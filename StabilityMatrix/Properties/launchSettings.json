@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "StabilityMatrix (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "StabilityMatrix (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

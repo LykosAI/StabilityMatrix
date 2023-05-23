@@ -1,0 +1,1 @@
+C:\Users\ionite\Repos\NET\StabilityMatrix\StabilityMatrix\StabilityMatrix.csproj;x86

@@ -1,6 +1,3 @@
-<!-- Copyright (c) Microsoft Corporation and Contributors. -->
-<!-- Licensed under the MIT License. -->
-
 <Window
     x:Class="StabilityMatrix.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"

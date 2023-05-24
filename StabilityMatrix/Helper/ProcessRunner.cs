@@ -1,13 +1,11 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
+﻿using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace StabilityMatrix.Helper;
 
 public static class ProcessRunner
 {
-    public static async Task<string> RunProcessAsync(string fileName, string arguments)
+    public static async Task<string> GetProcessOutputAsync(string fileName, string arguments)
     {
         using var process = new Process();
         process.StartInfo.FileName = fileName;
@@ -23,10 +21,10 @@ public static class ProcessRunner
         return output;
     }
 
-    public static Process RunProcess(string fileName, string arguments)
+    public static Process StartProcess(string fileName, string arguments)
 
     {
-        using var process = new Process();
+        var process = new Process();
         process.StartInfo.FileName = fileName;
         process.StartInfo.Arguments = arguments;
         process.StartInfo.UseShellExecute = false;

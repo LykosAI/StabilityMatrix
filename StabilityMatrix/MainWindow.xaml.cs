@@ -1,71 +1,37 @@
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using Windows.UI.ViewManagement;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using Wpf.Ui.Controls;
+using Wpf.Ui.Controls.Window;
 
 namespace StabilityMatrix
 {
     /// <summary>
-    /// An empty window that can be used on its own or navigated to within a Frame.
+    /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public sealed partial class MainWindow : Window
+    public partial class MainWindow : FluentWindow
     {
         public MainWindow()
         {
-            this.InitializeComponent();
-            SetupWindowSize();
+            InitializeComponent();
+            RootNavigation.Navigating += (_, _) => Debug.WriteLine("Navigating");
         }
 
-
-        private void ButtonNavInstallPage_OnClick(object sender, RoutedEventArgs e)
+        private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
         {
-            ContentFrame.Navigate(typeof(InstallPage));
-        }
-
-        private void ButtonNavLaunchPage_OnClick(object sender, RoutedEventArgs e)
-        {
-            ContentFrame.Navigate(typeof(LaunchPage));
-        }
-
-        private void MainNavigationView_OnLoaded(object sender, RoutedEventArgs e)
-        {
-            var home = MainNavigationView.MenuItems.OfType<NavigationViewItem>().First();
-            SetCurrentNavigationViewItem(home);
-        }
-
-        private void MainNavigationView_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
-        {
-            SetCurrentNavigationViewItem(args.SelectedItemContainer as NavigationViewItem);
-        }
-
-        private void SetCurrentNavigationViewItem(NavigationViewItem item)
-        {
-            if (item == null || item.Tag == null) return;
-
-            var tag = item.Tag.ToString();
-            switch (tag)
-            {
-                case "InstallPage":
-                    ContentFrame.Navigate(typeof(InstallPage));
-                    break;
-                case "LaunchPage":
-                    ContentFrame.Navigate(typeof(LaunchPage));
-                    break;
-                default:
-                    throw new ArgumentException($"Invalid tag: {tag}");
-            }
-
-            MainNavigationView.Header = item.Content;
-            MainNavigationView.SelectedItem = item;
-        }
-
-        private void SetupWindowSize()
-        {
-            IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-            var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
-            var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
-            appWindow.Resize(new Windows.Graphics.SizeInt32 { Width = 1100, Height = 700 });
+            RootNavigation.Navigate(typeof(LaunchPage));
         }
     }
 }

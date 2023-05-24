@@ -1,43 +1,25 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.4.33213.308
+VisualStudioVersion = 17.6.33717.318
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix", "StabilityMatrix\StabilityMatrix.csproj", "{FB37844E-2B59-4AA2-A140-B230F095218B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix", "StabilityMatrix\StabilityMatrix.csproj", "{7CA2E862-B121-495D-8CCC-2D6EF56A3312}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|ARM64 = Debug|ARM64
-		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
-		Release|ARM64 = Release|ARM64
-		Release|x64 = Release|x64
-		Release|x86 = Release|x86
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{FB37844E-2B59-4AA2-A140-B230F095218B}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{FB37844E-2B59-4AA2-A140-B230F095218B}.Debug|ARM64.Build.0 = Debug|ARM64
-		{FB37844E-2B59-4AA2-A140-B230F095218B}.Debug|ARM64.Deploy.0 = Debug|ARM64
-		{FB37844E-2B59-4AA2-A140-B230F095218B}.Debug|x64.ActiveCfg = Debug|x64
-		{FB37844E-2B59-4AA2-A140-B230F095218B}.Debug|x64.Build.0 = Debug|x64
-		{FB37844E-2B59-4AA2-A140-B230F095218B}.Debug|x64.Deploy.0 = Debug|x64
-		{FB37844E-2B59-4AA2-A140-B230F095218B}.Debug|x86.ActiveCfg = Debug|x86
-		{FB37844E-2B59-4AA2-A140-B230F095218B}.Debug|x86.Build.0 = Debug|x86
-		{FB37844E-2B59-4AA2-A140-B230F095218B}.Debug|x86.Deploy.0 = Debug|x86
-		{FB37844E-2B59-4AA2-A140-B230F095218B}.Release|ARM64.ActiveCfg = Release|ARM64
-		{FB37844E-2B59-4AA2-A140-B230F095218B}.Release|ARM64.Build.0 = Release|ARM64
-		{FB37844E-2B59-4AA2-A140-B230F095218B}.Release|ARM64.Deploy.0 = Release|ARM64
-		{FB37844E-2B59-4AA2-A140-B230F095218B}.Release|x64.ActiveCfg = Release|x64
-		{FB37844E-2B59-4AA2-A140-B230F095218B}.Release|x64.Build.0 = Release|x64
-		{FB37844E-2B59-4AA2-A140-B230F095218B}.Release|x64.Deploy.0 = Release|x64
-		{FB37844E-2B59-4AA2-A140-B230F095218B}.Release|x86.ActiveCfg = Release|x86
-		{FB37844E-2B59-4AA2-A140-B230F095218B}.Release|x86.Build.0 = Release|x86
-		{FB37844E-2B59-4AA2-A140-B230F095218B}.Release|x86.Deploy.0 = Release|x86
+		{7CA2E862-B121-495D-8CCC-2D6EF56A3312}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CA2E862-B121-495D-8CCC-2D6EF56A3312}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CA2E862-B121-495D-8CCC-2D6EF56A3312}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CA2E862-B121-495D-8CCC-2D6EF56A3312}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {46EBF17D-F7E8-465B-94F1-26FC5BDEF80B}
+		SolutionGuid = {97DDAF21-661E-4E36-ABC3-BF2052415919}
 	EndGlobalSection
 EndGlobal

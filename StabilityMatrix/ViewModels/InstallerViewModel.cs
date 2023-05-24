@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Microsoft.UI.Xaml;
 using StabilityMatrix.Models.Packages;
 using System.Linq;
+using System.Windows;
+using CommunityToolkit.Mvvm.Input;
 
 namespace StabilityMatrix.ViewModels;
 

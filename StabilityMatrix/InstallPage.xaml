@@ -32,7 +32,7 @@
                     <Grid Height="110" Margin="6">
                         <StackPanel Grid.Column="0" VerticalAlignment="Top" Margin="10,0,0,0">
                             <TextBlock Text="{x:Bind DisplayName}" x:Phase="1" Margin="0,5,0,5" Style="{ThemeResource BaseTextBlockStyle}" />
-                            <TextBlock Text="{x:Bind Author}" x:Phase="2" Margin="0,0,0,5" Style="{ThemeResource BodyTextBlockStyle}" />
+                            <TextBlock Text="{x:Bind ByAuthor}" x:Phase="2" Margin="0,0,0,5" Style="{ThemeResource BodyTextBlockStyle}" />
                         </StackPanel>
                     </Grid>
                 </DataTemplate>

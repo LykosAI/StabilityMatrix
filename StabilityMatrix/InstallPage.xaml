@@ -42,7 +42,8 @@
         <StackPanel Orientation="Vertical">
             <Button Content="Install" Command="{Binding InstallCommand}" Width="100" Height="50" HorizontalAlignment="Center"/>
             <TextBlock Text="{Binding InstalledText}" HorizontalAlignment="Center" Padding="8"/>
-            <ProgressBar Visibility="{Binding ProgressBarVisibility}" Value="{Binding ProgressValue, FallbackValue=10}" 
+            <ProgressBar Visibility="{Binding ProgressBarVisibility}" Value="{Binding ProgressValue, FallbackValue=10}"
+                         IsIndeterminate="{Binding IsIndeterminate, FallbackValue=True}"
                          Maximum="100" Width="500" Style="{ThemeResource DefaultProgressBarStyle}"/>
         </StackPanel>
     </Grid>

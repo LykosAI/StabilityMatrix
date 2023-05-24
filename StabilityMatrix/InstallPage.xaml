@@ -6,12 +6,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:system="using:System"
+    xmlns:viewModels="using:StabilityMatrix.ViewModels"
+    xmlns:models="using:StabilityMatrix.Models"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
-    d:DataContext="{d:DesignInstance Type=local:InstallerViewModel}">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     
     <Page.DataContext>
-        <local:InstallerViewModel/>
+        <viewModels:InstallerViewModel/>
     </Page.DataContext>
     
     <Grid>
@@ -28,7 +29,7 @@
             </ListView.ItemsSource>
             
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="local:BasePackage">
+                <DataTemplate x:DataType="models:BasePackage">
                     <Grid Height="110" Margin="6">
                         <StackPanel Grid.Column="0" VerticalAlignment="Top" Margin="10,0,0,0">
                             <TextBlock Text="{x:Bind DisplayName}" x:Phase="1" Margin="0,5,0,5" Style="{ThemeResource BaseTextBlockStyle}" />
@@ -38,6 +39,11 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-
+        <StackPanel Orientation="Vertical">
+            <Button Content="Install" Command="{Binding InstallCommand}" Width="100" Height="50" HorizontalAlignment="Center"/>
+            <TextBlock Text="{Binding InstalledText}" HorizontalAlignment="Center" Padding="8"/>
+            <ProgressBar Visibility="{Binding ProgressBarVisibility}" Value="{Binding ProgressValue, FallbackValue=10}" 
+                         Maximum="100" Width="500" Style="{ThemeResource DefaultProgressBarStyle}"/>
+        </StackPanel>
     </Grid>
 </Page>

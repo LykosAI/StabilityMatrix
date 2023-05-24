@@ -1,4 +1,6 @@
-﻿namespace StabilityMatrix;
+﻿using StabilityMatrix.Models;
+
+namespace StabilityMatrix;
 
 public class A3WebUI: BasePackage
 {

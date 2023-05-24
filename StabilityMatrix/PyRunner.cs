@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Python.Runtime;
 
@@ -13,6 +14,8 @@ internal static class PyRunner
 
     public static PyIOStream StdOutStream;
     public static PyIOStream StdErrStream;
+
+    private static readonly SemaphoreSlim PyRunning = new(1, 1);
 
     public static async void Initialize()
     {
@@ -37,27 +40,70 @@ internal static class PyRunner
         StdOutStream = new PyIOStream();
         StdErrStream = new PyIOStream();
 
-        await Task.Run(() =>
+        await PyRunning.WaitAsync();
+        try
         {
-            using (Py.GIL())
+            await Task.Run(() =>
             {
-                dynamic sys = Py.Import("sys");
-                sys.stdout = StdOutStream;
-                sys.stderr = StdErrStream;
-            }
-        });
+                using (Py.GIL())
+                {
+                    dynamic sys = Py.Import("sys");
+                    sys.stdout = StdOutStream;
+                    sys.stderr = StdErrStream;
+                }
+            });
+        }
+        finally
+        {
+            PyRunning.Release();
+        }
     }
     
-    // Evaluate Python code
+    /// <summary>
+    /// Evaluate Python expression and return its value as a string
+    /// </summary>
+    /// <param name="code"></param>
+    /// <returns></returns>
     public static async Task<string> Eval(string code)
     {
-        using (Py.GIL())
+        await PyRunning.WaitAsync();
+        try
         {
             return await Task.Run(() =>
             {
-                dynamic result = PythonEngine.Eval(code);
-                return result.ToString();
+                using (Py.GIL())
+                {
+                    dynamic result = PythonEngine.Eval(code);
+                    return result.ToString();
+                }
             });
+        }
+        finally
+        {
+            PyRunning.Release();
+        }
+    }
+    
+    /// <summary>
+    /// Execute Python code without returning a value
+    /// </summary>
+    /// <param name="code"></param>
+    public static async Task Exec(string code)
+    {
+        await PyRunning.WaitAsync();
+        try
+        {
+            await Task.Run(() =>
+            {
+                using (Py.GIL())
+                {
+                    PythonEngine.Exec(code);
+                }
+            });
+        }
+        finally
+        {
+            PyRunning.Release();
         }
     }
 }

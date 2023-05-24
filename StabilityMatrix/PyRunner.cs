@@ -46,5 +46,18 @@ internal static class PyRunner
                 sys.stderr = StdErrStream;
             }
         });
-    } 
+    }
+    
+    // Evaluate Python code
+    public static async Task<string> Eval(string code)
+    {
+        using (Py.GIL())
+        {
+            return await Task.Run(() =>
+            {
+                dynamic result = PythonEngine.Eval(code);
+                return result.ToString();
+            });
+        }
+    }
 }

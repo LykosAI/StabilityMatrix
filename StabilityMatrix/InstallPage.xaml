@@ -7,28 +7,32 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:system="using:System"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    d:DataContext="{d:DesignInstance Type=local:InstallerViewModel}">
+    
+    <Page.DataContext>
+        <local:InstallerViewModel/>
+    </Page.DataContext>
+    
     <Grid>
-
-        <Grid.Resources>
-            <local:Package x:Key="ItemsViewSource" />
-        </Grid.Resources>
-
         <ListView x:Name="ItemListView"
                   Margin="120,0,0,60"
-                  ItemsSource="{x:Bind packages}"
                   BorderThickness="1"
                   BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}"
                   Width="350"
                   Height="400"
                   HorizontalAlignment="Left">
 
+            <ListView.ItemsSource>
+                <Binding Path="Packages" />
+            </ListView.ItemsSource>
+            
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="local:Package">
+                <DataTemplate x:DataType="local:BasePackage">
                     <Grid Height="110" Margin="6">
                         <StackPanel Grid.Column="0" VerticalAlignment="Top" Margin="10,0,0,0">
-                            <TextBlock Text="{x:Bind Name}" x:Phase="1" Margin="0,5,0,5"></TextBlock>
+                            <TextBlock Text="{x:Bind DisplayName}" x:Phase="1" Margin="0,5,0,5" Style="{ThemeResource BaseTextBlockStyle}" />
+                            <TextBlock Text="{x:Bind Author}" x:Phase="2" Margin="0,0,0,5" Style="{ThemeResource BodyTextBlockStyle}" />
                         </StackPanel>
                     </Grid>
                 </DataTemplate>

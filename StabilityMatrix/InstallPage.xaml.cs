@@ -27,20 +27,10 @@ namespace StabilityMatrix
     /// </summary>
     public sealed partial class InstallPage : Page
     {
-        private readonly ObservableCollection<Package> packages = new()
-        {
-            new Package() { Name = "Automatic 1111" }
-        };
-
         public InstallPage()
-        {
-            this.InitializeComponent();
+        { 
+            InitializeComponent();
+            DataContext = new InstallerViewModel();
         }
     }
-
-    public class Package
-    {
-        public string Name { get; set; }
-    }
-
 }

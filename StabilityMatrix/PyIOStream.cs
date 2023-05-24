@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Text;
 
 namespace StabilityMatrix;
 
@@ -14,20 +15,34 @@ namespace StabilityMatrix;
 internal class PyIOStream
 {
     public event EventHandler<string> OnWriteUpdate;
-    public TextWriter TextWriter { get; set; }
+    private readonly StringBuilder TextBuilder;
+    private readonly StringWriter TextWriter;
 
-    public PyIOStream(TextWriter writer = null)
+    public PyIOStream(StringBuilder builder = null)
     {
-        TextWriter = writer ?? new StringWriter();
+        TextBuilder = builder ?? new StringBuilder();
+        TextWriter = new StringWriter(TextBuilder);
     }
 
+    public void ClearBuffer()
+    {
+        TextBuilder.Clear();
+    }
+    
+    public string GetBuffer()
+    {
+        return TextBuilder.ToString();
+    }
+
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public void write(string str)
     {
         TextWriter.Write(str);
         OnWriteUpdate?.Invoke(this, str);
     }
 
-    public void writelines(string[] str)
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    public void writelines(IEnumerable<string> str)
     {
         foreach (var line in str)
         {
@@ -35,11 +50,13 @@ internal class PyIOStream
         }
     }
 
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public void flush()
     {
         TextWriter.Flush();
     }
 
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public void close()
     {
         TextWriter?.Close();

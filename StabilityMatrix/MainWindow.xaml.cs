@@ -56,6 +56,9 @@ namespace StabilityMatrix
                 case "LaunchPage":
                     ContentFrame.Navigate(typeof(LaunchPage));
                     break;
+                case "Settings":
+                    ContentFrame.Navigate(typeof(SettingsPage));
+                    break;
                 default:
                     throw new ArgumentException($"Invalid tag: {tag}");
             }

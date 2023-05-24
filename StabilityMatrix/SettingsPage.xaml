@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="StabilityMatrix.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:StabilityMatrix"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewModels="using:StabilityMatrix.ViewModels"
+    xmlns:models="using:StabilityMatrix.Models"
+    xmlns:labs="using:CommunityToolkit.Labs.WinUI"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    
+    <Page.DataContext>
+        <viewModels:SettingsViewModel/>
+    </Page.DataContext>
+
+    <ScrollViewer Margin="20">
+        <StackPanel Spacing="3">
+            <labs:SettingsCard x:Name="SettingsCard"
+                               Header="Choose UI Theme">
+                <ComboBox
+                    ItemsSource="{Binding AvailableThemes}"
+                    SelectedItem="{Binding SelectedTheme, Mode=TwoWay}"
+                    Header="Theme" Width="200"/>
+            </labs:SettingsCard>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

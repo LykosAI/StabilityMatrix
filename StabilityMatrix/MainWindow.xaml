@@ -6,14 +6,18 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
-
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-
-        <Button x:Name="ButtonNavigate" Grid.Row="0" Content="InstallPage" Click="ButtonNavigate_OnClick"/>
-        <Frame x:Name="ContentFrame" Grid.Row="1"/>
-    </Grid>
+    
+    <NavigationView 
+        x:Name="MainNavigationView"
+        Loaded="MainNavigationView_OnLoaded"
+        SelectionChanged="MainNavigationView_OnSelectionChanged"
+        Header="Stability Matrix">
+        
+        <NavigationView.MenuItems>
+            <NavigationViewItem Content="Launch" Tag="LaunchPage" />
+            <NavigationViewItem Content="Install" Tag="InstallPage" />
+        </NavigationView.MenuItems>
+        
+        <Frame x:Name="ContentFrame"/>
+    </NavigationView>
 </Window>

@@ -2,6 +2,11 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Linq;
+using Windows.ApplicationModel.Core;
+using Windows.UI.ViewManagement;
+using Microsoft.UI;
+using Microsoft.UI.Windowing;
+using WinRT.Interop;
 
 namespace StabilityMatrix
 {
@@ -12,10 +17,11 @@ namespace StabilityMatrix
     {
         public MainWindow()
         {
-            this.InitializeComponent();
+            InitializeComponent();
+            Title = "Stability Matrix";
+            WindowOptions.TrySetCustomTitle(this, AppTitleBar);
         }
-
-
+        
         private void ButtonNavInstallPage_OnClick(object sender, RoutedEventArgs e)
         {
             ContentFrame.Navigate(typeof(InstallPage));

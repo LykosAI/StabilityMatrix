@@ -7,17 +7,49 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
     
-    <NavigationView 
-        x:Name="MainNavigationView"
-        Loaded="MainNavigationView_OnLoaded"
-        SelectionChanged="MainNavigationView_OnSelectionChanged"
-        Header="Stability Matrix">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="AppTitleBar">
+            <Image Source="Assets\LockScreenLogo.scale-200.png"
+                   HorizontalAlignment="Left" 
+                   Width="16" Height="16" 
+                   Margin="8,0"/>
+            <TextBlock x:Name="AppTitleTextBlock"
+                       Text="{StaticResource AppTitle}"
+                       TextWrapping="NoWrap"
+                       Style="{StaticResource CaptionTextBlockStyle}" 
+                       VerticalAlignment="Center"
+                       Margin="28,0,0,0"/>
+        </Grid>
+
+        <NavigationView 
+            Grid.Row="1"
+            x:Name="MainNavigationView"
+            Loaded="MainNavigationView_OnLoaded"
+            SelectionChanged="MainNavigationView_OnSelectionChanged"
+            Header="Stability Matrix">
         
-        <NavigationView.MenuItems>
-            <NavigationViewItem Content="Launch" Tag="LaunchPage" />
-            <NavigationViewItem Content="Install" Tag="InstallPage" />
-        </NavigationView.MenuItems>
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Launch" Tag="LaunchPage">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Play" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
         
-        <Frame x:Name="ContentFrame"/>
-    </NavigationView>
+                <NavigationViewItem Content="Install" Tag="InstallPage">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Repair" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+        
+            <Frame x:Name="ContentFrame"/>
+        </NavigationView>
+    </Grid>
+    
+
 </Window>

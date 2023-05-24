@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Linq;
+using Windows.UI.ViewManagement;
 
 namespace StabilityMatrix
 {
@@ -13,6 +14,7 @@ namespace StabilityMatrix
         public MainWindow()
         {
             this.InitializeComponent();
+            SetupWindowSize();
         }
 
 
@@ -56,6 +58,14 @@ namespace StabilityMatrix
 
             MainNavigationView.Header = item.Content;
             MainNavigationView.SelectedItem = item;
+        }
+
+        private void SetupWindowSize()
+        {
+            IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hWnd);
+            var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
+            appWindow.Resize(new Windows.Graphics.SizeInt32 { Width = 1100, Height = 700 });
         }
     }
 }

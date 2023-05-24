@@ -9,36 +9,47 @@
     xmlns:viewModels="using:StabilityMatrix.ViewModels"
     xmlns:models="using:StabilityMatrix.Models"
     mc:Ignorable="d"
+    Loaded="InstallPage_OnLoaded"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     
     <Page.DataContext>
         <viewModels:InstallerViewModel/>
     </Page.DataContext>
     
-    <Grid>
-        <ListView x:Name="ItemListView"
-                  Margin="120,0,0,60"
-                  BorderThickness="1"
-                  BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}"
-                  Width="350"
-                  Height="400"
-                  HorizontalAlignment="Left">
+    <Grid Padding="16">
+        <StackPanel Orientation="Horizontal" Margin="16" HorizontalAlignment="Left" Height="400">
+            <ListView x:Name="ItemListView"
+                      BorderThickness="1"
+                      BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}"
+                      SelectedIndex="0"
+                      SelectedItem="{Binding SelectedPackage, Mode=TwoWay}">
 
-            <ListView.ItemsSource>
-                <Binding Path="Packages" />
-            </ListView.ItemsSource>
+                <ListView.ItemsSource>
+                    <Binding Path="Packages" />
+                </ListView.ItemsSource>
             
-            <ListView.ItemTemplate>
-                <DataTemplate x:DataType="models:BasePackage">
-                    <Grid Height="110" Margin="6">
-                        <StackPanel Grid.Column="0" VerticalAlignment="Top" Margin="10,0,0,0">
-                            <TextBlock Text="{x:Bind DisplayName}" x:Phase="1" Margin="0,5,0,5" Style="{ThemeResource BaseTextBlockStyle}" />
-                            <TextBlock Text="{x:Bind ByAuthor}" x:Phase="2" Margin="0,0,0,5" Style="{ThemeResource BodyTextBlockStyle}" />
-                        </StackPanel>
-                    </Grid>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="models:BasePackage">
+                        <Grid Height="110" Margin="6">
+                            <StackPanel Grid.Column="0" VerticalAlignment="Top" Margin="10,0,0,0">
+                                <TextBlock Text="{x:Bind DisplayName}" x:Phase="1" Margin="0,5,0,5" Style="{ThemeResource BaseTextBlockStyle}" />
+                                <TextBlock Text="{x:Bind ByAuthor}" x:Phase="2" Margin="0,0,0,5" Style="{ThemeResource BodyTextBlockStyle}" />
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <StackPanel Orientation="Vertical" Margin="32,0,0,0">
+                <TextBlock Text="{Binding SelectedPackage.DisplayName}" Style="{ThemeResource HeaderTextBlockStyle}"/>
+                <TextBlock Text="{Binding SelectedPackage.ByAuthor}" Style="{ThemeResource CaptionTextBlockStyle}"/>
+                <HyperlinkButton NavigateUri="{Binding SelectedPackage.GithubUrl}">
+                    <TextBlock Style="{ThemeResource BodyTextBlockStyle}">
+                        <Run Text="GitHub Page:"/>
+                        <Run Text="{Binding SelectedPackage.GithubUrl}" TextDecorations="Underline"/>
+                    </TextBlock>
+                </HyperlinkButton>
+            </StackPanel>
+        </StackPanel>
         <StackPanel Orientation="Vertical">
             <Button Content="Install" Command="{Binding InstallCommand}" Width="100" Height="50" HorizontalAlignment="Center"/>
             <TextBlock Text="{Binding InstalledText}" HorizontalAlignment="Center" Padding="8"/>

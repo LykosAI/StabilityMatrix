@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using Windows.ApplicationModel.Core;
+using Windows.UI.ViewManagement;
 
 namespace StabilityMatrix
 {
@@ -31,7 +32,7 @@ namespace StabilityMatrix
             mainWindow = new MainWindow();
             mainWindow.Activate();
         }
-        
+
         private static void UnhandledError(object sender, UnhandledErrorDetectedEventArgs eventArgs)
         {
             try

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License.
 
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using StabilityMatrix.ViewModels;
 
@@ -18,6 +19,11 @@ namespace StabilityMatrix
         { 
             InitializeComponent();
             DataContext = new InstallerViewModel();
+        }
+
+        private void InstallPage_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            ((InstallerViewModel) DataContext).OnLoaded(); 
         }
     }
 }

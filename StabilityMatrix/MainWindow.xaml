@@ -12,6 +12,12 @@
         Loaded="MainNavigationView_OnLoaded"
         SelectionChanged="MainNavigationView_OnSelectionChanged"
         Header="Stability Matrix">
+
+        <NavigationView.HeaderTemplate>
+            <DataTemplate>
+                <TextBlock Text="{Binding}" Margin="0,0,0,8"/>
+            </DataTemplate>
+        </NavigationView.HeaderTemplate>
         
         <NavigationView.MenuItems>
             <NavigationViewItem Content="Launch" Tag="LaunchPage" />

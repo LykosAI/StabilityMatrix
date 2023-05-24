@@ -8,11 +8,13 @@ using Microsoft.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Shapes;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 
@@ -29,7 +31,10 @@ namespace StabilityMatrix
         /// </summary>
         public App()
         {
-            this.InitializeComponent();
+            CoreApplication.UnhandledErrorDetected += UnhandledError;
+            InitializeComponent();
+            DebugSettings.IsBindingTracingEnabled = true;
+            DebugSettings.BindingFailed += (sender, args) => Debug.WriteLine(args.Message);
         }
 
         /// <summary>
@@ -40,6 +45,19 @@ namespace StabilityMatrix
         {
             mainWindow = new MainWindow();
             mainWindow.Activate();
+        }
+        
+        private static void UnhandledError(object sender, UnhandledErrorDetectedEventArgs eventArgs)
+        {
+            try
+            {
+                eventArgs.UnhandledError.Propagate();
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("Error: {0}", e);
+                throw;
+            }
         }
 
         private Window mainWindow;

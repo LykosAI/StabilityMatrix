@@ -1,11 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.Input;
-using Microsoft.UI.Xaml;
-using StabilityMatrix.Helper;
-using StabilityMatrix.Models;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -28,16 +23,17 @@ internal class SettingsViewModel : INotifyPropertyChanged
             selectedTheme = value;
             OnPropertyChanged();
             
+            // TODO: redo for new UI Framework
             // Update theme
-            switch (selectedTheme)
-            {
-                case "Light":
-                    Application.Current.RequestedTheme = ApplicationTheme.Light;
-                    break;
-                case "Dark":
-                    Application.Current.RequestedTheme = ApplicationTheme.Dark;
-                    break;
-            }
+            // switch (selectedTheme)
+            // {
+            //     case "Light":
+            //         Application.Current.RequestedTheme = ApplicationTheme.Light;
+            //         break;
+            //     case "Dark":
+            //         Application.Current.RequestedTheme = ApplicationTheme.Dark;
+            //         break;
+            // }
         }
     }
 

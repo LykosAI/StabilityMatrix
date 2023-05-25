@@ -25,9 +25,10 @@ internal class InstallerViewModel : INotifyPropertyChanged
         ProgressValue = 0;
     }
 
-    public void OnLoaded()
+    public Task OnLoaded()
     {
         SelectedPackage = Packages.First();
+        return Task.CompletedTask;
     }
     
     public static ObservableCollection<BasePackage> Packages => new()
@@ -75,7 +76,6 @@ internal class InstallerViewModel : INotifyPropertyChanged
         get => selectedPackage;
         set
         {
-            if (Equals(value, selectedPackage)) return;
             selectedPackage = value;
             OnPropertyChanged();
         }

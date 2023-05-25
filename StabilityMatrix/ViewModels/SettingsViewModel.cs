@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Wpf.Ui.Appearance;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -23,17 +24,15 @@ internal class SettingsViewModel : INotifyPropertyChanged
             selectedTheme = value;
             OnPropertyChanged();
             
-            // TODO: redo for new UI Framework
-            // Update theme
-            // switch (selectedTheme)
-            // {
-            //     case "Light":
-            //         Application.Current.RequestedTheme = ApplicationTheme.Light;
-            //         break;
-            //     case "Dark":
-            //         Application.Current.RequestedTheme = ApplicationTheme.Dark;
-            //         break;
-            // }
+            switch (selectedTheme)
+            {
+                case "Light":
+                    Theme.Apply(ThemeType.Light);
+                    break;
+                case "Dark":
+                    Theme.Apply(ThemeType.Dark);
+                    break;
+            }
         }
     }
 

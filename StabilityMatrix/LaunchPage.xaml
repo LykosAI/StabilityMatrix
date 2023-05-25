@@ -1,17 +1,13 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Page
-    x:Class="StabilityMatrix.LaunchPage"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:StabilityMatrix"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-
+﻿<Page x:Class="StabilityMatrix.LaunchPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:local="clr-namespace:StabilityMatrix"
+      mc:Ignorable="d"
+      Title="LaunchPage" d:DesignHeight="700" d:DesignWidth="1100">
     <Grid>
-        
-        <Button x:Name="LaunchButton" Content="Launch" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Click="LaunchButton_OnClick"/>
-
+        <ui:Button x:Name="LaunchButton" Content="Launch" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
     </Grid>
 </Page>

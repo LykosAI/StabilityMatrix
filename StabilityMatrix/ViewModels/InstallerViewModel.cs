@@ -1,11 +1,14 @@
 ﻿using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Microsoft.UI.Xaml;
+using StabilityMatrix.Models.Packages;
+using System.Linq;
+using System.Windows;
+using CommunityToolkit.Mvvm.Input;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -14,6 +17,7 @@ internal class InstallerViewModel : INotifyPropertyChanged
     private string installedText;
     private int progressValue;
     private bool isIndeterminate;
+    private BasePackage selectedPackage;
 
     public InstallerViewModel()
     {
@@ -21,9 +25,15 @@ internal class InstallerViewModel : INotifyPropertyChanged
         ProgressValue = 0;
     }
 
+    public void OnLoaded()
+    {
+        SelectedPackage = Packages.First();
+    }
+    
     public static ObservableCollection<BasePackage> Packages => new()
     {
         new A3WebUI(),
+        new DankDiffusion()
     };
 
     public string InstalledText
@@ -60,36 +70,35 @@ internal class InstallerViewModel : INotifyPropertyChanged
         }
     }
 
+    public BasePackage SelectedPackage
+    {
+        get => selectedPackage;
+        set
+        {
+            if (Equals(value, selectedPackage)) return;
+            selectedPackage = value;
+            OnPropertyChanged();
+        }
+    }
+
     public Visibility ProgressBarVisibility => ProgressValue > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-    public AsyncRelayCommand InstallCommand => new(InstallGitIfNecessary);
-    private async Task InstallGitIfNecessary()
+    public RelayCommand InstallCommand => new(() => Debug.WriteLine(SelectedPackage.GithubUrl));
+    private async Task<bool> InstallGitIfNecessary()
     {
         var gitOutput = await ProcessRunner.GetProcessOutputAsync("git", "--version");
         if (gitOutput.Contains("git version 2"))
         {
-            InstalledText = "Installed";
-            IsIndeterminate = false;
-            ProgressValue = 100;
-            return;
+            return true;
         }
 
-        InstalledText = "Not Installed";
         IsIndeterminate = true;
+        InstalledText = "Installing Git...";
         using var installProcess = ProcessRunner.StartProcess("Assets\\Git-2.40.1-64-bit.exe", "/VERYSILENT /NORESTART");
         await installProcess.WaitForExitAsync();
-
-        if (installProcess.ExitCode == 0)
-        {
-            InstalledText = "Git successfully installed";
-            ProgressValue = 100;
-        }
-        else
-        {
-            InstalledText = $"There was an error installing Git: {installProcess.ExitCode}";
-            ProgressValue = 0;
-        }
         IsIndeterminate = false;
+
+        return installProcess.ExitCode == 0;
     }
 
     public event PropertyChangedEventHandler PropertyChanged;

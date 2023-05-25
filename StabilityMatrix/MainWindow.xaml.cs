@@ -1,70 +1,23 @@
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using System;
-using System.Linq;
-using Windows.ApplicationModel.Core;
-using Windows.UI.ViewManagement;
-using Microsoft.UI;
-using Microsoft.UI.Windowing;
-using WinRT.Interop;
+using System.Diagnostics;
+using System.Windows;
+using Wpf.Ui.Controls.Window;
 
 namespace StabilityMatrix
 {
     /// <summary>
-    /// An empty window that can be used on its own or navigated to within a Frame.
+    /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public sealed partial class MainWindow : Window
+    public partial class MainWindow : FluentWindow
     {
         public MainWindow()
         {
             InitializeComponent();
-            Title = "Stability Matrix";
-            WindowOptions.TrySetCustomTitle(this, AppTitleBar);
-        }
-        
-        private void ButtonNavInstallPage_OnClick(object sender, RoutedEventArgs e)
-        {
-            ContentFrame.Navigate(typeof(InstallPage));
+            RootNavigation.Navigating += (_, _) => Debug.WriteLine("Navigating");
         }
 
-        private void ButtonNavLaunchPage_OnClick(object sender, RoutedEventArgs e)
+        private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
         {
-            ContentFrame.Navigate(typeof(LaunchPage));
-        }
-
-        private void MainNavigationView_OnLoaded(object sender, RoutedEventArgs e)
-        {
-            var home = MainNavigationView.MenuItems.OfType<NavigationViewItem>().First();
-            SetCurrentNavigationViewItem(home);
-        }
-
-        private void MainNavigationView_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
-        {
-            SetCurrentNavigationViewItem(args.SelectedItemContainer as NavigationViewItem);
-        }
-
-        private void SetCurrentNavigationViewItem(NavigationViewItem item)
-        {
-            if (item == null || item.Tag == null) return;
-
-            var tag = item.Tag.ToString();
-            switch (tag)
-            {
-                case "InstallPage":
-                    ContentFrame.Navigate(typeof(InstallPage));
-                    break;
-                case "LaunchPage":
-                    ContentFrame.Navigate(typeof(LaunchPage));
-                    break;
-                case "Settings":
-                    ContentFrame.Navigate(typeof(SettingsPage));
-                    break;
-                default:
-                    throw new ArgumentException($"Invalid tag: {tag}");
-            }
-
-            MainNavigationView.Header = item.Content;
-            MainNavigationView.SelectedItem = item;
+            RootNavigation.Navigate(typeof(LaunchPage));
         }
     }
 }

@@ -1,7 +1,5 @@
-// Copyright (c) Microsoft Corporation and Contributors.
-// Licensed under the MIT License.
-
-using Microsoft.UI.Xaml.Controls;
+﻿using System.Windows;
+using System.Windows.Controls;
 using StabilityMatrix.ViewModels;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -18,6 +16,11 @@ namespace StabilityMatrix
         { 
             InitializeComponent();
             DataContext = new InstallerViewModel();
+        }
+
+        private void InstallPage_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            ((InstallerViewModel) DataContext).OnLoaded(); 
         }
     }
 }

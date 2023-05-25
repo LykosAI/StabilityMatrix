@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Python.Runtime;
+using StabilityMatrix.Helper;
 
 namespace StabilityMatrix;
 
@@ -10,15 +12,19 @@ internal static class PyRunner
 {
     private const string RelativeDllPath = @"Assets\Python310\python310.dll";
     private const string RelativeExePath = @"Assets\Python310\python.exe";
+    private const string RelativePipExePath = @"Assets\Python310\Scripts\pip.exe";
+    private const string RelativeGetPipPath = @"Assets\Python310\get-pip.py";
     public static string DllPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeDllPath);
     public static string ExePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeExePath);
+    public static string PipExePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativePipExePath);
+    public static string GetPipPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeGetPipPath);
 
     public static PyIOStream StdOutStream;
     public static PyIOStream StdErrStream;
 
     private static readonly SemaphoreSlim PyRunning = new(1, 1);
 
-    public static async void Initialize()
+    public static async Task Initialize()
     {
         if (PythonEngine.IsInitialized) return;
 
@@ -33,6 +39,40 @@ internal static class PyRunner
         PythonEngine.BeginAllowThreads();
         
         await RedirectPythonOutput();
+    }
+
+    /// <summary>
+    /// One-time setup for get-pip
+    /// </summary>
+    public static async Task SetupPip()
+    {
+        Debug.WriteLine($"Process '{ExePath}' starting '{GetPipPath}'");
+        var pythonProc = ProcessRunner.StartProcess(ExePath, GetPipPath);
+        await pythonProc.WaitForExitAsync();
+        // Check return code
+        var returnCode = pythonProc.ExitCode;
+        if (returnCode != 0)
+        {
+            var output = pythonProc.StandardOutput.ReadToEnd();
+            Debug.WriteLine($"Error in get-pip.py: {output}");
+            throw new InvalidOperationException($"Running get-pip.py failed with code {returnCode}: {output}");
+        }
+    }
+    
+    /// <summary>
+    /// Install a Python package with pip
+    /// </summary>
+    public static async Task InstallPackage(string package)
+    {
+        var pipProc = ProcessRunner.StartProcess(PipExePath, $"install {package}");
+        await pipProc.WaitForExitAsync();
+        // Check return code
+        var returnCode = pipProc.ExitCode;
+        if (returnCode != 0)
+        {
+            var output = await pipProc.StandardOutput.ReadToEndAsync(); 
+            throw new InvalidOperationException($"Pip install failed with code {returnCode}: {output}");
+        }
     }
     
     // Redirect Python output

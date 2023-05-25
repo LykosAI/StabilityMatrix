@@ -35,7 +35,7 @@ public class PyVenvRunner: IDisposable
     public bool Exists() => System.IO.File.Exists(PythonPath);
 
     /// <summary>
-    /// Configures the venv at path.
+    /// Creates a venv at the configured path.
     /// </summary>
     public async Task Setup(bool existsOk = false)
     {

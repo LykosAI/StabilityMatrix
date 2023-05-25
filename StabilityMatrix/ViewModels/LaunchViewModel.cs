@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -44,9 +45,20 @@ public partial class LaunchViewModel : ObservableObject
     public LaunchViewModel(ISettingsManager settingsManager)
     {
         this.settingsManager = settingsManager;
-        LoadPackages();
+        Packages.CollectionChanged += PackagesOnCollectionChanged;
     }
-    
+
+    private void PackagesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.Action != NotifyCollectionChangedAction.Add) return;
+        
+        var newPackage = e.NewItems?.Cast<InstalledPackage>().FirstOrDefault();
+        if (newPackage != null)
+        {
+            settingsManager.AddInstalledPackage(newPackage);
+        }
+    }
+
     public RelayCommand LaunchCommand => new(() =>
     {
         ConsoleOutput = "";

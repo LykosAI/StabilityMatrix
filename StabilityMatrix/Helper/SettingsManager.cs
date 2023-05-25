@@ -24,12 +24,11 @@ public class SettingsManager : ISettingsManager
         if (!File.Exists(SettingsPath))
         {
             File.Create(SettingsPath).Close();
-            File.WriteAllText(SettingsPath, "{}");
+            var defaultSettingsJson = JsonSerializer.Serialize(Settings);
+            File.WriteAllText(SettingsPath, defaultSettingsJson);
         }
         
         LoadSettings();
-        
-        
     }
     
     public void SetTheme(string theme)

@@ -9,7 +9,9 @@ namespace StabilityMatrix;
 internal static class PyRunner
 {
     private const string RelativeDllPath = @"Assets\Python310\python310.dll";
+    private const string RelativeExePath = @"Assets\Python310\python.exe";
     public static string DllPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeDllPath);
+    public static string ExePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeExePath);
 
     public static PyIOStream StdOutStream;
     public static PyIOStream StdErrStream;

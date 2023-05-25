@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using NLog;
 using Python.Runtime;
 using StabilityMatrix.Helper;
 
@@ -13,7 +14,8 @@ internal record struct PyVersionInfo(int Major, int Minor, int Micro, string Rel
 
 internal static class PyRunner
 {
-    private const string 
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    
     private const string RelativeDllPath = @"Assets\Python310\python310.dll";
     private const string RelativeExePath = @"Assets\Python310\python.exe";
     private const string RelativePipExePath = @"Assets\Python310\Scripts\pip.exe";
@@ -36,6 +38,8 @@ internal static class PyRunner
     public static async Task Initialize()
     {
         if (PythonEngine.IsInitialized) return;
+        
+        Logger.Trace($"Initializing Python runtime with DLL '{DllPath}'");
 
         // Check PythonDLL exists
         if (!File.Exists(DllPath))
@@ -62,7 +66,6 @@ internal static class PyRunner
     /// </summary>
     public static async Task SetupPip()
     {
-        Debug.WriteLine($"Process '{ExePath}' starting '{GetPipPath}'");
         var pythonProc = ProcessRunner.StartProcess(ExePath, GetPipPath);
         await pythonProc.WaitForExitAsync();
         // Check return code

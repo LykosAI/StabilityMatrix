@@ -1,4 +1,12 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
+using Refit;
+using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
 
 namespace StabilityMatrix.Models.Packages;
@@ -9,6 +17,43 @@ public class A3WebUI: BasePackage
     public override string DisplayName => "Stable Diffusion WebUI";
     public override string Author => "AUTOMATIC1111";
     public override string GithubUrl => "https://github.com/AUTOMATIC1111/stable-diffusion-webui";
+    public override async Task DownloadPackage()
+    {
+        var githubApi = RestService.For<IGithubApi>("https://api.github.com");
+        var latestRelease = await githubApi.GetLatestRelease("AUTOMATIC1111", "stable-diffusion-webui");
+        var downloadUrl = $"https://api.github.com/repos/AUTOMATIC1111/stable-diffusion-webui/zipball/{latestRelease.TagName}";
+
+        if (!Directory.Exists(DownloadLocation.Replace($"{Name}.zip", "")))
+        {
+            Directory.CreateDirectory(DownloadLocation.Replace($"{Name}.zip", ""));
+        }
+        
+        using var client = new HttpClient {Timeout = TimeSpan.FromMinutes(5)};
+        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("StabilityMatrix", "1.0"));
+        await using var file = new FileStream(DownloadLocation, FileMode.Create, FileAccess.Write, FileShare.None);
+        using var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
+        var length = response.Content.Headers.ContentLength;
+
+        await using var stream = await response.Content.ReadAsStreamAsync();
+        var totalBytesRead = 0;
+        while (true)
+        {
+            var buffer = new byte[1024];
+            var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+            if (bytesRead == 0) break;
+            await file.WriteAsync(buffer, 0, bytesRead);
+            
+            totalBytesRead += bytesRead;
+
+            var progress = (int) (totalBytesRead * 100d / length);
+            Debug.WriteLine($"Progress; {progress}");
+            OnDownloadProgressChanged(progress);
+        }
+
+        await file.FlushAsync();
+        OnDownloadComplete(DownloadLocation);
+    }
+
     public string CommandLineArgs => $"{GetVramOption()} {GetXformersOption()}";
     
     private static string GetVramOption()

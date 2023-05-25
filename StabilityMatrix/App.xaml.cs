@@ -1,5 +1,7 @@
 ﻿using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using Refit;
+using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;
@@ -21,9 +23,11 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<SettingsPage>();
             serviceCollection.AddTransient<LaunchPage>();
             serviceCollection.AddTransient<InstallPage>();
+            serviceCollection.AddTransient<MainWindowViewModel>();
             serviceCollection.AddSingleton<SettingsViewModel>();
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
+            serviceCollection.AddRefitClient<IGithubApi>();
 
             var provider = serviceCollection.BuildServiceProvider();
             var window = provider.GetRequiredService<MainWindow>();

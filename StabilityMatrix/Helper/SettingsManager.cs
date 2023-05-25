@@ -28,6 +28,8 @@ public class SettingsManager : ISettingsManager
         }
         
         LoadSettings();
+        
+        
     }
     
     public void SetTheme(string theme)

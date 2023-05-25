@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Windows;
-using StabilityMatrix.Helper;
-using Wpf.Ui.Appearance;
+using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.Navigation;
 using Wpf.Ui.Controls.Window;
@@ -16,15 +15,20 @@ namespace StabilityMatrix
         private readonly IPageService pageService;
         private readonly ISettingsManager settingsManager;
         private readonly IContentDialogService contentDialogService;
+        private readonly MainWindowViewModel mainWindowViewModel;
 
-        public MainWindow(IPageService pageService, ISettingsManager settingsManager, IContentDialogService contentDialogService)
+        public MainWindow(IPageService pageService, ISettingsManager settingsManager, 
+            IContentDialogService contentDialogService, MainWindowViewModel mainWindowViewModel)
         {
             InitializeComponent();
 
             this.pageService = pageService;
             this.settingsManager = settingsManager;
             this.contentDialogService = contentDialogService;
+            this.mainWindowViewModel = mainWindowViewModel;
 
+            DataContext = mainWindowViewModel;
+            
             RootNavigation.Navigating += (_, _) => Debug.WriteLine("Navigating");
             RootNavigation.SetPageService(pageService);
             
@@ -33,22 +37,9 @@ namespace StabilityMatrix
 
         private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
         {
-            SetTheme();
             RootNavigation.Navigate(typeof(LaunchPage));
+            mainWindowViewModel.OnLoaded();
         }
-
-        private void SetTheme()
-        {
-            var theme = settingsManager.Settings.Theme;
-            switch (theme)
-            {
-                case "Dark":
-                    Theme.Apply(ThemeType.Dark);
-                    break;
-                case "Light":
-                    Theme.Apply(ThemeType.Light);
-                    break;
-            }
-        }
+        
     }
 }

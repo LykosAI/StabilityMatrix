@@ -1,6 +1,10 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Net;
+using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Helper;
@@ -82,5 +86,7 @@ public partial class SettingsViewModel : ObservableObject
             ? "Dark"
             : settingsManager.Settings.Theme;
         GitInfo = await ProcessRunner.GetProcessOutputAsync("git", "--version");
+        
+        TestProperty = $"{SystemParameters.PrimaryScreenHeight} x {SystemParameters.PrimaryScreenWidth}";
     }
 }

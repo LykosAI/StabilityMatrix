@@ -1,5 +1,4 @@
 using System.Windows;
-using System.Windows.Controls;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Controls.Navigation;
 

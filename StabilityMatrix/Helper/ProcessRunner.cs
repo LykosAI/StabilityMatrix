@@ -37,7 +37,11 @@ public static class ProcessRunner
         }
 
         process.Start();
-        process.BeginOutputReadLine();
+
+        if (outputDataReceived != null)
+        {
+            process.BeginOutputReadLine();
+        }
 
         return process;
     }

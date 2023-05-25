@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
-
 <Page
     x:Class="StabilityMatrix.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -12,13 +10,11 @@
     xmlns:models="using:StabilityMatrix.Models"
     d:DesignHeight="700"
     d:DesignWidth="1100"
+    Loaded="SettingsPage_OnLoaded"
     Background="{DynamicResource ApplicationBackgroundBrush}"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d">
-
-    <Page.DataContext>
-        <viewModels:SettingsViewModel />
-    </Page.DataContext>
+    
     <Grid>
         <StackPanel Orientation="Vertical">
             <ui:Card Margin="8,16,8,8">
@@ -34,18 +30,16 @@
 
             <ui:Card Margin="8">
                 <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
-                    <TextBlock Text="Some Other Setting" FontWeight="Bold" FontSize="16" Margin="0,8" />
-                    <ComboBox
-                        Margin="8"
-                        ItemsSource="{Binding AvailableThemes}"
-                        SelectedItem="{Binding SelectedTheme, Mode=TwoWay}"
-                        Width="500" />
+                    <TextBlock Text="Debug Info" FontWeight="Bold" FontSize="16" Margin="0,8" />
+                    <TextBlock Margin="8" Text="{Binding GpuInfo, FallbackValue=3dfx Voodoo 5 6000 - 128MB VRAM}"/>
+                    <TextBlock Margin="8" Text="{Binding GitInfo}"/>
+                    <TextBlock Margin="8" Text="{Binding TestProperty, FallbackValue=TestProperty}"/>
                 </StackPanel>
             </ui:Card>
 
             <ui:Card Margin="8">
                 <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
-                    <TextBlock Text="Some Other Other Setting" FontWeight="Bold" FontSize="16" Margin="0,8" />
+                    <TextBlock Text="Some Other Setting" FontWeight="Bold" FontSize="16" Margin="0,8" />
                     <ComboBox
                         Margin="8"
                         ItemsSource="{Binding AvailableThemes}"

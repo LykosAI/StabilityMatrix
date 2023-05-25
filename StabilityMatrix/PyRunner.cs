@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NLog;
 using Python.Runtime;
+using StabilityMatrix.Exceptions;
 using StabilityMatrix.Helper;
 
 namespace StabilityMatrix;
@@ -34,7 +35,7 @@ internal static class PyRunner
     /// Initializes the Python runtime using the embedded dll.
     /// Can be called with no effect after initialization.
     /// </summary>
-    /// <exception cref="FileNotFoundException"></exception>
+    /// <exception cref="FileNotFoundException">Thrown if Python DLL not found.</exception>
     public static async Task Initialize()
     {
         if (PythonEngine.IsInitialized) return;
@@ -66,16 +67,8 @@ internal static class PyRunner
     /// </summary>
     public static async Task SetupPip()
     {
-        var pythonProc = ProcessRunner.StartProcess(ExePath, GetPipPath);
-        await pythonProc.WaitForExitAsync();
-        // Check return code
-        var returnCode = pythonProc.ExitCode;
-        if (returnCode != 0)
-        {
-            var output = pythonProc.StandardOutput.ReadToEnd();
-            Debug.WriteLine($"Error in get-pip.py: {output}");
-            throw new InvalidOperationException($"Running get-pip.py failed with code {returnCode}: {output}");
-        }
+        var p = ProcessRunner.StartProcess(ExePath, GetPipPath);
+        await ProcessRunner.WaitForExitConditionAsync(p);
     }
     
     /// <summary>
@@ -83,15 +76,8 @@ internal static class PyRunner
     /// </summary>
     public static async Task InstallPackage(string package)
     {
-        var pipProc = ProcessRunner.StartProcess(PipExePath, $"install {package}");
-        await pipProc.WaitForExitAsync();
-        // Check return code
-        var returnCode = pipProc.ExitCode;
-        if (returnCode != 0)
-        {
-            var output = await pipProc.StandardOutput.ReadToEndAsync(); 
-            throw new InvalidOperationException($"Pip install failed with code {returnCode}: {output}");
-        }
+        var p = ProcessRunner.StartProcess(PipExePath, $"install {package}");
+        await ProcessRunner.WaitForExitConditionAsync(p);
     }
     
     /// <summary>

@@ -5,11 +5,58 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       xmlns:local="clr-namespace:StabilityMatrix"
+      xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
+      xmlns:models="clr-namespace:StabilityMatrix.Models"
       Background="{DynamicResource ApplicationBackgroundBrush}"
       Foreground="{DynamicResource TextFillColorPrimaryBrush}"
       mc:Ignorable="d"
       Title="LaunchPage" d:DesignHeight="700" d:DesignWidth="1100">
+    
     <Grid>
-        <ui:Button x:Name="LaunchButton" Content="Launch" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <ui:Button
+                x:Name="LaunchButton"
+                Grid.Row="0"
+                Content="Launch"
+                Command="{Binding LaunchCommand}"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Stretch"
+                Margin="10,10,0,0"/>
+            <ComboBox
+                x:Name="SelectPackageComboBox"
+                ItemsSource="{Binding Packages}"
+                SelectedValue="{Binding SelectedPackage}"
+                Grid.Row="0" Grid.Column="1"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Top"
+                Margin="10,10,10,0">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type models:InstalledPackage}">
+                        <StackPanel VerticalAlignment="Top" Margin="10,0,0,0">
+                            <TextBlock Text="{Binding Name}" Margin="0,5,0,5" />
+                            <TextBlock Text="{Binding Path}" Margin="0,0,0,5" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </Grid>
+        
+        <TextBlock Grid.Row="1" 
+                   Name="OutputBlock"
+                   Margin="10,10,10,10"
+                   Text="{Binding ConsoleOutput, Mode=OneWay}"
+                   FontFamily="Consolas"
+                   Background="{DynamicResource ControlFillColorDisabledBrush}"
+                   HorizontalAlignment="Stretch"
+                   VerticalAlignment="Stretch"/>
     </Grid>
 </Page>

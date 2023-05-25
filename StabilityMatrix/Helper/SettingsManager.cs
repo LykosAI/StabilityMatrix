@@ -37,6 +37,25 @@ public class SettingsManager : ISettingsManager
         Settings.Theme = theme;
         SaveSettings();
     }
+    
+    public void AddInstalledPackage(InstalledPackage p) 
+    {
+        Settings.InstalledPackages.Add(p);
+        SaveSettings();
+    }
+    
+    public void SetActiveInstalledPackage(InstalledPackage? p) 
+    {
+        if (p == null)
+        {
+            Settings.ActiveInstalledPackage = null;
+        }
+        else
+        {
+            Settings.ActiveInstalledPackage = p.Id;
+        }
+        SaveSettings();
+    }
 
     private void LoadSettings()
     {

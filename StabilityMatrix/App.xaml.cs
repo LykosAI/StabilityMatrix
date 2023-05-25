@@ -27,6 +27,7 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<InstallPage>();
             serviceCollection.AddTransient<MainWindowViewModel>();
             serviceCollection.AddSingleton<SettingsViewModel>();
+            serviceCollection.AddSingleton<LaunchViewModel>();
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
             serviceCollection.AddRefitClient<IGithubApi>();

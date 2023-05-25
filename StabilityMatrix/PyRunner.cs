@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -114,8 +115,8 @@ internal static class PyRunner
             {
                 using (Py.GIL())
                 {
-                    dynamic result = PythonEngine.Eval(code);
-                    return result.ToString();
+                    var result = PythonEngine.Eval(code);
+                    return result.ToString(CultureInfo.InvariantCulture);
                 }
             });
         }

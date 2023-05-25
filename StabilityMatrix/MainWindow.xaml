@@ -54,6 +54,6 @@
             </ui:NavigationView.FooterMenuItems>
         </ui:NavigationView>
         
-        <ContentPresenter x:Name="RootContentDialog" Grid.Row="0" />
+        <ContentPresenter x:Name="RootContentDialog" Grid.Row="1" />
     </Grid>
 </ui:FluentWindow>

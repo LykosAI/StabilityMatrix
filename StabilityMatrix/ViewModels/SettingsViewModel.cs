@@ -1,8 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Net;
-using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -10,7 +6,6 @@ using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Helper;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Contracts;
-using Wpf.Ui.Controls.ContentDialogControl;
 
 namespace StabilityMatrix.ViewModels;
 

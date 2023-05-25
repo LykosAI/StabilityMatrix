@@ -9,8 +9,11 @@ using StabilityMatrix.Helper;
 
 namespace StabilityMatrix;
 
+internal record struct PyVersionInfo(int Major, int Minor, int Micro, string ReleaseLevel, int Serial);
+
 internal static class PyRunner
 {
+    private const string 
     private const string RelativeDllPath = @"Assets\Python310\python310.dll";
     private const string RelativeExePath = @"Assets\Python310\python.exe";
     private const string RelativePipExePath = @"Assets\Python310\Scripts\pip.exe";
@@ -25,6 +28,11 @@ internal static class PyRunner
 
     private static readonly SemaphoreSlim PyRunning = new(1, 1);
 
+    /// <summary>
+    /// Initializes the Python runtime using the embedded dll.
+    /// Can be called with no effect after initialization.
+    /// </summary>
+    /// <exception cref="FileNotFoundException"></exception>
     public static async Task Initialize()
     {
         if (PythonEngine.IsInitialized) return;
@@ -35,11 +43,18 @@ internal static class PyRunner
             throw new FileNotFoundException("Python DLL not found", DllPath);
         }
         Runtime.PythonDLL = DllPath;
-
         PythonEngine.Initialize();
         PythonEngine.BeginAllowThreads();
         
-        await RedirectPythonOutput();
+        // Redirect stdout and stderr
+        StdOutStream = new PyIOStream();
+        StdErrStream = new PyIOStream();
+        await RunInThreadWithLock(() =>
+        {
+            dynamic sys = Py.Import("sys");
+            sys.stdout = StdOutStream;
+            sys.stderr = StdErrStream;
+        });
     }
 
     /// <summary>
@@ -76,24 +91,26 @@ internal static class PyRunner
         }
     }
     
-    // Redirect Python output
-    private static async Task RedirectPythonOutput()
+    /// <summary>
+    /// Run a Function with PyRunning lock as a Task with GIL.
+    /// </summary>
+    /// <param name="func">Function to run.</param>
+    /// <param name="waitTimeout">Time limit for waiting on PyRunning lock.</param>
+    /// <param name="cancelToken">Cancellation token.</param>
+    /// <exception cref="OperationCanceledException">cancelToken was canceled, or waitTimeout expired.</exception>
+    private static async Task<T> RunInThreadWithLock<T>(Func<T> func, TimeSpan? waitTimeout = null, CancellationToken cancelToken = default)
     {
-        StdOutStream = new PyIOStream();
-        StdErrStream = new PyIOStream();
-
-        await PyRunning.WaitAsync();
+        // Wait to acquire PyRunning lock
+        await PyRunning.WaitAsync(cancelToken).ConfigureAwait(false);
         try
         {
-            await Task.Run(() =>
+            return await Task.Run(() =>
             {
                 using (Py.GIL())
                 {
-                    dynamic sys = Py.Import("sys");
-                    sys.stdout = StdOutStream;
-                    sys.stderr = StdErrStream;
+                    return func();
                 }
-            });
+            }, cancelToken);
         }
         finally
         {
@@ -102,11 +119,46 @@ internal static class PyRunner
     }
     
     /// <summary>
+    /// Run an Action with PyRunning lock as a Task with GIL.
+    /// </summary>
+    /// <param name="action">Action to run.</param>
+    /// <param name="waitTimeout">Time limit for waiting on PyRunning lock.</param>
+    /// <param name="cancelToken">Cancellation token.</param>
+    /// <exception cref="OperationCanceledException">cancelToken was canceled, or waitTimeout expired.</exception>
+    private static async Task RunInThreadWithLock(Action action, TimeSpan? waitTimeout = null, CancellationToken cancelToken = default)
+    {
+        // Wait to acquire PyRunning lock
+        await PyRunning.WaitAsync(cancelToken).ConfigureAwait(false);
+        try
+        {
+            await Task.Run(() =>
+            {
+                using (Py.GIL())
+                {
+                    action();
+                }
+            }, cancelToken);
+        }
+        finally
+        {
+            PyRunning.Release();
+        }
+    }
+
+    /// <summary>
     /// Evaluate Python expression and return its value as a string
     /// </summary>
-    /// <param name="code"></param>
-    /// <returns></returns>
-    public static async Task<string> Eval(string code)
+    /// <param name="expression"></param>
+    public static async Task<string> Eval(string expression)
+    {
+        return await Eval<string>(expression);
+    }
+    
+    /// <summary>
+    /// Evaluate Python expression and return its value
+    /// </summary>
+    /// <param name="expression"></param>
+    public static async Task<T> Eval<T>(string expression)
     {
         await PyRunning.WaitAsync();
         try
@@ -115,8 +167,8 @@ internal static class PyRunner
             {
                 using (Py.GIL())
                 {
-                    var result = PythonEngine.Eval(code);
-                    return result.ToString(CultureInfo.InvariantCulture);
+                    var result = PythonEngine.Eval(expression);
+                    return result.As<T>();
                 }
             });
         }

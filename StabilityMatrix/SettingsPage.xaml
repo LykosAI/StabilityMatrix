@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <Page
     x:Class="StabilityMatrix.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -7,24 +8,51 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:models="using:StabilityMatrix.Models"
-    mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    
-    <Page.DataContext>
-        <viewModels:SettingsViewModel/>
-    </Page.DataContext>
+    d:DesignHeight="700"
+    d:DesignWidth="1100"
+    Background="{DynamicResource ApplicationBackgroundBrush}"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    mc:Ignorable="d">
 
-    <ScrollViewer Margin="20">
-        <!-- TODO: Fix this with new UI Framework -->
-        <!-- <StackPanel Spacing="3"> -->
-        <!--     <labs:SettingsCard x:Name="SettingsCard" -->
-        <!--                        Header="Choose UI Theme"> -->
-        <!--         <ComboBox -->
-        <!--             ItemsSource="{Binding AvailableThemes}" -->
-        <!--             SelectedItem="{Binding SelectedTheme, Mode=TwoWay}" -->
-        <!--             Header="Theme" Width="200"/> -->
-        <!--     </labs:SettingsCard> -->
-        <!-- </StackPanel> -->
-    </ScrollViewer>
+    <Page.DataContext>
+        <viewModels:SettingsViewModel />
+    </Page.DataContext>
+    <Grid>
+        <StackPanel Orientation="Vertical">
+            <ui:Card Margin="8,16,8,8">
+                <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
+                    <TextBlock Text="Theme" FontWeight="Bold" FontSize="16" Margin="0,8" />
+                    <ComboBox
+                        Margin="8"
+                        ItemsSource="{Binding AvailableThemes}"
+                        SelectedItem="{Binding SelectedTheme, Mode=TwoWay}"
+                        Width="500" />
+                </StackPanel>
+            </ui:Card>
+
+            <ui:Card Margin="8">
+                <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
+                    <TextBlock Text="Some Other Setting" FontWeight="Bold" FontSize="16" Margin="0,8" />
+                    <ComboBox
+                        Margin="8"
+                        ItemsSource="{Binding AvailableThemes}"
+                        SelectedItem="{Binding SelectedTheme, Mode=TwoWay}"
+                        Width="500" />
+                </StackPanel>
+            </ui:Card>
+
+            <ui:Card Margin="8">
+                <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
+                    <TextBlock Text="Some Other Other Setting" FontWeight="Bold" FontSize="16" Margin="0,8" />
+                    <ComboBox
+                        Margin="8"
+                        ItemsSource="{Binding AvailableThemes}"
+                        SelectedItem="{Binding SelectedTheme, Mode=TwoWay}"
+                        Width="500" />
+                </StackPanel>
+            </ui:Card>
+        </StackPanel>
+    </Grid>
 </Page>

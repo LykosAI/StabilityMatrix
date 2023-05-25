@@ -18,9 +18,9 @@ namespace StabilityMatrix
             DataContext = new InstallerViewModel();
         }
 
-        private void InstallPage_OnLoaded(object sender, RoutedEventArgs e)
+        private async void InstallPage_OnLoaded(object sender, RoutedEventArgs e)
         {
-            ((InstallerViewModel) DataContext).OnLoaded(); 
+            await ((InstallerViewModel) DataContext).OnLoaded(); 
         }
     }
 }

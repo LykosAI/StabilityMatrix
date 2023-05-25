@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
 using System.Net.Mime;
@@ -59,11 +60,27 @@ public partial class LaunchViewModel : ObservableObject
         }
     }
 
-    public RelayCommand LaunchCommand => new(() =>
+    public AsyncRelayCommand LaunchCommand => new(async () =>
     {
+        // Clear console
         ConsoleOutput = "";
         
-        var venv = new PyVenvRunner(@"L:\Image ML\stable-diffusion-webui\venv");
+        if (SelectedPackage == null)
+        {
+            ConsoleOutput = "No package selected";
+            return;
+        }
+        
+        // Get path from package
+        var packagePath = SelectedPackage.Path;
+        var venvPath = Path.Combine(packagePath, "venv");
+        
+        // Setup venv
+        var venv = new PyVenvRunner(venvPath);
+        if (!venv.Exists())
+        {
+            await venv.Setup();
+        }
         
         var onConsoleOutput = new Action<string?>(s =>
         {
@@ -84,10 +101,9 @@ public partial class LaunchViewModel : ObservableObject
             });
         });
 
-        const string arg = "\"" + @"L:\Image ML\stable-diffusion-webui\launch.py" + "\"";
-        // const string arg = "-c \"import sys; print(sys.version_info)\"";
-        
-        venv.RunDetached(arg, onConsoleOutput, onExit);
+        var args = "\"" + Path.Combine(packagePath, "launch.py") + "\"";
+
+        venv.RunDetached(args, onConsoleOutput, onExit);
     });
 
     public void OnLoaded()

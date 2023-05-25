@@ -66,7 +66,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         // Get python version
         await PyRunner.Initialize();
-        var result = await PyRunner.Eval("str(__import__('sys').version_info)");
+        var result = await PyRunner.GetVersionInfo();
         // Show dialog box
         var dialog = contentDialogService.CreateDialog();
         dialog.Title = "Python version info";

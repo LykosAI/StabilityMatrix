@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -166,5 +167,24 @@ internal static class PyRunner
         {
             PythonEngine.Exec(code);
         });
+    }
+
+    /// <summary>
+    /// Return the Python version as a PyVersionInfo struct
+    /// </summary>
+    public static async Task<PyVersionInfo> GetVersionInfo()
+    {
+        var version = await RunInThreadWithLock(() =>
+        {
+            dynamic info = PythonEngine.Eval("tuple(__import__('sys').version_info)");
+            return new PyVersionInfo(
+                info[0].As<int>(),
+                info[1].As<int>(),
+                info[2].As<int>(),
+                info[3].As<string>(),
+                info[4].As<int>()
+            );
+        });
+        return version;
     }
 }

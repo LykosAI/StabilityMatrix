@@ -1,5 +1,7 @@
 ﻿using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using Refit;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
@@ -28,6 +30,13 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
             serviceCollection.AddRefitClient<IGithubApi>();
+
+            serviceCollection.AddLogging(log =>
+            {
+                log.ClearProviders();
+                log.SetMinimumLevel(LogLevel.Trace);
+                log.AddNLog();
+            });
 
             var provider = serviceCollection.BuildServiceProvider();
             var window = provider.GetRequiredService<MainWindow>();

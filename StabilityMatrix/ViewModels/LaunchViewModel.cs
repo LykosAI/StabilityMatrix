@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Mime;
 using System.Threading.Tasks;
 using System.Windows.Threading;
@@ -43,12 +44,7 @@ public partial class LaunchViewModel : ObservableObject
     public LaunchViewModel(ISettingsManager settingsManager)
     {
         this.settingsManager = settingsManager;
-        var packages = settingsManager.Settings.InstalledPackages;
-        foreach (var package in packages)
-        {
-            Packages.Add(package);
-        }
-        
+        LoadPackages();
     }
     
     public RelayCommand LaunchCommand => new(() =>
@@ -63,7 +59,7 @@ public partial class LaunchViewModel : ObservableObject
             Dispatcher.CurrentDispatcher.Invoke(() =>
             {
                 Debug.WriteLine($"process stdout: {s}");
-                return ConsoleOutput += s + "\n";
+                ConsoleOutput += s + "\n";
             });
         });
         
@@ -72,7 +68,7 @@ public partial class LaunchViewModel : ObservableObject
             Dispatcher.CurrentDispatcher.Invoke(() =>
             {
                 Debug.WriteLine($"Venv process exited with code {i}");
-                return ConsoleOutput += $"Venv process exited with code {i}";
+                ConsoleOutput += $"Venv process exited with code {i}";
             });
         });
 
@@ -81,4 +77,23 @@ public partial class LaunchViewModel : ObservableObject
         
         venv.RunDetached(arg, onConsoleOutput, onExit);
     });
+
+    public void OnLoaded()
+    {
+        LoadPackages();
+    }
+
+    private void LoadPackages()
+    {
+        var packages = settingsManager.Settings.InstalledPackages;
+        if (!packages.Any())
+        {
+            return;
+        }
+        
+        foreach (var package in packages)
+        {
+            Packages.Add(package);
+        }
+    }
 }

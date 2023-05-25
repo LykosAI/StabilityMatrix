@@ -9,6 +9,7 @@
       xmlns:models="clr-namespace:StabilityMatrix.Models"
       Background="{DynamicResource ApplicationBackgroundBrush}"
       Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+      Loaded="LaunchPage_OnLoaded"
       mc:Ignorable="d"
       Title="LaunchPage" d:DesignHeight="700" d:DesignWidth="1100">
     

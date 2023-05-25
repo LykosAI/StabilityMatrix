@@ -4,6 +4,7 @@ using StabilityMatrix.Helper;
 using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
+using Wpf.Ui.Services;
 
 namespace StabilityMatrix
 {
@@ -21,6 +22,7 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<LaunchPage>();
             serviceCollection.AddTransient<InstallPage>();
             serviceCollection.AddSingleton<SettingsViewModel>();
+            serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
 
             var provider = serviceCollection.BuildServiceProvider();

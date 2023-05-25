@@ -3,6 +3,7 @@ using System.Windows;
 using StabilityMatrix.Helper;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Contracts;
+using Wpf.Ui.Controls.Navigation;
 using Wpf.Ui.Controls.Window;
 
 namespace StabilityMatrix
@@ -14,16 +15,20 @@ namespace StabilityMatrix
     {
         private readonly IPageService pageService;
         private readonly ISettingsManager settingsManager;
+        private readonly IContentDialogService contentDialogService;
 
-        public MainWindow(IPageService pageService, ISettingsManager settingsManager)
+        public MainWindow(IPageService pageService, ISettingsManager settingsManager, IContentDialogService contentDialogService)
         {
             InitializeComponent();
 
             this.pageService = pageService;
             this.settingsManager = settingsManager;
+            this.contentDialogService = contentDialogService;
 
             RootNavigation.Navigating += (_, _) => Debug.WriteLine("Navigating");
             RootNavigation.SetPageService(pageService);
+            
+            contentDialogService.SetContentPresenter(RootContentDialog);
         }
 
         private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)

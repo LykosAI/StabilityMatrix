@@ -60,5 +60,6 @@
                     Command="{Binding GoAdvancedModeCommand}"
                     VerticalAlignment="Bottom" Margin="16" FontSize="14"/>
         </Grid>
+        <ContentPresenter x:Name="RootContentDialog" Grid.Row="1" />
     </Grid>
 </ui:FluentWindow>

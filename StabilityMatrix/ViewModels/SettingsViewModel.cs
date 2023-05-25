@@ -1,12 +1,16 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Helper;
 using Wpf.Ui.Appearance;
+using Wpf.Ui.Contracts;
+using Wpf.Ui.Controls.ContentDialogControl;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -21,10 +25,12 @@ public partial class SettingsViewModel : ObservableObject
         "System",
     };
     private string selectedTheme;
+    private readonly IContentDialogService contentDialogService;
     
-    public SettingsViewModel(ISettingsManager settingsManager)
+    public SettingsViewModel(ISettingsManager settingsManager, IContentDialogService contentDialogService)
     {
         this.settingsManager = settingsManager;
+        this.contentDialogService = contentDialogService;
         SelectedTheme = settingsManager.Settings.Theme;
     }
 
@@ -60,6 +66,19 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty] 
     public string testProperty;
+    
+    public AsyncRelayCommand PythonVersionCommand => new(async () =>
+    {
+        // Get python version
+        await PyRunner.Initialize();
+        var result = await PyRunner.Eval("str(__import__('sys').version_info)");
+        // Show dialog box
+        var dialog = contentDialogService.CreateDialog();
+        dialog.Title = "Python version info";
+        dialog.Content = result;
+        dialog.PrimaryButtonText = "Ok";
+        await dialog.ShowAsync();
+    });
 
     public async Task OnLoaded()
     {

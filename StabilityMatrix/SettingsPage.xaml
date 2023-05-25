@@ -36,6 +36,14 @@
                     <TextBlock Margin="8" Text="{Binding TestProperty, FallbackValue=TestProperty}"/>
                 </StackPanel>
             </ui:Card>
+            
+            <ui:Card Margin="8">
+                <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
+                    <TextBlock Text="Embedded Python" FontWeight="Bold" FontSize="16" Margin="0,8" />
+                    <!-- Add a button to show messagebox for python version -->
+                    <Button Margin="8" Content="Check Version Info" Command="{Binding PythonVersionCommand}"/>
+                </StackPanel>
+            </ui:Card>
 
             <ui:Card Margin="8">
                 <StackPanel Orientation="Vertical" HorizontalAlignment="Left">

@@ -23,8 +23,8 @@ internal static class PyRunner
     public static string PipExePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativePipExePath);
     public static string GetPipPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeGetPipPath);
 
-    public static PyIOStream StdOutStream;
-    public static PyIOStream StdErrStream;
+    public static PyIOStream? StdOutStream;
+    public static PyIOStream? StdErrStream;
 
     private static readonly SemaphoreSlim PyRunning = new(1, 1);
 
@@ -158,46 +158,24 @@ internal static class PyRunner
     /// Evaluate Python expression and return its value
     /// </summary>
     /// <param name="expression"></param>
-    public static async Task<T> Eval<T>(string expression)
+    public static Task<T> Eval<T>(string expression)
     {
-        await PyRunning.WaitAsync();
-        try
+        return RunInThreadWithLock(() =>
         {
-            return await Task.Run(() =>
-            {
-                using (Py.GIL())
-                {
-                    var result = PythonEngine.Eval(expression);
-                    return result.As<T>();
-                }
-            });
-        }
-        finally
-        {
-            PyRunning.Release();
-        }
+            var result = PythonEngine.Eval(expression);
+            return result.As<T>();
+        });
     }
     
     /// <summary>
     /// Execute Python code without returning a value
     /// </summary>
     /// <param name="code"></param>
-    public static async Task Exec(string code)
+    public static Task Exec(string code)
     {
-        await PyRunning.WaitAsync();
-        try
+        return RunInThreadWithLock(() =>
         {
-            await Task.Run(() =>
-            {
-                using (Py.GIL())
-                {
-                    PythonEngine.Exec(code);
-                }
-            });
-        }
-        finally
-        {
-            PyRunning.Release();
-        }
+            PythonEngine.Exec(code);
+        });
     }
 }

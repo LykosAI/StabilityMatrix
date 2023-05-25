@@ -83,7 +83,7 @@ internal class InstallerViewModel : INotifyPropertyChanged
 
     public Visibility ProgressBarVisibility => ProgressValue > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-    public RelayCommand InstallCommand => new(() => Debug.WriteLine(SelectedPackage.GithubUrl));
+    public AsyncRelayCommand InstallCommand => new(async () => Debug.WriteLine(SelectedPackage.GithubUrl));
     private async Task<bool> InstallGitIfNecessary()
     {
         var gitOutput = await ProcessRunner.GetProcessOutputAsync("git", "--version");
@@ -95,6 +95,10 @@ internal class InstallerViewModel : INotifyPropertyChanged
         IsIndeterminate = true;
         InstalledText = "Installing Git...";
         using var installProcess = ProcessRunner.StartProcess("Assets\\Git-2.40.1-64-bit.exe", "/VERYSILENT /NORESTART");
+        installProcess.OutputDataReceived += (sender, args) =>
+        {
+            Debug.Write(args.Data);
+        };
         await installProcess.WaitForExitAsync();
         IsIndeterminate = false;
 

@@ -24,7 +24,7 @@
             </ui:TitleBar.Header>
         </ui:TitleBar>
         
-        <ui:NavigationView 
+        <ui:NavigationView
             Grid.Row="1" x:Name="RootNavigation" 
             IsBackButtonVisible="Collapsed">
             <ui:NavigationView.Header>

@@ -1,12 +1,15 @@
 ﻿using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
+using StabilityMatrix.Helper;
 using Wpf.Ui.Appearance;
 
 namespace StabilityMatrix.ViewModels;
 
-internal class SettingsViewModel : INotifyPropertyChanged
+public partial class SettingsViewModel : ObservableObject
 {
+    private readonly ISettingsManager settingsManager;
+
     public ObservableCollection<string> AvailableThemes => new()
     {
         "Light",
@@ -15,6 +18,12 @@ internal class SettingsViewModel : INotifyPropertyChanged
     };
     private string selectedTheme;
     
+    public SettingsViewModel(ISettingsManager settingsManager)
+    {
+        this.settingsManager = settingsManager;
+        SelectedTheme = settingsManager.Settings.Theme;
+    }
+
     public string SelectedTheme
     {
         get => selectedTheme;
@@ -33,18 +42,26 @@ internal class SettingsViewModel : INotifyPropertyChanged
                     Theme.Apply(ThemeType.Dark);
                     break;
             }
+
+            settingsManager.SetTheme(selectedTheme);
         }
     }
+    
+    [ObservableProperty]
+    public string gpuInfo =
+        $"{HardwareHelper.GetGpuChipName()} ({HardwareHelper.GetGpuMemoryBytes() / 1024 / 1024 / 1024} GB)";
 
-    public SettingsViewModel()
+    [ObservableProperty]
+    public string gitInfo;
+
+    [ObservableProperty] 
+    public string testProperty;
+
+    public async Task OnLoaded()
     {
-        SelectedTheme = "System";
-    }
-
-    public event PropertyChangedEventHandler PropertyChanged;
-
-    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        SelectedTheme = string.IsNullOrWhiteSpace(settingsManager.Settings.Theme)
+            ? "Dark"
+            : settingsManager.Settings.Theme;
+        GitInfo = await ProcessRunner.GetProcessOutputAsync("git", "--version");
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
+using StabilityMatrix.Helper;
 
 namespace StabilityMatrix;
 
@@ -10,31 +10,29 @@ namespace StabilityMatrix;
 /// </summary>
 public class PyVenvRunner: IDisposable
 {
+    /// <summary>
+    /// The process running the python executable.
+    /// </summary>
     public Process? Process { get; private set; }
-    private ProcessStartInfo StartInfo => new()
-    {
-        FileName = PythonPath,
-        UseShellExecute = false,
-        RedirectStandardOutput = true,
-        CreateNoWindow = true
-    };
+    
+    /// <summary>
+    /// The path to the venv root directory.
+    /// </summary>
     public string RootPath { get; private set; }
     
-    public event EventHandler<string> OnStdoutUpdate;
-
-    public PyVenvRunner(string path)
-    {
-        RootPath = path;
-        OnStdoutUpdate += (_, _) => { };
-    }
-    
-    // Whether the activate script exists
-    public bool Exists() => System.IO.File.Exists(RootPath + "Scripts/activate");
     
     /// <summary>
     /// The path to the python executable.
     /// </summary>
     public string PythonPath => RootPath + @"\Scripts\python.exe";
+
+    public PyVenvRunner(string path)
+    {
+        RootPath = path;
+    }
+
+    // Whether the activate script exists
+    public bool Exists() => System.IO.File.Exists(PythonPath);
 
     /// <summary>
     /// Configures the venv at path.
@@ -52,35 +50,29 @@ public class PyVenvRunner: IDisposable
             System.IO.Directory.CreateDirectory(RootPath);
         }
 
-        await PyRunner.Exec(@"
-import venv
-venv.EnvBuilder(with_pip=True).create(r""" + RootPath + @""")
-        ");
-    }
-
-    public void RunDetached(string arguments)
-    {
-        this.Process = new Process();
-        Process.StartInfo = StartInfo;
-        Process.StartInfo.Arguments = arguments;
-        
-        // Bind output data event
-        Process.OutputDataReceived += OnProcessOutputReceived;
-        
-        // Start the process
-        Process.Start();
-        Process.BeginOutputReadLine();
-    }
-
-    /// <summary>
-    /// Called on process output data.
-    /// </summary>
-    private void OnProcessOutputReceived(object sender, DataReceivedEventArgs e)
-    {
-        var data = e.Data;
-        if (!string.IsNullOrEmpty(data))
+        // Create venv
+        var venvProc = ProcessRunner.StartProcess(PyRunner.ExePath, "-m virtualenv " + RootPath);
+        await venvProc.WaitForExitAsync();
+        // Check return code
+        var returnCode = venvProc.ExitCode;
+        if (returnCode != 0)
         {
-            OnStdoutUpdate?.Invoke(this, data);
+           var output = await venvProc.StandardOutput.ReadToEndAsync(); 
+           throw new InvalidOperationException($"Venv creation failed with code {returnCode}: {output}");
+        }
+    }
+
+    public void RunDetached(string arguments, Action<string?> outputDataReceived, Action<int>? onExit = null)
+    {
+        if (!Exists())
+        {
+            throw new InvalidOperationException("Venv python process does not exist");
+        }
+        Debug.WriteLine($"Launching RunDetached at {PythonPath} with args {arguments}");
+        Process = ProcessRunner.StartProcess(PythonPath, arguments, outputDataReceived);
+        if (onExit != null)
+        {
+            Process.Exited += (_, _) => onExit(Process.ExitCode);
         }
     }
 

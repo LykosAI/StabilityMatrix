@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Windows;
-using StabilityMatrix.Helper;
-using Wpf.Ui.Appearance;
+using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.Window;
 
@@ -12,38 +11,25 @@ namespace StabilityMatrix
     /// </summary>
     public partial class MainWindow : FluentWindow
     {
-        private readonly IPageService pageService;
-        private readonly ISettingsManager settingsManager;
+        private readonly MainWindowViewModel mainWindowViewModel;
 
-        public MainWindow(IPageService pageService, ISettingsManager settingsManager)
+        public MainWindow(IPageService pageService, MainWindowViewModel mainWindowViewModel)
         {
             InitializeComponent();
 
-            this.pageService = pageService;
-            this.settingsManager = settingsManager;
+            this.mainWindowViewModel = mainWindowViewModel;
 
+            DataContext = mainWindowViewModel;
+            
             RootNavigation.Navigating += (_, _) => Debug.WriteLine("Navigating");
             RootNavigation.SetPageService(pageService);
         }
 
         private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
         {
-            SetTheme();
             RootNavigation.Navigate(typeof(LaunchPage));
+            mainWindowViewModel.OnLoaded();
         }
-
-        private void SetTheme()
-        {
-            var theme = settingsManager.Settings.Theme;
-            switch (theme)
-            {
-                case "Dark":
-                    Theme.Apply(ThemeType.Dark);
-                    break;
-                case "Light":
-                    Theme.Apply(ThemeType.Light);
-                    break;
-            }
-        }
+        
     }
 }

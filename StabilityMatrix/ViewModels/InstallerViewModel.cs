@@ -83,7 +83,7 @@ internal class InstallerViewModel : INotifyPropertyChanged
 
     public Visibility ProgressBarVisibility => ProgressValue > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-    public AsyncRelayCommand InstallCommand => new(async () => Debug.WriteLine(SelectedPackage.GithubUrl));
+    public AsyncRelayCommand InstallCommand => new(async () => await SelectedPackage.DownloadPackage());
     private async Task<bool> InstallGitIfNecessary()
     {
         var gitOutput = await ProcessRunner.GetProcessOutputAsync("git", "--version");

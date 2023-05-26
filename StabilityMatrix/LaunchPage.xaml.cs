@@ -18,5 +18,6 @@ public sealed partial class LaunchPage : Page
     private void LaunchPage_OnLoaded(object sender, RoutedEventArgs e)
     {
         viewModel.OnLoaded();
+        SelectPackageComboBox.ItemsSource = viewModel.InstalledPackages;
     }
 }

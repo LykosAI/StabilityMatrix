@@ -34,7 +34,7 @@
                 Margin="10,10,0,0"/>
             <ComboBox
                 x:Name="SelectPackageComboBox"
-                ItemsSource="{Binding Packages}"
+                ItemsSource="{Binding InstalledPackages}"
                 SelectedValue="{Binding SelectedPackage}"
                 Grid.Row="0" Grid.Column="1"
                 HorizontalAlignment="Stretch"

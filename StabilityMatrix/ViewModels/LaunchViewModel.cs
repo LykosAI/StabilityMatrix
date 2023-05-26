@@ -41,7 +41,7 @@ public partial class LaunchViewModel : ObservableObject
         }
     }
 
-    public ObservableCollection<InstalledPackage> Packages => new();
+    public ObservableCollection<InstalledPackage> InstalledPackages = new();
 
     public LaunchViewModel(ISettingsManager settingsManager)
     {
@@ -109,7 +109,7 @@ public partial class LaunchViewModel : ObservableObject
         
         foreach (var package in packages)
         {
-            Packages.Add(package);
+            InstalledPackages.Add(package);
         }
     }
 }

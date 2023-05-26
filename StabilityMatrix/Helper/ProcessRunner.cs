@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,7 +29,11 @@ public static class ProcessRunner
         return output;
     }
 
-    public static Process StartProcess(string fileName, string arguments, Action<string?>? outputDataReceived = null)
+    public static Process StartProcess(
+        string fileName,
+        string arguments,
+        Action<string?>? outputDataReceived = null,
+        Dictionary<string, string>? environmentVariables = null)
     {
         Logger.Trace($"Starting process '{fileName}' with arguments '{arguments}'");
         var process = new Process();
@@ -38,6 +43,14 @@ public static class ProcessRunner
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
         process.StartInfo.CreateNoWindow = true;
+        
+        if (environmentVariables != null)
+        {
+            foreach (var (key, value) in environmentVariables)
+            {
+                process.StartInfo.EnvironmentVariables[key] = value;
+            }
+        }
 
         if (outputDataReceived != null)
         {

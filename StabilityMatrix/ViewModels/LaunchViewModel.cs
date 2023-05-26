@@ -22,6 +22,7 @@ public partial class LaunchViewModel : ObservableObject
 {
     private readonly ISettingsManager settingsManager;
     private PyVenvRunner? venvRunner;
+    private bool clearingPackages = false;
     
     [ObservableProperty]
     private string consoleInput = "";
@@ -44,7 +45,12 @@ public partial class LaunchViewModel : ObservableObject
         {
             if (value == selectedPackage) return;
             selectedPackage = value;
-            settingsManager.SetActiveInstalledPackage(value);
+            
+            if (!clearingPackages)
+            {
+                settingsManager.SetActiveInstalledPackage(value);
+            }
+
             OnPropertyChanged();
         }
     }
@@ -56,6 +62,7 @@ public partial class LaunchViewModel : ObservableObject
     public LaunchViewModel(ISettingsManager settingsManager)
     {
         this.settingsManager = settingsManager;
+        SetProcessRunning(false);
     }
 
     public AsyncRelayCommand LaunchCommand => new(async () =>
@@ -82,8 +89,8 @@ public partial class LaunchViewModel : ObservableObject
         {
             await venvRunner.Setup();
         }
-        
-        var onConsoleOutput = new Action<string?>(s =>
+
+        void OnConsoleOutput(string? s)
         {
             if (s == null) return;
             Dispatcher.CurrentDispatcher.Invoke(() =>
@@ -92,9 +99,9 @@ public partial class LaunchViewModel : ObservableObject
                 ConsoleOutput += s + "\n";
                 ScrollNeeded?.Invoke(this, EventArgs.Empty);
             });
-        });
-        
-        var onExit = new Action<int>(i =>
+        }
+
+        void OnExit(int i)
         {
             Dispatcher.CurrentDispatcher.Invoke(() =>
             {
@@ -103,17 +110,16 @@ public partial class LaunchViewModel : ObservableObject
                 ScrollNeeded?.Invoke(this, EventArgs.Empty);
                 SetProcessRunning(false);
             });
-        });
+        }
 
         var args = "\"" + Path.Combine(packagePath, "launch.py") + "\"";
 
-        venvRunner.RunDetached(args, onConsoleOutput, onExit);
+        venvRunner.RunDetached(args, OnConsoleOutput, OnExit);
         SetProcessRunning(true);
     });
 
     public void OnLoaded()
     {
-        SetProcessRunning(false);
         LoadPackages();
         if (InstalledPackages.Any() && settingsManager.Settings.ActiveInstalledPackage != null)
         {
@@ -134,9 +140,13 @@ public partial class LaunchViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void Stop()
+    private async Task Stop()
     {
         venvRunner?.Dispose();
+        if (venvRunner?.Process != null)
+        {
+            await venvRunner.Process.WaitForExitAsync();
+        }
         venvRunner = null;
         SetProcessRunning(false);
         ConsoleOutput += $"{Environment.NewLine}Stopped process at {DateTimeOffset.Now}{Environment.NewLine}";
@@ -149,13 +159,15 @@ public partial class LaunchViewModel : ObservableObject
         {
             return;
         }
-        
+
+        clearingPackages = true;
         InstalledPackages.Clear();
         
         foreach (var package in packages)
         {
             InstalledPackages.Add(package);
         }
+        clearingPackages = false;
     }
 
     private void SetProcessRunning(bool running)

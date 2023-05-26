@@ -17,5 +17,5 @@ public class InstalledPackage
     public string PackageVersion { get; set; }
     // Install path
     public string Path { get; set; }
-    
+
 }

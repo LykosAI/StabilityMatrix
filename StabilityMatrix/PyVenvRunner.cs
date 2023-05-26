@@ -9,19 +9,19 @@ namespace StabilityMatrix;
 /// <summary>
 /// Python runner using a subprocess, mainly for venv support.
 /// </summary>
-public class PyVenvRunner: IDisposable
+public class PyVenvRunner : IDisposable
 {
     /// <summary>
     /// The process running the python executable.
     /// </summary>
     public Process? Process { get; private set; }
-    
+
     /// <summary>
     /// The path to the venv root directory.
     /// </summary>
     public string RootPath { get; private set; }
-    
-    
+
+
     /// <summary>
     /// The path to the python executable.
     /// </summary>
@@ -44,7 +44,7 @@ public class PyVenvRunner: IDisposable
         {
             throw new InvalidOperationException("Venv already exists");
         }
-        
+
         // Create RootPath if it doesn't exist
         if (!System.IO.Directory.Exists(RootPath))
         {
@@ -54,14 +54,14 @@ public class PyVenvRunner: IDisposable
         // Create venv
         var venvProc = ProcessRunner.StartProcess(PyRunner.ExePath, "-m virtualenv " + RootPath);
         await venvProc.WaitForExitAsync();
-        
+
         // Check return code
         var returnCode = venvProc.ExitCode;
         if (returnCode != 0)
         {
-           var output = await venvProc.StandardOutput.ReadToEndAsync();
-           output += await venvProc.StandardError.ReadToEndAsync();
-           throw new InvalidOperationException($"Venv creation failed with code {returnCode}: {output}");
+            var output = await venvProc.StandardOutput.ReadToEndAsync();
+            output += await venvProc.StandardError.ReadToEndAsync();
+            throw new InvalidOperationException($"Venv creation failed with code {returnCode}: {output}");
         }
     }
 
@@ -82,7 +82,7 @@ public class PyVenvRunner: IDisposable
         }
         else
         {
-            Process = ProcessRunner.StartProcess(PythonPath, arguments, outputDataReceived);   
+            Process = ProcessRunner.StartProcess(PythonPath, arguments, outputDataReceived);
         }
         if (onExit != null)
         {

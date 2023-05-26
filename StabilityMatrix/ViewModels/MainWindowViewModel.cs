@@ -15,7 +15,7 @@ public partial class MainWindowViewModel : ObservableObject
         this.settingsManager = settingsManager;
     }
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private Visibility advancedModeVisibility;
 
     [ObservableProperty]
@@ -26,14 +26,14 @@ public partial class MainWindowViewModel : ObservableObject
         SetTheme();
         GoAdvancedMode();
     }
-    
+
     [RelayCommand]
     private void GoAdvancedMode()
     {
         AdvancedModeVisibility = Visibility.Visible;
         SimpleModeVisibility = Visibility.Hidden;
     }
-    
+
     private void SetTheme()
     {
         var theme = settingsManager.Settings.Theme;

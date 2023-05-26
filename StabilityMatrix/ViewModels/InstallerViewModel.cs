@@ -21,13 +21,18 @@ public partial class InstallerViewModel : ObservableObject
 {
     private readonly ILogger<InstallerViewModel> logger;
     private readonly ISettingsManager settingsManager;
-    private int progressValue;
-    private BasePackage selectedPackage;
     
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
+    private int progressValue;
+    [ObservableProperty]
+    private BasePackage selectedPackage;
     [ObservableProperty]
     private string installedText;
     [ObservableProperty]
     private bool isIndeterminate;
+    [ObservableProperty]
+    private Visibility packageInstalledVisibility;
 
     public InstallerViewModel(ILogger<InstallerViewModel> logger, ISettingsManager settingsManager)
     {
@@ -47,38 +52,15 @@ public partial class InstallerViewModel : ObservableObject
     {
         return Task.CompletedTask;
     }
-    
+
     public ObservableCollection<BasePackage> Packages { get; }
 
-
-    [ObservableProperty]
-    private Visibility packageInstalledVisibility;
-
-    public int ProgressValue
+    partial void OnSelectedPackageChanged(BasePackage value)
     {
-        get => progressValue;
-        set
-        {
-            if (value == progressValue) return;
-            progressValue = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(ProgressBarVisibility));
-        }
-    }
-
-    public BasePackage SelectedPackage
-    {
-        get => selectedPackage;
-        set
-        {
-            selectedPackage = value;
-            OnPropertyChanged();
-
-            PackageInstalledVisibility =
-                settingsManager.Settings.InstalledPackages.Any(p => p.Name == selectedPackage.Name)
-                    ? Visibility.Visible
-                    : Visibility.Collapsed;
-        }
+        var installed = settingsManager.Settings.InstalledPackages;
+        PackageInstalledVisibility = installed.FirstOrDefault(package => package.Name == value.Name) != null
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
     public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
@@ -91,9 +73,9 @@ public partial class InstallerViewModel : ObservableObject
             logger.LogError("Git installation failed");
             return;
         }
-        
+
         await DownloadPackage();
-        
+
         UnzipPackage();
 
         InstalledText = "Installing dependencies...";
@@ -131,7 +113,7 @@ public partial class InstallerViewModel : ObservableObject
         }
     });
 
-    
+
     private async Task DownloadPackage()
     {
         SelectedPackage.DownloadProgressChanged += (_, progress) =>
@@ -150,19 +132,19 @@ public partial class InstallerViewModel : ObservableObject
         InstalledText = "Downloading package...";
         await SelectedPackage.DownloadPackage();
     }
-    
+
     private void UnzipPackage()
     {
         InstalledText = "Unzipping package...";
         ProgressValue = 0;
-        
+
         Directory.CreateDirectory(SelectedPackage.InstallLocation);
-        
+
         using var zip = ZipFile.OpenRead(SelectedPackage.DownloadLocation);
         var zipDirName = string.Empty;
         var totalEntries = zip.Entries.Count;
         var currentEntry = 0;
-        
+
         foreach (var entry in zip.Entries)
         {
             if (string.IsNullOrWhiteSpace(entry.Name) && entry.FullName.EndsWith("/"))
@@ -179,17 +161,17 @@ public partial class InstallerViewModel : ObservableObject
                 continue;
             }
 
-            
+
             var destinationPath = Path.GetFullPath(Path.Combine(SelectedPackage.InstallLocation,
                 entry.FullName.Replace(zipDirName, string.Empty)));
             entry.ExtractToFile(destinationPath, true);
             currentEntry++;
-            
-            ProgressValue = (int) ((double) currentEntry / totalEntries * 100);
+
+            ProgressValue = (int)((double)currentEntry / totalEntries * 100);
         }
 
     }
-    
+
     private async Task<bool> InstallGitIfNecessary()
     {
         var gitOutput = await ProcessRunner.GetProcessOutputAsync("git", "--version");

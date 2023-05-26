@@ -1,11 +1,11 @@
-<Application x:Class="StabilityMatrix.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:StabilityMatrix"
-             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-             Exit="App_OnExit"
-             Startup="App_OnStartup"
-             >
+<Application
+    Exit="App_OnExit"
+    Startup="App_OnStartup"
+    x:Class="StabilityMatrix.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:local="clr-namespace:StabilityMatrix"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

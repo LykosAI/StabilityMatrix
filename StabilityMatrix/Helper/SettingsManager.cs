@@ -20,30 +20,30 @@ public class SettingsManager : ISettingsManager
         {
             Directory.CreateDirectory(SettingsPath.Replace(SettingsFileName, ""));
         }
-        
+
         if (!File.Exists(SettingsPath))
         {
             File.Create(SettingsPath).Close();
             var defaultSettingsJson = JsonSerializer.Serialize(Settings);
             File.WriteAllText(SettingsPath, defaultSettingsJson);
         }
-        
+
         LoadSettings();
     }
-    
+
     public void SetTheme(string theme)
     {
         Settings.Theme = theme;
         SaveSettings();
     }
-    
-    public void AddInstalledPackage(InstalledPackage p) 
+
+    public void AddInstalledPackage(InstalledPackage p)
     {
         Settings.InstalledPackages.Add(p);
         SaveSettings();
     }
-    
-    public void SetActiveInstalledPackage(InstalledPackage? p) 
+
+    public void SetActiveInstalledPackage(InstalledPackage? p)
     {
         if (p == null)
         {
@@ -55,13 +55,13 @@ public class SettingsManager : ISettingsManager
         }
         SaveSettings();
     }
-    
+
     public void SetHasInstalledPip(bool hasInstalledPip)
     {
         Settings.HasInstalledPip = hasInstalledPip;
         SaveSettings();
     }
-    
+
     public void SetHasInstalledVenv(bool hasInstalledVenv)
     {
         Settings.HasInstalledVenv = hasInstalledVenv;

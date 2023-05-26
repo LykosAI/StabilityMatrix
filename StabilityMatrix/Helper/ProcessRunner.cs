@@ -36,11 +36,13 @@ public static class ProcessRunner
         process.StartInfo.Arguments = arguments;
         process.StartInfo.UseShellExecute = false;
         process.StartInfo.RedirectStandardOutput = true;
+        process.StartInfo.RedirectStandardError = true;
         process.StartInfo.CreateNoWindow = true;
 
         if (outputDataReceived != null)
         {
             process.OutputDataReceived += (_, args) => outputDataReceived(args.Data);
+            process.ErrorDataReceived += (_, args) => outputDataReceived(args.Data);
         }
 
         process.Start();
@@ -48,6 +50,7 @@ public static class ProcessRunner
         if (outputDataReceived != null)
         {
             process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
         }
 
         return process;

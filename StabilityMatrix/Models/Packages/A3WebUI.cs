@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 using Refit;
 using StabilityMatrix.Api;
@@ -30,9 +31,20 @@ public class A3WebUI: BasePackage
         using var client = new HttpClient {Timeout = TimeSpan.FromMinutes(5)};
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("StabilityMatrix", "1.0"));
         await using var file = new FileStream(DownloadLocation, FileMode.Create, FileAccess.Write, FileShare.None);
-        using var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
-        var length = response.Content.Headers.ContentLength;
 
+        long contentLength = 0;
+        var retryCount = 0;
+        var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
+        while (contentLength == 0 && retryCount++ < 5)
+        {
+            response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
+            contentLength = response.Content.Headers.ContentLength ?? 0;
+            Debug.WriteLine("Retrying...");
+            Thread.Sleep(50);
+        }
+
+        var isIndeterminate = contentLength == 0;
+        
         await using var stream = await response.Content.ReadAsStreamAsync();
         var totalBytesRead = 0;
         while (true)
@@ -44,9 +56,16 @@ public class A3WebUI: BasePackage
             
             totalBytesRead += bytesRead;
 
-            var progress = (int) (totalBytesRead * 100d / length);
-            Debug.WriteLine($"Progress; {progress}");
-            OnDownloadProgressChanged(progress);
+            if (isIndeterminate)
+            {
+                OnDownloadProgressChanged(-1);
+            }
+            else
+            {
+                var progress = (int) (totalBytesRead * 100d / contentLength);
+                Debug.WriteLine($"Progress; {progress}");
+                OnDownloadProgressChanged(progress);
+            }
         }
 
         await file.FlushAsync();

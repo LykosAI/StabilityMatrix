@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using StabilityMatrix.Helper;
@@ -64,14 +65,25 @@ public class PyVenvRunner: IDisposable
         }
     }
 
-    public void RunDetached(string arguments, Action<string?> outputDataReceived, Action<int>? onExit = null)
+    public void RunDetached(string arguments, Action<string?> outputDataReceived, Action<int>? onExit = null, bool unbuffered = true)
     {
         if (!Exists())
         {
             throw new InvalidOperationException("Venv python process does not exist");
         }
         Debug.WriteLine($"Launching RunDetached at {PythonPath} with args {arguments}");
-        Process = ProcessRunner.StartProcess(PythonPath, arguments, outputDataReceived);
+        if (unbuffered)
+        {
+            var env = new Dictionary<string, string>
+            {
+                {"PYTHONUNBUFFERED", "1"}
+            };
+            Process = ProcessRunner.StartProcess(PythonPath, "-u " + arguments, outputDataReceived, env);
+        }
+        else
+        {
+            Process = ProcessRunner.StartProcess(PythonPath, arguments, outputDataReceived);   
+        }
         if (onExit != null)
         {
             Process.Exited += (_, _) => onExit(Process.ExitCode);

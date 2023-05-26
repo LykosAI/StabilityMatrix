@@ -29,5 +29,4 @@ jobs:
         with:
           name: build
           path: |
-            bin/Release/net6.0/win-x64/publish/
-            bin/Release/net6.0/win-x86/publish/
+            bin/Release/net6.0-windows

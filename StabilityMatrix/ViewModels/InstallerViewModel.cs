@@ -128,14 +128,16 @@ public class InstallerViewModel : INotifyPropertyChanged
         if (settingsManager.Settings.InstalledPackages.FirstOrDefault(x => x.PackageName == SelectedPackage.Name) ==
             null)
         {
-            settingsManager.AddInstalledPackage(new InstalledPackage
+            var package = new InstalledPackage
             {
                 Name = SelectedPackage.Name,
                 Path = SelectedPackage.InstallLocation,
                 Id = Guid.NewGuid(),
                 PackageName = SelectedPackage.Name,
                 PackageVersion = "idklol"
-            });
+            };
+            settingsManager.AddInstalledPackage(package);
+            settingsManager.SetActiveInstalledPackage(package);
         }
     });
 

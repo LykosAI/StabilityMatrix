@@ -97,6 +97,10 @@ public partial class LaunchViewModel : ObservableObject
     public void OnLoaded()
     {
         LoadPackages();
+        if (InstalledPackages.Any())
+        {
+            SelectedPackage = InstalledPackages[0];
+        }
     }
 
     private void LoadPackages()

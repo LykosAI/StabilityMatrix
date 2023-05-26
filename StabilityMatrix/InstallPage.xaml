@@ -12,37 +12,39 @@
     Background="{DynamicResource ApplicationBackgroundBrush}"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d">
-    
+
     <Grid Margin="16">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        
+
         <StackPanel Grid.Row="0" Orientation="Vertical">
-            <Button Content="Install" Command="{Binding InstallCommand}" Width="100" Height="50" HorizontalAlignment="Center"/>
-            <TextBlock Text="{Binding InstalledText}" HorizontalAlignment="Center" Padding="8"/>
-            <ProgressBar Visibility="{Binding ProgressBarVisibility, FallbackValue=Visible}" Value="{Binding ProgressValue, FallbackValue=10}"
+            <Button Content="Install" Command="{Binding InstallCommand}" Width="100" Height="50"
+                    HorizontalAlignment="Center" />
+            <TextBlock Text="{Binding InstalledText}" HorizontalAlignment="Center" Padding="8" />
+            <ProgressBar Visibility="{Binding ProgressBarVisibility, FallbackValue=Visible}"
+                         Value="{Binding ProgressValue, FallbackValue=10}"
                          IsIndeterminate="{Binding IsIndeterminate, FallbackValue=False}"
-                         Maximum="100" Width="500"/>
+                         Maximum="100" Width="500" />
         </StackPanel>
-        
+
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="16" HorizontalAlignment="Left" Height="400">
             <ListView ItemsSource="{Binding Packages}"
                       SelectedItem="{Binding SelectedPackage, Mode=TwoWay}">
-                
+
                 <ListView.Style>
                     <Style TargetType="ListView">
-                        <Setter Property="Background" Value="#191919"/>
+                        <Setter Property="Background" Value="#191919" />
                     </Style>
                 </ListView.Style>
-            
+
                 <ListView.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:BasePackage}">
-                            <StackPanel VerticalAlignment="Top" Margin="8">
-                                <TextBlock Text="{Binding DisplayName}" Margin="0,5,0,5" />
-                                <TextBlock Text="{Binding ByAuthor}" Margin="0,0,0,5" />
-                            </StackPanel>
+                        <StackPanel VerticalAlignment="Top" Margin="8">
+                            <TextBlock Text="{Binding DisplayName}" Margin="0,5,0,5" />
+                            <TextBlock Text="{Binding ByAuthor}" Margin="0,0,0,5" />
+                        </StackPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
@@ -51,18 +53,18 @@
                     <TextBlock Text="{Binding SelectedPackage.DisplayName, FallbackValue=Stable Diffusion Web UI}"
                                FontSize="24" FontWeight="Bold" />
                     <Grid Visibility="{Binding PackageInstalledVisibility}">
-                        <Ellipse Width="24" Height="24" Fill="Green" Margin="8,0,0,0"/>
-                        <ui:SymbolIcon Symbol="Checkmark24" Foreground="White" Margin="8,0,0,0"/>
+                        <Ellipse Width="24" Height="24" Fill="Green" Margin="8,0,0,0" />
+                        <ui:SymbolIcon Symbol="Checkmark24" Foreground="White" Margin="8,0,0,0" />
                     </Grid>
                     <TextBlock Text="Installed" VerticalAlignment="Center" Margin="8,0,0,0"
-                               Visibility="{Binding PackageInstalledVisibility}"/>
+                               Visibility="{Binding PackageInstalledVisibility}" />
                 </StackPanel>
                 <TextBlock Text="{Binding SelectedPackage.ByAuthor, FallbackValue=by Automatic111}"
                            FontSize="12" Margin="0,5, 0, 5" />
                 <ui:Hyperlink NavigateUri="{Binding SelectedPackage.GithubUrl}">
                     <TextBlock>
-                        <Run Text="GitHub Page:"/>
-                        <Run Text="{Binding SelectedPackage.GithubUrl, Mode=OneWay}" TextDecorations="Underline"/>
+                        <Run Text="GitHub Page:" />
+                        <Run Text="{Binding SelectedPackage.GithubUrl, Mode=OneWay}" TextDecorations="Underline" />
                     </TextBlock>
                 </ui:Hyperlink>
             </StackPanel>

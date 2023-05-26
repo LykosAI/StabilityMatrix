@@ -18,4 +18,6 @@ public class InstalledPackage
     // Install path
     public string Path { get; set; }
 
+    public string LaunchCommand { get; set; }
+
 }

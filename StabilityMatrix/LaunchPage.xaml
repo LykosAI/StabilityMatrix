@@ -11,7 +11,7 @@
       Foreground="{DynamicResource TextFillColorPrimaryBrush}"
       Loaded="LaunchPage_OnLoaded"
       mc:Ignorable="d"
-      Title="LaunchPage" d:DesignHeight="700" d:DesignWidth="1100">
+      Title="LaunchPage" d:DesignHeight="450" d:DesignWidth="700">
     
     <Grid>
         <Grid.RowDefinitions>
@@ -30,9 +30,22 @@
                 Content="Launch"
                 Command="{Binding LaunchCommand}"
                 Background="Green"
+                Width="72"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Stretch"
-                Margin="10,10,0,0"/>
+                Visibility="{Binding LaunchButtonVisibility, FallbackValue=Visible}"
+                Margin="8,8,0,0"/>
+            <ui:Button
+                x:Name="StopButton"
+                Grid.Row="0"
+                Content="Stop"
+                Command="{Binding StopCommand}"
+                Background="DarkRed"
+                Width="72"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Stretch"
+                Visibility="{Binding StopButtonVisibility, FallbackValue=Hidden}"
+                Margin="8,8,0,0"/>
             <ComboBox
                 x:Name="SelectPackageComboBox"
                 ItemsSource="{Binding InstalledPackages}"
@@ -40,7 +53,7 @@
                 Grid.Row="0" Grid.Column="1"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Top"
-                Margin="10,10,10,0">
+                Margin="8,8,24,0">
                 <ComboBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:InstalledPackage}">
                         <StackPanel VerticalAlignment="Top" Margin="10,0,0,0">
@@ -51,7 +64,7 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>
         </Grid>
-        <ScrollViewer Grid.Row="1" x:Name="OutputScrollViewer">
+        <ScrollViewer Grid.Row="1" x:Name="OutputScrollViewer" Margin="0,8,0,0">
             <TextBlock ScrollViewer.HorizontalScrollBarVisibility="Hidden"
                        ScrollViewer.VerticalScrollBarVisibility="Auto"
                        Name="OutputBlock"

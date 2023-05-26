@@ -65,7 +65,7 @@ public class PyVenvRunner: IDisposable
         }
     }
 
-    public void RunDetached(string arguments, Action<string?> outputDataReceived, Action<int>? onExit = null, bool unbuffered = true)
+    public void RunDetached(string arguments, Action<string>? outputDataReceived, Action<int>? onExit = null, bool unbuffered = true)
     {
         if (!Exists())
         {
@@ -92,7 +92,7 @@ public class PyVenvRunner: IDisposable
 
     public void Dispose()
     {
-        Process?.Dispose();
+        Process?.Kill();
         GC.SuppressFinalize(this);
     }
 }

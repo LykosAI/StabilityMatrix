@@ -55,7 +55,8 @@ public partial class LaunchViewModel : ObservableObject
         }
     }
 
-    public ObservableCollection<InstalledPackage> InstalledPackages = new();
+    [ObservableProperty]
+    private ObservableCollection<InstalledPackage> installedPackages = new();
 
     public event EventHandler ScrollNeeded;
 
@@ -112,7 +113,7 @@ public partial class LaunchViewModel : ObservableObject
             });
         }
 
-        var args = "\"" + Path.Combine(packagePath, "launch.py") + "\"";
+        var args = "\"" + Path.Combine(packagePath, SelectedPackage.LaunchCommand) + "\"";
 
         venvRunner.RunDetached(args, OnConsoleOutput, OnExit);
         SetProcessRunning(true);

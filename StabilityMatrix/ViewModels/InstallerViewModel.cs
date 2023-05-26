@@ -65,7 +65,8 @@ public partial class InstallerViewModel : ObservableObject
 
     public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
 
-    public AsyncRelayCommand InstallCommand => new(async () =>
+    [RelayCommand]
+    private async Task Install()
     {
         var installSuccess = await InstallGitIfNecessary();
         if (!installSuccess)
@@ -75,8 +76,7 @@ public partial class InstallerViewModel : ObservableObject
         }
 
         await DownloadPackage();
-
-        UnzipPackage();
+        await InstallPackage();
 
         InstalledText = "Installing dependencies...";
         await PyRunner.Initialize();
@@ -106,70 +106,42 @@ public partial class InstallerViewModel : ObservableObject
                 Path = SelectedPackage.InstallLocation,
                 Id = Guid.NewGuid(),
                 PackageName = SelectedPackage.Name,
-                PackageVersion = "idklol"
+                PackageVersion = "idklol",
+                LaunchCommand = SelectedPackage.LaunchCommand
             };
             settingsManager.AddInstalledPackage(package);
             settingsManager.SetActiveInstalledPackage(package);
         }
-    });
+    }
 
 
     private async Task DownloadPackage()
     {
-        SelectedPackage.DownloadProgressChanged += (_, progress) =>
-        {
-            if (progress == -1)
-            {
-                IsIndeterminate = true;
-            }
-            else
-            {
-                IsIndeterminate = false;
-                ProgressValue = progress;
-            }
-        };
+        SelectedPackage.DownloadProgressChanged += SelectedPackageOnProgressChanged;
         SelectedPackage.DownloadComplete += (_, _) => InstalledText = "Download Complete";
         InstalledText = "Downloading package...";
         await SelectedPackage.DownloadPackage();
     }
 
-    private void UnzipPackage()
+    private async Task InstallPackage()
     {
-        InstalledText = "Unzipping package...";
-        ProgressValue = 0;
-
-        Directory.CreateDirectory(SelectedPackage.InstallLocation);
-
-        using var zip = ZipFile.OpenRead(SelectedPackage.DownloadLocation);
-        var zipDirName = string.Empty;
-        var totalEntries = zip.Entries.Count;
-        var currentEntry = 0;
-
-        foreach (var entry in zip.Entries)
+        SelectedPackage.InstallProgressChanged += SelectedPackageOnProgressChanged;
+        SelectedPackage.InstallComplete += (_, _) => InstalledText = "Install Complete";
+        InstalledText = "Installing package...";
+        await SelectedPackage.InstallPackage();
+    }
+    
+    private void SelectedPackageOnProgressChanged(object? sender, int progress)
+    {
+        if (progress == -1)
         {
-            if (string.IsNullOrWhiteSpace(entry.Name) && entry.FullName.EndsWith("/"))
-            {
-                if (string.IsNullOrWhiteSpace(zipDirName))
-                {
-                    zipDirName = entry.FullName;
-                    continue;
-                }
-
-                var folderPath = Path.Combine(SelectedPackage.InstallLocation,
-                    entry.FullName.Replace(zipDirName, string.Empty));
-                Directory.CreateDirectory(folderPath);
-                continue;
-            }
-
-
-            var destinationPath = Path.GetFullPath(Path.Combine(SelectedPackage.InstallLocation,
-                entry.FullName.Replace(zipDirName, string.Empty)));
-            entry.ExtractToFile(destinationPath, true);
-            currentEntry++;
-
-            ProgressValue = (int)((double)currentEntry / totalEntries * 100);
+            IsIndeterminate = true;
         }
-
+        else
+        {
+            IsIndeterminate = false;
+            ProgressValue = progress;
+        }
     }
 
     private async Task<bool> InstallGitIfNecessary()

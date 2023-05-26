@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -17,6 +18,7 @@ public class A3WebUI : BasePackage
     public override string DisplayName => "Stable Diffusion WebUI";
     public override string Author => "AUTOMATIC1111";
     public override string GithubUrl => "https://github.com/AUTOMATIC1111/stable-diffusion-webui";
+    public override string LaunchCommand => "launch.py";
 
     public override async Task DownloadPackage()
     {
@@ -73,7 +75,53 @@ public class A3WebUI : BasePackage
         OnDownloadComplete(DownloadLocation);
     }
 
+    public override Task InstallPackage()
+    {
+        UnzipPackage();
+        OnInstallComplete("Installation complete");
+        return Task.CompletedTask;
+    }
+
     public string CommandLineArgs => $"{GetVramOption()} {GetXformersOption()}";
+    
+    private void UnzipPackage()
+    {
+        OnInstallProgressChanged(0);
+
+        Directory.CreateDirectory(InstallLocation);
+
+        using var zip = ZipFile.OpenRead(DownloadLocation);
+        var zipDirName = string.Empty;
+        var totalEntries = zip.Entries.Count;
+        var currentEntry = 0;
+
+        foreach (var entry in zip.Entries)
+        {
+            if (string.IsNullOrWhiteSpace(entry.Name) && entry.FullName.EndsWith("/"))
+            {
+                if (string.IsNullOrWhiteSpace(zipDirName))
+                {
+                    zipDirName = entry.FullName;
+                    continue;
+                }
+
+                var folderPath = Path.Combine(InstallLocation,
+                    entry.FullName.Replace(zipDirName, string.Empty));
+                Directory.CreateDirectory(folderPath);
+                continue;
+            }
+
+
+            var destinationPath = Path.GetFullPath(Path.Combine(InstallLocation,
+                entry.FullName.Replace(zipDirName, string.Empty)));
+            entry.ExtractToFile(destinationPath, true);
+            currentEntry++;
+
+            var progressValue = (int)((double)currentEntry / totalEntries * 100);
+            OnInstallProgressChanged(progressValue);
+        }
+
+    }
 
     private static string GetVramOption()
     {

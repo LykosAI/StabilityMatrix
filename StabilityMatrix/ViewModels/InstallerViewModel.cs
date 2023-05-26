@@ -21,13 +21,18 @@ public partial class InstallerViewModel : ObservableObject
 {
     private readonly ILogger<InstallerViewModel> logger;
     private readonly ISettingsManager settingsManager;
+    
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
     private int progressValue;
+    [ObservableProperty]
     private BasePackage selectedPackage;
-
     [ObservableProperty]
     private string installedText;
     [ObservableProperty]
     private bool isIndeterminate;
+    [ObservableProperty]
+    private Visibility packageInstalledVisibility;
 
     public InstallerViewModel(ILogger<InstallerViewModel> logger, ISettingsManager settingsManager)
     {
@@ -50,35 +55,12 @@ public partial class InstallerViewModel : ObservableObject
 
     public ObservableCollection<BasePackage> Packages { get; }
 
-
-    [ObservableProperty]
-    private Visibility packageInstalledVisibility;
-
-    public int ProgressValue
+    partial void OnSelectedPackageChanged(BasePackage value)
     {
-        get => progressValue;
-        set
-        {
-            if (value == progressValue) return;
-            progressValue = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(ProgressBarVisibility));
-        }
-    }
-
-    public BasePackage SelectedPackage
-    {
-        get => selectedPackage;
-        set
-        {
-            selectedPackage = value;
-            OnPropertyChanged();
-
-            PackageInstalledVisibility =
-                settingsManager.Settings.InstalledPackages.Any(p => p.Name == selectedPackage.Name)
-                    ? Visibility.Visible
-                    : Visibility.Collapsed;
-        }
+        var installed = settingsManager.Settings.InstalledPackages;
+        PackageInstalledVisibility = installed.FirstOrDefault(package => package.Name == value.Name) != null
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
     public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;

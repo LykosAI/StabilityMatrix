@@ -33,8 +33,7 @@ public partial class SettingsViewModel : ObservableObject
         
     }
 
-    [ObservableProperty]
-    private string selectedTheme;
+    [ObservableProperty] private string selectedTheme;
     
     partial void OnSelectedThemeChanged(string value)
     {
@@ -57,11 +56,9 @@ public partial class SettingsViewModel : ObservableObject
     private string gpuInfo =
         $"{HardwareHelper.GetGpuChipName()} ({HardwareHelper.GetGpuMemoryBytes() / 1024 / 1024 / 1024} GB)";
 
-    [ObservableProperty]
-    private string gitInfo;
+    [ObservableProperty] private string gitInfo;
 
-    [ObservableProperty]
-    private string testProperty;
+    [ObservableProperty] private string testProperty;
 
     public AsyncRelayCommand PythonVersionCommand => new(async () =>
     {

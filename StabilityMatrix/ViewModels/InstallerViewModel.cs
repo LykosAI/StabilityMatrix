@@ -4,23 +4,28 @@ using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using StabilityMatrix.Models.Packages;
 using System.Linq;
 using System.Windows;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 
 namespace StabilityMatrix.ViewModels;
 
 public class InstallerViewModel : INotifyPropertyChanged
 {
+    private readonly ILogger<InstallerViewModel> logger;
     private string installedText;
     private int progressValue;
     private bool isIndeterminate;
     private BasePackage selectedPackage;
 
-    public InstallerViewModel()
+    public InstallerViewModel(ILogger<InstallerViewModel> logger)
     {
+        this.logger = logger;
         InstalledText = "shrug";
         ProgressValue = 0;
         Packages = new ObservableCollection<BasePackage>
@@ -86,12 +91,35 @@ public class InstallerViewModel : INotifyPropertyChanged
 
     public AsyncRelayCommand InstallCommand => new(async () =>
     {
+        var installSuccess = await InstallGitIfNecessary();
+        if (!installSuccess)
+        {
+            logger.LogError("Git installation failed");
+            return;
+        }
+        
+        await DownloadPackage();
+        
+        UnzipPackage();
+
+        InstalledText = "Installing dependencies...";
+        await PyRunner.Initialize();
+        await PyRunner.SetupPip();
+        await PyRunner.InstallPackage("virtualenv");
+        InstalledText = "Done";
+
+        IsIndeterminate = false;
+        ProgressValue = 100;
+    });
+
+    
+    private async Task DownloadPackage()
+    {
         SelectedPackage.DownloadProgressChanged += (_, progress) =>
         {
             if (progress == -1)
             {
                 IsIndeterminate = true;
-                ProgressValue = 1;
             }
             else
             {
@@ -100,8 +128,49 @@ public class InstallerViewModel : INotifyPropertyChanged
             }
         };
         SelectedPackage.DownloadComplete += (_, _) => InstalledText = "Download Complete";
+        InstalledText = "Downloading package...";
         await SelectedPackage.DownloadPackage();
-    });
+    }
+    
+    private void UnzipPackage()
+    {
+        InstalledText = "Unzipping package...";
+        ProgressValue = 0;
+        
+        Directory.CreateDirectory(SelectedPackage.InstallLocation);
+        
+        using var zip = ZipFile.OpenRead(SelectedPackage.DownloadLocation);
+        var zipDirName = string.Empty;
+        var totalEntries = zip.Entries.Count;
+        var currentEntry = 0;
+        
+        foreach (var entry in zip.Entries)
+        {
+            if (string.IsNullOrWhiteSpace(entry.Name) && entry.FullName.EndsWith("/"))
+            {
+                if (string.IsNullOrWhiteSpace(zipDirName))
+                {
+                    zipDirName = entry.FullName;
+                    continue;
+                }
+
+                var folderPath = Path.Combine(SelectedPackage.InstallLocation,
+                    entry.FullName.Replace(zipDirName, string.Empty));
+                Directory.CreateDirectory(folderPath);
+                continue;
+            }
+
+            
+            var destinationPath = Path.GetFullPath(Path.Combine(SelectedPackage.InstallLocation,
+                entry.FullName.Replace(zipDirName, string.Empty)));
+            entry.ExtractToFile(destinationPath, true);
+            currentEntry++;
+            
+            ProgressValue = (int) ((double) currentEntry / totalEntries * 100);
+        }
+
+    }
+    
     private async Task<bool> InstallGitIfNecessary()
     {
         var gitOutput = await ProcessRunner.GetProcessOutputAsync("git", "--version");

@@ -109,6 +109,7 @@ public partial class LaunchViewModel : ObservableObject
         
         foreach (var package in packages)
         {
+            InstalledPackages.Clear();
             InstalledPackages.Add(package);
         }
     }

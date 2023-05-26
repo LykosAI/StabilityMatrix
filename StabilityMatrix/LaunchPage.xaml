@@ -56,6 +56,7 @@
                    Margin="10,10,10,10"
                    Text="{Binding ConsoleOutput, Mode=OneWay}"
                    FontFamily="Consolas"
+                   TextWrapping="Wrap"
                    Background="{DynamicResource ControlFillColorDisabledBrush}"
                    HorizontalAlignment="Stretch"
                    VerticalAlignment="Stretch"/>

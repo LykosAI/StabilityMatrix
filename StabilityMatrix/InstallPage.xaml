@@ -2,22 +2,16 @@
     x:Class="StabilityMatrix.InstallPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:StabilityMatrix"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:models="clr-namespace:StabilityMatrix.Models"
-    xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
     d:DesignHeight="700"
     d:DesignWidth="1100"
     Loaded="InstallPage_OnLoaded"
     Background="{DynamicResource ApplicationBackgroundBrush}"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d">
-    
-    <Page.DataContext>
-        <viewModels:InstallerViewModel/>
-    </Page.DataContext>
     
     <Grid Margin="16">
         <Grid.RowDefinitions>

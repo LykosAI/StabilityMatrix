@@ -28,7 +28,6 @@ public partial class LaunchViewModel : ObservableObject
     public string consoleOutput = "";
     
     private InstalledPackage? selectedPackage;
-    
     public InstalledPackage? SelectedPackage
     {
         get => selectedPackage;
@@ -42,6 +41,8 @@ public partial class LaunchViewModel : ObservableObject
     }
 
     public ObservableCollection<InstalledPackage> InstalledPackages = new();
+    public Process? CurrentRunningProcess { get; set; }
+    
     public event EventHandler ScrollNeeded;
 
     public LaunchViewModel(ISettingsManager settingsManager)
@@ -97,6 +98,7 @@ public partial class LaunchViewModel : ObservableObject
         var args = "\"" + Path.Combine(packagePath, "launch.py") + "\"";
 
         venv.RunDetached(args, onConsoleOutput, onExit);
+        CurrentRunningProcess = venv.Process;
     });
 
     public void OnLoaded()
@@ -104,8 +106,16 @@ public partial class LaunchViewModel : ObservableObject
         LoadPackages();
         if (InstalledPackages.Any())
         {
-            SelectedPackage = InstalledPackages[0];
+            SelectedPackage =
+                InstalledPackages[
+                    InstalledPackages.IndexOf(InstalledPackages.FirstOrDefault(x =>
+                        x.Id == settingsManager.Settings.ActiveInstalledPackage))];
         }
+    }
+
+    public void OnShutdown()
+    {
+        CurrentRunningProcess?.Kill();
     }
 
     private void LoadPackages()

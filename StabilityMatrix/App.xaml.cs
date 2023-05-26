@@ -20,6 +20,8 @@ namespace StabilityMatrix
     /// </summary>
     public partial class App : Application
     {
+        private ServiceProvider? serviceProvider;
+        
         private void App_OnStartup(object sender, StartupEventArgs e)
         {
             var serviceCollection = new ServiceCollection();
@@ -50,9 +52,14 @@ namespace StabilityMatrix
                 log.AddNLog(logConfig);
             });
 
-            var provider = serviceCollection.BuildServiceProvider();
-            var window = provider.GetRequiredService<MainWindow>();
+            serviceProvider = serviceCollection.BuildServiceProvider();
+            var window = serviceProvider.GetRequiredService<MainWindow>();
             window.Show();
+        }
+
+        private void App_OnExit(object sender, ExitEventArgs e)
+        {
+            serviceProvider?.GetRequiredService<LaunchViewModel>().OnShutdown();
         }
     }
 }

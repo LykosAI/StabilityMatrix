@@ -1,80 +1,185 @@
-﻿<Page x:Class="StabilityMatrix.LaunchPage"
-      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-      xmlns:local="clr-namespace:StabilityMatrix"
-      xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
-      xmlns:models="clr-namespace:StabilityMatrix.Models"
-      Background="{DynamicResource ApplicationBackgroundBrush}"
-      Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-      Loaded="LaunchPage_OnLoaded"
-      mc:Ignorable="d"
-      Title="LaunchPage" d:DesignHeight="450" d:DesignWidth="700">
-    
+﻿<Page
+    Background="{DynamicResource ApplicationBackgroundBrush}"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    Loaded="LaunchPage_OnLoaded"
+    Title="LaunchPage"
+    d:DataContext="{d:DesignInstance Type=viewModels:LaunchViewModel,
+                                     IsDesignTimeCreatable=True}"
+    d:DesignHeight="450"
+    d:DesignWidth="700"
+    mc:Ignorable="d"
+    x:Class="StabilityMatrix.LaunchPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:StabilityMatrix"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:StabilityMatrix.Models"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Page.Resources>
+        <!--  Manually copied style since can't inherit: https://github.com/lepoco/wpfui/blob/main/src/Wpf.Ui/Styles/Controls/ComboBox.xaml  -->
+        <ControlTemplate TargetType="{x:Type ComboBoxItem}" x:Key="SelectPackageDropDownStyle">
+            <Grid>
+                <Border
+                    CornerRadius="{TemplateBinding Border.CornerRadius}"
+                    Margin="{TemplateBinding Margin}"
+                    Name="ContentBorder"
+                    Padding="0"
+                    SnapsToDevicePixels="True"
+                    VerticalAlignment="Stretch">
+                    <Grid>
+                        <Rectangle
+                            Height="16"
+                            HorizontalAlignment="Left"
+                            Margin="0"
+                            RadiusX="2"
+                            RadiusY="2"
+                            VerticalAlignment="Center"
+                            Visibility="Collapsed"
+                            Width="3"
+                            x:Name="ActiveRectangle">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="{DynamicResource SystemAccentColorSecondary}" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <!--  Setup grid rows  -->
+                            <StackPanel
+                                Grid.Column="0"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Top">
+                                <TextBlock Margin="0,5,0,5" Text="{Binding Name}" />
+                                <TextBlock Margin="0,0,0,5" Text="{Binding Path}" />
+                            </StackPanel>
+                            <!--  Buttons right-aligned  -->
+                            <StackPanel
+                                Grid.Column="1"
+                                HorizontalAlignment="Right"
+                                Margin="8,8,8,8"
+                                Orientation="Horizontal">
+                                <!--  remove button  -->
+                                <ui:Button
+                                    Background="Transparent"
+                                    Command="{Binding RemoveCommand}"
+                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                    Height="36"
+                                    HorizontalAlignment="Right"
+                                    Padding="0"
+                                    VerticalAlignment="Center"
+                                    Width="36">
+                                    <ui:SymbolIcon
+                                        HorizontalAlignment="Stretch"
+                                        Symbol="Dismiss48"
+                                        VerticalAlignment="Stretch" />
+                                </ui:Button>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsHighlighted" Value="True">
+                    <Setter Property="Background" TargetName="ContentBorder">
+                        <Setter.Value>
+                            <SolidColorBrush Color="{DynamicResource ControlFillColorSecondary}" />
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Visibility" TargetName="ActiveRectangle" Value="Visible" />
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Foreground">
+                        <Setter.Value>
+                            <SolidColorBrush Color="{DynamicResource TextFillColorTertiary}" />
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+    </Page.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        
+
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <ui:Button
-                x:Name="LaunchButton"
-                Grid.Row="0"
-                Content="Launch"
-                Command="{Binding LaunchCommand}"
                 Background="Green"
-                Width="72"
+                Command="{Binding LaunchCommand}"
+                Content="Launch"
+                Grid.Row="0"
                 HorizontalAlignment="Left"
+                Margin="8,8,0,0"
                 VerticalAlignment="Stretch"
                 Visibility="{Binding LaunchButtonVisibility, FallbackValue=Visible}"
-                Margin="8,8,0,0"/>
-            <ui:Button
-                x:Name="StopButton"
-                Grid.Row="0"
-                Content="Stop"
-                Command="{Binding StopCommand}"
-                Background="DarkRed"
                 Width="72"
+                x:Name="LaunchButton" />
+            <ui:Button
+                Background="DarkRed"
+                Command="{Binding StopCommand}"
+                Content="Stop"
+                Grid.Row="0"
                 HorizontalAlignment="Left"
+                Margin="8,8,0,0"
                 VerticalAlignment="Stretch"
                 Visibility="{Binding StopButtonVisibility, FallbackValue=Hidden}"
-                Margin="8,8,0,0"/>
+                Width="72"
+                x:Name="StopButton" />
             <ComboBox
-                x:Name="SelectPackageComboBox"
-                ItemsSource="{Binding InstalledPackages}"
-                SelectedValue="{Binding SelectedPackage}"
-                Grid.Row="0" Grid.Column="1"
+                Grid.Column="1"
+                Grid.Row="0"
                 HorizontalAlignment="Stretch"
+                ItemsSource="{Binding InstalledPackages}"
+                Margin="8,8,24,0"
+                SelectedValue="{Binding SelectedPackage}"
                 VerticalAlignment="Top"
-                Margin="8,8,24,0">
+                x:Name="SelectPackageComboBox">
+                <ComboBox.ItemContainerStyle>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Template" Value="{StaticResource SelectPackageDropDownStyle}" />
+                    </Style>
+                </ComboBox.ItemContainerStyle>
+
                 <ComboBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:InstalledPackage}">
-                        <StackPanel VerticalAlignment="Top" Margin="10,0,0,0">
-                            <TextBlock Text="{Binding Name}" Margin="0,5,0,5" />
-                            <TextBlock Text="{Binding Path}" Margin="0,0,0,5" />
+                        <StackPanel Margin="10,0,0,0" VerticalAlignment="Top">
+                            <TextBlock
+                                Margin="0,5,0,5"
+                                Name="NameTextBlock"
+                                Text="{Binding Name}" />
                         </StackPanel>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
         </Grid>
-        <ScrollViewer Grid.Row="1" x:Name="OutputScrollViewer" Margin="0,8,0,0">
-            <TextBlock ScrollViewer.HorizontalScrollBarVisibility="Hidden"
-                       ScrollViewer.VerticalScrollBarVisibility="Auto"
-                       Name="OutputBlock"
-                       Margin="10,10,10,10"
-                       Text="{Binding ConsoleOutput, Mode=OneWay}"
-                       FontFamily="Consolas"
-                       TextWrapping="Wrap"
-                       Background="{DynamicResource ControlFillColorDisabledBrush}"
-                       HorizontalAlignment="Stretch"
-                       VerticalAlignment="Stretch"/>
+        <ScrollViewer
+            Grid.Row="1"
+            Margin="0,8,0,0"
+            x:Name="OutputScrollViewer">
+            <TextBlock
+                Background="{DynamicResource ControlFillColorDisabledBrush}"
+                FontFamily="Consolas"
+                HorizontalAlignment="Stretch"
+                Margin="10,10,10,10"
+                Name="OutputBlock"
+                ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                Text="{Binding ConsoleOutput, Mode=OneWay}"
+                TextWrapping="Wrap"
+                VerticalAlignment="Stretch" />
         </ScrollViewer>
     </Grid>
 </Page>

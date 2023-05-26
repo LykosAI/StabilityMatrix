@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using StabilityMatrix.ViewModels;
 
@@ -19,5 +20,14 @@ public sealed partial class LaunchPage : Page
     {
         viewModel.OnLoaded();
         SelectPackageComboBox.ItemsSource = viewModel.InstalledPackages;
+        viewModel.ScrollNeeded += ViewModelOnScrollNeeded;
+    }
+
+    private void ViewModelOnScrollNeeded(object? sender, EventArgs e)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            OutputScrollViewer.ScrollToBottom();
+        });
     }
 }

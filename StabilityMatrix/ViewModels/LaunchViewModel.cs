@@ -42,6 +42,7 @@ public partial class LaunchViewModel : ObservableObject
     }
 
     public ObservableCollection<InstalledPackage> InstalledPackages = new();
+    public event EventHandler ScrollNeeded;
 
     public LaunchViewModel(ISettingsManager settingsManager)
     {
@@ -52,12 +53,14 @@ public partial class LaunchViewModel : ObservableObject
     {
         // Clear console
         ConsoleOutput = "";
-        
+
         if (SelectedPackage == null)
         {
             ConsoleOutput = "No package selected";
             return;
         }
+
+        await PyRunner.Initialize();
         
         // Get path from package
         var packagePath = SelectedPackage.Path;
@@ -77,6 +80,7 @@ public partial class LaunchViewModel : ObservableObject
             {
                 Debug.WriteLine($"process stdout: {s}");
                 ConsoleOutput += s + "\n";
+                ScrollNeeded?.Invoke(this, EventArgs.Empty);
             });
         });
         
@@ -86,6 +90,7 @@ public partial class LaunchViewModel : ObservableObject
             {
                 Debug.WriteLine($"Venv process exited with code {i}");
                 ConsoleOutput += $"Venv process exited with code {i}";
+                ScrollNeeded?.Invoke(this, EventArgs.Empty);
             });
         });
 

@@ -29,6 +29,7 @@
                 Grid.Row="0"
                 Content="Launch"
                 Command="{Binding LaunchCommand}"
+                Background="Green"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Stretch"
                 Margin="10,10,0,0"/>
@@ -50,15 +51,17 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>
         </Grid>
-        
-        <TextBlock Grid.Row="1" 
-                   Name="OutputBlock"
-                   Margin="10,10,10,10"
-                   Text="{Binding ConsoleOutput, Mode=OneWay}"
-                   FontFamily="Consolas"
-                   TextWrapping="Wrap"
-                   Background="{DynamicResource ControlFillColorDisabledBrush}"
-                   HorizontalAlignment="Stretch"
-                   VerticalAlignment="Stretch"/>
+        <ScrollViewer Grid.Row="1" x:Name="OutputScrollViewer">
+            <TextBlock ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                       ScrollViewer.VerticalScrollBarVisibility="Auto"
+                       Name="OutputBlock"
+                       Margin="10,10,10,10"
+                       Text="{Binding ConsoleOutput, Mode=OneWay}"
+                       FontFamily="Consolas"
+                       TextWrapping="Wrap"
+                       Background="{DynamicResource ControlFillColorDisabledBrush}"
+                       HorizontalAlignment="Stretch"
+                       VerticalAlignment="Stretch"/>
+        </ScrollViewer>
     </Grid>
 </Page>

@@ -55,6 +55,18 @@ public class SettingsManager : ISettingsManager
         }
         SaveSettings();
     }
+    
+    public void SetHasInstalledPip(bool hasInstalledPip)
+    {
+        Settings.HasInstalledPip = hasInstalledPip;
+        SaveSettings();
+    }
+    
+    public void SetHasInstalledVenv(bool hasInstalledVenv)
+    {
+        Settings.HasInstalledVenv = hasInstalledVenv;
+        SaveSettings();
+    }
 
     private void LoadSettings()
     {

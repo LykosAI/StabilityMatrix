@@ -8,4 +8,6 @@ public interface ISettingsManager
     void SetTheme(string theme);
     void AddInstalledPackage(InstalledPackage p);
     void SetActiveInstalledPackage(InstalledPackage? p);
+    void SetHasInstalledPip(bool hasInstalledPip);
+    void SetHasInstalledVenv(bool hasInstalledVenv);
 }

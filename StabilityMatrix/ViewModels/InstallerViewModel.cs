@@ -1,9 +1,11 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Dynamic;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
@@ -18,14 +20,16 @@ namespace StabilityMatrix.ViewModels;
 public class InstallerViewModel : INotifyPropertyChanged
 {
     private readonly ILogger<InstallerViewModel> logger;
+    private readonly ISettingsManager settingsManager;
     private string installedText;
     private int progressValue;
     private bool isIndeterminate;
     private BasePackage selectedPackage;
 
-    public InstallerViewModel(ILogger<InstallerViewModel> logger)
+    public InstallerViewModel(ILogger<InstallerViewModel> logger, ISettingsManager settingsManager)
     {
         this.logger = logger;
+        this.settingsManager = settingsManager;
         InstalledText = "shrug";
         ProgressValue = 0;
         Packages = new ObservableCollection<BasePackage>
@@ -104,12 +108,35 @@ public class InstallerViewModel : INotifyPropertyChanged
 
         InstalledText = "Installing dependencies...";
         await PyRunner.Initialize();
-        await PyRunner.SetupPip();
-        await PyRunner.InstallPackage("virtualenv");
+        if (!settingsManager.Settings.HasInstalledPip)
+        {
+            await PyRunner.SetupPip();
+            settingsManager.SetHasInstalledPip(true);
+        }
+
+        if (!settingsManager.Settings.HasInstalledVenv)
+        {
+            await PyRunner.InstallPackage("virtualenv");
+            settingsManager.SetHasInstalledVenv(true);
+        }
+
         InstalledText = "Done";
 
         IsIndeterminate = false;
         ProgressValue = 100;
+
+        if (settingsManager.Settings.InstalledPackages.FirstOrDefault(x => x.PackageName == SelectedPackage.Name) ==
+            null)
+        {
+            settingsManager.AddInstalledPackage(new InstalledPackage
+            {
+                Name = SelectedPackage.Name,
+                Path = SelectedPackage.InstallLocation,
+                Id = Guid.NewGuid(),
+                PackageName = SelectedPackage.Name,
+                PackageVersion = "idklol"
+            });
+        }
     });
 
     

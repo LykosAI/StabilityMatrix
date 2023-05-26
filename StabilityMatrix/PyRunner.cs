@@ -21,7 +21,7 @@ internal static class PyRunner
     private const string RelativeDllPath = @"Assets\Python310\python310.dll";
     private const string RelativeExePath = @"Assets\Python310\python.exe";
     private const string RelativePipExePath = @"Assets\Python310\Scripts\pip.exe";
-    private const string RelativeGetPipPath = @"Assets\Python310\get-pip.py";
+    private const string RelativeGetPipPath = @"Assets\Python310\get-pip.pyc";
     public static string DllPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeDllPath);
     public static string ExePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeExePath);
     public static string PipExePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativePipExePath);
@@ -68,7 +68,11 @@ internal static class PyRunner
     /// </summary>
     public static async Task SetupPip()
     {
-        var p = ProcessRunner.StartProcess(ExePath, GetPipPath);
+        if (!File.Exists(GetPipPath))
+        {
+            throw new FileNotFoundException("get-pip not found", GetPipPath);
+        }
+        var p = ProcessRunner.StartProcess(ExePath, "-m get-pip");
         await ProcessRunner.WaitForExitConditionAsync(p);
     }
 
@@ -77,6 +81,10 @@ internal static class PyRunner
     /// </summary>
     public static async Task InstallPackage(string package)
     {
+        if (!File.Exists(PipExePath))
+        {
+            throw new FileNotFoundException("pip not found", PipExePath);
+        }
         var p = ProcessRunner.StartProcess(PipExePath, $"install {package}");
         await ProcessRunner.WaitForExitConditionAsync(p);
     }

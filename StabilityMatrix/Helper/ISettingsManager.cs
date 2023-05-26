@@ -10,4 +10,5 @@ public interface ISettingsManager
     void SetActiveInstalledPackage(InstalledPackage? p);
     void SetHasInstalledPip(bool hasInstalledPip);
     void SetHasInstalledVenv(bool hasInstalledVenv);
+    void SetNavExpanded(bool navExpanded);
 }

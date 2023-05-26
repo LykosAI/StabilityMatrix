@@ -17,6 +17,7 @@ public class A3WebUI: BasePackage
     public override string DisplayName => "Stable Diffusion WebUI";
     public override string Author => "AUTOMATIC1111";
     public override string GithubUrl => "https://github.com/AUTOMATIC1111/stable-diffusion-webui";
+
     public override async Task DownloadPackage()
     {
         var githubApi = RestService.For<IGithubApi>("https://api.github.com");

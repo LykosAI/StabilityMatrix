@@ -20,6 +20,7 @@ namespace StabilityMatrix.ViewModels;
 public partial class LaunchViewModel : ObservableObject
 {
     private readonly ISettingsManager settingsManager;
+    private PyVenvRunner? venvRunner;
     
     [ObservableProperty]
     public string consoleInput = "";
@@ -41,7 +42,6 @@ public partial class LaunchViewModel : ObservableObject
     }
 
     public ObservableCollection<InstalledPackage> InstalledPackages = new();
-    public Process? CurrentRunningProcess { get; set; }
     
     public event EventHandler ScrollNeeded;
 
@@ -68,10 +68,10 @@ public partial class LaunchViewModel : ObservableObject
         var venvPath = Path.Combine(packagePath, "venv");
         
         // Setup venv
-        var venv = new PyVenvRunner(venvPath);
-        if (!venv.Exists())
+        venvRunner = new PyVenvRunner(venvPath);
+        if (!venvRunner.Exists())
         {
-            await venv.Setup();
+            await venvRunner.Setup();
         }
         
         var onConsoleOutput = new Action<string?>(s =>
@@ -97,8 +97,7 @@ public partial class LaunchViewModel : ObservableObject
 
         var args = "\"" + Path.Combine(packagePath, "launch.py") + "\"";
 
-        venv.RunDetached(args, onConsoleOutput, onExit);
-        CurrentRunningProcess = venv.Process;
+        venvRunner.RunDetached(args, onConsoleOutput, onExit);
     });
 
     public void OnLoaded()
@@ -115,7 +114,7 @@ public partial class LaunchViewModel : ObservableObject
 
     public void OnShutdown()
     {
-        CurrentRunningProcess?.Kill();
+        venvRunner?.Dispose();
     }
 
     private void LoadPackages()

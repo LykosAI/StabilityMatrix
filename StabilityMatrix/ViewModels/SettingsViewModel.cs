@@ -1,9 +1,13 @@
+using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Models;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Contracts;
 
@@ -73,6 +77,37 @@ public partial class SettingsViewModel : ObservableObject
         dialog.Content = result;
         dialog.PrimaryButtonText = "Ok";
         await dialog.ShowAsync();
+    });
+
+    public RelayCommand AddInstallationCommand => new(() =>
+    {
+        var initialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages";
+        // Show dialog box to choose a folder
+        var dialog = new OpenFileDialog
+        {
+            Title = "Choose directory for installation",
+            CheckFileExists = false,
+            CheckPathExists = true,
+            FileName = "Folder Selection",
+            Filter = "Folder|no.file",
+            InitialDirectory = initialDirectory
+        };
+        if (dialog.ShowDialog() != true) return;
+        var path = Path.GetDirectoryName(dialog.FileName);
+        if (path == null) return;
+
+        // Create package
+        var package = new InstalledPackage
+        {
+            Id = Guid.NewGuid(),
+            Name = Path.GetFileName(path),
+            Path = path,
+            PackageName = "dank-diffusion",
+            PackageVersion = "v1.0.0",
+        };
+        
+        // Add package to settings
+        settingsManager.AddInstalledPackage(package);
     });
 
     public async Task OnLoaded()

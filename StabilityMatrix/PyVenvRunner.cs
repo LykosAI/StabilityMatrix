@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using NLog;
+using NLog.Fluent;
 using StabilityMatrix.Helper;
 
 namespace StabilityMatrix;
@@ -26,6 +28,8 @@ public class PyVenvRunner : IDisposable
     /// The path to the python executable.
     /// </summary>
     public string PythonPath => RootPath + @"\Scripts\python.exe";
+
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     public PyVenvRunner(string path)
     {
@@ -65,13 +69,15 @@ public class PyVenvRunner : IDisposable
         }
     }
 
-    public void RunDetached(string arguments, Action<string>? outputDataReceived, Action<int>? onExit = null, bool unbuffered = true)
+    public void RunDetached(string arguments, Action<string?>? outputDataReceived, Action<int>? onExit = null, bool unbuffered = true)
     {
         if (!Exists())
         {
             throw new InvalidOperationException("Venv python process does not exist");
         }
-        Debug.WriteLine($"Launching RunDetached at {PythonPath} with args {arguments}");
+
+        Logger.Debug($"Launching RunDetached at {PythonPath} with args {arguments}");
+            
         if (unbuffered)
         {
             var env = new Dictionary<string, string>

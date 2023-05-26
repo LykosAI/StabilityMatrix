@@ -12,15 +12,16 @@ namespace StabilityMatrix;
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal class PyIOStream
 {
-    public event EventHandler<string> OnWriteUpdate;
     private readonly StringBuilder TextBuilder;
     private readonly StringWriter TextWriter;
 
-    public PyIOStream(StringBuilder builder = null)
+    public PyIOStream(StringBuilder? builder = null)
     {
         TextBuilder = builder ?? new StringBuilder();
         TextWriter = new StringWriter(TextBuilder);
     }
+    
+    public event EventHandler<string>? OnWriteUpdate;
 
     public void ClearBuffer()
     {

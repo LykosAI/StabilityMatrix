@@ -5,9 +5,6 @@ using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
-using System.Runtime.CompilerServices;
 using StabilityMatrix.Models.Packages;
 using System.Linq;
 using System.Windows;
@@ -40,11 +37,7 @@ public partial class InstallerViewModel : ObservableObject
         this.settingsManager = settingsManager;
         InstalledText = "shrug";
         ProgressValue = 0;
-        Packages = new ObservableCollection<BasePackage>
-        {
-            new A3WebUI(),
-            new DankDiffusion()
-        };
+        Packages = new ObservableCollection<BasePackage>(PackageFactory.GetAllAvailablePackages());
         SelectedPackage = Packages[0];
     }
 
@@ -146,24 +139,28 @@ public partial class InstallerViewModel : ObservableObject
 
     private async Task<bool> InstallGitIfNecessary()
     {
-        var gitOutput = await ProcessRunner.GetProcessOutputAsync("git", "--version");
-        if (gitOutput.Contains("git version 2"))
+        try
         {
-            return true;
+            var gitOutput = await ProcessRunner.GetProcessOutputAsync("git", "--version");
+            if (gitOutput.Contains("git version 2"))
+            {
+                return true;
+            }
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Error running git: ");
         }
 
         IsIndeterminate = true;
         InstalledText = "Installing Git...";
-        using var installProcess = ProcessRunner.StartProcess("Assets\\Git-2.40.1-64-bit.exe", "/VERYSILENT /NORESTART");
-        installProcess.OutputDataReceived += (sender, args) =>
-        {
-            Debug.Write(args.Data);
-        };
+        using var installProcess =
+            ProcessRunner.StartProcess("Assets\\Git-2.40.1-64-bit.exe", "/VERYSILENT /NORESTART");
+        installProcess.OutputDataReceived += (sender, args) => { Debug.Write(args.Data); };
         await installProcess.WaitForExitAsync();
         IsIndeterminate = false;
 
         return installProcess.ExitCode == 0;
+        
     }
-
-    public event PropertyChangedEventHandler PropertyChanged;
 }

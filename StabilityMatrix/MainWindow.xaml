@@ -6,6 +6,7 @@
                  xmlns:local="clr-namespace:StabilityMatrix"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
                  mc:Ignorable="d"
+                 Icon="Assets/Icon.ico"
                  Background="{DynamicResource ApplicationBackgroundBrush}"
                  Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                  ExtendsContentIntoTitleBar="True"

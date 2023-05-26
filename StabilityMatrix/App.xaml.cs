@@ -1,5 +1,9 @@
-﻿using System.Windows;
+﻿using System;
+using System.IO;
+using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using Refit;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
@@ -7,6 +11,7 @@ using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Services;
+using SetupBuilderExtensions = NLog.SetupBuilderExtensions;
 
 namespace StabilityMatrix
 {
@@ -25,9 +30,24 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<InstallPage>();
             serviceCollection.AddTransient<MainWindowViewModel>();
             serviceCollection.AddSingleton<SettingsViewModel>();
+            serviceCollection.AddSingleton<LaunchViewModel>();
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
+            serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
             serviceCollection.AddRefitClient<IGithubApi>();
+            
+            var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");
+            var logConfig = new NLog.Config.LoggingConfiguration();
+            var fileTarget = new NLog.Targets.FileTarget("logfile") {FileName = logPath};
+            logConfig.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, fileTarget);
+            NLog.LogManager.Configuration = logConfig;
+
+            serviceCollection.AddLogging(log =>
+            {
+                log.ClearProviders();
+                log.SetMinimumLevel(LogLevel.Trace);
+                log.AddNLog(logConfig);
+            });
 
             var provider = serviceCollection.BuildServiceProvider();
             var window = provider.GetRequiredService<MainWindow>();

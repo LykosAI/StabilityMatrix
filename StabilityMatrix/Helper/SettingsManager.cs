@@ -24,17 +24,35 @@ public class SettingsManager : ISettingsManager
         if (!File.Exists(SettingsPath))
         {
             File.Create(SettingsPath).Close();
-            File.WriteAllText(SettingsPath, "{}");
+            var defaultSettingsJson = JsonSerializer.Serialize(Settings);
+            File.WriteAllText(SettingsPath, defaultSettingsJson);
         }
         
         LoadSettings();
-        
-        
     }
     
     public void SetTheme(string theme)
     {
         Settings.Theme = theme;
+        SaveSettings();
+    }
+    
+    public void AddInstalledPackage(InstalledPackage p) 
+    {
+        Settings.InstalledPackages.Add(p);
+        SaveSettings();
+    }
+    
+    public void SetActiveInstalledPackage(InstalledPackage? p) 
+    {
+        if (p == null)
+        {
+            Settings.ActiveInstalledPackage = null;
+        }
+        else
+        {
+            Settings.ActiveInstalledPackage = p.Id;
+        }
         SaveSettings();
     }
 

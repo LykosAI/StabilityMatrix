@@ -15,46 +15,56 @@
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d">
     
-    <Grid>
-        <StackPanel Orientation="Vertical">
-            <ui:Card Margin="8,16,8,8">
-                <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
-                    <TextBlock Text="Theme" FontWeight="Bold" FontSize="16" Margin="0,8" />
-                    <ComboBox
-                        Margin="8"
-                        ItemsSource="{Binding AvailableThemes}"
-                        SelectedItem="{Binding SelectedTheme, Mode=TwoWay}"
-                        Width="500" />
-                </StackPanel>
-            </ui:Card>
+    <!-- Scroll view -->
+    <ScrollViewer HorizontalScrollBarVisibility="Auto">
+        <Grid>
+            <StackPanel Orientation="Vertical">
+                <ui:Card Margin="8,16,8,8">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
+                        <TextBlock Text="Theme" FontWeight="Bold" FontSize="16" Margin="0,8" />
+                        <ComboBox
+                            Margin="8"
+                            ItemsSource="{Binding AvailableThemes}"
+                            SelectedItem="{Binding SelectedTheme, Mode=TwoWay}"
+                            Width="500" />
+                    </StackPanel>
+                </ui:Card>
 
-            <ui:Card Margin="8">
-                <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
-                    <TextBlock Text="Debug Info" FontWeight="Bold" FontSize="16" Margin="0,8" />
-                    <TextBlock Margin="8" Text="{Binding GpuInfo, FallbackValue=3dfx Voodoo 5 6000 - 128MB VRAM}"/>
-                    <TextBlock Margin="8" Text="{Binding GitInfo}"/>
-                    <TextBlock Margin="8" Text="{Binding TestProperty, FallbackValue=TestProperty}"/>
-                </StackPanel>
-            </ui:Card>
-            
-            <ui:Card Margin="8">
-                <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
-                    <TextBlock Text="Embedded Python" FontWeight="Bold" FontSize="16" Margin="0,8" />
-                    <!-- Add a button to show messagebox for python version -->
-                    <Button Margin="8" Content="Check Version Info" Command="{Binding PythonVersionCommand}"/>
-                </StackPanel>
-            </ui:Card>
+                <ui:Card Margin="8">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
+                        <TextBlock Text="Debug Info" FontWeight="Bold" FontSize="16" Margin="0,8" />
+                        <TextBlock Margin="8" Text="{Binding GpuInfo, FallbackValue=3dfx Voodoo 5 6000 - 128MB VRAM}"/>
+                        <TextBlock Margin="8" Text="{Binding GitInfo}"/>
+                        <TextBlock Margin="8" Text="{Binding TestProperty, FallbackValue=TestProperty}"/>
+                    </StackPanel>
+                </ui:Card>
+                
+                <ui:Card Margin="8">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
+                        <TextBlock Text="Embedded Python" FontWeight="Bold" FontSize="16" Margin="0,8" />
+                        <!-- Add a button to show messagebox for python version -->
+                        <Button Margin="8" Content="Check Version Info" Command="{Binding PythonVersionCommand}"/>
+                    </StackPanel>
+                </ui:Card>
+                
+                <ui:Card Margin="8">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
+                        <TextBlock Text="Debug" FontWeight="Bold" FontSize="16" Margin="0,8" />
+                        <Button Margin="8" Content="Add Installation" Command="{Binding AddInstallationCommand}"/>
+                    </StackPanel>
+                </ui:Card>
 
-            <ui:Card Margin="8">
-                <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
-                    <TextBlock Text="Some Other Setting" FontWeight="Bold" FontSize="16" Margin="0,8" />
-                    <ComboBox
-                        Margin="8"
-                        ItemsSource="{Binding AvailableThemes}"
-                        SelectedItem="{Binding SelectedTheme, Mode=TwoWay}"
-                        Width="500" />
-                </StackPanel>
-            </ui:Card>
-        </StackPanel>
-    </Grid>
+                <ui:Card Margin="8">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
+                        <TextBlock Text="Some Other Setting" FontWeight="Bold" FontSize="16" Margin="0,8" />
+                        <ComboBox
+                            Margin="8"
+                            ItemsSource="{Binding AvailableThemes}"
+                            SelectedItem="{Binding SelectedTheme, Mode=TwoWay}"
+                            Width="500" />
+                    </StackPanel>
+                </ui:Card>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
 </Page>

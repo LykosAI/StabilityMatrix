@@ -92,7 +92,7 @@ public class PyVenvRunner: IDisposable
 
     public void Dispose()
     {
-        Process?.Dispose();
+        Process?.Kill();
         GC.SuppressFinalize(this);
     }
 }

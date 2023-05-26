@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Mime;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -23,10 +24,17 @@ public partial class LaunchViewModel : ObservableObject
     private PyVenvRunner? venvRunner;
     
     [ObservableProperty]
-    public string consoleInput = "";
+    private string consoleInput = "";
 
     [ObservableProperty]
-    public string consoleOutput = "";
+    private string consoleOutput = "";
+    
+    [ObservableProperty]
+    private Visibility launchButtonVisibility;
+
+    [ObservableProperty] 
+    private Visibility stopButtonVisibility;
+    
     
     private InstalledPackage? selectedPackage;
     public InstalledPackage? SelectedPackage
@@ -68,6 +76,7 @@ public partial class LaunchViewModel : ObservableObject
         var venvPath = Path.Combine(packagePath, "venv");
         
         // Setup venv
+        venvRunner?.Dispose();
         venvRunner = new PyVenvRunner(venvPath);
         if (!venvRunner.Exists())
         {
@@ -92,29 +101,45 @@ public partial class LaunchViewModel : ObservableObject
                 Debug.WriteLine($"Venv process exited with code {i}");
                 ConsoleOutput += $"Venv process exited with code {i}";
                 ScrollNeeded?.Invoke(this, EventArgs.Empty);
+                SetProcessRunning(false);
             });
         });
 
         var args = "\"" + Path.Combine(packagePath, "launch.py") + "\"";
 
         venvRunner.RunDetached(args, onConsoleOutput, onExit);
+        SetProcessRunning(true);
     });
 
     public void OnLoaded()
     {
+        SetProcessRunning(false);
         LoadPackages();
-        if (InstalledPackages.Any())
+        if (InstalledPackages.Any() && settingsManager.Settings.ActiveInstalledPackage != null)
         {
             SelectedPackage =
                 InstalledPackages[
                     InstalledPackages.IndexOf(InstalledPackages.FirstOrDefault(x =>
                         x.Id == settingsManager.Settings.ActiveInstalledPackage))];
         }
+        else if (InstalledPackages.Any())
+        {
+            SelectedPackage = InstalledPackages[0];
+        }
     }
 
     public void OnShutdown()
     {
         venvRunner?.Dispose();
+    }
+
+    [RelayCommand]
+    private void Stop()
+    {
+        venvRunner?.Dispose();
+        venvRunner = null;
+        SetProcessRunning(false);
+        ConsoleOutput += $"{Environment.NewLine}Stopped process at {DateTimeOffset.Now}{Environment.NewLine}";
     }
 
     private void LoadPackages()
@@ -130,6 +155,20 @@ public partial class LaunchViewModel : ObservableObject
         foreach (var package in packages)
         {
             InstalledPackages.Add(package);
+        }
+    }
+
+    private void SetProcessRunning(bool running)
+    {
+        if (running)
+        {
+            LaunchButtonVisibility = Visibility.Collapsed;
+            StopButtonVisibility = Visibility.Visible;
+        }
+        else
+        {
+            LaunchButtonVisibility = Visibility.Visible;
+            StopButtonVisibility = Visibility.Collapsed;
         }
     }
 }

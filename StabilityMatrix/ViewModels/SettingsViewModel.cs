@@ -1,12 +1,10 @@
 using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Win32;
 using Ookii.Dialogs.Wpf;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;

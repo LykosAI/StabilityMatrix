@@ -9,6 +9,7 @@ public abstract class BasePackage
     public abstract string DisplayName { get; }
     public abstract string Author { get; }
     public abstract string GithubUrl { get; }
+
     public abstract Task DownloadPackage();
     
     internal virtual string DownloadLocation => $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages\\{Name}.zip";

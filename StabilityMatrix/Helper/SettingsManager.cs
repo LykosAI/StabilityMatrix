@@ -68,6 +68,12 @@ public class SettingsManager : ISettingsManager
         SaveSettings();
     }
 
+    public void SetNavExpanded(bool navExpanded)
+    {
+        Settings.IsNavExpanded = navExpanded;
+        SaveSettings();
+    }
+
     private void LoadSettings()
     {
         var settingsContent = File.ReadAllText(SettingsPath);

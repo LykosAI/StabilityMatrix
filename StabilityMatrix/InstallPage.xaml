@@ -6,8 +6,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:models="clr-namespace:StabilityMatrix.Models"
-    d:DesignHeight="700"
-    d:DesignWidth="1100"
+    d:DesignHeight="450"
+    d:DesignWidth="700"
     Loaded="InstallPage_OnLoaded"
     Background="{DynamicResource ApplicationBackgroundBrush}"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
@@ -47,8 +47,18 @@
                 </ListView.ItemTemplate>
             </ListView>
             <StackPanel Orientation="Vertical" Margin="32,0,0,0">
-                <TextBlock Text="{Binding SelectedPackage.DisplayName}"/>
-                <TextBlock Text="{Binding SelectedPackage.ByAuthor}"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding SelectedPackage.DisplayName, FallbackValue=Stable Diffusion Web UI}"
+                               FontSize="24" FontWeight="Bold" />
+                    <Grid Visibility="{Binding PackageInstalledVisibility}">
+                        <Ellipse Width="24" Height="24" Fill="Green" Margin="8,0,0,0"/>
+                        <ui:SymbolIcon Symbol="Checkmark24" Foreground="White" Margin="8,0,0,0"/>
+                    </Grid>
+                    <TextBlock Text="Installed" VerticalAlignment="Center" Margin="8,0,0,0"
+                               Visibility="{Binding PackageInstalledVisibility}"/>
+                </StackPanel>
+                <TextBlock Text="{Binding SelectedPackage.ByAuthor, FallbackValue=by Automatic111}"
+                           FontSize="12" Margin="0,5, 0, 5" />
                 <ui:Hyperlink NavigateUri="{Binding SelectedPackage.GithubUrl}">
                     <TextBlock>
                         <Run Text="GitHub Page:"/>

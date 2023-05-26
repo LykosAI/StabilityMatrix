@@ -5,26 +5,29 @@ using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Dynamic;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using StabilityMatrix.Models.Packages;
 using System.Linq;
 using System.Windows;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 
 namespace StabilityMatrix.ViewModels;
 
-public class InstallerViewModel : INotifyPropertyChanged
+public partial class InstallerViewModel : ObservableObject
 {
     private readonly ILogger<InstallerViewModel> logger;
     private readonly ISettingsManager settingsManager;
-    private string installedText;
     private int progressValue;
-    private bool isIndeterminate;
     private BasePackage selectedPackage;
+    
+    [ObservableProperty]
+    private string installedText;
+    [ObservableProperty]
+    private bool isIndeterminate;
 
     public InstallerViewModel(ILogger<InstallerViewModel> logger, ISettingsManager settingsManager)
     {
@@ -47,16 +50,9 @@ public class InstallerViewModel : INotifyPropertyChanged
     
     public ObservableCollection<BasePackage> Packages { get; }
 
-    public string InstalledText
-    {
-        get => installedText;
-        private set
-        {
-            if (value == installedText) return;
-            installedText = value;
-            OnPropertyChanged();
-        }
-    }
+
+    [ObservableProperty]
+    private Visibility packageInstalledVisibility;
 
     public int ProgressValue
     {
@@ -70,17 +66,6 @@ public class InstallerViewModel : INotifyPropertyChanged
         }
     }
 
-    public bool IsIndeterminate
-    {
-        get => isIndeterminate;
-        set
-        {
-            if (value == isIndeterminate) return;
-            isIndeterminate = value;
-            OnPropertyChanged();
-        }
-    }
-
     public BasePackage SelectedPackage
     {
         get => selectedPackage;
@@ -88,6 +73,11 @@ public class InstallerViewModel : INotifyPropertyChanged
         {
             selectedPackage = value;
             OnPropertyChanged();
+
+            PackageInstalledVisibility =
+                settingsManager.Settings.InstalledPackages.Any(p => p.Name == selectedPackage.Name)
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
         }
     }
 
@@ -222,9 +212,4 @@ public class InstallerViewModel : INotifyPropertyChanged
     }
 
     public event PropertyChangedEventHandler PropertyChanged;
-
-    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
 }

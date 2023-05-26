@@ -10,4 +10,5 @@ public class Settings
     public Guid? ActiveInstalledPackage { get; set; }
     public bool HasInstalledPip { get; set; }
     public bool HasInstalledVenv { get; set; }
+    public bool IsNavExpanded { get; set; }
 }

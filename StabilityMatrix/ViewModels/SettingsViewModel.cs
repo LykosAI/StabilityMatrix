@@ -1,11 +1,13 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
+using Ookii.Dialogs.Wpf;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using Wpf.Ui.Appearance;
@@ -83,17 +85,14 @@ public partial class SettingsViewModel : ObservableObject
     {
         var initialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages";
         // Show dialog box to choose a folder
-        var dialog = new OpenFileDialog
+
+        var dialog = new VistaFolderBrowserDialog
         {
-            Title = "Choose directory for installation",
-            CheckFileExists = false,
-            CheckPathExists = true,
-            FileName = "Folder Selection",
-            Filter = "Folder|no.file",
-            InitialDirectory = initialDirectory
+            Description = "Select a folder",
+            UseDescriptionForTitle = true
         };
         if (dialog.ShowDialog() != true) return;
-        var path = Path.GetDirectoryName(dialog.FileName);
+        var path = dialog.SelectedPath;
         if (path == null) return;
 
         // Create package

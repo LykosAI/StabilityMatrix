@@ -23,7 +23,6 @@ public partial class SettingsViewModel : ObservableObject
         "Dark",
         "System",
     };
-    private string selectedTheme;
     private readonly IContentDialogService contentDialogService;
 
     public SettingsViewModel(ISettingsManager settingsManager, IContentDialogService contentDialogService)
@@ -31,28 +30,26 @@ public partial class SettingsViewModel : ObservableObject
         this.settingsManager = settingsManager;
         this.contentDialogService = contentDialogService;
         SelectedTheme = settingsManager.Settings.Theme;
+        
     }
 
-    public string SelectedTheme
+    [ObservableProperty]
+    private string selectedTheme;
+    
+    partial void OnSelectedThemeChanged(string value)
     {
-        get => selectedTheme;
-        set
+        settingsManager.SetTheme(value);
+        switch (value)
         {
-            if (value == selectedTheme) return;
-            selectedTheme = value;
-            OnPropertyChanged();
-
-            switch (selectedTheme)
-            {
-                case "Light":
-                    Theme.Apply(ThemeType.Light);
-                    break;
-                case "Dark":
-                    Theme.Apply(ThemeType.Dark);
-                    break;
-            }
-
-            settingsManager.SetTheme(selectedTheme);
+            case "Light":
+                Theme.Apply(ThemeType.Light);
+                break;
+            case "Dark":
+                Theme.Apply(ThemeType.Dark);
+                break;
+            case "System":
+                Theme.Apply(SystemInfo.ShouldUseDarkMode() ? ThemeType.Dark : ThemeType.Light);
+                break;
         }
     }
 
@@ -60,9 +57,11 @@ public partial class SettingsViewModel : ObservableObject
     private string gpuInfo =
         $"{HardwareHelper.GetGpuChipName()} ({HardwareHelper.GetGpuMemoryBytes() / 1024 / 1024 / 1024} GB)";
 
-    [ObservableProperty] private string gitInfo;
+    [ObservableProperty]
+    private string gitInfo;
 
-    [ObservableProperty] private string testProperty;
+    [ObservableProperty]
+    private string testProperty;
 
     public AsyncRelayCommand PythonVersionCommand => new(async () =>
     {

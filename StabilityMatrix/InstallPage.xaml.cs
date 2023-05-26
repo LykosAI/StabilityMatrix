@@ -23,7 +23,7 @@ namespace StabilityMatrix
 
         private async void InstallPage_OnLoaded(object sender, RoutedEventArgs e)
         {
-            await viewModel.OnLoaded(); 
+            await viewModel.OnLoaded();
         }
     }
 }

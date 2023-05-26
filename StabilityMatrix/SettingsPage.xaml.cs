@@ -13,7 +13,7 @@ namespace StabilityMatrix
         {
             ViewModel = viewModel;
             DataContext = ViewModel;
-            
+
             InitializeComponent();
         }
 

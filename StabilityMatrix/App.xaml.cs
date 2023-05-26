@@ -21,7 +21,7 @@ namespace StabilityMatrix
     public partial class App : Application
     {
         private ServiceProvider? serviceProvider;
-        
+
         private void App_OnStartup(object sender, StartupEventArgs e)
         {
             var serviceCollection = new ServiceCollection();
@@ -38,10 +38,10 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
             serviceCollection.AddRefitClient<IGithubApi>();
-            
+
             var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");
             var logConfig = new NLog.Config.LoggingConfiguration();
-            var fileTarget = new NLog.Targets.FileTarget("logfile") {FileName = logPath};
+            var fileTarget = new NLog.Targets.FileTarget("logfile") { FileName = logPath };
             logConfig.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, fileTarget);
             NLog.LogManager.Configuration = logConfig;
 

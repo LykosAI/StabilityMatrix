@@ -26,7 +26,7 @@ internal class PyIOStream
     {
         TextBuilder.Clear();
     }
-    
+
     public string GetBuffer()
     {
         return TextBuilder.ToString();

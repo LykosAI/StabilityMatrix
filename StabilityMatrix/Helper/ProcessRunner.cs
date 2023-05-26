@@ -11,7 +11,7 @@ namespace StabilityMatrix.Helper;
 public static class ProcessRunner
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
+
     public static async Task<string> GetProcessOutputAsync(string fileName, string arguments)
     {
         Logger.Trace($"Starting process '{fileName}' with arguments '{arguments}'");
@@ -44,7 +44,7 @@ public static class ProcessRunner
         process.StartInfo.RedirectStandardError = true;
         process.StartInfo.RedirectStandardInput = true;
         process.StartInfo.CreateNoWindow = true;
-        
+
         if (environmentVariables != null)
         {
             foreach (var (key, value) in environmentVariables)

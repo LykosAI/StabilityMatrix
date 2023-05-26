@@ -17,7 +17,7 @@ internal record struct PyVersionInfo(int Major, int Minor, int Micro, string Rel
 internal static class PyRunner
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
+
     private const string RelativeDllPath = @"Assets\Python310\python310.dll";
     private const string RelativeExePath = @"Assets\Python310\python.exe";
     private const string RelativePipExePath = @"Assets\Python310\Scripts\pip.exe";
@@ -40,7 +40,7 @@ internal static class PyRunner
     public static async Task Initialize()
     {
         if (PythonEngine.IsInitialized) return;
-        
+
         Logger.Trace($"Initializing Python runtime with DLL '{DllPath}'");
 
         // Check PythonDLL exists
@@ -51,7 +51,7 @@ internal static class PyRunner
         Runtime.PythonDLL = DllPath;
         PythonEngine.Initialize();
         PythonEngine.BeginAllowThreads();
-        
+
         // Redirect stdout and stderr
         StdOutStream = new PyIOStream();
         StdErrStream = new PyIOStream();
@@ -71,7 +71,7 @@ internal static class PyRunner
         var p = ProcessRunner.StartProcess(ExePath, GetPipPath);
         await ProcessRunner.WaitForExitConditionAsync(p);
     }
-    
+
     /// <summary>
     /// Install a Python package with pip
     /// </summary>
@@ -80,7 +80,7 @@ internal static class PyRunner
         var p = ProcessRunner.StartProcess(PipExePath, $"install {package}");
         await ProcessRunner.WaitForExitConditionAsync(p);
     }
-    
+
     /// <summary>
     /// Run a Function with PyRunning lock as a Task with GIL.
     /// </summary>
@@ -107,7 +107,7 @@ internal static class PyRunner
             PyRunning.Release();
         }
     }
-    
+
     /// <summary>
     /// Run an Action with PyRunning lock as a Task with GIL.
     /// </summary>
@@ -143,7 +143,7 @@ internal static class PyRunner
     {
         return await Eval<string>(expression);
     }
-    
+
     /// <summary>
     /// Evaluate Python expression and return its value
     /// </summary>
@@ -156,7 +156,7 @@ internal static class PyRunner
             return result.As<T>();
         });
     }
-    
+
     /// <summary>
     /// Execute Python code without returning a value
     /// </summary>

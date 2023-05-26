@@ -23,20 +23,20 @@ public partial class LaunchViewModel : ObservableObject
     private readonly ISettingsManager settingsManager;
     private PyVenvRunner? venvRunner;
     private bool clearingPackages = false;
-    
+
     [ObservableProperty]
     private string consoleInput = "";
 
     [ObservableProperty]
     private string consoleOutput = "";
-    
+
     [ObservableProperty]
     private Visibility launchButtonVisibility;
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private Visibility stopButtonVisibility;
-    
-    
+
+
     private InstalledPackage? selectedPackage;
     public InstalledPackage? SelectedPackage
     {
@@ -45,7 +45,7 @@ public partial class LaunchViewModel : ObservableObject
         {
             if (value == selectedPackage) return;
             selectedPackage = value;
-            
+
             if (!clearingPackages)
             {
                 settingsManager.SetActiveInstalledPackage(value);
@@ -56,7 +56,7 @@ public partial class LaunchViewModel : ObservableObject
     }
 
     public ObservableCollection<InstalledPackage> InstalledPackages = new();
-    
+
     public event EventHandler ScrollNeeded;
 
     public LaunchViewModel(ISettingsManager settingsManager)
@@ -77,11 +77,11 @@ public partial class LaunchViewModel : ObservableObject
         }
 
         await PyRunner.Initialize();
-        
+
         // Get path from package
         var packagePath = SelectedPackage.Path;
         var venvPath = Path.Combine(packagePath, "venv");
-        
+
         // Setup venv
         venvRunner?.Dispose();
         venvRunner = new PyVenvRunner(venvPath);
@@ -162,7 +162,7 @@ public partial class LaunchViewModel : ObservableObject
 
         clearingPackages = true;
         InstalledPackages.Clear();
-        
+
         foreach (var package in packages)
         {
             InstalledPackages.Add(package);

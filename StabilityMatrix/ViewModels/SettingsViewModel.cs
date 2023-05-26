@@ -25,7 +25,7 @@ public partial class SettingsViewModel : ObservableObject
     };
     private string selectedTheme;
     private readonly IContentDialogService contentDialogService;
-    
+
     public SettingsViewModel(ISettingsManager settingsManager, IContentDialogService contentDialogService)
     {
         this.settingsManager = settingsManager;
@@ -41,7 +41,7 @@ public partial class SettingsViewModel : ObservableObject
             if (value == selectedTheme) return;
             selectedTheme = value;
             OnPropertyChanged();
-            
+
             switch (selectedTheme)
             {
                 case "Light":
@@ -55,17 +55,15 @@ public partial class SettingsViewModel : ObservableObject
             settingsManager.SetTheme(selectedTheme);
         }
     }
-    
+
     [ObservableProperty]
-    public string gpuInfo =
+    private string gpuInfo =
         $"{HardwareHelper.GetGpuChipName()} ({HardwareHelper.GetGpuMemoryBytes() / 1024 / 1024 / 1024} GB)";
 
-    [ObservableProperty]
-    public string gitInfo;
+    [ObservableProperty] private string gitInfo;
 
-    [ObservableProperty] 
-    public string testProperty;
-    
+    [ObservableProperty] private string testProperty;
+
     public AsyncRelayCommand PythonVersionCommand => new(async () =>
     {
         // Get python version
@@ -102,7 +100,7 @@ public partial class SettingsViewModel : ObservableObject
             PackageName = "dank-diffusion",
             PackageVersion = "v1.0.0",
         };
-        
+
         // Add package to settings
         settingsManager.AddInstalledPackage(package);
     });
@@ -113,7 +111,7 @@ public partial class SettingsViewModel : ObservableObject
             ? "Dark"
             : settingsManager.Settings.Theme;
         GitInfo = await ProcessRunner.GetProcessOutputAsync("git", "--version");
-        
+
         TestProperty = $"{SystemParameters.PrimaryScreenHeight} x {SystemParameters.PrimaryScreenWidth}";
     }
 }

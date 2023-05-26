@@ -13,7 +13,7 @@ public class HardwareHelper
         {
             return 0;
         }
-        
+
         var vram = key.GetValue("HardwareInformation.qwMemorySize");
         var vramLong = Convert.ToUInt64(vram);
         return vramLong;
@@ -27,7 +27,7 @@ public class HardwareHelper
         {
             return "Unknown";
         }
-        
+
         var gpuName = key.GetValue("HardwareInformation.ChipType");
         return gpuName?.ToString() ?? "Unknown";
     }

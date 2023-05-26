@@ -11,7 +11,7 @@ using StabilityMatrix.Helper;
 
 namespace StabilityMatrix.Models.Packages;
 
-public class A3WebUI: BasePackage
+public class A3WebUI : BasePackage
 {
     public override string Name => "stable-diffusion-webui";
     public override string DisplayName => "Stable Diffusion WebUI";
@@ -28,8 +28,8 @@ public class A3WebUI: BasePackage
         {
             Directory.CreateDirectory(DownloadLocation.Replace($"{Name}.zip", ""));
         }
-        
-        using var client = new HttpClient {Timeout = TimeSpan.FromMinutes(5)};
+
+        using var client = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("StabilityMatrix", "1.0"));
         await using var file = new FileStream(DownloadLocation, FileMode.Create, FileAccess.Write, FileShare.None);
 
@@ -45,7 +45,7 @@ public class A3WebUI: BasePackage
         }
 
         var isIndeterminate = contentLength == 0;
-        
+
         await using var stream = await response.Content.ReadAsStreamAsync();
         var totalBytesRead = 0;
         while (true)
@@ -54,7 +54,7 @@ public class A3WebUI: BasePackage
             var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
             if (bytesRead == 0) break;
             await file.WriteAsync(buffer, 0, bytesRead);
-            
+
             totalBytesRead += bytesRead;
 
             if (isIndeterminate)
@@ -63,7 +63,7 @@ public class A3WebUI: BasePackage
             }
             else
             {
-                var progress = (int) (totalBytesRead * 100d / contentLength);
+                var progress = (int)(totalBytesRead * 100d / contentLength);
                 Debug.WriteLine($"Progress; {progress}");
                 OnDownloadProgressChanged(progress);
             }
@@ -74,7 +74,7 @@ public class A3WebUI: BasePackage
     }
 
     public string CommandLineArgs => $"{GetVramOption()} {GetXformersOption()}";
-    
+
     private static string GetVramOption()
     {
         var vramGb = HardwareHelper.GetGpuMemoryBytes() / 1024 / 1024 / 1024;
@@ -86,7 +86,7 @@ public class A3WebUI: BasePackage
             _ => string.Empty
         };
     }
-    
+
     private static string GetXformersOption()
     {
         var gpuName = HardwareHelper.GetGpuChipName();

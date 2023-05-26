@@ -31,6 +31,7 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<MainWindowViewModel>();
             serviceCollection.AddSingleton<SettingsViewModel>();
             serviceCollection.AddSingleton<LaunchViewModel>();
+            serviceCollection.AddSingleton<InstallerViewModel>();
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();

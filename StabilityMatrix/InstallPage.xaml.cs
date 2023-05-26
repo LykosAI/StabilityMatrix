@@ -12,15 +12,18 @@ namespace StabilityMatrix
     /// </summary>
     public sealed partial class InstallPage : Page
     {
-        public InstallPage()
-        { 
+        private readonly InstallerViewModel viewModel;
+
+        public InstallPage(InstallerViewModel viewModel)
+        {
+            this.viewModel = viewModel;
             InitializeComponent();
-            DataContext = new InstallerViewModel();
+            DataContext = viewModel;
         }
 
         private async void InstallPage_OnLoaded(object sender, RoutedEventArgs e)
         {
-            await ((InstallerViewModel) DataContext).OnLoaded(); 
+            await viewModel.OnLoaded(); 
         }
     }
 }

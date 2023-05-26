@@ -53,11 +53,13 @@ public class PyVenvRunner: IDisposable
         // Create venv
         var venvProc = ProcessRunner.StartProcess(PyRunner.ExePath, "-m virtualenv " + RootPath);
         await venvProc.WaitForExitAsync();
+        
         // Check return code
         var returnCode = venvProc.ExitCode;
         if (returnCode != 0)
         {
-           var output = await venvProc.StandardOutput.ReadToEndAsync(); 
+           var output = await venvProc.StandardOutput.ReadToEndAsync();
+           output += await venvProc.StandardError.ReadToEndAsync();
            throw new InvalidOperationException($"Venv creation failed with code {returnCode}: {output}");
         }
     }

@@ -12,7 +12,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace StabilityMatrix.ViewModels;
 
-internal class InstallerViewModel : INotifyPropertyChanged
+public class InstallerViewModel : INotifyPropertyChanged
 {
     private string installedText;
     private int progressValue;
@@ -23,19 +23,20 @@ internal class InstallerViewModel : INotifyPropertyChanged
     {
         InstalledText = "shrug";
         ProgressValue = 0;
+        Packages = new ObservableCollection<BasePackage>
+        {
+            new A3WebUI(),
+            new DankDiffusion()
+        };
+        SelectedPackage = Packages[0];
     }
 
     public Task OnLoaded()
     {
-        SelectedPackage = Packages.First();
         return Task.CompletedTask;
     }
     
-    public static ObservableCollection<BasePackage> Packages => new()
-    {
-        new A3WebUI(),
-        new DankDiffusion()
-    };
+    public ObservableCollection<BasePackage> Packages { get; }
 
     public string InstalledText
     {
@@ -81,9 +82,26 @@ internal class InstallerViewModel : INotifyPropertyChanged
         }
     }
 
-    public Visibility ProgressBarVisibility => ProgressValue > 0 ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
 
-    public AsyncRelayCommand InstallCommand => new(async () => await SelectedPackage.DownloadPackage());
+    public AsyncRelayCommand InstallCommand => new(async () =>
+    {
+        SelectedPackage.DownloadProgressChanged += (_, progress) =>
+        {
+            if (progress == -1)
+            {
+                IsIndeterminate = true;
+                ProgressValue = 1;
+            }
+            else
+            {
+                IsIndeterminate = false;
+                ProgressValue = progress;
+            }
+        };
+        SelectedPackage.DownloadComplete += (_, _) => InstalledText = "Download Complete";
+        await SelectedPackage.DownloadPackage();
+    });
     private async Task<bool> InstallGitIfNecessary()
     {
         var gitOutput = await ProcessRunner.GetProcessOutputAsync("git", "--version");

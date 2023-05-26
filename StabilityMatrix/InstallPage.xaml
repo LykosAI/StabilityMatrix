@@ -20,14 +20,32 @@
     </Page.DataContext>
     
     <Grid Margin="16">
-        <StackPanel Orientation="Horizontal" Margin="16" HorizontalAlignment="Left" Height="400">
-            <ListView
-                      ItemsSource="{Binding Packages}"
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <StackPanel Grid.Row="0" Orientation="Vertical">
+            <Button Content="Install" Command="{Binding InstallCommand}" Width="100" Height="50" HorizontalAlignment="Center"/>
+            <TextBlock Text="{Binding InstalledText}" HorizontalAlignment="Center" Padding="8"/>
+            <ProgressBar Visibility="{Binding ProgressBarVisibility, FallbackValue=Visible}" Value="{Binding ProgressValue, FallbackValue=10}"
+                         IsIndeterminate="{Binding IsIndeterminate, FallbackValue=False}"
+                         Maximum="100" Width="500"/>
+        </StackPanel>
+        
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="16" HorizontalAlignment="Left" Height="400">
+            <ListView ItemsSource="{Binding Packages}"
                       SelectedItem="{Binding SelectedPackage, Mode=TwoWay}">
+                
+                <ListView.Style>
+                    <Style TargetType="ListView">
+                        <Setter Property="Background" Value="#191919"/>
+                    </Style>
+                </ListView.Style>
             
                 <ListView.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:BasePackage}">
-                            <StackPanel VerticalAlignment="Top" Margin="10,0,0,0">
+                            <StackPanel VerticalAlignment="Top" Margin="8">
                                 <TextBlock Text="{Binding DisplayName}" Margin="0,5,0,5" />
                                 <TextBlock Text="{Binding ByAuthor}" Margin="0,0,0,5" />
                             </StackPanel>
@@ -44,13 +62,6 @@
                     </TextBlock>
                 </ui:Hyperlink>
             </StackPanel>
-        </StackPanel>
-        <StackPanel Orientation="Vertical">
-            <Button Content="Install" Command="{Binding InstallCommand}" Width="100" Height="50" HorizontalAlignment="Center"/>
-            <TextBlock Text="{Binding InstalledText}" HorizontalAlignment="Center" Padding="8"/>
-            <ProgressBar Visibility="{Binding ProgressBarVisibility}" Value="{Binding ProgressValue, FallbackValue=10}"
-                         IsIndeterminate="{Binding IsIndeterminate, FallbackValue=True}"
-                         Maximum="100" Width="500"/>
         </StackPanel>
     </Grid>
 </Page>

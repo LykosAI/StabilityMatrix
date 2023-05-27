@@ -1,16 +1,31 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
+using NLog;
 using StabilityMatrix.Api;
+using StabilityMatrix.Helper;
 using StabilityMatrix.Models.Api;
+using ILogger = NLog.ILogger;
 
 namespace StabilityMatrix.ViewModels;
 
 public partial class TextToImageViewModel : ObservableObject
 {
+    private readonly ILogger<TextToImageViewModel> logger;
     private readonly IA3WebApi a3WebApi;
+    private AsyncDispatcherTimer? progressQueryTimer;
+
+    [ObservableProperty]
+    private bool isGenerating;
+    
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
+    private int progressValue;
 
     [ObservableProperty]
     private string positivePromptText;
@@ -24,12 +39,57 @@ public partial class TextToImageViewModel : ObservableObject
     [ObservableProperty]
     private BitmapImage? imagePreview;
     
-    public TextToImageViewModel(IA3WebApi a3WebApi)
+    public Visibility ProgressBarVisibility => ProgressValue > 0 ? Visibility.Visible : Visibility.Collapsed;
+    
+    public TextToImageViewModel(IA3WebApi a3WebApi, ILogger<TextToImageViewModel> logger)
     {
+        this.logger = logger;
         this.a3WebApi = a3WebApi;
         positivePromptText = "Positive";
         negativePromptText = "Negative";
         generationSteps = 10;
+    }
+
+    private void StartProgressTracking(TimeSpan? interval = null)
+    {
+        progressQueryTimer = new AsyncDispatcherTimer
+        {
+            Interval = interval ?? TimeSpan.FromMilliseconds(150),
+            IsReentrant = false,
+            TickTask = OnProgressTrackingTick,
+        };
+        progressQueryTimer.Start();
+    }
+    
+    private void StopProgressTracking()
+    {
+        ProgressValue = 0;
+        progressQueryTimer?.Stop();
+    }
+    
+    private async Task OnProgressTrackingTick()
+    {
+        var request = new ProgressRequest();
+        var response = await a3WebApi.GetProgress(request);
+        var progress = response.Progress;
+        logger.LogInformation("Image Progress: {ResponseProgress}, ETA: {ResponseEtaRelative} s", response.Progress, response.EtaRelative);
+        if (Math.Abs(progress - 1.0) < 0.01)
+        {
+            ProgressValue = 100;
+            progressQueryTimer?.Stop();
+        }
+        else
+        {
+            // Update progress
+            ProgressValue = (int) Math.Clamp(Math.Ceiling(progress * 100), 0, 100);
+            // Update preview image
+            var result = response.CurrentImage;
+            if (result != null)
+            {
+                var bitmap = Base64ToBitmap(result);
+                ImagePreview = bitmap;
+            }
+        }
     }
     
     private static BitmapImage Base64ToBitmap(string base64String)
@@ -55,7 +115,13 @@ public partial class TextToImageViewModel : ObservableObject
             NegativePrompt = NegativePromptText,
             Steps = GenerationSteps,
         };
-        var response = await a3WebApi.TextToImage(request);
+        var task = a3WebApi.TextToImage(request);
+        
+        // Progress track while waiting for response
+        StartProgressTracking();
+        var response = await task;
+        StopProgressTracking();
+
         // Decode base64 image
         var result = response.Images[0];
         var bitmap = Base64ToBitmap(result);

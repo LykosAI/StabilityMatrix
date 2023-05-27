@@ -95,10 +95,17 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <Label
-                            Content="Image"
-                            FontSize="14"
-                            Margin="2" />
+                        <StackPanel Grid.Row="0" Orientation="Vertical">
+                            <Label
+                                Content="Image"
+                                FontSize="14"
+                                Margin="2" />
+                            <ProgressBar
+                                Maximum="100"
+                                Value="{Binding ProgressValue, FallbackValue=10}"
+                                Visibility="{Binding ProgressBarVisibility, FallbackValue=Visible}"
+                                Width="500" />
+                        </StackPanel>
                         <Grid Background="{DynamicResource ApplicationBackgroundBrush}" Grid.Row="1">
                             <Image
                                 Margin="8"

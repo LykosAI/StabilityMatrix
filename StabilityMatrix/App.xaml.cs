@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +26,11 @@ namespace StabilityMatrix
 
         private void App_OnStartup(object sender, StartupEventArgs e)
         {
+            // Configure window exception handler when not in debug mode
+            if (!Debugger.IsAttached)
+            {
+                DispatcherUnhandledException += App_DispatcherUnhandledException;
+            }
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddSingleton<IPageService, PageService>();
             serviceCollection.AddTransient<MainWindow>();
@@ -60,6 +67,23 @@ namespace StabilityMatrix
         private void App_OnExit(object sender, ExitEventArgs e)
         {
             serviceProvider?.GetRequiredService<LaunchViewModel>().OnShutdown();
+        }
+        
+        [DoesNotReturn]
+        private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        {
+            var vm = new ExceptionWindowViewModel
+            {
+                Exception = e.Exception
+            };
+            var exceptionWindow = new ExceptionWindow
+            {
+                DataContext = vm,
+                Owner = MainWindow
+            };
+            exceptionWindow.ShowDialog();
+            e.Handled = true;
+            Environment.Exit(1);
         }
     }
 }

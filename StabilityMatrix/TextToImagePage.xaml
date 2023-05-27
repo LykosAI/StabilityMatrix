@@ -29,10 +29,14 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <ScrollViewer>
+
+            <ScrollViewer
+                HorizontalAlignment="Stretch"
+                Margin="8,8,8,16"
+                VerticalAlignment="Stretch">
                 <StackPanel>
-                    <ui:Card>
-                        <StackPanel>
+                    <ui:Card HorizontalAlignment="Stretch" Padding="8">
+                        <StackPanel Margin="8">
                             <Label
                                 Content="Prompt"
                                 FontSize="14"
@@ -88,46 +92,57 @@
             </ScrollViewer>
 
             <!--  Image Viewer  -->
-            <StackPanel Grid.Column="1" VerticalAlignment="Stretch">
-                <ui:Card VerticalAlignment="Top" d:DesignHeight="600">
-                    <Grid VerticalAlignment="Stretch">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <StackPanel Grid.Row="0" Orientation="Vertical">
-                            <Label
-                                Content="Image"
-                                FontSize="14"
-                                Margin="2" />
-                            <ProgressBar
-                                Maximum="100"
-                                Value="{Binding ProgressValue, FallbackValue=10}"
-                                Visibility="{Binding ProgressBarVisibility, FallbackValue=Visible}"
-                                Width="500" />
-                        </StackPanel>
-                        <Grid Background="{DynamicResource ApplicationBackgroundBrush}" Grid.Row="1">
-                            <ui:ProgressRing
-                                Background="DarkRed"
-                                Grid.Row="0"
-                                Height="72"
-                                HorizontalAlignment="Center"
-                                IsIndeterminate="True"
-                                Margin="8"
-                                VerticalAlignment="Center"
-                                Visibility="{Binding ProgressRingVisibility, FallbackValue=Collapsed}"
-                                Width="72"
-                                x:Name="ImageProgressRing" />
-                            <Image
-                                Margin="8"
-                                Source="{Binding ImagePreview}"
-                                Visibility="{Binding ImagePreviewVisibility, FallbackValue=Visible}"
-                                d:DesignHeight="512"
-                                d:DesignWidth="512" />
-                        </Grid>
+            <ui:Card
+                Grid.Column="1"
+                HorizontalAlignment="Stretch"
+                Margin="8,8,8,16"
+                Padding="8"
+                VerticalAlignment="Top">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="0.2*" />
+                        <RowDefinition Height="0.7*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel
+                        Grid.Row="0"
+                        Orientation="Vertical"
+                        VerticalAlignment="Top">
+                        <Label
+                            Content="Image"
+                            FontSize="14"
+                            Margin="2" />
+                        <ProgressBar
+                            Maximum="100"
+                            Value="{Binding ProgressValue, FallbackValue=10}"
+                            Visibility="{Binding ProgressBarVisibility, FallbackValue=Visible}"
+                            Width="500" />
+                    </StackPanel>
+                    <Grid
+                        Background="{DynamicResource ApplicationBackgroundBrush}"
+                        Grid.Row="1"
+                        MinHeight="512"
+                        VerticalAlignment="Stretch">
+                        <ui:ProgressRing
+                            Background="DarkRed"
+                            Grid.Row="0"
+                            Height="72"
+                            HorizontalAlignment="Center"
+                            IsIndeterminate="True"
+                            Margin="8"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding ProgressRingVisibility, FallbackValue=Collapsed}"
+                            Width="72"
+                            x:Name="ImageProgressRing" />
+                        <Image
+                            HorizontalAlignment="Stretch"
+                            Margin="8"
+                            Source="{Binding ImagePreview}"
+                            Stretch="Uniform"
+                            VerticalAlignment="Stretch"
+                            Visibility="{Binding ImagePreviewVisibility, FallbackValue=Visible}" />
                     </Grid>
-                </ui:Card>
-            </StackPanel>
+                </Grid>
+            </ui:Card>
         </Grid>
 
         <ui:Button

@@ -21,7 +21,7 @@ namespace StabilityMatrix.ViewModels;
 public partial class LaunchViewModel : ObservableObject
 {
     private readonly ISettingsManager settingsManager;
-    private PyVenvRunner? venvRunner;
+    private BasePackage? runningPackage;
     private bool clearingPackages = false;
 
     [ObservableProperty]
@@ -58,7 +58,7 @@ public partial class LaunchViewModel : ObservableObject
     [ObservableProperty]
     private ObservableCollection<InstalledPackage> installedPackages = new();
 
-    public event EventHandler ScrollNeeded;
+    public event EventHandler? ScrollNeeded;
 
     public LaunchViewModel(ISettingsManager settingsManager)
     {
@@ -80,44 +80,30 @@ public partial class LaunchViewModel : ObservableObject
         await PyRunner.Initialize();
 
         // Get path from package
-        var packagePath = SelectedPackage.Path;
-        var venvPath = Path.Combine(packagePath, "venv");
-
-        // Setup venv
-        venvRunner?.Dispose();
-        venvRunner = new PyVenvRunner(venvPath);
-        if (!venvRunner.Exists())
+        var packagePath = SelectedPackage.Path!;
+        var basePackage = PackageFactory.FindPackageByName(SelectedPackage.Name!);
+        if (basePackage == null)
         {
-            await venvRunner.Setup();
+            throw new InvalidOperationException("Package not found");
         }
-
-        void OnConsoleOutput(string? s)
-        {
-            if (s == null) return;
-            Dispatcher.CurrentDispatcher.Invoke(() =>
-            {
-                Debug.WriteLine($"process stdout: {s}");
-                ConsoleOutput += s + "\n";
-                ScrollNeeded?.Invoke(this, EventArgs.Empty);
-            });
-        }
-
-        void OnExit(int i)
-        {
-            Dispatcher.CurrentDispatcher.Invoke(() =>
-            {
-                Debug.WriteLine($"Venv process exited with code {i}");
-                ConsoleOutput += $"Venv process exited with code {i}";
-                ScrollNeeded?.Invoke(this, EventArgs.Empty);
-                SetProcessRunning(false);
-            });
-        }
-
-        var args = "\"" + Path.Combine(packagePath, SelectedPackage.LaunchCommand) + "\"";
-
-        venvRunner.RunDetached(args, OnConsoleOutput, OnExit);
+        
+        basePackage.ConsoleOutput += OnConsoleOutput;
+        basePackage.Exited += OnExit;
+        basePackage.StartupComplete += RunningPackageOnStartupComplete;
+        await basePackage.RunPackage(packagePath, string.Empty);
+        runningPackage = basePackage;
         SetProcessRunning(true);
     });
+
+    private void RunningPackageOnStartupComplete(object? sender, EventArgs e)
+    {
+        
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = "http://localhost:7860",
+            UseShellExecute = true
+        });
+    }
 
     public void OnLoaded()
     {
@@ -137,20 +123,23 @@ public partial class LaunchViewModel : ObservableObject
 
     public void OnShutdown()
     {
-        venvRunner?.Dispose();
+        Stop();
     }
 
     [RelayCommand]
-    private async Task Stop()
+    private Task Stop()
     {
-        venvRunner?.Dispose();
-        if (venvRunner?.Process != null)
+        if (runningPackage != null)
         {
-            await venvRunner.Process.WaitForExitAsync();
+            runningPackage.StartupComplete -= RunningPackageOnStartupComplete;
+            runningPackage.ConsoleOutput -= OnConsoleOutput;
+            runningPackage.Exited -= OnExit;
         }
-        venvRunner = null;
+        runningPackage?.Shutdown();
+        runningPackage = null;
         SetProcessRunning(false);
         ConsoleOutput += $"{Environment.NewLine}Stopped process at {DateTimeOffset.Now}{Environment.NewLine}";
+        return Task.CompletedTask;
     }
 
     private void LoadPackages()
@@ -183,5 +172,25 @@ public partial class LaunchViewModel : ObservableObject
             LaunchButtonVisibility = Visibility.Visible;
             StopButtonVisibility = Visibility.Collapsed;
         }
+    }
+    
+    private void OnConsoleOutput(object? sender, string output)
+    {
+        if (output == null) return;
+        Dispatcher.CurrentDispatcher.Invoke(() =>
+        {
+            ConsoleOutput += output + "\n";
+            ScrollNeeded?.Invoke(this, EventArgs.Empty);
+        });
+    }
+
+    private void OnExit(object? sender, int exitCode)
+    {
+        Dispatcher.CurrentDispatcher.Invoke(() =>
+        {
+            ConsoleOutput += $"Venv process exited with code {exitCode}";
+            ScrollNeeded?.Invoke(this, EventArgs.Empty);
+            SetProcessRunning(false);
+        });
     }
 }

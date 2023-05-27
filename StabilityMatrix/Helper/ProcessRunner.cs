@@ -42,7 +42,6 @@ public static class ProcessRunner
         process.StartInfo.UseShellExecute = false;
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
-        process.StartInfo.RedirectStandardInput = true;
         process.StartInfo.CreateNoWindow = true;
 
         if (environmentVariables != null)

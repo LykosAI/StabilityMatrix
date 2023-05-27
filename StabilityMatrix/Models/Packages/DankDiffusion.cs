@@ -19,4 +19,16 @@ public class DankDiffusion : BasePackage
     {
         throw new System.NotImplementedException();
     }
+
+    public override Task RunPackage(string installedPackagePath, string arguments)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public override Task Shutdown()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public override string DefaultLaunchArguments => "";
 }

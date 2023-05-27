@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using NLog;
 using Refit;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
@@ -14,11 +15,17 @@ namespace StabilityMatrix.Models.Packages;
 
 public class A3WebUI : BasePackage
 {
+    private PyVenvRunner? venvRunner;
+    
     public override string Name => "stable-diffusion-webui";
     public override string DisplayName => "Stable Diffusion WebUI";
     public override string Author => "AUTOMATIC1111";
     public override string GithubUrl => "https://github.com/AUTOMATIC1111/stable-diffusion-webui";
     public override string LaunchCommand => "launch.py";
+    public override string DefaultLaunchArguments => $"{GetVramOption()} {GetXformersOption()}";
+
+
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     public override async Task DownloadPackage()
     {
@@ -42,7 +49,7 @@ public class A3WebUI : BasePackage
         {
             response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
             contentLength = response.Content.Headers.ContentLength ?? 0;
-            Debug.WriteLine("Retrying...");
+            Logger.Debug("Retrying get-headers for content-length");
             Thread.Sleep(50);
         }
 
@@ -66,7 +73,7 @@ public class A3WebUI : BasePackage
             else
             {
                 var progress = (int)(totalBytesRead * 100d / contentLength);
-                Debug.WriteLine($"Progress; {progress}");
+                Logger.Debug($"Progress; {progress}");
                 OnDownloadProgressChanged(progress);
             }
         }
@@ -82,8 +89,48 @@ public class A3WebUI : BasePackage
         return Task.CompletedTask;
     }
 
-    public string CommandLineArgs => $"{GetVramOption()} {GetXformersOption()}";
-    
+    public override async Task RunPackage(string installedPackagePath, string arguments)
+    {
+        var venvPath = Path.Combine(installedPackagePath, "venv");
+
+        // Setup venv
+        venvRunner?.Dispose();
+        venvRunner = new PyVenvRunner(venvPath);
+        if (!venvRunner.Exists())
+        {
+            await venvRunner.Setup();
+        }
+
+        void HandleConsoleOutput(string? s)
+        {
+            if (s == null) return;
+            if (s.Contains("model loaded", StringComparison.OrdinalIgnoreCase))
+            {
+                OnStartupComplete();
+            }
+            Debug.WriteLine($"process stdout: {s}");
+            OnConsoleOutput($"{s}\n");
+        }
+
+        void HandleExit(int i)
+        {
+            Debug.WriteLine($"Venv process exited with code {i}");
+            OnConsoleOutput($"Venv process exited with code {i}");
+        }
+
+        var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\"";
+
+        venvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
+    }
+
+    public override Task Shutdown()
+    {
+        venvRunner?.Dispose();
+        venvRunner?.Process?.WaitForExitAsync();
+        return Task.CompletedTask;
+    }
+
+
     private void UnzipPackage()
     {
         OnInstallProgressChanged(0);

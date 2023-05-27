@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Windows;
-using CommunityToolkit.Mvvm.Input;
 
 namespace StabilityMatrix.ViewModels;
 

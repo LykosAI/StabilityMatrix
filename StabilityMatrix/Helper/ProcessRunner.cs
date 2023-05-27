@@ -32,6 +32,7 @@ public static class ProcessRunner
     public static Process StartProcess(
         string fileName,
         string arguments,
+        string? workingDirectory = null,
         Action<string?>? outputDataReceived = null,
         Dictionary<string, string>? environmentVariables = null)
     {
@@ -50,6 +51,11 @@ public static class ProcessRunner
             {
                 process.StartInfo.EnvironmentVariables[key] = value;
             }
+        }
+
+        if (workingDirectory != null)
+        {
+            process.StartInfo.WorkingDirectory = workingDirectory;
         }
 
         if (outputDataReceived != null)

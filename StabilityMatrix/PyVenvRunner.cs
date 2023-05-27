@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using NLog;
-using NLog.Fluent;
 using StabilityMatrix.Helper;
 
 namespace StabilityMatrix;
@@ -69,7 +68,8 @@ public class PyVenvRunner : IDisposable
         }
     }
 
-    public void RunDetached(string arguments, Action<string?>? outputDataReceived, Action<int>? onExit = null, bool unbuffered = true)
+    public void RunDetached(string arguments, Action<string?>? outputDataReceived, Action<int>? onExit = null,
+        bool unbuffered = true, string workingDirectory = "")
     {
         if (!Exists())
         {
@@ -77,19 +77,22 @@ public class PyVenvRunner : IDisposable
         }
 
         Logger.Debug($"Launching RunDetached at {PythonPath} with args {arguments}");
-            
+
         if (unbuffered)
         {
             var env = new Dictionary<string, string>
             {
                 {"PYTHONUNBUFFERED", "1"}
             };
-            Process = ProcessRunner.StartProcess(PythonPath, "-u " + arguments, outputDataReceived, env);
+            Process = ProcessRunner.StartProcess(PythonPath, "-u " + arguments, workingDirectory, outputDataReceived,
+                env);
         }
         else
         {
-            Process = ProcessRunner.StartProcess(PythonPath, arguments, outputDataReceived);
+            Process = ProcessRunner.StartProcess(PythonPath, arguments, outputDataReceived: outputDataReceived,
+                workingDirectory: workingDirectory);
         }
+
         if (onExit != null)
         {
             Process.Exited += (_, _) => onExit(Process.ExitCode);

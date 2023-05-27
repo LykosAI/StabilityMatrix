@@ -43,7 +43,6 @@
                                 PlaceholderText="Prompt"
                                 QuerySubmitted="PositivePromptBox_OnQuerySubmitted"
                                 SuggestionChosen="PositivePromptBox_OnSuggestionChosen"
-                                Text="{Binding PositivePromptText}"
                                 TextChanged="PositivePromptBox_OnTextChanged" />
                             <Label
                                 Content="Negative Prompt"
@@ -55,7 +54,6 @@
                                 PlaceholderText="Negative Prompt"
                                 QuerySubmitted="NegativePromptBox_OnQuerySubmitted"
                                 SuggestionChosen="NegativePromptBox_OnSuggestionChosen"
-                                Text="{Binding NegativePromptText}"
                                 TextChanged="NegativePromptBox_OnTextChanged" />
 
                             <Grid Margin="8">

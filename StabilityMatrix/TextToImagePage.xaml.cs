@@ -6,6 +6,8 @@ namespace StabilityMatrix;
 
 public sealed partial class TextToImagePage : Page
 {
+    private TextToImageViewModel ViewModel => (TextToImageViewModel) DataContext;
+    
     public TextToImagePage(TextToImageViewModel viewModel)
     {
         InitializeComponent();
@@ -14,31 +16,37 @@ public sealed partial class TextToImagePage : Page
 
     private void PositivePromptBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
-        throw new System.NotImplementedException();
     }
 
     private void PositivePromptBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
     {
-        throw new System.NotImplementedException();
     }
 
     private void PositivePromptBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
-        throw new System.NotImplementedException();
+        // Update the prompt text when the user types
+        if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
+        {
+            var fullText = sender.Text;
+            ViewModel.PositivePromptText = fullText;
+        }
     }
 
     private void NegativePromptBox_OnQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
-        throw new System.NotImplementedException();
     }
 
     private void NegativePromptBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
     {
-        throw new System.NotImplementedException();
     }
 
     private void NegativePromptBox_OnTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
-        throw new System.NotImplementedException();
+        // Update the prompt text when the user types
+        if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
+        {
+            var fullText = sender.Text;
+            ViewModel.NegativePromptText = fullText;
+        }
     }
 }

@@ -39,8 +39,7 @@ public partial class TextToImageViewModel : ObservableObject
         var bitmapImage = new BitmapImage();
         bitmapImage.BeginInit();
         
-        using var stream = new MemoryStream(imageBytes, 0, imageBytes.Length);
-        bitmapImage.StreamSource = stream;
+        bitmapImage.StreamSource = new MemoryStream(imageBytes, 0, imageBytes.Length);
         bitmapImage.EndInit();
         return bitmapImage;
     }

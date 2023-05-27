@@ -37,12 +37,26 @@
                                 Content="Prompt"
                                 FontSize="14"
                                 Margin="2" />
-                            <TextBox Margin="8" Text="{Binding PositivePromptText}" />
+                            <ui:AutoSuggestBox
+                                Margin="8"
+                                Name="PositivePromptBox"
+                                PlaceholderText="Prompt"
+                                QuerySubmitted="PositivePromptBox_OnQuerySubmitted"
+                                SuggestionChosen="PositivePromptBox_OnSuggestionChosen"
+                                Text="{Binding PositivePromptText}"
+                                TextChanged="PositivePromptBox_OnTextChanged" />
                             <Label
                                 Content="Negative Prompt"
                                 FontSize="14"
                                 Margin="2" />
-                            <TextBox Margin="8" Text="{Binding NegativePromptText}" />
+                            <ui:AutoSuggestBox
+                                Margin="8"
+                                Name="NegativePromptBox"
+                                PlaceholderText="Negative Prompt"
+                                QuerySubmitted="NegativePromptBox_OnQuerySubmitted"
+                                SuggestionChosen="NegativePromptBox_OnSuggestionChosen"
+                                Text="{Binding NegativePromptText}"
+                                TextChanged="NegativePromptBox_OnTextChanged" />
 
                             <Grid Margin="8">
                                 <Grid.ColumnDefinitions>
@@ -77,16 +91,24 @@
 
             <!--  Image Viewer  -->
             <StackPanel Grid.Column="1" VerticalAlignment="Stretch">
-                <ui:Card VerticalAlignment="Stretch">
-                    <StackPanel>
+                <ui:Card VerticalAlignment="Top" d:DesignHeight="600">
+                    <Grid VerticalAlignment="Stretch">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
                         <Label
                             Content="Image"
                             FontSize="14"
                             Margin="2" />
-                        <Grid Background="{DynamicResource ApplicationBackgroundBrush}">
-                            <Image Margin="8" Source="{Binding ImagePreview}" />
+                        <Grid Background="{DynamicResource ApplicationBackgroundBrush}" Grid.Row="1">
+                            <Image
+                                Margin="8"
+                                Source="{Binding ImagePreview}"
+                                d:DesignHeight="512"
+                                d:DesignWidth="512" />
                         </Grid>
-                    </StackPanel>
+                    </Grid>
                 </ui:Card>
             </StackPanel>
         </Grid>

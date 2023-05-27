@@ -13,7 +13,6 @@ using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Services;
-using SetupBuilderExtensions = NLog.SetupBuilderExtensions;
 
 namespace StabilityMatrix
 {

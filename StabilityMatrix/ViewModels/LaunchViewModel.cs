@@ -1,20 +1,15 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Diagnostics.Eventing.Reader;
-using System.IO;
 using System.Linq;
-using System.Net.Mime;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Toolkit.Uwp.Notifications;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
-using Wpf.Ui.Appearance;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -64,6 +59,16 @@ public partial class LaunchViewModel : ObservableObject
     {
         this.settingsManager = settingsManager;
         SetProcessRunning(false);
+        
+        ToastNotificationManagerCompat.OnActivated += ToastNotificationManagerCompatOnOnActivated;
+    }
+
+    private void ToastNotificationManagerCompatOnOnActivated(ToastNotificationActivatedEventArgsCompat e)
+    {
+        if (e.Argument.StartsWith("http"))
+        {
+            Process.Start(new ProcessStartInfo(e.Argument) { UseShellExecute = true });
+        }
     }
 
     public AsyncRelayCommand LaunchCommand => new(async () =>
@@ -95,14 +100,12 @@ public partial class LaunchViewModel : ObservableObject
         SetProcessRunning(true);
     });
 
-    private void RunningPackageOnStartupComplete(object? sender, EventArgs e)
+    private void RunningPackageOnStartupComplete(object? sender, string url)
     {
-        
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = "http://localhost:7860",
-            UseShellExecute = true
-        });
+        new ToastContentBuilder()
+            .AddText("Stable Diffusion Web UI ready to go!")
+            .AddButton("Launch Web UI", ToastActivationType.Foreground, url)
+            .Show();
     }
 
     public void OnLoaded()

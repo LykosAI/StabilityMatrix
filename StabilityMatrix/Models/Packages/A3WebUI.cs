@@ -26,6 +26,7 @@ public class A3WebUI : BasePackage
 
 
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private string webUrl = string.Empty;
 
     public override async Task DownloadPackage()
     {
@@ -106,7 +107,11 @@ public class A3WebUI : BasePackage
             if (s == null) return;
             if (s.Contains("model loaded", StringComparison.OrdinalIgnoreCase))
             {
-                OnStartupComplete();
+                OnStartupComplete(webUrl);
+            }
+            if (s.Contains("Running on", StringComparison.OrdinalIgnoreCase))
+            {
+                webUrl = s.Split(" ")[5];
             }
             Debug.WriteLine($"process stdout: {s}");
             OnConsoleOutput($"{s}\n");
@@ -118,9 +123,9 @@ public class A3WebUI : BasePackage
             OnConsoleOutput($"Venv process exited with code {i}");
         }
 
-        var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\"";
+        var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}{arguments}\"";
 
-        venvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
+        venvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit, workingDirectory: installedPackagePath);
     }
 
     public override Task Shutdown()

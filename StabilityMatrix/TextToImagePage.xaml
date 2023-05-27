@@ -107,9 +107,21 @@
                                 Width="500" />
                         </StackPanel>
                         <Grid Background="{DynamicResource ApplicationBackgroundBrush}" Grid.Row="1">
+                            <ui:ProgressRing
+                                Background="DarkRed"
+                                Grid.Row="0"
+                                Height="72"
+                                HorizontalAlignment="Center"
+                                IsIndeterminate="True"
+                                Margin="8"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding ProgressRingVisibility, FallbackValue=Collapsed}"
+                                Width="72"
+                                x:Name="ImageProgressRing" />
                             <Image
                                 Margin="8"
                                 Source="{Binding ImagePreview}"
+                                Visibility="{Binding ImagePreviewVisibility, FallbackValue=Visible}"
                                 d:DesignHeight="512"
                                 d:DesignWidth="512" />
                         </Grid>

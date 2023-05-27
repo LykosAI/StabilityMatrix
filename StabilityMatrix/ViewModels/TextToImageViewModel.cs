@@ -24,6 +24,15 @@ public partial class TextToImageViewModel : ObservableObject
     private bool isGenerating;
     
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ProgressRingVisibility))]
+    [NotifyPropertyChangedFor(nameof(ImagePreviewVisibility))]
+    private bool isProgressRingActive;
+    
+    public Visibility ProgressRingVisibility => IsProgressRingActive ? Visibility.Visible : Visibility.Collapsed;
+    
+    public Visibility ImagePreviewVisibility => IsProgressRingActive ? Visibility.Collapsed : Visibility.Visible;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
     private int progressValue;
 
@@ -63,6 +72,7 @@ public partial class TextToImageViewModel : ObservableObject
     
     private void StopProgressTracking()
     {
+        IsProgressRingActive = false;
         ProgressValue = 0;
         progressQueryTimer?.Stop();
     }
@@ -86,6 +96,9 @@ public partial class TextToImageViewModel : ObservableObject
             var result = response.CurrentImage;
             if (result != null)
             {
+                // Stop indeterminate progress ring
+                IsProgressRingActive = false;
+                // Set preview image
                 var bitmap = Base64ToBitmap(result);
                 ImagePreview = bitmap;
             }
@@ -109,6 +122,9 @@ public partial class TextToImageViewModel : ObservableObject
     [RelayCommand]
     private async void TextToImageGenerate()
     {
+        // Start indeterminate progress ring
+        IsProgressRingActive = true;
+        
         var request = new TextToImageRequest
         {
             Prompt = PositivePromptText,

@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -30,20 +32,37 @@ namespace StabilityMatrix
             {
                 DispatcherUnhandledException += App_DispatcherUnhandledException;
             }
+
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddSingleton<IPageService, PageService>();
             serviceCollection.AddTransient<MainWindow>();
             serviceCollection.AddTransient<SettingsPage>();
             serviceCollection.AddTransient<LaunchPage>();
             serviceCollection.AddTransient<InstallPage>();
+            serviceCollection.AddTransient<TextToImagePage>();
             serviceCollection.AddTransient<MainWindowViewModel>();
             serviceCollection.AddSingleton<SettingsViewModel>();
             serviceCollection.AddSingleton<LaunchViewModel>();
             serviceCollection.AddSingleton<InstallerViewModel>();
+            serviceCollection.AddSingleton<TextToImageViewModel>();
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
+            
+            var jsonOptions = new JsonSerializerOptions
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            };
+            var refitSettings = new RefitSettings
+            {
+                ContentSerializer = new SystemTextJsonContentSerializer(jsonOptions)
+            };
+            
             serviceCollection.AddRefitClient<IGithubApi>();
+            serviceCollection.AddRefitClient<IA3WebApi>(refitSettings).ConfigureHttpClient(client =>
+            {
+                client.BaseAddress = new Uri("http://localhost:7860");
+            });
 
             var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");
             var logConfig = new NLog.Config.LoggingConfiguration();

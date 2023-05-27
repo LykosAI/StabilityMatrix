@@ -1,65 +1,99 @@
 <Page
-    x:Class="StabilityMatrix.SettingsPage"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:StabilityMatrix"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
-    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    xmlns:models="using:StabilityMatrix.Models"
-    d:DesignHeight="700"
-    d:DesignWidth="1100"
-    Loaded="SettingsPage_OnLoaded"
     Background="{DynamicResource ApplicationBackgroundBrush}"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-    mc:Ignorable="d">
-    
-    <!-- Scroll view -->
+    Loaded="SettingsPage_OnLoaded"
+    d:DataContext="{d:DesignInstance Type=viewModels:SettingsViewModel,
+                                     IsDesignTimeCreatable=True}"
+    d:DesignHeight="700"
+    d:DesignWidth="1100"
+    mc:Ignorable="d"
+    x:Class="StabilityMatrix.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:StabilityMatrix"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:StabilityMatrix.Models"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--  Scroll view  -->
     <ScrollViewer HorizontalScrollBarVisibility="Auto">
         <Grid>
             <StackPanel Orientation="Vertical">
                 <ui:Card Margin="8,16,8,8">
-                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
-                        <TextBlock Text="Theme" FontWeight="Bold" FontSize="16" Margin="0,8" />
+                    <StackPanel HorizontalAlignment="Left" Orientation="Vertical">
+                        <TextBlock
+                            FontSize="16"
+                            FontWeight="Bold"
+                            Margin="0,8"
+                            Text="Theme" />
                         <ComboBox
-                            Margin="8"
                             ItemsSource="{Binding AvailableThemes}"
+                            Margin="8"
                             SelectedItem="{Binding SelectedTheme, Mode=TwoWay}"
                             Width="500" />
                     </StackPanel>
                 </ui:Card>
 
                 <ui:Card Margin="8">
-                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
-                        <TextBlock Text="Debug Info" FontWeight="Bold" FontSize="16" Margin="0,8" />
-                        <TextBlock Margin="8" Text="{Binding GpuInfo, FallbackValue=3dfx Voodoo 5 6000 - 128MB VRAM}"/>
-                        <TextBlock Margin="8" Text="{Binding GitInfo}"/>
-                        <TextBlock Margin="8" Text="{Binding TestProperty, FallbackValue=TestProperty}"/>
-                    </StackPanel>
-                </ui:Card>
-                
-                <ui:Card Margin="8">
-                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
-                        <TextBlock Text="Embedded Python" FontWeight="Bold" FontSize="16" Margin="0,8" />
-                        <!-- Add a button to show messagebox for python version -->
-                        <Button Margin="8" Content="Check Version Info" Command="{Binding PythonVersionCommand}"/>
-                    </StackPanel>
-                </ui:Card>
-                
-                <ui:Card Margin="8">
-                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
-                        <TextBlock Text="Debug" FontWeight="Bold" FontSize="16" Margin="0,8" />
-                        <Button Margin="8" Content="Add Installation" Command="{Binding AddInstallationCommand}"/>
+                    <StackPanel HorizontalAlignment="Left" Orientation="Vertical">
+                        <TextBlock
+                            FontSize="16"
+                            FontWeight="Bold"
+                            Margin="0,8"
+                            Text="Debug Info" />
+                        <TextBlock Margin="8" Text="{Binding GpuInfo, FallbackValue=3dfx Voodoo 5 6000 - 128MB VRAM}" />
+                        <TextBlock Margin="8" Text="{Binding GitInfo}" />
+                        <TextBlock Margin="8" Text="{Binding TestProperty, FallbackValue=TestProperty}" />
                     </StackPanel>
                 </ui:Card>
 
                 <ui:Card Margin="8">
-                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
-                        <TextBlock Text="Some Other Setting" FontWeight="Bold" FontSize="16" Margin="0,8" />
+                    <StackPanel HorizontalAlignment="Left" Orientation="Vertical">
+                        <TextBlock
+                            FontSize="16"
+                            FontWeight="Bold"
+                            Margin="0,8"
+                            Text="Embedded Python" />
+                        <!--  Add a button to show messagebox for python version  -->
+                        <Button
+                            Command="{Binding PythonVersionCommand}"
+                            Content="Check Version Info"
+                            Margin="8" />
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card Margin="8">
+                    <StackPanel HorizontalAlignment="Left" Orientation="Vertical">
+                        <TextBlock
+                            FontSize="16"
+                            FontWeight="Bold"
+                            Margin="0,8"
+                            Text="Debug" />
+                        <StackPanel Orientation="Horizontal">
+                            <Button
+                                Command="{Binding AddInstallationCommand}"
+                                Content="Add Installation"
+                                Margin="8" />
+                            <Button
+                                Command="{Binding PingWebApiCommand}"
+                                Content="Ping Web API"
+                                Margin="8" />
+                        </StackPanel>
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card Margin="8">
+                    <StackPanel HorizontalAlignment="Left" Orientation="Vertical">
+                        <TextBlock
+                            FontSize="16"
+                            FontWeight="Bold"
+                            Margin="0,8"
+                            Text="Some Other Setting" />
                         <ComboBox
-                            Margin="8"
                             ItemsSource="{Binding AvailableThemes}"
+                            Margin="8"
                             SelectedItem="{Binding SelectedTheme, Mode=TwoWay}"
                             Width="500" />
                     </StackPanel>

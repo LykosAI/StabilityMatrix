@@ -6,6 +6,7 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Ookii.Dialogs.Wpf;
+using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using Wpf.Ui.Appearance;
@@ -24,11 +25,13 @@ public partial class SettingsViewModel : ObservableObject
         "System",
     };
     private readonly IContentDialogService contentDialogService;
+    private readonly IA3WebApi a3WebApi;
 
-    public SettingsViewModel(ISettingsManager settingsManager, IContentDialogService contentDialogService)
+    public SettingsViewModel(ISettingsManager settingsManager, IContentDialogService contentDialogService, IA3WebApi a3WebApi)
     {
         this.settingsManager = settingsManager;
         this.contentDialogService = contentDialogService;
+        this.a3WebApi = a3WebApi;
         SelectedTheme = settingsManager.Settings.Theme ?? "Dark";
     }
 
@@ -100,6 +103,17 @@ public partial class SettingsViewModel : ObservableObject
         // Add package to settings
         settingsManager.AddInstalledPackage(package);
     });
+
+    [RelayCommand]
+    private async Task PingWebApi()
+    {
+        var result = await a3WebApi.GetPing();
+        var dialog = contentDialogService.CreateDialog();
+        dialog.Title = "Web API ping";
+        dialog.Content = result;
+        dialog.PrimaryButtonText = "Ok";
+        await dialog.ShowAsync();
+    }
 
     public async Task OnLoaded()
     {

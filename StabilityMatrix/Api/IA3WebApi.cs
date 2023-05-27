@@ -12,4 +12,7 @@ public interface IA3WebApi
     
     [Post("/sdapi/v1/txt2img")]
     Task<ImageResponse> TextToImage([Body] TextToImageRequest request);
+    
+    [Get("/sdapi/v1/progress")]
+    Task<ProgressResponse> GetProgress([Body] ProgressRequest request);
 }

@@ -56,7 +56,7 @@ public partial class TextToImageViewModel : ObservableObject
         };
         var response = await a3WebApi.TextToImage(request);
         // Decode base64 image
-        var result = response.Images[0].Split(',')[1];
+        var result = response.Images[0];
         var bitmap = Base64ToBitmap(result);
 
         ImagePreview = bitmap;

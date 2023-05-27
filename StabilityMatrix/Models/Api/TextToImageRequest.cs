@@ -114,11 +114,11 @@ public class TextToImageRequest
     [JsonPropertyName("override_settings_restore_afterwards")]
     public bool? OverrideSettingsRestoreAfterwards { get; set; }
 
-    // [JsonPropertyName("script_args")]
-    // public Dictionary<string?, string?> ScriptArgs { get; set; }
+    [JsonPropertyName("script_args")]
+    public string[]? ScriptArgs { get; set; }
 
-    // [JsonPropertyName("sampler_index")]
-    // public string? SamplerIndex { get; set; }
+    [JsonPropertyName("sampler_index")]
+    public string? SamplerIndex { get; set; }
 
     [JsonPropertyName("script_name")]
     public string? ScriptName { get; set; }
@@ -129,6 +129,6 @@ public class TextToImageRequest
     [JsonPropertyName("save_images")]
     public bool? SaveImages { get; set; }
 
-    // [JsonPropertyName("alwayson_scripts")]
-    // public Dictionary<string?, string?> AlwaysOnScripts { get; set; }
+    [JsonPropertyName("alwayson_scripts")]
+    public Dictionary<string, string>? AlwaysOnScripts { get; set; }
 }

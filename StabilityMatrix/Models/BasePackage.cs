@@ -28,6 +28,7 @@ public abstract class BasePackage
     public event EventHandler<string>? InstallComplete;
     public event EventHandler<string>? ConsoleOutput;
     public event EventHandler<int>? Exited;
+    public event EventHandler? StartupComplete;
 
     public void OnDownloadProgressChanged(int progress) => DownloadProgressChanged?.Invoke(this, progress);
     public void OnDownloadComplete(string path) => DownloadComplete?.Invoke(this, path);
@@ -35,6 +36,7 @@ public abstract class BasePackage
     public void OnInstallComplete(string path) => InstallComplete?.Invoke(this, path);
     public void OnConsoleOutput(string output) => ConsoleOutput?.Invoke(this, output);
     public void OnExit(int exitCode) => Exited?.Invoke(this, exitCode);
+    public void OnStartupComplete() => StartupComplete?.Invoke(this, EventArgs.Empty);
 
     public string ByAuthor => $"By {Author}";
 }

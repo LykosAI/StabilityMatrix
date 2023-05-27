@@ -89,10 +89,21 @@ public partial class LaunchViewModel : ObservableObject
         
         basePackage.ConsoleOutput += OnConsoleOutput;
         basePackage.Exited += OnExit;
+        basePackage.StartupComplete += RunningPackageOnStartupComplete;
         await basePackage.RunPackage(packagePath, string.Empty);
         runningPackage = basePackage;
         SetProcessRunning(true);
     });
+
+    private void RunningPackageOnStartupComplete(object? sender, EventArgs e)
+    {
+        
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = "http://localhost:7860",
+            UseShellExecute = true
+        });
+    }
 
     public void OnLoaded()
     {
@@ -112,7 +123,7 @@ public partial class LaunchViewModel : ObservableObject
 
     public void OnShutdown()
     {
-        runningPackage?.Shutdown();
+        Stop();
     }
 
     [RelayCommand]
@@ -120,6 +131,7 @@ public partial class LaunchViewModel : ObservableObject
     {
         if (runningPackage != null)
         {
+            runningPackage.StartupComplete -= RunningPackageOnStartupComplete;
             runningPackage.ConsoleOutput -= OnConsoleOutput;
             runningPackage.Exited -= OnExit;
         }

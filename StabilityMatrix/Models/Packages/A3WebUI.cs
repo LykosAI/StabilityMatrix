@@ -104,6 +104,10 @@ public class A3WebUI : BasePackage
         void HandleConsoleOutput(string? s)
         {
             if (s == null) return;
+            if (s.Contains("model loaded", StringComparison.OrdinalIgnoreCase))
+            {
+                OnStartupComplete();
+            }
             Debug.WriteLine($"process stdout: {s}");
             OnConsoleOutput($"{s}\n");
         }

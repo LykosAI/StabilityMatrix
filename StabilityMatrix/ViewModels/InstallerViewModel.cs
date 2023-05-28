@@ -9,6 +9,7 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using EventManager = StabilityMatrix.Helper.EventManager;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -86,7 +87,7 @@ public partial class InstallerViewModel : ObservableObject
         InstalledText = "Done";
 
         IsIndeterminate = false;
-        ProgressValue = 100;
+        SelectedPackageOnProgressChanged(this, 100);
 
         if (settingsManager.Settings.InstalledPackages.FirstOrDefault(x => x.PackageName == SelectedPackage.Name) ==
             null)
@@ -133,6 +134,8 @@ public partial class InstallerViewModel : ObservableObject
             IsIndeterminate = false;
             ProgressValue = progress;
         }
+        
+        EventManager.Instance.OnGlobalProgressChanged(progress);
     }
 
     private async Task<bool> InstallGitIfNecessary()

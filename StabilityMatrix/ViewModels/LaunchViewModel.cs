@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Toolkit.Uwp.Notifications;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
+using Wpf.Ui.Contracts;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -17,6 +18,8 @@ public partial class LaunchViewModel : ObservableObject
 {
     private readonly ISettingsManager settingsManager;
     private readonly IPackageFactory packageFactory;
+    private readonly IContentDialogService contentDialogService;
+    private readonly LaunchOptionsDialogViewModel launchOptionsDialogViewModel;
     private BasePackage? runningPackage;
     private bool clearingPackages = false;
 
@@ -56,8 +59,10 @@ public partial class LaunchViewModel : ObservableObject
 
     public event EventHandler? ScrollNeeded;
 
-    public LaunchViewModel(ISettingsManager settingsManager, IPackageFactory packageFactory)
+    public LaunchViewModel(ISettingsManager settingsManager, IPackageFactory packageFactory, IContentDialogService contentDialogService, LaunchOptionsDialogViewModel launchOptionsDialogViewModel)
     {
+        this.contentDialogService = contentDialogService;
+        this.launchOptionsDialogViewModel = launchOptionsDialogViewModel;
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         SetProcessRunning(false);
@@ -101,6 +106,36 @@ public partial class LaunchViewModel : ObservableObject
         runningPackage = basePackage;
         SetProcessRunning(true);
     });
+
+    [RelayCommand]
+    public async Task ConfigAsync()
+    {
+        var vm = launchOptionsDialogViewModel;
+        var name = SelectedPackage?.Name;
+        if (name == null)
+        {
+            Debug.WriteLine($"Selected package is null");
+            return;
+        }
+        var package = packageFactory.FindPackageByName(name);
+        if (package == null)
+        {
+            Debug.WriteLine($"Package {name} not found");
+            return;
+        }
+        
+        vm.SelectedPackage = package;
+        
+        // Open a config page
+        var dialog = new LaunchOptionsDialog(contentDialogService.GetContentPresenter())
+        {
+            DataContext = vm,
+            IsPrimaryButtonEnabled = true,
+            PrimaryButtonText = "Save",
+            CloseButtonText= "Cancel",
+        };
+        await dialog.ShowAsync();
+    }
 
     private void RunningPackageOnStartupComplete(object? sender, string url)
     {

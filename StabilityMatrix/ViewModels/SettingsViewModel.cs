@@ -37,7 +37,7 @@ public partial class SettingsViewModel : ObservableObject
         SelectedTheme = settingsManager.Settings.Theme ?? "Dark";
     }
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private string selectedTheme;
     
     partial void OnSelectedThemeChanged(string value)

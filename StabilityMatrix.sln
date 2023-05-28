@@ -5,6 +5,8 @@ VisualStudioVersion = 17.6.33717.318
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix", "StabilityMatrix\StabilityMatrix.csproj", "{7CA2E862-B121-495D-8CCC-2D6EF56A3312}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix.Tests", "StabilityMatrix.Tests\StabilityMatrix.Tests.csproj", "{63EF4330-CCFF-4677-B14C-1A700CD81FDA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{7CA2E862-B121-495D-8CCC-2D6EF56A3312}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7CA2E862-B121-495D-8CCC-2D6EF56A3312}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7CA2E862-B121-495D-8CCC-2D6EF56A3312}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63EF4330-CCFF-4677-B14C-1A700CD81FDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63EF4330-CCFF-4677-B14C-1A700CD81FDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63EF4330-CCFF-4677-B14C-1A700CD81FDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63EF4330-CCFF-4677-B14C-1A700CD81FDA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

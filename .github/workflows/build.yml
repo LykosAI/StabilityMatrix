@@ -26,9 +26,10 @@ jobs:
         run: dotnet restore
         
       - name: Build
-        run: dotnet build --configuration Release --output out --no-restore
+        run: dotnet publish -o out -c Release --no-restore --self-contained false -p:IncludeNativeLibrariesForSelfExtract=false
         
       - name: Upload Artifacts
+        if: ${{ github.event_name == 'push' }}
         uses: actions/upload-artifact@v2
         with:
           name: build

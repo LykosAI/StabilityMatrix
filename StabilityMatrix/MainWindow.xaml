@@ -56,6 +56,11 @@
                             <ui:SymbolIcon Symbol="Wrench24" />
                         </ui:NavigationViewItem.Icon>
                     </ui:NavigationViewItem>
+                    <ui:NavigationViewItem Content="Text2Image" TargetPageType="{x:Type local:TextToImagePage}">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:SymbolIcon Symbol="Image24" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
                 </ui:NavigationView.MenuItems>
                 <ui:NavigationView.FooterMenuItems>
                     <ui:NavigationViewItem Content="Settings" TargetPageType="{x:Type local:SettingsPage}">

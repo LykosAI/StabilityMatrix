@@ -38,19 +38,23 @@ namespace StabilityMatrix
 
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddSingleton<IPageService, PageService>();
+            serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
+            serviceCollection.AddSingleton<IPackageFactory, PackageFactory>();
+            serviceCollection.AddSingleton<IPyRunner, PyRunner>();
+            
             serviceCollection.AddTransient<MainWindow>();
             serviceCollection.AddTransient<SettingsPage>();
             serviceCollection.AddTransient<LaunchPage>();
             serviceCollection.AddTransient<InstallPage>();
             serviceCollection.AddTransient<TextToImagePage>();
+            
             serviceCollection.AddTransient<MainWindowViewModel>();
             serviceCollection.AddSingleton<SettingsViewModel>();
             serviceCollection.AddSingleton<LaunchViewModel>();
             serviceCollection.AddSingleton<InstallerViewModel>();
             serviceCollection.AddSingleton<TextToImageViewModel>();
             serviceCollection.AddSingleton<LaunchOptionsDialogViewModel>();
-            serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
-            serviceCollection.AddSingleton<IPackageFactory, PackageFactory>();
+            
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, DankDiffusion>();
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();

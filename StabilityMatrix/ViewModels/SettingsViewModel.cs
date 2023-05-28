@@ -17,6 +17,7 @@ namespace StabilityMatrix.ViewModels;
 public partial class SettingsViewModel : ObservableObject
 {
     private readonly ISettingsManager settingsManager;
+    private readonly IPyRunner pyRunner;
 
     public ObservableCollection<string> AvailableThemes => new()
     {
@@ -27,11 +28,12 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IContentDialogService contentDialogService;
     private readonly IA3WebApi a3WebApi;
 
-    public SettingsViewModel(ISettingsManager settingsManager, IContentDialogService contentDialogService, IA3WebApi a3WebApi)
+    public SettingsViewModel(ISettingsManager settingsManager, IContentDialogService contentDialogService, IA3WebApi a3WebApi, IPyRunner pyRunner)
     {
         this.settingsManager = settingsManager;
         this.contentDialogService = contentDialogService;
         this.a3WebApi = a3WebApi;
+        this.pyRunner = pyRunner;
         SelectedTheme = settingsManager.Settings.Theme ?? "Dark";
     }
 
@@ -66,8 +68,8 @@ public partial class SettingsViewModel : ObservableObject
     public AsyncRelayCommand PythonVersionCommand => new(async () =>
     {
         // Get python version
-        await PyRunner.Initialize();
-        var result = await PyRunner.GetVersionInfo();
+        await pyRunner.Initialize();
+        var result = await pyRunner.GetVersionInfo();
         // Show dialog box
         var dialog = contentDialogService.CreateDialog();
         dialog.Title = "Python version info";
@@ -78,9 +80,7 @@ public partial class SettingsViewModel : ObservableObject
 
     public RelayCommand AddInstallationCommand => new(() =>
     {
-        var initialDirectory = $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages";
         // Show dialog box to choose a folder
-
         var dialog = new VistaFolderBrowserDialog
         {
             Description = "Select a folder",

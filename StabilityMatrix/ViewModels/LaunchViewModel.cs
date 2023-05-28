@@ -22,6 +22,8 @@ public partial class LaunchViewModel : ObservableObject
     private readonly IContentDialogService contentDialogService;
     private readonly LaunchOptionsDialogViewModel launchOptionsDialogViewModel;
     private readonly ILogger<LaunchViewModel> logger;
+    private readonly IPyRunner pyRunner;
+    
     private BasePackage? runningPackage;
     private bool clearingPackages = false;
 
@@ -61,8 +63,10 @@ public partial class LaunchViewModel : ObservableObject
         IPackageFactory packageFactory,
         IContentDialogService contentDialogService,
         LaunchOptionsDialogViewModel launchOptionsDialogViewModel,
-        ILogger<LaunchViewModel> logger)
+        ILogger<LaunchViewModel> logger,
+        IPyRunner pyRunner)
     {
+        this.pyRunner = pyRunner;
         this.contentDialogService = contentDialogService;
         this.launchOptionsDialogViewModel = launchOptionsDialogViewModel;
         this.logger = logger;
@@ -92,7 +96,7 @@ public partial class LaunchViewModel : ObservableObject
             return;
         }
 
-        await PyRunner.Initialize();
+        await pyRunner.Initialize();
 
         // Get path from package
         var packagePath = SelectedPackage.Path!;
@@ -117,14 +121,14 @@ public partial class LaunchViewModel : ObservableObject
         var name = SelectedPackage?.Name;
         if (name == null)
         {
-            Debug.WriteLine($"Selected package is null");
+            logger.LogWarning($"Selected package is null");
             return;
         }
 
         var package = packageFactory.FindPackageByName(name);
         if (package == null)
         {
-            Debug.WriteLine($"Package {name} not found");
+            logger.LogWarning("Package {Name} not found", name);
             return;
         }
 
@@ -152,16 +156,20 @@ public partial class LaunchViewModel : ObservableObject
     public void OnLoaded()
     {
         LoadPackages();
-        if (InstalledPackages.Any() && settingsManager.Settings.ActiveInstalledPackage != null)
+        lock (InstalledPackages)
         {
-            SelectedPackage =
-                InstalledPackages[
-                    InstalledPackages.IndexOf(InstalledPackages.FirstOrDefault(x =>
-                        x.Id == settingsManager.Settings.ActiveInstalledPackage))];
-        }
-        else if (InstalledPackages.Any())
-        {
-            SelectedPackage = InstalledPackages[0];
+            // Skip if no packages
+            if (!InstalledPackages.Any())
+            {
+                logger.LogTrace($"No packages for {nameof(LaunchViewModel)}");
+                return;
+            }
+            var activePackageId = settingsManager.Settings.ActiveInstalledPackage;
+            if (activePackageId != null)
+            {
+                SelectedPackage = InstalledPackages.FirstOrDefault(
+                    x => x.Id == activePackageId) ?? InstalledPackages[0];
+            }
         }
     }
 

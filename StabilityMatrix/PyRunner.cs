@@ -2,17 +2,19 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using NLog;
 using Python.Runtime;
 using StabilityMatrix.Helper;
+using ILogger = NLog.ILogger;
 
 namespace StabilityMatrix;
 
-internal record struct PyVersionInfo(int Major, int Minor, int Micro, string ReleaseLevel, int Serial);
+public record struct PyVersionInfo(int Major, int Minor, int Micro, string ReleaseLevel, int Serial);
 
-internal static class PyRunner
+public class PyRunner : IPyRunner
 {
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private readonly ILogger<PyRunner> logger;
 
     private const string RelativeDllPath = @"Assets\Python310\python310.dll";
     private const string RelativeExePath = @"Assets\Python310\python.exe";
@@ -22,26 +24,32 @@ internal static class PyRunner
     public static string ExePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeExePath);
     public static string PipExePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativePipExePath);
     public static string GetPipPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeGetPipPath);
-
-    public static PyIOStream? StdOutStream;
-    public static PyIOStream? StdErrStream;
-
+    
     private static readonly SemaphoreSlim PyRunning = new(1, 1);
+    
+    private PyIOStream? StdOutStream;
+    private PyIOStream? StdErrStream;
+
+    public PyRunner(ILogger<PyRunner> logger)
+    {
+        this.logger = logger;
+    }
 
     /// <summary>
     /// Initializes the Python runtime using the embedded dll.
     /// Can be called with no effect after initialization.
     /// </summary>
     /// <exception cref="FileNotFoundException">Thrown if Python DLL not found.</exception>
-    public static async Task Initialize()
+    public async Task Initialize()
     {
         if (PythonEngine.IsInitialized) return;
 
-        Logger.Trace($"Initializing Python runtime with DLL '{DllPath}'");
+        logger.LogInformation("Initializing Python runtime with DLL: {DllPath}", DllPath);
 
         // Check PythonDLL exists
         if (!File.Exists(DllPath))
         {
+            logger.LogError("Python DLL not found");
             throw new FileNotFoundException("Python DLL not found", DllPath);
         }
         Runtime.PythonDLL = DllPath;
@@ -62,7 +70,7 @@ internal static class PyRunner
     /// <summary>
     /// One-time setup for get-pip
     /// </summary>
-    public static async Task SetupPip()
+    public async Task SetupPip()
     {
         if (!File.Exists(GetPipPath))
         {
@@ -75,7 +83,7 @@ internal static class PyRunner
     /// <summary>
     /// Install a Python package with pip
     /// </summary>
-    public static async Task InstallPackage(string package)
+    public async Task InstallPackage(string package)
     {
         if (!File.Exists(PipExePath))
         {
@@ -92,7 +100,7 @@ internal static class PyRunner
     /// <param name="waitTimeout">Time limit for waiting on PyRunning lock.</param>
     /// <param name="cancelToken">Cancellation token.</param>
     /// <exception cref="OperationCanceledException">cancelToken was canceled, or waitTimeout expired.</exception>
-    private static async Task<T> RunInThreadWithLock<T>(Func<T> func, TimeSpan? waitTimeout = null, CancellationToken cancelToken = default)
+    private async Task<T> RunInThreadWithLock<T>(Func<T> func, TimeSpan? waitTimeout = null, CancellationToken cancelToken = default)
     {
         // Wait to acquire PyRunning lock
         await PyRunning.WaitAsync(cancelToken).ConfigureAwait(false);
@@ -119,7 +127,7 @@ internal static class PyRunner
     /// <param name="waitTimeout">Time limit for waiting on PyRunning lock.</param>
     /// <param name="cancelToken">Cancellation token.</param>
     /// <exception cref="OperationCanceledException">cancelToken was canceled, or waitTimeout expired.</exception>
-    private static async Task RunInThreadWithLock(Action action, TimeSpan? waitTimeout = null, CancellationToken cancelToken = default)
+    private async Task RunInThreadWithLock(Action action, TimeSpan? waitTimeout = null, CancellationToken cancelToken = default)
     {
         // Wait to acquire PyRunning lock
         await PyRunning.WaitAsync(cancelToken).ConfigureAwait(false);
@@ -143,7 +151,7 @@ internal static class PyRunner
     /// Evaluate Python expression and return its value as a string
     /// </summary>
     /// <param name="expression"></param>
-    public static async Task<string> Eval(string expression)
+    public async Task<string> Eval(string expression)
     {
         return await Eval<string>(expression);
     }
@@ -152,7 +160,7 @@ internal static class PyRunner
     /// Evaluate Python expression and return its value
     /// </summary>
     /// <param name="expression"></param>
-    public static Task<T> Eval<T>(string expression)
+    public Task<T> Eval<T>(string expression)
     {
         return RunInThreadWithLock(() =>
         {
@@ -165,7 +173,7 @@ internal static class PyRunner
     /// Execute Python code without returning a value
     /// </summary>
     /// <param name="code"></param>
-    public static Task Exec(string code)
+    public Task Exec(string code)
     {
         return RunInThreadWithLock(() =>
         {
@@ -176,7 +184,7 @@ internal static class PyRunner
     /// <summary>
     /// Return the Python version as a PyVersionInfo struct
     /// </summary>
-    public static async Task<PyVersionInfo> GetVersionInfo()
+    public async Task<PyVersionInfo> GetVersionInfo()
     {
         var version = await RunInThreadWithLock(() =>
         {

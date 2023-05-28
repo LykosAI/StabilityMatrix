@@ -11,4 +11,5 @@ public interface ISettingsManager
     void SetHasInstalledPip(bool hasInstalledPip);
     void SetHasInstalledVenv(bool hasInstalledVenv);
     void SetNavExpanded(bool navExpanded);
+    void UpdatePackageVersionNumber(string packageName, string newVersion);
 }

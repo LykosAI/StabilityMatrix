@@ -29,6 +29,7 @@ jobs:
         run: dotnet build --configuration Release --output out --no-restore
         
       - name: Upload Artifacts
+        if: ${{ github.event_name == 'push' }}
         uses: actions/upload-artifact@v2
         with:
           name: build

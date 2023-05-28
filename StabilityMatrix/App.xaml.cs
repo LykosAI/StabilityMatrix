@@ -48,6 +48,7 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<LaunchViewModel>();
             serviceCollection.AddSingleton<InstallerViewModel>();
             serviceCollection.AddSingleton<TextToImageViewModel>();
+            serviceCollection.AddSingleton<LaunchOptionsDialogViewModel>();
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
             serviceCollection.AddSingleton<IPackageFactory, PackageFactory>();
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
@@ -70,10 +71,15 @@ namespace StabilityMatrix
                 client.BaseAddress = new Uri("http://localhost:7860");
             });
 
+            // Logging configuration
             var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");
             var logConfig = new NLog.Config.LoggingConfiguration();
+            // File logging
             var fileTarget = new NLog.Targets.FileTarget("logfile") { FileName = logPath };
-            logConfig.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, fileTarget);
+            // Log trace+ to debug console
+            var debugTarget = new NLog.Targets.DebuggerTarget("debugger") { Layout = "${message}" };
+            logConfig.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, fileTarget);
+            logConfig.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, debugTarget);
             NLog.LogManager.Configuration = logConfig;
 
             serviceCollection.AddLogging(log =>

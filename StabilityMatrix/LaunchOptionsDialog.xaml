@@ -48,43 +48,12 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <TextBlock
-            Margin="8"
-            Text="Launch Options"
-            TextWrapping="WrapWithOverflow" />
-        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto">
+        <ScrollViewer HorizontalScrollBarVisibility="Auto">
             <StackPanel Orientation="Vertical">
                 <!--  Options cards  -->
                 <ItemsControl ItemTemplate="{StaticResource LaunchOptionCardDataTemplate}" ItemsSource="{Binding Cards}" />
             </StackPanel>
         </ScrollViewer>
-        <StackPanel
-            Grid.Row="2"
-            Margin="16,8,16,8"
-            VerticalAlignment="Bottom">
-
-            <UniformGrid Columns="2" VerticalAlignment="Bottom">
-                <ui:Button
-                    Appearance="Primary"
-                    Content="Save"
-                    FontSize="16"
-                    HorizontalAlignment="Stretch"
-                    Margin="8"
-                    VerticalAlignment="Center"
-                    VerticalContentAlignment="Center" />
-                <ui:Button
-                    Appearance="Secondary"
-                    Content="Cancel"
-                    FontSize="16"
-                    HorizontalAlignment="Stretch"
-                    Margin="8"
-                    VerticalAlignment="Center"
-                    VerticalContentAlignment="Center" />
-            </UniformGrid>
-
-        </StackPanel>
     </Grid>
 </ui:ContentDialog>

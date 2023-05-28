@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Windows;
 using StabilityMatrix.Helper;
@@ -5,6 +6,7 @@ using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.Navigation;
 using Wpf.Ui.Controls.Window;
+using EventManager = StabilityMatrix.Helper.EventManager;
 
 namespace StabilityMatrix
 {
@@ -30,6 +32,13 @@ namespace StabilityMatrix
             RootNavigation.SetPageService(pageService);
 
             contentDialogService.SetContentPresenter(RootContentDialog);
+            
+            EventManager.Instance.PageChangeRequested += InstanceOnPageChangeRequested;
+        }
+
+        private void InstanceOnPageChangeRequested(object? sender, Type e)
+        {
+            RootNavigation.Navigate(e);
         }
 
         private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)

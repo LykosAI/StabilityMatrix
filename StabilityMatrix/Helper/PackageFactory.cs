@@ -2,25 +2,25 @@
 using System.Collections.Generic;
 using System.Linq;
 using StabilityMatrix.Models;
-using StabilityMatrix.Models.Packages;
 
 namespace StabilityMatrix.Helper;
 
-public static class PackageFactory
+public class PackageFactory : IPackageFactory
 {
-    private static readonly List<BasePackage> AllPackages = new()
-    {
-        new A3WebUI(),
-        new DankDiffusion()
-    };
+    private readonly IEnumerable<BasePackage> basePackages;
 
-    public static IEnumerable<BasePackage> GetAllAvailablePackages()
+    public PackageFactory(IEnumerable<BasePackage> basePackages)
     {
-        return AllPackages;
+        this.basePackages = basePackages;
+    }
+    
+    public IEnumerable<BasePackage> GetAllAvailablePackages()
+    {
+        return basePackages;
     }
 
-    public static BasePackage? FindPackageByName(string packageName)
+    public BasePackage? FindPackageByName(string packageName)
     {
-        return AllPackages.FirstOrDefault(x => x.Name.Equals(packageName, StringComparison.OrdinalIgnoreCase));
+        return basePackages.FirstOrDefault(x => x.Name.Equals(packageName, StringComparison.OrdinalIgnoreCase));
     }
 }

@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using System.Windows.Shell;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Python.Runtime;
 using StabilityMatrix.Helper;
 using Wpf.Ui.Appearance;
-using Dispatcher = System.Windows.Threading.Dispatcher;
 using EventManager = StabilityMatrix.Helper.EventManager;
 
 namespace StabilityMatrix.ViewModels;
@@ -40,6 +39,10 @@ public partial class MainWindowViewModel : ObservableObject
         EventManager.Instance.GlobalProgressChanged += OnGlobalProgressChanged;
     }
 
+    /// <summary>
+    ///   Updates the taskbar progress bar value and state.
+    /// </summary>
+    /// <param name="progress">Progress value from 0 to 100</param>
     private void OnGlobalProgressChanged(object? sender, int progress)
     {
         if (progress == -1)

@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -15,6 +16,7 @@ namespace StabilityMatrix.Models.Packages;
 
 public class A3WebUI : BasePackage
 {
+    private readonly ISettingsManager settingsManager;
     private PyVenvRunner? venvRunner;
     
     public override string Name => "stable-diffusion-webui";
@@ -24,11 +26,18 @@ public class A3WebUI : BasePackage
     public override string LaunchCommand => "launch.py";
     public override string DefaultLaunchArguments => $"{GetVramOption()} {GetXformersOption()}";
 
+    public override bool UpdateAvailable { get; set; } = false;
+
 
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private string webUrl = string.Empty;
 
-    public override async Task DownloadPackage()
+    public A3WebUI(ISettingsManager settingsManager)
+    {
+        this.settingsManager = settingsManager;
+    }
+
+    public override async Task<string?> DownloadPackage(bool isUpdate = false)
     {
         var githubApi = RestService.For<IGithubApi>("https://api.github.com");
         var latestRelease = await githubApi.GetLatestRelease("AUTOMATIC1111", "stable-diffusion-webui");
@@ -69,24 +78,50 @@ public class A3WebUI : BasePackage
 
             if (isIndeterminate)
             {
-                OnDownloadProgressChanged(-1);
+                if (isUpdate)
+                {
+                    OnUpdateProgressChanged(-1);
+                }
+                else
+                {
+                    OnDownloadProgressChanged(-1);
+                }
             }
             else
             {
                 var progress = (int)(totalBytesRead * 100d / contentLength);
                 Logger.Debug($"Progress; {progress}");
-                OnDownloadProgressChanged(progress);
+                
+                if (isUpdate)
+                {
+                    OnUpdateProgressChanged(progress);
+                }
+                else
+                {
+                    OnDownloadProgressChanged(progress);
+                }
             }
         }
 
         await file.FlushAsync();
         OnDownloadComplete(DownloadLocation);
+
+        return latestRelease.TagName;
     }
 
-    public override Task InstallPackage()
+    public override Task InstallPackage(bool isUpdate = false)
     {
-        UnzipPackage();
-        OnInstallComplete("Installation complete");
+        UnzipPackage(isUpdate);
+        
+        if (isUpdate)
+        {
+            OnUpdateComplete("Update complete");
+        }
+        else
+        {
+            OnInstallComplete("Installation complete");
+        }
+
         return Task.CompletedTask;
     }
 
@@ -135,10 +170,40 @@ public class A3WebUI : BasePackage
         return Task.CompletedTask;
     }
 
-
-    private void UnzipPackage()
+    public override async Task<bool> CheckForUpdates()
     {
-        OnInstallProgressChanged(0);
+        var currentVersion = settingsManager.Settings.InstalledPackages.FirstOrDefault(x => x.Name == Name)
+            ?.PackageVersion;
+        if (string.IsNullOrWhiteSpace(currentVersion))
+        {
+            return false;
+        }
+        
+        var githubApi = RestService.For<IGithubApi>("https://api.github.com");
+        var latestRelease = await githubApi.GetLatestRelease("AUTOMATIC1111", "stable-diffusion-webui");
+
+        UpdateAvailable = latestRelease.TagName != currentVersion;
+        return latestRelease.TagName != currentVersion;
+    }
+
+    public override async Task<string?> Update()
+    {
+        var version = await DownloadPackage(true);
+        await InstallPackage(true);
+
+        return version;
+    }
+
+    private void UnzipPackage(bool isUpdate = false)
+    {
+        if (isUpdate)
+        {
+            OnInstallProgressChanged(0);
+        }
+        else
+        {
+            OnUpdateProgressChanged(0);
+        }
 
         Directory.CreateDirectory(InstallLocation);
 
@@ -170,9 +235,16 @@ public class A3WebUI : BasePackage
             currentEntry++;
 
             var progressValue = (int)((double)currentEntry / totalEntries * 100);
-            OnInstallProgressChanged(progressValue);
-        }
 
+            if (isUpdate)
+            {
+                OnUpdateProgressChanged(progressValue);
+            }
+            else
+            {
+                OnInstallProgressChanged(progressValue);
+            }
+        }
     }
 
     private static string GetVramOption()

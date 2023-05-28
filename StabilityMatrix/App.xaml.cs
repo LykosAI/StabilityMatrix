@@ -5,12 +5,15 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
+using Windows.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
 using Refit;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Models;
+using StabilityMatrix.Models.Packages;
 using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
@@ -46,6 +49,9 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<InstallerViewModel>();
             serviceCollection.AddSingleton<TextToImageViewModel>();
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
+            serviceCollection.AddSingleton<IPackageFactory, PackageFactory>();
+            serviceCollection.AddSingleton<BasePackage, A3WebUI>();
+            serviceCollection.AddSingleton<BasePackage, DankDiffusion>();
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
             

@@ -16,6 +16,7 @@ namespace StabilityMatrix.ViewModels;
 public partial class LaunchViewModel : ObservableObject
 {
     private readonly ISettingsManager settingsManager;
+    private readonly IPackageFactory packageFactory;
     private BasePackage? runningPackage;
     private bool clearingPackages = false;
 
@@ -55,9 +56,10 @@ public partial class LaunchViewModel : ObservableObject
 
     public event EventHandler? ScrollNeeded;
 
-    public LaunchViewModel(ISettingsManager settingsManager)
+    public LaunchViewModel(ISettingsManager settingsManager, IPackageFactory packageFactory)
     {
         this.settingsManager = settingsManager;
+        this.packageFactory = packageFactory;
         SetProcessRunning(false);
         
         ToastNotificationManagerCompat.OnActivated += ToastNotificationManagerCompatOnOnActivated;
@@ -86,7 +88,7 @@ public partial class LaunchViewModel : ObservableObject
 
         // Get path from package
         var packagePath = SelectedPackage.Path!;
-        var basePackage = PackageFactory.FindPackageByName(SelectedPackage.Name!);
+        var basePackage = packageFactory.FindPackageByName(SelectedPackage.Name!);
         if (basePackage == null)
         {
             throw new InvalidOperationException("Package not found");

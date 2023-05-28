@@ -19,17 +19,18 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Vertical">
-            <Button Content="Install" Command="{Binding InstallCommand}" Width="100" Height="50"
-                    HorizontalAlignment="Center" />
-            <TextBlock Text="{Binding InstalledText}" HorizontalAlignment="Center" Padding="8" />
-            <ProgressBar Visibility="{Binding ProgressBarVisibility, FallbackValue=Visible}"
-                         Value="{Binding ProgressValue, FallbackValue=10}"
+        <StackPanel Grid.Row="0" Orientation="Vertical"
+                    Visibility="{Binding ProgressBarVisibility, FallbackValue=Visible}">
+            
+            <ProgressBar Value="{Binding ProgressValue, FallbackValue=10}"
                          IsIndeterminate="{Binding IsIndeterminate, FallbackValue=False}"
                          Maximum="100" Width="500" />
+            <TextBlock Text="{Binding ProgressText, FallbackValue=Installing...}" 
+                       HorizontalAlignment="Center" Padding="8" />
         </StackPanel>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="16" HorizontalAlignment="Left" Height="400">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" 
+                    Margin="16" HorizontalAlignment="Left">
             <ListView ItemsSource="{Binding Packages}"
                       SelectedItem="{Binding SelectedPackage, Mode=TwoWay}">
 
@@ -67,6 +68,14 @@
                         <Run Text="{Binding SelectedPackage.GithubUrl, Mode=OneWay}" TextDecorations="Underline" />
                     </TextBlock>
                 </ui:Hyperlink>
+                
+                <Button Content="{Binding InstallButtonText, FallbackValue=Install}"
+                        Command="{Binding InstallCommand}"
+                        IsEnabled="{Binding InstallButtonEnabled, FallbackValue=true}"
+                        Width="100" Height="50"
+                        Background="Green"
+                        Margin="0,16,0,0"
+                        VerticalAlignment="Top" />
             </StackPanel>
         </StackPanel>
     </Grid>

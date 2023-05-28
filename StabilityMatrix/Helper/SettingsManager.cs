@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using StabilityMatrix.Models;
 
@@ -71,6 +72,18 @@ public class SettingsManager : ISettingsManager
     public void SetNavExpanded(bool navExpanded)
     {
         Settings.IsNavExpanded = navExpanded;
+        SaveSettings();
+    }
+
+    public void UpdatePackageVersionNumber(string packageName, string? newVersion)
+    {
+        var package = Settings.InstalledPackages.FirstOrDefault(x => x.PackageName == packageName);
+        if (package == null || newVersion == null)
+        {
+            return;
+        }
+        
+        package.PackageVersion = newVersion;
         SaveSettings();
     }
 

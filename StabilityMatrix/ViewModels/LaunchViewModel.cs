@@ -104,7 +104,7 @@ public partial class LaunchViewModel : ObservableObject
 
         // Get path from package
         var packagePath = SelectedPackage.Path!;
-        var basePackage = packageFactory.FindPackageByName(SelectedPackage.Name!);
+        var basePackage = packageFactory.FindPackageByName(SelectedPackage.PackageName!);
         if (basePackage == null)
         {
             throw new InvalidOperationException("Package not found");

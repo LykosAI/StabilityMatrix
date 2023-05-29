@@ -50,6 +50,9 @@ public partial class InstallerViewModel : ObservableObject
     private ObservableCollection<string> availableVersions;
 
     [ObservableProperty] 
+    private string selectedVersion;
+
+    [ObservableProperty] 
     private ObservableCollection<BasePackage> availablePackages;
     
     public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
@@ -72,7 +75,7 @@ public partial class InstallerViewModel : ObservableObject
         if (!AvailablePackages.Any()) return;
         
         SelectedPackage = AvailablePackages[0];
-        InstallName = SelectedPackage.Name;
+        InstallName = SelectedPackage.DisplayName;
     }
 
     [RelayCommand]
@@ -87,11 +90,20 @@ public partial class InstallerViewModel : ObservableObject
             return;
 
         AvailableVersions = new ObservableCollection<string>(await SelectedPackage.GetVersions());
+        if (!AvailableVersions.Any())
+            return;
+
+        SelectedVersion = AvailableVersions[0];
     }
 
     partial void OnSelectedPackageChanged(BasePackage value)
     {
-        InstallName = value.Name;
+        InstallName = $"{value.DisplayName}-{SelectedVersion}";
+    }
+    
+    partial void OnSelectedVersionChanged(string value)
+    {
+        InstallName = $"{SelectedPackage.DisplayName}-{value}";
     }
 
     private async Task ActuallyInstall()
@@ -103,7 +115,10 @@ public partial class InstallerViewModel : ObservableObject
             return;
         }
 
-        var version = await DownloadPackage();
+        SelectedPackage.InstallLocation = $"{InstallPath}\\{InstallName}";
+        SelectedPackage.DisplayName = InstallName;
+
+        var version = await DownloadPackage(SelectedVersion);
         await InstallPackage();
 
         ProgressText = "Installing dependencies...";
@@ -125,29 +140,25 @@ public partial class InstallerViewModel : ObservableObject
         IsIndeterminate = false;
         SelectedPackageOnProgressChanged(this, 100);
 
-        if (settingsManager.Settings.InstalledPackages.FirstOrDefault(x => x.PackageName == SelectedPackage.Name) ==
-            null)
+        var package = new InstalledPackage
         {
-            var package = new InstalledPackage
-            {
-                Name = SelectedPackage.Name,
-                Path = SelectedPackage.InstallLocation,
-                Id = Guid.NewGuid(),
-                PackageName = SelectedPackage.Name,
-                PackageVersion = version,
-                LaunchCommand = SelectedPackage.LaunchCommand
-            };
-            settingsManager.AddInstalledPackage(package);
-            settingsManager.SetActiveInstalledPackage(package);
-        }
+            Name = SelectedPackage.DisplayName,
+            Path = SelectedPackage.InstallLocation,
+            Id = Guid.NewGuid(),
+            PackageName = SelectedPackage.Name,
+            PackageVersion = version,
+            LaunchCommand = SelectedPackage.LaunchCommand
+        };
+        settingsManager.AddInstalledPackage(package);
+        settingsManager.SetActiveInstalledPackage(package);
     }
     
-    private Task<string?> DownloadPackage()
+    private Task<string?> DownloadPackage(string? version = null)
     {
         SelectedPackage.DownloadProgressChanged += SelectedPackageOnProgressChanged;
         SelectedPackage.DownloadComplete += (_, _) => ProgressText = "Download Complete";
         ProgressText = "Downloading package...";
-        return SelectedPackage.DownloadPackage();
+        return SelectedPackage.DownloadPackage(version: version);
     }
 
     private async Task InstallPackage()

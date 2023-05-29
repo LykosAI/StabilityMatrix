@@ -48,7 +48,8 @@
                 </ui:Button>
                 
                 <ListView ItemsSource="{Binding Packages}"
-                    SelectedItem="{Binding SelectedPackage, Mode=TwoWay}">
+                          Visibility="{Binding InstallButtonVisibility, FallbackValue=Visible}"
+                          SelectedItem="{Binding SelectedPackage, Mode=TwoWay}">
 
                     <ListView.Style>
                         <Style TargetType="ListView">
@@ -86,6 +87,7 @@
 
                 <ui:Button Content="{Binding InstallButtonText, FallbackValue=Install}"
                            Command="{Binding InstallCommand}"
+                           Visibility="{Binding InstallButtonVisibility, FallbackValue=Visible}"
                            IsEnabled="{Binding InstallButtonEnabled, FallbackValue=true}"
                            Width="100" Height="50"
                            Background="Green"

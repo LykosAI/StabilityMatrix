@@ -27,8 +27,8 @@ public class A3WebUI : BasePackage
         this.settingsManager = settingsManager;
     }
     
-    public override string Name { get; set; } = "stable-diffusion-webui";
-    public override string DisplayName => "Stable Diffusion WebUI";
+    public override string Name => "stable-diffusion-webui";
+    public override string DisplayName { get; set; } = "stable-diffusion-webui";
     public override string Author => "AUTOMATIC1111";
     public override string GithubUrl => "https://github.com/AUTOMATIC1111/stable-diffusion-webui";
     public override string LaunchCommand => "launch.py";
@@ -61,8 +61,8 @@ public class A3WebUI : BasePackage
         }
     };
 
-    public override string DownloadLocation { get; set; } =
-        $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages\\stable-diffusion-webui.zip";
+    public override string DownloadLocation =>
+        $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages\\{Name}.zip";
 
     public override string InstallLocation { get; set; } =
         $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages";
@@ -76,11 +76,12 @@ public class A3WebUI : BasePackage
         this.settingsManager = settingsManager;
     }
 
-    public override async Task<string?> DownloadPackage(bool isUpdate = false)
+    public override async Task<string?> DownloadPackage(bool isUpdate = false, string? version = null)
     {
         var githubApi = RestService.For<IGithubApi>("https://api.github.com");
         var latestRelease = await githubApi.GetLatestRelease("AUTOMATIC1111", "stable-diffusion-webui");
-        var downloadUrl = $"https://api.github.com/repos/AUTOMATIC1111/stable-diffusion-webui/zipball/{latestRelease.TagName}";
+        var tagName = string.IsNullOrWhiteSpace(version) ? latestRelease.TagName : version;
+        var downloadUrl = $"https://api.github.com/repos/AUTOMATIC1111/stable-diffusion-webui/zipball/{tagName}";
 
         if (!Directory.Exists(DownloadLocation.Replace($"{Name}.zip", "")))
         {
@@ -145,7 +146,7 @@ public class A3WebUI : BasePackage
         await file.FlushAsync();
         OnDownloadComplete(DownloadLocation);
 
-        return latestRelease.TagName;
+        return tagName;
     }
 
     public override Task InstallPackage(bool isUpdate = false)
@@ -218,7 +219,6 @@ public class A3WebUI : BasePackage
             return false;
         }
         
-        var githubApi = RestService.For<IGithubApi>("https://api.github.com");
         var latestRelease = await githubApi.GetLatestRelease("AUTOMATIC1111", "stable-diffusion-webui");
 
         UpdateAvailable = latestRelease.TagName != currentVersion;
@@ -244,7 +244,7 @@ public class A3WebUI : BasePackage
             OnUpdateProgressChanged(0);
         }
 
-        Directory.CreateDirectory(Path.Combine(InstallLocation, Name));
+        Directory.CreateDirectory(InstallLocation);
 
         using var zip = ZipFile.OpenRead(DownloadLocation);
         var zipDirName = string.Empty;
@@ -261,14 +261,14 @@ public class A3WebUI : BasePackage
                     continue;
                 }
 
-                var folderPath = Path.Combine(InstallLocation, Name,
+                var folderPath = Path.Combine(InstallLocation,
                     entry.FullName.Replace(zipDirName, string.Empty));
                 Directory.CreateDirectory(folderPath);
                 continue;
             }
 
 
-            var destinationPath = Path.GetFullPath(Path.Combine(InstallLocation, Name,
+            var destinationPath = Path.GetFullPath(Path.Combine(InstallLocation,
                 entry.FullName.Replace(zipDirName, string.Empty)));
             entry.ExtractToFile(destinationPath, true);
             currentEntry++;

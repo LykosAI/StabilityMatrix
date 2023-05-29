@@ -37,6 +37,9 @@ public partial class PackageManagerViewModel : ObservableObject
     [ObservableProperty] 
     private bool installButtonEnabled;
 
+    [ObservableProperty] 
+    private Visibility installButtonVisibility;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedPackage))]
     private bool updateAvailable;
@@ -53,9 +56,21 @@ public partial class PackageManagerViewModel : ObservableObject
         InstallButtonText = "Install";
         installButtonEnabled = true;
         ProgressValue = 0;
-
         Packages = new ObservableCollection<InstalledPackage>(settingsManager.Settings.InstalledPackages);
-        SelectedPackage = Packages[0];
+
+        if (Packages.Any())
+        {
+            SelectedPackage = Packages[0];
+            InstallButtonVisibility = Visibility.Visible;
+        }
+        else
+        {
+            SelectedPackage = new InstalledPackage
+            {
+                Name = "Click \"Add Package\" to install a package"
+            };
+            InstallButtonVisibility = Visibility.Collapsed;
+        }
     }
 
     public async Task OnLoaded()
@@ -65,26 +80,31 @@ public partial class PackageManagerViewModel : ObservableObject
         {
             return;
         }
-
+        
+        Packages.Clear();
+        
         foreach (var packageToUpdate in installedPackages)
         {
-            var basePackage = packageFactory.FindPackageByName(packageToUpdate.Name);
+            var basePackage = packageFactory.FindPackageByName(packageToUpdate.PackageName);
             if (basePackage == null) continue;
             
             var hasUpdate = await basePackage.CheckForUpdates();
             packageToUpdate.UpdateAvailable = hasUpdate;
-            OnSelectedPackageChanged(packageToUpdate);
+            Packages.Add(packageToUpdate);
         }
+
+        SelectedPackage = Packages[0];
     }
 
     public ObservableCollection<InstalledPackage> Packages { get; }
 
-    partial void OnSelectedPackageChanged(InstalledPackage value)
+    partial void OnSelectedPackageChanged(InstalledPackage? value)
     {
-        var installed = settingsManager.Settings.InstalledPackages;
-        var isInstalled = installed.FirstOrDefault(package => package.Name == value.Name) != null;
+        if (value == null) return;
+        
         UpdateAvailable = value.UpdateAvailable;
-        InstallButtonText = value.UpdateAvailable ? "Update" : isInstalled ? "Launch" : "Install"; 
+        InstallButtonText = value.UpdateAvailable ? "Update" : "Launch";
+        InstallButtonVisibility = Visibility.Visible;
     }
 
     public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;

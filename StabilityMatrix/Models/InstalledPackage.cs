@@ -21,7 +21,6 @@ public class InstalledPackage
     public string? Path { get; set; }
     public string? LaunchCommand { get; set; }
     public List<string>? LaunchArgs { get; set; }
-    
-    [JsonIgnore]
-    public bool UpdateAvailable { get; set; }
+
+    [JsonIgnore] public bool UpdateAvailable { get; set; } = false;
 }

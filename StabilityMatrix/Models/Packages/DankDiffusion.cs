@@ -5,8 +5,8 @@ namespace StabilityMatrix.Models.Packages;
 
 public class DankDiffusion : BasePackage
 {
-    public override string Name { get; set; } = "dank-diffusion";
-    public override string DisplayName => "Dank Diffusion";
+    public override string Name => "dank-diffusion";
+    public override string DisplayName { get; set; } = "dank-diffusion";
     public override string Author => "mohnjiles";
     public override string GithubUrl => "https://github.com/mohnjiles/dank-diffusion";
     public override string LaunchCommand => "";
@@ -35,10 +35,10 @@ public class DankDiffusion : BasePackage
         }
     };
 
-    public override string DownloadLocation { get; set; }
+    public override string DownloadLocation { get; }
     public override string InstallLocation { get; set; }
 
-    public override Task<string?> DownloadPackage(bool isUpdate = false)
+    public override Task<string?> DownloadPackage(bool isUpdate = false, string? version = null)
     {
         throw new System.NotImplementedException();
     }

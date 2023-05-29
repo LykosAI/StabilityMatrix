@@ -7,7 +7,7 @@
     Loaded="InstallPage_OnLoaded"
     Title="Stability Matrix - Installer"
     Width="1100"
-    d:DesignHeight="450"
+    d:DesignHeight="600"
     d:DesignWidth="700"
     WindowBackdropType="Mica"
     d:DataContext="{d:DesignInstance Type=viewModels:InstallerViewModel,
@@ -87,6 +87,10 @@
                         <Run Text="{Binding SelectedPackage.GithubUrl, Mode=OneWay}" TextDecorations="Underline" />
                     </TextBlock>
                 </ui:Hyperlink>
+                
+                <Label Content="Version" Margin="0,16,0,0"/>
+                <ComboBox ItemsSource="{Binding AvailableVersions}"
+                          SelectedItem="{Binding SelectedVersion}"/>
                 
                 <Label Content="Install Location" Margin="0,16,0,0"/>
                 <ui:TextBox Text="{Binding InstallPath}" Margin="0,0,0,8"/>

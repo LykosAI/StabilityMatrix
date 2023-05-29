@@ -6,14 +6,14 @@ namespace StabilityMatrix.Models;
 
 public abstract class BasePackage
 {
-    public abstract string Name { get; set; }
-    public abstract string DisplayName { get; }
+    public abstract string Name { get; }
+    public abstract string DisplayName { get; set; }
     public abstract string Author { get; }
     public abstract string GithubUrl { get; }
     public abstract string LaunchCommand { get; }
     public abstract string DefaultLaunchArguments { get; }
     public virtual bool UpdateAvailable { get; set; }
-    public abstract Task<string?> DownloadPackage(bool isUpdate = false);
+    public abstract Task<string?> DownloadPackage(bool isUpdate = false, string? version = null);
     public abstract Task InstallPackage(bool isUpdate = false);
     public abstract Task RunPackage(string installedPackagePath, string arguments);
     public abstract Task Shutdown();
@@ -23,7 +23,7 @@ public abstract class BasePackage
 
     public abstract List<LaunchOptionDefinition> LaunchOptions { get; }
 
-    public abstract string DownloadLocation { get; set; }
+    public abstract string DownloadLocation { get; }
     public abstract string InstallLocation { get; set; }
 
     public event EventHandler<int>? DownloadProgressChanged;

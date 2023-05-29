@@ -65,18 +65,20 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
             serviceCollection.AddSingleton<IDialogErrorHandler, DialogErrorHandler>();
-            
-            var jsonOptions = new JsonSerializerOptions
+
+            var defaultRefitSettings = new RefitSettings
             {
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            };
-            var refitSettings = new RefitSettings
-            {
-                ContentSerializer = new SystemTextJsonContentSerializer(jsonOptions)
+                ContentSerializer = new SystemTextJsonContentSerializer(new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                })
             };
             
-            serviceCollection.AddRefitClient<IGithubApi>();
-            serviceCollection.AddRefitClient<IA3WebApi>(refitSettings).ConfigureHttpClient(client =>
+            serviceCollection.AddRefitClient<IGithubApi>(defaultRefitSettings).ConfigureHttpClient(client =>
+            {
+                client.BaseAddress = new Uri("https://api.github.com");
+            });
+            serviceCollection.AddRefitClient<IA3WebApi>(defaultRefitSettings).ConfigureHttpClient(client =>
             {
                 client.BaseAddress = new Uri("http://localhost:7860");
             });

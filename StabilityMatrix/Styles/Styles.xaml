@@ -1,0 +1,102 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style TargetType="FlowDocument" x:Key="DocumentStyle">
+        <Setter Property="FontFamily"
+                Value="Calibri" />
+        <Setter Property="TextAlignment"
+                Value="Left" />
+        </Style>
+
+        <Style x:Key="H1Style"
+               TargetType="Paragraph">
+            <Setter Property="FontSize"
+                    Value="42" />
+            <Setter Property="Foreground"
+                    Value="{ui:ThemeResource TextFillColorPrimaryBrush}" />
+            <Setter Property="FontWeight"
+                    Value="Light" />
+        </Style>
+
+        <Style x:Key="H2Style"
+               TargetType="Paragraph">
+            <Setter Property="FontSize"
+                    Value="20" />
+            <Setter Property="Foreground"
+                    Value="{ui:ThemeResource TextFillColorPrimaryBrush}" />
+            <Setter Property="FontWeight"
+                    Value="Light" />
+        </Style>
+
+        <Style x:Key="H3Style"
+               TargetType="Paragraph">
+            <Setter Property="FontSize"
+                    Value="20" />
+            <Setter Property="Foreground"
+                    Value="{ui:ThemeResource TextFillColorPrimaryBrush}" />
+            <Setter Property="FontWeight"
+                    Value="Light" />
+        </Style>
+
+        <Style x:Key="H4Style"
+               TargetType="Paragraph">
+            <Setter Property="FontSize"
+                    Value="14" />
+            <Setter Property="Foreground"
+                    Value="{ui:ThemeResource TextFillColorPrimaryBrush}" />
+            <Setter Property="FontWeight"
+                    Value="Light" />
+        </Style>
+
+        <Style x:Key="LinkStyle"
+               TargetType="Hyperlink">
+            <Setter Property="TextDecorations"
+                    Value="None" />
+        </Style>
+
+        <Style x:Key="ImageStyle"
+               TargetType="Image">
+          <Setter Property="RenderOptions.BitmapScalingMode"
+                  Value="NearestNeighbor" />
+          <Style.Triggers>
+              <Trigger Property="Tag"
+                       Value="imageright">
+                  <Setter Property="Margin" 
+                          Value="20,0,0,0" />
+              </Trigger>
+          </Style.Triggers>
+      </Style>
+
+      <Style x:Key="SeparatorStyle"
+             TargetType="Separator">
+          <!--<Setter Property="X2"
+                  Value="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=FlowDocumentScrollViewer}}" />
+          <Setter Property="Stroke"
+                  Value="#99000000" />
+          <Setter Property="StrokeThickness"
+                  Value="2" />-->
+      </Style>
+
+      <!-- 
+         The Table's style don't seem to support border-collapse. 
+         By making the ruled line width 0.5 and applying it to cell and table, 
+         it looks like the ruled lines are not doubled. 
+     --> 
+     <Style x:Key="TableStyle" TargetType="Table"> 
+         <Setter Property="CellSpacing" Value="0"/> 
+         <Setter Property="BorderThickness" Value="0.5"/> 
+         <Setter Property="BorderBrush" Value="Gray"/> 
+         <Style.Resources> 
+             <Style TargetType="TableCell"> 
+                 <Setter Property="BorderThickness" Value="0.5"/> 
+                 <Setter Property="BorderBrush" Value="Gray"/> 
+                 <Setter Property="Padding" Value="2"/> 
+             </Style> 
+         </Style.Resources> 
+     </Style> 
+     <Style x:Key="TableHeaderStyle" TargetType="TableRowGroup"> 
+         <Setter Property="FontWeight" Value="DemiBold"/> 
+         <Setter Property="Background" Value="LightGray"/> 
+     </Style> 
+
+</ResourceDictionary>

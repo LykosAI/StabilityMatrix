@@ -12,6 +12,7 @@ using NLog;
 using Refit;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Models.Api;
 
 namespace StabilityMatrix.Models.Packages;
 
@@ -36,10 +37,10 @@ public class A3WebUI : BasePackage
 
     public override bool UpdateAvailable { get; set; } = false;
 
-    public override async Task<IEnumerable<string>> GetVersions()
+    public override async Task<IEnumerable<GithubRelease>> GetVersions()
     {
         var allReleases = await githubApi.GetAllReleases(Author, Name);
-        return allReleases.Select(release => release.TagName!);
+        return allReleases;
     }
 
     public override List<LaunchOptionDefinition> LaunchOptions => new()

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using StabilityMatrix.Models.Api;
 
 namespace StabilityMatrix.Models;
 
@@ -19,7 +20,7 @@ public abstract class BasePackage
     public abstract Task Shutdown();
     public abstract Task<bool> CheckForUpdates(string installedPackageName);
     public abstract Task<string?> Update();
-    public abstract Task<IEnumerable<string>> GetVersions();
+    public abstract Task<IEnumerable<GithubRelease>> GetVersions();
 
     public abstract List<LaunchOptionDefinition> LaunchOptions { get; }
 

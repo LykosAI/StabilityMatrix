@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using StabilityMatrix.Models.Api;
 
 namespace StabilityMatrix.Models.Packages;
 
@@ -11,7 +12,7 @@ public class DankDiffusion : BasePackage
     public override string GithubUrl => "https://github.com/mohnjiles/dank-diffusion";
     public override string LaunchCommand => "";
 
-    public override Task<IEnumerable<string>> GetVersions()
+    public override Task<IEnumerable<GithubRelease>> GetVersions()
     {
         throw new System.NotImplementedException();
     }

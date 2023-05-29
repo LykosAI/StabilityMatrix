@@ -33,7 +33,7 @@ public abstract class BaseGitPackage : BasePackage
     /// <summary>
     /// URL of the hosted web page on launch
     /// </summary>
-    private string webUrl = string.Empty;
+    protected string WebUrl = string.Empty;
 
     public override string GithubUrl => $"https://github.com/{Author}/{Name}";
 
@@ -51,9 +51,27 @@ public abstract class BaseGitPackage : BasePackage
         this.SettingsManager = settingsManager;
     }
 
-    private Task<GithubRelease> GetLatestRelease()
+    protected Task<GithubRelease> GetLatestRelease()
     {
         return GithubApi.GetLatestRelease(Author, Name);
+    }
+
+    /// <summary>
+    /// Setup the virtual environment for the package.
+    /// </summary>
+    /// <param name="installedPackagePath"></param>
+    /// <param name="venvName"></param>
+    /// <returns></returns>
+    protected async Task<PyVenvRunner> SetupVenv(string installedPackagePath, string venvName = "venv")
+    {
+        var venvPath = Path.Combine(installedPackagePath, "venv");
+        VenvRunner?.Dispose();
+        VenvRunner = new PyVenvRunner(venvPath);
+        if (!VenvRunner.Exists())
+        {
+            await VenvRunner.Setup();
+        }
+        return VenvRunner;
     }
     
     public override async Task<IEnumerable<string>> GetVersions()
@@ -208,45 +226,7 @@ public abstract class BaseGitPackage : BasePackage
 
         return Task.CompletedTask;
     }
-    
-    public override async Task RunPackage(string installedPackagePath, string arguments)
-    {
-        var venvPath = Path.Combine(installedPackagePath, "venv");
 
-        // Setup venv
-        VenvRunner?.Dispose();
-        VenvRunner = new PyVenvRunner(venvPath);
-        if (!VenvRunner.Exists())
-        {
-            await VenvRunner.Setup();
-        }
-
-        void HandleConsoleOutput(string? s)
-        {
-            if (s == null) return;
-            if (s.Contains("model loaded", StringComparison.OrdinalIgnoreCase))
-            {
-                OnStartupComplete(webUrl);
-            }
-            if (s.Contains("Running on", StringComparison.OrdinalIgnoreCase))
-            {
-                webUrl = s.Split(" ")[5];
-            }
-            Debug.WriteLine($"process stdout: {s}");
-            OnConsoleOutput($"{s}\n");
-        }
-
-        void HandleExit(int i)
-        {
-            Debug.WriteLine($"Venv process exited with code {i}");
-            OnConsoleOutput($"Venv process exited with code {i}");
-        }
-
-        var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
-
-        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit, workingDirectory: installedPackagePath);
-    }
-    
     public override async Task<bool> CheckForUpdates(string installedPackageName)
     {
         var currentVersion = SettingsManager.Settings.InstalledPackages.FirstOrDefault(x => x.Name == installedPackageName)

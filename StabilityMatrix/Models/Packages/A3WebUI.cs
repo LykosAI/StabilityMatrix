@@ -78,7 +78,6 @@ public class A3WebUI : BasePackage
 
     public override async Task<string?> DownloadPackage(bool isUpdate = false, string? version = null)
     {
-        var githubApi = RestService.For<IGithubApi>("https://api.github.com");
         var latestRelease = await githubApi.GetLatestRelease("AUTOMATIC1111", "stable-diffusion-webui");
         var tagName = string.IsNullOrWhiteSpace(version) ? latestRelease.TagName : version;
         var downloadUrl = $"https://api.github.com/repos/AUTOMATIC1111/stable-diffusion-webui/zipball/{tagName}";
@@ -210,19 +209,26 @@ public class A3WebUI : BasePackage
         return Task.CompletedTask;
     }
 
-    public override async Task<bool> CheckForUpdates()
+    public override async Task<bool> CheckForUpdates(string installedPackageName)
     {
-        var currentVersion = settingsManager.Settings.InstalledPackages.FirstOrDefault(x => x.Name == Name)
+        var currentVersion = settingsManager.Settings.InstalledPackages.FirstOrDefault(x => x.Name == installedPackageName)
             ?.PackageVersion;
         if (string.IsNullOrWhiteSpace(currentVersion))
         {
             return false;
         }
-        
-        var latestRelease = await githubApi.GetLatestRelease("AUTOMATIC1111", "stable-diffusion-webui");
 
-        UpdateAvailable = latestRelease.TagName != currentVersion;
-        return latestRelease.TagName != currentVersion;
+        try
+        {
+            var latestRelease = await githubApi.GetLatestRelease("AUTOMATIC1111", "stable-diffusion-webui");
+            UpdateAvailable = latestRelease.TagName != currentVersion;
+            return latestRelease.TagName != currentVersion;
+        }
+        catch (ApiException e)
+        {
+            Logger.Error(e, "Failed to check for updates");
+            return false;
+        }
     }
 
     public override async Task<string?> Update()

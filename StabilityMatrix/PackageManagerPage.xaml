@@ -43,10 +43,10 @@
                     <StackPanel Orientation="Horizontal">
                         <ui:SymbolIcon Symbol="Add24" />
                         <Label Margin="8,4,0,0"
-                            Content="Add Package" VerticalContentAlignment="Center"/>
+                               Content="Add Package" VerticalContentAlignment="Center" />
                     </StackPanel>
                 </ui:Button>
-                
+
                 <ListView ItemsSource="{Binding Packages}"
                           Visibility="{Binding InstallButtonVisibility, FallbackValue=Visible}"
                           SelectedItem="{Binding SelectedPackage, Mode=TwoWay}">
@@ -80,19 +80,28 @@
             <StackPanel Orientation="Vertical" Margin="32,0,0,0">
                 <TextBlock Text="{Binding SelectedPackage.Name, FallbackValue=Stable Diffusion Web UI}"
                            FontSize="24" FontWeight="Bold" />
-                <TextBlock Text="{Binding SelectedPackage.PackageVersion, FallbackValue=v1.3.37}"
-                           FontSize="12" Margin="0,5, 0, 5" />
+                <TextBlock FontSize="12" Margin="0,5, 0, 5">
+                    <Run Text="{Binding SelectedPackage.PackageName, FallbackValue=stable-diffusion-webui}" />
+                    <Run Text="{Binding SelectedPackage.PackageVersion, FallbackValue=v1.3.37}" />
+                </TextBlock>
                 <TextBlock Text="{Binding SelectedPackage.Path, FallbackValue=C:\Users\Example\Downloads}"
                            FontSize="12" Margin="0,5, 0, 5" />
-
-                <ui:Button Content="{Binding InstallButtonText, FallbackValue=Install}"
-                           Command="{Binding InstallCommand}"
-                           Visibility="{Binding InstallButtonVisibility, FallbackValue=Visible}"
-                           IsEnabled="{Binding InstallButtonEnabled, FallbackValue=true}"
-                           Width="100" Height="50"
-                           Background="Green"
-                           Margin="0,16,0,0"
-                           VerticalAlignment="Top" />
+                <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                    <ui:Button Content="{Binding InstallButtonText, FallbackValue=Install}"
+                               Command="{Binding InstallCommand}"
+                               Visibility="{Binding InstallButtonVisibility, FallbackValue=Visible}"
+                               IsEnabled="{Binding InstallButtonEnabled, FallbackValue=true}"
+                               Width="100" Height="50"
+                               Background="Green"
+                               VerticalAlignment="Top" />
+                    <ui:Button Content="Uninstall"
+                               Command="{Binding UninstallCommand}"
+                               Visibility="{Binding InstallButtonVisibility, FallbackValue=Visible}"
+                               Width="100" Height="50"
+                               Background="DarkRed"
+                               Margin="16,0,0,0"
+                               VerticalAlignment="Top" />
+                </StackPanel>
             </StackPanel>
         </StackPanel>
     </Grid>

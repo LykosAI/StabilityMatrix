@@ -9,7 +9,7 @@ public interface IDialogErrorHandler
     /// <summary>
     /// Shows a generic error snackbar with the given message.
     /// </summary>
-    Task ShowSnackbarAsync(string message, LogLevel level = LogLevel.Error, int timeoutSeconds = 5);
+    void ShowSnackbarAsync(string message, LogLevel level = LogLevel.Error, int timeoutSeconds = 5);
 
     /// <summary>
     /// Attempt to run the given action, showing a generic error snackbar if it fails.

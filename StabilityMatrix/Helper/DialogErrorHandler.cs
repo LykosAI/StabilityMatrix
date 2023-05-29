@@ -29,7 +29,7 @@ public class DialogErrorHandler : IDialogErrorHandler
     /// <summary>
     /// Shows a generic error snackbar with the given message.
     /// </summary>
-    public Task ShowSnackbarAsync(string message, LogLevel level = LogLevel.Error, int timeoutMilliseconds = 5000)
+    public void ShowSnackbarAsync(string message, LogLevel level = LogLevel.Error, int timeoutMilliseconds = 5000)
     {
         snackbarViewModel.SnackbarAppearance = level switch
         {
@@ -40,7 +40,7 @@ public class DialogErrorHandler : IDialogErrorHandler
         };
         // snackbarService.Timeout = timeoutMilliseconds;
         var icon = new SymbolIcon(SymbolRegular.ErrorCircle24);
-        return snackbarService.ShowAsync("Error", message, icon, snackbarViewModel.SnackbarAppearance);
+        snackbarService.ShowAsync("Error", message, icon, snackbarViewModel.SnackbarAppearance);
     }
     
     /// <summary>
@@ -57,7 +57,7 @@ public class DialogErrorHandler : IDialogErrorHandler
         }
         catch (Exception e)
         {
-            await ShowSnackbarAsync(message, level, timeoutMilliseconds);
+            ShowSnackbarAsync(message, level, timeoutMilliseconds);
             return new TaskResult<T>
             {
                 Exception = e

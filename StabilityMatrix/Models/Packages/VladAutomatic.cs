@@ -5,21 +5,21 @@ using System.IO;
 using System.Threading.Tasks;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
-using StabilityMatrix.Models.Api;
 using StabilityMatrix.Python;
 
 namespace StabilityMatrix.Models.Packages;
 
-public class A3WebUI : BaseGitPackage
+public class VladAutomatic : BaseGitPackage
 {
-    public override string Name => "stable-diffusion-webui";
-    public override string DisplayName { get; set; } = "stable-diffusion-webui";
-    public override string Author => "AUTOMATIC1111";
+    public override string Name => "automatic";
+    public override string DisplayName { get; set; } = "SD.Next Web UI";
+    public override string Author => "vladmandic";
     public override string LaunchCommand => "launch.py";
     public override string DefaultLaunchArguments => $"{GetVramOption()} {GetXformersOption()}";
 
-    
-    public A3WebUI(IGithubApi githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager) { }
+    public VladAutomatic(IGithubApi githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager)
+    {
+    }
 
     public override List<LaunchOptionDefinition> LaunchOptions => new()
     {

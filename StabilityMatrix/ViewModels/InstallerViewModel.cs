@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Api;
+using StabilityMatrix.Python;
 using EventManager = StabilityMatrix.Helper.EventManager;
 
 namespace StabilityMatrix.ViewModels;

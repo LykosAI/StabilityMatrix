@@ -3,12 +3,11 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using NLog;
 using Python.Runtime;
 using StabilityMatrix.Helper;
-using ILogger = NLog.ILogger;
+using StabilityMatrix.Python.Interop;
 
-namespace StabilityMatrix;
+namespace StabilityMatrix.Python;
 
 public record struct PyVersionInfo(int Major, int Minor, int Micro, string ReleaseLevel, int Serial);
 
@@ -105,7 +104,7 @@ public class PyRunner : IPyRunner
     /// <param name="waitTimeout">Time limit for waiting on PyRunning lock.</param>
     /// <param name="cancelToken">Cancellation token.</param>
     /// <exception cref="OperationCanceledException">cancelToken was canceled, or waitTimeout expired.</exception>
-    private async Task<T> RunInThreadWithLock<T>(Func<T> func, TimeSpan? waitTimeout = null, CancellationToken cancelToken = default)
+    public async Task<T> RunInThreadWithLock<T>(Func<T> func, TimeSpan? waitTimeout = null, CancellationToken cancelToken = default)
     {
         // Wait to acquire PyRunning lock
         await PyRunning.WaitAsync(cancelToken).ConfigureAwait(false);
@@ -132,7 +131,7 @@ public class PyRunner : IPyRunner
     /// <param name="waitTimeout">Time limit for waiting on PyRunning lock.</param>
     /// <param name="cancelToken">Cancellation token.</param>
     /// <exception cref="OperationCanceledException">cancelToken was canceled, or waitTimeout expired.</exception>
-    private async Task RunInThreadWithLock(Action action, TimeSpan? waitTimeout = null, CancellationToken cancelToken = default)
+    public async Task RunInThreadWithLock(Action action, TimeSpan? waitTimeout = null, CancellationToken cancelToken = default)
     {
         // Wait to acquire PyRunning lock
         await PyRunning.WaitAsync(cancelToken).ConfigureAwait(false);
@@ -169,7 +168,8 @@ public class PyRunner : IPyRunner
     {
         return RunInThreadWithLock(() =>
         {
-            var result = PythonEngine.Eval(expression);
+            using var scope = Py.CreateScope();
+            var result = scope.Eval(expression);
             return result.As<T>();
         });
     }
@@ -182,7 +182,8 @@ public class PyRunner : IPyRunner
     {
         return RunInThreadWithLock(() =>
         {
-            PythonEngine.Exec(code);
+            using var scope = Py.CreateScope();
+            scope.Exec(code);
         });
     }
 

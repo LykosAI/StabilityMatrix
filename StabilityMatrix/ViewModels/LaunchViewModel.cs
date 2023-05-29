@@ -23,7 +23,8 @@ public partial class LaunchViewModel : ObservableObject
     private readonly LaunchOptionsDialogViewModel launchOptionsDialogViewModel;
     private readonly ILogger<LaunchViewModel> logger;
     private readonly IPyRunner pyRunner;
-    
+    private readonly IDialogFactory dialogFactory;
+
     private BasePackage? runningPackage;
     private bool clearingPackages = false;
 
@@ -64,9 +65,11 @@ public partial class LaunchViewModel : ObservableObject
         IContentDialogService contentDialogService,
         LaunchOptionsDialogViewModel launchOptionsDialogViewModel,
         ILogger<LaunchViewModel> logger,
-        IPyRunner pyRunner)
+        IPyRunner pyRunner,
+        IDialogFactory dialogFactory)
     {
         this.pyRunner = pyRunner;
+        this.dialogFactory = dialogFactory;
         this.contentDialogService = contentDialogService;
         this.launchOptionsDialogViewModel = launchOptionsDialogViewModel;
         this.logger = logger;
@@ -135,13 +138,10 @@ public partial class LaunchViewModel : ObservableObject
         vm.SelectedPackage = package;
 
         // Open a config page
-        var dialog = new LaunchOptionsDialog(contentDialogService.GetContentPresenter())
-        {
-            DataContext = vm,
-            IsPrimaryButtonEnabled = true,
-            PrimaryButtonText = "Save",
-            CloseButtonText = "Cancel",
-        };
+        var dialog = dialogFactory.CreateLaunchOptionsDialog();
+        dialog.IsPrimaryButtonEnabled = true;
+        dialog.PrimaryButtonText = "Save";
+        dialog.CloseButtonText = "Cancel";
         await dialog.ShowAsync();
     }
 

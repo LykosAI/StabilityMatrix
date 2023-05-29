@@ -12,11 +12,11 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
 
     [ObservableProperty]
     private BasePackage? selectedPackage;
-
+    
     public void OnLoad()
     {
         // Populate Cards using the selected package
         
-
+        
     }
 }

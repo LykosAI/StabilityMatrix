@@ -42,6 +42,7 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddSingleton<IPackageFactory, PackageFactory>();
             serviceCollection.AddSingleton<IPyRunner, PyRunner>();
+            serviceCollection.AddTransient<IDialogFactory, DialogFactory>();
             
             serviceCollection.AddTransient<MainWindow>();
             serviceCollection.AddTransient<SettingsPage>();
@@ -51,11 +52,11 @@ namespace StabilityMatrix
             
             serviceCollection.AddTransient<MainWindowViewModel>();
             serviceCollection.AddTransient<SnackbarViewModel>();
+            serviceCollection.AddTransient<LaunchOptionsDialogViewModel>();
             serviceCollection.AddSingleton<SettingsViewModel>();
             serviceCollection.AddSingleton<LaunchViewModel>();
             serviceCollection.AddSingleton<InstallerViewModel>();
             serviceCollection.AddSingleton<TextToImageViewModel>();
-            serviceCollection.AddSingleton<LaunchOptionsDialogViewModel>();
             
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, DankDiffusion>();

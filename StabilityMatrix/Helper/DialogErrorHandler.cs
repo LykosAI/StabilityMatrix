@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using System;
+using System.Windows.Threading;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Models;
 using StabilityMatrix.ViewModels;
@@ -15,17 +16,15 @@ namespace StabilityMatrix.Helper;
 /// </summary>
 public class DialogErrorHandler : IDialogErrorHandler
 {
-    private readonly IContentDialogService contentDialogService;
     private readonly ISnackbarService snackbarService;
     private readonly SnackbarViewModel snackbarViewModel;
-    
-    public DialogErrorHandler(IContentDialogService contentDialogService, ISnackbarService snackbarService, SnackbarViewModel snackbarViewModel)
+
+    public DialogErrorHandler(ISnackbarService snackbarService, SnackbarViewModel snackbarViewModel)
     {
-        this.contentDialogService = contentDialogService;
         this.snackbarService = snackbarService;
         this.snackbarViewModel = snackbarViewModel;
     }
-    
+
     /// <summary>
     /// Shows a generic error snackbar with the given message.
     /// </summary>

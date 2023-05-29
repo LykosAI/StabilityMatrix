@@ -20,10 +20,15 @@ public class PyRunner : IPyRunner
     private const string RelativeExePath = @"Assets\Python310\python.exe";
     private const string RelativePipExePath = @"Assets\Python310\Scripts\pip.exe";
     private const string RelativeGetPipPath = @"Assets\Python310\get-pip.pyc";
+    private const string RelativeVenvPath = @"Assets\Python310\Scripts\virtualenv.exe";
     public static string DllPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeDllPath);
     public static string ExePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeExePath);
     public static string PipExePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativePipExePath);
     public static string GetPipPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeGetPipPath);
+    public static string VenvPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeVenvPath);
+    
+    public static bool PipInstalled => File.Exists(PipExePath);
+    public static bool VenvInstalled => File.Exists(VenvPath);
     
     private static readonly SemaphoreSlim PyRunning = new(1, 1);
     

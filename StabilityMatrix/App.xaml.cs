@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
@@ -9,6 +10,10 @@ using Windows.ApplicationModel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
+using Polly;
+using Polly.Contrib.WaitAndRetry;
+using Polly.Extensions.Http;
+using Polly.Timeout;
 using Refit;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
@@ -74,14 +79,25 @@ namespace StabilityMatrix
                 })
             };
             
-            serviceCollection.AddRefitClient<IGithubApi>(defaultRefitSettings).ConfigureHttpClient(client =>
-            {
-                client.BaseAddress = new Uri("https://api.github.com");
-            });
-            serviceCollection.AddRefitClient<IA3WebApi>(defaultRefitSettings).ConfigureHttpClient(client =>
-            {
-                client.BaseAddress = new Uri("http://localhost:7860");
-            });
+            // Polly retry policy for Refit
+            var delay = Backoff
+                .DecorrelatedJitterBackoffV2(medianFirstRetryDelay: TimeSpan.FromSeconds(1), retryCount: 5);
+            var retryPolicy = HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .Or<TimeoutRejectedException>()
+                .WaitAndRetryAsync(delay);
+            var timeoutPolicy = Policy
+                .TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(10));
+            
+            // Add Refit clients
+            serviceCollection.AddRefitClient<IGithubApi>(defaultRefitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://api.github.com"))
+                .AddPolicyHandler(retryPolicy)
+                .AddPolicyHandler(timeoutPolicy);
+            serviceCollection.AddRefitClient<IA3WebApi>(defaultRefitSettings)
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri("http://localhost:7860"))
+                .AddPolicyHandler(retryPolicy)
+                .AddPolicyHandler(timeoutPolicy);
 
             // Logging configuration
             var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");

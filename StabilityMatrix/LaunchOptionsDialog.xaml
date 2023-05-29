@@ -38,7 +38,7 @@
                         <ItemsControl ItemsSource="{Binding Options}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <CheckBox Content="{Binding}" />
+                                    <CheckBox Content="{Binding Name}" IsChecked="{Binding Selected}" />
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

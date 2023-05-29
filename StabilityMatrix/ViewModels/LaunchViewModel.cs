@@ -12,6 +12,7 @@ using Microsoft.Toolkit.Uwp.Notifications;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using Wpf.Ui.Contracts;
+using Wpf.Ui.Controls.ContentDialogControl;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -120,8 +121,9 @@ public partial class LaunchViewModel : ObservableObject
     [RelayCommand]
     public async Task ConfigAsync()
     {
-        var name = SelectedPackage?.Name;
-        if (name == null)
+        var activeInstall = SelectedPackage;
+        var name = activeInstall?.Name;
+        if (name == null || activeInstall == null)
         {
             logger.LogWarning($"Selected package is null");
             return;
@@ -135,11 +137,18 @@ public partial class LaunchViewModel : ObservableObject
         }
 
         // Open a config page
-        var dialog = dialogFactory.CreateLaunchOptionsDialog(package);
+        var dialog = dialogFactory.CreateLaunchOptionsDialog(package, activeInstall);
         dialog.IsPrimaryButtonEnabled = true;
         dialog.PrimaryButtonText = "Save";
         dialog.CloseButtonText = "Cancel";
-        await dialog.ShowAsync();
+        var result = await dialog.ShowAsync();
+        
+        if (result == ContentDialogResult.Primary)
+        {
+            // Save config
+            var args = dialog.AsLaunchArgs();
+            settingsManager.SaveLaunchArgs(activeInstall.Id, args);
+        }
     }
 
     private void RunningPackageOnStartupComplete(object? sender, string url)

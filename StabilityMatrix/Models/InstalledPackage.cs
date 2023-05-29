@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Windows.Documents;
 
 namespace StabilityMatrix.Models;
 
@@ -20,5 +19,5 @@ public class InstalledPackage
     // Install path
     public string? Path { get; set; }
     public string? LaunchCommand { get; set; }
-    public HashSet<string>? LaunchArgs { get; set; }
+    public List<string>? LaunchArgs { get; set; }
 }

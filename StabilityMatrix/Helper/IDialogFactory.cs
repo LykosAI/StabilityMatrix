@@ -1,6 +1,8 @@
-﻿namespace StabilityMatrix.Helper;
+﻿using StabilityMatrix.Models;
+
+namespace StabilityMatrix.Helper;
 
 public interface IDialogFactory
 {
-    LaunchOptionsDialog CreateLaunchOptionsDialog();
+    LaunchOptionsDialog CreateLaunchOptionsDialog(BasePackage selectedPackage);
 }

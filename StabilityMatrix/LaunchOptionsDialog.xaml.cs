@@ -15,6 +15,7 @@ public partial class LaunchOptionsDialog : ContentDialog
     {
         this.viewModel = viewModel;
         InitializeComponent();
+        DataContext = viewModel;
     }
 
     private void LaunchOptionsDialog_OnLoaded(object sender, RoutedEventArgs e)

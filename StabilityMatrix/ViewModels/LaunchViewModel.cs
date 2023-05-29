@@ -120,7 +120,6 @@ public partial class LaunchViewModel : ObservableObject
     [RelayCommand]
     public async Task ConfigAsync()
     {
-        var vm = launchOptionsDialogViewModel;
         var name = SelectedPackage?.Name;
         if (name == null)
         {
@@ -135,10 +134,8 @@ public partial class LaunchViewModel : ObservableObject
             return;
         }
 
-        vm.SelectedPackage = package;
-
         // Open a config page
-        var dialog = dialogFactory.CreateLaunchOptionsDialog();
+        var dialog = dialogFactory.CreateLaunchOptionsDialog(package);
         dialog.IsPrimaryButtonEnabled = true;
         dialog.PrimaryButtonText = "Save";
         dialog.CloseButtonText = "Cancel";

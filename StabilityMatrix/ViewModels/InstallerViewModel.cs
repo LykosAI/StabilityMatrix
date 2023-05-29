@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
@@ -10,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.Api;
 using StabilityMatrix.Python;
 using EventManager = StabilityMatrix.Helper.EventManager;
 
@@ -48,13 +48,16 @@ public partial class InstallerViewModel : ObservableObject
     private string installName;
     
     [ObservableProperty]
-    private ObservableCollection<string> availableVersions;
+    private ObservableCollection<GithubRelease> availableVersions;
 
     [ObservableProperty] 
-    private string selectedVersion;
+    private GithubRelease selectedVersion;
 
     [ObservableProperty] 
     private ObservableCollection<BasePackage> availablePackages;
+
+    [ObservableProperty] 
+    private string releaseNotes;
     
     public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
 
@@ -90,11 +93,16 @@ public partial class InstallerViewModel : ObservableObject
         if (SelectedPackage == null)
             return;
 
-        AvailableVersions = new ObservableCollection<string>(await SelectedPackage.GetVersions());
+        var releases = (await SelectedPackage.GetVersions()).ToList();
+        if (!releases.Any())
+            return;
+        
+        AvailableVersions = new ObservableCollection<GithubRelease>(releases);
         if (!AvailableVersions.Any())
             return;
 
         SelectedVersion = AvailableVersions[0];
+        ReleaseNotes = releases.First().Body;
     }
 
     partial void OnSelectedPackageChanged(BasePackage value)
@@ -102,9 +110,10 @@ public partial class InstallerViewModel : ObservableObject
         InstallName = $"{value.DisplayName}-{SelectedVersion}";
     }
     
-    partial void OnSelectedVersionChanged(string value)
+    partial void OnSelectedVersionChanged(GithubRelease? value)
     {
-        InstallName = $"{SelectedPackage.DisplayName}-{value}";
+        InstallName = $"{SelectedPackage.DisplayName}-{value?.TagName}";
+        ReleaseNotes = value?.Body ?? string.Empty;
     }
 
     private async Task ActuallyInstall()
@@ -119,7 +128,7 @@ public partial class InstallerViewModel : ObservableObject
         SelectedPackage.InstallLocation = $"{InstallPath}\\{InstallName}";
         SelectedPackage.DisplayName = InstallName;
 
-        var version = await DownloadPackage(SelectedVersion);
+        var version = await DownloadPackage(SelectedVersion.TagName);
         await InstallPackage();
 
         ProgressText = "Installing dependencies...";

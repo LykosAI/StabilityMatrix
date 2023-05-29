@@ -21,7 +21,25 @@
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:models="clr-namespace:StabilityMatrix.Models"
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:xaml="clr-namespace:Markdown.Xaml;assembly=Markdown.Xaml"
+    xmlns:api="clr-namespace:StabilityMatrix.Models.Api"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime">
+    
+    <ui:FluentWindow.Resources>
+        <xaml:Markdown x:Key="Markdown"
+                        DocumentStyle="{StaticResource DocumentStyle}"
+                        Heading1Style="{StaticResource H1Style}"
+                        Heading2Style="{StaticResource H2Style}"
+                        Heading3Style="{StaticResource H3Style}"
+                        Heading4Style="{StaticResource H4Style}"
+                        LinkStyle="{StaticResource LinkStyle}"
+                        ImageStyle="{StaticResource ImageStyle}"
+                        SeparatorStyle="{StaticResource SeparatorStyle}"
+                        AssetPathRoot="{x:Static system:Environment.CurrentDirectory}"/>
+        <xaml:TextToFlowDocumentConverter x:Key="TextToFlowDocumentConverter" 
+                                          Markdown="{StaticResource Markdown}"/>
+    </ui:FluentWindow.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -46,9 +64,14 @@
                        HorizontalAlignment="Center" Padding="8" />
         </StackPanel>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal"
-                    Margin="16" HorizontalAlignment="Left">
+        <Grid Grid.Row="2" HorizontalAlignment="Left">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
             <ListView ItemsSource="{Binding AvailablePackages}"
+                      Margin="16"
                       SelectedItem="{Binding SelectedPackage, Mode=TwoWay}">
 
                 <ListView.Style>
@@ -76,13 +99,13 @@
                 </ListView.ItemTemplate>
             </ListView>
 
-            <StackPanel Orientation="Vertical" Margin="32,0,0,0">
+            <StackPanel Grid.Column="1" Orientation="Vertical" Margin="16,16,0,16">
                 <TextBlock Text="{Binding SelectedPackage.DisplayName, FallbackValue=Stable Diffusion Web UI}"
                            FontSize="24" FontWeight="Bold" />
                 <TextBlock Text="{Binding SelectedPackage.ByAuthor, FallbackValue=by Automatic111}"
                            FontSize="12" Margin="0,5, 0, 5" />
                 <ui:Hyperlink NavigateUri="{Binding SelectedPackage.GithubUrl}">
-                    <TextBlock>
+                    <TextBlock TextWrapping="Wrap">
                         <Run Text="GitHub Page:" />
                         <Run Text="{Binding SelectedPackage.GithubUrl, Mode=OneWay}" TextDecorations="Underline" />
                     </TextBlock>
@@ -90,7 +113,18 @@
                 
                 <Label Content="Version" Margin="0,16,0,0"/>
                 <ComboBox ItemsSource="{Binding AvailableVersions}"
-                          SelectedItem="{Binding SelectedVersion}"/>
+                          SelectedItem="{Binding SelectedVersion}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type api:GithubRelease}">
+                            <StackPanel Margin="10,0,0,0" VerticalAlignment="Top">
+                                <TextBlock
+                                    Margin="0,5,0,5"
+                                    Name="NameTextBlock"
+                                    Text="{Binding TagName}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
                 
                 <Label Content="Install Location" Margin="0,16,0,0"/>
                 <ui:TextBox Text="{Binding InstallPath}" Margin="0,0,0,8"/>
@@ -105,6 +139,11 @@
                            Margin="0,16,0,0"
                            VerticalAlignment="Top" />
             </StackPanel>
-        </StackPanel>
+            <FlowDocumentScrollViewer Grid.Column="2" Margin="16, 16, 0 ,16"
+                                      VerticalAlignment="Stretch"
+                                      HorizontalAlignment="Stretch"
+                                      Document="{Binding ReleaseNotes, Converter={StaticResource TextToFlowDocumentConverter}}"/>
+            
+        </Grid>
     </Grid>
 </ui:FluentWindow>

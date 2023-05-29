@@ -5,7 +5,6 @@ using System.IO;
 using System.Threading.Tasks;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
-using StabilityMatrix.Python;
 
 namespace StabilityMatrix.Models.Packages;
 
@@ -17,9 +16,8 @@ public class A3WebUI : BaseGitPackage
     public override string LaunchCommand => "launch.py";
     public override string DefaultLaunchArguments => $"{GetVramOption()} {GetXformersOption()}";
 
-    public A3WebUI(IGithubApi githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager)
-    {
-    }
+    
+    public A3WebUI(IGithubApi githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager) { }
 
     public override List<LaunchOptionDefinition> LaunchOptions => new()
     {

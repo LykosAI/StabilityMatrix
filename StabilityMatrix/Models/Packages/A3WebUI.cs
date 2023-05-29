@@ -197,7 +197,7 @@ public class A3WebUI : BasePackage
             OnConsoleOutput($"Venv process exited with code {i}");
         }
 
-        var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}{arguments}\"";
+        var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
 
         venvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit, workingDirectory: installedPackagePath);
     }

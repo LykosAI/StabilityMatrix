@@ -87,21 +87,22 @@ namespace StabilityMatrix
                 .HandleTransientHttpError()
                 .Or<TimeoutRejectedException>()
                 .WaitAndRetryAsync(delay);
-            var timeoutPolicy = Policy
-                .TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(10));
-            
+
             // Add Refit clients
             serviceCollection.AddRefitClient<IGithubApi>(defaultRefitSettings)
-                .ConfigureHttpClient(c => 
-                    {
-                        c.BaseAddress = new Uri("https://api.github.com"));
-                        c.Timeout = TimeSpan.FromSeconds(10);
-                    })
-                .AddPolicyHandler(retryPolicy)
+                .ConfigureHttpClient(c =>
+                {
+                    c.BaseAddress = new Uri("https://api.github.com"));
+                    c.Timeout = TimeSpan.FromSeconds(5);
+                })
+                .AddPolicyHandler(retryPolicy);
             serviceCollection.AddRefitClient<IA3WebApi>(defaultRefitSettings)
-                .ConfigureHttpClient(c => c.BaseAddress = new Uri("http://localhost:7860"))
-                .AddPolicyHandler(retryPolicy)
-                .AddPolicyHandler(timeoutPolicy);
+                .ConfigureHttpClient(c =>
+                {
+                    c.BaseAddress = new Uri("http://localhost:7860");
+                    c.Timeout = TimeSpan.FromSeconds(2);
+                })
+                .AddPolicyHandler(retryPolicy);
 
             // Logging configuration
             var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");

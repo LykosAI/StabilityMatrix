@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using System;
-using System.Windows.Threading;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Models;
 using StabilityMatrix.ViewModels;

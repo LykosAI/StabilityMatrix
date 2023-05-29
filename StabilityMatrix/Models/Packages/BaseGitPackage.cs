@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
@@ -74,10 +73,10 @@ public abstract class BaseGitPackage : BasePackage
         return VenvRunner;
     }
     
-    public override async Task<IEnumerable<string>> GetVersions()
+    public override async Task<IEnumerable<GithubRelease>> GetVersions()
     {
         var allReleases = await GithubApi.GetAllReleases(Author, Name);
-        return allReleases.Select(release => release.TagName!);
+        return allReleases;
     }
     
     public override async Task<string?> DownloadPackage(bool isUpdate = false, string? version = null)

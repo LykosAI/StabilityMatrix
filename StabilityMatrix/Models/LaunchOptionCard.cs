@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Windows.Documents;
-using ABI.Windows.Data.Xml.Dom;
-using StabilityMatrix.Helper;
+﻿using System.Collections.ObjectModel;
 
 namespace StabilityMatrix.Models;
 

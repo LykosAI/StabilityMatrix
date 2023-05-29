@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Toolkit.Uwp.Notifications;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
+using StabilityMatrix.Python;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.ContentDialogControl;
 

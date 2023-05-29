@@ -3,12 +3,10 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using NLog;
 using Python.Runtime;
 using StabilityMatrix.Helper;
-using ILogger = NLog.ILogger;
 
-namespace StabilityMatrix;
+namespace StabilityMatrix.Python;
 
 public record struct PyVersionInfo(int Major, int Minor, int Micro, string ReleaseLevel, int Serial);
 

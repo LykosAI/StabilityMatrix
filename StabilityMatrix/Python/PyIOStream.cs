@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 
-namespace StabilityMatrix;
+namespace StabilityMatrix.Python;
 
 /// <summary>
 /// Implement the interface of the sys.stdout redirection

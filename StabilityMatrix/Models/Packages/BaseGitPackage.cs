@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -8,13 +9,11 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using NLog;
 using Refit;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models.Api;
-using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace StabilityMatrix.Models.Packages;
 
@@ -22,12 +21,14 @@ namespace StabilityMatrix.Models.Packages;
 /// Base class for packages that are hosted on Github.
 /// Author and Name should be the Github username and repository name respectively.
 /// </summary>
+[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public abstract class BaseGitPackage : BasePackage
 {
     protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    protected readonly IGithubApi githubApi;
-    protected readonly ISettingsManager settingsManager;
-    protected PyVenvRunner? venvRunner;
+    protected readonly IGithubApi GithubApi;
+    protected readonly ISettingsManager SettingsManager;
+    protected PyVenvRunner? VenvRunner;
+    
     /// <summary>
     /// URL of the hosted web page on launch
     /// </summary>
@@ -45,18 +46,18 @@ public abstract class BaseGitPackage : BasePackage
 
     protected BaseGitPackage(IGithubApi githubApi, ISettingsManager settingsManager)
     {
-        this.githubApi = githubApi;
-        this.settingsManager = settingsManager;
+        this.GithubApi = githubApi;
+        this.SettingsManager = settingsManager;
     }
 
     private Task<GithubRelease> GetLatestRelease()
     {
-        return githubApi.GetLatestRelease(Author, Name);
+        return GithubApi.GetLatestRelease(Author, Name);
     }
     
     public override async Task<IEnumerable<string>> GetVersions()
     {
-        var allReleases = await githubApi.GetAllReleases(Author, Name);
+        var allReleases = await GithubApi.GetAllReleases(Author, Name);
         return allReleases.Select(release => release.TagName!);
     }
     
@@ -88,7 +89,7 @@ public abstract class BaseGitPackage : BasePackage
         {
             response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
             contentLength = response.Content.Headers.ContentLength ?? 0;
-            logger.LogDebug("Retrying get-headers for content-length");
+            Logger.Debug("Retrying get-headers for content-length");
             Thread.Sleep(50);
         }
 
@@ -212,11 +213,11 @@ public abstract class BaseGitPackage : BasePackage
         var venvPath = Path.Combine(installedPackagePath, "venv");
 
         // Setup venv
-        venvRunner?.Dispose();
-        venvRunner = new PyVenvRunner(venvPath);
-        if (!venvRunner.Exists())
+        VenvRunner?.Dispose();
+        VenvRunner = new PyVenvRunner(venvPath);
+        if (!VenvRunner.Exists())
         {
-            await venvRunner.Setup();
+            await VenvRunner.Setup();
         }
 
         void HandleConsoleOutput(string? s)
@@ -242,12 +243,12 @@ public abstract class BaseGitPackage : BasePackage
 
         var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
 
-        venvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit, workingDirectory: installedPackagePath);
+        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit, workingDirectory: installedPackagePath);
     }
     
     public override async Task<bool> CheckForUpdates(string installedPackageName)
     {
-        var currentVersion = settingsManager.Settings.InstalledPackages.FirstOrDefault(x => x.Name == installedPackageName)
+        var currentVersion = SettingsManager.Settings.InstalledPackages.FirstOrDefault(x => x.Name == installedPackageName)
             ?.PackageVersion;
         if (string.IsNullOrWhiteSpace(currentVersion))
         {
@@ -262,7 +263,7 @@ public abstract class BaseGitPackage : BasePackage
         }
         catch (ApiException e)
         {
-            logger.LogError(e, "Failed to check for updates");
+            Logger.Error(e, "Failed to check for updates");
             return false;
         }
     }
@@ -277,8 +278,8 @@ public abstract class BaseGitPackage : BasePackage
     
     public override Task Shutdown()
     {
-        venvRunner?.Dispose();
-        venvRunner?.Process?.WaitForExitAsync();
+        VenvRunner?.Dispose();
+        VenvRunner?.Process?.WaitForExitAsync();
         return Task.CompletedTask;
     }
 }

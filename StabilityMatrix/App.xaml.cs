@@ -39,6 +39,7 @@ namespace StabilityMatrix
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddSingleton<IPageService, PageService>();
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
+            serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddSingleton<IPackageFactory, PackageFactory>();
             serviceCollection.AddSingleton<IPyRunner, PyRunner>();
             
@@ -49,6 +50,7 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<TextToImagePage>();
             
             serviceCollection.AddTransient<MainWindowViewModel>();
+            serviceCollection.AddTransient<SnackbarViewModel>();
             serviceCollection.AddSingleton<SettingsViewModel>();
             serviceCollection.AddSingleton<LaunchViewModel>();
             serviceCollection.AddSingleton<InstallerViewModel>();
@@ -59,6 +61,7 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<BasePackage, DankDiffusion>();
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
+            serviceCollection.AddSingleton<IDialogErrorHandler, DialogErrorHandler>();
             
             var jsonOptions = new JsonSerializerOptions
             {

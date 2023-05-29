@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DotNext.Threading.Tasks;
 using Ookii.Dialogs.Wpf;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
@@ -18,6 +19,7 @@ public partial class SettingsViewModel : ObservableObject
 {
     private readonly ISettingsManager settingsManager;
     private readonly IPyRunner pyRunner;
+    private readonly IDialogErrorHandler dialogErrorHandler;
 
     public ObservableCollection<string> AvailableThemes => new()
     {
@@ -28,10 +30,11 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IContentDialogService contentDialogService;
     private readonly IA3WebApi a3WebApi;
 
-    public SettingsViewModel(ISettingsManager settingsManager, IContentDialogService contentDialogService, IA3WebApi a3WebApi, IPyRunner pyRunner)
+    public SettingsViewModel(ISettingsManager settingsManager, IContentDialogService contentDialogService, IA3WebApi a3WebApi, IPyRunner pyRunner, IDialogErrorHandler dialogErrorHandler)
     {
         this.settingsManager = settingsManager;
         this.contentDialogService = contentDialogService;
+        this.dialogErrorHandler = dialogErrorHandler;
         this.a3WebApi = a3WebApi;
         this.pyRunner = pyRunner;
         SelectedTheme = settingsManager.Settings.Theme ?? "Dark";
@@ -107,12 +110,16 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task PingWebApi()
     {
-        var result = await a3WebApi.GetPing();
-        var dialog = contentDialogService.CreateDialog();
-        dialog.Title = "Web API ping";
-        dialog.Content = result;
-        dialog.PrimaryButtonText = "Ok";
-        await dialog.ShowAsync();
+        var result = await dialogErrorHandler.TryAsync(a3WebApi.GetPing(), "Failed to ping web api");
+
+        if (result.IsSuccessful)
+        {
+            var dialog = contentDialogService.CreateDialog();
+            dialog.Title = "Web API ping";
+            dialog.Content = result;
+            dialog.PrimaryButtonText = "Ok";
+            await dialog.ShowAsync();
+        }
     }
 
     public async Task OnLoaded()

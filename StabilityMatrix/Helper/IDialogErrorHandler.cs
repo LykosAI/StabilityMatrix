@@ -1,7 +1,6 @@
-﻿using System;
-using System.Threading.Tasks;
-using DotNext;
+﻿using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Models;
 
 namespace StabilityMatrix.Helper;
 
@@ -15,5 +14,5 @@ public interface IDialogErrorHandler
     /// <summary>
     /// Attempt to run the given action, showing a generic error snackbar if it fails.
     /// </summary>
-    Task<Result<T>> TryAsync<T>(Task<T> task, string message, LogLevel level = LogLevel.Error, int timeoutSeconds = 5);
+    Task<TaskResult<T>> TryAsync<T>(Task<T> task, string message, LogLevel level = LogLevel.Error, int timeoutSeconds = 5);
 }

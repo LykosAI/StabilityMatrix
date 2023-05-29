@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DotNext.Threading.Tasks;
 using Ookii.Dialogs.Wpf;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;

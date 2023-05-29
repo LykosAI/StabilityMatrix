@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using System;
-using DotNext;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Models;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Common;
 using Wpf.Ui.Contracts;
@@ -46,16 +46,22 @@ public class DialogErrorHandler : IDialogErrorHandler
     /// <summary>
     /// Attempt to run the given action, showing a generic error snackbar if it fails.
     /// </summary>
-    public async Task<Result<T>> TryAsync<T>(Task<T> task, string message, LogLevel level = LogLevel.Error, int timeoutMilliseconds = 5000)
+    public async Task<TaskResult<T>> TryAsync<T>(Task<T> task, string message, LogLevel level = LogLevel.Error, int timeoutMilliseconds = 5000)
     {
         try
         {
-            return await task;
+            return new TaskResult<T>
+            {
+                Result = await task
+            };
         }
         catch (Exception e)
         {
             await ShowSnackbarAsync(message, level, timeoutMilliseconds);
-            return Result.FromException<T>(e);
+            return new TaskResult<T>
+            {
+                Exception = e
+            };
         }
     }
 }

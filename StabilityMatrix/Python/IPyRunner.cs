@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 
-namespace StabilityMatrix;
+namespace StabilityMatrix.Python;
 
 public interface IPyRunner
 {

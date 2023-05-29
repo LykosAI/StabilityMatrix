@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text.Json.Serialization;
-using StabilityMatrix.ViewModels;
+﻿using System.Text.Json.Serialization;
 
 namespace StabilityMatrix.Models.Api;
 

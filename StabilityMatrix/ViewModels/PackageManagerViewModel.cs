@@ -202,6 +202,8 @@ public partial class PackageManagerViewModel : ObservableObject
         {
             SelectedPackageOnProgressChanged(this, 100);
             ProgressText = "Update complete";
+            SelectedPackage.UpdateAvailable = false;
+            UpdateAvailable = false;
         };
         var updateResult = await package.Update();
         settingsManager.UpdatePackageVersionNumber(SelectedPackage.Name!, updateResult!);

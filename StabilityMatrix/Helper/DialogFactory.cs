@@ -1,5 +1,4 @@
-﻿using System;
-using StabilityMatrix.Models;
+﻿using StabilityMatrix.Models;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 

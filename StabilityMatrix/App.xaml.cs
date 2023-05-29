@@ -92,7 +92,7 @@ namespace StabilityMatrix
             serviceCollection.AddRefitClient<IGithubApi>(defaultRefitSettings)
                 .ConfigureHttpClient(c =>
                 {
-                    c.BaseAddress = new Uri("https://api.github.com"));
+                    c.BaseAddress = new Uri("https://api.github.com");
                     c.Timeout = TimeSpan.FromSeconds(5);
                 })
                 .AddPolicyHandler(retryPolicy);

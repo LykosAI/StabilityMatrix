@@ -38,7 +38,7 @@ public class DialogErrorHandler : IDialogErrorHandler
             LogLevel.Information => ControlAppearance.Info,
             _ => ControlAppearance.Secondary
         };
-        // snackbarService.Timeout = timeoutMilliseconds;
+        snackbarService.Timeout = timeoutMilliseconds;
         var icon = new SymbolIcon(SymbolRegular.ErrorCircle24);
         snackbarService.ShowAsync("Error", message, icon, snackbarViewModel.SnackbarAppearance);
     }

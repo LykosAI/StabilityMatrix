@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Threading.Tasks;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
@@ -7,6 +9,8 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using Wpf.Ui.Contracts;
+using Wpf.Ui.Controls.ContentDialogControl;
 using EventManager = StabilityMatrix.Helper.EventManager;
 
 namespace StabilityMatrix.ViewModels;
@@ -17,6 +21,8 @@ public partial class PackageManagerViewModel : ObservableObject
     private readonly ISettingsManager settingsManager;
     private readonly IPackageFactory packageFactory;
     private readonly IDialogFactory dialogFactory;
+    private readonly IContentDialogService contentDialogService;
+    private const int MinutesToWaitForUpdateCheck = 60;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
@@ -45,12 +51,13 @@ public partial class PackageManagerViewModel : ObservableObject
     private bool updateAvailable;
 
     public PackageManagerViewModel(ILogger<PackageManagerViewModel> logger, ISettingsManager settingsManager,
-        IPackageFactory packageFactory, IDialogFactory dialogFactory)
+        IPackageFactory packageFactory, IDialogFactory dialogFactory, IContentDialogService contentDialogService)
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         this.dialogFactory = dialogFactory;
+        this.contentDialogService = contentDialogService;
 
         ProgressText = "shrug";
         InstallButtonText = "Install";
@@ -88,12 +95,23 @@ public partial class PackageManagerViewModel : ObservableObject
             var basePackage = packageFactory.FindPackageByName(packageToUpdate.PackageName);
             if (basePackage == null) continue;
             
-            var hasUpdate = await basePackage.CheckForUpdates();
-            packageToUpdate.UpdateAvailable = hasUpdate;
+            var canCheckUpdate = packageToUpdate.LastUpdateCheck == null ||
+                            packageToUpdate.LastUpdateCheck.Value.AddMinutes(MinutesToWaitForUpdateCheck) <
+                            DateTimeOffset.Now;
+            if (canCheckUpdate)
+            {
+                var hasUpdate = await basePackage.CheckForUpdates(packageToUpdate.Name);
+                packageToUpdate.UpdateAvailable = hasUpdate;
+                packageToUpdate.LastUpdateCheck = DateTimeOffset.Now;
+                settingsManager.SetLastUpdateCheck(packageToUpdate);
+            }
+
             Packages.Add(packageToUpdate);
         }
 
-        SelectedPackage = Packages[0];
+        SelectedPackage =
+            installedPackages.FirstOrDefault(x => x.Id == settingsManager.Settings.ActiveInstalledPackage) ??
+            Packages[0];
     }
 
     public ObservableCollection<InstalledPackage> Packages { get; }
@@ -115,12 +133,79 @@ public partial class PackageManagerViewModel : ObservableObject
         switch (InstallButtonText.ToLower())
         {
             case "update":
-                //await UpdateSelectedPackage();
+                await UpdateSelectedPackage();
                 break;
             case "launch":
                 EventManager.Instance.RequestPageChange(typeof(LaunchPage));
                 break;
         }
+    }
+
+    [RelayCommand]
+    private async Task Uninstall()
+    {
+        if (SelectedPackage?.Path == null)
+        {
+            logger.LogError("No package selected to uninstall");
+            return;
+        }
+        
+        var dialog = contentDialogService.CreateDialog();
+        dialog.Title = "Are you sure?";
+        dialog.Content = "This will delete all folders in the package directory, including any generated images in that directory as well as any files you may have added.";
+        dialog.PrimaryButtonText = "Yes, delete it";
+        dialog.CloseButtonText = "No, keep it";
+        var result = await dialog.ShowAsync();
+
+        if (result == ContentDialogResult.Primary)
+        {
+            DeleteDirectory(SelectedPackage.Path);
+            settingsManager.RemoveInstalledPackage(SelectedPackage);
+            await OnLoaded();
+        }
+    }
+    
+    private void DeleteDirectory(string targetDirectory)
+    {
+        // Delete all files in the directory
+        var fileEntries = Directory.GetFiles(targetDirectory);
+        foreach (var filePath in fileEntries)
+        {
+            File.SetAttributes(filePath, FileAttributes.Normal);
+            File.Delete(filePath);
+        }
+
+        // Recursively delete all subdirectories
+        var subdirectoryEntries = Directory.GetDirectories(targetDirectory);
+        foreach (var subdirectoryPath in subdirectoryEntries)
+        {
+            DeleteDirectory(subdirectoryPath);
+        }
+
+        // Delete the target directory itself
+        Directory.Delete(targetDirectory, false);
+    }
+
+    private async Task UpdateSelectedPackage()
+    {
+        var package = packageFactory.FindPackageByName(SelectedPackage?.PackageName ?? string.Empty);
+        if (package == null)
+        {
+            logger.LogError($"Could not find package {SelectedPackage.PackageName}");
+            return;
+        }
+
+        ProgressText = $"Updating {SelectedPackage.Name} to latest version...";
+        package.InstallLocation = SelectedPackage.Path!;
+        package.UpdateProgressChanged += SelectedPackageOnProgressChanged;
+        package.UpdateComplete += (_, _) =>
+        {
+            SelectedPackageOnProgressChanged(this, 100);
+            ProgressText = "Update complete";
+        };
+        var updateResult = await package.Update();
+        settingsManager.UpdatePackageVersionNumber(SelectedPackage.Name!, updateResult!);
+        await OnLoaded();
     }
 
     [RelayCommand]
@@ -141,6 +226,7 @@ public partial class PackageManagerViewModel : ObservableObject
         {
             IsIndeterminate = false;
             ProgressValue = progress;
+            ProgressText = $"Updating {SelectedPackage.Name} to latest version... {progress}%";
         }
         
         EventManager.Instance.OnGlobalProgressChanged(progress);

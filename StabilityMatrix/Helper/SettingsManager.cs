@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -84,6 +85,24 @@ public class SettingsManager : ISettingsManager
         }
         
         package.PackageVersion = newVersion;
+        SaveSettings();
+    }
+    
+    public List<string> GetLaunchArgs(Guid packageId)
+    {
+        var packageData = Settings.InstalledPackages.FirstOrDefault(x => x.Id == packageId);
+        return packageData?.LaunchArgs ?? new List<string>();
+    }
+    
+    public void SaveLaunchArgs(Guid packageId, List<string> launchArgs)
+    {
+        var packageData = Settings.InstalledPackages.FirstOrDefault(x => x.Id == packageId);
+        if (packageData == null)
+        {
+            return;
+        }
+        
+        packageData.LaunchArgs = launchArgs;
         SaveSettings();
     }
 

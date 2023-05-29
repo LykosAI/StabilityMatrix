@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -27,6 +28,25 @@ public class A3WebUI : BasePackage
     public override string DefaultLaunchArguments => $"{GetVramOption()} {GetXformersOption()}";
 
     public override bool UpdateAvailable { get; set; } = false;
+    
+    public override List<LaunchOptionDefinition> LaunchOptions => new()
+    {
+        new LaunchOptionDefinition
+        {
+            Name = "API",
+            Options = new List<string> { "--api" }
+        },
+        new LaunchOptionDefinition
+        {
+            Name = "VRAM",
+            Options = new List<string> { "--lowvram", "--medvram" }
+        },
+        new LaunchOptionDefinition
+        {
+            Name = "Xformers",
+            Options = new List<string> { "--xformers" }
+        }
+    };
 
 
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

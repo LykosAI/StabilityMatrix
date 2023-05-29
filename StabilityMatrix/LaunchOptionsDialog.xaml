@@ -1,0 +1,59 @@
+﻿<ui:ContentDialog
+    CloseButtonText="Close"
+    DialogHeight="600"
+    DialogWidth="600"
+    Loaded="LaunchOptionsDialog_OnLoaded"
+    Title="Launch Options"
+    d:DataContext="{d:DesignInstance Type=viewModels:LaunchOptionsDialogViewModel,
+                                     IsDesignTimeCreatable=True}"
+    d:DesignHeight="512"
+    d:DesignWidth="512"
+    mc:Ignorable="d"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    x:Class="StabilityMatrix.LaunchOptionsDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:StabilityMatrix"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:StabilityMatrix.Models"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ui:ContentDialog.Resources>
+        <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:LaunchOptionsDialog}" />
+        <DataTemplate DataType="{x:Type models:LaunchOptionCard}" x:Key="LaunchOptionCardDataTemplate">
+            <ui:Card Margin="16,8,8,8">
+                <StackPanel
+                    HorizontalAlignment="Left"
+                    Margin="8,0,8,0"
+                    Orientation="Vertical">
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Margin="0,8"
+                        Text="{Binding Title}" />
+                    <StackPanel Orientation="Horizontal">
+                        <ItemsControl ItemsSource="{Binding Options}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Name}" IsChecked="{Binding Selected}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </StackPanel>
+            </ui:Card>
+        </DataTemplate>
+    </ui:ContentDialog.Resources>
+
+    <Grid Height="700" Width="700">
+        <ScrollViewer HorizontalScrollBarVisibility="Auto">
+            <StackPanel Orientation="Vertical">
+                <!--  Options cards  -->
+                <ItemsControl ItemTemplate="{StaticResource LaunchOptionCardDataTemplate}" ItemsSource="{Binding Cards}" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</ui:ContentDialog>

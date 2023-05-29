@@ -19,7 +19,7 @@ namespace StabilityMatrix
         private readonly ISettingsManager settingsManager;
 
         public MainWindow(IPageService pageService, IContentDialogService contentDialogService,
-            MainWindowViewModel mainWindowViewModel, ISettingsManager settingsManager)
+            MainWindowViewModel mainWindowViewModel, ISettingsManager settingsManager, ISnackbarService snackbarService)
         {
             InitializeComponent();
 
@@ -31,6 +31,7 @@ namespace StabilityMatrix
             RootNavigation.Navigating += (_, _) => Debug.WriteLine("Navigating");
             RootNavigation.SetPageService(pageService);
 
+            snackbarService.SetSnackbarControl(RootSnackbar);
             contentDialogService.SetContentPresenter(RootContentDialog);
             
             EventManager.Instance.PageChangeRequested += InstanceOnPageChangeRequested;

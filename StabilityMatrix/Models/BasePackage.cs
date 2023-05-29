@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace StabilityMatrix.Models;
@@ -18,6 +19,7 @@ public abstract class BasePackage
     public abstract Task Shutdown();
     public abstract Task<bool> CheckForUpdates();
     public abstract Task<string?> Update();
+    public abstract List<LaunchOptionDefinition> LaunchOptions { get; }
 
     internal virtual string DownloadLocation => $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages\\{Name}.zip";
     internal virtual string InstallLocation => $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages\\{Name}";

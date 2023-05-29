@@ -1,4 +1,6 @@
-﻿using StabilityMatrix.Models;
+﻿using System;
+using System.Collections.Generic;
+using StabilityMatrix.Models;
 
 namespace StabilityMatrix.Helper;
 
@@ -12,4 +14,6 @@ public interface ISettingsManager
     void SetHasInstalledVenv(bool hasInstalledVenv);
     void SetNavExpanded(bool navExpanded);
     void UpdatePackageVersionNumber(string packageName, string newVersion);
+    List<string> GetLaunchArgs(Guid packageId);
+    void SaveLaunchArgs(Guid packageId, List<string> launchArgs);
 }

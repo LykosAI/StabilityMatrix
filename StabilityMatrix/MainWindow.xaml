@@ -19,12 +19,11 @@
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    
+
     <ui:FluentWindow.TaskbarItemInfo>
-        <TaskbarItemInfo ProgressState="{Binding ProgressState}" 
-                         ProgressValue="{Binding ProgressValue}"/>
+        <TaskbarItemInfo ProgressState="{Binding ProgressState}" ProgressValue="{Binding ProgressValue}" />
     </ui:FluentWindow.TaskbarItemInfo>
-    
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -75,6 +74,11 @@
                         </ui:NavigationViewItem.Icon>
                     </ui:NavigationViewItem>
                 </ui:NavigationView.FooterMenuItems>
+                <ui:NavigationView.ContentOverlay>
+                    <Grid>
+                        <ui:Snackbar x:Name="RootSnackbar" />
+                    </Grid>
+                </ui:NavigationView.ContentOverlay>
             </ui:NavigationView>
         </Grid>
         <Grid Grid.Row="1" Visibility="{Binding SimpleModeVisibility, FallbackValue=Hidden}">

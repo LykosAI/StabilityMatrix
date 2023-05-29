@@ -38,22 +38,31 @@ namespace StabilityMatrix
 
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddSingleton<IPageService, PageService>();
+            serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
+            serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
+            serviceCollection.AddSingleton<IPackageFactory, PackageFactory>();
+            serviceCollection.AddSingleton<IPyRunner, PyRunner>();
+            serviceCollection.AddTransient<IDialogFactory, DialogFactory>();
+            
             serviceCollection.AddTransient<MainWindow>();
             serviceCollection.AddTransient<SettingsPage>();
             serviceCollection.AddTransient<LaunchPage>();
             serviceCollection.AddTransient<InstallPage>();
             serviceCollection.AddTransient<TextToImagePage>();
+            
             serviceCollection.AddTransient<MainWindowViewModel>();
+            serviceCollection.AddTransient<SnackbarViewModel>();
+            serviceCollection.AddTransient<LaunchOptionsDialogViewModel>();
             serviceCollection.AddSingleton<SettingsViewModel>();
             serviceCollection.AddSingleton<LaunchViewModel>();
             serviceCollection.AddSingleton<InstallerViewModel>();
             serviceCollection.AddSingleton<TextToImageViewModel>();
-            serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
-            serviceCollection.AddSingleton<IPackageFactory, PackageFactory>();
+            
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, DankDiffusion>();
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
+            serviceCollection.AddSingleton<IDialogErrorHandler, DialogErrorHandler>();
             
             var jsonOptions = new JsonSerializerOptions
             {
@@ -70,10 +79,15 @@ namespace StabilityMatrix
                 client.BaseAddress = new Uri("http://localhost:7860");
             });
 
+            // Logging configuration
             var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");
             var logConfig = new NLog.Config.LoggingConfiguration();
+            // File logging
             var fileTarget = new NLog.Targets.FileTarget("logfile") { FileName = logPath };
-            logConfig.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, fileTarget);
+            // Log trace+ to debug console
+            var debugTarget = new NLog.Targets.DebuggerTarget("debugger") { Layout = "${message}" };
+            logConfig.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, fileTarget);
+            logConfig.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, debugTarget);
             NLog.LogManager.Configuration = logConfig;
 
             serviceCollection.AddLogging(log =>

@@ -116,28 +116,50 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <ui:Button
-                Background="Green"
-                Command="{Binding LaunchCommand}"
-                Content="Launch"
-                Grid.Row="0"
-                HorizontalAlignment="Left"
-                Margin="8,8,0,0"
-                VerticalAlignment="Stretch"
-                Visibility="{Binding LaunchButtonVisibility, FallbackValue=Visible}"
-                Width="72"
-                x:Name="LaunchButton" />
-            <ui:Button
-                Background="DarkRed"
-                Command="{Binding StopCommand}"
-                Content="Stop"
-                Grid.Row="0"
-                HorizontalAlignment="Left"
-                Margin="8,8,0,0"
-                VerticalAlignment="Stretch"
-                Visibility="{Binding StopButtonVisibility, FallbackValue=Hidden}"
-                Width="72"
-                x:Name="StopButton" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.8*" />
+                    <ColumnDefinition Width="0.2*" />
+                </Grid.ColumnDefinitions>
+                <ui:Button
+                    Background="Green"
+                    Command="{Binding LaunchCommand}"
+                    Content="Launch"
+                    Grid.Column="0"
+                    Grid.Row="0"
+                    HorizontalAlignment="Left"
+                    Margin="8,8,0,0"
+                    VerticalAlignment="Stretch"
+                    Visibility="{Binding LaunchButtonVisibility, FallbackValue=Visible}"
+                    Width="72"
+                    x:Name="LaunchButton" />
+                <ui:Button
+                    Background="DarkRed"
+                    Command="{Binding StopCommand}"
+                    Content="Stop"
+                    Grid.Column="0"
+                    Grid.Row="0"
+                    HorizontalAlignment="Left"
+                    Margin="8,8,0,0"
+                    VerticalAlignment="Stretch"
+                    Visibility="{Binding StopButtonVisibility, FallbackValue=Hidden}"
+                    Width="72"
+                    x:Name="StopButton" />
+                <ui:Button
+                    Command="{Binding ConfigCommand}"
+                    FontSize="16"
+                    Grid.Column="1"
+                    Grid.Row="0"
+                    HorizontalAlignment="Left"
+                    Margin="8,8,0,0"
+                    VerticalAlignment="Stretch"
+                    Width="48"
+                    x:Name="ConfigButton">
+                    <ui:Button.Icon>
+                        <ui:SymbolIcon Symbol="Settings32" />
+                    </ui:Button.Icon>
+                </ui:Button>
+            </Grid>
             <ComboBox
                 Grid.Column="1"
                 Grid.Row="0"

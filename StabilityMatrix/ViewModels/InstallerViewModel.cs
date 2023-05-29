@@ -19,6 +19,7 @@ public partial class InstallerViewModel : ObservableObject
 {
     private readonly ILogger<InstallerViewModel> logger;
     private readonly ISettingsManager settingsManager;
+    private readonly IPyRunner pyRunner;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
@@ -47,10 +48,11 @@ public partial class InstallerViewModel : ObservableObject
     private bool updateAvailable;
 
     public InstallerViewModel(ILogger<InstallerViewModel> logger, ISettingsManager settingsManager,
-        IPackageFactory packageFactory)
+        IPackageFactory packageFactory, IPyRunner pyRunner)
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
+        this.pyRunner = pyRunner;
 
         ProgressText = "shrug";
         InstallButtonText = "Install";
@@ -120,16 +122,16 @@ public partial class InstallerViewModel : ObservableObject
         await InstallPackage();
 
         ProgressText = "Installing dependencies...";
-        await PyRunner.Initialize();
+        await pyRunner.Initialize();
         if (!settingsManager.Settings.HasInstalledPip)
         {
-            await PyRunner.SetupPip();
+            await pyRunner.SetupPip();
             settingsManager.SetHasInstalledPip(true);
         }
 
         if (!settingsManager.Settings.HasInstalledVenv)
         {
-            await PyRunner.InstallPackage("virtualenv");
+            await pyRunner.InstallPackage("virtualenv");
             settingsManager.SetHasInstalledVenv(true);
         }
 

@@ -7,9 +7,12 @@ using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using Microsoft.Toolkit.Uwp.Notifications;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
+using Wpf.Ui.Contracts;
+using Wpf.Ui.Controls.ContentDialogControl;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -17,23 +20,26 @@ public partial class LaunchViewModel : ObservableObject
 {
     private readonly ISettingsManager settingsManager;
     private readonly IPackageFactory packageFactory;
+    private readonly IContentDialogService contentDialogService;
+    private readonly LaunchOptionsDialogViewModel launchOptionsDialogViewModel;
+    private readonly ILogger<LaunchViewModel> logger;
+    private readonly IPyRunner pyRunner;
+    private readonly IDialogFactory dialogFactory;
+
     private BasePackage? runningPackage;
     private bool clearingPackages = false;
 
-    [ObservableProperty]
-    private string consoleInput = "";
+    [ObservableProperty] private string consoleInput = "";
 
-    [ObservableProperty]
-    private string consoleOutput = "";
+    [ObservableProperty] private string consoleOutput = "";
 
-    [ObservableProperty]
-    private Visibility launchButtonVisibility;
+    [ObservableProperty] private Visibility launchButtonVisibility;
 
-    [ObservableProperty]
-    private Visibility stopButtonVisibility;
+    [ObservableProperty] private Visibility stopButtonVisibility;
 
 
     private InstalledPackage? selectedPackage;
+
     public InstalledPackage? SelectedPackage
     {
         get => selectedPackage;
@@ -51,17 +57,27 @@ public partial class LaunchViewModel : ObservableObject
         }
     }
 
-    [ObservableProperty]
-    private ObservableCollection<InstalledPackage> installedPackages = new();
+    [ObservableProperty] private ObservableCollection<InstalledPackage> installedPackages = new();
 
     public event EventHandler? ScrollNeeded;
 
-    public LaunchViewModel(ISettingsManager settingsManager, IPackageFactory packageFactory)
+    public LaunchViewModel(ISettingsManager settingsManager,
+        IPackageFactory packageFactory,
+        IContentDialogService contentDialogService,
+        LaunchOptionsDialogViewModel launchOptionsDialogViewModel,
+        ILogger<LaunchViewModel> logger,
+        IPyRunner pyRunner,
+        IDialogFactory dialogFactory)
     {
+        this.pyRunner = pyRunner;
+        this.dialogFactory = dialogFactory;
+        this.contentDialogService = contentDialogService;
+        this.launchOptionsDialogViewModel = launchOptionsDialogViewModel;
+        this.logger = logger;
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         SetProcessRunning(false);
-        
+
         ToastNotificationManagerCompat.OnActivated += ToastNotificationManagerCompatOnOnActivated;
     }
 
@@ -69,7 +85,7 @@ public partial class LaunchViewModel : ObservableObject
     {
         if (e.Argument.StartsWith("http"))
         {
-            Process.Start(new ProcessStartInfo(e.Argument) { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo(e.Argument) {UseShellExecute = true});
         }
     }
 
@@ -84,7 +100,7 @@ public partial class LaunchViewModel : ObservableObject
             return;
         }
 
-        await PyRunner.Initialize();
+        await pyRunner.Initialize();
 
         // Get path from package
         var packagePath = SelectedPackage.Path!;
@@ -93,7 +109,7 @@ public partial class LaunchViewModel : ObservableObject
         {
             throw new InvalidOperationException("Package not found");
         }
-        
+
         basePackage.ConsoleOutput += OnConsoleOutput;
         basePackage.Exited += OnExit;
         basePackage.StartupComplete += RunningPackageOnStartupComplete;
@@ -101,6 +117,39 @@ public partial class LaunchViewModel : ObservableObject
         runningPackage = basePackage;
         SetProcessRunning(true);
     });
+
+    [RelayCommand]
+    public async Task ConfigAsync()
+    {
+        var activeInstall = SelectedPackage;
+        var name = activeInstall?.Name;
+        if (name == null || activeInstall == null)
+        {
+            logger.LogWarning($"Selected package is null");
+            return;
+        }
+
+        var package = packageFactory.FindPackageByName(name);
+        if (package == null)
+        {
+            logger.LogWarning("Package {Name} not found", name);
+            return;
+        }
+
+        // Open a config page
+        var dialog = dialogFactory.CreateLaunchOptionsDialog(package, activeInstall);
+        dialog.IsPrimaryButtonEnabled = true;
+        dialog.PrimaryButtonText = "Save";
+        dialog.CloseButtonText = "Cancel";
+        var result = await dialog.ShowAsync();
+        
+        if (result == ContentDialogResult.Primary)
+        {
+            // Save config
+            var args = dialog.AsLaunchArgs();
+            settingsManager.SaveLaunchArgs(activeInstall.Id, args);
+        }
+    }
 
     private void RunningPackageOnStartupComplete(object? sender, string url)
     {
@@ -113,16 +162,20 @@ public partial class LaunchViewModel : ObservableObject
     public void OnLoaded()
     {
         LoadPackages();
-        if (InstalledPackages.Any() && settingsManager.Settings.ActiveInstalledPackage != null)
+        lock (InstalledPackages)
         {
-            SelectedPackage =
-                InstalledPackages[
-                    InstalledPackages.IndexOf(InstalledPackages.FirstOrDefault(x =>
-                        x.Id == settingsManager.Settings.ActiveInstalledPackage))];
-        }
-        else if (InstalledPackages.Any())
-        {
-            SelectedPackage = InstalledPackages[0];
+            // Skip if no packages
+            if (!InstalledPackages.Any())
+            {
+                logger.LogTrace($"No packages for {nameof(LaunchViewModel)}");
+                return;
+            }
+            var activePackageId = settingsManager.Settings.ActiveInstalledPackage;
+            if (activePackageId != null)
+            {
+                SelectedPackage = InstalledPackages.FirstOrDefault(
+                    x => x.Id == activePackageId) ?? InstalledPackages[0];
+            }
         }
     }
 
@@ -140,6 +193,7 @@ public partial class LaunchViewModel : ObservableObject
             runningPackage.ConsoleOutput -= OnConsoleOutput;
             runningPackage.Exited -= OnExit;
         }
+
         runningPackage?.Shutdown();
         runningPackage = null;
         SetProcessRunning(false);
@@ -162,6 +216,7 @@ public partial class LaunchViewModel : ObservableObject
         {
             InstalledPackages.Add(package);
         }
+
         clearingPackages = false;
     }
 
@@ -178,7 +233,7 @@ public partial class LaunchViewModel : ObservableObject
             StopButtonVisibility = Visibility.Collapsed;
         }
     }
-    
+
     private void OnConsoleOutput(object? sender, string output)
     {
         if (output == null) return;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace StabilityMatrix.Models;
 
@@ -17,6 +18,6 @@ public class InstalledPackage
     public string? PackageVersion { get; set; }
     // Install path
     public string? Path { get; set; }
-
     public string? LaunchCommand { get; set; }
+    public List<string>? LaunchArgs { get; set; }
 }

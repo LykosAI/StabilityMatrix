@@ -10,7 +10,7 @@ namespace StabilityMatrix;
 /// Implement the interface of the sys.stdout redirection
 /// </summary>
 [SuppressMessage("ReSharper", "InconsistentNaming")]
-internal class PyIOStream
+public class PyIOStream
 {
     private readonly StringBuilder TextBuilder;
     private readonly StringWriter TextWriter;

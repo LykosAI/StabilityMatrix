@@ -45,46 +45,39 @@ public class SettingsManager : ISettingsManager
         SaveSettings();
     }
 
+    public void RemoveInstalledPackage(InstalledPackage p)
+    {
+        Settings.InstalledPackages.Remove(p);
+        SetActiveInstalledPackage(Settings.InstalledPackages.Any() ? Settings.InstalledPackages.First() : null);
+    }
+
     public void SetActiveInstalledPackage(InstalledPackage? p)
     {
-        if (p == null)
-        {
-            Settings.ActiveInstalledPackage = null;
-        }
-        else
-        {
-            Settings.ActiveInstalledPackage = p.Id;
-        }
+        Settings.ActiveInstalledPackage = p?.Id;
         SaveSettings();
     }
-
-    public void SetHasInstalledPip(bool hasInstalledPip)
-    {
-        Settings.HasInstalledPip = hasInstalledPip;
-        SaveSettings();
-    }
-
-    public void SetHasInstalledVenv(bool hasInstalledVenv)
-    {
-        Settings.HasInstalledVenv = hasInstalledVenv;
-        SaveSettings();
-    }
-
+    
     public void SetNavExpanded(bool navExpanded)
     {
         Settings.IsNavExpanded = navExpanded;
         SaveSettings();
     }
 
-    public void UpdatePackageVersionNumber(string packageName, string? newVersion)
+    public void UpdatePackageVersionNumber(string name, string? newVersion)
     {
-        var package = Settings.InstalledPackages.FirstOrDefault(x => x.PackageName == packageName);
+        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Name == name);
         if (package == null || newVersion == null)
         {
             return;
         }
         
         package.PackageVersion = newVersion;
+        SaveSettings();
+    }
+    
+    public void SetLastUpdateCheck(InstalledPackage package)
+    {
+        Settings.InstalledPackages.First(p => p.Name == package.Name).LastUpdateCheck = package.LastUpdateCheck;
         SaveSettings();
     }
     

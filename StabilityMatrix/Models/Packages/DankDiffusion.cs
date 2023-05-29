@@ -58,7 +58,7 @@ public class DankDiffusion : BasePackage
         throw new System.NotImplementedException();
     }
 
-    public override Task<bool> CheckForUpdates()
+    public override Task<bool> CheckForUpdates(string installedPackageName)
     {
         throw new System.NotImplementedException();
     }

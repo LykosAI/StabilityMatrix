@@ -17,7 +17,7 @@ public abstract class BasePackage
     public abstract Task InstallPackage(bool isUpdate = false);
     public abstract Task RunPackage(string installedPackagePath, string arguments);
     public abstract Task Shutdown();
-    public abstract Task<bool> CheckForUpdates();
+    public abstract Task<bool> CheckForUpdates(string installedPackageName);
     public abstract Task<string?> Update();
     public abstract Task<IEnumerable<string>> GetVersions();
 

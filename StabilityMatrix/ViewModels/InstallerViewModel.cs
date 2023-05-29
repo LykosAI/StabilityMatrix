@@ -123,16 +123,14 @@ public partial class InstallerViewModel : ObservableObject
 
         ProgressText = "Installing dependencies...";
         await pyRunner.Initialize();
-        if (!settingsManager.Settings.HasInstalledPip)
+        if (!PyRunner.PipInstalled)
         {
             await pyRunner.SetupPip();
-            settingsManager.SetHasInstalledPip(true);
         }
 
-        if (!settingsManager.Settings.HasInstalledVenv)
+        if (!PyRunner.VenvInstalled)
         {
             await pyRunner.InstallPackage("virtualenv");
-            settingsManager.SetHasInstalledVenv(true);
         }
 
         ProgressText = "Done";
@@ -147,7 +145,8 @@ public partial class InstallerViewModel : ObservableObject
             Id = Guid.NewGuid(),
             PackageName = SelectedPackage.Name,
             PackageVersion = version,
-            LaunchCommand = SelectedPackage.LaunchCommand
+            LaunchCommand = SelectedPackage.LaunchCommand,
+            LastUpdateCheck = DateTimeOffset.Now
         };
         settingsManager.AddInstalledPackage(package);
         settingsManager.SetActiveInstalledPackage(package);

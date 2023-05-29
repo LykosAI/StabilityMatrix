@@ -43,6 +43,7 @@ namespace StabilityMatrix
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddSingleton<IPageService, PageService>();
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
+            serviceCollection.AddSingleton<PageContentDialogService>();
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddSingleton<IPackageFactory, PackageFactory>();
             serviceCollection.AddSingleton<IPyRunner, PyRunner>();

@@ -1,6 +1,7 @@
 ﻿<Page
     Background="{DynamicResource ApplicationBackgroundBrush}"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    Loaded="TextToImagePage_OnLoaded"
     Title="TextToImagePage"
     d:DataContext="{d:DesignInstance Type=viewModels:TextToImageViewModel,
                                      IsDesignTimeCreatable=True}"
@@ -17,141 +18,144 @@
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <Grid>
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        <!--  Controls  -->
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+            <!--  Controls  -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-            <ScrollViewer
-                HorizontalAlignment="Stretch"
-                Margin="8,8,8,16"
-                VerticalAlignment="Stretch">
-                <StackPanel>
-                    <ui:Card HorizontalAlignment="Stretch" Padding="8">
-                        <StackPanel Margin="8">
-                            <Label
-                                Content="Prompt"
-                                FontSize="14"
-                                Margin="2" />
-                            <ui:AutoSuggestBox
-                                Margin="8"
-                                Name="PositivePromptBox"
-                                PlaceholderText="Prompt"
-                                QuerySubmitted="PositivePromptBox_OnQuerySubmitted"
-                                SuggestionChosen="PositivePromptBox_OnSuggestionChosen"
-                                TextChanged="PositivePromptBox_OnTextChanged" />
-                            <Label
-                                Content="Negative Prompt"
-                                FontSize="14"
-                                Margin="2" />
-                            <ui:AutoSuggestBox
-                                Margin="8"
-                                Name="NegativePromptBox"
-                                PlaceholderText="Negative Prompt"
-                                QuerySubmitted="NegativePromptBox_OnQuerySubmitted"
-                                SuggestionChosen="NegativePromptBox_OnSuggestionChosen"
-                                TextChanged="NegativePromptBox_OnTextChanged" />
-
-                            <Grid Margin="8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+                <ScrollViewer
+                    HorizontalAlignment="Stretch"
+                    Margin="8,8,8,16"
+                    VerticalAlignment="Stretch">
+                    <StackPanel>
+                        <ui:Card HorizontalAlignment="Stretch" Padding="8">
+                            <StackPanel Margin="8">
                                 <Label
-                                    Content="Steps"
+                                    Content="Prompt"
                                     FontSize="14"
-                                    Margin="2"
-                                    VerticalAlignment="Center" />
-                                <TextBox
-                                    FontSize="14"
-                                    Grid.Column="1"
+                                    Margin="2" />
+                                <ui:AutoSuggestBox
                                     Margin="8"
-                                    Text="{Binding GenerationSteps}"
-                                    VerticalAlignment="Bottom"
-                                    Width="64" />
-                            </Grid>
+                                    Name="PositivePromptBox"
+                                    PlaceholderText="Prompt"
+                                    QuerySubmitted="PositivePromptBox_OnQuerySubmitted"
+                                    SuggestionChosen="PositivePromptBox_OnSuggestionChosen"
+                                    TextChanged="PositivePromptBox_OnTextChanged" />
+                                <Label
+                                    Content="Negative Prompt"
+                                    FontSize="14"
+                                    Margin="2" />
+                                <ui:AutoSuggestBox
+                                    Margin="8"
+                                    Name="NegativePromptBox"
+                                    PlaceholderText="Negative Prompt"
+                                    QuerySubmitted="NegativePromptBox_OnQuerySubmitted"
+                                    SuggestionChosen="NegativePromptBox_OnSuggestionChosen"
+                                    TextChanged="NegativePromptBox_OnTextChanged" />
 
-                            <Slider
-                                IsSnapToTickEnabled="True"
-                                Maximum="150"
-                                Minimum="0"
-                                TickFrequency="5"
-                                TickPlacement="BottomRight"
-                                Value="{Binding GenerationSteps}" />
-                        </StackPanel>
-                    </ui:Card>
-                </StackPanel>
-            </ScrollViewer>
+                                <Grid Margin="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Label
+                                        Content="Steps"
+                                        FontSize="14"
+                                        Margin="2"
+                                        VerticalAlignment="Center" />
+                                    <TextBox
+                                        FontSize="14"
+                                        Grid.Column="1"
+                                        Margin="8"
+                                        Text="{Binding GenerationSteps}"
+                                        VerticalAlignment="Bottom"
+                                        Width="64" />
+                                </Grid>
 
-            <!--  Image Viewer  -->
-            <ui:Card
-                Grid.Column="1"
-                HorizontalAlignment="Stretch"
-                Margin="8,8,8,16"
-                Padding="8"
-                VerticalAlignment="Top">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="0.2*" />
-                        <RowDefinition Height="0.7*" />
-                    </Grid.RowDefinitions>
-                    <StackPanel
-                        Grid.Row="0"
-                        Orientation="Vertical"
-                        VerticalAlignment="Top">
-                        <Label
-                            Content="Image"
-                            FontSize="14"
-                            Margin="2" />
-                        <ProgressBar
-                            Maximum="100"
-                            Value="{Binding ProgressValue, FallbackValue=10}"
-                            Visibility="{Binding ProgressBarVisibility, FallbackValue=Visible}"
-                            Width="500" />
+                                <Slider
+                                    IsSnapToTickEnabled="True"
+                                    Maximum="150"
+                                    Minimum="0"
+                                    TickFrequency="5"
+                                    TickPlacement="BottomRight"
+                                    Value="{Binding GenerationSteps}" />
+                            </StackPanel>
+                        </ui:Card>
                     </StackPanel>
-                    <Grid
-                        Background="{DynamicResource ApplicationBackgroundBrush}"
-                        Grid.Row="1"
-                        MinHeight="512"
-                        VerticalAlignment="Stretch">
-                        <ui:ProgressRing
-                            Background="DarkRed"
+                </ScrollViewer>
+
+                <!--  Image Viewer  -->
+                <ui:Card
+                    Grid.Column="1"
+                    HorizontalAlignment="Stretch"
+                    Margin="8,8,8,16"
+                    Padding="8"
+                    VerticalAlignment="Top">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="0.2*" />
+                            <RowDefinition Height="0.7*" />
+                        </Grid.RowDefinitions>
+                        <StackPanel
                             Grid.Row="0"
-                            Height="72"
-                            HorizontalAlignment="Center"
-                            IsIndeterminate="True"
-                            Margin="8"
-                            VerticalAlignment="Center"
-                            Visibility="{Binding ProgressRingVisibility, FallbackValue=Collapsed}"
-                            Width="72"
-                            x:Name="ImageProgressRing" />
-                        <Image
-                            HorizontalAlignment="Stretch"
-                            Margin="8"
-                            Source="{Binding ImagePreview}"
-                            Stretch="Uniform"
-                            VerticalAlignment="Stretch"
-                            Visibility="{Binding ImagePreviewVisibility, FallbackValue=Visible}" />
+                            Orientation="Vertical"
+                            VerticalAlignment="Top">
+                            <Label
+                                Content="Image"
+                                FontSize="14"
+                                Margin="2" />
+                            <ProgressBar
+                                Maximum="100"
+                                Value="{Binding ProgressValue, FallbackValue=10}"
+                                Visibility="{Binding ProgressBarVisibility, FallbackValue=Visible}"
+                                Width="500" />
+                        </StackPanel>
+                        <Grid
+                            Background="{DynamicResource ApplicationBackgroundBrush}"
+                            Grid.Row="1"
+                            MinHeight="512"
+                            VerticalAlignment="Stretch">
+                            <ui:ProgressRing
+                                Background="DarkRed"
+                                Grid.Row="0"
+                                Height="72"
+                                HorizontalAlignment="Center"
+                                IsIndeterminate="True"
+                                Margin="8"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding ProgressRingVisibility, FallbackValue=Collapsed}"
+                                Width="72"
+                                x:Name="ImageProgressRing" />
+                            <Image
+                                HorizontalAlignment="Stretch"
+                                Margin="8"
+                                Source="{Binding ImagePreview}"
+                                Stretch="Uniform"
+                                VerticalAlignment="Stretch"
+                                Visibility="{Binding ImagePreviewVisibility, FallbackValue=Visible}" />
+                        </Grid>
                     </Grid>
-                </Grid>
-            </ui:Card>
+                </ui:Card>
+            </Grid>
+
+            <ui:Button
+                Appearance="Primary"
+                Command="{Binding TextToImageGenerateCommand}"
+                Content="Generate Image"
+                Grid.Row="1"
+                HorizontalAlignment="Center"
+                Name="TextToImageButton" />
+
         </Grid>
-
-        <ui:Button
-            Appearance="Primary"
-            Command="{Binding TextToImageGenerateCommand}"
-            Content="Generate Image"
-            Grid.Row="1"
-            HorizontalAlignment="Center"
-            Name="TextToImageButton" />
+        <ContentPresenter x:Name="PageContentDialog" />
     </Grid>
-
 </Page>

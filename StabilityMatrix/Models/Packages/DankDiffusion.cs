@@ -6,10 +6,15 @@ namespace StabilityMatrix.Models.Packages;
 public class DankDiffusion : BasePackage
 {
     public override string Name => "dank-diffusion";
-    public override string DisplayName => "Dank Diffusion";
+    public override string DisplayName { get; set; } = "dank-diffusion";
     public override string Author => "mohnjiles";
     public override string GithubUrl => "https://github.com/mohnjiles/dank-diffusion";
     public override string LaunchCommand => "";
+
+    public override Task<IEnumerable<string>> GetVersions()
+    {
+        throw new System.NotImplementedException();
+    }
 
     public override List<LaunchOptionDefinition> LaunchOptions => new()
     {
@@ -29,8 +34,11 @@ public class DankDiffusion : BasePackage
             Options = new List<string> { "--xformers" }
         }
     };
-    
-    public override Task<string?> DownloadPackage(bool isUpdate = false)
+
+    public override string DownloadLocation { get; }
+    public override string InstallLocation { get; set; }
+
+    public override Task<string?> DownloadPackage(bool isUpdate = false, string? version = null)
     {
         throw new System.NotImplementedException();
     }

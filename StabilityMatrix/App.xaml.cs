@@ -47,34 +47,38 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<MainWindow>();
             serviceCollection.AddTransient<SettingsPage>();
             serviceCollection.AddTransient<LaunchPage>();
-            serviceCollection.AddTransient<InstallPage>();
+            serviceCollection.AddTransient<PackageManagerPage>();
             serviceCollection.AddTransient<TextToImagePage>();
+            serviceCollection.AddTransient<InstallerWindow>();
             
             serviceCollection.AddTransient<MainWindowViewModel>();
             serviceCollection.AddTransient<SnackbarViewModel>();
             serviceCollection.AddTransient<LaunchOptionsDialogViewModel>();
             serviceCollection.AddSingleton<SettingsViewModel>();
             serviceCollection.AddSingleton<LaunchViewModel>();
-            serviceCollection.AddSingleton<InstallerViewModel>();
+            serviceCollection.AddSingleton<PackageManagerViewModel>();
             serviceCollection.AddSingleton<TextToImageViewModel>();
+            serviceCollection.AddTransient<InstallerViewModel>();
             
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, DankDiffusion>();
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
             serviceCollection.AddSingleton<IDialogErrorHandler, DialogErrorHandler>();
-            
-            var jsonOptions = new JsonSerializerOptions
+
+            var defaultRefitSettings = new RefitSettings
             {
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            };
-            var refitSettings = new RefitSettings
-            {
-                ContentSerializer = new SystemTextJsonContentSerializer(jsonOptions)
+                ContentSerializer = new SystemTextJsonContentSerializer(new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                })
             };
             
-            serviceCollection.AddRefitClient<IGithubApi>();
-            serviceCollection.AddRefitClient<IA3WebApi>(refitSettings).ConfigureHttpClient(client =>
+            serviceCollection.AddRefitClient<IGithubApi>(defaultRefitSettings).ConfigureHttpClient(client =>
+            {
+                client.BaseAddress = new Uri("https://api.github.com");
+            });
+            serviceCollection.AddRefitClient<IA3WebApi>(defaultRefitSettings).ConfigureHttpClient(client =>
             {
                 client.BaseAddress = new Uri("http://localhost:7860");
             });

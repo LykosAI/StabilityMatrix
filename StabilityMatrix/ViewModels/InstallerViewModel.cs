@@ -1,26 +1,26 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
-using StabilityMatrix.Helper;
-using StabilityMatrix.Models;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
-using Wpf.Ui.Contracts;
+using StabilityMatrix.Helper;
+using StabilityMatrix.Models;
 using EventManager = StabilityMatrix.Helper.EventManager;
 
 namespace StabilityMatrix.ViewModels;
 
 public partial class InstallerViewModel : ObservableObject
 {
-    private readonly ILogger<InstallerViewModel> logger;
     private readonly ISettingsManager settingsManager;
+    private readonly ILogger<InstallerViewModel> logger;
     private readonly IPyRunner pyRunner;
-
+    private readonly IPackageFactory packageFactory;
+    
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
     private int progressValue;
@@ -40,73 +40,70 @@ public partial class InstallerViewModel : ObservableObject
     [ObservableProperty]
     private string installButtonText;
 
-    [ObservableProperty] 
-    private bool installButtonEnabled;
-
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SelectedPackage))]
-    private bool updateAvailable;
+    private string installPath;
 
-    public InstallerViewModel(ILogger<InstallerViewModel> logger, ISettingsManager settingsManager,
-        IPackageFactory packageFactory, IPyRunner pyRunner)
-    {
-        this.logger = logger;
-        this.settingsManager = settingsManager;
-        this.pyRunner = pyRunner;
+    [ObservableProperty] 
+    private string installName;
+    
+    [ObservableProperty]
+    private ObservableCollection<string> availableVersions;
 
-        ProgressText = "shrug";
-        InstallButtonText = "Install";
-        installButtonEnabled = true;
-        ProgressValue = 0;
-        Packages = new ObservableCollection<BasePackage>(packageFactory.GetAllAvailablePackages());
-        SelectedPackage = Packages[0];
-    }
+    [ObservableProperty] 
+    private string selectedVersion;
 
-    public async Task OnLoaded()
-    {
-        var installedPackages = settingsManager.Settings.InstalledPackages;
-        if (installedPackages.Count == 0)
-        {
-            return;
-        }
-
-        foreach (var packageToUpdate in installedPackages
-                     .Select(package => Packages.FirstOrDefault(x => x.Name == package.Name))
-                     .Where(packageToUpdate => packageToUpdate != null))
-        {
-            await packageToUpdate!.CheckForUpdates();
-            OnSelectedPackageChanged(packageToUpdate);
-        }
-    }
-
-    public ObservableCollection<BasePackage> Packages { get; }
-
-    partial void OnSelectedPackageChanged(BasePackage value)
-    {
-        var installed = settingsManager.Settings.InstalledPackages;
-        var isInstalled = installed.FirstOrDefault(package => package.Name == value.Name) != null;
-        PackageInstalledVisibility = isInstalled ? Visibility.Visible : Visibility.Collapsed;
-        UpdateAvailable = value.UpdateAvailable;
-        InstallButtonText = value.UpdateAvailable ? "Update" : isInstalled ? "Launch" : "Install"; 
-    }
-
+    [ObservableProperty] 
+    private ObservableCollection<BasePackage> availablePackages;
+    
     public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
+
+    public InstallerViewModel(ISettingsManager settingsManager, ILogger<InstallerViewModel> logger, IPyRunner pyRunner,
+        IPackageFactory packageFactory)
+    {
+        this.settingsManager = settingsManager;
+        this.logger = logger;
+        this.pyRunner = pyRunner;
+        this.packageFactory = packageFactory;
+        
+        ProgressText = "";
+        InstallButtonText = "Install";
+        ProgressValue = 0;
+        InstallPath =
+            $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages";
+
+        AvailablePackages = new ObservableCollection<BasePackage>(packageFactory.GetAllAvailablePackages());
+        if (!AvailablePackages.Any()) return;
+        
+        SelectedPackage = AvailablePackages[0];
+        InstallName = SelectedPackage.DisplayName;
+    }
 
     [RelayCommand]
     private async Task Install()
     {
-        switch (InstallButtonText.ToLower())
-        {
-            case "install":
-                await ActuallyInstall();
-                break;
-            case "update":
-                await UpdateSelectedPackage();
-                break;
-            case "launch":
-                EventManager.Instance.RequestPageChange(typeof(LaunchPage));
-                break;
-        }
+        await ActuallyInstall();
+    }
+
+    public async Task OnLoaded()
+    {
+        if (SelectedPackage == null)
+            return;
+
+        AvailableVersions = new ObservableCollection<string>(await SelectedPackage.GetVersions());
+        if (!AvailableVersions.Any())
+            return;
+
+        SelectedVersion = AvailableVersions[0];
+    }
+
+    partial void OnSelectedPackageChanged(BasePackage value)
+    {
+        InstallName = $"{value.DisplayName}-{SelectedVersion}";
+    }
+    
+    partial void OnSelectedVersionChanged(string value)
+    {
+        InstallName = $"{SelectedPackage.DisplayName}-{value}";
     }
 
     private async Task ActuallyInstall()
@@ -118,7 +115,10 @@ public partial class InstallerViewModel : ObservableObject
             return;
         }
 
-        var version = await DownloadPackage();
+        SelectedPackage.InstallLocation = $"{InstallPath}\\{InstallName}";
+        SelectedPackage.DisplayName = InstallName;
+
+        var version = await DownloadPackage(SelectedVersion);
         await InstallPackage();
 
         ProgressText = "Installing dependencies...";
@@ -140,45 +140,25 @@ public partial class InstallerViewModel : ObservableObject
         IsIndeterminate = false;
         SelectedPackageOnProgressChanged(this, 100);
 
-        if (settingsManager.Settings.InstalledPackages.FirstOrDefault(x => x.PackageName == SelectedPackage.Name) ==
-            null)
+        var package = new InstalledPackage
         {
-            var package = new InstalledPackage
-            {
-                Name = SelectedPackage.Name,
-                Path = SelectedPackage.InstallLocation,
-                Id = Guid.NewGuid(),
-                PackageName = SelectedPackage.Name,
-                PackageVersion = version,
-                LaunchCommand = SelectedPackage.LaunchCommand
-            };
-            settingsManager.AddInstalledPackage(package);
-            settingsManager.SetActiveInstalledPackage(package);
-        }
+            Name = SelectedPackage.DisplayName,
+            Path = SelectedPackage.InstallLocation,
+            Id = Guid.NewGuid(),
+            PackageName = SelectedPackage.Name,
+            PackageVersion = version,
+            LaunchCommand = SelectedPackage.LaunchCommand
+        };
+        settingsManager.AddInstalledPackage(package);
+        settingsManager.SetActiveInstalledPackage(package);
     }
-
-    private async Task UpdateSelectedPackage()
-    {
-        ProgressText = "Updating...";
-        SelectedPackageOnProgressChanged(this, 0);
-        SelectedPackage.UpdateProgressChanged += SelectedPackageOnProgressChanged;
-        SelectedPackage.UpdateComplete += (_, s) => ProgressText = s;
-        
-        var version = await SelectedPackage.Update();
-        settingsManager.UpdatePackageVersionNumber(SelectedPackage.Name, version);
-        SelectedPackage.UpdateAvailable = false;
-        UpdateAvailable = false;
-        InstallButtonText = "Launch";
-        SelectedPackageOnProgressChanged(this, 100);
-    }
-
-
-    private Task<string?> DownloadPackage()
+    
+    private Task<string?> DownloadPackage(string? version = null)
     {
         SelectedPackage.DownloadProgressChanged += SelectedPackageOnProgressChanged;
         SelectedPackage.DownloadComplete += (_, _) => ProgressText = "Download Complete";
         ProgressText = "Downloading package...";
-        return SelectedPackage.DownloadPackage();
+        return SelectedPackage.DownloadPackage(version: version);
     }
 
     private async Task InstallPackage()
@@ -189,21 +169,6 @@ public partial class InstallerViewModel : ObservableObject
         await SelectedPackage.InstallPackage();
     }
     
-    private void SelectedPackageOnProgressChanged(object? sender, int progress)
-    {
-        if (progress == -1)
-        {
-            IsIndeterminate = true;
-        }
-        else
-        {
-            IsIndeterminate = false;
-            ProgressValue = progress;
-        }
-        
-        EventManager.Instance.OnGlobalProgressChanged(progress);
-    }
-
     private async Task<bool> InstallGitIfNecessary()
     {
         try
@@ -228,6 +193,21 @@ public partial class InstallerViewModel : ObservableObject
         IsIndeterminate = false;
 
         return installProcess.ExitCode == 0;
-        
     }
+    
+    private void SelectedPackageOnProgressChanged(object? sender, int progress)
+    {
+        if (progress == -1)
+        {
+            IsIndeterminate = true;
+        }
+        else
+        {
+            IsIndeterminate = false;
+            ProgressValue = progress;
+        }
+        
+        EventManager.Instance.OnGlobalProgressChanged(progress);
+    }
+    
 }

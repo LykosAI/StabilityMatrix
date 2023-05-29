@@ -56,12 +56,12 @@
                             <ui:SymbolIcon Symbol="Rocket24" />
                         </ui:NavigationViewItem.Icon>
                     </ui:NavigationViewItem>
-                    <ui:NavigationViewItem Content="Install" TargetPageType="{x:Type local:InstallPage}">
+                    <ui:NavigationViewItem Content="Package Manager" TargetPageType="{x:Type local:PackageManagerPage}">
                         <ui:NavigationViewItem.Icon>
                             <ui:SymbolIcon Symbol="Wrench24" />
                         </ui:NavigationViewItem.Icon>
                     </ui:NavigationViewItem>
-                    <ui:NavigationViewItem Content="Text2Image" TargetPageType="{x:Type local:TextToImagePage}">
+                    <ui:NavigationViewItem Content="Text2Image (Beta™)" TargetPageType="{x:Type local:TextToImagePage}">
                         <ui:NavigationViewItem.Icon>
                             <ui:SymbolIcon Symbol="Image24" />
                         </ui:NavigationViewItem.Icon>

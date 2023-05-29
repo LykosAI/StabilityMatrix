@@ -7,22 +7,24 @@ namespace StabilityMatrix.Models;
 public abstract class BasePackage
 {
     public abstract string Name { get; }
-    public abstract string DisplayName { get; }
+    public abstract string DisplayName { get; set; }
     public abstract string Author { get; }
     public abstract string GithubUrl { get; }
     public abstract string LaunchCommand { get; }
     public abstract string DefaultLaunchArguments { get; }
     public virtual bool UpdateAvailable { get; set; }
-    public abstract Task<string?> DownloadPackage(bool isUpdate = false);
+    public abstract Task<string?> DownloadPackage(bool isUpdate = false, string? version = null);
     public abstract Task InstallPackage(bool isUpdate = false);
     public abstract Task RunPackage(string installedPackagePath, string arguments);
     public abstract Task Shutdown();
     public abstract Task<bool> CheckForUpdates();
     public abstract Task<string?> Update();
+    public abstract Task<IEnumerable<string>> GetVersions();
+
     public abstract List<LaunchOptionDefinition> LaunchOptions { get; }
 
-    internal virtual string DownloadLocation => $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages\\{Name}.zip";
-    internal virtual string InstallLocation => $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages\\{Name}";
+    public abstract string DownloadLocation { get; }
+    public abstract string InstallLocation { get; set; }
 
     public event EventHandler<int>? DownloadProgressChanged;
     public event EventHandler<string>? DownloadComplete;
@@ -43,6 +45,7 @@ public abstract class BasePackage
     public void OnStartupComplete(string url) => StartupComplete?.Invoke(this, url);
     public void OnUpdateProgressChanged(int progress) => UpdateProgressChanged?.Invoke(this, progress);
     public void OnUpdateComplete(string path) => UpdateComplete?.Invoke(this, path);
+    
     
 
     public string ByAuthor => $"By {Author}";

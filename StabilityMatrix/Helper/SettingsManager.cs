@@ -114,7 +114,10 @@ public class SettingsManager : ISettingsManager
 
     private void SaveSettings()
     {
-        var json = JsonSerializer.Serialize(Settings);
+        var json = JsonSerializer.Serialize(Settings, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
         File.WriteAllText(SettingsPath, json);
     }
 }

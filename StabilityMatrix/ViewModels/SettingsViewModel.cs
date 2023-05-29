@@ -9,6 +9,7 @@ using Ookii.Dialogs.Wpf;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
+using StabilityMatrix.Python;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Contracts;
 

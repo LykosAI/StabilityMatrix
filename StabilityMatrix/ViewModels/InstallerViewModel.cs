@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
+using StabilityMatrix.Python;
 using EventManager = StabilityMatrix.Helper.EventManager;
 
 namespace StabilityMatrix.ViewModels;

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using NLog;
 using StabilityMatrix.Helper;
 
-namespace StabilityMatrix;
+namespace StabilityMatrix.Python;
 
 /// <summary>
 /// Python runner using a subprocess, mainly for venv support.

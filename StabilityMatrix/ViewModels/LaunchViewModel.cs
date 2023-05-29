@@ -113,7 +113,8 @@ public partial class LaunchViewModel : ObservableObject
         basePackage.ConsoleOutput += OnConsoleOutput;
         basePackage.Exited += OnExit;
         basePackage.StartupComplete += RunningPackageOnStartupComplete;
-        await basePackage.RunPackage(packagePath, string.Empty);
+        var userArgs = string.Join(" ", settingsManager.GetLaunchArgs(SelectedPackage.Id));
+        await basePackage.RunPackage(packagePath, userArgs);
         runningPackage = basePackage;
         SetProcessRunning(true);
     });

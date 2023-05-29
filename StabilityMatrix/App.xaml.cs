@@ -47,16 +47,18 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<MainWindow>();
             serviceCollection.AddTransient<SettingsPage>();
             serviceCollection.AddTransient<LaunchPage>();
-            serviceCollection.AddTransient<InstallPage>();
+            serviceCollection.AddTransient<PackageManagerPage>();
             serviceCollection.AddTransient<TextToImagePage>();
+            serviceCollection.AddTransient<InstallerWindow>();
             
             serviceCollection.AddTransient<MainWindowViewModel>();
             serviceCollection.AddTransient<SnackbarViewModel>();
             serviceCollection.AddTransient<LaunchOptionsDialogViewModel>();
             serviceCollection.AddSingleton<SettingsViewModel>();
             serviceCollection.AddSingleton<LaunchViewModel>();
-            serviceCollection.AddSingleton<InstallerViewModel>();
+            serviceCollection.AddSingleton<PackageManagerViewModel>();
             serviceCollection.AddSingleton<TextToImageViewModel>();
+            serviceCollection.AddTransient<InstallerViewModel>();
             
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, DankDiffusion>();

@@ -17,10 +17,17 @@ namespace StabilityMatrix.Models.Packages;
 
 public class A3WebUI : BasePackage
 {
+    private readonly IGithubApi githubApi;
     private readonly ISettingsManager settingsManager;
     private PyVenvRunner? venvRunner;
+
+    public A3WebUI(IGithubApi githubApi, ISettingsManager settingsManager)
+    {
+        this.githubApi = githubApi;
+        this.settingsManager = settingsManager;
+    }
     
-    public override string Name => "stable-diffusion-webui";
+    public override string Name { get; set; } = "stable-diffusion-webui";
     public override string DisplayName => "Stable Diffusion WebUI";
     public override string Author => "AUTOMATIC1111";
     public override string GithubUrl => "https://github.com/AUTOMATIC1111/stable-diffusion-webui";
@@ -28,7 +35,13 @@ public class A3WebUI : BasePackage
     public override string DefaultLaunchArguments => $"{GetVramOption()} {GetXformersOption()}";
 
     public override bool UpdateAvailable { get; set; } = false;
-    
+
+    public override async Task<IEnumerable<string>> GetVersions()
+    {
+        var allReleases = await githubApi.GetAllReleases(Author, Name);
+        return allReleases.Select(release => release.TagName!);
+    }
+
     public override List<LaunchOptionDefinition> LaunchOptions => new()
     {
         new LaunchOptionDefinition
@@ -47,6 +60,12 @@ public class A3WebUI : BasePackage
             Options = new List<string> { "--xformers" }
         }
     };
+
+    public override string DownloadLocation { get; set; } =
+        $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages\\stable-diffusion-webui.zip";
+
+    public override string InstallLocation { get; set; } =
+        $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages";
 
 
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -225,7 +244,7 @@ public class A3WebUI : BasePackage
             OnUpdateProgressChanged(0);
         }
 
-        Directory.CreateDirectory(InstallLocation);
+        Directory.CreateDirectory(Path.Combine(InstallLocation, Name));
 
         using var zip = ZipFile.OpenRead(DownloadLocation);
         var zipDirName = string.Empty;
@@ -242,14 +261,14 @@ public class A3WebUI : BasePackage
                     continue;
                 }
 
-                var folderPath = Path.Combine(InstallLocation,
+                var folderPath = Path.Combine(InstallLocation, Name,
                     entry.FullName.Replace(zipDirName, string.Empty));
                 Directory.CreateDirectory(folderPath);
                 continue;
             }
 
 
-            var destinationPath = Path.GetFullPath(Path.Combine(InstallLocation,
+            var destinationPath = Path.GetFullPath(Path.Combine(InstallLocation, Name,
                 entry.FullName.Replace(zipDirName, string.Empty)));
             entry.ExtractToFile(destinationPath, true);
             currentEntry++;

@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 using Wpf.Ui.Common;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls;
-using Wpf.Ui.Controls.IconElements;
 using SymbolIcon = Wpf.Ui.Controls.IconElements.SymbolIcon;
 
 namespace StabilityMatrix.ViewModels;

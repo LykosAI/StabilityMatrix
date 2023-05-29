@@ -6,11 +6,9 @@ using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
-using NLog;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models.Api;
-using ILogger = NLog.ILogger;
 
 namespace StabilityMatrix.ViewModels;
 

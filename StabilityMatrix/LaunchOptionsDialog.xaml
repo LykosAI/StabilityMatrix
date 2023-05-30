@@ -23,6 +23,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <ui:ContentDialog.Resources>
+        <!-- ReSharper disable once Xaml.StaticResourceNotResolved -->
         <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:LaunchOptionsDialog}" />
 
         <converters:LaunchOptionConverter x:Key="LaunchOptionConverter" />

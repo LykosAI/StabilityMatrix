@@ -7,20 +7,23 @@ namespace StabilityMatrix.Helper;
 
 public class PackageFactory : IPackageFactory
 {
-    private readonly IEnumerable<BasePackage> basePackages;
+    /// <summary>
+    /// Mapping of package.Name to package
+    /// </summary>
+    private readonly Dictionary<string, BasePackage> basePackages;
 
     public PackageFactory(IEnumerable<BasePackage> basePackages)
     {
-        this.basePackages = basePackages;
+        this.basePackages = basePackages.ToDictionary(x => x.Name);
     }
     
     public IEnumerable<BasePackage> GetAllAvailablePackages()
     {
-        return basePackages;
+        return basePackages.Values;
     }
 
     public BasePackage? FindPackageByName(string packageName)
     {
-        return basePackages.FirstOrDefault(x => x.Name.Equals(packageName, StringComparison.OrdinalIgnoreCase));
+        return basePackages.GetValueOrDefault(packageName);
     }
 }

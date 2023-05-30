@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
+using StabilityMatrix.Models;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.ContentDialogControl;
@@ -10,7 +11,7 @@ public partial class LaunchOptionsDialog : ContentDialog
 {
     private readonly LaunchOptionsDialogViewModel viewModel;
 
-    public List<string> AsLaunchArgs() => viewModel.AsLaunchArgs();
+    public List<LaunchOption> AsLaunchArgs() => viewModel.AsLaunchArgs();
 
     public LaunchOptionsDialog(IContentDialogService dialogService, LaunchOptionsDialogViewModel viewModel) : base(
         dialogService.GetContentPresenter())

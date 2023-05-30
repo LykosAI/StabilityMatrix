@@ -14,6 +14,6 @@ public interface ISettingsManager
     void SetNavExpanded(bool navExpanded);
     void UpdatePackageVersionNumber(string name, string? newVersion);
     void SetLastUpdateCheck(InstalledPackage package);
-    List<string> GetLaunchArgs(Guid packageId);
-    void SaveLaunchArgs(Guid packageId, List<string> launchArgs);
+    List<LaunchOption> GetLaunchArgs(Guid packageId);
+    void SaveLaunchArgs(Guid packageId, List<LaunchOption> launchArgs);
 }

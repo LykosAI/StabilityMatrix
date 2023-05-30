@@ -81,13 +81,13 @@ public class SettingsManager : ISettingsManager
         SaveSettings();
     }
     
-    public List<string> GetLaunchArgs(Guid packageId)
+    public List<LaunchOption> GetLaunchArgs(Guid packageId)
     {
         var packageData = Settings.InstalledPackages.FirstOrDefault(x => x.Id == packageId);
-        return packageData?.LaunchArgs ?? new List<string>();
+        return packageData?.LaunchArgs ?? new();
     }
     
-    public void SaveLaunchArgs(Guid packageId, List<string> launchArgs)
+    public void SaveLaunchArgs(Guid packageId, List<LaunchOption> launchArgs)
     {
         var packageData = Settings.InstalledPackages.FirstOrDefault(x => x.Id == packageId);
         if (packageData == null)

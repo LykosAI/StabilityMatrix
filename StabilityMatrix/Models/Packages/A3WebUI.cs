@@ -24,7 +24,22 @@ public class A3WebUI : BaseGitPackage
         new()
         {
             Name = "API",
+            DefaultValue = true,
             Options = new() { "--api" }
+        },
+        new()
+        {
+            Name = "Host",
+            Type = "string",
+            DefaultValue = "localhost",
+            Options = new() { "--host" }
+        },
+        new()
+        {
+            Name = "Port",
+            Type = "int",
+            DefaultValue = 7860,
+            Options = new() { "--port" }
         },
         new()
         {

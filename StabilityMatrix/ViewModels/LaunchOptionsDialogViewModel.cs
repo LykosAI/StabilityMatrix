@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
@@ -17,11 +18,14 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
     /// <summary>
     /// Export the current cards options to a list of strings
     /// </summary>
-    public List<string> AsLaunchArgs()
+    public List<LaunchOption> AsLaunchArgs()
     {
-        return (
-            from card in Cards from option in card.Options 
-            where option.Selected select option.Name).ToList();
+        var launchArgs = new List<LaunchOption>();
+        foreach (var card in Cards)
+        {
+            launchArgs.AddRange(card.Options);
+        }
+        return launchArgs;
     }
     
     /// <summary>
@@ -38,14 +42,16 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
     /// <summary>
     /// Import the current cards options from a list of strings
     /// </summary>
-    public void LoadFromLaunchArgs(IEnumerable<string> launchArgs)
+    public void LoadFromLaunchArgs(IEnumerable<LaunchOption> launchArgs)
     {
-        var launchArgsSet = new HashSet<string>(launchArgs);
+        var launchArgsDict = launchArgs.ToDictionary(launchArg => launchArg.Name);
         foreach (var card in Cards)
         {
             foreach (var option in card.Options)
             {
-                option.Selected = launchArgsSet.Contains(option.Name);
+                var userOption = launchArgsDict.GetValueOrDefault(option.Name);
+                var userValue = userOption?.OptionValue.ToString();
+                option.SetValueFromString(userValue);
             }
         }
     }

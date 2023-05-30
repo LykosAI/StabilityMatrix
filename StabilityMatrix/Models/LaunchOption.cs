@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace StabilityMatrix.Models;
@@ -7,6 +8,12 @@ public partial class LaunchOption : ObservableObject
 {
     public string Name { get; init; }
     public string Type { get; init; }
+    
+    [JsonIgnore]
+    public object? DefaultValue { get; init; }
+    
+    [JsonIgnore]
+    public bool HasDefaultValue => DefaultValue != null;
 
     [ObservableProperty]
     private object optionValue;

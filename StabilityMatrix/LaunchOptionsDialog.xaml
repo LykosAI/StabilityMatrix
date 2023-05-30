@@ -76,6 +76,8 @@
                                     <ui:TextBox
                                         HorizontalAlignment="Stretch"
                                         Margin="8"
+                                        PlaceholderEnabled="{Binding HasDefaultValue}"
+                                        PlaceholderText="{Binding DefaultValue}"
                                         Text="{Binding OptionValue, Converter={StaticResource LaunchOptionConverter}}"
                                         VerticalAlignment="Stretch" />
                                 </StackPanel>

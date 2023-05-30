@@ -16,7 +16,12 @@ public class LaunchOptionCard
         Type = definition.Type;
         foreach (var optionName in definition.Options)
         {
-            var option = new LaunchOption {Name = optionName, Type = definition.Type};
+            var option = new LaunchOption
+            {
+                Name = optionName,
+                Type = definition.Type,
+                DefaultValue = definition.DefaultValue
+            };
             Options.Add(option);
         }
     }

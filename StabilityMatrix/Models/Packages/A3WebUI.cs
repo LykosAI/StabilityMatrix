@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
@@ -52,7 +53,31 @@ public class A3WebUI : BaseGitPackage
             Options = new() { "--xformers" }
         }
     };
-    
+
+    public override async Task<string> GetLatestVersion()
+    {
+        var release = await GetLatestRelease();
+        return release.TagName!;
+    }
+
+    public override async Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true)
+    {
+        if (isReleaseMode)
+        {
+            var allReleases = await GetAllReleases();
+            return allReleases.Select(r => new PackageVersion {TagName = r.TagName!, ReleaseNotesMarkdown = r.Body});
+        }
+        else // branch mode1
+        {
+            var allBranches = await GetAllBranches();
+            return allBranches.Select(b => new PackageVersion
+            {
+                TagName = $"{b.Name}",
+                ReleaseNotesMarkdown = string.Empty
+            });
+        }
+    }
+
     public override async Task RunPackage(string installedPackagePath, string arguments)
     {
         await SetupVenv(installedPackagePath);

@@ -12,7 +12,7 @@ public class DankDiffusion : BasePackage
     public override string GithubUrl => "https://github.com/mohnjiles/dank-diffusion";
     public override string LaunchCommand => "";
 
-    public override Task<IEnumerable<GithubRelease>> GetVersions()
+    public override Task<IEnumerable<GithubRelease>> GetReleaseTags()
     {
         throw new System.NotImplementedException();
     }
@@ -36,10 +36,29 @@ public class DankDiffusion : BasePackage
         }
     };
 
+    public override Task<string> GetLatestVersion()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public override Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public override Task<IEnumerable<GithubCommit>> GetAllCommits(string branch, int page = 1, int perPage = 10)
+    {
+        throw new System.NotImplementedException();
+    }
+
     public override string DownloadLocation { get; }
     public override string InstallLocation { get; set; }
+    public override Task<IEnumerable<GithubBranch>> GetAllBranches()
+    {
+        throw new System.NotImplementedException();
+    }
 
-    public override Task<string?> DownloadPackage(bool isUpdate = false, string? version = null)
+    public override Task<string?> DownloadPackage(string version, bool isUpdate = false)
     {
         throw new System.NotImplementedException();
     }

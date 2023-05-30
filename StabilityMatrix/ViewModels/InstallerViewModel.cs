@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -48,18 +49,30 @@ public partial class InstallerViewModel : ObservableObject
     private string installName;
     
     [ObservableProperty]
-    private ObservableCollection<GithubRelease> availableVersions;
+    private ObservableCollection<PackageVersion> availableVersions;
 
     [ObservableProperty] 
-    private GithubRelease selectedVersion;
+    private PackageVersion selectedVersion;
 
     [ObservableProperty] 
     private ObservableCollection<BasePackage> availablePackages;
+    
+    [ObservableProperty]
+    private ObservableCollection<GithubCommit> availableCommits;
+    
+    [ObservableProperty]
+    private GithubCommit selectedCommit;
 
     [ObservableProperty] 
     private string releaseNotes;
-    
+
+    [ObservableProperty]
+    private bool isReleaseMode;
+
     public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
+
+    public string ReleaseLabelText => IsReleaseMode ? "Version" : "Branch";
+    
 
     public InstallerViewModel(ISettingsManager settingsManager, ILogger<InstallerViewModel> logger, IPyRunner pyRunner,
         IPackageFactory packageFactory)
@@ -74,6 +87,7 @@ public partial class InstallerViewModel : ObservableObject
         ProgressValue = 0;
         InstallPath =
             $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages";
+        IsReleaseMode = true;
 
         AvailablePackages = new ObservableCollection<BasePackage>(packageFactory.GetAllAvailablePackages());
         if (!AvailablePackages.Any()) return;
@@ -93,27 +107,99 @@ public partial class InstallerViewModel : ObservableObject
         if (SelectedPackage == null)
             return;
 
-        var releases = (await SelectedPackage.GetVersions()).ToList();
+        var releases = (await SelectedPackage.GetAllVersions()).ToList();
         if (!releases.Any())
             return;
         
-        AvailableVersions = new ObservableCollection<GithubRelease>(releases);
+        AvailableVersions = new ObservableCollection<PackageVersion>(releases);
         if (!AvailableVersions.Any())
             return;
 
         SelectedVersion = AvailableVersions[0];
-        ReleaseNotes = releases.First().Body;
+        ReleaseNotes = releases.First().ReleaseNotesMarkdown;
     }
 
-    partial void OnSelectedPackageChanged(BasePackage value)
+    partial void OnSelectedPackageChanged(BasePackage? value)
     {
-        InstallName = $"{value.DisplayName}-{SelectedVersion}";
+        if (value == null) return;
+        
+        InstallName = value.DisplayName;
+        ReleaseNotes = string.Empty;
+        AvailableVersions?.Clear();
+
+        // This can swallow exceptions if you don't explicity try/catch
+        // Idk how to make it better tho
+        Task.Run(async () =>
+        {
+            var releases = await value.GetAllVersions(IsReleaseMode);
+            var releasesList = releases.ToList();
+            if (!releasesList.Any())
+                return;
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                AvailableVersions = new ObservableCollection<PackageVersion>(releasesList);
+                try
+                {
+                    SelectedVersion = AvailableVersions[0];
+                    ReleaseNotes = releasesList.First().ReleaseNotesMarkdown;
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "shit");
+                }
+            });
+            
+            if (!IsReleaseMode)
+            {
+                try
+                {
+                    var commits = await value.GetAllCommits(SelectedVersion.TagName);
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        AvailableCommits = new ObservableCollection<GithubCommit>(commits);
+                        SelectedCommit = AvailableCommits[0];
+                    });
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Error getting commits");
+                }
+            }
+        });
+
     }
-    
-    partial void OnSelectedVersionChanged(GithubRelease? value)
+
+    partial void OnIsReleaseModeChanged(bool oldValue, bool newValue)
     {
-        InstallName = $"{SelectedPackage.DisplayName}-{value?.TagName}";
-        ReleaseNotes = value?.Body ?? string.Empty;
+        OnSelectedPackageChanged(SelectedPackage);
+    }
+
+    partial void OnSelectedVersionChanged(PackageVersion? value)
+    {
+        ReleaseNotes = value?.ReleaseNotesMarkdown ?? string.Empty;
+        if (value == null) return;
+        
+        SelectedCommit = null;
+        AvailableCommits?.Clear();
+        
+        if (!IsReleaseMode)
+        {
+            Task.Run(async () =>
+            {
+                try
+                {
+                    var hashes = await SelectedPackage.GetAllCommits(value.TagName);
+                    AvailableCommits = new ObservableCollection<GithubCommit>(hashes);
+                    await Task.Delay(10); // or it doesn't work sometimes? lolwut?
+                    SelectedCommit = AvailableCommits[0];
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Error getting commits");
+                }
+            });
+        }
     }
 
     private async Task ActuallyInstall()

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
@@ -38,7 +39,24 @@ public class VladAutomatic : BaseGitPackage
             Options = new() { "--xformers" }
         }
     };
-    
+
+    public override async Task<string> GetLatestVersion()
+    {
+        var branches = await GetAllBranches();
+        var mainBranch = branches.First(b => b.Name.Equals("master", StringComparison.OrdinalIgnoreCase));
+        return $"{mainBranch.Name}-{mainBranch.Commit.ShaHash[^8..]}";
+    }
+
+    public override async Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true)
+    {
+        var allBranches = await GetAllBranches();
+        return allBranches.Select(b => new PackageVersion
+        {
+            TagName = $"{b.Name}-{b.Commit.ShaHash[^8..]}", 
+            ReleaseNotesMarkdown = string.Empty
+        });
+    }
+
     public override async Task RunPackage(string installedPackagePath, string arguments)
     {
         await SetupVenv(installedPackagePath);

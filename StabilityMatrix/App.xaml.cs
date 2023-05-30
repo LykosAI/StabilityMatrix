@@ -5,6 +5,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
@@ -31,6 +32,17 @@ namespace StabilityMatrix
     public partial class App : Application
     {
         private ServiceProvider? serviceProvider;
+        
+        public static IConfiguration Config { get; set; }
+
+        public App()
+        {
+            Config = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true)
+                .Build();
+        }
 
         private void App_OnStartup(object sender, StartupEventArgs e)
         {
@@ -66,7 +78,7 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<InstallerViewModel>();
             
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
-            serviceCollection.AddSingleton<BasePackage, DankDiffusion>();
+            serviceCollection.AddSingleton<BasePackage, VladAutomatic>();
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
             serviceCollection.AddSingleton<IDialogErrorHandler, DialogErrorHandler>();
@@ -93,6 +105,12 @@ namespace StabilityMatrix
                 {
                     c.BaseAddress = new Uri("https://api.github.com");
                     c.Timeout = TimeSpan.FromSeconds(5);
+
+                    var githubApiKey = Config["GithubApiKey"];
+                    if (!string.IsNullOrEmpty(githubApiKey))
+                    {
+                        c.DefaultRequestHeaders.Add("Authorization", $"Bearer {githubApiKey}");
+                    }
                 })
                 .AddPolicyHandler(retryPolicy);
             serviceCollection.AddRefitClient<IA3WebApi>(defaultRefitSettings)
@@ -149,3 +167,4 @@ namespace StabilityMatrix
         }
     }
 }
+

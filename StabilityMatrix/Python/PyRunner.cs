@@ -2,7 +2,7 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+using NLog;
 using Python.Runtime;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Python.Interop;
@@ -13,7 +13,7 @@ public record struct PyVersionInfo(int Major, int Minor, int Micro, string Relea
 
 public class PyRunner : IPyRunner
 {
-    private readonly ILogger<PyRunner> logger;
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private const string RelativeDllPath = @"Assets\Python310\python310.dll";
     private const string RelativeExePath = @"Assets\Python310\python.exe";
@@ -25,19 +25,14 @@ public class PyRunner : IPyRunner
     public static string PipExePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativePipExePath);
     public static string GetPipPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeGetPipPath);
     public static string VenvPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeVenvPath);
-    
+
     public static bool PipInstalled => File.Exists(PipExePath);
     public static bool VenvInstalled => File.Exists(VenvPath);
-    
-    private static readonly SemaphoreSlim PyRunning = new(1, 1);
-    
-    private PyIOStream? StdOutStream;
-    private PyIOStream? StdErrStream;
 
-    public PyRunner(ILogger<PyRunner> logger)
-    {
-        this.logger = logger;
-    }
+    private static readonly SemaphoreSlim PyRunning = new(1, 1);
+
+    public PyIOStream? StdOutStream;
+    public PyIOStream? StdErrStream;
 
     /// <summary>
     /// Initializes the Python runtime using the embedded dll.
@@ -48,12 +43,12 @@ public class PyRunner : IPyRunner
     {
         if (PythonEngine.IsInitialized) return;
 
-        logger.LogInformation("Initializing Python runtime with DLL: {DllPath}", DllPath);
+        Logger.Info("Initializing Python runtime with DLL: {DllPath}", DllPath);
 
         // Check PythonDLL exists
         if (!File.Exists(DllPath))
         {
-            logger.LogError("Python DLL not found");
+            Logger.Error("Python DLL not found");
             throw new FileNotFoundException("Python DLL not found", DllPath);
         }
         Runtime.PythonDLL = DllPath;
@@ -170,6 +165,12 @@ public class PyRunner : IPyRunner
         {
             using var scope = Py.CreateScope();
             var result = scope.Eval(expression);
+
+            // For string, cast with __str__()
+            if (typeof(T) == typeof(string))
+            {
+                return result.GetAttr("__str__").Invoke().As<T>();
+            }
             return result.As<T>();
         });
     }

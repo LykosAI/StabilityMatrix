@@ -127,7 +127,7 @@ public partial class LaunchViewModel : ObservableObject
     public async Task ConfigAsync()
     {
         var activeInstall = SelectedPackage;
-        var name = activeInstall?.Name;
+        var name = activeInstall?.PackageName;
         if (name == null || activeInstall == null)
         {
             logger.LogWarning($"Selected package is null");
@@ -140,7 +140,7 @@ public partial class LaunchViewModel : ObservableObject
             logger.LogWarning("Package {Name} not found", name);
             return;
         }
-
+        
         var definitions = package.LaunchOptions;
         // Check if package supports IArgParsable
         // Use dynamic parsed args over static

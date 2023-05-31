@@ -1,13 +1,13 @@
 ﻿<ui:ContentDialog
     CloseButtonText="Close"
-    DialogHeight="512"
-    DialogWidth="512"
     Loaded="LaunchOptionsDialog_OnLoaded"
     Title="Launch Options"
     d:DataContext="{d:DesignInstance Type=viewModels:LaunchOptionsDialogViewModel,
                                      IsDesignTimeCreatable=True}"
     d:DesignHeight="512"
     d:DesignWidth="512"
+    DialogHeight="512"
+    DialogWidth="640"
     mc:Ignorable="d"
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
@@ -43,6 +43,7 @@
                         FontSize="16"
                         FontWeight="Bold"
                         Margin="0,8"
+                        TextWrapping="Wrap"
                         Text="{Binding Title}" />
                     <StackPanel Orientation="Horizontal">
                         <ItemsControl ItemsSource="{Binding Options}">
@@ -68,6 +69,7 @@
                         FontSize="16"
                         FontWeight="Bold"
                         Margin="0,8"
+                        TextWrapping="Wrap"
                         Text="{Binding Title}" />
                     <ItemsControl ItemsSource="{Binding Options}">
                         <ItemsControl.ItemTemplate>
@@ -100,6 +102,7 @@
                         FontSize="16"
                         FontWeight="Bold"
                         Margin="0,8"
+                        TextWrapping="Wrap"
                         Text="{Binding Title}" />
                     <ItemsControl ItemsSource="{Binding Options}">
                         <ItemsControl.ItemTemplate>
@@ -138,13 +141,6 @@
         </DataTemplate>
     </ui:ContentDialog.Resources>
 
-
-    <Grid Height="704" Width="704">
-        <ScrollViewer HorizontalScrollBarVisibility="Auto">
-            <StackPanel Orientation="Vertical">
-                <!--  Options cards  -->
-                <ItemsControl ItemTemplate="{StaticResource LaunchOptionCardDataTemplate}" ItemsSource="{Binding Cards}" />
-            </StackPanel>
-        </ScrollViewer>
-    </Grid>
+    <!--  Options cards  -->
+    <ItemsControl ItemTemplate="{StaticResource LaunchOptionCardDataTemplate}" ItemsSource="{Binding Cards}" />
 </ui:ContentDialog>

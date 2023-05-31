@@ -69,6 +69,9 @@ public partial class InstallerViewModel : ObservableObject
     [ObservableProperty]
     private bool isReleaseMode;
 
+    [ObservableProperty] 
+    private bool isReleaseModeEnabled;
+
     public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
 
     public string ReleaseLabelText => IsReleaseMode ? "Version" : "Branch";
@@ -88,6 +91,7 @@ public partial class InstallerViewModel : ObservableObject
         InstallPath =
             $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages";
         IsReleaseMode = true;
+        IsReleaseModeEnabled = true;
 
         AvailablePackages = new ObservableCollection<BasePackage>(packageFactory.GetAllAvailablePackages());
         if (!AvailablePackages.Any()) return;
@@ -107,16 +111,19 @@ public partial class InstallerViewModel : ObservableObject
         if (SelectedPackage == null)
             return;
 
-        var releases = (await SelectedPackage.GetAllVersions()).ToList();
+        var releases = (await SelectedPackage.GetAllReleases()).ToList();
         if (!releases.Any())
-            return;
-        
-        AvailableVersions = new ObservableCollection<PackageVersion>(releases);
+        {
+            IsReleaseMode = false;
+        }
+
+        var versions = (await SelectedPackage.GetAllVersions()).ToList();
+        AvailableVersions = new ObservableCollection<PackageVersion>(versions);
         if (!AvailableVersions.Any())
             return;
 
         SelectedVersion = AvailableVersions[0];
-        ReleaseNotes = releases.First().ReleaseNotesMarkdown;
+        ReleaseNotes = versions.First().ReleaseNotesMarkdown;
     }
 
     partial void OnSelectedPackageChanged(BasePackage? value)
@@ -131,40 +138,40 @@ public partial class InstallerViewModel : ObservableObject
         // Idk how to make it better tho
         Task.Run(async () =>
         {
-            var releases = await value.GetAllVersions(IsReleaseMode);
-            var releasesList = releases.ToList();
-            if (!releasesList.Any())
+            var releases = (await SelectedPackage.GetAllReleases()).ToList();
+            if (!releases.Any())
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    IsReleaseMode = false;
+                    IsReleaseModeEnabled = false;
+                });
+            }
+            else
+            {
+                Application.Current.Dispatcher.Invoke(() => { IsReleaseModeEnabled = true; });
+            }
+            
+            var versions = (await value.GetAllVersions(IsReleaseMode)).ToList();
+            if (!versions.Any())
                 return;
 
             Application.Current.Dispatcher.Invoke(() =>
             {
-                AvailableVersions = new ObservableCollection<PackageVersion>(releasesList);
-                try
-                {
-                    SelectedVersion = AvailableVersions[0];
-                    ReleaseNotes = releasesList.First().ReleaseNotesMarkdown;
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e, "shit");
-                }
+                AvailableVersions = new ObservableCollection<PackageVersion>(versions);
+                SelectedVersion = AvailableVersions[0];
+                ReleaseNotes = versions.First().ReleaseNotesMarkdown;
             });
             
             if (!IsReleaseMode)
             {
-                try
+                var commits = await value.GetAllCommits(SelectedVersion.TagName);
+                Application.Current.Dispatcher.Invoke(() =>
                 {
-                    var commits = await value.GetAllCommits(SelectedVersion.TagName);
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        AvailableCommits = new ObservableCollection<GithubCommit>(commits);
-                        SelectedCommit = AvailableCommits[0];
-                    });
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(e, "Error getting commits");
-                }
+                    AvailableCommits = new ObservableCollection<GithubCommit>(commits);
+                    SelectedCommit = AvailableCommits[0];
+                    SelectedVersion = AvailableVersions.First(x => x.TagName == "master");
+                });
             }
         });
 

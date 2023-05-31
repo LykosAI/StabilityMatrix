@@ -16,6 +16,7 @@ using Polly.Timeout;
 using Refit;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Helper.Cache;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Packages;
 using StabilityMatrix.Python;
@@ -82,6 +83,8 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
             serviceCollection.AddSingleton<IDialogErrorHandler, DialogErrorHandler>();
+            serviceCollection.AddMemoryCache();
+            serviceCollection.AddSingleton<IGithubApiCache, GithubApiCache>();
 
             var defaultRefitSettings = new RefitSettings
             {

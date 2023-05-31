@@ -51,6 +51,11 @@ public class DankDiffusion : BasePackage
         throw new System.NotImplementedException();
     }
 
+    public override Task<IEnumerable<GithubRelease>> GetAllReleases()
+    {
+        throw new System.NotImplementedException();
+    }
+
     public override string DownloadLocation { get; }
     public override string InstallLocation { get; set; }
     public override Task<IEnumerable<GithubBranch>> GetAllBranches()

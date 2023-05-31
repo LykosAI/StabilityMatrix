@@ -248,6 +248,11 @@ public partial class LaunchViewModel : ObservableObject
 
     private void OnExit(object? sender, int exitCode)
     {
+        var basePackage = packageFactory.FindPackageByName(SelectedPackage.PackageName);
+        basePackage.ConsoleOutput -= OnConsoleOutput;
+        basePackage.Exited -= OnExit;
+        basePackage.StartupComplete -= RunningPackageOnStartupComplete;
+        
         Dispatcher.CurrentDispatcher.Invoke(() =>
         {
             ConsoleOutput += $"Venv process exited with code {exitCode}";

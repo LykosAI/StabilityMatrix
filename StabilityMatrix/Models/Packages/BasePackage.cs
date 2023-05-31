@@ -26,6 +26,8 @@ public abstract class BasePackage
     public abstract Task<string> GetLatestVersion();
     public abstract Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true);
     public abstract Task<IEnumerable<GithubCommit>> GetAllCommits(string branch, int page = 1, int perPage = 10);
+    public abstract Task<IEnumerable<GithubBranch>> GetAllBranches();
+    public abstract Task<IEnumerable<GithubRelease>> GetAllReleases();
 
     public abstract string DownloadLocation { get; }
     public abstract string InstallLocation { get; set; }
@@ -53,5 +55,4 @@ public abstract class BasePackage
     
 
     public string ByAuthor => $"By {Author}";
-    public abstract Task<IEnumerable<GithubBranch>> GetAllBranches();
 }

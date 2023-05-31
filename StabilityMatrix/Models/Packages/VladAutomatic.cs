@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Helper.Cache;
 
 namespace StabilityMatrix.Models.Packages;
 
@@ -17,7 +18,7 @@ public class VladAutomatic : BaseGitPackage
     public override string LaunchCommand => "launch.py";
     public override string DefaultLaunchArguments => $"{GetVramOption()} {GetXformersOption()}";
 
-    public VladAutomatic(IGithubApi githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager)
+    public VladAutomatic(IGithubApiCache githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager)
     {
     }
 
@@ -40,19 +41,14 @@ public class VladAutomatic : BaseGitPackage
         }
     };
 
-    public override async Task<string> GetLatestVersion()
-    {
-        var branches = await GetAllBranches();
-        var mainBranch = branches.First(b => b.Name.Equals("master", StringComparison.OrdinalIgnoreCase));
-        return $"{mainBranch.Name}-{mainBranch.Commit.ShaHash[^8..]}";
-    }
+    public override Task<string> GetLatestVersion() => Task.FromResult("master");
 
     public override async Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true)
     {
         var allBranches = await GetAllBranches();
         return allBranches.Select(b => new PackageVersion
         {
-            TagName = $"{b.Name}-{b.Commit.ShaHash[^8..]}", 
+            TagName = $"{b.Name}", 
             ReleaseNotesMarkdown = string.Empty
         });
     }
@@ -79,12 +75,12 @@ public class VladAutomatic : BaseGitPackage
         void HandleExit(int i)
         {
             Debug.WriteLine($"Venv process exited with code {i}");
-            OnConsoleOutput($"Venv process exited with code {i}");
+            OnExit(i);
         }
 
         var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
 
-        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit, workingDirectory: installedPackagePath);
+        VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit, workingDirectory: installedPackagePath);
     }
 
     private static string GetVramOption()

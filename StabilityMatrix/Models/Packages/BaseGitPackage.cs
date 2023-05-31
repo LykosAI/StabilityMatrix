@@ -12,6 +12,7 @@ using NLog;
 using Refit;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Helper.Cache;
 using StabilityMatrix.Models.Api;
 using StabilityMatrix.Python;
 
@@ -25,7 +26,7 @@ namespace StabilityMatrix.Models.Packages;
 public abstract class BaseGitPackage : BasePackage
 {
     protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    protected readonly IGithubApi GithubApi;
+    protected readonly IGithubApiCache GithubApi;
     protected readonly ISettingsManager SettingsManager;
     protected PyVenvRunner? VenvRunner;
     
@@ -44,7 +45,7 @@ public abstract class BaseGitPackage : BasePackage
     
     protected string GetDownloadUrl(string tagName) => $"https://api.github.com/repos/{Author}/{Name}/zipball/{tagName}";
 
-    protected BaseGitPackage(IGithubApi githubApi, ISettingsManager settingsManager)
+    protected BaseGitPackage(IGithubApiCache githubApi, ISettingsManager settingsManager)
     {
         this.GithubApi = githubApi;
         this.SettingsManager = settingsManager;
@@ -60,7 +61,7 @@ public abstract class BaseGitPackage : BasePackage
         return GithubApi.GetAllBranches(Author, Name);
     }
     
-    protected Task<IEnumerable<GithubRelease>> GetAllReleases()
+    public override Task<IEnumerable<GithubRelease>> GetAllReleases()
     {
         return GithubApi.GetAllReleases(Author, Name);
     }

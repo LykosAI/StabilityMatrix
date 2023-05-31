@@ -95,6 +95,7 @@ public class PyVenvRunner : IDisposable
 
         if (onExit != null)
         {
+            Process.EnableRaisingEvents = true;
             Process.Exited += (_, _) => onExit(Process.ExitCode);
         }
     }

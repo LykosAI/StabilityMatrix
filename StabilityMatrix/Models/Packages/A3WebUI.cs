@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Helper.Cache;
 
 namespace StabilityMatrix.Models.Packages;
 
@@ -18,7 +19,7 @@ public class A3WebUI : BaseGitPackage
     public override string DefaultLaunchArguments => $"{GetVramOption()} {GetXformersOption()}";
 
     
-    public A3WebUI(IGithubApi githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager) { }
+    public A3WebUI(IGithubApiCache githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager) { }
 
     public override List<LaunchOptionDefinition> LaunchOptions => new()
     {
@@ -101,6 +102,7 @@ public class A3WebUI : BaseGitPackage
         {
             Debug.WriteLine($"Venv process exited with code {i}");
             OnConsoleOutput($"Venv process exited with code {i}");
+            OnExit(i);
         }
 
         var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";

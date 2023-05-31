@@ -96,7 +96,7 @@
                 <TextBlock
                     FontSize="24"
                     FontWeight="Bold"
-                    Text="{Binding SelectedPackage.Name, FallbackValue=Stable Diffusion Web UI}" />
+                    Text="{Binding SelectedPackage.DisplayName, FallbackValue=Stable Diffusion Web UI}" />
                 <TextBlock FontSize="12" Margin="0,5,0,5">
                     <Run Text="{Binding SelectedPackage.PackageName, FallbackValue=stable-diffusion-webui}" />
                     <Run Text="{Binding SelectedPackage.PackageVersion, FallbackValue=v1.3.37}" />

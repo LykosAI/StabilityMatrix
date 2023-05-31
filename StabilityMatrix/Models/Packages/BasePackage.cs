@@ -14,15 +14,20 @@ public abstract class BasePackage
     public abstract string LaunchCommand { get; }
     public abstract string DefaultLaunchArguments { get; }
     public virtual bool UpdateAvailable { get; set; }
-    public abstract Task<string?> DownloadPackage(bool isUpdate = false, string? version = null);
+    public abstract Task<string?> DownloadPackage(string version, bool isUpdate = false);
     public abstract Task InstallPackage(bool isUpdate = false);
     public abstract Task RunPackage(string installedPackagePath, string arguments);
     public abstract Task Shutdown();
     public abstract Task<bool> CheckForUpdates(string installedPackageName);
-    public abstract Task<string?> Update();
-    public abstract Task<IEnumerable<GithubRelease>> GetVersions();
+    public abstract Task<string> Update();
+    public abstract Task<IEnumerable<GithubRelease>> GetReleaseTags();
 
     public abstract List<LaunchOptionDefinition> LaunchOptions { get; }
+    public abstract Task<string> GetLatestVersion();
+    public abstract Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true);
+    public abstract Task<IEnumerable<GithubCommit>> GetAllCommits(string branch, int page = 1, int perPage = 10);
+    public abstract Task<IEnumerable<GithubBranch>> GetAllBranches();
+    public abstract Task<IEnumerable<GithubRelease>> GetAllReleases();
 
     public abstract string DownloadLocation { get; }
     public abstract string InstallLocation { get; set; }

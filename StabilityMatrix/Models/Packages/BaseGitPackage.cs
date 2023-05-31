@@ -12,6 +12,7 @@ using NLog;
 using Refit;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Helper.Cache;
 using StabilityMatrix.Models.Api;
 using StabilityMatrix.Python;
 
@@ -25,7 +26,7 @@ namespace StabilityMatrix.Models.Packages;
 public abstract class BaseGitPackage : BasePackage
 {
     protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    protected readonly IGithubApi GithubApi;
+    protected readonly IGithubApiCache GithubApi;
     protected readonly ISettingsManager SettingsManager;
     protected PyVenvRunner? VenvRunner;
     
@@ -44,7 +45,7 @@ public abstract class BaseGitPackage : BasePackage
     
     protected string GetDownloadUrl(string tagName) => $"https://api.github.com/repos/{Author}/{Name}/zipball/{tagName}";
 
-    protected BaseGitPackage(IGithubApi githubApi, ISettingsManager settingsManager)
+    protected BaseGitPackage(IGithubApiCache githubApi, ISettingsManager settingsManager)
     {
         this.GithubApi = githubApi;
         this.SettingsManager = settingsManager;
@@ -53,6 +54,21 @@ public abstract class BaseGitPackage : BasePackage
     protected Task<GithubRelease> GetLatestRelease()
     {
         return GithubApi.GetLatestRelease(Author, Name);
+    }
+    
+    public override Task<IEnumerable<GithubBranch>> GetAllBranches()
+    {
+        return GithubApi.GetAllBranches(Author, Name);
+    }
+    
+    public override Task<IEnumerable<GithubRelease>> GetAllReleases()
+    {
+        return GithubApi.GetAllReleases(Author, Name);
+    }
+    
+    public override Task<IEnumerable<GithubCommit>> GetAllCommits(string branch, int page = 1, int perPage = 10)
+    {
+        return GithubApi.GetAllCommits(Author, Name, branch, page, perPage);
     }
 
     /// <summary>
@@ -73,22 +89,15 @@ public abstract class BaseGitPackage : BasePackage
         return VenvRunner;
     }
     
-    public override async Task<IEnumerable<GithubRelease>> GetVersions()
+    public override async Task<IEnumerable<GithubRelease>> GetReleaseTags()
     {
         var allReleases = await GithubApi.GetAllReleases(Author, Name);
         return allReleases;
     }
     
-    public override async Task<string?> DownloadPackage(bool isUpdate = false, string? version = null)
+    public override async Task<string?> DownloadPackage(string version, bool isUpdate = false)
     {
-        var latestRelease = await GetLatestRelease();
-        var latestTagName = latestRelease.TagName;
-        if (string.IsNullOrWhiteSpace(latestTagName) && string.IsNullOrWhiteSpace(version))
-        {
-            throw new Exception("Could not find latest release. Both latest release and version are null or empty.");
-        }
-        var tagName = version ?? latestTagName!;
-        var downloadUrl = GetDownloadUrl(tagName);
+        var downloadUrl = GetDownloadUrl(version);
 
         if (!Directory.Exists(DownloadLocation.Replace($"{Name}.zip", "")))
         {
@@ -154,7 +163,7 @@ public abstract class BaseGitPackage : BasePackage
         await file.FlushAsync();
         OnDownloadComplete(DownloadLocation);
 
-        return tagName;
+        return version;
     }
     
     private void UnzipPackage(bool isUpdate = false)
@@ -237,9 +246,9 @@ public abstract class BaseGitPackage : BasePackage
 
         try
         {
-            var latestRelease = await GetLatestRelease();
-            UpdateAvailable = latestRelease.TagName != currentVersion;
-            return latestRelease.TagName != currentVersion;
+            var latestVersion = await GetLatestVersion();
+            UpdateAvailable = latestVersion != currentVersion;
+            return latestVersion != currentVersion;
         }
         catch (ApiException e)
         {
@@ -248,9 +257,10 @@ public abstract class BaseGitPackage : BasePackage
         }
     }
 
-    public override async Task<string?> Update()
+    public override async Task<string> Update()
     {
-        var version = await DownloadPackage(true);
+        var version = await GetLatestVersion();
+        await DownloadPackage(version, true);
         await InstallPackage(true);
         return version;
     }

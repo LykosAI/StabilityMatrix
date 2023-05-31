@@ -24,19 +24,27 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:xaml="clr-namespace:Markdown.Xaml;assembly=Markdown.Xaml"
     xmlns:api="clr-namespace:StabilityMatrix.Models.Api"
-    xmlns:system="clr-namespace:System;assembly=System.Runtime">
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:converters="clr-namespace:StabilityMatrix.Converters">
     
     <ui:FluentWindow.Resources>
+        <converters:ValueConverterGroup x:Key="InvertAndVisibilitate">
+            <converters:BoolNegationConverter/>
+            <BooleanToVisibilityConverter/>
+        </converters:ValueConverterGroup>
+        
+        <converters:BoolNegationConverter x:Key="BoolNegationConverter"/>
+
         <xaml:Markdown x:Key="Markdown"
-                        DocumentStyle="{StaticResource DocumentStyle}"
-                        Heading1Style="{StaticResource H1Style}"
-                        Heading2Style="{StaticResource H2Style}"
-                        Heading3Style="{StaticResource H3Style}"
-                        Heading4Style="{StaticResource H4Style}"
-                        LinkStyle="{StaticResource LinkStyle}"
-                        ImageStyle="{StaticResource ImageStyle}"
-                        SeparatorStyle="{StaticResource SeparatorStyle}"
-                        AssetPathRoot="{x:Static system:Environment.CurrentDirectory}"/>
+                       DocumentStyle="{StaticResource DocumentStyle}"
+                       Heading1Style="{StaticResource H1Style}"
+                       Heading2Style="{StaticResource H2Style}"
+                       Heading3Style="{StaticResource H3Style}"
+                       Heading4Style="{StaticResource H4Style}"
+                       LinkStyle="{StaticResource LinkStyle}"
+                       ImageStyle="{StaticResource ImageStyle}"
+                       SeparatorStyle="{StaticResource SeparatorStyle}"
+                       AssetPathRoot="{x:Static system:Environment.CurrentDirectory}"/>
         <xaml:TextToFlowDocumentConverter x:Key="TextToFlowDocumentConverter" 
                                           Markdown="{StaticResource Markdown}"/>
     </ui:FluentWindow.Resources>
@@ -111,20 +119,53 @@
                     </TextBlock>
                 </ui:Hyperlink>
                 
-                <Label Content="Version" Margin="0,16,0,0"/>
-                <ComboBox ItemsSource="{Binding AvailableVersions}"
-                          SelectedItem="{Binding SelectedVersion}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate DataType="{x:Type api:GithubRelease}">
-                            <StackPanel Margin="10,0,0,0" VerticalAlignment="Top">
-                                <TextBlock
-                                    Margin="0,5,0,5"
-                                    Name="NameTextBlock"
-                                    Text="{Binding TagName}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
+                <StackPanel Orientation="Horizontal">
+                    <ToggleButton IsEnabled="{Binding IsReleaseModeEnabled, FallbackValue=true}"
+                        Content="Releases" IsChecked="{Binding IsReleaseMode}"/>
+                    <ToggleButton Content="Branches" Margin="8,0,0,0" 
+                                  IsChecked="{Binding IsReleaseMode, 
+                                    Converter={StaticResource BoolNegationConverter}}"/>
+                </StackPanel>
+                
+                <StackPanel Orientation="Horizontal" Margin="0, 16, 0, 0">
+                    <StackPanel Orientation="Vertical">
+                        <Label Content="{Binding ReleaseLabelText, FallbackValue=Version}"/>
+                        <ComboBox ItemsSource="{Binding AvailableVersions}"
+                                  SelectedItem="{Binding SelectedVersion}"
+                                  MinWidth="200">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:PackageVersion}">
+                                    <StackPanel Margin="8,0,0,0" VerticalAlignment="Top">
+                                        <TextBlock
+                                            Margin="0,4,0,4"
+                                            Name="NameTextBlock"
+                                            Text="{Binding TagName}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                    
+                    <StackPanel Orientation="Vertical" Margin="8, 0, 0, 0" 
+                                Visibility="{Binding IsReleaseMode, 
+                                    Converter={StaticResource InvertAndVisibilitate}}">
+                        <Label Content="Commit"/>
+                        <ComboBox ItemsSource="{Binding AvailableCommits}"
+                                  SelectedItem="{Binding SelectedCommit}"
+                                  MinWidth="100">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate DataType="{x:Type api:GithubCommit}">
+                                <StackPanel Margin="8,0,0,0" VerticalAlignment="Top">
+                                    <TextBlock
+                                        Margin="0,4,0,4"
+                                        Name="NameTextBlock"
+                                        Text="{Binding ShaHash}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+                </StackPanel>
                 
                 <Label Content="Install Location" Margin="0,16,0,0"/>
                 <ui:TextBox Text="{Binding InstallPath}" Margin="0,0,0,8"/>

@@ -47,7 +47,7 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
             foreach (var option in card.Options)
             {
                 var userOption = launchArgsDict.GetValueOrDefault(option.Name);
-                var userValue = userOption?.OptionValue.ToString();
+                var userValue = userOption?.OptionValue?.ToString();
                 option.SetValueFromString(userValue);
             }
         }

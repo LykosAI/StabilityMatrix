@@ -25,7 +25,7 @@ public partial class LaunchOption : ObservableObject
         switch (Type)
         {
             case LaunchOptionType.Bool:
-                return (bool?) OptionValue == true;
+                return OptionValue == null;
             case LaunchOptionType.Int:
                 return OptionValue == null || (int?) OptionValue == (int?) DefaultValue;
             case LaunchOptionType.String:

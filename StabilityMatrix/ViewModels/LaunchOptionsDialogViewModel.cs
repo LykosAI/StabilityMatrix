@@ -12,6 +12,15 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
 {
     public ObservableCollection<LaunchOptionCard> Cards { get; set; } = new();
 
+    [ObservableProperty]
+    private string title = "Launch Options";
+
+    [ObservableProperty] 
+    private string searchText = string.Empty;
+    
+    [ObservableProperty]
+    private bool isSearchBoxEnabled = true;
+
     /// <summary>
     /// Export the current cards options to a list of strings
     /// </summary>

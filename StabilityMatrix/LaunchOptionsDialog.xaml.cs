@@ -20,7 +20,6 @@ public partial class LaunchOptionsDialog : ContentDialog
         dialogService.GetContentPresenter())
     {
         this.viewModel = viewModel;
-        var sw = new Stopwatch();
         InitializeComponent();
         DataContext = viewModel;
     }

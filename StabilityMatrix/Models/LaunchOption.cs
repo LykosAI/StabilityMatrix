@@ -62,6 +62,11 @@ public partial class LaunchOption : ObservableObject
                 return (int?) OptionValue != null ? $"{Name} {OptionValue}" : null;
             case LaunchOptionType.String:
                 var valueString = (string?) OptionValue;
+                // Special case empty string name to not do quoting (for custom launch args)
+                if (Name == "")
+                {
+                    return valueString;
+                }
                 return string.IsNullOrWhiteSpace(valueString) ? null : $"{Name} {ProcessRunner.Quote(valueString)}";
             default:
                 throw new ArgumentOutOfRangeException();

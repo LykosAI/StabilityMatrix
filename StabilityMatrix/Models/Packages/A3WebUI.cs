@@ -53,6 +53,12 @@ public class A3WebUI : BaseGitPackage
         {
             Name = "Xformers",
             Options = new() {"--xformers"}
+        },
+        new()
+        {
+            Name = "Extra Launch Arguments",
+            Type = LaunchOptionType.String,
+            Options = new() {""}
         }
     };
 

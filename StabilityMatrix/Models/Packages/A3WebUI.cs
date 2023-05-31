@@ -40,8 +40,8 @@ public class A3WebUI : BaseGitPackage
         new()
         {
             Name = "Port",
-            Type = LaunchOptionType.Int,
-            DefaultValue = 7860,
+            Type = LaunchOptionType.String,
+            DefaultValue = "7860",
             Options = new() {"--port"}
         },
         new()

@@ -65,7 +65,7 @@ public class SettingsManager : ISettingsManager
 
     public void UpdatePackageVersionNumber(string name, string? newVersion)
     {
-        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Name == name);
+        var package = Settings.InstalledPackages.FirstOrDefault(x => x.DisplayName == name);
         if (package == null || newVersion == null)
         {
             return;
@@ -77,7 +77,7 @@ public class SettingsManager : ISettingsManager
     
     public void SetLastUpdateCheck(InstalledPackage package)
     {
-        Settings.InstalledPackages.First(p => p.Name == package.Name).LastUpdateCheck = package.LastUpdateCheck;
+        Settings.InstalledPackages.First(p => p.DisplayName == package.DisplayName).LastUpdateCheck = package.LastUpdateCheck;
         SaveSettings();
     }
     
@@ -94,8 +94,10 @@ public class SettingsManager : ISettingsManager
         {
             return;
         }
-        
-        packageData.LaunchArgs = launchArgs;
+        // Only save if not null or default
+        var toSave = launchArgs.Where(opt => !opt.IsEmptyOrDefault()).ToList();
+
+        packageData.LaunchArgs = toSave;
         SaveSettings();
     }
 

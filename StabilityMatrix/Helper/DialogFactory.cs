@@ -1,4 +1,5 @@
-﻿using StabilityMatrix.Models;
+﻿using System.Collections.Generic;
+using StabilityMatrix.Models;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 
@@ -20,10 +21,8 @@ public class DialogFactory : IDialogFactory
         this.settingsManager = settingsManager;
     }
 
-    public LaunchOptionsDialog CreateLaunchOptionsDialog(BasePackage selectedPackage, InstalledPackage installedPackage)
+    public LaunchOptionsDialog CreateLaunchOptionsDialog(IEnumerable<LaunchOptionDefinition> definitions, InstalledPackage installedPackage)
     {
-        var definitions = selectedPackage.LaunchOptions;
-        launchOptionsDialogViewModel.SelectedPackage = selectedPackage;
         launchOptionsDialogViewModel.Cards.Clear();
         // Create cards
         launchOptionsDialogViewModel.CardsFromDefinitions(definitions);

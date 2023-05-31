@@ -12,9 +12,6 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
 {
     public ObservableCollection<LaunchOptionCard> Cards { get; set; } = new();
 
-    [ObservableProperty]
-    private BasePackage? selectedPackage;
-
     /// <summary>
     /// Export the current cards options to a list of strings
     /// </summary>
@@ -31,7 +28,7 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
     /// <summary>
     /// Create cards using definitions
     /// </summary>
-    public void CardsFromDefinitions(List<LaunchOptionDefinition> definitions)
+    public void CardsFromDefinitions(IEnumerable<LaunchOptionDefinition> definitions)
     {
         foreach (var definition in definitions)
         {
@@ -50,7 +47,7 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
             foreach (var option in card.Options)
             {
                 var userOption = launchArgsDict.GetValueOrDefault(option.Name);
-                var userValue = userOption?.OptionValue.ToString();
+                var userValue = userOption?.OptionValue?.ToString();
                 option.SetValueFromString(userValue);
             }
         }

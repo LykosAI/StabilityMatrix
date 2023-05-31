@@ -1,9 +1,10 @@
-﻿using StabilityMatrix.Models;
+﻿using System.Collections.Generic;
+using StabilityMatrix.Models;
 
 namespace StabilityMatrix.Helper;
 
 public interface IDialogFactory
 {
-    LaunchOptionsDialog CreateLaunchOptionsDialog(BasePackage selectedPackage, InstalledPackage installedPackage);
+    LaunchOptionsDialog CreateLaunchOptionsDialog(IEnumerable<LaunchOptionDefinition> definitions, InstalledPackage installedPackage);
     InstallerWindow CreateInstallerWindow();
 }

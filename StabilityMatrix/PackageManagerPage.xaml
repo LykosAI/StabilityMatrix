@@ -1,17 +1,17 @@
 ﻿<Page
-    x:Class="StabilityMatrix.PackageManagerPage"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    xmlns:models="clr-namespace:StabilityMatrix.Models"
-    d:DesignHeight="450"
-    d:DesignWidth="700"
-    Loaded="InstallPage_OnLoaded"
     Background="{DynamicResource ApplicationBackgroundBrush}"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-    mc:Ignorable="d">
+    Loaded="InstallPage_OnLoaded"
+    d:DesignHeight="450"
+    d:DesignWidth="700"
+    mc:Ignorable="d"
+    x:Class="StabilityMatrix.PackageManagerPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:StabilityMatrix.Models"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Grid Margin="16">
         <Grid.RowDefinitions>
@@ -19,37 +19,50 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Vertical"
-                    Visibility="{Binding ProgressBarVisibility, FallbackValue=Visible}">
+        <StackPanel
+            Grid.Row="0"
+            Orientation="Vertical"
+            Visibility="{Binding ProgressBarVisibility, FallbackValue=Visible}">
 
-            <ProgressBar Value="{Binding ProgressValue, FallbackValue=10}"
-                         IsIndeterminate="{Binding IsIndeterminate, FallbackValue=False}"
-                         Maximum="100" Width="500" />
-            <TextBlock Text="{Binding ProgressText, FallbackValue=Installing...}"
-                       HorizontalAlignment="Center" Padding="8" />
+            <ProgressBar
+                IsIndeterminate="{Binding IsIndeterminate, FallbackValue=False}"
+                Maximum="100"
+                Value="{Binding ProgressValue, FallbackValue=10}"
+                Width="500" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                Padding="8"
+                Text="{Binding ProgressText, FallbackValue=Installing...}" />
         </StackPanel>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal"
-                    Margin="16" HorizontalAlignment="Left">
+        <StackPanel
+            Grid.Row="1"
+            HorizontalAlignment="Left"
+            Margin="16"
+            Orientation="Horizontal">
             <StackPanel Orientation="Vertical">
-                <ui:Button Command="{Binding ShowInstallWindowCommand}"
-                           IsEnabled="{Binding InstallButtonEnabled, FallbackValue=true}"
-                           Height="40"
-                           HorizontalAlignment="Stretch"
-                           Foreground="{ui:ThemeResource TextFillColorPrimaryBrush}"
-                           Margin="0,0,0,16"
-                           VerticalContentAlignment="Center"
-                           Background="Green">
+                <ui:Button
+                    Background="Green"
+                    Command="{Binding ShowInstallWindowCommand}"
+                    Foreground="{ui:ThemeResource TextFillColorPrimaryBrush}"
+                    Height="40"
+                    HorizontalAlignment="Stretch"
+                    IsEnabled="{Binding InstallButtonEnabled, FallbackValue=true}"
+                    Margin="0,0,0,16"
+                    VerticalContentAlignment="Center">
                     <StackPanel Orientation="Horizontal">
                         <ui:SymbolIcon Symbol="Add24" />
-                        <Label Margin="8,4,0,0"
-                               Content="Add Package" VerticalContentAlignment="Center" />
+                        <Label
+                            Content="Add Package"
+                            Margin="8,4,0,0"
+                            VerticalContentAlignment="Center" />
                     </StackPanel>
                 </ui:Button>
 
-                <ListView ItemsSource="{Binding Packages}"
-                          Visibility="{Binding InstallButtonVisibility, FallbackValue=Visible}"
-                          SelectedItem="{Binding SelectedPackage, Mode=TwoWay}">
+                <ListView
+                    ItemsSource="{Binding Packages}"
+                    SelectedItem="{Binding SelectedPackage, Mode=TwoWay}"
+                    Visibility="{Binding InstallButtonVisibility, FallbackValue=Visible}">
 
                     <ListView.Style>
                         <Style TargetType="ListView">
@@ -59,8 +72,10 @@
 
                     <ListView.Template>
                         <ControlTemplate>
-                            <Border CornerRadius="5" BorderThickness="1"
-                                    BorderBrush="{ui:ThemeResource KeyboardFocusBorderColorBrush}">
+                            <Border
+                                BorderBrush="{ui:ThemeResource KeyboardFocusBorderColorBrush}"
+                                BorderThickness="1"
+                                CornerRadius="5">
                                 <ItemsPresenter />
                             </Border>
                         </ControlTemplate>
@@ -68,39 +83,47 @@
 
                     <ListView.ItemTemplate>
                         <DataTemplate DataType="{x:Type models:InstalledPackage}">
-                            <StackPanel VerticalAlignment="Top" Margin="8">
-                                <TextBlock Text="{Binding Name}" Margin="0,5,0,5" />
-                                <TextBlock Text="{Binding PackageVersion}" Margin="0,0,0,5" />
+                            <StackPanel Margin="8" VerticalAlignment="Top">
+                                <TextBlock Margin="0,5,0,5" Text="{Binding DisplayName}" />
+                                <TextBlock Margin="0,0,0,5" Text="{Binding PackageVersion}" />
                             </StackPanel>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
             </StackPanel>
 
-            <StackPanel Orientation="Vertical" Margin="32,0,0,0">
-                <TextBlock Text="{Binding SelectedPackage.Name, FallbackValue=Stable Diffusion Web UI}"
-                           FontSize="24" FontWeight="Bold" />
-                <TextBlock FontSize="12" Margin="0,5, 0, 5">
+            <StackPanel Margin="32,0,0,0" Orientation="Vertical">
+                <TextBlock
+                    FontSize="24"
+                    FontWeight="Bold"
+                    Text="{Binding SelectedPackage.DisplayName, FallbackValue=Stable Diffusion Web UI}" />
+                <TextBlock FontSize="12" Margin="0,5,0,5">
                     <Run Text="{Binding SelectedPackage.PackageName, FallbackValue=stable-diffusion-webui}" />
                     <Run Text="{Binding SelectedPackage.PackageVersion, FallbackValue=v1.3.37}" />
                 </TextBlock>
-                <TextBlock Text="{Binding SelectedPackage.Path, FallbackValue=C:\Users\Example\Downloads}"
-                           FontSize="12" Margin="0,5, 0, 5" />
-                <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
-                    <ui:Button Content="{Binding InstallButtonText, FallbackValue=Install}"
-                               Command="{Binding InstallCommand}"
-                               Visibility="{Binding InstallButtonVisibility, FallbackValue=Visible}"
-                               IsEnabled="{Binding InstallButtonEnabled, FallbackValue=true}"
-                               Width="100" Height="50"
-                               Background="Green"
-                               VerticalAlignment="Top" />
-                    <ui:Button Content="Uninstall"
-                               Command="{Binding UninstallCommand}"
-                               Visibility="{Binding InstallButtonVisibility, FallbackValue=Visible}"
-                               Width="100" Height="50"
-                               Background="DarkRed"
-                               Margin="16,0,0,0"
-                               VerticalAlignment="Top" />
+                <TextBlock
+                    FontSize="12"
+                    Margin="0,5,0,5"
+                    Text="{Binding SelectedPackage.Path, FallbackValue=C:\Users\Example\Downloads}" />
+                <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
+                    <ui:Button
+                        Background="Green"
+                        Command="{Binding InstallCommand}"
+                        Content="{Binding InstallButtonText, FallbackValue=Install}"
+                        Height="50"
+                        IsEnabled="{Binding InstallButtonEnabled, FallbackValue=true}"
+                        VerticalAlignment="Top"
+                        Visibility="{Binding InstallButtonVisibility, FallbackValue=Visible}"
+                        Width="100" />
+                    <ui:Button
+                        Background="DarkRed"
+                        Command="{Binding UninstallCommand}"
+                        Content="Uninstall"
+                        Height="50"
+                        Margin="16,0,0,0"
+                        VerticalAlignment="Top"
+                        Visibility="{Binding InstallButtonVisibility, FallbackValue=Visible}"
+                        Width="100" />
                 </StackPanel>
             </StackPanel>
         </StackPanel>

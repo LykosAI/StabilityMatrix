@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
@@ -14,7 +15,7 @@ public static class ProcessRunner
 
     public static async Task<string> GetProcessOutputAsync(string fileName, string arguments)
     {
-        Logger.Trace($"Starting process '{fileName}' with arguments '{arguments}'");
+        Logger.Debug($"Starting process '{fileName}' with arguments '{arguments}'");
         using var process = new Process();
         process.StartInfo.FileName = fileName;
         process.StartInfo.Arguments = arguments;
@@ -36,7 +37,7 @@ public static class ProcessRunner
         Action<string?>? outputDataReceived = null,
         Dictionary<string, string>? environmentVariables = null)
     {
-        Logger.Trace($"Starting process '{fileName}' with arguments '{arguments}'");
+        Logger.Debug($"Starting process '{fileName}' with arguments '{arguments}'");
         var process = new Process();
         process.StartInfo.FileName = fileName;
         process.StartInfo.Arguments = arguments;
@@ -73,6 +74,28 @@ public static class ProcessRunner
         }
 
         return process;
+    }
+
+    public static Process StartProcess(
+        string fileName,
+        IEnumerable<string> arguments,
+        string? workingDirectory = null,
+        Action<string?>? outputDataReceived = null,
+        Dictionary<string, string>? environmentVariables = null)
+    {
+        // Quote arguments containing spaces
+        var args = string.Join(" ", arguments.Select(Quote));
+        return StartProcess(fileName, args, workingDirectory, outputDataReceived, environmentVariables);
+    }
+
+    /// <summary>
+    /// Quotes argument with double quotes if it contains spaces,
+    /// and does not already start and end with double quotes.
+    /// </summary>
+    public static string Quote(string argument)
+    {
+        var inner = argument.Trim('"');
+        return inner.Contains(' ') ? $"\"{inner}\"" : argument;
     }
 
     /// <summary>

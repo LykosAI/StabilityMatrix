@@ -6,7 +6,7 @@ namespace StabilityMatrix.Converters;
 
 public class LaunchOptionConverter : IValueConverter
 {
-    public object Convert(object? value, Type targetType, object parameter, CultureInfo culture)
+    public object? Convert(object? value, Type targetType, object parameter, CultureInfo culture)
     {
         if (targetType == typeof(string))
         {
@@ -20,11 +20,19 @@ public class LaunchOptionConverter : IValueConverter
 
         if (targetType == typeof(double?))
         {
+            if (value == null)
+            {
+                return null;
+            }
             return double.TryParse(value?.ToString(), out var doubleValue) ? doubleValue : 0;
         }
         
         if (targetType == typeof(int?))
         {
+            if (value == null)
+            {
+                return null;
+            }
             return int.TryParse(value?.ToString(), out var intValue) ? intValue : 0;
         }
 

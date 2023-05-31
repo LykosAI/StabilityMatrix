@@ -17,6 +17,7 @@ public class A3WebUI : BaseGitPackage
     public override string Author => "AUTOMATIC1111";
     public override string LaunchCommand => "launch.py";
     public override string DefaultLaunchArguments => $"{GetVramOption()} {GetXformersOption()}";
+    public string RelativeArgsDefinitionScriptPath => "modules.cmd_args";
 
     
     public A3WebUI(IGithubApiCache githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager) { }
@@ -27,31 +28,37 @@ public class A3WebUI : BaseGitPackage
         {
             Name = "API",
             DefaultValue = true,
-            Options = new() { "--api" }
+            Options = new() {"--api"}
         },
         new()
         {
             Name = "Host",
-            Type = "string",
+            Type = LaunchOptionType.String,
             DefaultValue = "localhost",
-            Options = new() { "--host" }
+            Options = new() {"--host"}
         },
         new()
         {
             Name = "Port",
-            Type = "int",
-            DefaultValue = 7860,
-            Options = new() { "--port" }
+            Type = LaunchOptionType.String,
+            DefaultValue = "7860",
+            Options = new() {"--port"}
         },
         new()
         {
             Name = "VRAM",
-            Options = new() { "--lowvram", "--medvram" }
+            Options = new() {"--lowvram", "--medvram"}
         },
         new()
         {
             Name = "Xformers",
-            Options = new() { "--xformers" }
+            Options = new() {"--xformers"}
+        },
+        new()
+        {
+            Name = "Extra Launch Arguments",
+            Type = LaunchOptionType.String,
+            Options = new() {""}
         }
     };
 
@@ -90,10 +97,12 @@ public class A3WebUI : BaseGitPackage
             {
                 OnStartupComplete(WebUrl);
             }
+
             if (s.Contains("Running on", StringComparison.OrdinalIgnoreCase))
             {
                 WebUrl = s.Split(" ")[5];
             }
+
             Debug.WriteLine($"process stdout: {s}");
             OnConsoleOutput($"{s}\n");
         }

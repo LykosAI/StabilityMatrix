@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Toolkit.Uwp.Notifications;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.Packages;
 using StabilityMatrix.Python;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.ContentDialogControl;
@@ -114,8 +115,12 @@ public partial class LaunchViewModel : ObservableObject
         basePackage.ConsoleOutput += OnConsoleOutput;
         basePackage.Exited += OnExit;
         basePackage.StartupComplete += RunningPackageOnStartupComplete;
-        var userArgs = string.Join(" ", settingsManager.GetLaunchArgs(SelectedPackage.Id));
-        await basePackage.RunPackage(packagePath, userArgs);
+        // Load user launch args from settings and convert to string
+        var userArgs = settingsManager.GetLaunchArgs(SelectedPackage.Id);
+        var userArgsString = string.Join(" ", userArgs.Select(opt => opt.ToArgString()));
+        // Join with extras, if any
+        userArgsString = string.Join(" ", userArgsString, basePackage.ExtraLaunchArguments);
+        await basePackage.RunPackage(packagePath, userArgsString);
         runningPackage = basePackage;
         SetProcessRunning(true);
     });
@@ -124,7 +129,7 @@ public partial class LaunchViewModel : ObservableObject
     public async Task ConfigAsync()
     {
         var activeInstall = SelectedPackage;
-        var name = activeInstall?.Name;
+        var name = activeInstall?.PackageName;
         if (name == null || activeInstall == null)
         {
             logger.LogWarning($"Selected package is null");
@@ -137,9 +142,20 @@ public partial class LaunchViewModel : ObservableObject
             logger.LogWarning("Package {Name} not found", name);
             return;
         }
+        
+        var definitions = package.LaunchOptions;
+        // Check if package supports IArgParsable
+        // Use dynamic parsed args over static
+        if (package is IArgParsable parsable)
+        {
+            var rootPath = activeInstall.Path!;
+            var moduleName = parsable.RelativeArgsDefinitionScriptPath;
+            var parser = new ArgParser(pyRunner, rootPath, moduleName);
+            definitions = await parser.GetArgsAsync();
+        }
 
         // Open a config page
-        var dialog = dialogFactory.CreateLaunchOptionsDialog(package, activeInstall);
+        var dialog = dialogFactory.CreateLaunchOptionsDialog(definitions, activeInstall);
         dialog.IsPrimaryButtonEnabled = true;
         dialog.PrimaryButtonText = "Save";
         dialog.CloseButtonText = "Cancel";

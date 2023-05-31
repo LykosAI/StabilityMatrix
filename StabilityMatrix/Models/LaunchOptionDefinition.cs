@@ -15,7 +15,7 @@ public class LaunchOptionDefinition
     /// - "bool" can supply 1 or more flags in the Options list (e.g. ["--api", "--lowvram"])
     /// - "int" and "string" should supply a single flag in the Options list (e.g. ["--width"], ["--api"])
     /// </summary>
-    public string Type { get; set; } = "bool";
+    public LaunchOptionType Type { get; init; } = LaunchOptionType.Bool;
     public string? Description { get; set; }
     
     /// <summary>

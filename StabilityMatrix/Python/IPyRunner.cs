@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace StabilityMatrix.Python;
@@ -21,6 +23,26 @@ public interface IPyRunner
     /// Install a Python package with pip
     /// </summary>
     Task InstallPackage(string package);
+
+    /// <summary>
+    /// Run a Function with PyRunning lock as a Task with GIL.
+    /// </summary>
+    /// <param name="func">Function to run.</param>
+    /// <param name="waitTimeout">Time limit for waiting on PyRunning lock.</param>
+    /// <param name="cancelToken">Cancellation token.</param>
+    /// <exception cref="OperationCanceledException">cancelToken was canceled, or waitTimeout expired.</exception>
+    Task<T> RunInThreadWithLock<T>(Func<T> func, TimeSpan? waitTimeout = null,
+        CancellationToken cancelToken = default);
+
+    /// <summary>
+    /// Run an Action with PyRunning lock as a Task with GIL.
+    /// </summary>
+    /// <param name="action">Action to run.</param>
+    /// <param name="waitTimeout">Time limit for waiting on PyRunning lock.</param>
+    /// <param name="cancelToken">Cancellation token.</param>
+    /// <exception cref="OperationCanceledException">cancelToken was canceled, or waitTimeout expired.</exception>
+    Task RunInThreadWithLock(Action action, TimeSpan? waitTimeout = null,
+        CancellationToken cancelToken = default);
 
     /// <summary>
     /// Evaluate Python expression and return its value as a string

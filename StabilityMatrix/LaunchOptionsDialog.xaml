@@ -1,7 +1,7 @@
 ﻿<ui:ContentDialog
     CloseButtonText="Close"
     DialogHeight="512"
-    DialogWidth="512"
+    DialogWidth="640"
     Loaded="LaunchOptionsDialog_OnLoaded"
     Title="Launch Options"
     d:DataContext="{d:DesignInstance Type=viewModels:LaunchOptionsDialogViewModel,
@@ -23,12 +23,14 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <ui:ContentDialog.Resources>
+        <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
         <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:LaunchOptionsDialog}" />
 
         <converters:LaunchOptionConverter x:Key="LaunchOptionConverter" />
-        <converters:ValueConverterGroup x:Key="LaunchOptionIntToDoubleConverter">
+        <converters:LaunchOptionIntDoubleConverter x:Key="LaunchOptionIntDoubleConverter" />
+        <converters:ValueConverterGroup x:Key="LaunchOptionIntToStringConverter">
             <converters:LaunchOptionConverter />
-            <converters:IntDoubleConverter />
+            <converters:LaunchOptionIntDoubleConverter />
         </converters:ValueConverterGroup>
 
         <!--  Bool type card (checkboxes)  -->
@@ -42,7 +44,8 @@
                         FontSize="16"
                         FontWeight="Bold"
                         Margin="0,8"
-                        Text="{Binding Title}" />
+                        Text="{Binding Title}"
+                        TextWrapping="Wrap" />
                     <StackPanel Orientation="Horizontal">
                         <ItemsControl ItemsSource="{Binding Options}">
                             <ItemsControl.ItemTemplate>
@@ -67,7 +70,8 @@
                         FontSize="16"
                         FontWeight="Bold"
                         Margin="0,8"
-                        Text="{Binding Title}" />
+                        Text="{Binding Title}"
+                        TextWrapping="Wrap" />
                     <ItemsControl ItemsSource="{Binding Options}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -99,7 +103,8 @@
                         FontSize="16"
                         FontWeight="Bold"
                         Margin="0,8"
-                        Text="{Binding Title}" />
+                        Text="{Binding Title}"
+                        TextWrapping="Wrap" />
                     <ItemsControl ItemsSource="{Binding Options}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -108,7 +113,9 @@
                                     <ui:NumberBox
                                         HorizontalAlignment="Stretch"
                                         Margin="8"
-                                        Value="{Binding OptionValue, Converter={StaticResource LaunchOptionIntToDoubleConverter}}"
+                                        PlaceholderText="{Binding DefaultValue, Mode=OneWay, Converter={StaticResource LaunchOptionConverter}}"
+                                        ValidationMode="InvalidInputOverwritten"
+                                        Value="{Binding OptionValue, Converter={StaticResource LaunchOptionIntDoubleConverter}, Mode=TwoWay}"
                                         VerticalAlignment="Stretch" />
                                 </StackPanel>
                             </DataTemplate>
@@ -137,13 +144,6 @@
         </DataTemplate>
     </ui:ContentDialog.Resources>
 
-
-    <Grid Height="512" Width="512">
-        <ScrollViewer HorizontalScrollBarVisibility="Auto">
-            <StackPanel Orientation="Vertical">
-                <!--  Options cards  -->
-                <ItemsControl ItemTemplate="{StaticResource LaunchOptionCardDataTemplate}" ItemsSource="{Binding Cards}" />
-            </StackPanel>
-        </ScrollViewer>
-    </Grid>
+    <!--  Options cards  -->
+    <ItemsControl ItemTemplate="{StaticResource LaunchOptionCardDataTemplate}" ItemsSource="{Binding Cards}" />
 </ui:ContentDialog>

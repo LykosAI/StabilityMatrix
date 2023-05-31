@@ -139,7 +139,7 @@
     </ui:ContentDialog.Resources>
 
 
-    <Grid Height="512" Width="512">
+    <Grid Height="704" Width="704">
         <ScrollViewer HorizontalScrollBarVisibility="Auto">
             <StackPanel Orientation="Vertical">
                 <!--  Options cards  -->

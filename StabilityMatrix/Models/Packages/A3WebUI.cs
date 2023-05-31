@@ -10,7 +10,7 @@ using StabilityMatrix.Helper.Cache;
 
 namespace StabilityMatrix.Models.Packages;
 
-public class A3WebUI : BaseGitPackage, IArgParsable
+public class A3WebUI : BaseGitPackage
 {
     public override string Name => "stable-diffusion-webui";
     public override string DisplayName { get; set; } = "stable-diffusion-webui";

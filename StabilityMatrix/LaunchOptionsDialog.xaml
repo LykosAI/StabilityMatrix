@@ -180,7 +180,7 @@
         HorizontalAlignment="Stretch"
         HorizontalContentAlignment="Center"
         ItemTemplate="{StaticResource LaunchOptionCardDataTemplate}"
-        ItemsSource="{Binding Cards}"
+        ItemsSource="{Binding FilteredCards}"
         Margin="16,0,0,0"
         MaxWidth="400"
         MinWidth="300" />

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
+using StabilityMatrix.Helper.Cache;
 using StabilityMatrix.Models;
 
 namespace StabilityMatrix.ViewModels;
@@ -15,11 +17,43 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
     [ObservableProperty]
     private string title = "Launch Options";
 
-    [ObservableProperty] 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FilteredCards))]
     private string searchText = string.Empty;
     
     [ObservableProperty]
     private bool isSearchBoxEnabled = true;
+    
+    private LRUCache<string, ImmutableList<LaunchOptionCard>> cache = new(100);
+    
+    /// <summary>
+    /// Return cards that match the search text
+    /// </summary>
+    public IEnumerable<LaunchOptionCard> FilteredCards
+    {
+        get
+        {
+            var text = SearchText;
+            if (string.IsNullOrWhiteSpace(text) || text.Length < 2)
+            {
+                return Cards;
+            }
+            // Try cache
+            if (cache.Get(text, out var cachedCards))
+            {
+                return cachedCards!;
+            }
+            var searchCard = new LaunchOptionCard(text.ToLowerInvariant());
+            var extracted = FuzzySharp.Process
+                .ExtractTop(searchCard, Cards, c => c.Title.ToLowerInvariant());
+            var results = extracted
+                .Where(r => r.Score > 40)
+                .Select(r => r.Value)
+                .ToImmutableList();
+            cache.Add(text, results);
+            return results;
+        }
+    }
 
     /// <summary>
     /// Export the current cards options to a list of strings
@@ -60,6 +94,15 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
                 option.SetValueFromString(userValue);
             }
         }
+    }
+    
+    /// <summary>
+    /// Clear Cards and cache
+    /// </summary>
+    public void Clear()
+    {
+        cache = new LRUCache<string, ImmutableList<LaunchOptionCard>>(100);
+        Cards.Clear();
     }
     
     public void OnLoad()

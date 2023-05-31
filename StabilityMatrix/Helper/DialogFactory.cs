@@ -23,7 +23,7 @@ public class DialogFactory : IDialogFactory
 
     public LaunchOptionsDialog CreateLaunchOptionsDialog(IEnumerable<LaunchOptionDefinition> definitions, InstalledPackage installedPackage)
     {
-        launchOptionsDialogViewModel.Cards.Clear();
+        launchOptionsDialogViewModel.Clear();
         // Create cards
         launchOptionsDialogViewModel.CardsFromDefinitions(definitions);
         // Load user settings

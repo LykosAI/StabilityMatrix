@@ -74,7 +74,7 @@ public partial class PackageManagerViewModel : ObservableObject
         {
             SelectedPackage = new InstalledPackage
             {
-                Name = "Click \"Add Package\" to install a package"
+                DisplayName = "Click \"Add Package\" to install a package"
             };
             InstallButtonVisibility = Visibility.Collapsed;
         }
@@ -100,7 +100,7 @@ public partial class PackageManagerViewModel : ObservableObject
                             DateTimeOffset.Now;
             if (canCheckUpdate)
             {
-                var hasUpdate = await basePackage.CheckForUpdates(packageToUpdate.Name);
+                var hasUpdate = await basePackage.CheckForUpdates(packageToUpdate.DisplayName);
                 packageToUpdate.UpdateAvailable = hasUpdate;
                 packageToUpdate.LastUpdateCheck = DateTimeOffset.Now;
                 settingsManager.SetLastUpdateCheck(packageToUpdate);
@@ -195,7 +195,7 @@ public partial class PackageManagerViewModel : ObservableObject
             return;
         }
 
-        ProgressText = $"Updating {SelectedPackage.Name} to latest version...";
+        ProgressText = $"Updating {SelectedPackage.DisplayName} to latest version...";
         package.InstallLocation = SelectedPackage.Path!;
         package.UpdateProgressChanged += SelectedPackageOnProgressChanged;
         package.UpdateComplete += (_, _) =>
@@ -206,7 +206,7 @@ public partial class PackageManagerViewModel : ObservableObject
             UpdateAvailable = false;
         };
         var updateResult = await package.Update();
-        settingsManager.UpdatePackageVersionNumber(SelectedPackage.Name!, updateResult!);
+        settingsManager.UpdatePackageVersionNumber(SelectedPackage.DisplayName!, updateResult!);
         await OnLoaded();
     }
 
@@ -228,7 +228,7 @@ public partial class PackageManagerViewModel : ObservableObject
         {
             IsIndeterminate = false;
             ProgressValue = progress;
-            ProgressText = $"Updating {SelectedPackage.Name} to latest version... {progress}%";
+            ProgressText = $"Updating {SelectedPackage.DisplayName} to latest version... {progress}%";
         }
         
         EventManager.Instance.OnGlobalProgressChanged(progress);

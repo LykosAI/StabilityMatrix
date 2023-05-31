@@ -97,7 +97,7 @@ public partial class SettingsViewModel : ObservableObject
         var package = new InstalledPackage
         {
             Id = Guid.NewGuid(),
-            Name = Path.GetFileName(path),
+            DisplayName = Path.GetFileName(path),
             Path = path,
             PackageName = "dank-diffusion",
             PackageVersion = "v1.0.0",

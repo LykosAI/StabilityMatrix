@@ -99,6 +99,25 @@
                     <ColumnDefinition Width="0.8*" />
                     <ColumnDefinition Width="0.2*" />
                 </Grid.ColumnDefinitions>
+                <ui:Flyout
+                    Background="{DynamicResource SystemAccentColorPrimaryBrush}"
+                    FontSize="18"
+                    Grid.Column="0"
+                    Grid.Row="0"
+                    IsOpen="{Binding isLaunchTeachingTipsOpen, Mode=TwoWay}"
+                    Placement="Bottom">
+                    <StackPanel Orientation="Horizontal">
+                        <Grid HorizontalAlignment="Left">
+                            <ui:SymbolIcon Symbol="ArrowCurveUpLeft20" />
+                        </Grid>
+                        <TextBlock
+                            HorizontalAlignment="Left"
+                            Text="Click here to get started!"
+                            TextWrapping="WrapWithOverflow"
+                            Width="280" />
+                    </StackPanel>
+
+                </ui:Flyout>
                 <ui:Button
                     Background="Green"
                     Command="{Binding LaunchCommand}"

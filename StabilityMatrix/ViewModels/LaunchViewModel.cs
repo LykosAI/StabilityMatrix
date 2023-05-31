@@ -41,6 +41,8 @@ public partial class LaunchViewModel : ObservableObject
 
     [ObservableProperty] private Visibility stopButtonVisibility;
 
+    [ObservableProperty] private bool isLaunchTeachingTipsOpen = false;
+
 
     private InstalledPackage? selectedPackage;
 

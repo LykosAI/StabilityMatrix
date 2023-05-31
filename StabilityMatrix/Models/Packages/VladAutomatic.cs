@@ -41,6 +41,8 @@ public class VladAutomatic : BaseGitPackage
         }
     };
 
+    public override string ExtraLaunchArguments => "--skip-git";
+
     public override Task<string> GetLatestVersion() => Task.FromResult("master");
 
     public override async Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true)

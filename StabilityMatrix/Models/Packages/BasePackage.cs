@@ -23,6 +23,8 @@ public abstract class BasePackage
     public abstract Task<IEnumerable<GithubRelease>> GetReleaseTags();
 
     public abstract List<LaunchOptionDefinition> LaunchOptions { get; }
+    public virtual string? ExtraLaunchArguments { get; set; } = null;
+    
     public abstract Task<string> GetLatestVersion();
     public abstract Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true);
     public abstract Task<IEnumerable<GithubCommit>> GetAllCommits(string branch, int page = 1, int perPage = 10);

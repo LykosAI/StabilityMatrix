@@ -118,6 +118,8 @@ public partial class LaunchViewModel : ObservableObject
         // Load user launch args from settings and convert to string
         var userArgs = settingsManager.GetLaunchArgs(SelectedPackage.Id);
         var userArgsString = string.Join(" ", userArgs.Select(opt => opt.ToArgString()));
+        // Join with extras, if any
+        userArgsString = string.Join(" ", userArgsString, basePackage.ExtraLaunchArguments);
         await basePackage.RunPackage(packagePath, userArgsString);
         runningPackage = basePackage;
         SetProcessRunning(true);

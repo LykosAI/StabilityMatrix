@@ -1,10 +1,16 @@
 {
   "profiles": {
     "StabilityMatrix (Package)": {
-      "commandName": "MsixPackage"
+      "commandName": "MsixPackage",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Production"
+      }
     },
     "StabilityMatrix (Unpackaged)": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
     }
   }
 }

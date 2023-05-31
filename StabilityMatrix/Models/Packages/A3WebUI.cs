@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Helper.Cache;
 
 namespace StabilityMatrix.Models.Packages;
 
@@ -17,14 +19,8 @@ public class A3WebUI : BaseGitPackage, IArgParsable
     public override string DefaultLaunchArguments => $"{GetVramOption()} {GetXformersOption()}";
     public string RelativeArgsDefinitionScriptPath => "modules.cmd_args";
 
-    public A3WebUI(IGithubApi githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager)
-    {
-    }
-
-    public IEnumerable<LaunchOptionDefinition> ParseLaunchOptions()
-    {
-        throw new NotImplementedException();
-    }
+    
+    public A3WebUI(IGithubApiCache githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager) { }
 
     public override List<LaunchOptionDefinition> LaunchOptions => new()
     {
@@ -60,6 +56,30 @@ public class A3WebUI : BaseGitPackage, IArgParsable
         }
     };
 
+    public override async Task<string> GetLatestVersion()
+    {
+        var release = await GetLatestRelease();
+        return release.TagName!;
+    }
+
+    public override async Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true)
+    {
+        if (isReleaseMode)
+        {
+            var allReleases = await GetAllReleases();
+            return allReleases.Select(r => new PackageVersion {TagName = r.TagName!, ReleaseNotesMarkdown = r.Body});
+        }
+        else // branch mode1
+        {
+            var allBranches = await GetAllBranches();
+            return allBranches.Select(b => new PackageVersion
+            {
+                TagName = $"{b.Name}",
+                ReleaseNotesMarkdown = string.Empty
+            });
+        }
+    }
+
     public override async Task RunPackage(string installedPackagePath, string arguments)
     {
         await SetupVenv(installedPackagePath);
@@ -85,6 +105,7 @@ public class A3WebUI : BaseGitPackage, IArgParsable
         {
             Debug.WriteLine($"Venv process exited with code {i}");
             OnConsoleOutput($"Venv process exited with code {i}");
+            OnExit(i);
         }
 
         var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";

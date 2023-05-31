@@ -181,7 +181,7 @@
                             <TextBlock
                                 Margin="0,5,0,5"
                                 Name="NameTextBlock"
-                                Text="{Binding Name}" />
+                                Text="{Binding DisplayName}" />
                         </StackPanel>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>

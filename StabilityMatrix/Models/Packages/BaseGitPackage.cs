@@ -237,7 +237,7 @@ public abstract class BaseGitPackage : BasePackage
 
     public override async Task<bool> CheckForUpdates(string installedPackageName)
     {
-        var currentVersion = SettingsManager.Settings.InstalledPackages.FirstOrDefault(x => x.Name == installedPackageName)
+        var currentVersion = SettingsManager.Settings.InstalledPackages.FirstOrDefault(x => x.DisplayName == installedPackageName)
             ?.PackageVersion;
         if (string.IsNullOrWhiteSpace(currentVersion))
         {

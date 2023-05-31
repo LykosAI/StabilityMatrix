@@ -12,7 +12,7 @@ public class InstalledPackage
     // Unique ID for the installation
     public Guid Id { get; set; }
     // User defined name
-    public string? Name { get; set; }
+    public string? DisplayName { get; set; }
     // Package name
     public string? PackageName { get; set; }
     // Package version

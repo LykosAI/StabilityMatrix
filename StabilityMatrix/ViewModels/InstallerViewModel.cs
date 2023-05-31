@@ -243,7 +243,7 @@ public partial class InstallerViewModel : ObservableObject
 
         var package = new InstalledPackage
         {
-            Name = SelectedPackage.DisplayName,
+            DisplayName = SelectedPackage.DisplayName,
             Path = SelectedPackage.InstallLocation,
             Id = Guid.NewGuid(),
             PackageName = SelectedPackage.Name,

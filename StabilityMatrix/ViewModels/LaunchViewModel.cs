@@ -127,7 +127,7 @@ public partial class LaunchViewModel : ObservableObject
     public async Task ConfigAsync()
     {
         var activeInstall = SelectedPackage;
-        var name = activeInstall?.Name;
+        var name = activeInstall?.PackageName;
         if (name == null || activeInstall == null)
         {
             logger.LogWarning($"Selected package is null");

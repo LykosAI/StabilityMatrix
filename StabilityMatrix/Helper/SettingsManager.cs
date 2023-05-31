@@ -94,8 +94,10 @@ public class SettingsManager : ISettingsManager
         {
             return;
         }
-        
-        packageData.LaunchArgs = launchArgs;
+        // Only save if not null or default
+        var toSave = launchArgs.Where(opt => !opt.IsEmptyOrDefault()).ToList();
+
+        packageData.LaunchArgs = toSave;
         SaveSettings();
     }
 

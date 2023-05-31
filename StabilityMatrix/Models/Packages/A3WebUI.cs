@@ -8,16 +8,23 @@ using StabilityMatrix.Helper;
 
 namespace StabilityMatrix.Models.Packages;
 
-public class A3WebUI : BaseGitPackage
+public class A3WebUI : BaseGitPackage, IArgParsable
 {
     public override string Name => "stable-diffusion-webui";
     public override string DisplayName { get; set; } = "stable-diffusion-webui";
     public override string Author => "AUTOMATIC1111";
     public override string LaunchCommand => "launch.py";
     public override string DefaultLaunchArguments => $"{GetVramOption()} {GetXformersOption()}";
+    public string RelativeArgsDefinitionScriptPath => "modules.cmd_args";
 
-    
-    public A3WebUI(IGithubApi githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager) { }
+    public A3WebUI(IGithubApi githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager)
+    {
+    }
+
+    public IEnumerable<LaunchOptionDefinition> ParseLaunchOptions()
+    {
+        throw new NotImplementedException();
+    }
 
     public override List<LaunchOptionDefinition> LaunchOptions => new()
     {
@@ -25,34 +32,34 @@ public class A3WebUI : BaseGitPackage
         {
             Name = "API",
             DefaultValue = true,
-            Options = new() { "--api" }
+            Options = new() {"--api"}
         },
         new()
         {
             Name = "Host",
-            Type = "string",
+            Type = LaunchOptionType.String,
             DefaultValue = "localhost",
-            Options = new() { "--host" }
+            Options = new() {"--host"}
         },
         new()
         {
             Name = "Port",
-            Type = "int",
+            Type = LaunchOptionType.Int,
             DefaultValue = 7860,
-            Options = new() { "--port" }
+            Options = new() {"--port"}
         },
         new()
         {
             Name = "VRAM",
-            Options = new() { "--lowvram", "--medvram" }
+            Options = new() {"--lowvram", "--medvram"}
         },
         new()
         {
             Name = "Xformers",
-            Options = new() { "--xformers" }
+            Options = new() {"--xformers"}
         }
     };
-    
+
     public override async Task RunPackage(string installedPackagePath, string arguments)
     {
         await SetupVenv(installedPackagePath);
@@ -64,10 +71,12 @@ public class A3WebUI : BaseGitPackage
             {
                 OnStartupComplete(WebUrl);
             }
+
             if (s.Contains("Running on", StringComparison.OrdinalIgnoreCase))
             {
                 WebUrl = s.Split(" ")[5];
             }
+
             Debug.WriteLine($"process stdout: {s}");
             OnConsoleOutput($"{s}\n");
         }

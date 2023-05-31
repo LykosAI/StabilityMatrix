@@ -5,7 +5,7 @@ namespace StabilityMatrix.Models;
 public class LaunchOptionCard
 {
     public string Title { get; set; }
-    public string Type { get; set; }
+    public LaunchOptionType Type { get; set; }
     public string? Description { get; set; }
     public ObservableCollection<LaunchOption> Options { get; set; } = new();
     

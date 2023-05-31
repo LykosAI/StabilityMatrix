@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -19,6 +20,7 @@ public partial class LaunchOptionsDialog : ContentDialog
         dialogService.GetContentPresenter())
     {
         this.viewModel = viewModel;
+        var sw = new Stopwatch();
         InitializeComponent();
         DataContext = viewModel;
     }

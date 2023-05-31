@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
@@ -15,6 +16,7 @@ using StabilityMatrix.Models.Packages;
 using StabilityMatrix.Python;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.ContentDialogControl;
+using EventManager = StabilityMatrix.Helper.EventManager;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -79,8 +81,15 @@ public partial class LaunchViewModel : ObservableObject
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         SetProcessRunning(false);
+        
+        EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
 
         ToastNotificationManagerCompat.OnActivated += ToastNotificationManagerCompatOnOnActivated;
+    }
+
+    private void OnInstalledPackagesChanged(object? sender, EventArgs e)
+    {
+        OnLoaded();
     }
 
     private void ToastNotificationManagerCompatOnOnActivated(ToastNotificationActivatedEventArgsCompat e)
@@ -222,7 +231,7 @@ public partial class LaunchViewModel : ObservableObject
     private void LoadPackages()
     {
         var packages = settingsManager.Settings.InstalledPackages;
-        if (!packages.Any())
+        if (!packages?.Any() ?? true)
         {
             return;
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
@@ -121,6 +122,16 @@ public partial class SettingsViewModel : ObservableObject
             await dialog.ShowAsync();
         }
     }
+    
+    [RelayCommand]
+    private void OpenAppDataDirectory()
+    {
+        // Open app data in file explorer
+        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var appPath = Path.Combine(appDataPath, "StabilityMatrix");
+        Process.Start("explorer.exe", appPath);
+    }
+
 
     public async Task OnLoaded()
     {

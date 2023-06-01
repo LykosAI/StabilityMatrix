@@ -90,12 +90,15 @@
                             FontSize="16"
                             FontWeight="Bold"
                             Margin="0,8"
-                            Text="Some Other Setting" />
-                        <ComboBox
-                            ItemsSource="{Binding AvailableThemes}"
-                            Margin="8"
-                            SelectedItem="{Binding SelectedTheme, Mode=TwoWay}"
-                            Width="500" />
+                            Text="Directories" />
+                        <ui:Button
+                            Command="{Binding OpenAppDataDirectoryCommand}"
+                            Content="App Data"
+                            Margin="8">
+                            <ui:Button.Icon>
+                                <ui:SymbolIcon Margin="4" Symbol="Open32" />
+                            </ui:Button.Icon>
+                        </ui:Button>
                     </StackPanel>
                 </ui:Card>
             </StackPanel>

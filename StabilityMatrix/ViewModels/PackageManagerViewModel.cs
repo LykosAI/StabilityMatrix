@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using StabilityMatrix.Helper;
@@ -9,6 +11,7 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using Polly;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.ContentDialogControl;
 using EventManager = StabilityMatrix.Helper.EventManager;
@@ -22,6 +25,7 @@ public partial class PackageManagerViewModel : ObservableObject
     private readonly IPackageFactory packageFactory;
     private readonly IDialogFactory dialogFactory;
     private readonly IContentDialogService contentDialogService;
+    private readonly IDialogErrorHandler dialogErrorHandler;
     private const int MinutesToWaitForUpdateCheck = 60;
 
     [ObservableProperty]
@@ -51,13 +55,14 @@ public partial class PackageManagerViewModel : ObservableObject
     private bool updateAvailable;
 
     public PackageManagerViewModel(ILogger<PackageManagerViewModel> logger, ISettingsManager settingsManager,
-        IPackageFactory packageFactory, IDialogFactory dialogFactory, IContentDialogService contentDialogService)
+        IPackageFactory packageFactory, IDialogFactory dialogFactory, IContentDialogService contentDialogService, IDialogErrorHandler dialogErrorHandler)
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         this.dialogFactory = dialogFactory;
         this.contentDialogService = contentDialogService;
+        this.dialogErrorHandler = dialogErrorHandler;
 
         ProgressText = "shrug";
         InstallButtonText = "Install";
@@ -82,13 +87,19 @@ public partial class PackageManagerViewModel : ObservableObject
 
     public async Task OnLoaded()
     {
+        Packages.Clear();
         var installedPackages = settingsManager.Settings.InstalledPackages;
         if (installedPackages.Count == 0)
         {
+            SelectedPackage = new InstalledPackage
+            {
+                DisplayName = "Click \"Add Package\" to install a package"
+            };
+            InstallButtonVisibility = Visibility.Collapsed;
+            
             return;
         }
         
-        Packages.Clear();
         
         foreach (var packageToUpdate in installedPackages)
         {
@@ -159,10 +170,41 @@ public partial class PackageManagerViewModel : ObservableObject
 
         if (result == ContentDialogResult.Primary)
         {
-            DeleteDirectory(SelectedPackage.Path);
-            settingsManager.RemoveInstalledPackage(SelectedPackage);
+            var deleteTask = DeleteDirectoryAsync(SelectedPackage.Path);
+            var taskResult = await dialogErrorHandler.TryAsync(deleteTask,
+                "Some files could not be deleted. Please close any open files in the package directory and try again.");
+            if (taskResult.IsSuccessful)
+            {
+                settingsManager.RemoveInstalledPackage(SelectedPackage);
+            }
             await OnLoaded();
         }
+    }
+    
+    /// <summary>
+    /// Deletes a directory and all of its contents recursively.
+    /// Uses Polly to retry the deletion if it fails, up to 5 times with an exponential backoff.
+    /// </summary>
+    /// <param name="targetDirectory"></param>
+    private Task DeleteDirectoryAsync(string targetDirectory)
+    {
+        var policy = Policy.Handle<IOException>()
+            .WaitAndRetryAsync(3, attempt => TimeSpan.FromMilliseconds(50 * Math.Pow(2, attempt)),
+                onRetry: (exception, calculatedWaitDuration) =>
+                {
+                    logger.LogWarning(
+                        exception, 
+                        "Deletion of {TargetDirectory} failed. Retrying in {CalculatedWaitDuration}", 
+                        targetDirectory, calculatedWaitDuration);
+                });
+
+        return policy.ExecuteAsync(async () =>
+        {
+            await Task.Run(() =>
+            {
+                DeleteDirectory(targetDirectory);
+            });
+        });
     }
     
     private void DeleteDirectory(string targetDirectory)

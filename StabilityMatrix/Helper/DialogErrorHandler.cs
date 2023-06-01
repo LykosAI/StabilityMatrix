@@ -42,7 +42,7 @@ public class DialogErrorHandler : IDialogErrorHandler
     }
     
     /// <summary>
-    /// Attempt to run the given action, showing a generic error snackbar if it fails.
+    /// Attempt to run the given task, showing a generic error snackbar if it fails.
     /// </summary>
     public async Task<TaskResult<T>> TryAsync<T>(Task<T> task, string message, LogLevel level = LogLevel.Error, int timeoutMilliseconds = 5000)
     {
@@ -58,6 +58,31 @@ public class DialogErrorHandler : IDialogErrorHandler
             ShowSnackbarAsync(message, level, timeoutMilliseconds);
             return new TaskResult<T>
             {
+                Exception = e
+            };
+        }
+    }
+    
+    /// <summary>
+    /// Attempt to run the given void task, showing a generic error snackbar if it fails.
+    /// Return a TaskResult with true if the task succeeded, false if it failed.
+    /// </summary>
+    public async Task<TaskResult<bool>> TryAsync(Task task, string message, LogLevel level = LogLevel.Error, int timeoutMilliseconds = 5000)
+    {
+        try
+        {
+            await task;
+            return new TaskResult<bool>
+            {
+                Result = true
+            };
+        }
+        catch (Exception e)
+        {
+            ShowSnackbarAsync(message, level, timeoutMilliseconds);
+            return new TaskResult<bool>
+            {
+                Result = false,
                 Exception = e
             };
         }

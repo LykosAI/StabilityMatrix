@@ -255,7 +255,7 @@ public partial class InstallerViewModel : ObservableObject
         settingsManager.SetActiveInstalledPackage(package);
     }
     
-    private Task<string?> DownloadPackage(string? version = null)
+    private Task<string?> DownloadPackage(string version)
     {
         SelectedPackage.DownloadProgressChanged += SelectedPackageOnProgressChanged;
         SelectedPackage.DownloadComplete += (_, _) => ProgressText = "Download Complete";

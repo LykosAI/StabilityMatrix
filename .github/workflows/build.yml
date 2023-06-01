@@ -32,7 +32,6 @@ jobs:
             ${{ runner.os }}-nuget-
 
       - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
         run: dotnet restore
         
       - name: Build

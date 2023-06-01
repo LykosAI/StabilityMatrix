@@ -10,6 +10,7 @@
     d:DesignHeight="600"
     d:DesignWidth="700"
     WindowBackdropType="Mica"
+    WindowStartupLocation="CenterOwner"
     d:DataContext="{d:DesignInstance Type=viewModels:InstallerViewModel,
                                      IsDesignTimeCreatable=True}"
     mc:Ignorable="d"
@@ -34,6 +35,7 @@
         </converters:ValueConverterGroup>
         
         <converters:BoolNegationConverter x:Key="BoolNegationConverter"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
 
         <xaml:Markdown x:Key="Markdown"
                        DocumentStyle="{StaticResource DocumentStyle}"
@@ -111,8 +113,9 @@
                 <TextBlock Text="{Binding SelectedPackage.DisplayName, FallbackValue=Stable Diffusion Web UI}"
                            FontSize="24" FontWeight="Bold" />
                 <TextBlock Text="{Binding SelectedPackage.ByAuthor, FallbackValue=by Automatic111}"
-                           FontSize="12" Margin="0,5, 0, 5" />
-                <ui:Hyperlink NavigateUri="{Binding SelectedPackage.GithubUrl}">
+                           FontSize="12"/>
+                <ui:Hyperlink NavigateUri="{Binding SelectedPackage.GithubUrl}"
+                              Margin="0,8,0,8">
                     <TextBlock TextWrapping="Wrap">
                         <Run Text="GitHub Page:" />
                         <Run Text="{Binding SelectedPackage.GithubUrl, Mode=OneWay}" TextDecorations="Underline" />
@@ -168,13 +171,31 @@
                 </StackPanel>
                 
                 <Label Content="Install Location" Margin="0,16,0,0"/>
-                <ui:TextBox Text="{Binding InstallPath}" Margin="0,0,0,8"/>
+                <ui:TextBox Text="{Binding InstallPath, UpdateSourceTrigger=PropertyChanged}" 
+                            Margin="0,0,0,8"/>
                 
                 <Label Content="Display Name" Margin="0,16,0,0"/>
-                <ui:TextBox Text="{Binding InstallName}" Margin="0,0,0,8"/>
+                <StackPanel Orientation="Horizontal" 
+                            Visibility="{Binding ShowDuplicateWarning, 
+                                Converter={StaticResource BoolToVisConverter}}">
+                    <ui:SymbolIcon Symbol="ErrorCircle24"
+                                   Margin="8"
+                                   Foreground="{ui:ThemeResource SystemFillColorCriticalBrush}"/>
+                    <TextBlock TextAlignment="Left"
+                               Margin="0,8,8,8"
+                               Foreground="{ui:ThemeResource SystemFillColorCriticalBrush}" 
+                               TextWrapping="Wrap">
+                        <Run Text="An installation with this name already exists."/>
+                        <LineBreak/><Run Text="Please choose a different name or select a different Install Location."/>
+                    </TextBlock>
+                </StackPanel>
+                <ui:TextBox Text="{Binding InstallName, UpdateSourceTrigger=PropertyChanged}" 
+                            Margin="0,0,0,8"/>
                 
                 <ui:Button Content="{Binding InstallButtonText, FallbackValue=Install}"
                            Command="{Binding InstallCommand}"
+                           IsEnabled="{Binding ShowDuplicateWarning, 
+                                Converter={StaticResource BoolNegationConverter}}"
                            Width="100" Height="50"
                            Background="Green"
                            Margin="0,16,0,0"

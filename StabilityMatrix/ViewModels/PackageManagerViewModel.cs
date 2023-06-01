@@ -50,6 +50,9 @@ public partial class PackageManagerViewModel : ObservableObject
     [ObservableProperty] 
     private Visibility installButtonVisibility;
 
+    [ObservableProperty] 
+    private bool isUninstalling;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedPackage))]
     private bool updateAvailable;
@@ -170,6 +173,7 @@ public partial class PackageManagerViewModel : ObservableObject
 
         if (result == ContentDialogResult.Primary)
         {
+            IsUninstalling = true;
             var deleteTask = DeleteDirectoryAsync(SelectedPackage.Path);
             var taskResult = await dialogErrorHandler.TryAsync(deleteTask,
                 "Some files could not be deleted. Please close any open files in the package directory and try again.");
@@ -178,6 +182,7 @@ public partial class PackageManagerViewModel : ObservableObject
                 settingsManager.RemoveInstalledPackage(SelectedPackage);
             }
             await OnLoaded();
+            IsUninstalling = false;
         }
     }
     

@@ -241,6 +241,7 @@ public partial class LaunchViewModel : ObservableObject
         var packages = settingsManager.Settings.InstalledPackages;
         if (!packages?.Any() ?? true)
         {
+            InstalledPackages.Clear();
             return;
         }
 

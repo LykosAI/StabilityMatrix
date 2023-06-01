@@ -87,13 +87,13 @@ public partial class PackageManagerViewModel : ObservableObject
 
     public async Task OnLoaded()
     {
+        Packages.Clear();
         var installedPackages = settingsManager.Settings.InstalledPackages;
         if (installedPackages.Count == 0)
         {
             return;
         }
         
-        Packages.Clear();
         
         foreach (var packageToUpdate in installedPackages)
         {

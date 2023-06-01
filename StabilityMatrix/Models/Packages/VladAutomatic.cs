@@ -38,12 +38,7 @@ public class VladAutomatic : BaseGitPackage
             Name = "Xformers",
             Options = new() { "--xformers" }
         },
-        new()
-        {
-            Name = "Extra Launch Arguments",
-            Type = LaunchOptionType.String,
-            Options = new() {""}
-        }
+        LaunchOptionDefinition.Extras
     };
 
     public override string ExtraLaunchArguments => "--skip-git";

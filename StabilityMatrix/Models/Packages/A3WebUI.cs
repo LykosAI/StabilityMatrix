@@ -54,12 +54,7 @@ public class A3WebUI : BaseGitPackage
             Name = "Xformers",
             Options = new() {"--xformers"}
         },
-        new()
-        {
-            Name = "Extra Launch Arguments",
-            Type = LaunchOptionType.String,
-            Options = new() {""}
-        }
+        LaunchOptionDefinition.Extras
     };
 
     public override async Task<string> GetLatestVersion()

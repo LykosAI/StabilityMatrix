@@ -34,12 +34,7 @@ public class DankDiffusion : BasePackage
             Name = "Xformers",
             Options = new List<string> { "--xformers" }
         },
-        new()
-        {
-            Name = "Extra Launch Arguments",
-            Type = LaunchOptionType.String,
-            Options = new() {""}
-        }
+        LaunchOptionDefinition.Extras
     };
 
     public override Task<string> GetLatestVersion()

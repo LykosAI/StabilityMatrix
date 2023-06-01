@@ -31,4 +31,11 @@ public class LaunchOptionDefinition
     /// List of option flags like "--api", "--lowvram", etc.
     /// </summary>
     public List<string> Options { get; set; }
+    
+    public static LaunchOptionDefinition Extras => new()
+    {
+        Name = "Extra Launch Arguments",
+        Type = LaunchOptionType.String,
+        Options = new() {""}
+    };
 }

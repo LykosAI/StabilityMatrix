@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
+using StabilityMatrix.Python;
 using Wpf.Ui.Appearance;
 using EventManager = StabilityMatrix.Helper.EventManager;
 
@@ -21,15 +22,17 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IPackageFactory packageFactory;
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly ILogger<MainWindowViewModel> logger;
+    private readonly IPyRunner pyRunner;
     private const string DefaultPackageName = "stable-diffusion-webui";
 
     public MainWindowViewModel(ISettingsManager settingsManager, IPackageFactory packageFactory,
-        IPrerequisiteHelper prerequisiteHelper, ILogger<MainWindowViewModel> logger)
+        IPrerequisiteHelper prerequisiteHelper, ILogger<MainWindowViewModel> logger, IPyRunner pyRunner)
     {
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         this.prerequisiteHelper = prerequisiteHelper;
         this.logger = logger;
+        this.pyRunner = pyRunner;
     }
 
     [ObservableProperty] 
@@ -126,6 +129,19 @@ public partial class MainWindowViewModel : ObservableObject
             }
         }
 
+        SubHeaderText = "Installing prerequisites...";
+        IsIndeterminate = true;
+        if (!PyRunner.PipInstalled)
+        {
+            await pyRunner.SetupPip();
+        }
+
+        if (!PyRunner.VenvInstalled)
+        {
+            await pyRunner.InstallPackage("virtualenv");
+        }
+        IsIndeterminate = false;
+
         // get latest version & download & install
         SubHeaderText = "Getting latest version...";
         var latestVersion = await a1111.GetLatestVersion();
@@ -149,9 +165,15 @@ public partial class MainWindowViewModel : ObservableObject
         
         HeaderText = "Installation complete!";
         OneClickInstallProgress = 100;
-        SubHeaderText = "Proceeding to Launch page in 5 seconds...";
-        await Task.Delay(5000);
+        SubHeaderText = "Proceeding to Launch page in 3 seconds...";
+        await Task.Delay(1000);
+        SubHeaderText = "Proceeding to Launch page in 2 seconds...";
+        await Task.Delay(1000);
+        SubHeaderText = "Proceeding to Launch page in 1 second...";
+        await Task.Delay(1000);
+        
         IsAdvancedMode = true;
+        EventManager.Instance.OnOneClickInstallFinished();
     }
 
     private Task<string?> DownloadPackage(BasePackage selectedPackage, string version)

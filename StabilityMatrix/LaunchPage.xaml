@@ -104,7 +104,7 @@
                     FontSize="18"
                     Grid.Column="0"
                     Grid.Row="0"
-                    IsOpen="{Binding isLaunchTeachingTipsOpen, Mode=TwoWay}"
+                    IsOpen="{Binding IsLaunchTeachingTipsOpen, Mode=TwoWay}"
                     Placement="Bottom">
                     <StackPanel Orientation="Horizontal">
                         <Grid HorizontalAlignment="Left">

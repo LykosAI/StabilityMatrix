@@ -85,8 +85,14 @@ public partial class LaunchViewModel : ObservableObject
         SetProcessRunning(false);
         
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
+        EventManager.Instance.OneClickInstallFinished += OnOneClickInstallFinished;
 
         ToastNotificationManagerCompat.OnActivated += ToastNotificationManagerCompatOnOnActivated;
+    }
+
+    private void OnOneClickInstallFinished(object? sender, EventArgs e)
+    {
+        IsLaunchTeachingTipsOpen = true;
     }
 
     private void OnInstalledPackagesChanged(object? sender, EventArgs e)

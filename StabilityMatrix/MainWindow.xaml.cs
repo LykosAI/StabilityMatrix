@@ -42,11 +42,11 @@ namespace StabilityMatrix
             RootNavigation.Navigate(e);
         }
 
-        private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
+        private async void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
         {
             RootNavigation.Navigate(typeof(LaunchPage));
-            mainWindowViewModel.OnLoaded();
             RootNavigation.IsPaneOpen = settingsManager.Settings.IsNavExpanded;
+            await mainWindowViewModel.OnLoaded();
         }
 
         private void RootNavigation_OnPaneOpened(NavigationView sender, RoutedEventArgs args)

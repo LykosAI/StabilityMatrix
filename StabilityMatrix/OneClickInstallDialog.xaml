@@ -1,0 +1,72 @@
+﻿<ui:ContentDialog
+    CloseButtonText="Close"
+    Loaded="OneClickInstallDialog_OnLoaded"
+    Title="Stable Diffusion WebUI Installer"
+    d:DataContext="{d:DesignInstance Type=viewModels:OneClickInstallViewModel,
+                                     IsDesignTimeCreatable=True}"
+    d:DesignHeight="512"
+    d:DesignWidth="640"
+    mc:Ignorable="d"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    x:Class="StabilityMatrix.OneClickInstallDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:StabilityMatrix"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ui:ContentDialog.Resources>
+        <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
+        <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:OneClickInstallDialog}" />
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+    </ui:ContentDialog.Resources>
+
+    <Grid MaxHeight="900" VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="0.25*" />
+        </Grid.RowDefinitions>
+        <TextBlock Text="{Binding HeaderText}"
+                   TextWrapping="Wrap"
+                   VerticalAlignment="Top" HorizontalAlignment="Center"
+                   FontSize="36" FontWeight="Light" Margin="8" />
+        <TextBlock Grid.Row="1"
+                   Text="{Binding SubHeaderText}"
+                   TextWrapping="Wrap" TextAlignment="Center"
+                   VerticalAlignment="Top" HorizontalAlignment="Center"
+                   FontSize="16" FontWeight="Light" Margin="8">
+        </TextBlock>
+
+        <StackPanel Grid.Row="2" VerticalAlignment="Center">
+            <ProgressBar Maximum="100" Value="{Binding OneClickInstallProgress}"
+                         Visibility="{Binding ProgressBarVisibility}"
+                         IsIndeterminate="{Binding IsIndeterminate}"
+                         Margin="16" />
+            <ui:Button
+                Visibility="{Binding ShowInstallButton, Converter={StaticResource BoolToVisConverter}}"
+                Content="Install"
+                Command="{Binding InstallCommand}"
+                FontSize="32"
+                HorizontalAlignment="Center"
+                Appearance="Primary"
+                Margin="16"
+                Padding="16, 8, 16, 8" />
+        </StackPanel>
+
+        <ui:Button Grid.Row="3"
+                Appearance="Transparent"
+                Visibility="{Binding ShowInstallButton, Converter={StaticResource BoolToVisConverter}}"
+                Command="{Binding ToggleAdvancedModeCommand}"
+                Content="Skip first-time setup"
+                FontSize="14"
+                HorizontalAlignment="Center"
+                Margin="16"
+                VerticalAlignment="Bottom" />
+    </Grid>
+
+</ui:ContentDialog>

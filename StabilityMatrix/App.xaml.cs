@@ -9,7 +9,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
-using NLog.Layouts;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
@@ -78,6 +77,7 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<PackageManagerViewModel>();
             serviceCollection.AddSingleton<TextToImageViewModel>();
             serviceCollection.AddTransient<InstallerViewModel>();
+            serviceCollection.AddTransient<OneClickInstallViewModel>();
             
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, VladAutomatic>();

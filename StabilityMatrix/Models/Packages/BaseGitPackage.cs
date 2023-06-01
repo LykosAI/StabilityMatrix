@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using NLog;
 using Refit;
-using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
 using StabilityMatrix.Models.Api;

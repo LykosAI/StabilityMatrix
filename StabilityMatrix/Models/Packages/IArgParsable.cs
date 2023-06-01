@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace StabilityMatrix.Models.Packages;
+﻿namespace StabilityMatrix.Models.Packages;
 
 /// <summary>
 /// Supports parsing launch options from a python script.

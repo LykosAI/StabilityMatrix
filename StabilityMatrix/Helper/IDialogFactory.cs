@@ -7,4 +7,5 @@ public interface IDialogFactory
 {
     LaunchOptionsDialog CreateLaunchOptionsDialog(IEnumerable<LaunchOptionDefinition> definitions, InstalledPackage installedPackage);
     InstallerWindow CreateInstallerWindow();
+    OneClickInstallDialog CreateOneClickInstallDialog();
 }

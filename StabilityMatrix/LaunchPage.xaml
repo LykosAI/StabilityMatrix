@@ -119,7 +119,7 @@
 
                 </ui:Flyout>
                 <ui:Button
-                    Background="Green"
+                    Appearance="Success"
                     Command="{Binding LaunchCommand}"
                     Content="Launch"
                     Grid.Column="0"
@@ -131,7 +131,7 @@
                     Width="72"
                     x:Name="LaunchButton" />
                 <ui:Button
-                    Background="DarkRed"
+                    Appearance="Danger"
                     Command="{Binding StopCommand}"
                     Content="Stop"
                     Grid.Column="0"

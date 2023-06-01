@@ -25,13 +25,9 @@ public class DialogFactory : IDialogFactory
 
     public LaunchOptionsDialog CreateLaunchOptionsDialog(IEnumerable<LaunchOptionDefinition> definitions, InstalledPackage installedPackage)
     {
-        launchOptionsDialogViewModel.Clear();
-        // Create cards
-        launchOptionsDialogViewModel.CardsFromDefinitions(definitions);
         // Load user settings
         var userLaunchArgs = settingsManager.GetLaunchArgs(installedPackage.Id);
-        launchOptionsDialogViewModel.LoadFromLaunchArgs(userLaunchArgs);
-
+        launchOptionsDialogViewModel.Initialize(definitions, userLaunchArgs);
         return new LaunchOptionsDialog(contentDialogService, launchOptionsDialogViewModel);
     }
     

@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
+using NLog;
 using StabilityMatrix.Helper.Cache;
 using StabilityMatrix.Models;
 
@@ -12,6 +13,7 @@ namespace StabilityMatrix.ViewModels;
 
 public partial class LaunchOptionsDialogViewModel : ObservableObject
 {
+    public static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     public ObservableCollection<LaunchOptionCard> Cards { get; set; } = new();
 
     [ObservableProperty]
@@ -67,23 +69,52 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
         }
         return launchArgs;
     }
-    
-    /// <summary>
-    /// Create cards using definitions
-    /// </summary>
-    public void CardsFromDefinitions(IEnumerable<LaunchOptionDefinition> definitions)
+
+    public void Initialize(IEnumerable<LaunchOptionDefinition> definitions, IEnumerable<LaunchOption> launchArgs)
     {
+        Clear();
+        // During card creation, store dict of options with initial values
+        var initialOptions = new Dictionary<string, object>();
+        // Create cards
         foreach (var definition in definitions)
         {
+            // Check that non-bool types have exactly one option
+            if (definition.Type != LaunchOptionType.Bool && definition.Options.Count != 1)
+            {
+                throw new InvalidOperationException(
+                    $"Definition: '{definition.Name}' has {definition.Options.Count} options," +
+                    $" it must have exactly 1 option for non-bool types");
+            }
+            // Store initial values
+            if (definition.InitialValue != null)
+            {
+                // For bool types, initial value can be string (single/multiple options) or bool (single option)
+                if (definition.Type == LaunchOptionType.Bool)
+                {
+                    // For single option, check bool
+                    if (definition.Options.Count == 1 && definition.InitialValue is bool boolValue)
+                    {
+                        initialOptions[definition.Options.First()] = boolValue;
+                    }
+                    // For single/multiple options (string only)
+                    var option = definition.Options.FirstOrDefault(opt => opt.Equals(definition.InitialValue));
+                    if (option == null)
+                    {
+                        throw new InvalidOperationException(
+                            $"Definition '{definition.Name}' has InitialValue of '{definition.InitialValue}', but it was not found in options:" +
+                            $" '{string.Join(",", definition.Options)}'");
+                    }
+                    initialOptions[option] = true;
+                }
+                else
+                {
+                    // Otherwise store initial value for first option
+                    initialOptions[definition.Options.First()] = definition.InitialValue;
+                }
+            }
             Cards.Add(new LaunchOptionCard(definition));
         }
-    }
-    
-    /// <summary>
-    /// Import the current cards options from a list of strings
-    /// </summary>
-    public void LoadFromLaunchArgs(IEnumerable<LaunchOption> launchArgs)
-    {
+        // Load launch args
         var launchArgsDict = launchArgs.ToDictionary(launchArg => launchArg.Name);
         foreach (var card in Cards)
         {
@@ -91,6 +122,17 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
             {
                 var userOption = launchArgsDict.GetValueOrDefault(option.Name);
                 var userValue = userOption?.OptionValue?.ToString();
+                // If no user value, check for initial value
+                if (userValue == null)
+                {
+                    var initialValue = initialOptions.GetValueOrDefault(option.Name);
+                    if (initialValue != null)
+                    {
+                        userValue = initialValue.ToString();
+                        Logger.Info("Using initial value '{InitialValue}' for option '{OptionName}'",
+                            initialValue, option.Name);
+                    }
+                }
                 option.SetValueFromString(userValue);
             }
         }

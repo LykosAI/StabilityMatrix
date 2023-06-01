@@ -25,12 +25,6 @@ public class A3WebUI : BaseGitPackage
     {
         new()
         {
-            Name = "API",
-            DefaultValue = true,
-            Options = new() {"--api"}
-        },
-        new()
-        {
             Name = "Host",
             Type = LaunchOptionType.String,
             DefaultValue = "localhost",
@@ -46,12 +40,25 @@ public class A3WebUI : BaseGitPackage
         new()
         {
             Name = "VRAM",
-            Options = new() {"--lowvram", "--medvram"}
+            InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
+            {
+                Level.Low => "--lowvram",
+                Level.Medium => "--medvram",
+                _ => null
+            },
+            Options = new() { "--lowvram", "--medvram" }
         },
         new()
         {
             Name = "Xformers",
-            Options = new() {"--xformers"}
+            InitialValue = HardwareHelper.HasNvidiaGpu(),
+            Options = new() { "--xformers" }
+        },
+        new()
+        {
+            Name = "API",
+            DefaultValue = true,
+            Options = new() {"--api"}
         },
         LaunchOptionDefinition.Extras
     };

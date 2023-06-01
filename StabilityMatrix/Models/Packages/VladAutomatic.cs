@@ -24,18 +24,25 @@ public class VladAutomatic : BaseGitPackage
     {
         new()
         {
-            Name = "API",
-            Options = new() { "--api" }
-        },
-        new()
-        {
             Name = "VRAM",
+            InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
+            {
+                Level.Low => "--lowvram",
+                Level.Medium => "--medvram",
+                _ => null
+            },
             Options = new() { "--lowvram", "--medvram" }
         },
         new()
         {
             Name = "Xformers",
+            InitialValue = HardwareHelper.HasNvidiaGpu() ? "--xformers" : null,
             Options = new() { "--xformers" }
+        },
+        new()
+        {
+            Name = "API",
+            Options = new() { "--api" }
         },
         LaunchOptionDefinition.Extras
     };

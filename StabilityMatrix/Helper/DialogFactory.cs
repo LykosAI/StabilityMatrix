@@ -10,14 +10,16 @@ public class DialogFactory : IDialogFactory
     private readonly IContentDialogService contentDialogService;
     private readonly LaunchOptionsDialogViewModel launchOptionsDialogViewModel;
     private readonly InstallerViewModel installerViewModel;
+    private readonly OneClickInstallViewModel oneClickInstallViewModel;
     private readonly ISettingsManager settingsManager;
 
     public DialogFactory(IContentDialogService contentDialogService, LaunchOptionsDialogViewModel launchOptionsDialogViewModel, 
-        ISettingsManager settingsManager, InstallerViewModel installerViewModel)
+        ISettingsManager settingsManager, InstallerViewModel installerViewModel, OneClickInstallViewModel oneClickInstallViewModel)
     {
         this.contentDialogService = contentDialogService;
         this.launchOptionsDialogViewModel = launchOptionsDialogViewModel;
         this.installerViewModel = installerViewModel;
+        this.oneClickInstallViewModel = oneClickInstallViewModel;
         this.settingsManager = settingsManager;
     }
 
@@ -31,6 +33,11 @@ public class DialogFactory : IDialogFactory
         launchOptionsDialogViewModel.LoadFromLaunchArgs(userLaunchArgs);
 
         return new LaunchOptionsDialog(contentDialogService, launchOptionsDialogViewModel);
+    }
+    
+    public OneClickInstallDialog CreateOneClickInstallDialog()
+    {
+        return new OneClickInstallDialog(contentDialogService, oneClickInstallViewModel);
     }
     
     public InstallerWindow CreateInstallerWindow()

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
@@ -85,12 +84,12 @@ public partial class LaunchViewModel : ObservableObject
         SetProcessRunning(false);
         
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
-        EventManager.Instance.OneClickInstallFinished += OnOneClickInstallFinished;
+        EventManager.Instance.TeachingTooltipNeeded += OnTeachingTooltipNeeded;
 
         ToastNotificationManagerCompat.OnActivated += ToastNotificationManagerCompatOnOnActivated;
     }
 
-    private void OnOneClickInstallFinished(object? sender, EventArgs e)
+    private void OnTeachingTooltipNeeded(object? sender, EventArgs e)
     {
         IsLaunchTeachingTipsOpen = true;
     }

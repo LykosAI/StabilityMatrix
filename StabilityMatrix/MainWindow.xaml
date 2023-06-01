@@ -20,16 +20,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:converters="clr-namespace:StabilityMatrix.Converters">
-
-    <ui:FluentWindow.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
-        <converters:ValueConverterGroup x:Key="InvertAndVisibilitate">
-            <converters:BoolNegationConverter />
-            <BooleanToVisibilityConverter />
-        </converters:ValueConverterGroup>
-    </ui:FluentWindow.Resources>
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <ui:FluentWindow.TaskbarItemInfo>
         <TaskbarItemInfo ProgressState="{Binding ProgressState}" ProgressValue="{Binding ProgressValue}" />
@@ -46,10 +37,7 @@
                 <TextBlock Margin="16,8" Text="Stability Matrix" />
             </ui:TitleBar.Header>
         </ui:TitleBar>
-        <Grid Grid.Row="1"
-              Visibility="{Binding IsAdvancedMode, 
-                            Converter={StaticResource BoolToVisConverter}, 
-                            FallbackValue=Hidden}">
+        <Grid Grid.Row="1">
             <ui:NavigationView
                 IsBackButtonVisible="Collapsed"
                 PaneClosed="RootNavigation_OnPaneClosed"
@@ -95,52 +83,7 @@
                 </ui:NavigationView.ContentOverlay>
             </ui:NavigationView>
         </Grid>
-        <Grid Grid.Row="1"
-              Visibility="{Binding IsAdvancedMode,
-               Converter={StaticResource InvertAndVisibilitate}, 
-                FallbackValue=Visible}">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="1*"/>
-                <RowDefinition Height="0.25*"/>
-            </Grid.RowDefinitions>
-            <TextBlock Text="{Binding HeaderText}"
-                       TextWrapping="Wrap"
-                       VerticalAlignment="Top" HorizontalAlignment="Center"
-                       FontSize="36" FontWeight="Light" Margin="8"/>
-            <TextBlock Grid.Row="1"
-                       Text="{Binding SubHeaderText}"
-                       TextWrapping="Wrap" TextAlignment="Center"
-                       VerticalAlignment="Top" HorizontalAlignment="Center"
-                       FontSize="16" FontWeight="Light" Margin="8">
-            </TextBlock>
-            
-            <StackPanel Grid.Row="2" VerticalAlignment="Center">
-                <ProgressBar Maximum="100" Value="{Binding OneClickInstallProgress}"
-                             Visibility="{Binding ProgressBarVisibility}"
-                             IsIndeterminate="{Binding IsIndeterminate}"
-                             Margin="16"/>
-                <ui:Button
-                    Visibility="{Binding ShowInstallButton, Converter={StaticResource BoolToVisConverter}}"
-                    Content="{Binding InstallButtonText, FallbackValue=Install}"
-                    Command="{Binding InstallCommand}"
-                    FontSize="32"
-                    HorizontalAlignment="Center"
-                    Margin="16"
-                    Padding="16, 8, 16, 8" />
-            </StackPanel>
-            
-            <Button Grid.Row="3"
-                Background="Transparent"
-                Visibility="{Binding ShowInstallButton, Converter={StaticResource BoolToVisConverter}}"
-                Command="{Binding ToggleAdvancedModeCommand}"
-                Content="Skip first-time setup"
-                FontSize="14"
-                HorizontalAlignment="Center"
-                Margin="16"
-                VerticalAlignment="Bottom" />
-        </Grid>
+        
         <ContentPresenter Grid.Row="1" x:Name="RootContentDialog" />
     </Grid>
 </ui:FluentWindow>

@@ -91,6 +91,12 @@ public partial class PackageManagerViewModel : ObservableObject
         var installedPackages = settingsManager.Settings.InstalledPackages;
         if (installedPackages.Count == 0)
         {
+            SelectedPackage = new InstalledPackage
+            {
+                DisplayName = "Click \"Add Package\" to install a package"
+            };
+            InstallButtonVisibility = Visibility.Collapsed;
+            
             return;
         }
         

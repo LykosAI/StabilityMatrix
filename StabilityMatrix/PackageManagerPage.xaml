@@ -2,6 +2,8 @@
     Background="{DynamicResource ApplicationBackgroundBrush}"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     Loaded="InstallPage_OnLoaded"
+    d:DataContext="{d:DesignInstance Type=viewModels:PackageManagerViewModel,
+                                     IsDesignTimeCreatable=True}"
     d:DesignHeight="450"
     d:DesignWidth="700"
     mc:Ignorable="d"
@@ -11,6 +13,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:StabilityMatrix.Models"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Grid Margin="16">

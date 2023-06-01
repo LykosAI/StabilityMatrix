@@ -19,6 +19,7 @@ namespace StabilityMatrix
             this.viewModel = viewModel;
             InitializeComponent();
             DataContext = viewModel;
+            viewModel.PackageInstalled += (_, _) => Close();
         }
 
         private async void InstallPage_OnLoaded(object sender, RoutedEventArgs e)

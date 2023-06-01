@@ -10,6 +10,7 @@
     d:DesignHeight="600"
     d:DesignWidth="700"
     WindowBackdropType="Mica"
+    WindowStartupLocation="CenterOwner"
     d:DataContext="{d:DesignInstance Type=viewModels:InstallerViewModel,
                                      IsDesignTimeCreatable=True}"
     mc:Ignorable="d"

@@ -75,7 +75,9 @@ public partial class InstallerViewModel : ObservableObject
     public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
 
     public string ReleaseLabelText => IsReleaseMode ? "Version" : "Branch";
-    
+
+    internal event EventHandler? PackageInstalled;
+
 
     public InstallerViewModel(ISettingsManager settingsManager, ILogger<InstallerViewModel> logger, IPyRunner pyRunner,
         IPackageFactory packageFactory)
@@ -104,6 +106,7 @@ public partial class InstallerViewModel : ObservableObject
     private async Task Install()
     {
         await ActuallyInstall();
+        OnPackageInstalled();
     }
 
     public async Task OnLoaded()
@@ -134,7 +137,7 @@ public partial class InstallerViewModel : ObservableObject
         ReleaseNotes = string.Empty;
         AvailableVersions?.Clear();
 
-        // This can swallow exceptions if you don't explicity try/catch
+        // This can swallow exceptions if you don't explicitly try/catch
         // Idk how to make it better tho
         Task.Run(async () =>
         {
@@ -311,5 +314,7 @@ public partial class InstallerViewModel : ObservableObject
         
         EventManager.Instance.OnGlobalProgressChanged(progress);
     }
-    
+
+    private void OnPackageInstalled() => PackageInstalled?.Invoke(this, EventArgs.Empty);
+
 }

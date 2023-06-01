@@ -41,9 +41,11 @@ public partial class OneClickInstallViewModel : ObservableObject
         this.logger = logger;
         this.pyRunner = pyRunner;
         
-        HeaderText = "Click the Install button below to get started!";
+        HeaderText = "Welcome to Stability Matrix!";
         SubHeaderText =
-            "This will install the latest version of Stable Diffusion WebUI by Automatic1111.\nIf you don't know what this means, don't worry, you'll be generating images soon!";
+            "Click the Install button below to get started!\n" +
+            "This will install the latest version of Stable Diffusion WebUI by Automatic1111.\n" +
+            "If you don't know what this means, don't worry, you'll be generating images soon!";
         ShowInstallButton = true;
     }
 

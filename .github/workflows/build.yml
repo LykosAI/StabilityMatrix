@@ -23,6 +23,7 @@ jobs:
           dotnet-version: '6.0.x'
         
       - name: Cache NuGet packages 
+        id: cache
         uses: actions/cache@v1
         with:
           path: ~/.nuget/packages

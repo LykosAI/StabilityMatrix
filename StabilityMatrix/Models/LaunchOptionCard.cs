@@ -8,6 +8,12 @@ public class LaunchOptionCard
     public LaunchOptionType Type { get; set; }
     public string? Description { get; set; }
     public ObservableCollection<LaunchOption> Options { get; set; } = new();
+
+    public LaunchOptionCard(string title, LaunchOptionType type = LaunchOptionType.Bool)
+    {
+        Title = title;
+        Type = type;
+    }
     
     public LaunchOptionCard(LaunchOptionDefinition definition)
     {

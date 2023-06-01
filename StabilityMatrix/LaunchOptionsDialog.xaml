@@ -1,13 +1,12 @@
 ﻿<ui:ContentDialog
     CloseButtonText="Close"
-    DialogHeight="512"
-    DialogWidth="640"
+    DialogHeight="616"
+    DialogWidth="760"
     Loaded="LaunchOptionsDialog_OnLoaded"
-    Title="Launch Options"
     d:DataContext="{d:DesignInstance Type=viewModels:LaunchOptionsDialogViewModel,
                                      IsDesignTimeCreatable=True}"
-    d:DesignHeight="512"
-    d:DesignWidth="512"
+    d:DesignHeight="616"
+    d:DesignWidth="760"
     mc:Ignorable="d"
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
@@ -114,7 +113,8 @@
                                         HorizontalAlignment="Stretch"
                                         Margin="8"
                                         PlaceholderText="{Binding DefaultValue, Mode=OneWay, Converter={StaticResource LaunchOptionConverter}}"
-                                        ValidationMode="InvalidInputOverwritten"
+                                        SpinButtonPlacementMode="Compact"
+                                        ValidationMode="Disabled"
                                         Value="{Binding OptionValue, Converter={StaticResource LaunchOptionIntDoubleConverter}, Mode=TwoWay}"
                                         VerticalAlignment="Stretch" />
                                 </StackPanel>
@@ -144,6 +144,45 @@
         </DataTemplate>
     </ui:ContentDialog.Resources>
 
-    <!--  Options cards  -->
-    <ItemsControl ItemTemplate="{StaticResource LaunchOptionCardDataTemplate}" ItemsSource="{Binding Cards}" />
+    <ui:ContentDialog.Title>
+        <StackPanel
+            HorizontalAlignment="Stretch"
+            Margin="8,0,8,0"
+            Orientation="Vertical">
+            <!--  Title  -->
+            <TextBlock
+                FontSize="24"
+                FontWeight="Bold"
+                Margin="8,0,8,8"
+                Text="{Binding Title}"
+                TextWrapping="Wrap" />
+            <!--  Search box  -->
+            <ui:TextBox
+                HorizontalAlignment="Stretch"
+                IconPlacement="Right"
+                Margin="0,8,0,0"
+                MaxWidth="300"
+                PlaceholderEnabled="True"
+                PlaceholderText="Search..."
+                Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                VerticalAlignment="Top"
+                Visibility="{Binding IsSearchBoxEnabled, Converter={StaticResource BooleanToVisibilityConverter}}"
+                x:Name="SearchBox">
+                <ui:TextBox.Icon>
+                    <ui:SymbolIcon Symbol="Search28" />
+                </ui:TextBox.Icon>
+            </ui:TextBox>
+        </StackPanel>
+    </ui:ContentDialog.Title>
+
+    <!--  Option Cards  -->
+    <ItemsControl
+        HorizontalAlignment="Stretch"
+        HorizontalContentAlignment="Center"
+        ItemTemplate="{StaticResource LaunchOptionCardDataTemplate}"
+        ItemsSource="{Binding FilteredCards}"
+        Margin="16,0,0,0"
+        MaxWidth="400"
+        MinWidth="300" />
+
 </ui:ContentDialog>

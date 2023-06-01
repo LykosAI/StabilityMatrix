@@ -15,7 +15,6 @@ public class VladAutomatic : BaseGitPackage
     public override string DisplayName { get; set; } = "SD.Next Web UI";
     public override string Author => "vladmandic";
     public override string LaunchCommand => "launch.py";
-    public override string DefaultLaunchArguments => $"{GetVramOption()} {GetXformersOption()}";
 
     public VladAutomatic(IGithubApiCache githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager)
     {
@@ -83,23 +82,5 @@ public class VladAutomatic : BaseGitPackage
         var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
 
         VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit, workingDirectory: installedPackagePath);
-    }
-
-    private static string GetVramOption()
-    {
-        var vramGb = HardwareHelper.GetGpuMemoryBytes() / 1024 / 1024 / 1024;
-
-        return vramGb switch
-        {
-            < 4 => "--lowvram",
-            < 8 => "--medvram",
-            _ => string.Empty
-        };
-    }
-
-    private static string GetXformersOption()
-    {
-        var gpuName = HardwareHelper.GetGpuChipName();
-        return gpuName.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase) ? "--xformers" : string.Empty;
     }
 }

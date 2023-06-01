@@ -93,6 +93,4 @@ public class DankDiffusion : BasePackage
     {
         throw new System.NotImplementedException();
     }
-
-    public override string DefaultLaunchArguments => "";
 }

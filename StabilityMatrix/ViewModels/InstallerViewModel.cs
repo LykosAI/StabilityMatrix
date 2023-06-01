@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -71,6 +72,9 @@ public partial class InstallerViewModel : ObservableObject
 
     [ObservableProperty] 
     private bool isReleaseModeEnabled;
+
+    [ObservableProperty]
+    private bool showDuplicateWarning;
 
     public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
 
@@ -185,6 +189,18 @@ public partial class InstallerViewModel : ObservableObject
         OnSelectedPackageChanged(SelectedPackage);
     }
 
+    partial void OnInstallNameChanged(string oldValue, string newValue)
+    {
+        var path = Path.GetFullPath($"{InstallPath}\\{newValue}");
+        ShowDuplicateWarning = settingsManager.Settings.InstalledPackages.Any(p => p.Path.Equals(path));
+    }
+
+    partial void OnInstallPathChanged(string oldValue, string newValue)
+    {
+        var path = Path.GetFullPath($"{newValue}\\{InstallName}");
+        ShowDuplicateWarning = settingsManager.Settings.InstalledPackages.Any(p => p.Path.Equals(path));
+    }
+
     partial void OnSelectedVersionChanged(PackageVersion? value)
     {
         ReleaseNotes = value?.ReleaseNotesMarkdown ?? string.Empty;
@@ -256,6 +272,8 @@ public partial class InstallerViewModel : ObservableObject
         };
         settingsManager.AddInstalledPackage(package);
         settingsManager.SetActiveInstalledPackage(package);
+
+        ProgressValue = 0;
     }
     
     private Task<string?> DownloadPackage(string version)

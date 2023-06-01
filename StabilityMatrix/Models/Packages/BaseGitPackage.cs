@@ -165,7 +165,7 @@ public abstract class BaseGitPackage : BasePackage
         return version;
     }
     
-    private void UnzipPackage(bool isUpdate = false)
+    public void UnzipPackage(bool isUpdate = false)
     {
         if (isUpdate)
         {

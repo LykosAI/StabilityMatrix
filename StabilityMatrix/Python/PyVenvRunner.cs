@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using NLog;
 using StabilityMatrix.Helper;
@@ -22,11 +23,15 @@ public class PyVenvRunner : IDisposable
     /// </summary>
     public string RootPath { get; private set; }
 
-
     /// <summary>
     /// The path to the python executable.
     /// </summary>
     public string PythonPath => RootPath + @"\Scripts\python.exe";
+
+    /// <summary>
+    /// The path to the pip executable.
+    /// </summary>
+    public string PipPath => RootPath + @"\Scripts\pip.exe";
 
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -66,6 +71,42 @@ public class PyVenvRunner : IDisposable
             output += await venvProc.StandardError.ReadToEndAsync();
             throw new InvalidOperationException($"Venv creation failed with code {returnCode}: {output}");
         }
+    }
+
+    /// <summary>
+    /// Return the pip install command for torch, automatically chooses between Cuda and CPU.
+    /// </summary>
+    /// <returns></returns>
+    public string GetTorchInstallCommand()
+    {
+        if (HardwareHelper.HasNvidiaGpu())
+        {
+            return "torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118";
+        }
+
+        return "torch torchvision torchaudio";
+    }
+
+    /// <summary>
+    /// Install torch with pip, automatically chooses between Cuda and CPU.
+    /// </summary>
+    public async Task InstallTorch(Action<string?>? outputDataReceived = null)
+    {
+        await PipInstall(GetTorchInstallCommand(), outputDataReceived: outputDataReceived);
+    }
+    
+    /// <summary>
+    /// Run a pip install command. Waits for the process to exit.
+    /// workingDirectory defaults to RootPath.
+    /// </summary>
+    public async Task PipInstall(string args, string? workingDirectory = null, Action<string?>? outputDataReceived = null)
+    {
+        if (!File.Exists(PipPath))
+        {
+            throw new FileNotFoundException("pip not found", PipPath);
+        }
+        Process = ProcessRunner.StartProcess(PythonPath, $"-m pip install {args}", workingDirectory ?? RootPath, outputDataReceived);
+        await ProcessRunner.WaitForExitConditionAsync(Process);
     }
 
     public void RunDetached(string arguments, Action<string?>? outputDataReceived, Action<int>? onExit = null,

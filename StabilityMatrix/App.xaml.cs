@@ -67,6 +67,7 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<LaunchPage>();
             serviceCollection.AddTransient<PackageManagerPage>();
             serviceCollection.AddTransient<TextToImagePage>();
+            serviceCollection.AddTransient<CheckpointManagerPage>();
             serviceCollection.AddTransient<InstallerWindow>();
             
             serviceCollection.AddTransient<MainWindowViewModel>();
@@ -78,6 +79,7 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<TextToImageViewModel>();
             serviceCollection.AddTransient<InstallerViewModel>();
             serviceCollection.AddTransient<OneClickInstallViewModel>();
+            serviceCollection.AddTransient<CheckpointManagerViewModel>();
             
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, VladAutomatic>();

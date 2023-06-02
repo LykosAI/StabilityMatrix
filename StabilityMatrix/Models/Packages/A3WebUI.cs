@@ -16,7 +16,6 @@ public class A3WebUI : BaseGitPackage
     public override string DisplayName { get; set; } = "stable-diffusion-webui";
     public override string Author => "AUTOMATIC1111";
     public override string LaunchCommand => "launch.py";
-    public override bool ShouldIgnoreReleases => false;
     public string RelativeArgsDefinitionScriptPath => "modules.cmd_args";
 
     

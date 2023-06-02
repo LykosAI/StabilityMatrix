@@ -12,7 +12,6 @@ using NLog;
 using Octokit;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
-using StabilityMatrix.Models.Api;
 using StabilityMatrix.Python;
 using ApiException = Refit.ApiException;
 using FileMode = System.IO.FileMode;

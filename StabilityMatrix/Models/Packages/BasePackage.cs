@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Octokit;
-using StabilityMatrix.Models.Api;
 
-namespace StabilityMatrix.Models;
+namespace StabilityMatrix.Models.Packages;
 
 public abstract class BasePackage
 {
@@ -14,7 +13,7 @@ public abstract class BasePackage
     public abstract string Author { get; }
     public abstract string GithubUrl { get; }
     public abstract string LaunchCommand { get; }
-    public abstract bool ShouldIgnoreReleases { get; }
+    public virtual bool ShouldIgnoreReleases => false;
     public virtual bool UpdateAvailable { get; set; }
     public abstract Task<string?> DownloadPackage(string version, bool isCommitHash, bool isUpdate = false);
     public abstract Task InstallPackage(bool isUpdate = false);

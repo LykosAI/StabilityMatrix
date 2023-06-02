@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.Packages;
 using StabilityMatrix.Python;
 using EventManager = StabilityMatrix.Helper.EventManager;
 

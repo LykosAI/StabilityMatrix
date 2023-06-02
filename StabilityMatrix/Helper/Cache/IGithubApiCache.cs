@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Octokit;
 using Refit;
-using StabilityMatrix.Models.Api;
 
 namespace StabilityMatrix.Helper.Cache;
 

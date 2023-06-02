@@ -27,7 +27,8 @@
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:xaml="clr-namespace:Markdown.Xaml;assembly=Markdown.Xaml"
-    xmlns:octokit="clr-namespace:Octokit;assembly=Octokit">
+    xmlns:octokit="clr-namespace:Octokit;assembly=Octokit"
+    xmlns:packages="clr-namespace:StabilityMatrix.Models.Packages">
 
     <ui:FluentWindow.Resources>
         <converters:ValueConverterGroup x:Key="InvertAndVisibilitate">
@@ -111,7 +112,7 @@
                 </ListView.Template>
 
                 <ListView.ItemTemplate>
-                    <DataTemplate DataType="{x:Type models:BasePackage}">
+                    <DataTemplate DataType="{x:Type packages:BasePackage}">
                         <StackPanel Margin="8" VerticalAlignment="Top">
                             <TextBlock Margin="0,5,0,5" Text="{Binding DisplayName}" />
                             <TextBlock Margin="0,0,0,5" Text="{Binding ByAuthor}" />

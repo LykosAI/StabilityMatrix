@@ -4,8 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using Octokit;
-using StabilityMatrix.Api;
-using StabilityMatrix.Models.Api;
 
 namespace StabilityMatrix.Helper.Cache;
 

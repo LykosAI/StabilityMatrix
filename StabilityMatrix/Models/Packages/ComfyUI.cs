@@ -60,11 +60,6 @@ public class ComfyUI : BaseGitPackage
     {
         UnzipPackage(isUpdate);
         
-        if (isUpdate)
-        {
-            OnUpdateComplete("Update complete");
-            return;
-        }
         // Setup dependencies
         OnInstallProgressChanged(-1); // Indeterminate progress bar
         // Setup venv

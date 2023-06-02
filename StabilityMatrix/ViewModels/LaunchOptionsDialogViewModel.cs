@@ -96,15 +96,18 @@ public partial class LaunchOptionsDialogViewModel : ObservableObject
                     {
                         initialOptions[definition.Options.First()] = boolValue;
                     }
-                    // For single/multiple options (string only)
-                    var option = definition.Options.FirstOrDefault(opt => opt.Equals(definition.InitialValue));
-                    if (option == null)
+                    else
                     {
-                        throw new InvalidOperationException(
-                            $"Definition '{definition.Name}' has InitialValue of '{definition.InitialValue}', but it was not found in options:" +
-                            $" '{string.Join(",", definition.Options)}'");
+                        // For single/multiple options (string only)
+                        var option = definition.Options.FirstOrDefault(opt => opt.Equals(definition.InitialValue));
+                        if (option == null)
+                        {
+                            throw new InvalidOperationException(
+                                $"Definition '{definition.Name}' has InitialValue of '{definition.InitialValue}', but it was not found in options:" +
+                                $" '{string.Join(",", definition.Options)}'");
+                        }
+                        initialOptions[option] = true;
                     }
-                    initialOptions[option] = true;
                 }
                 else
                 {

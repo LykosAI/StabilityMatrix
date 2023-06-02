@@ -279,7 +279,7 @@ public abstract class BaseGitPackage : BasePackage
         {
             var releases = await GetAllReleases();
             var latestRelease = releases.First();
-            await DownloadPackage(latestRelease.TagName, false);
+            await DownloadPackage(latestRelease.TagName, false, true);
             await InstallPackage(true);
             return latestRelease.TagName;
         }

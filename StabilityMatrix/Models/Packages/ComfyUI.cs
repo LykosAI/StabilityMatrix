@@ -68,17 +68,18 @@ public class ComfyUI : BaseGitPackage
         await SetupVenv(InstallLocation);
         var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
         
-        void OnConsoleOutput(string? s)
+        void HandleConsoleOutput(string? s)
         {
             Debug.WriteLine($"venv stdout: {s}");
+            OnConsoleOutput(s);
         }
         
         // Install torch
         Logger.Debug("Starting torch install...");
-        await venvRunner.PipInstall(venvRunner.GetTorchInstallCommand(), InstallLocation, OnConsoleOutput);
+        await venvRunner.PipInstall(venvRunner.GetTorchInstallCommand(), InstallLocation, HandleConsoleOutput);
         // Install requirements
         Logger.Debug("Starting requirements install...");
-        await venvRunner.PipInstall("-r requirements.txt", InstallLocation, OnConsoleOutput);
+        await venvRunner.PipInstall("-r requirements.txt", InstallLocation, HandleConsoleOutput);
         
         Logger.Debug("Finished installing requirements!");
         if (isUpdate)

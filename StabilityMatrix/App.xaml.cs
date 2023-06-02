@@ -26,6 +26,8 @@ using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Services;
 using Application = System.Windows.Application;
+using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
+using SnackbarService = StabilityMatrix.Helper.SnackbarService;
 
 namespace StabilityMatrix
 {
@@ -59,7 +61,7 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<IPageService, PageService>();
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
             serviceCollection.AddSingleton<PageContentDialogService>();
-            serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
+            serviceCollection.AddSingleton<Wpf.Ui.Contracts.ISnackbarService, Wpf.Ui.Services.SnackbarService>();
             serviceCollection.AddSingleton<IPackageFactory, PackageFactory>();
             serviceCollection.AddSingleton<IPyRunner, PyRunner>();
             serviceCollection.AddTransient<IDialogFactory, DialogFactory>();
@@ -84,10 +86,10 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, VladAutomatic>();
             serviceCollection.AddSingleton<BasePackage, ComfyUI>();
-            serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
+            serviceCollection.AddSingleton<Wpf.Ui.Contracts.ISnackbarService, Wpf.Ui.Services.SnackbarService>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
             serviceCollection.AddSingleton<IPrerequisiteHelper, PrerequisiteHelper>();
-            serviceCollection.AddSingleton<IDialogErrorHandler, DialogErrorHandler>();
+            serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddTransient<IGitHubClient, GitHubClient>(_ =>
             {
                 var client = new GitHubClient(new ProductHeaderValue("StabilityMatrix"));

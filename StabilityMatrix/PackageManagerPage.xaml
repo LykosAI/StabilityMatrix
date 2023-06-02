@@ -1,5 +1,4 @@
 ﻿<Page
-    Background="{DynamicResource ApplicationBackgroundBrush}"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     Loaded="InstallPage_OnLoaded"
     d:DataContext="{d:DesignInstance Type=viewModels:PackageManagerViewModel,

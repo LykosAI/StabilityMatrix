@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Threading;
 using System.Windows.Shell;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Helper;
 using Wpf.Ui.Appearance;
+using Wpf.Ui.Controls.Window;
 using EventManager = StabilityMatrix.Helper.EventManager;
 
 namespace StabilityMatrix.ViewModels;
@@ -87,15 +89,24 @@ public partial class MainWindowViewModel : ObservableObject
 
     private void SetTheme()
     {
-        var theme = settingsManager.Settings.Theme;
-        switch (theme)
+        Application.Current.Dispatcher.BeginInvoke(() =>
         {
-            case "Dark":
-                Theme.Apply(ThemeType.Dark);
-                break;
-            case "Light":
-                Theme.Apply(ThemeType.Light);
-                break;
-        }
+            if (Application.Current.MainWindow != null)
+            {
+                WindowBackdrop.ApplyBackdrop(Application.Current.MainWindow,
+                    settingsManager.Settings.WindowBackdropType);
+            }
+
+            var theme = settingsManager.Settings.Theme;
+            switch (theme)
+            {
+                case "Dark":
+                    Theme.Apply(ThemeType.Dark, settingsManager.Settings.WindowBackdropType);
+                    break;
+                case "Light":
+                    Theme.Apply(ThemeType.Light, settingsManager.Settings.WindowBackdropType);
+                    break;
+            }
+        });
     }
 }

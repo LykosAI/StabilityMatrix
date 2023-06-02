@@ -1,5 +1,4 @@
 <ui:FluentWindow
-    Background="{DynamicResource ApplicationBackgroundBrush}"
     ExtendsContentIntoTitleBar="True"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     Height="700"
@@ -7,11 +6,12 @@
     Loaded="MainWindow_OnLoaded"
     Title="Stability Matrix"
     Width="1100"
-    WindowBackdropType="Mica"
+    WindowBackdropType="Acrylic"
     d:DesignHeight="500"
     d:DesignWidth="700"
     d:DataContext="{d:DesignInstance Type=viewModels:MainWindowViewModel,
                                      IsDesignTimeCreatable=True}"
+    d:Background="#FF202020"
     mc:Ignorable="d"
     x:Class="StabilityMatrix.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -32,7 +32,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <ui:TitleBar Background="#191919" Foreground="White">
+        <ui:TitleBar Background="{ui:ThemeResource ApplicationBackgroundBrush}">
             <ui:TitleBar.Header>
                 <TextBlock Margin="16,8" Text="Stability Matrix" />
             </ui:TitleBar.Header>

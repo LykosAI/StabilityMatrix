@@ -1,5 +1,4 @@
 <Page
-    Background="{DynamicResource ApplicationBackgroundBrush}"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     Loaded="SettingsPage_OnLoaded"
     d:DataContext="{d:DesignInstance Type=viewModels:SettingsViewModel,
@@ -32,6 +31,11 @@
                             ItemsSource="{Binding AvailableThemes}"
                             Margin="8"
                             SelectedItem="{Binding SelectedTheme, Mode=TwoWay}"
+                            Width="500" />
+                        <ComboBox
+                            ItemsSource="{Binding AvailableBackdrops}"
+                            Margin="8"
+                            SelectedItem="{Binding WindowBackdropType, Mode=TwoWay}"
                             Width="500" />
                     </StackPanel>
                 </ui:Card>

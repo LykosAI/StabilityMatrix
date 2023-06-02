@@ -6,6 +6,7 @@ using System.Windows.Shell;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Helper;
 using Wpf.Ui.Appearance;
+using Wpf.Ui.Controls.Window;
 using EventManager = StabilityMatrix.Helper.EventManager;
 
 namespace StabilityMatrix.ViewModels;
@@ -91,10 +92,10 @@ public partial class MainWindowViewModel : ObservableObject
         switch (theme)
         {
             case "Dark":
-                Theme.Apply(ThemeType.Dark);
+                Theme.Apply(ThemeType.Dark, WindowBackdropType.Acrylic);
                 break;
             case "Light":
-                Theme.Apply(ThemeType.Light);
+                Theme.Apply(ThemeType.Light, WindowBackdropType.Acrylic);
                 break;
         }
     }

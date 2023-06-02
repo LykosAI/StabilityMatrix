@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using StabilityMatrix.Models;
+using Wpf.Ui.Controls.Window;
 
 namespace StabilityMatrix.Helper;
 
@@ -106,17 +108,27 @@ public class SettingsManager : ISettingsManager
         SaveSettings();
     }
 
+    public void SetWindowBackdropType(WindowBackdropType backdropType)
+    {
+        Settings.WindowBackdropType = backdropType;
+        SaveSettings();
+    }
+
     private void LoadSettings()
     {
         var settingsContent = File.ReadAllText(SettingsPath);
-        Settings = JsonSerializer.Deserialize<Settings>(settingsContent)!;
+        Settings = JsonSerializer.Deserialize<Settings>(settingsContent, new JsonSerializerOptions
+        {
+            Converters = { new JsonStringEnumConverter() }
+        })!;
     }
 
     private void SaveSettings()
     {
         var json = JsonSerializer.Serialize(Settings, new JsonSerializerOptions
         {
-            WriteIndented = true
+            WriteIndented = true,
+            Converters = { new JsonStringEnumConverter() }
         });
         File.WriteAllText(SettingsPath, json);
     }

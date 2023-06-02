@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using StabilityMatrix.Models;
+using Wpf.Ui.Controls.Window;
 
 namespace StabilityMatrix.Helper;
 
@@ -16,4 +17,5 @@ public interface ISettingsManager
     void SetLastUpdateCheck(InstalledPackage package);
     List<LaunchOption> GetLaunchArgs(Guid packageId);
     void SaveLaunchArgs(Guid packageId, List<LaunchOption> launchArgs);
+    void SetWindowBackdropType(WindowBackdropType backdropType);
 }

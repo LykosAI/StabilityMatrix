@@ -199,7 +199,7 @@ public partial class InstallerViewModel : ObservableObject
                 {
                     AvailableCommits = new ObservableCollection<GitHubCommit>(commits);
                     SelectedCommit = AvailableCommits[0];
-                    SelectedVersion = AvailableVersions.First(x => x.TagName == "master");
+                    SelectedVersion = AvailableVersions.FirstOrDefault(x => x.TagName == "master");
                 });
             }
         });

@@ -13,6 +13,7 @@ using StabilityMatrix.Models;
 using StabilityMatrix.Python;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Contracts;
+using Wpf.Ui.Controls.Window;
 using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
 
 namespace StabilityMatrix.ViewModels;
@@ -29,6 +30,15 @@ public partial class SettingsViewModel : ObservableObject
         "Dark",
         "System",
     };
+
+    public ObservableCollection<WindowBackdropType> AvailableBackdrops => new()
+    {
+        WindowBackdropType.Acrylic,
+        WindowBackdropType.Auto,
+        WindowBackdropType.Mica,
+        WindowBackdropType.None,
+        WindowBackdropType.Tabbed
+    };
     private readonly IContentDialogService contentDialogService;
     private readonly IA3WebApi a3WebApi;
 
@@ -40,25 +50,27 @@ public partial class SettingsViewModel : ObservableObject
         this.a3WebApi = a3WebApi;
         this.pyRunner = pyRunner;
         SelectedTheme = settingsManager.Settings.Theme ?? "Dark";
+        WindowBackdropType = settingsManager.Settings.WindowBackdropType;
     }
 
     [ObservableProperty]
     private string selectedTheme;
+
+    [ObservableProperty] 
+    private WindowBackdropType windowBackdropType;
     
     partial void OnSelectedThemeChanged(string value)
     {
         settingsManager.SetTheme(value);
-        switch (value)
+        ApplyTheme(value);
+    }
+
+    partial void OnWindowBackdropTypeChanged(WindowBackdropType oldValue, WindowBackdropType newValue)
+    {
+        settingsManager.SetWindowBackdropType(newValue);
+        if (Application.Current.MainWindow != null)
         {
-            case "Light":
-                Theme.Apply(ThemeType.Light);
-                break;
-            case "Dark":
-                Theme.Apply(ThemeType.Dark);
-                break;
-            case "System":
-                Theme.Apply(SystemInfo.ShouldUseDarkMode() ? ThemeType.Dark : ThemeType.Light);
-                break;
+            WindowBackdrop.ApplyBackdrop(Application.Current.MainWindow, newValue);
         }
     }
 
@@ -133,6 +145,21 @@ public partial class SettingsViewModel : ObservableObject
         Process.Start("explorer.exe", appPath);
     }
 
+    private void ApplyTheme(string value)
+    {
+        switch (value)
+        {
+            case "Light":
+                Theme.Apply(ThemeType.Light, WindowBackdropType);
+                break;
+            case "Dark":
+                Theme.Apply(ThemeType.Dark, WindowBackdropType);
+                break;
+            case "System":
+                Theme.Apply(SystemInfo.ShouldUseDarkMode() ? ThemeType.Dark : ThemeType.Light, WindowBackdropType);
+                break;
+        }
+    }
 
     public async Task OnLoaded()
     {

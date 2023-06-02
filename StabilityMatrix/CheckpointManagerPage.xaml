@@ -27,7 +27,10 @@
 
     <Page.Resources>
         <DataTemplate DataType="{x:Type models:CheckpointFolderCard}" x:Key="CheckpointFolderCardGridDataTemplate">
-            <ui:CardExpander Header="{Binding Name}" IsExpanded="True">
+            <ui:CardExpander
+                Header="{Binding Name}"
+                IsExpanded="True"
+                Margin="8">
                 <ui:VirtualizingGridView>
                     <ItemsControl ItemsSource="{Binding CheckpointCards}">
                         <ItemsControl.ItemTemplate>
@@ -80,5 +83,5 @@
         HorizontalContentAlignment="Center"
         ItemTemplate="{StaticResource CheckpointFolderCardDataTemplate}"
         ItemsSource="{Binding CheckpointFolderCards}"
-        Margin="16,0,0,0" />
+        Margin="16,16,16,16" />
 </Page>

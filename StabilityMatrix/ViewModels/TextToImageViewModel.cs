@@ -10,7 +10,6 @@ using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models.Api;
 using StabilityMatrix.Services;
-using Wpf.Ui.Contracts;
 
 namespace StabilityMatrix.ViewModels;
 

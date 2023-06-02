@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using StabilityMatrix.Helper;
@@ -252,8 +250,8 @@ public partial class PackageManagerViewModel : ObservableObject
             SelectedPackage.UpdateAvailable = false;
             UpdateAvailable = false;
         };
-        var updateResult = await package.Update();
-        settingsManager.UpdatePackageVersionNumber(SelectedPackage.DisplayName!, updateResult!);
+        var updateResult = await package.Update(SelectedPackage);
+        settingsManager.UpdatePackageVersionNumber(SelectedPackage.Id, updateResult);
         await OnLoaded();
     }
 

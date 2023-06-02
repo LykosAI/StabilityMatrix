@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using StabilityMatrix.Models.Api;
+using Octokit;
 
-namespace StabilityMatrix.Models;
+namespace StabilityMatrix.Models.Packages;
 
 public abstract class BasePackage
 {
@@ -12,23 +13,24 @@ public abstract class BasePackage
     public abstract string Author { get; }
     public abstract string GithubUrl { get; }
     public abstract string LaunchCommand { get; }
+    public virtual bool ShouldIgnoreReleases => false;
     public virtual bool UpdateAvailable { get; set; }
-    public abstract Task<string?> DownloadPackage(string version, bool isUpdate = false);
+    public abstract Task<string?> DownloadPackage(string version, bool isCommitHash, bool isUpdate = false);
     public abstract Task InstallPackage(bool isUpdate = false);
     public abstract Task RunPackage(string installedPackagePath, string arguments);
     public abstract Task Shutdown();
     public abstract Task<bool> CheckForUpdates(string installedPackageName);
-    public abstract Task<string> Update();
-    public abstract Task<IEnumerable<GithubRelease>> GetReleaseTags();
+    public abstract Task<string> Update(InstalledPackage installedPackage);
+    public abstract Task<IOrderedEnumerable<Release>> GetReleaseTags();
 
     public abstract List<LaunchOptionDefinition> LaunchOptions { get; }
     public virtual string? ExtraLaunchArguments { get; set; } = null;
     
     public abstract Task<string> GetLatestVersion();
     public abstract Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true);
-    public abstract Task<IEnumerable<GithubCommit>> GetAllCommits(string branch, int page = 1, int perPage = 10);
-    public abstract Task<IEnumerable<GithubBranch>> GetAllBranches();
-    public abstract Task<IEnumerable<GithubRelease>> GetAllReleases();
+    public abstract Task<IReadOnlyList<GitHubCommit>?> GetAllCommits(string branch, int page = 1, int perPage = 10);
+    public abstract Task<IReadOnlyList<Branch>> GetAllBranches();
+    public abstract Task<IOrderedEnumerable<Release>> GetAllReleases();
 
     public abstract string DownloadLocation { get; }
     public abstract string InstallLocation { get; set; }

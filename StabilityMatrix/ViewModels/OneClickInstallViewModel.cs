@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.Packages;
 using StabilityMatrix.Python;
 using EventManager = StabilityMatrix.Helper.EventManager;
 
@@ -136,7 +137,7 @@ public partial class OneClickInstallViewModel : ObservableObject
         selectedPackage.DownloadProgressChanged += SelectedPackageOnProgressChanged;
         selectedPackage.DownloadComplete += (_, _) => SubHeaderText = "Download Complete";
         SubHeaderText = "Downloading package...";
-        return selectedPackage.DownloadPackage(version: version);
+        return selectedPackage.DownloadPackage(version, false);
     }
 
     private async Task InstallPackage(BasePackage selectedPackage)

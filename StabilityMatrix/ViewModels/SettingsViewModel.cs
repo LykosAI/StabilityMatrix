@@ -34,9 +34,7 @@ public partial class SettingsViewModel : ObservableObject
     public ObservableCollection<WindowBackdropType> AvailableBackdrops => new()
     {
         WindowBackdropType.Acrylic,
-        WindowBackdropType.Auto,
         WindowBackdropType.Mica,
-        WindowBackdropType.None,
         WindowBackdropType.Tabbed
     };
     private readonly IContentDialogService contentDialogService;

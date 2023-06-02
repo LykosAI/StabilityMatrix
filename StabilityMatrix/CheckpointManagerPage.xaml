@@ -1,72 +1,89 @@
 ﻿<Page
     Background="{DynamicResource ApplicationBackgroundBrush}"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-    d:DataContext="{d:DesignInstance Type=viewModels:CheckpointManagerViewModel,
+    Loaded="CheckpointManagerPage_OnLoaded"
+    d:DataContext="{d:DesignInstance Type=designData:MockCheckpointManagerViewModel,
                                      IsDesignTimeCreatable=True}"
-    d:DesignHeight="450"
-    d:DesignWidth="700"
+    d:DesignHeight="500"
+    d:DesignWidth="650"
     mc:Ignorable="d"
     x:Class="StabilityMatrix.CheckpointManagerPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:designData="clr-namespace:StabilityMatrix.DesignData"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:StabilityMatrix.Models"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <d:DesignProperties.DataContext>
-        <viewModels:CheckpointManagerViewModel>
-            <viewModels:CheckpointManagerViewModel.CheckpointFolderCards>
-                <models:CheckpointFolderCard Name="hi" />
-                <models:CheckpointFolderCard Name="hi" />
-                <models:CheckpointFolderCard Name="hi" />
-            </viewModels:CheckpointManagerViewModel.CheckpointFolderCards>
-        </viewModels:CheckpointManagerViewModel>
-    </d:DesignProperties.DataContext>
-
     <Page.Resources>
-        <DataTemplate DataType="{x:Type models:CheckpointFolderCard}" x:Key="CheckpointFolderCardGridDataTemplate">
+        <DataTemplate DataType="{x:Type models:CheckpointFile}" x:Key="CheckpointCardDataTemplate">
+            <ui:Card Width="256">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="0.2*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Vertical">
+                        <ui:Image
+                            CornerRadius="4"
+                            Margin="4,4,4,8"
+                            MinHeight="256"
+                            MinWidth="200"
+                            Source="{Binding PreviewImage}"
+                            Stretch="UniformToFill"
+                            Visibility="Collapsed"
+                            Width="128" />
+                        <TextBlock
+                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                            Margin="0,0,0,0"
+                            Text="{Binding Title}"
+                            VerticalAlignment="Center" />
+                        <TextBlock
+                            FontSize="11"
+                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                            Margin="0,2,0,0"
+                            Text="{Binding FileName}"
+                            VerticalAlignment="Center" />
+                    </StackPanel>
+                    <ui:DropDownButton Grid.Column="1" Margin="16,0,0,0">
+                        <ui:DropDownButton.Style>
+                            <Style BasedOn="{StaticResource {x:Type ui:DropDownButton}}" TargetType="{x:Type ui:DropDownButton}">
+                                <Setter Property="Visibility" Value="Hidden" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ui:Card}}}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:DropDownButton.Style>
+                        <ui:SymbolIcon Symbol="ChevronDown24" />
+                    </ui:DropDownButton>
+                </Grid>
+            </ui:Card>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type models:CheckpointFolder}" x:Key="CheckpointFolderCardGridDataTemplate">
             <ui:CardExpander
-                Header="{Binding Name}"
+                AllowDrop="True"
+                Drop="FolderCard_OnDrop"
+                Header="{Binding Title}"
                 IsExpanded="True"
-                Margin="8">
-                <ui:VirtualizingGridView>
-                    <ItemsControl ItemsSource="{Binding CheckpointCards}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="{x:Type models:CheckpointCard}">
-                                <ui:Card Margin="8">
-                                    <VirtualizingStackPanel Orientation="Vertical">
-                                        <ui:Image
-                                            CornerRadius="4"
-                                            Margin="4,4,4,8"
-                                            MinHeight="256"
-                                            MinWidth="200"
-                                            Source="{Binding Image}"
-                                            Stretch="UniformToFill"
-                                            Visibility="Collapsed"
-                                            Width="128" />
-                                        <TextBlock
-                                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                            Margin="0,0,0,0"
-                                            Text="{Binding Name}"
-                                            VerticalAlignment="Center" />
-                                        <TextBlock
-                                            FontSize="11"
-                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                            Margin="0,2,0,0"
-                                            Text="{Binding FileName}"
-                                            VerticalAlignment="Center" />
-                                    </VirtualizingStackPanel>
-                                </ui:Card>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ui:VirtualizingGridView>
+                Margin="8"
+                PreviewDragEnter="FolderCard_OnPreviewDragEnter"
+                PreviewDragLeave="FolderCard_OnPreviewDragLeave"
+                PreviewDragOver="FolderCard_OnPreviewDragOver"
+                PreviewDrop="FolderCard_OnPreviewDrop">
+                <ui:VirtualizingGridView
+                    ItemTemplate="{StaticResource CheckpointCardDataTemplate}"
+                    ItemsSource="{Binding CheckpointFiles}"
+                    Padding="5"
+                    SpacingMode="StartAndEndOnly" />
             </ui:CardExpander>
         </DataTemplate>
 
-        <DataTemplate DataType="{x:Type models:CheckpointFolderCard}" x:Key="CheckpointFolderCardDataTemplate">
+        <DataTemplate DataType="{x:Type models:CheckpointFolder}" x:Key="CheckpointFolderCardDataTemplate">
             <ContentControl Content="{Binding}">
                 <ContentControl.Style>
                     <Style TargetType="{x:Type ContentControl}">
@@ -80,8 +97,7 @@
     <!--  Option Cards  -->
     <ItemsControl
         HorizontalAlignment="Stretch"
-        HorizontalContentAlignment="Center"
-        ItemTemplate="{StaticResource CheckpointFolderCardDataTemplate}"
-        ItemsSource="{Binding CheckpointFolderCards}"
+        ItemTemplate="{StaticResource CheckpointFolderCardGridDataTemplate}"
+        ItemsSource="{Binding CheckpointFolders}"
         Margin="16,16,16,16" />
 </Page>

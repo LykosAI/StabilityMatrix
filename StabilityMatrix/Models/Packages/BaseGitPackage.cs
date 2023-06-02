@@ -9,11 +9,13 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
-using Refit;
+using Octokit;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
 using StabilityMatrix.Models.Api;
 using StabilityMatrix.Python;
+using ApiException = Refit.ApiException;
+using FileMode = System.IO.FileMode;
 
 namespace StabilityMatrix.Models.Packages;
 
@@ -42,30 +44,35 @@ public abstract class BaseGitPackage : BasePackage
     public override string InstallLocation { get; set; } =
         $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages";
     
-    protected string GetDownloadUrl(string tagName) => $"https://api.github.com/repos/{Author}/{Name}/zipball/{tagName}";
+    protected string GetDownloadUrl(string tagName, bool isCommitHash = false)
+    {
+        return isCommitHash
+            ? $"https://github.com/{Author}/{Name}/archive/{tagName}.zip"
+            : $"https://api.github.com/repos/{Author}/{Name}/zipball/{tagName}";
+    }
 
     protected BaseGitPackage(IGithubApiCache githubApi, ISettingsManager settingsManager)
     {
-        this.GithubApi = githubApi;
-        this.SettingsManager = settingsManager;
+        GithubApi = githubApi;
+        SettingsManager = settingsManager;
     }
 
-    protected Task<GithubRelease> GetLatestRelease()
+    protected Task<Release> GetLatestRelease()
     {
         return GithubApi.GetLatestRelease(Author, Name);
     }
     
-    public override Task<IEnumerable<GithubBranch>> GetAllBranches()
+    public override Task<IReadOnlyList<Branch>> GetAllBranches()
     {
         return GithubApi.GetAllBranches(Author, Name);
     }
     
-    public override Task<IEnumerable<GithubRelease>> GetAllReleases()
+    public override Task<IOrderedEnumerable<Release>> GetAllReleases()
     {
         return GithubApi.GetAllReleases(Author, Name);
     }
     
-    public override Task<IEnumerable<GithubCommit>> GetAllCommits(string branch, int page = 1, int perPage = 10)
+    public override Task<IReadOnlyList<GitHubCommit>?> GetAllCommits(string branch, int page = 1, int perPage = 10)
     {
         return GithubApi.GetAllCommits(Author, Name, branch, page, perPage);
     }
@@ -88,15 +95,15 @@ public abstract class BaseGitPackage : BasePackage
         return VenvRunner;
     }
     
-    public override async Task<IEnumerable<GithubRelease>> GetReleaseTags()
+    public override async Task<IOrderedEnumerable<Release>> GetReleaseTags()
     {
         var allReleases = await GithubApi.GetAllReleases(Author, Name);
         return allReleases;
     }
     
-    public override async Task<string?> DownloadPackage(string version, bool isUpdate = false)
+    public override async Task<string?> DownloadPackage(string version, bool isCommitHash, bool isUpdate = false)
     {
-        var downloadUrl = GetDownloadUrl(version);
+        var downloadUrl = GetDownloadUrl(version, isCommitHash);
 
         if (!Directory.Exists(DownloadLocation.Replace($"{Name}.zip", "")))
         {
@@ -107,7 +114,6 @@ public abstract class BaseGitPackage : BasePackage
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("StabilityMatrix", "1.0"));
         await using var file = new FileStream(DownloadLocation, FileMode.Create, FileAccess.Write, FileShare.None);
         
-
         long contentLength = 0;
         var retryCount = 0;
         var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
@@ -236,18 +242,29 @@ public abstract class BaseGitPackage : BasePackage
 
     public override async Task<bool> CheckForUpdates(string installedPackageName)
     {
-        var currentVersion = SettingsManager.Settings.InstalledPackages.FirstOrDefault(x => x.DisplayName == installedPackageName)
-            ?.PackageVersion;
-        if (string.IsNullOrWhiteSpace(currentVersion))
+        var package =
+            SettingsManager.Settings.InstalledPackages.FirstOrDefault(x => x.DisplayName == installedPackageName);
+        var currentVersion = package?.PackageVersion;
+        if (package == null || string.IsNullOrWhiteSpace(currentVersion))
         {
             return false;
         }
 
         try
         {
-            var latestVersion = await GetLatestVersion();
-            UpdateAvailable = latestVersion != currentVersion;
-            return latestVersion != currentVersion;
+            if (string.IsNullOrWhiteSpace(package.InstalledBranch))
+            {
+                var latestVersion = await GetLatestVersion();
+                UpdateAvailable = latestVersion != currentVersion;
+                return latestVersion != currentVersion;
+            }
+            else
+            {
+                var allCommits = await GetAllCommits(package.InstalledBranch);
+                var latestCommitHash = allCommits.First().Sha;
+                return latestCommitHash != currentVersion;
+            }
+            
         }
         catch (ApiException e)
         {
@@ -256,12 +273,24 @@ public abstract class BaseGitPackage : BasePackage
         }
     }
 
-    public override async Task<string> Update()
+    public override async Task<string> Update(InstalledPackage installedPackage)
     {
-        var version = await GetLatestVersion();
-        await DownloadPackage(version, true);
-        await InstallPackage(true);
-        return version;
+        if (string.IsNullOrWhiteSpace(installedPackage.InstalledBranch))
+        {
+            var releases = await GetAllReleases();
+            var latestRelease = releases.First();
+            await DownloadPackage(latestRelease.TagName, false);
+            await InstallPackage(true);
+            return latestRelease.TagName;
+        }
+        else
+        {
+            var allCommits = await GetAllCommits(installedPackage.InstalledBranch);
+            var latestCommit = allCommits.First();
+            await DownloadPackage(latestCommit.Sha, true, true);
+            await InstallPackage(true);
+            return latestCommit.Sha;
+        }
     }
 
     

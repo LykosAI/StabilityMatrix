@@ -26,7 +26,8 @@
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:xaml="clr-namespace:Markdown.Xaml;assembly=Markdown.Xaml">
+    xmlns:xaml="clr-namespace:Markdown.Xaml;assembly=Markdown.Xaml"
+    xmlns:octokit="clr-namespace:Octokit;assembly=Octokit">
 
     <ui:FluentWindow.Resources>
         <converters:ValueConverterGroup x:Key="InvertAndVisibilitate">
@@ -173,12 +174,12 @@
                             MinWidth="100"
                             SelectedItem="{Binding SelectedCommit}">
                             <ComboBox.ItemTemplate>
-                                <DataTemplate DataType="{x:Type api:GithubCommit}">
+                                <DataTemplate DataType="{x:Type octokit:GitHubCommit}">
                                     <StackPanel Margin="8,0,0,0" VerticalAlignment="Top">
                                         <TextBlock
                                             Margin="0,4,0,4"
                                             Name="NameTextBlock"
-                                            Text="{Binding ShaHash}" />
+                                            Text="{Binding Sha}" />
                                     </StackPanel>
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>

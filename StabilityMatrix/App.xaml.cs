@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
+using Octokit;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
@@ -24,6 +25,7 @@ using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Services;
+using Application = System.Windows.Application;
 
 namespace StabilityMatrix
 {
@@ -86,6 +88,16 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
             serviceCollection.AddSingleton<IPrerequisiteHelper, PrerequisiteHelper>();
             serviceCollection.AddSingleton<IDialogErrorHandler, DialogErrorHandler>();
+            serviceCollection.AddTransient<IGitHubClient, GitHubClient>(_ =>
+            {
+                var client = new GitHubClient(new ProductHeaderValue("StabilityMatrix"));
+                var githubApiKey = Config["GithubApiKey"];
+                if (string.IsNullOrWhiteSpace(githubApiKey))
+                    return client;
+                
+                client.Credentials = new Credentials(githubApiKey);
+                return client;
+            });
             serviceCollection.AddMemoryCache();
             serviceCollection.AddSingleton<IGithubApiCache, GithubApiCache>();
 
@@ -106,19 +118,6 @@ namespace StabilityMatrix
                 .WaitAndRetryAsync(delay);
 
             // Add Refit clients
-            serviceCollection.AddRefitClient<IGithubApi>(defaultRefitSettings)
-                .ConfigureHttpClient(c =>
-                {
-                    c.BaseAddress = new Uri("https://api.github.com");
-                    c.Timeout = TimeSpan.FromSeconds(5);
-
-                    var githubApiKey = Config["GithubApiKey"];
-                    if (!string.IsNullOrEmpty(githubApiKey))
-                    {
-                        c.DefaultRequestHeaders.Add("Authorization", $"Bearer {githubApiKey}");
-                    }
-                })
-                .AddPolicyHandler(retryPolicy);
             serviceCollection.AddRefitClient<IA3WebApi>(defaultRefitSettings)
                 .ConfigureHttpClient(c =>
                 {

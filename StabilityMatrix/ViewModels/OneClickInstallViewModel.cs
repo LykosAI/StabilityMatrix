@@ -136,7 +136,7 @@ public partial class OneClickInstallViewModel : ObservableObject
         selectedPackage.DownloadProgressChanged += SelectedPackageOnProgressChanged;
         selectedPackage.DownloadComplete += (_, _) => SubHeaderText = "Download Complete";
         SubHeaderText = "Downloading package...";
-        return selectedPackage.DownloadPackage(version: version);
+        return selectedPackage.DownloadPackage(version, false);
     }
 
     private async Task InstallPackage(BasePackage selectedPackage)

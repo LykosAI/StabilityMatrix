@@ -9,11 +9,14 @@ using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using Octokit;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Api;
 using StabilityMatrix.Python;
+using Application = System.Windows.Application;
 using EventManager = StabilityMatrix.Helper.EventManager;
+using PackageVersion = StabilityMatrix.Models.PackageVersion;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -59,10 +62,10 @@ public partial class InstallerViewModel : ObservableObject
     private ObservableCollection<BasePackage> availablePackages;
     
     [ObservableProperty]
-    private ObservableCollection<GithubCommit> availableCommits;
+    private ObservableCollection<GitHubCommit> availableCommits;
     
     [ObservableProperty]
-    private GithubCommit selectedCommit;
+    private GitHubCommit selectedCommit;
 
     [ObservableProperty] 
     private string releaseNotes;
@@ -117,20 +120,32 @@ public partial class InstallerViewModel : ObservableObject
     {
         if (SelectedPackage == null)
             return;
-
-        var releases = (await SelectedPackage.GetAllReleases()).ToList();
-        if (!releases.Any())
+        
+        if (SelectedPackage.ShouldIgnoreReleases)
         {
             IsReleaseMode = false;
         }
 
-        var versions = (await SelectedPackage.GetAllVersions()).ToList();
-        AvailableVersions = new ObservableCollection<PackageVersion>(versions);
-        if (!AvailableVersions.Any())
-            return;
+        if (IsReleaseMode)
+        {
+            var versions = (await SelectedPackage.GetAllVersions()).ToList();
+            AvailableVersions = new ObservableCollection<PackageVersion>(versions);
+            if (!AvailableVersions.Any())
+                return;
+            SelectedVersion = AvailableVersions[0];
+        }
+        else
+        {
+            var branches = (await SelectedPackage.GetAllBranches()).ToList();
+            AvailableVersions = new ObservableCollection<PackageVersion>(branches.Select(b => new PackageVersion
+            {
+                TagName = b.Name,
+                ReleaseNotesMarkdown = b.Commit.Label
+            }));
+            SelectedVersion = AvailableVersions.FirstOrDefault(x => x.TagName == "master") ?? AvailableVersions[0];
+        }
 
-        SelectedVersion = AvailableVersions[0];
-        ReleaseNotes = versions.First().ReleaseNotesMarkdown;
+        ReleaseNotes = SelectedVersion.ReleaseNotesMarkdown;
     }
 
     partial void OnSelectedPackageChanged(BasePackage? value)
@@ -140,13 +155,13 @@ public partial class InstallerViewModel : ObservableObject
         InstallName = value.DisplayName;
         ReleaseNotes = string.Empty;
         AvailableVersions?.Clear();
+        AvailableCommits?.Clear();
 
         // This can swallow exceptions if you don't explicitly try/catch
         // Idk how to make it better tho
         Task.Run(async () =>
         {
-            var releases = (await SelectedPackage.GetAllReleases()).ToList();
-            if (!releases.Any())
+            if (SelectedPackage.ShouldIgnoreReleases)
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -175,7 +190,7 @@ public partial class InstallerViewModel : ObservableObject
                 var commits = await value.GetAllCommits(SelectedVersion.TagName);
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    AvailableCommits = new ObservableCollection<GithubCommit>(commits);
+                    AvailableCommits = new ObservableCollection<GitHubCommit>(commits);
                     SelectedCommit = AvailableCommits[0];
                     SelectedVersion = AvailableVersions.First(x => x.TagName == "master");
                 });
@@ -216,9 +231,12 @@ public partial class InstallerViewModel : ObservableObject
                 try
                 {
                     var hashes = await SelectedPackage.GetAllCommits(value.TagName);
-                    AvailableCommits = new ObservableCollection<GithubCommit>(hashes);
-                    await Task.Delay(10); // or it doesn't work sometimes? lolwut?
-                    SelectedCommit = AvailableCommits[0];
+
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        AvailableCommits = new ObservableCollection<GitHubCommit>(hashes);
+                        SelectedCommit = AvailableCommits[0];
+                    });
                 }
                 catch (Exception e)
                 {
@@ -230,6 +248,8 @@ public partial class InstallerViewModel : ObservableObject
 
     private async Task ActuallyInstall()
     {
+        var isCurrentlyReleaseMode = IsReleaseMode;
+        
         var installSuccess = await InstallGitIfNecessary();
         if (!installSuccess)
         {
@@ -254,13 +274,17 @@ public partial class InstallerViewModel : ObservableObject
             }
         }
 
-        var version = await DownloadPackage(SelectedVersion.TagName);
+        var version = isCurrentlyReleaseMode
+            ? await DownloadPackage(SelectedVersion.TagName, false)
+            : await DownloadPackage(SelectedCommit.Sha, true);
         await InstallPackage();
 
         ProgressText = "Done";
 
         IsIndeterminate = false;
         SelectedPackageOnProgressChanged(this, 100);
+
+        var branch = isCurrentlyReleaseMode ? null : SelectedVersion.TagName;
 
         var package = new InstalledPackage
         {
@@ -269,6 +293,8 @@ public partial class InstallerViewModel : ObservableObject
             Id = Guid.NewGuid(),
             PackageName = SelectedPackage.Name,
             PackageVersion = version,
+            DisplayVersion = GetDisplayVersion(version, branch),
+            InstalledBranch = branch,
             LaunchCommand = SelectedPackage.LaunchCommand,
             LastUpdateCheck = DateTimeOffset.Now
         };
@@ -277,13 +303,18 @@ public partial class InstallerViewModel : ObservableObject
 
         ProgressValue = 0;
     }
+
+    private string GetDisplayVersion(string version, string? branch)
+    {
+        return branch == null ? version : $"{branch}@{version[..7]}";
+    }
     
-    private Task<string?> DownloadPackage(string version)
+    private Task<string?> DownloadPackage(string version, bool isCommitHash)
     {
         SelectedPackage.DownloadProgressChanged += SelectedPackageOnProgressChanged;
         SelectedPackage.DownloadComplete += (_, _) => ProgressText = "Download Complete";
         ProgressText = "Downloading package...";
-        return SelectedPackage.DownloadPackage(version: version);
+        return SelectedPackage.DownloadPackage(version, isCommitHash);
     }
 
     private async Task InstallPackage()

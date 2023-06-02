@@ -63,15 +63,20 @@ public class SettingsManager : ISettingsManager
         SaveSettings();
     }
 
-    public void UpdatePackageVersionNumber(string name, string? newVersion)
+    public void UpdatePackageVersionNumber(Guid id, string? newVersion)
     {
-        var package = Settings.InstalledPackages.FirstOrDefault(x => x.DisplayName == name);
+        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == id);
         if (package == null || newVersion == null)
         {
             return;
         }
-        
+
         package.PackageVersion = newVersion;
+
+        package.DisplayVersion = string.IsNullOrWhiteSpace(package.InstalledBranch)
+            ? newVersion
+            : $"{package.InstalledBranch}@{newVersion[..7]}";
+
         SaveSettings();
     }
     

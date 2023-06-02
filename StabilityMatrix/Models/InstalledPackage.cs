@@ -17,6 +17,10 @@ public class InstalledPackage
     public string? PackageName { get; set; }
     // Package version
     public string? PackageVersion { get; set; }
+    public string? InstalledBranch { get; set; }
+
+    public string? DisplayVersion { get; set; }
+
     // Install path
     public string? Path { get; set; }
     public string? LaunchCommand { get; set; }

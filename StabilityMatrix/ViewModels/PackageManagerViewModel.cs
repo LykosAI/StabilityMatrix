@@ -252,8 +252,8 @@ public partial class PackageManagerViewModel : ObservableObject
             SelectedPackage.UpdateAvailable = false;
             UpdateAvailable = false;
         };
-        var updateResult = await package.Update();
-        settingsManager.UpdatePackageVersionNumber(SelectedPackage.DisplayName!, updateResult!);
+        var updateResult = await package.Update(SelectedPackage);
+        settingsManager.UpdatePackageVersionNumber(SelectedPackage.Id, updateResult);
         await OnLoaded();
     }
 

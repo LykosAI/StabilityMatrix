@@ -35,9 +35,9 @@
             <converters:BoolNegationConverter />
             <BooleanToVisibilityConverter />
         </converters:ValueConverterGroup>
-        
-        <converters:BoolNegationConverter x:Key="BoolNegationConverter"/>
-        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+
+        <converters:BoolNegationConverter x:Key="BoolNegationConverter" />
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
 
         <xaml:Markdown x:Key="Markdown"
                        DocumentStyle="{StaticResource DocumentStyle}"
@@ -48,9 +48,9 @@
                        LinkStyle="{StaticResource LinkStyle}"
                        ImageStyle="{StaticResource ImageStyle}"
                        SeparatorStyle="{StaticResource SeparatorStyle}"
-                       AssetPathRoot="{x:Static system:Environment.CurrentDirectory}"/>
-        <xaml:TextToFlowDocumentConverter x:Key="TextToFlowDocumentConverter" 
-                                          Markdown="{StaticResource Markdown}"/>
+                       AssetPathRoot="{x:Static system:Environment.CurrentDirectory}" />
+        <xaml:TextToFlowDocumentConverter x:Key="TextToFlowDocumentConverter"
+                                          Markdown="{StaticResource Markdown}" />
     </ui:FluentWindow.Resources>
 
     <Grid>
@@ -68,10 +68,14 @@
 
         <StackPanel
             Grid.Row="1"
-            Margin="16"
+            Margin="16, 8, 16, 0"
             Orientation="Vertical"
             Visibility="{Binding ProgressBarVisibility, FallbackValue=Visible}">
 
+            <TextBlock
+                HorizontalAlignment="Center"
+                Padding="8"
+                Text="{Binding ProgressText, FallbackValue=Installing...}" />
             <ProgressBar
                 IsIndeterminate="{Binding IsIndeterminate, FallbackValue=False}"
                 Maximum="100"
@@ -79,8 +83,10 @@
                 Width="500" />
             <TextBlock
                 HorizontalAlignment="Center"
-                Padding="8"
-                Text="{Binding ProgressText, FallbackValue=Installing...}" />
+                Padding="4"
+                FontSize="10"
+                TextWrapping="Wrap"
+                Text="{Binding SecondaryProgressText, FallbackValue=Installing...}" />
         </StackPanel>
 
         <Grid Grid.Row="2" HorizontalAlignment="Left">
@@ -125,7 +131,7 @@
                 <TextBlock Text="{Binding SelectedPackage.DisplayName, FallbackValue=Stable Diffusion Web UI}"
                            FontSize="24" FontWeight="Bold" />
                 <TextBlock Text="{Binding SelectedPackage.ByAuthor, FallbackValue=by Automatic111}"
-                           FontSize="12"/>
+                           FontSize="12" />
                 <ui:Hyperlink NavigateUri="{Binding SelectedPackage.GithubUrl}"
                               Margin="0,8,0,8">
                     <TextBlock TextWrapping="Wrap">
@@ -188,36 +194,49 @@
                     </StackPanel>
                 </StackPanel>
 
-                <Label Content="Install Location" Margin="0,16,0,0"/>
-                <ui:TextBox Text="{Binding InstallPath, UpdateSourceTrigger=PropertyChanged}" 
-                            Margin="0,0,0,8"/>
-                
-                <Label Content="Display Name" Margin="0,16,0,0"/>
-                <StackPanel Orientation="Horizontal" 
+                <Label Content="Install Location" Margin="0,16,0,0" />
+                <ui:TextBox Text="{Binding InstallPath, UpdateSourceTrigger=PropertyChanged}"
+                            Margin="0,0,0,8" />
+
+                <Label Content="Display Name" Margin="0,16,0,0" />
+                <StackPanel Orientation="Horizontal"
                             Visibility="{Binding ShowDuplicateWarning, 
                                 Converter={StaticResource BoolToVisConverter}}">
                     <ui:SymbolIcon Symbol="ErrorCircle24"
                                    Margin="8"
-                                   Foreground="{ui:ThemeResource SystemFillColorCriticalBrush}"/>
+                                   Foreground="{ui:ThemeResource SystemFillColorCriticalBrush}" />
                     <TextBlock TextAlignment="Left"
                                Margin="0,8,8,8"
-                               Foreground="{ui:ThemeResource SystemFillColorCriticalBrush}" 
+                               Foreground="{ui:ThemeResource SystemFillColorCriticalBrush}"
                                TextWrapping="Wrap">
-                        <Run Text="An installation with this name already exists."/>
-                        <LineBreak/><Run Text="Please choose a different name or select a different Install Location."/>
+                        <Run Text="An installation with this name already exists." />
+                        <LineBreak />
+                        <Run Text="Please choose a different name or select a different Install Location." />
                     </TextBlock>
                 </StackPanel>
-                <ui:TextBox Text="{Binding InstallName, UpdateSourceTrigger=PropertyChanged}" 
-                            Margin="0,0,0,8"/>
-                
-                <ui:Button Content="{Binding InstallButtonText, FallbackValue=Install}"
-                           Command="{Binding InstallCommand}"
-                           IsEnabled="{Binding ShowDuplicateWarning, 
+                <ui:TextBox Text="{Binding InstallName, UpdateSourceTrigger=PropertyChanged}"
+                            Margin="0,0,0,8" />
+
+                <StackPanel Orientation="Horizontal">
+                    <ui:Button Content="{Binding InstallButtonText, FallbackValue=Install}"
+                               Command="{Binding InstallCommand}"
+                               IsEnabled="{Binding ShowDuplicateWarning, 
                                 Converter={StaticResource BoolNegationConverter}}"
-                           Width="100" Height="50"
-                           Background="Green"
-                           Margin="0,16,0,0"
-                           VerticalAlignment="Top" />
+                               Width="100" Height="50"
+                               Appearance="Primary"
+                               Margin="0,16,0,0"
+                               VerticalAlignment="Top" />
+                    <ui:ProgressRing
+                        IsIndeterminate="True"
+                        Visibility="{Binding ProgressBarVisibility}"
+                        Height="25" Width="25"
+                        VerticalAlignment="Center"
+                        Margin="8,16,0,0" />
+                    <TextBlock Text="Installing..." 
+                               VerticalAlignment="Center"
+                               Visibility="{Binding ProgressBarVisibility}"
+                               Margin="8,16,0,0"/>
+                </StackPanel>
             </StackPanel>
             <FlowDocumentScrollViewer
                 Document="{Binding ReleaseNotes, Converter={StaticResource TextToFlowDocumentConverter}}"

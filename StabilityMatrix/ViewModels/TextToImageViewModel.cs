@@ -17,7 +17,7 @@ public partial class TextToImageViewModel : ObservableObject
 {
     private readonly ILogger<TextToImageViewModel> logger;
     private readonly IA3WebApi a3WebApi;
-    private readonly IDialogErrorHandler dialogErrorHandler;
+    private readonly ISnackbarService snackbarService;
     private readonly PageContentDialogService pageContentDialogService;
     private AsyncDispatcherTimer? progressQueryTimer;
 
@@ -54,11 +54,11 @@ public partial class TextToImageViewModel : ObservableObject
     
     public Visibility ProgressBarVisibility => ProgressValue > 0 ? Visibility.Visible : Visibility.Collapsed;
     
-    public TextToImageViewModel(IA3WebApi a3WebApi, ILogger<TextToImageViewModel> logger, IDialogErrorHandler dialogErrorHandler, PageContentDialogService pageContentDialogService)
+    public TextToImageViewModel(IA3WebApi a3WebApi, ILogger<TextToImageViewModel> logger, ISnackbarService snackbarService, PageContentDialogService pageContentDialogService)
     {
         this.logger = logger;
         this.a3WebApi = a3WebApi;
-        this.dialogErrorHandler = dialogErrorHandler;
+        this.snackbarService = snackbarService;
         this.pageContentDialogService = pageContentDialogService;
         positivePromptText = "Positive";
         negativePromptText = "Negative";
@@ -137,7 +137,7 @@ public partial class TextToImageViewModel : ObservableObject
     {
         var request = new ProgressRequest();
         var task = a3WebApi.GetProgress(request);
-        var responseResult = await dialogErrorHandler.TryAsync(task, "Failed to get progress");
+        var responseResult = await snackbarService.TryAsync(task, "Failed to get progress");
         if (!responseResult.IsSuccessful || responseResult.Result == null)
         {
             StopProgressTracking();
@@ -199,7 +199,7 @@ public partial class TextToImageViewModel : ObservableObject
         
         // Progress track while waiting for response
         StartProgressTracking();
-        var response = await dialogErrorHandler.TryAsync(task, "Failed to get a response from the server");
+        var response = await snackbarService.TryAsync(task, "Failed to get a response from the server");
         StopProgressTracking();
 
         if (!response.IsSuccessful || response.Result == null) return;

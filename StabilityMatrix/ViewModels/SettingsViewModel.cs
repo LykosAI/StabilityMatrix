@@ -13,6 +13,7 @@ using StabilityMatrix.Models;
 using StabilityMatrix.Python;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Contracts;
+using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -20,7 +21,7 @@ public partial class SettingsViewModel : ObservableObject
 {
     private readonly ISettingsManager settingsManager;
     private readonly IPyRunner pyRunner;
-    private readonly IDialogErrorHandler dialogErrorHandler;
+    private readonly ISnackbarService snackbarService;
 
     public ObservableCollection<string> AvailableThemes => new()
     {
@@ -31,11 +32,11 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IContentDialogService contentDialogService;
     private readonly IA3WebApi a3WebApi;
 
-    public SettingsViewModel(ISettingsManager settingsManager, IContentDialogService contentDialogService, IA3WebApi a3WebApi, IPyRunner pyRunner, IDialogErrorHandler dialogErrorHandler)
+    public SettingsViewModel(ISettingsManager settingsManager, IContentDialogService contentDialogService, IA3WebApi a3WebApi, IPyRunner pyRunner, ISnackbarService snackbarService)
     {
         this.settingsManager = settingsManager;
         this.contentDialogService = contentDialogService;
-        this.dialogErrorHandler = dialogErrorHandler;
+        this.snackbarService = snackbarService;
         this.a3WebApi = a3WebApi;
         this.pyRunner = pyRunner;
         SelectedTheme = settingsManager.Settings.Theme ?? "Dark";
@@ -111,7 +112,7 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task PingWebApi()
     {
-        var result = await dialogErrorHandler.TryAsync(a3WebApi.GetPing(), "Failed to ping web api");
+        var result = await snackbarService.TryAsync(a3WebApi.GetPing(), "Failed to ping web api");
 
         if (result.IsSuccessful)
         {

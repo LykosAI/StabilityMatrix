@@ -25,7 +25,8 @@ public partial class InstallerViewModel : ObservableObject
     private readonly ILogger<InstallerViewModel> logger;
     private readonly IPyRunner pyRunner;
     private readonly IPackageFactory packageFactory;
-    
+    private readonly ISnackbarService snackbarService;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
     private int progressValue;
@@ -35,6 +36,9 @@ public partial class InstallerViewModel : ObservableObject
     
     [ObservableProperty]
     private string progressText;
+
+    [ObservableProperty] 
+    private string secondaryProgressText;
     
     [ObservableProperty]
     private bool isIndeterminate;
@@ -86,14 +90,16 @@ public partial class InstallerViewModel : ObservableObject
 
 
     public InstallerViewModel(ISettingsManager settingsManager, ILogger<InstallerViewModel> logger, IPyRunner pyRunner,
-        IPackageFactory packageFactory)
+        IPackageFactory packageFactory, ISnackbarService snackbarService)
     {
         this.settingsManager = settingsManager;
         this.logger = logger;
         this.pyRunner = pyRunner;
         this.packageFactory = packageFactory;
-        
+        this.snackbarService = snackbarService;
+
         ProgressText = "";
+        SecondaryProgressText = "";
         InstallButtonText = "Install";
         ProgressValue = 0;
         InstallPath =
@@ -112,6 +118,8 @@ public partial class InstallerViewModel : ObservableObject
     private async Task Install()
     {
         await ActuallyInstall();
+        snackbarService.ShowSnackbarAsync($"Package {SelectedPackage.Name} installed successfully!",
+            "Success", LogLevel.Trace);
         OnPackageInstalled();
     }
 
@@ -276,6 +284,7 @@ public partial class InstallerViewModel : ObservableObject
         var version = isCurrentlyReleaseMode
             ? await DownloadPackage(SelectedVersion.TagName, false)
             : await DownloadPackage(SelectedCommit.Sha, true);
+        
         await InstallPackage();
 
         ProgressText = "Done";
@@ -312,6 +321,7 @@ public partial class InstallerViewModel : ObservableObject
     {
         SelectedPackage.DownloadProgressChanged += SelectedPackageOnProgressChanged;
         SelectedPackage.DownloadComplete += (_, _) => ProgressText = "Download Complete";
+        SelectedPackage.ConsoleOutput += SelectedPackageOnConsoleOutput;
         ProgressText = "Downloading package...";
         return SelectedPackage.DownloadPackage(version, isCommitHash);
     }
@@ -320,10 +330,16 @@ public partial class InstallerViewModel : ObservableObject
     {
         SelectedPackage.InstallProgressChanged += SelectedPackageOnProgressChanged;
         SelectedPackage.InstallComplete += (_, _) => ProgressText = "Install Complete";
+        SelectedPackage.ConsoleOutput += SelectedPackageOnConsoleOutput;
         ProgressText = "Installing package...";
         await SelectedPackage.InstallPackage();
     }
-    
+
+    private void SelectedPackageOnConsoleOutput(object? sender, string e)
+    {
+        SecondaryProgressText = e;
+    }
+
     private async Task<bool> InstallGitIfNecessary()
     {
         try

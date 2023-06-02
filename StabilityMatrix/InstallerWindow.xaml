@@ -7,7 +7,7 @@
     Loaded="InstallPage_OnLoaded"
     Title="Stability Matrix - Installer"
     Width="1100"
-    WindowBackdropType="Mica"
+    WindowBackdropType="{Binding WindowBackdropType}"
     WindowStartupLocation="CenterOwner"
     d:DataContext="{d:DesignInstance Type=viewModels:InstallerViewModel,
                                      IsDesignTimeCreatable=True}"

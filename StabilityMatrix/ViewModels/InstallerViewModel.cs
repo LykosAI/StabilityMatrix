@@ -13,6 +13,7 @@ using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Packages;
 using StabilityMatrix.Python;
+using Wpf.Ui.Controls.Window;
 using Application = System.Windows.Application;
 using EventManager = StabilityMatrix.Helper.EventManager;
 using PackageVersion = StabilityMatrix.Models.PackageVersion;
@@ -82,6 +83,8 @@ public partial class InstallerViewModel : ObservableObject
     [ObservableProperty]
     private bool showDuplicateWarning;
 
+
+    public WindowBackdropType WindowBackdropType => settingsManager.Settings.WindowBackdropType;
     public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
 
     public string ReleaseLabelText => IsReleaseMode ? "Version" : "Branch";

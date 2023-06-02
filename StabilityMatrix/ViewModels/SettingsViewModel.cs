@@ -33,7 +33,6 @@ public partial class SettingsViewModel : ObservableObject
 
     public ObservableCollection<WindowBackdropType> AvailableBackdrops => new()
     {
-        WindowBackdropType.Acrylic,
         WindowBackdropType.Mica,
         WindowBackdropType.Tabbed
     };

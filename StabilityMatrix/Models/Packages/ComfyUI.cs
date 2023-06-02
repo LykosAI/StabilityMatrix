@@ -65,7 +65,7 @@ public class ComfyUI : BaseGitPackage
             OnUpdateComplete("Update complete");
             return;
         }
-        // On first install, need to setup dependencies
+        // Setup dependencies
         OnInstallProgressChanged(-1); // Indeterminate progress bar
         // Setup venv
         Logger.Debug("Setting up venv");
@@ -85,7 +85,14 @@ public class ComfyUI : BaseGitPackage
         await venvRunner.PipInstall("-r requirements.txt", InstallLocation, OnConsoleOutput);
         
         Logger.Debug("Finished installing requirements!");
-        OnInstallComplete("Installation complete");
+        if (isUpdate)
+        {
+            OnUpdateComplete("Update complete");
+        }
+        else
+        {
+            OnInstallComplete("Install complete");
+        }
     }
     
     public override async Task RunPackage(string installedPackagePath, string arguments)

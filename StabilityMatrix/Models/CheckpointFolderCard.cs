@@ -12,8 +12,23 @@ public partial class CheckpointFolderCard : ObservableObject
     {
         new CheckpointCard
         {
-            Name = "",
-            FileName = "",
-        }
+            Name = "Stable Diffusion v1.5",
+            FileName = "v1-5-pruned-emaonly.safetensors",
+        },
+        new CheckpointCard
+        {
+            Name = "Stable Diffusion v1.5 (EMA)",
+            FileName = "v1-5-emaonly.safetensors",
+        },
+        new CheckpointCard
+        {
+            Name = "Stable Diffusion v1.5 (EMA, 512x512)",
+            FileName = "v1-5-emaonly-512.safetensors",
+        },
+        new CheckpointCard
+        {
+            Name = "Stable Diffusion v2.0",
+            FileName = "v2-0-pruned-emaonly.safetensors",
+        },
     };
 }

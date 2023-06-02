@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -72,10 +73,15 @@ public partial class InstallerViewModel : ObservableObject
     [ObservableProperty] 
     private bool isReleaseModeEnabled;
 
+    [ObservableProperty]
+    private bool showDuplicateWarning;
+
     public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
 
     public string ReleaseLabelText => IsReleaseMode ? "Version" : "Branch";
-    
+
+    internal event EventHandler? PackageInstalled;
+
 
     public InstallerViewModel(ISettingsManager settingsManager, ILogger<InstallerViewModel> logger, IPyRunner pyRunner,
         IPackageFactory packageFactory)
@@ -104,6 +110,7 @@ public partial class InstallerViewModel : ObservableObject
     private async Task Install()
     {
         await ActuallyInstall();
+        OnPackageInstalled();
     }
 
     public async Task OnLoaded()
@@ -134,7 +141,7 @@ public partial class InstallerViewModel : ObservableObject
         ReleaseNotes = string.Empty;
         AvailableVersions?.Clear();
 
-        // This can swallow exceptions if you don't explicity try/catch
+        // This can swallow exceptions if you don't explicitly try/catch
         // Idk how to make it better tho
         Task.Run(async () =>
         {
@@ -180,6 +187,18 @@ public partial class InstallerViewModel : ObservableObject
     partial void OnIsReleaseModeChanged(bool oldValue, bool newValue)
     {
         OnSelectedPackageChanged(SelectedPackage);
+    }
+
+    partial void OnInstallNameChanged(string oldValue, string newValue)
+    {
+        var path = Path.GetFullPath($"{InstallPath}\\{newValue}");
+        ShowDuplicateWarning = settingsManager.Settings.InstalledPackages.Any(p => p.Path.Equals(path));
+    }
+
+    partial void OnInstallPathChanged(string oldValue, string newValue)
+    {
+        var path = Path.GetFullPath($"{newValue}\\{InstallName}");
+        ShowDuplicateWarning = settingsManager.Settings.InstalledPackages.Any(p => p.Path.Equals(path));
     }
 
     partial void OnSelectedVersionChanged(PackageVersion? value)
@@ -255,6 +274,8 @@ public partial class InstallerViewModel : ObservableObject
         };
         settingsManager.AddInstalledPackage(package);
         settingsManager.SetActiveInstalledPackage(package);
+
+        ProgressValue = 0;
     }
     
     private Task<string?> DownloadPackage(string version)
@@ -313,5 +334,7 @@ public partial class InstallerViewModel : ObservableObject
         
         EventManager.Instance.OnGlobalProgressChanged(progress);
     }
-    
+
+    private void OnPackageInstalled() => PackageInstalled?.Invoke(this, EventArgs.Empty);
+
 }

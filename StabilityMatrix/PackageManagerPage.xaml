@@ -15,6 +15,10 @@
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+    </Page.Resources>
 
     <Grid Margin="16">
         <Grid.RowDefinitions>
@@ -127,6 +131,13 @@
                         VerticalAlignment="Top"
                         Visibility="{Binding InstallButtonVisibility, FallbackValue=Visible}"
                         Width="100" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Visibility="{Binding IsUninstalling,
+                                                        Converter={StaticResource BoolToVisConverter}}">
+                    <ui:ProgressRing Height="24" Width="24" Margin="8, 16, 8, 8"
+                                     VerticalAlignment="Center"
+                                     IsIndeterminate="True" HorizontalAlignment="Left"/>
+                    <TextBlock Text="Uninstalling..." VerticalAlignment="Center" Margin="0,8,0,0"/>
                 </StackPanel>
             </StackPanel>
         </StackPanel>

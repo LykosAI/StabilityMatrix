@@ -1,4 +1,4 @@
-﻿<ui:FluentWindow
+<ui:FluentWindow
     Background="{DynamicResource ApplicationBackgroundBrush}"
     ExtendsContentIntoTitleBar="True"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
@@ -8,6 +8,7 @@
     Title="Stability Matrix - Installer"
     Width="1100"
     WindowBackdropType="Mica"
+    WindowStartupLocation="CenterOwner"
     d:DataContext="{d:DesignInstance Type=viewModels:InstallerViewModel,
                                      IsDesignTimeCreatable=True}"
     d:DesignHeight="600"
@@ -32,21 +33,22 @@
             <converters:BoolNegationConverter />
             <BooleanToVisibilityConverter />
         </converters:ValueConverterGroup>
+        
+        <converters:BoolNegationConverter x:Key="BoolNegationConverter"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
 
-        <converters:BoolNegationConverter x:Key="BoolNegationConverter" />
-
-        <xaml:Markdown
-            AssetPathRoot="{x:Static system:Environment.CurrentDirectory}"
-            DocumentStyle="{StaticResource DocumentStyle}"
-            Heading1Style="{StaticResource H1Style}"
-            Heading2Style="{StaticResource H2Style}"
-            Heading3Style="{StaticResource H3Style}"
-            Heading4Style="{StaticResource H4Style}"
-            ImageStyle="{StaticResource ImageStyle}"
-            LinkStyle="{StaticResource LinkStyle}"
-            SeparatorStyle="{StaticResource SeparatorStyle}"
-            x:Key="Markdown" />
-        <xaml:TextToFlowDocumentConverter Markdown="{StaticResource Markdown}" x:Key="TextToFlowDocumentConverter" />
+        <xaml:Markdown x:Key="Markdown"
+                       DocumentStyle="{StaticResource DocumentStyle}"
+                       Heading1Style="{StaticResource H1Style}"
+                       Heading2Style="{StaticResource H2Style}"
+                       Heading3Style="{StaticResource H3Style}"
+                       Heading4Style="{StaticResource H4Style}"
+                       LinkStyle="{StaticResource LinkStyle}"
+                       ImageStyle="{StaticResource ImageStyle}"
+                       SeparatorStyle="{StaticResource SeparatorStyle}"
+                       AssetPathRoot="{x:Static system:Environment.CurrentDirectory}"/>
+        <xaml:TextToFlowDocumentConverter x:Key="TextToFlowDocumentConverter" 
+                                          Markdown="{StaticResource Markdown}"/>
     </ui:FluentWindow.Resources>
 
     <Grid>
@@ -117,19 +119,13 @@
                 </ListView.ItemTemplate>
             </ListView>
 
-            <StackPanel
-                Grid.Column="1"
-                Margin="16,16,0,16"
-                Orientation="Vertical">
-                <TextBlock
-                    FontSize="24"
-                    FontWeight="Bold"
-                    Text="{Binding SelectedPackage.DisplayName, FallbackValue=Stable Diffusion Web UI}" />
-                <TextBlock
-                    FontSize="12"
-                    Margin="0,5,0,5"
-                    Text="{Binding SelectedPackage.ByAuthor, FallbackValue=by Automatic111}" />
-                <ui:Hyperlink NavigateUri="{Binding SelectedPackage.GithubUrl}">
+            <StackPanel Grid.Column="1" Orientation="Vertical" Margin="16,16,0,16">
+                <TextBlock Text="{Binding SelectedPackage.DisplayName, FallbackValue=Stable Diffusion Web UI}"
+                           FontSize="24" FontWeight="Bold" />
+                <TextBlock Text="{Binding SelectedPackage.ByAuthor, FallbackValue=by Automatic111}"
+                           FontSize="12"/>
+                <ui:Hyperlink NavigateUri="{Binding SelectedPackage.GithubUrl}"
+                              Margin="0,8,0,8">
                     <TextBlock TextWrapping="Wrap">
                         <Run Text="GitHub Page:" />
                         <Run Text="{Binding SelectedPackage.GithubUrl, Mode=OneWay}" TextDecorations="Underline" />
@@ -190,20 +186,36 @@
                     </StackPanel>
                 </StackPanel>
 
-                <Label Content="Install Location" Margin="0,16,0,0" />
-                <ui:TextBox Margin="0,0,0,8" Text="{Binding InstallPath}" />
-
-                <Label Content="Display Name" Margin="0,16,0,0" />
-                <ui:TextBox Margin="0,0,0,8" Text="{Binding InstallName}" />
-
-                <ui:Button
-                    Appearance="Success"
-                    Command="{Binding InstallCommand}"
-                    Content="{Binding InstallButtonText, FallbackValue=Install}"
-                    Height="50"
-                    Margin="0,16,0,0"
-                    VerticalAlignment="Top"
-                    Width="100" />
+                <Label Content="Install Location" Margin="0,16,0,0"/>
+                <ui:TextBox Text="{Binding InstallPath, UpdateSourceTrigger=PropertyChanged}" 
+                            Margin="0,0,0,8"/>
+                
+                <Label Content="Display Name" Margin="0,16,0,0"/>
+                <StackPanel Orientation="Horizontal" 
+                            Visibility="{Binding ShowDuplicateWarning, 
+                                Converter={StaticResource BoolToVisConverter}}">
+                    <ui:SymbolIcon Symbol="ErrorCircle24"
+                                   Margin="8"
+                                   Foreground="{ui:ThemeResource SystemFillColorCriticalBrush}"/>
+                    <TextBlock TextAlignment="Left"
+                               Margin="0,8,8,8"
+                               Foreground="{ui:ThemeResource SystemFillColorCriticalBrush}" 
+                               TextWrapping="Wrap">
+                        <Run Text="An installation with this name already exists."/>
+                        <LineBreak/><Run Text="Please choose a different name or select a different Install Location."/>
+                    </TextBlock>
+                </StackPanel>
+                <ui:TextBox Text="{Binding InstallName, UpdateSourceTrigger=PropertyChanged}" 
+                            Margin="0,0,0,8"/>
+                
+                <ui:Button Content="{Binding InstallButtonText, FallbackValue=Install}"
+                           Command="{Binding InstallCommand}"
+                           IsEnabled="{Binding ShowDuplicateWarning, 
+                                Converter={StaticResource BoolNegationConverter}}"
+                           Width="100" Height="50"
+                           Background="Green"
+                           Margin="0,16,0,0"
+                           VerticalAlignment="Top" />
             </StackPanel>
             <FlowDocumentScrollViewer
                 Document="{Binding ReleaseNotes, Converter={StaticResource TextToFlowDocumentConverter}}"

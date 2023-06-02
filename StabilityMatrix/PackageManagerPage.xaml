@@ -2,6 +2,8 @@
     Background="{DynamicResource ApplicationBackgroundBrush}"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     Loaded="InstallPage_OnLoaded"
+    d:DataContext="{d:DesignInstance Type=viewModels:PackageManagerViewModel,
+                                     IsDesignTimeCreatable=True}"
     d:DesignHeight="450"
     d:DesignWidth="700"
     mc:Ignorable="d"
@@ -11,6 +13,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:StabilityMatrix.Models"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     
     <Page.Resources>
@@ -46,7 +49,7 @@
             Orientation="Horizontal">
             <StackPanel Orientation="Vertical">
                 <ui:Button
-                    Background="Green"
+                    Appearance="Success"
                     Command="{Binding ShowInstallWindowCommand}"
                     Foreground="{ui:ThemeResource TextFillColorPrimaryBrush}"
                     Height="40"
@@ -111,7 +114,7 @@
                     Text="{Binding SelectedPackage.Path, FallbackValue=C:\Users\Example\Downloads}" />
                 <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
                     <ui:Button
-                        Background="Green"
+                        Appearance="Success"
                         Command="{Binding InstallCommand}"
                         Content="{Binding InstallButtonText, FallbackValue=Install}"
                         Height="50"
@@ -120,7 +123,7 @@
                         Visibility="{Binding InstallButtonVisibility, FallbackValue=Visible}"
                         Width="100" />
                     <ui:Button
-                        Background="DarkRed"
+                        Appearance="Danger"
                         Command="{Binding UninstallCommand}"
                         Content="Uninstall"
                         Height="50"

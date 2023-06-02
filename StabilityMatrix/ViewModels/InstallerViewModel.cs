@@ -240,20 +240,22 @@ public partial class InstallerViewModel : ObservableObject
         SelectedPackage.InstallLocation = $"{InstallPath}\\{InstallName}";
         SelectedPackage.DisplayName = InstallName;
 
+        if (!PyRunner.PipInstalled || !PyRunner.VenvInstalled)
+        {
+            ProgressText = "Installing dependencies...";
+            await pyRunner.Initialize();
+            if (!PyRunner.PipInstalled)
+            {
+                await pyRunner.SetupPip();
+            }
+            if (!PyRunner.VenvInstalled)
+            {
+                await pyRunner.InstallPackage("virtualenv");
+            }
+        }
+
         var version = await DownloadPackage(SelectedVersion.TagName);
         await InstallPackage();
-
-        ProgressText = "Installing dependencies...";
-        await pyRunner.Initialize();
-        if (!PyRunner.PipInstalled)
-        {
-            await pyRunner.SetupPip();
-        }
-
-        if (!PyRunner.VenvInstalled)
-        {
-            await pyRunner.InstallPackage("virtualenv");
-        }
 
         ProgressText = "Done";
 

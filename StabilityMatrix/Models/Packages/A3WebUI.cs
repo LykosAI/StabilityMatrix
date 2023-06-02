@@ -16,7 +16,6 @@ public class A3WebUI : BaseGitPackage
     public override string DisplayName { get; set; } = "stable-diffusion-webui";
     public override string Author => "AUTOMATIC1111";
     public override string LaunchCommand => "launch.py";
-    public override string DefaultLaunchArguments => $"{GetVramOption()} {GetXformersOption()}";
     public string RelativeArgsDefinitionScriptPath => "modules.cmd_args";
 
     
@@ -24,12 +23,6 @@ public class A3WebUI : BaseGitPackage
 
     public override List<LaunchOptionDefinition> LaunchOptions => new()
     {
-        new()
-        {
-            Name = "API",
-            DefaultValue = true,
-            Options = new() {"--api"}
-        },
         new()
         {
             Name = "Host",
@@ -47,19 +40,27 @@ public class A3WebUI : BaseGitPackage
         new()
         {
             Name = "VRAM",
-            Options = new() {"--lowvram", "--medvram"}
+            InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
+            {
+                Level.Low => "--lowvram",
+                Level.Medium => "--medvram",
+                _ => null
+            },
+            Options = new() { "--lowvram", "--medvram" }
         },
         new()
         {
             Name = "Xformers",
-            Options = new() {"--xformers"}
+            InitialValue = HardwareHelper.HasNvidiaGpu(),
+            Options = new() { "--xformers" }
         },
         new()
         {
-            Name = "Extra Launch Arguments",
-            Type = LaunchOptionType.String,
-            Options = new() {""}
-        }
+            Name = "API",
+            DefaultValue = true,
+            Options = new() {"--api"}
+        },
+        LaunchOptionDefinition.Extras
     };
 
     public override async Task<string> GetLatestVersion()
@@ -123,23 +124,5 @@ public class A3WebUI : BaseGitPackage
         var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
 
         VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit, workingDirectory: installedPackagePath);
-    }
-
-    private static string GetVramOption()
-    {
-        var vramGb = HardwareHelper.GetGpuMemoryBytes() / 1024 / 1024 / 1024;
-
-        return vramGb switch
-        {
-            < 4 => "--lowvram",
-            < 8 => "--medvram",
-            _ => string.Empty
-        };
-    }
-
-    private static string GetXformersOption()
-    {
-        var gpuName = HardwareHelper.GetGpuChipName();
-        return gpuName.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase) ? "--xformers" : string.Empty;
     }
 }

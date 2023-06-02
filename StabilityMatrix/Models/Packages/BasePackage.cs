@@ -12,7 +12,6 @@ public abstract class BasePackage
     public abstract string Author { get; }
     public abstract string GithubUrl { get; }
     public abstract string LaunchCommand { get; }
-    public abstract string DefaultLaunchArguments { get; }
     public virtual bool UpdateAvailable { get; set; }
     public abstract Task<string?> DownloadPackage(string version, bool isUpdate = false);
     public abstract Task InstallPackage(bool isUpdate = false);

@@ -81,6 +81,7 @@ namespace StabilityMatrix
             
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, VladAutomatic>();
+            serviceCollection.AddSingleton<BasePackage, ComfyUI>();
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
             serviceCollection.AddSingleton<IPrerequisiteHelper, PrerequisiteHelper>();

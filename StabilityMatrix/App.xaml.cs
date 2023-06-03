@@ -160,6 +160,8 @@ namespace StabilityMatrix
         [DoesNotReturn]
         private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
+            var logger = serviceProvider?.GetRequiredService<ILogger<App>>();
+            logger?.LogCritical(e.Exception, "Unhandled Exception: {ExceptionMessage}", e.Exception.Message);
             var vm = new ExceptionWindowViewModel
             {
                 Exception = e.Exception

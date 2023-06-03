@@ -18,22 +18,22 @@ public class MockCheckpointManagerViewModel : CheckpointManagerViewModel
                     new()
                     {
                         Title = "Stable Diffusion v1.5",
-                        FileName = "v1-5-pruned-emaonly.safetensors",
+                        FilePath = "v1-5-pruned-emaonly.safetensors",
                     },
                     new()
                     {
                         Title = "Scenery Mix",
-                        FileName = "scenery-mix.pt",
+                        FilePath = "scenery-mix.pt",
                     },
                     new()
                     {
                         Title = "Example Realistic",
-                        FileName = "exr-v21.safetensors",
+                        FilePath = "exr-v21.safetensors",
                     },
                     new()
                     {
                         Title = "Painting e12",
-                        FileName = "painting-e12.pt",
+                        FilePath = "painting-e12.pt",
                     },
                 }
             },
@@ -45,12 +45,12 @@ public class MockCheckpointManagerViewModel : CheckpointManagerViewModel
                     new()
                     {
                         Title = "Detail Tweaker LoRA",
-                        FileName = "add_detail.safetensors",
+                        FilePath = "add_detail.safetensors",
                     },
                     new()
                     {
                         Title = "Armor Suit LoRa",
-                        FileName = "ArmorSuit_v1.safetensors",
+                        FilePath = "ArmorSuit_v1.safetensors",
                     },
                 }
             }

@@ -8,30 +8,25 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace StabilityMatrix.Models;
 
-public partial class CheckpointFile : ObservableObject
+public class CheckpointFile
 {
     /// <summary>
     /// Absolute path to the checkpoint file.
     /// </summary>
-    [ObservableProperty]
-    private string filePath;
+    public string FilePath { get; init; } = string.Empty;
     
     /// <summary>
     /// Custom title for UI.
     /// </summary>
-    [ObservableProperty]
-    private string title;
-
-    [ObservableProperty]
-    private string? previewImagePath;
+    public string Title { get; init; } = string.Empty;
     
-    [ObservableProperty]
-    private BitmapImage? previewImage;
+    public string? PreviewImagePath { get; set; } 
+    
+    public BitmapImage? PreviewImage { get; set; }
     
     public bool IsPreviewImageLoaded => PreviewImage != null;
-
-    [ObservableProperty]
-    private string fileName;
+    
+    public string FileName => Path.GetFileName(FilePath);
 
     private static readonly string[] SupportedCheckpointExtensions = { ".safetensors", ".pt" };
     private static readonly string[] SupportedImageExtensions = { ".png", ".jpg", ".jpeg" };
@@ -57,14 +52,13 @@ public partial class CheckpointFile : ObservableObject
             {
                 Title = Path.GetFileNameWithoutExtension(file),
                 FilePath = Path.Combine(directory, file),
-                FileName = file,
             };
 
             // Check for preview image
             var previewImage = SupportedImageExtensions.Select(ext => $"{checkpointFile.FileName}.preview.{ext}").FirstOrDefault(files.ContainsKey);
             if (previewImage != null)
             {
-                checkpointFile.PreviewImage = new BitmapImage(new Uri(Path.Combine(directory, previewImage)));
+                checkpointFile.PreviewImagePath = Path.Combine(directory, previewImage);
             }
 
             yield return checkpointFile;

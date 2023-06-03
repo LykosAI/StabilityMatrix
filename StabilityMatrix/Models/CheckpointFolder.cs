@@ -5,25 +5,17 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace StabilityMatrix.Models;
 
-public partial class CheckpointFolder : ObservableObject
+public class CheckpointFolder
 {
     /// <summary>
     /// Absolute path to the folder.
     /// </summary>
-    [ObservableProperty]
-    private string directoryPath;
+    public string DirectoryPath { get; init; } = string.Empty;
     
     /// <summary>
     /// Custom title for UI.
     /// </summary>
-    [ObservableProperty]
-    private string title;
-    
-    /// <summary>
-    /// State of indexing.
-    /// </summary>
-    [ObservableProperty]
-    private LoadState indexState = LoadState.NotLoaded;
+    public string Title { get; init; } = string.Empty;
 
     public ObservableCollection<CheckpointFile> CheckpointFiles { get; set; } = new();
 
@@ -32,7 +24,6 @@ public partial class CheckpointFolder : ObservableObject
     /// </summary>
     public async Task IndexAsync(IProgress<ProgressReport>? progress = default)
     {
-        IndexState = LoadState.Loading;
         var checkpointFiles = await (progress switch
         {
             null => Task.Run(() => CheckpointFile.FromDirectoryIndex(DirectoryPath)),
@@ -44,6 +35,5 @@ public partial class CheckpointFolder : ObservableObject
         {
             CheckpointFiles.Add(checkpointFile);
         }
-        IndexState = LoadState.Loaded;
     }
 }

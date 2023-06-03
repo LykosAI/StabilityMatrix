@@ -1,4 +1,6 @@
-﻿namespace StabilityMatrix.Models;
+﻿using StabilityMatrix.Models.Packages;
+
+namespace StabilityMatrix.Models;
 
 public interface ISharedFolders
 {

@@ -2,6 +2,7 @@
 using System.IO;
 using NCode.ReparsePoints;
 using NLog;
+using StabilityMatrix.Models.Packages;
 
 namespace StabilityMatrix.Models;
 

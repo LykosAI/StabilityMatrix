@@ -27,6 +27,12 @@ public partial class CheckpointManagerViewModel : ObservableObject
         {
             return;
         }
+        // Skip if the shared folder root doesn't exist
+        if (!Directory.Exists(sharedFolders.SharedFoldersPath))
+        {
+            Logger.Debug($"Skipped shared folder index - {sharedFolders.SharedFoldersPath} doesn't exist");
+            return;
+        }
         var folders = Directory.GetDirectories(sharedFolders.SharedFoldersPath);
         
         CheckpointFolders.Clear();

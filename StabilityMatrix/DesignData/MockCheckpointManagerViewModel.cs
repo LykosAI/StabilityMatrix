@@ -6,7 +6,7 @@ namespace StabilityMatrix.DesignData;
 [DesignOnly(true)]
 public class MockCheckpointManagerViewModel : CheckpointManagerViewModel
 {
-    public MockCheckpointManagerViewModel()
+    public MockCheckpointManagerViewModel() : base(null!)
     {
         CheckpointFolders = new()
         {

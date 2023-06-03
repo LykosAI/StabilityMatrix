@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
+using StabilityMatrix.Models;
 
 namespace StabilityMatrix.Services;
 
 public interface IDownloadService
 {
-    event EventHandler<int>? DownloadProgressChanged;
-    event EventHandler<string>? DownloadComplete;
-    Task DownloadToFileAsync(string downloadUrl, string downloadLocation, ushort bufferSize = ushort.MaxValue);
+    event EventHandler<ProgressReport>? DownloadProgressChanged;
+    event EventHandler<ProgressReport>? DownloadComplete;
+    Task DownloadToFileAsync(string downloadUrl, string downloadLocation, int bufferSize = ushort.MaxValue);
 }

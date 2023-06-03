@@ -112,10 +112,10 @@ public abstract class BaseGitPackage : BasePackage
             Directory.CreateDirectory(DownloadLocation.Replace($"{Name}.zip", ""));
         }
 
-        void DownloadProgressHandler(object? _, int progress) =>
+        void DownloadProgressHandler(object? _, ProgressReport progress) =>
             DownloadServiceOnDownloadProgressChanged(progress, isUpdate);
 
-        void DownloadFinishedHandler(object? _, string downloadLocation) =>
+        void DownloadFinishedHandler(object? _, ProgressReport downloadLocation) =>
             DownloadServiceOnDownloadFinished(downloadLocation, isUpdate);
 
         DownloadService.DownloadProgressChanged += DownloadProgressHandler;
@@ -129,27 +129,27 @@ public abstract class BaseGitPackage : BasePackage
         return version;
     }
 
-    private void DownloadServiceOnDownloadProgressChanged(int progress, bool isUpdate)
+    private void DownloadServiceOnDownloadProgressChanged(ProgressReport progress, bool isUpdate)
     {
         if (isUpdate)
         {
-            OnUpdateProgressChanged(progress);
+            OnUpdateProgressChanged(Convert.ToInt32(progress.Progress));
         }
         else
         {
-            OnDownloadProgressChanged(progress);
+            OnDownloadProgressChanged(Convert.ToInt32(progress.Progress));
         }
     }
     
-    private void DownloadServiceOnDownloadFinished(string downloadLocation, bool isUpdate)
+    private void DownloadServiceOnDownloadFinished(ProgressReport downloadLocation, bool isUpdate)
     {
         if (isUpdate)
         {
-            OnUpdateComplete(downloadLocation);
+            OnUpdateComplete(downloadLocation.Message);
         }
         else
         {
-            OnDownloadComplete(downloadLocation);
+            OnDownloadComplete(downloadLocation.Message);
         }
     }
 

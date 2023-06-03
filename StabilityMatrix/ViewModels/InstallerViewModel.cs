@@ -268,12 +268,7 @@ public partial class InstallerViewModel : ObservableObject
     {
         var isCurrentlyReleaseMode = IsReleaseMode;
         
-        var installSuccess = await InstallGitIfNecessary();
-        if (!installSuccess)
-        {
-            logger.LogError("Git installation failed");
-            return;
-        }
+        await InstallGitIfNecessary();
 
         SelectedPackage.InstallLocation = $"{InstallPath}\\{InstallName}";
         SelectedPackage.DisplayName = InstallName;
@@ -353,47 +348,43 @@ public partial class InstallerViewModel : ObservableObject
         SecondaryProgressText = e;
     }
 
-    private async Task<bool> InstallGitIfNecessary()
+    private async Task InstallGitIfNecessary()
     {
-        void DownloadProgressHandler(object? _, int progress)
+        void DownloadProgressHandler(object? _, ProgressReport progress)
         {
-            ProgressText = $"Downloading git... ({progress}%)";
-            ProgressValue = progress;
+            ProgressText = $"Downloading git... ({progress.Progress}%)";
+            ProgressValue = Convert.ToInt32(progress.Progress);
         }
 
-        void DownloadFinishedHandler(object? _, string downloadLocation)
+        void DownloadFinishedHandler(object? _, ProgressReport downloadLocation)
+        {
+            ProgressText = "Git download complete";
+            ProgressValue = 100;
+        }
+        
+        void InstallProgressHandler(object? _, ProgressReport progress)
+        {
+            ProgressText = $"Installing git... ({progress.Progress:N1}%)";
+            ProgressValue = Convert.ToInt32(progress.Progress);
+        }
+
+        void InstallFinishedHandler(object? _, ProgressReport __)
         {
             ProgressText = "Git install complete";
             ProgressValue = 100;
         }
 
-        downloadService.DownloadProgressChanged += DownloadProgressHandler;
-        downloadService.DownloadComplete += DownloadFinishedHandler;
-        
-        var gitProcess = await prerequisiteHelper.InstallGitIfNecessary();
-        if (gitProcess != null) // git isn't installed
-        {
-            IsIndeterminate = true;
-            ProgressText = "Installing git...";
-            await gitProcess.WaitForExitAsync();
-            if (gitProcess.ExitCode != 0)
-            {
-                ProgressText = "Installation failed";
-                SecondaryProgressText = "Error installing git. Please try again later.";
-                ProgressValue = 0;
-                logger.LogError($"Git install failed with exit code {gitProcess.ExitCode}");
-            }
-        }
-        
-        downloadService.DownloadProgressChanged -= DownloadProgressHandler;
-        downloadService.DownloadComplete -= DownloadFinishedHandler;
+        prerequisiteHelper.DownloadProgressChanged += DownloadProgressHandler;
+        prerequisiteHelper.DownloadComplete += DownloadFinishedHandler;
+        prerequisiteHelper.InstallProgressChanged += InstallProgressHandler;
+        prerequisiteHelper.InstallComplete += InstallFinishedHandler;
 
-        if (gitProcess == null)
-        {
-            return true;
-        }
+        await prerequisiteHelper.InstallGitIfNecessary();
         
-        return gitProcess.ExitCode == 0;
+        prerequisiteHelper.DownloadProgressChanged -= DownloadProgressHandler;
+        prerequisiteHelper.DownloadComplete -= DownloadFinishedHandler;
+        prerequisiteHelper.InstallProgressChanged -= InstallProgressHandler;
+        prerequisiteHelper.InstallComplete -= InstallFinishedHandler;
     }
     
     private void SelectedPackageOnProgressChanged(object? sender, int progress)

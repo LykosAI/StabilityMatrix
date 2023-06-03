@@ -20,7 +20,6 @@ public partial class OneClickInstallViewModel : ObservableObject
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly ILogger<MainWindowViewModel> logger;
     private readonly IPyRunner pyRunner;
-    private readonly IDownloadService downloadService;
     private const string DefaultPackageName = "stable-diffusion-webui";
     
     [ObservableProperty] private string headerText;
@@ -37,15 +36,13 @@ public partial class OneClickInstallViewModel : ObservableObject
         OneClickInstallProgress > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
 
     public OneClickInstallViewModel(ISettingsManager settingsManager, IPackageFactory packageFactory,
-        IPrerequisiteHelper prerequisiteHelper, ILogger<MainWindowViewModel> logger, IPyRunner pyRunner,
-        IDownloadService downloadService)
+        IPrerequisiteHelper prerequisiteHelper, ILogger<MainWindowViewModel> logger, IPyRunner pyRunner)
     {
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         this.prerequisiteHelper = prerequisiteHelper;
         this.logger = logger;
         this.pyRunner = pyRunner;
-        this.downloadService = downloadService;
 
         HeaderText = "Welcome to Stability Matrix!";
         SubHeaderText =
@@ -75,38 +72,41 @@ public partial class OneClickInstallViewModel : ObservableObject
         var a1111 = packageFactory.FindPackageByName(DefaultPackageName)!;
         HeaderText = "Installing Stable Diffusion WebUI...";
 
-        void DownloadProgressHandler(object? _, int progress)
+        void DownloadProgressHandler(object? _, ProgressReport progress)
         {
-            SubHeaderText = $"Downloading git... ({progress}%)";
-            OneClickInstallProgress = progress;
+            SubHeaderText = $"Downloading git... ({progress.Progress}%)";
+            OneClickInstallProgress = Convert.ToInt32(progress.Progress);
         }
 
-        void DownloadFinishedHandler(object? _, string downloadLocation)
+        void DownloadFinishedHandler(object? _, ProgressReport downloadLocation)
+        {
+            SubHeaderText = "Git download complete";
+            OneClickInstallProgress = 100;
+        }
+        
+        void InstallProgressHandler(object? _, ProgressReport progress)
+        {
+            SubHeaderText = $"Installing git... ({progress.Progress:N1}%)";
+            OneClickInstallProgress = Convert.ToInt32(progress.Progress);
+        }
+
+        void InstallFinishedHandler(object? _, ProgressReport __)
         {
             SubHeaderText = "Git install complete";
             OneClickInstallProgress = 100;
         }
 
-        downloadService.DownloadProgressChanged += DownloadProgressHandler;
-        downloadService.DownloadComplete += DownloadFinishedHandler;
+        prerequisiteHelper.DownloadProgressChanged += DownloadProgressHandler;
+        prerequisiteHelper.DownloadComplete += DownloadFinishedHandler;
+        prerequisiteHelper.InstallProgressChanged += InstallProgressHandler;
+        prerequisiteHelper.InstallComplete += InstallFinishedHandler;
+
+        await prerequisiteHelper.InstallGitIfNecessary();
         
-        var gitProcess = await prerequisiteHelper.InstallGitIfNecessary();
-        if (gitProcess != null) // git isn't installed
-        {
-            IsIndeterminate = true;
-            SubHeaderText = "Installing git...";
-            await gitProcess.WaitForExitAsync();
-            if (gitProcess.ExitCode != 0)
-            {
-                HeaderText = "Installation failed";
-                SubHeaderText = "Error installing git. Please try again later.";
-                OneClickInstallProgress = 0;
-                logger.LogError($"Git install failed with exit code {gitProcess.ExitCode}");
-            }
-        }
-        
-        downloadService.DownloadProgressChanged -= DownloadProgressHandler;
-        downloadService.DownloadComplete -= DownloadFinishedHandler;
+        prerequisiteHelper.DownloadProgressChanged -= DownloadProgressHandler;
+        prerequisiteHelper.DownloadComplete -= DownloadFinishedHandler;
+        prerequisiteHelper.InstallProgressChanged -= InstallProgressHandler;
+        prerequisiteHelper.InstallComplete -= InstallFinishedHandler;
 
         SubHeaderText = "Installing prerequisites...";
         IsIndeterminate = true;

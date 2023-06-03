@@ -5,24 +5,28 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Models;
 
 namespace StabilityMatrix.Services;
 
 public class DownloadService : IDownloadService
 {
     private readonly ILogger<DownloadService> logger;
+    private readonly IHttpClientFactory httpClientFactory;
 
-    public DownloadService(ILogger<DownloadService> logger)
+    public DownloadService(ILogger<DownloadService> logger, IHttpClientFactory httpClientFactory)
     {
         this.logger = logger;
+        this.httpClientFactory = httpClientFactory;
     }
     
-    public event EventHandler<int>? DownloadProgressChanged;
-    public event EventHandler<string>? DownloadComplete;
+    public event EventHandler<ProgressReport>? DownloadProgressChanged;
+    public event EventHandler<ProgressReport>? DownloadComplete;
     
-    public async Task DownloadToFileAsync(string downloadUrl, string downloadLocation, ushort bufferSize = ushort.MaxValue)
+    public async Task DownloadToFileAsync(string downloadUrl, string downloadLocation, int bufferSize = ushort.MaxValue)
     {
-        using var client = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+        using var client = httpClientFactory.CreateClient();
+        client.Timeout = TimeSpan.FromMinutes(5);
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("StabilityMatrix", "1.0"));
         await using var file = new FileStream(downloadLocation, FileMode.Create, FileAccess.Write, FileShare.None);
         
@@ -69,7 +73,10 @@ public class DownloadService : IDownloadService
         await file.FlushAsync();
         OnDownloadComplete(downloadLocation);
     }
-    
-    private void OnDownloadProgressChanged(int progress) => DownloadProgressChanged?.Invoke(this, progress);
-    private void OnDownloadComplete(string path) => DownloadComplete?.Invoke(this, path);
+
+    private void OnDownloadProgressChanged(int progress) =>
+        DownloadProgressChanged?.Invoke(this, new ProgressReport(progress));
+
+    private void OnDownloadComplete(string path) =>
+        DownloadComplete?.Invoke(this, new ProgressReport(progress: 100f, message: path));
 }

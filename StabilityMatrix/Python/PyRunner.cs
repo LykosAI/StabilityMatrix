@@ -15,11 +15,13 @@ public class PyRunner : IPyRunner
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private const string RelativeHomePath = @"Assets\Python310";
     private const string RelativeDllPath = @"Assets\Python310\python310.dll";
     private const string RelativeExePath = @"Assets\Python310\python.exe";
     private const string RelativePipExePath = @"Assets\Python310\Scripts\pip.exe";
     private const string RelativeGetPipPath = @"Assets\Python310\get-pip.pyc";
     private const string RelativeVenvPath = @"Assets\Python310\Scripts\virtualenv.exe";
+    public static string HomePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeHomePath);
     public static string DllPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeDllPath);
     public static string ExePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeExePath);
     public static string PipExePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativePipExePath);
@@ -43,14 +45,18 @@ public class PyRunner : IPyRunner
     {
         if (PythonEngine.IsInitialized) return;
 
-        Logger.Info("Initializing Python runtime with DLL: {DllPath}", DllPath);
+        Logger.Info("Setting PYTHONHOME and PATH to {HomePath}", HomePath);
+        Environment.SetEnvironmentVariable("PYTHONHOME", HomePath, EnvironmentVariableTarget.Process);
+        Environment.SetEnvironmentVariable("PATH", HomePath, EnvironmentVariableTarget.Process);
 
+        Logger.Info("Initializing Python runtime with DLL: {DllPath}", DllPath);
         // Check PythonDLL exists
         if (!File.Exists(DllPath))
         {
             Logger.Error("Python DLL not found");
             throw new FileNotFoundException("Python DLL not found", DllPath);
         }
+        
         Runtime.PythonDLL = DllPath;
         PythonEngine.Initialize();
         PythonEngine.BeginAllowThreads();

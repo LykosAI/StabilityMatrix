@@ -13,6 +13,7 @@ using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Packages;
 using StabilityMatrix.Python;
+using StabilityMatrix.Services;
 using Wpf.Ui.Controls.Window;
 using Application = System.Windows.Application;
 using EventManager = StabilityMatrix.Helper.EventManager;
@@ -27,6 +28,8 @@ public partial class InstallerViewModel : ObservableObject
     private readonly IPyRunner pyRunner;
     private readonly IPackageFactory packageFactory;
     private readonly ISharedFolders sharedFolders;
+    private readonly IPrerequisiteHelper prerequisiteHelper;
+    private readonly IDownloadService downloadService;
     private readonly ISnackbarService snackbarService;
 
     [ObservableProperty]
@@ -94,13 +97,16 @@ public partial class InstallerViewModel : ObservableObject
 
 
     public InstallerViewModel(ISettingsManager settingsManager, ILogger<InstallerViewModel> logger, IPyRunner pyRunner,
-        IPackageFactory packageFactory, ISnackbarService snackbarService, ISharedFolders sharedFolders)
+        IPackageFactory packageFactory, ISnackbarService snackbarService, ISharedFolders sharedFolders,
+        IPrerequisiteHelper prerequisiteHelper, IDownloadService downloadService)
     {
         this.settingsManager = settingsManager;
         this.logger = logger;
         this.pyRunner = pyRunner;
         this.packageFactory = packageFactory;
         this.sharedFolders = sharedFolders;
+        this.prerequisiteHelper = prerequisiteHelper;
+        this.downloadService = downloadService;
         this.snackbarService = snackbarService;
 
         ProgressText = "";
@@ -114,7 +120,7 @@ public partial class InstallerViewModel : ObservableObject
 
         AvailablePackages = new ObservableCollection<BasePackage>(packageFactory.GetAllAvailablePackages());
         if (!AvailablePackages.Any()) return;
-        
+
         SelectedPackage = AvailablePackages[0];
         InstallName = SelectedPackage.DisplayName;
     }
@@ -349,28 +355,45 @@ public partial class InstallerViewModel : ObservableObject
 
     private async Task<bool> InstallGitIfNecessary()
     {
-        try
+        void DownloadProgressHandler(object? _, int progress)
         {
-            var gitOutput = await ProcessRunner.GetProcessOutputAsync("git", "--version");
-            if (gitOutput.Contains("git version 2"))
+            ProgressText = $"Downloading git... ({progress}%)";
+            ProgressValue = progress;
+        }
+
+        void DownloadFinishedHandler(object? _, string downloadLocation)
+        {
+            ProgressText = "Git install complete";
+            ProgressValue = 100;
+        }
+
+        downloadService.DownloadProgressChanged += DownloadProgressHandler;
+        downloadService.DownloadComplete += DownloadFinishedHandler;
+        
+        var gitProcess = await prerequisiteHelper.InstallGitIfNecessary();
+        if (gitProcess != null) // git isn't installed
+        {
+            IsIndeterminate = true;
+            ProgressText = "Installing git...";
+            await gitProcess.WaitForExitAsync();
+            if (gitProcess.ExitCode != 0)
             {
-                return true;
+                ProgressText = "Installation failed";
+                SecondaryProgressText = "Error installing git. Please try again later.";
+                ProgressValue = 0;
+                logger.LogError($"Git install failed with exit code {gitProcess.ExitCode}");
             }
         }
-        catch (Exception e)
+        
+        downloadService.DownloadProgressChanged -= DownloadProgressHandler;
+        downloadService.DownloadComplete -= DownloadFinishedHandler;
+
+        if (gitProcess == null)
         {
-            logger.LogError(e, "Error running git: ");
+            return true;
         }
-
-        IsIndeterminate = true;
-        ProgressText = "Installing Git...";
-        using var installProcess =
-            ProcessRunner.StartProcess("Assets\\Git-2.40.1-64-bit.exe", "/VERYSILENT /NORESTART");
-        installProcess.OutputDataReceived += (sender, args) => { Debug.Write(args.Data); };
-        await installProcess.WaitForExitAsync();
-        IsIndeterminate = false;
-
-        return installProcess.ExitCode == 0;
+        
+        return gitProcess.ExitCode == 0;
     }
     
     private void SelectedPackageOnProgressChanged(object? sender, int progress)

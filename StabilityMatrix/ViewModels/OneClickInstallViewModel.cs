@@ -8,6 +8,7 @@ using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Packages;
 using StabilityMatrix.Python;
+using StabilityMatrix.Services;
 using EventManager = StabilityMatrix.Helper.EventManager;
 
 namespace StabilityMatrix.ViewModels;
@@ -19,6 +20,7 @@ public partial class OneClickInstallViewModel : ObservableObject
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly ILogger<MainWindowViewModel> logger;
     private readonly IPyRunner pyRunner;
+    private readonly IDownloadService downloadService;
     private const string DefaultPackageName = "stable-diffusion-webui";
     
     [ObservableProperty] private string headerText;
@@ -30,18 +32,21 @@ public partial class OneClickInstallViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
     private int oneClickInstallProgress;
 
-    
-    public Visibility ProgressBarVisibility => OneClickInstallProgress > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+    public Visibility ProgressBarVisibility =>
+        OneClickInstallProgress > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
 
     public OneClickInstallViewModel(ISettingsManager settingsManager, IPackageFactory packageFactory,
-        IPrerequisiteHelper prerequisiteHelper, ILogger<MainWindowViewModel> logger, IPyRunner pyRunner)
+        IPrerequisiteHelper prerequisiteHelper, ILogger<MainWindowViewModel> logger, IPyRunner pyRunner,
+        IDownloadService downloadService)
     {
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         this.prerequisiteHelper = prerequisiteHelper;
         this.logger = logger;
         this.pyRunner = pyRunner;
-        
+        this.downloadService = downloadService;
+
         HeaderText = "Welcome to Stability Matrix!";
         SubHeaderText =
             "Click the Install button below to get started!\n" +
@@ -69,7 +74,22 @@ public partial class OneClickInstallViewModel : ObservableObject
     {
         var a1111 = packageFactory.FindPackageByName(DefaultPackageName)!;
         HeaderText = "Installing Stable Diffusion WebUI...";
-        // check git
+
+        void DownloadProgressHandler(object? _, int progress)
+        {
+            SubHeaderText = $"Downloading git... ({progress}%)";
+            OneClickInstallProgress = progress;
+        }
+
+        void DownloadFinishedHandler(object? _, string downloadLocation)
+        {
+            SubHeaderText = "Git install complete";
+            OneClickInstallProgress = 100;
+        }
+
+        downloadService.DownloadProgressChanged += DownloadProgressHandler;
+        downloadService.DownloadComplete += DownloadFinishedHandler;
+        
         var gitProcess = await prerequisiteHelper.InstallGitIfNecessary();
         if (gitProcess != null) // git isn't installed
         {
@@ -84,6 +104,9 @@ public partial class OneClickInstallViewModel : ObservableObject
                 logger.LogError($"Git install failed with exit code {gitProcess.ExitCode}");
             }
         }
+        
+        downloadService.DownloadProgressChanged -= DownloadProgressHandler;
+        downloadService.DownloadComplete -= DownloadFinishedHandler;
 
         SubHeaderText = "Installing prerequisites...";
         IsIndeterminate = true;

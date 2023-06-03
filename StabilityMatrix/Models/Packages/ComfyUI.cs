@@ -9,6 +9,7 @@ using NLog;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
 using StabilityMatrix.Python;
+using StabilityMatrix.Services;
 
 namespace StabilityMatrix.Models.Packages;
 
@@ -21,7 +22,8 @@ public class ComfyUI : BaseGitPackage
     public override string LaunchCommand => "main.py";
     public override bool ShouldIgnoreReleases => true;
 
-    public ComfyUI(IGithubApiCache githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager)
+    public ComfyUI(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService) :
+        base(githubApi, settingsManager, downloadService)
     {
     }
 

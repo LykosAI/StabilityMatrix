@@ -2,12 +2,14 @@
 using System.Threading.Tasks;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
+using StabilityMatrix.Services;
 
 namespace StabilityMatrix.Models.Packages;
 
 public class DankDiffusion : BaseGitPackage
 {
-    public DankDiffusion(IGithubApiCache githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager)
+    public DankDiffusion(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService) :
+        base(githubApi, settingsManager, downloadService)
     {
     }
 

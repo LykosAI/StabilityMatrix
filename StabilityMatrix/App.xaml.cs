@@ -93,6 +93,7 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
             serviceCollection.AddSingleton<IPrerequisiteHelper, PrerequisiteHelper>();
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
+            serviceCollection.AddSingleton<IDownloadService, DownloadService>();
             serviceCollection.AddTransient<IGitHubClient, GitHubClient>(_ =>
             {
                 var client = new GitHubClient(new ProductHeaderValue("StabilityMatrix"));

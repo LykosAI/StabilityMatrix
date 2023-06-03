@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
+using StabilityMatrix.Services;
 
 namespace StabilityMatrix.Models.Packages;
 
@@ -18,8 +19,11 @@ public class A3WebUI : BaseGitPackage
     public override string LaunchCommand => "launch.py";
     public string RelativeArgsDefinitionScriptPath => "modules.cmd_args";
 
-    
-    public A3WebUI(IGithubApiCache githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager) { }
+
+    public A3WebUI(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService) :
+        base(githubApi, settingsManager, downloadService)
+    {
+    }
 
     // From https://github.com/AUTOMATIC1111/stable-diffusion-webui/tree/master/models
     public override Dictionary<SharedFolderType, string> SharedFolders => new()

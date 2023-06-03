@@ -30,17 +30,24 @@ public class ComfyUI : BaseGitPackage
         new()
         {
             Name = "VRAM",
-            Options = new() { "--lowvram", "--medvram" }
+            InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
+            {
+                Level.Low => "--lowvram",
+                Level.Medium => "--normalvram",
+                _ => null
+            },
+            Options = new() { "--highvram", "--normalvram", "--lowvram", "--novram", "--cpu" }
         },
         new()
         {
-            Name = "Xformers",
-            Options = new() { "--xformers" }
+            Name = "Disable Xformers",
+            InitialValue = !HardwareHelper.HasNvidiaGpu(),
+            Options = new() { "--disable-xformers" }
         },
         new()
         {
-            Name = "API",
-            Options = new() { "--api" }
+            Name = "Auto-Launch",
+            Options = new() { "--auto-launch" }
         },
         LaunchOptionDefinition.Extras
     };
@@ -77,6 +84,13 @@ public class ComfyUI : BaseGitPackage
         // Install torch
         Logger.Debug("Starting torch install...");
         await venvRunner.PipInstall(venvRunner.GetTorchInstallCommand(), InstallLocation, HandleConsoleOutput);
+        
+        // Install xformers if nvidia
+        if (HardwareHelper.HasNvidiaGpu())
+        {
+            await venvRunner.PipInstall("xformers", InstallLocation, HandleConsoleOutput);
+        }
+
         // Install requirements
         Logger.Debug("Starting requirements install...");
         await venvRunner.PipInstall("-r requirements.txt", InstallLocation, HandleConsoleOutput);

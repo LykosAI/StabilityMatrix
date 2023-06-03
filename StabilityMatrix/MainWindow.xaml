@@ -11,7 +11,8 @@
     d:DesignWidth="700"
     d:DataContext="{d:DesignInstance Type=viewModels:MainWindowViewModel,
                                      IsDesignTimeCreatable=True}"
-    d:Background="#FF202020"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d"
     x:Class="StabilityMatrix.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"

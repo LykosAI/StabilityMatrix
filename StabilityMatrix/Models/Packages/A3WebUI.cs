@@ -25,6 +25,11 @@ public class A3WebUI : BaseGitPackage
     public override Dictionary<SharedFolderType, string> SharedFolders => new()
     {
         [SharedFolderType.StableDiffusion] = "models/Stable-diffusion",
+        [SharedFolderType.ESRGAN] = "models/ESRGAN",
+        [SharedFolderType.RealESRGAN] = "models/RealESRGAN",
+        [SharedFolderType.SwinIR] = "models/SwinIR",
+        [SharedFolderType.Lora] = "models/Lora",
+        [SharedFolderType.LyCORIS] = "models/LyCORIS",
         [SharedFolderType.ApproxVAE] = "models/VAE-approx",
         [SharedFolderType.VAE] = "models/VAE",
         [SharedFolderType.DeepDanbooru] = "models/deepbooru",

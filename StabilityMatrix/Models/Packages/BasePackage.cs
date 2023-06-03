@@ -26,6 +26,12 @@ public abstract class BasePackage
     public abstract List<LaunchOptionDefinition> LaunchOptions { get; }
     public virtual string? ExtraLaunchArguments { get; set; } = null;
     
+    /// <summary>
+    /// The shared folders that this package supports.
+    /// Mapping of <see cref="SharedFolderType"/> to the relative path from the package root.
+    /// </summary>
+    public virtual Dictionary<SharedFolderType, string>? SharedFolders { get; }
+    
     public abstract Task<string> GetLatestVersion();
     public abstract Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true);
     public abstract Task<IReadOnlyList<GitHubCommit>?> GetAllCommits(string branch, int page = 1, int perPage = 10);

@@ -1,0 +1,89 @@
+﻿<Page
+    Background="{DynamicResource ApplicationBackgroundBrush}"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    Loaded="CheckpointManagerPage_OnLoaded"
+    d:DataContext="{d:DesignInstance Type=designData:MockCheckpointManagerViewModel,
+                                     IsDesignTimeCreatable=True}"
+    d:DesignHeight="500"
+    d:DesignWidth="650"
+    mc:Ignorable="d"
+    x:Class="StabilityMatrix.CheckpointManagerPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:designData="clr-namespace:StabilityMatrix.DesignData"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:StabilityMatrix.Models"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Page.Resources>
+        <DataTemplate DataType="{x:Type models:CheckpointFile}" x:Key="CheckpointFileDataTemplate">
+            <ui:CardAction Height="96" Width="240">
+                <StackPanel Orientation="Vertical">
+                    <ui:Image
+                        CornerRadius="4"
+                        Margin="4,4,4,8"
+                        MinHeight="256"
+                        MinWidth="200"
+                        Source="{Binding PreviewImage}"
+                        Stretch="UniformToFill"
+                        Visibility="Collapsed"
+                        Width="128" />
+                    <TextBlock
+                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                        Margin="0,0,0,0"
+                        Text="{Binding Title}"
+                        VerticalAlignment="Center" />
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                        Margin="0,2,0,0"
+                        Text="{Binding FileName}"
+                        VerticalAlignment="Center" />
+                </StackPanel>
+            </ui:CardAction>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type models:CheckpointFolder}" x:Key="CheckpointFolderGridDataTemplate">
+            <Expander
+                AllowDrop="True"
+                Header="{Binding Title}"
+                IsExpanded="True"
+                Margin="8">
+                <ui:VirtualizingGridView
+                    ItemTemplate="{StaticResource CheckpointFileDataTemplate}"
+                    ItemsSource="{Binding CheckpointFiles}"
+                    Padding="5"
+                    PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel"
+                    SpacingMode="StartAndEndOnly" />
+            </Expander>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type models:CheckpointFolder}" x:Key="CheckpointFolderDataTemplate">
+            <ContentControl Content="{Binding}">
+                <ContentControl.Style>
+                    <Style TargetType="{x:Type ContentControl}">
+                        <Setter Property="ContentTemplate" Value="{StaticResource CheckpointFolderGridDataTemplate}" />
+                    </Style>
+                </ContentControl.Style>
+            </ContentControl>
+        </DataTemplate>
+    </Page.Resources>
+
+    <!--  Folder Cards  -->
+    <ui:DynamicScrollViewer
+        CanContentScroll="True"
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <Grid>
+            <StackPanel Orientation="Vertical">
+                <ItemsControl
+                    HorizontalAlignment="Stretch"
+                    ItemTemplate="{StaticResource CheckpointFolderGridDataTemplate}"
+                    ItemsSource="{Binding CheckpointFolders, Mode=OneWay}"
+                    Margin="16,16,16,16" />
+            </StackPanel>
+        </Grid>
+    </ui:DynamicScrollViewer>
+</Page>

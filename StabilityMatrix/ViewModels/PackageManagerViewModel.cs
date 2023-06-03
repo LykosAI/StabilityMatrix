@@ -217,6 +217,24 @@ public partial class PackageManagerViewModel : ObservableObject
     
     private void DeleteDirectory(string targetDirectory)
     {
+        // Skip if directory does not exist
+        if (!Directory.Exists(targetDirectory))
+        {
+            return;
+        }
+        // For junction points, delete with recursive false
+        if (new DirectoryInfo(targetDirectory).LinkTarget != null)
+        {
+            logger.LogInformation("Removing junction point {TargetDirectory}", targetDirectory);
+            Directory.Delete(targetDirectory, false);
+            return;
+        }
+        // Recursively delete all subdirectories
+        var subdirectoryEntries = Directory.GetDirectories(targetDirectory);
+        foreach (var subdirectoryPath in subdirectoryEntries)
+        {
+            DeleteDirectory(subdirectoryPath);
+        }
         // Delete all files in the directory
         var fileEntries = Directory.GetFiles(targetDirectory);
         foreach (var filePath in fileEntries)
@@ -224,14 +242,6 @@ public partial class PackageManagerViewModel : ObservableObject
             File.SetAttributes(filePath, FileAttributes.Normal);
             File.Delete(filePath);
         }
-
-        // Recursively delete all subdirectories
-        var subdirectoryEntries = Directory.GetDirectories(targetDirectory);
-        foreach (var subdirectoryPath in subdirectoryEntries)
-        {
-            DeleteDirectory(subdirectoryPath);
-        }
-
         // Delete the target directory itself
         Directory.Delete(targetDirectory, false);
     }

@@ -26,6 +26,7 @@ public partial class InstallerViewModel : ObservableObject
     private readonly ILogger<InstallerViewModel> logger;
     private readonly IPyRunner pyRunner;
     private readonly IPackageFactory packageFactory;
+    private readonly ISharedFolders sharedFolders;
     private readonly ISnackbarService snackbarService;
 
     [ObservableProperty]
@@ -93,12 +94,13 @@ public partial class InstallerViewModel : ObservableObject
 
 
     public InstallerViewModel(ISettingsManager settingsManager, ILogger<InstallerViewModel> logger, IPyRunner pyRunner,
-        IPackageFactory packageFactory, ISnackbarService snackbarService)
+        IPackageFactory packageFactory, ISnackbarService snackbarService, ISharedFolders sharedFolders)
     {
         this.settingsManager = settingsManager;
         this.logger = logger;
         this.pyRunner = pyRunner;
         this.packageFactory = packageFactory;
+        this.sharedFolders = sharedFolders;
         this.snackbarService = snackbarService;
 
         ProgressText = "";
@@ -290,8 +292,10 @@ public partial class InstallerViewModel : ObservableObject
         
         await InstallPackage();
 
+        ProgressText = "Setting up shared folder links...";
+        sharedFolders.SetupLinksForPackage(SelectedPackage, SelectedPackage.InstallLocation);
+        
         ProgressText = "Done";
-
         IsIndeterminate = false;
         SelectedPackageOnProgressChanged(this, 100);
 

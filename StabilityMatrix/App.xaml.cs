@@ -64,6 +64,7 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<Wpf.Ui.Contracts.ISnackbarService, Wpf.Ui.Services.SnackbarService>();
             serviceCollection.AddSingleton<IPackageFactory, PackageFactory>();
             serviceCollection.AddSingleton<IPyRunner, PyRunner>();
+            serviceCollection.AddSingleton<ISharedFolders, SharedFolders>();
             serviceCollection.AddTransient<IDialogFactory, DialogFactory>();
             
             serviceCollection.AddTransient<MainWindow>();
@@ -71,6 +72,7 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<LaunchPage>();
             serviceCollection.AddTransient<PackageManagerPage>();
             serviceCollection.AddTransient<TextToImagePage>();
+            serviceCollection.AddTransient<CheckpointManagerPage>();
             serviceCollection.AddTransient<InstallerWindow>();
             
             serviceCollection.AddTransient<MainWindowViewModel>();
@@ -82,6 +84,7 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<TextToImageViewModel>();
             serviceCollection.AddTransient<InstallerViewModel>();
             serviceCollection.AddTransient<OneClickInstallViewModel>();
+            serviceCollection.AddTransient<CheckpointManagerViewModel>();
             
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, VladAutomatic>();
@@ -159,6 +162,8 @@ namespace StabilityMatrix
         [DoesNotReturn]
         private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
+            var logger = serviceProvider?.GetRequiredService<ILogger<App>>();
+            logger?.LogCritical(e.Exception, "Unhandled Exception: {ExceptionMessage}", e.Exception.Message);
             var vm = new ExceptionWindowViewModel
             {
                 Exception = e.Exception

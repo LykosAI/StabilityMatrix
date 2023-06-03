@@ -61,7 +61,12 @@
                     </ui:NavigationViewItem>
                     <ui:NavigationViewItem Content="Package Manager" TargetPageType="{x:Type local:PackageManagerPage}">
                         <ui:NavigationViewItem.Icon>
-                            <ui:SymbolIcon Symbol="Wrench24" />
+                            <ui:SymbolIcon Symbol="Box24" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
+                    <ui:NavigationViewItem Content="Checkpoints" TargetPageType="{x:Type local:CheckpointManagerPage}">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:SymbolIcon Symbol="Notebook24" />
                         </ui:NavigationViewItem.Icon>
                     </ui:NavigationViewItem>
                     <ui:NavigationViewItem Content="Text2Image (Beta™)" TargetPageType="{x:Type local:TextToImagePage}">

@@ -16,7 +16,7 @@ public class PackageFactoryTests
         fakeBasePackages = new List<BasePackage>
         {
             // TODO: inject mocks
-            new DankDiffusion(null, null)
+            new DankDiffusion(null, null, null)
         };
         packageFactory = new PackageFactory(fakeBasePackages);
     }

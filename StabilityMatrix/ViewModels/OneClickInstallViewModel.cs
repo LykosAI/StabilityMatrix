@@ -135,6 +135,7 @@ public partial class OneClickInstallViewModel : ObservableObject
             Id = Guid.NewGuid(),
             PackageName = a1111.Name,
             PackageVersion = latestVersion,
+            DisplayVersion = latestVersion,
             LaunchCommand = a1111.LaunchCommand,
             LastUpdateCheck = DateTimeOffset.Now
         };

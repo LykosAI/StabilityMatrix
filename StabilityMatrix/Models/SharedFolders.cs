@@ -9,7 +9,7 @@ public class SharedFolders : ISharedFolders
 {
     private const string SharedFoldersName = "Models";
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    private static readonly string SharedFoldersPath =
+    public string SharedFoldersPath { get; } =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix",
             SharedFoldersName);
 

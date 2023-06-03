@@ -23,6 +23,7 @@ public partial class InstallerViewModel : ObservableObject
     private readonly ILogger<InstallerViewModel> logger;
     private readonly IPyRunner pyRunner;
     private readonly IPackageFactory packageFactory;
+    private readonly ISharedFolders sharedFolders;
     
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
@@ -84,12 +85,13 @@ public partial class InstallerViewModel : ObservableObject
 
 
     public InstallerViewModel(ISettingsManager settingsManager, ILogger<InstallerViewModel> logger, IPyRunner pyRunner,
-        IPackageFactory packageFactory)
+        IPackageFactory packageFactory, ISharedFolders sharedFolders)
     {
         this.settingsManager = settingsManager;
         this.logger = logger;
         this.pyRunner = pyRunner;
         this.packageFactory = packageFactory;
+        this.sharedFolders = sharedFolders;
         
         ProgressText = "";
         InstallButtonText = "Install";
@@ -257,8 +259,10 @@ public partial class InstallerViewModel : ObservableObject
         var version = await DownloadPackage(SelectedVersion.TagName);
         await InstallPackage();
 
+        ProgressText = "Setting up shared folder links...";
+        sharedFolders.SetupLinksForPackage(SelectedPackage, SelectedPackage.InstallLocation);
+        
         ProgressText = "Done";
-
         IsIndeterminate = false;
         SelectedPackageOnProgressChanged(this, 100);
 

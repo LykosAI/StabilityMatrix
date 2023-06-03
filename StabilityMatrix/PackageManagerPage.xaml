@@ -1,11 +1,12 @@
 ﻿<Page
-    Background="{DynamicResource ApplicationBackgroundBrush}"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     Loaded="InstallPage_OnLoaded"
     d:DataContext="{d:DesignInstance Type=viewModels:PackageManagerViewModel,
                                      IsDesignTimeCreatable=True}"
     d:DesignHeight="450"
     d:DesignWidth="700"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     mc:Ignorable="d"
     x:Class="StabilityMatrix.PackageManagerPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -92,7 +93,7 @@
                         <DataTemplate DataType="{x:Type models:InstalledPackage}">
                             <StackPanel Margin="8" VerticalAlignment="Top">
                                 <TextBlock Margin="0,5,0,5" Text="{Binding DisplayName}" />
-                                <TextBlock Margin="0,0,0,5" Text="{Binding PackageVersion}" />
+                                <TextBlock Margin="0,0,0,5" Text="{Binding DisplayVersion}" />
                             </StackPanel>
                         </DataTemplate>
                     </ListView.ItemTemplate>
@@ -106,7 +107,7 @@
                     Text="{Binding SelectedPackage.DisplayName, FallbackValue=Stable Diffusion Web UI}" />
                 <TextBlock FontSize="12" Margin="0,5,0,5">
                     <Run Text="{Binding SelectedPackage.PackageName, FallbackValue=stable-diffusion-webui}" />
-                    <Run Text="{Binding SelectedPackage.PackageVersion, FallbackValue=v1.3.37}" />
+                    <Run Text="{Binding SelectedPackage.DisplayVersion, FallbackValue=v1.3.37}" />
                 </TextBlock>
                 <TextBlock
                     FontSize="12"

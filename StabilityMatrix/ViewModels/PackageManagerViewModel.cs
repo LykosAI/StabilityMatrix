@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using StabilityMatrix.Helper;
@@ -15,6 +13,7 @@ using Polly;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.ContentDialogControl;
 using EventManager = StabilityMatrix.Helper.EventManager;
+using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -25,7 +24,7 @@ public partial class PackageManagerViewModel : ObservableObject
     private readonly IPackageFactory packageFactory;
     private readonly IDialogFactory dialogFactory;
     private readonly IContentDialogService contentDialogService;
-    private readonly IDialogErrorHandler dialogErrorHandler;
+    private readonly ISnackbarService snackbarService;
     private const int MinutesToWaitForUpdateCheck = 60;
 
     [ObservableProperty]
@@ -58,14 +57,14 @@ public partial class PackageManagerViewModel : ObservableObject
     private bool updateAvailable;
 
     public PackageManagerViewModel(ILogger<PackageManagerViewModel> logger, ISettingsManager settingsManager,
-        IPackageFactory packageFactory, IDialogFactory dialogFactory, IContentDialogService contentDialogService, IDialogErrorHandler dialogErrorHandler)
+        IPackageFactory packageFactory, IDialogFactory dialogFactory, IContentDialogService contentDialogService, ISnackbarService snackbarService)
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         this.dialogFactory = dialogFactory;
         this.contentDialogService = contentDialogService;
-        this.dialogErrorHandler = dialogErrorHandler;
+        this.snackbarService = snackbarService;
 
         ProgressText = "shrug";
         InstallButtonText = "Install";
@@ -174,8 +173,9 @@ public partial class PackageManagerViewModel : ObservableObject
         if (result == ContentDialogResult.Primary)
         {
             IsUninstalling = true;
+            InstallButtonEnabled = false;
             var deleteTask = DeleteDirectoryAsync(SelectedPackage.Path);
-            var taskResult = await dialogErrorHandler.TryAsync(deleteTask,
+            var taskResult = await snackbarService.TryAsync(deleteTask,
                 "Some files could not be deleted. Please close any open files in the package directory and try again.");
             if (taskResult.IsSuccessful)
             {
@@ -183,6 +183,9 @@ public partial class PackageManagerViewModel : ObservableObject
             }
             await OnLoaded();
             IsUninstalling = false;
+            InstallButtonEnabled = true;
+            snackbarService.ShowSnackbarAsync($"Package {SelectedPackage.DisplayName} uninstalled", "Success",
+                LogLevel.Trace);
         }
     }
     
@@ -262,8 +265,8 @@ public partial class PackageManagerViewModel : ObservableObject
             SelectedPackage.UpdateAvailable = false;
             UpdateAvailable = false;
         };
-        var updateResult = await package.Update();
-        settingsManager.UpdatePackageVersionNumber(SelectedPackage.DisplayName!, updateResult!);
+        var updateResult = await package.Update(SelectedPackage);
+        settingsManager.UpdatePackageVersionNumber(SelectedPackage.Id, updateResult);
         await OnLoaded();
     }
 

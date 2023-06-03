@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
+using Octokit;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
@@ -24,6 +25,9 @@ using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Services;
+using Application = System.Windows.Application;
+using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
+using SnackbarService = StabilityMatrix.Helper.SnackbarService;
 
 namespace StabilityMatrix
 {
@@ -57,7 +61,7 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<IPageService, PageService>();
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
             serviceCollection.AddSingleton<PageContentDialogService>();
-            serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
+            serviceCollection.AddSingleton<Wpf.Ui.Contracts.ISnackbarService, Wpf.Ui.Services.SnackbarService>();
             serviceCollection.AddSingleton<IPackageFactory, PackageFactory>();
             serviceCollection.AddSingleton<IPyRunner, PyRunner>();
             serviceCollection.AddSingleton<ISharedFolders, SharedFolders>();
@@ -85,10 +89,20 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, VladAutomatic>();
             serviceCollection.AddSingleton<BasePackage, ComfyUI>();
-            serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
+            serviceCollection.AddSingleton<Wpf.Ui.Contracts.ISnackbarService, Wpf.Ui.Services.SnackbarService>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
             serviceCollection.AddSingleton<IPrerequisiteHelper, PrerequisiteHelper>();
-            serviceCollection.AddSingleton<IDialogErrorHandler, DialogErrorHandler>();
+            serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
+            serviceCollection.AddTransient<IGitHubClient, GitHubClient>(_ =>
+            {
+                var client = new GitHubClient(new ProductHeaderValue("StabilityMatrix"));
+                var githubApiKey = Config["GithubApiKey"];
+                if (string.IsNullOrWhiteSpace(githubApiKey))
+                    return client;
+                
+                client.Credentials = new Credentials(githubApiKey);
+                return client;
+            });
             serviceCollection.AddMemoryCache();
             serviceCollection.AddSingleton<IGithubApiCache, GithubApiCache>();
 
@@ -109,19 +123,6 @@ namespace StabilityMatrix
                 .WaitAndRetryAsync(delay);
 
             // Add Refit clients
-            serviceCollection.AddRefitClient<IGithubApi>(defaultRefitSettings)
-                .ConfigureHttpClient(c =>
-                {
-                    c.BaseAddress = new Uri("https://api.github.com");
-                    c.Timeout = TimeSpan.FromSeconds(5);
-
-                    var githubApiKey = Config["GithubApiKey"];
-                    if (!string.IsNullOrEmpty(githubApiKey))
-                    {
-                        c.DefaultRequestHeaders.Add("Authorization", $"Bearer {githubApiKey}");
-                    }
-                })
-                .AddPolicyHandler(retryPolicy);
             serviceCollection.AddRefitClient<IA3WebApi>(defaultRefitSettings)
                 .ConfigureHttpClient(c =>
                 {

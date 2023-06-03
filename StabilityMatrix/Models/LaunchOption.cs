@@ -1,14 +1,16 @@
 ﻿using System;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using StabilityMatrix.Converters.Json;
 using StabilityMatrix.Helper;
 
 namespace StabilityMatrix.Models;
 
-public partial class LaunchOption : ObservableObject
+public class LaunchOption
 {
     public string Name { get; init; }
-    [JsonConverter(typeof(JsonStringEnumConverter))]
+    
     public LaunchOptionType Type { get; init; }
     
     [JsonIgnore]
@@ -17,8 +19,8 @@ public partial class LaunchOption : ObservableObject
     [JsonIgnore]
     public bool HasDefaultValue => DefaultValue != null;
 
-    [ObservableProperty]
-    private object? optionValue;
+    [JsonConverter(typeof(LaunchOptionValueJsonConverter))]
+    public object? OptionValue { get; set; }
 
     public bool IsEmptyOrDefault()
     {

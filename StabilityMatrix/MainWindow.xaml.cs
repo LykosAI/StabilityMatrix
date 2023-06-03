@@ -7,6 +7,7 @@ using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.Navigation;
 using Wpf.Ui.Controls.Window;
 using EventManager = StabilityMatrix.Helper.EventManager;
+using ISnackbarService = Wpf.Ui.Contracts.ISnackbarService;
 
 namespace StabilityMatrix
 {

@@ -23,6 +23,7 @@
     <PackageReference Include="NCode.ReparsePoints" Version="1.0.2" />
     <PackageReference Include="NLog" Version="5.1.4" />
     <PackageReference Include="NLog.Extensions.Logging" Version="5.2.3" />
+    <PackageReference Include="Octokit" Version="6.0.0" />
     <PackageReference Include="Ookii.Dialogs.Wpf" Version="5.0.1" />
     <PackageReference Include="Polly" Version="7.2.3" />
     <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />

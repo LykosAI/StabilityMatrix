@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using StabilityMatrix.Models;
+using Wpf.Ui.Controls.Window;
 
 namespace StabilityMatrix.Helper;
 
@@ -63,15 +65,20 @@ public class SettingsManager : ISettingsManager
         SaveSettings();
     }
 
-    public void UpdatePackageVersionNumber(string name, string? newVersion)
+    public void UpdatePackageVersionNumber(Guid id, string? newVersion)
     {
-        var package = Settings.InstalledPackages.FirstOrDefault(x => x.DisplayName == name);
+        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == id);
         if (package == null || newVersion == null)
         {
             return;
         }
-        
+
         package.PackageVersion = newVersion;
+
+        package.DisplayVersion = string.IsNullOrWhiteSpace(package.InstalledBranch)
+            ? newVersion
+            : $"{package.InstalledBranch}@{newVersion[..7]}";
+
         SaveSettings();
     }
     
@@ -101,17 +108,27 @@ public class SettingsManager : ISettingsManager
         SaveSettings();
     }
 
+    public void SetWindowBackdropType(WindowBackdropType backdropType)
+    {
+        Settings.WindowBackdropType = backdropType;
+        SaveSettings();
+    }
+
     private void LoadSettings()
     {
         var settingsContent = File.ReadAllText(SettingsPath);
-        Settings = JsonSerializer.Deserialize<Settings>(settingsContent)!;
+        Settings = JsonSerializer.Deserialize<Settings>(settingsContent, new JsonSerializerOptions
+        {
+            Converters = { new JsonStringEnumConverter() }
+        })!;
     }
 
     private void SaveSettings()
     {
         var json = JsonSerializer.Serialize(Settings, new JsonSerializerOptions
         {
-            WriteIndented = true
+            WriteIndented = true,
+            Converters = { new JsonStringEnumConverter() }
         });
         File.WriteAllText(SettingsPath, json);
     }

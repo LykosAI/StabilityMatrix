@@ -14,4 +14,6 @@ public enum SharedFolderType
     SwinIR,
     VAE,
     ApproxVAE,
+    Karlo,
+    DeepDanbooru,
 }

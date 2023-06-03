@@ -21,6 +21,16 @@ public class A3WebUI : BaseGitPackage
     
     public A3WebUI(IGithubApiCache githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager) { }
 
+    // From https://github.com/AUTOMATIC1111/stable-diffusion-webui/tree/master/models
+    public override Dictionary<SharedFolderType, string> SharedFolders => new()
+    {
+        [SharedFolderType.StableDiffusion] = "models/Stable-diffusion",
+        [SharedFolderType.ApproxVAE] = "models/VAE-approx",
+        [SharedFolderType.VAE] = "models/VAE",
+        [SharedFolderType.DeepDanbooru] = "models/deepbooru",
+        [SharedFolderType.Karlo] = "models/karlo",
+    };
+
     public override List<LaunchOptionDefinition> LaunchOptions => new()
     {
         new()

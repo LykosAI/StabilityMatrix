@@ -60,6 +60,7 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
             serviceCollection.AddSingleton<IPackageFactory, PackageFactory>();
             serviceCollection.AddSingleton<IPyRunner, PyRunner>();
+            serviceCollection.AddSingleton<ISharedFolders, SharedFolders>();
             serviceCollection.AddTransient<IDialogFactory, DialogFactory>();
             
             serviceCollection.AddTransient<MainWindow>();

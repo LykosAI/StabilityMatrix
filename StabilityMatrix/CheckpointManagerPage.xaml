@@ -48,14 +48,9 @@
         <DataTemplate DataType="{x:Type models:CheckpointFolder}" x:Key="CheckpointFolderGridDataTemplate">
             <Expander
                 AllowDrop="True"
-                Drop="FolderCard_OnDrop"
                 Header="{Binding Title}"
                 IsExpanded="True"
-                Margin="8"
-                PreviewDragEnter="FolderCard_OnPreviewDragEnter"
-                PreviewDragLeave="FolderCard_OnPreviewDragLeave"
-                PreviewDragOver="FolderCard_OnPreviewDragOver"
-                PreviewDrop="FolderCard_OnPreviewDrop">
+                Margin="8">
                 <ui:VirtualizingGridView
                     ItemTemplate="{StaticResource CheckpointFileDataTemplate}"
                     ItemsSource="{Binding CheckpointFiles}"

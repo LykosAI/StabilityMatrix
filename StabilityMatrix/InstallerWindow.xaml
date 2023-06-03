@@ -1,10 +1,10 @@
 <ui:FluentWindow
-    Background="{DynamicResource ApplicationBackgroundBrush}"
     ExtendsContentIntoTitleBar="True"
-    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     Height="700"
     Icon="Assets/Icon.ico"
     Loaded="InstallPage_OnLoaded"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     Title="Stability Matrix - Installer"
     Width="1100"
     WindowBackdropType="{Binding WindowBackdropType}"

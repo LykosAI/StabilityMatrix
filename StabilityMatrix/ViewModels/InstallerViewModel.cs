@@ -13,6 +13,7 @@ using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Packages;
 using StabilityMatrix.Python;
+using StabilityMatrix.Services;
 using Wpf.Ui.Controls.Window;
 using Application = System.Windows.Application;
 using EventManager = StabilityMatrix.Helper.EventManager;
@@ -27,6 +28,8 @@ public partial class InstallerViewModel : ObservableObject
     private readonly IPyRunner pyRunner;
     private readonly IPackageFactory packageFactory;
     private readonly ISharedFolders sharedFolders;
+    private readonly IPrerequisiteHelper prerequisiteHelper;
+    private readonly IDownloadService downloadService;
     private readonly ISnackbarService snackbarService;
 
     [ObservableProperty]
@@ -94,13 +97,16 @@ public partial class InstallerViewModel : ObservableObject
 
 
     public InstallerViewModel(ISettingsManager settingsManager, ILogger<InstallerViewModel> logger, IPyRunner pyRunner,
-        IPackageFactory packageFactory, ISnackbarService snackbarService, ISharedFolders sharedFolders)
+        IPackageFactory packageFactory, ISnackbarService snackbarService, ISharedFolders sharedFolders,
+        IPrerequisiteHelper prerequisiteHelper, IDownloadService downloadService)
     {
         this.settingsManager = settingsManager;
         this.logger = logger;
         this.pyRunner = pyRunner;
         this.packageFactory = packageFactory;
         this.sharedFolders = sharedFolders;
+        this.prerequisiteHelper = prerequisiteHelper;
+        this.downloadService = downloadService;
         this.snackbarService = snackbarService;
 
         ProgressText = "";
@@ -114,7 +120,7 @@ public partial class InstallerViewModel : ObservableObject
 
         AvailablePackages = new ObservableCollection<BasePackage>(packageFactory.GetAllAvailablePackages());
         if (!AvailablePackages.Any()) return;
-        
+
         SelectedPackage = AvailablePackages[0];
         InstallName = SelectedPackage.DisplayName;
     }
@@ -262,12 +268,7 @@ public partial class InstallerViewModel : ObservableObject
     {
         var isCurrentlyReleaseMode = IsReleaseMode;
         
-        var installSuccess = await InstallGitIfNecessary();
-        if (!installSuccess)
-        {
-            logger.LogError("Git installation failed");
-            return;
-        }
+        await InstallGitIfNecessary();
 
         SelectedPackage.InstallLocation = $"{InstallPath}\\{InstallName}";
         SelectedPackage.DisplayName = InstallName;
@@ -347,30 +348,43 @@ public partial class InstallerViewModel : ObservableObject
         SecondaryProgressText = e;
     }
 
-    private async Task<bool> InstallGitIfNecessary()
+    private async Task InstallGitIfNecessary()
     {
-        try
+        void DownloadProgressHandler(object? _, ProgressReport progress)
         {
-            var gitOutput = await ProcessRunner.GetProcessOutputAsync("git", "--version");
-            if (gitOutput.Contains("git version 2"))
-            {
-                return true;
-            }
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Error running git: ");
+            ProgressText = $"Downloading git... ({progress.Progress}%)";
+            ProgressValue = Convert.ToInt32(progress.Progress);
         }
 
-        IsIndeterminate = true;
-        ProgressText = "Installing Git...";
-        using var installProcess =
-            ProcessRunner.StartProcess("Assets\\Git-2.40.1-64-bit.exe", "/VERYSILENT /NORESTART");
-        installProcess.OutputDataReceived += (sender, args) => { Debug.Write(args.Data); };
-        await installProcess.WaitForExitAsync();
-        IsIndeterminate = false;
+        void DownloadFinishedHandler(object? _, ProgressReport downloadLocation)
+        {
+            ProgressText = "Git download complete";
+            ProgressValue = 100;
+        }
+        
+        void InstallProgressHandler(object? _, ProgressReport progress)
+        {
+            ProgressText = $"Installing git... ({progress.Progress:N1}%)";
+            ProgressValue = Convert.ToInt32(progress.Progress);
+        }
 
-        return installProcess.ExitCode == 0;
+        void InstallFinishedHandler(object? _, ProgressReport __)
+        {
+            ProgressText = "Git install complete";
+            ProgressValue = 100;
+        }
+
+        prerequisiteHelper.DownloadProgressChanged += DownloadProgressHandler;
+        prerequisiteHelper.DownloadComplete += DownloadFinishedHandler;
+        prerequisiteHelper.InstallProgressChanged += InstallProgressHandler;
+        prerequisiteHelper.InstallComplete += InstallFinishedHandler;
+
+        await prerequisiteHelper.InstallGitIfNecessary();
+        
+        prerequisiteHelper.DownloadProgressChanged -= DownloadProgressHandler;
+        prerequisiteHelper.DownloadComplete -= DownloadFinishedHandler;
+        prerequisiteHelper.InstallProgressChanged -= InstallProgressHandler;
+        prerequisiteHelper.InstallComplete -= InstallFinishedHandler;
     }
     
     private void SelectedPackageOnProgressChanged(object? sender, int progress)

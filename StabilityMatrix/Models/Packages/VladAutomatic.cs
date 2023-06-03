@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
+using StabilityMatrix.Services;
 
 namespace StabilityMatrix.Models.Packages;
 
@@ -17,7 +18,8 @@ public class VladAutomatic : BaseGitPackage
     public override string LaunchCommand => "launch.py";
     public override bool ShouldIgnoreReleases => true;
 
-    public VladAutomatic(IGithubApiCache githubApi, ISettingsManager settingsManager) : base(githubApi, settingsManager)
+    public VladAutomatic(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService) :
+        base(githubApi, settingsManager, downloadService)
     {
     }
 

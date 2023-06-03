@@ -142,7 +142,7 @@ public partial class LaunchViewModel : ObservableObject
     });
 
     [RelayCommand]
-    public async Task ConfigAsync()
+    private async Task ConfigAsync()
     {
         var activeInstall = SelectedPackage;
         var name = activeInstall?.PackageName;

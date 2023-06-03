@@ -13,6 +13,7 @@ using Octokit;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
 using StabilityMatrix.Python;
+using StabilityMatrix.Services;
 using ApiException = Refit.ApiException;
 using FileMode = System.IO.FileMode;
 
@@ -28,6 +29,7 @@ public abstract class BaseGitPackage : BasePackage
     protected static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     protected readonly IGithubApiCache GithubApi;
     protected readonly ISettingsManager SettingsManager;
+    protected readonly IDownloadService DownloadService;
     protected PyVenvRunner? VenvRunner;
     
     /// <summary>
@@ -50,10 +52,11 @@ public abstract class BaseGitPackage : BasePackage
             : $"https://api.github.com/repos/{Author}/{Name}/zipball/{tagName}";
     }
 
-    protected BaseGitPackage(IGithubApiCache githubApi, ISettingsManager settingsManager)
+    protected BaseGitPackage(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService)
     {
         GithubApi = githubApi;
         SettingsManager = settingsManager;
+        this.DownloadService = downloadService;
     }
 
     protected Task<Release> GetLatestRelease()
@@ -109,68 +112,48 @@ public abstract class BaseGitPackage : BasePackage
             Directory.CreateDirectory(DownloadLocation.Replace($"{Name}.zip", ""));
         }
 
-        using var client = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
-        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("StabilityMatrix", "1.0"));
-        await using var file = new FileStream(DownloadLocation, FileMode.Create, FileAccess.Write, FileShare.None);
+        void DownloadProgressHandler(object? _, ProgressReport progress) =>
+            DownloadServiceOnDownloadProgressChanged(progress, isUpdate);
+
+        void DownloadFinishedHandler(object? _, ProgressReport downloadLocation) =>
+            DownloadServiceOnDownloadFinished(downloadLocation, isUpdate);
+
+        DownloadService.DownloadProgressChanged += DownloadProgressHandler;
+        DownloadService.DownloadComplete += DownloadFinishedHandler;
         
-        long contentLength = 0;
-        var retryCount = 0;
-        var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
-        while (contentLength == 0 && retryCount++ < 5)
-        {
-            response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
-            contentLength = response.Content.Headers.ContentLength ?? 0;
-            Logger.Debug("Retrying get-headers for content-length");
-            Thread.Sleep(50);
-        }
-
-        var isIndeterminate = contentLength == 0;
-
-        await using var stream = await response.Content.ReadAsStreamAsync();
-        var totalBytesRead = 0;
-        while (true)
-        {
-            var buffer = new byte[1024];
-            var bytesRead = await stream.ReadAsync(buffer);
-            if (bytesRead == 0) break;
-            await file.WriteAsync(buffer.AsMemory(0, bytesRead));
-
-            totalBytesRead += bytesRead;
-
-            if (isIndeterminate)
-            {
-                if (isUpdate)
-                {
-                    OnUpdateProgressChanged(-1);
-                }
-                else
-                {
-                    OnDownloadProgressChanged(-1);
-                }
-            }
-            else
-            {
-                var progress = (int)(totalBytesRead * 100d / contentLength);
-                Logger.Debug($"Progress; {progress}");
-                
-                if (isUpdate)
-                {
-                    OnUpdateProgressChanged(progress);
-                }
-                else
-                {
-                    OnDownloadProgressChanged(progress);
-                }
-            }
-        }
-
-        await file.FlushAsync();
-        OnDownloadComplete(DownloadLocation);
-
+        await DownloadService.DownloadToFileAsync(downloadUrl, DownloadLocation);
+        
+        DownloadService.DownloadProgressChanged -= DownloadProgressHandler;
+        DownloadService.DownloadComplete -= DownloadFinishedHandler;
+        
         return version;
     }
+
+    private void DownloadServiceOnDownloadProgressChanged(ProgressReport progress, bool isUpdate)
+    {
+        if (isUpdate)
+        {
+            OnUpdateProgressChanged(Convert.ToInt32(progress.Progress));
+        }
+        else
+        {
+            OnDownloadProgressChanged(Convert.ToInt32(progress.Progress));
+        }
+    }
     
-    public void UnzipPackage(bool isUpdate = false)
+    private void DownloadServiceOnDownloadFinished(ProgressReport downloadLocation, bool isUpdate)
+    {
+        if (isUpdate)
+        {
+            OnUpdateComplete(downloadLocation.Message);
+        }
+        else
+        {
+            OnDownloadComplete(downloadLocation.Message);
+        }
+    }
+
+    protected void UnzipPackage(bool isUpdate = false)
     {
         if (isUpdate)
         {

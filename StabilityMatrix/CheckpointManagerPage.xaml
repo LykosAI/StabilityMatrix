@@ -51,12 +51,26 @@
                 Header="{Binding Title}"
                 IsExpanded="True"
                 Margin="8">
-                <ui:VirtualizingGridView
-                    ItemTemplate="{StaticResource CheckpointFileDataTemplate}"
-                    ItemsSource="{Binding CheckpointFiles}"
-                    Padding="5"
-                    PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel"
-                    SpacingMode="StartAndEndOnly" />
+                <Grid>
+                    <ui:VirtualizingGridView
+                        ItemTemplate="{StaticResource CheckpointFileDataTemplate}"
+                        ItemsSource="{Binding CheckpointFiles}"
+                        Padding="5"
+                        PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel"
+                        SpacingMode="StartAndEndOnly" />
+                    <Border
+                        Grid.RowSpan="4"
+                        Opacity=".9"
+                        Visibility="{Binding BlurVisibility, Mode=OneWay}"
+                        x:Name="Splash">
+                        <Border.Background>
+                            <LinearGradientBrush EndPoint="1,1" StartPoint="0,0">
+                                <GradientStop Color="#8F202020" Offset="0.0" />
+                                <GradientStop Color="#8F202020" Offset="1.0" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+                </Grid>
             </Expander>
         </DataTemplate>
 

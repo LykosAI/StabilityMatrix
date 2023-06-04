@@ -1,0 +1,34 @@
+﻿<Page
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    d:DataContext="{d:DesignInstance viewModels:CheckpointBrowserViewModel,
+                                     IsDesignTimeCreatable=True}"
+    d:DesignHeight="500"
+    d:DesignWidth="650"
+    mc:Ignorable="d"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    x:Class="StabilityMatrix.CheckpointBrowserPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:designData="clr-namespace:StabilityMatrix.DesignData"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:StabilityMatrix.Models"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <TextBlock
+            FontSize="24"
+            HorizontalAlignment="Center"
+            Text="Imagine very nice UI here."
+            VerticalAlignment="Center" />
+        <StackPanel Margin="16" Orientation="Vertical">
+            <ui:TextBox PlaceholderText="Query" Text="{Binding SearchQuery, Mode=TwoWay}" />
+            <ui:Button
+                Command="{Binding SearchModelsCommand}"
+                Content="Search"
+                Margin="0,16,0,0" />
+        </StackPanel>
+    </Grid>
+</Page>

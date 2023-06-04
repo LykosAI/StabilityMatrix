@@ -16,6 +16,9 @@ public class VladAutomatic : BaseGitPackage
     public override string DisplayName { get; set; } = "SD.Next Web UI";
     public override string Author => "vladmandic";
     public override string LaunchCommand => "launch.py";
+
+    public override Uri PreviewImageUri =>
+        new("https://github.com/vladmandic/automatic/raw/master/html/black-orange.jpg");
     public override bool ShouldIgnoreReleases => true;
 
     public VladAutomatic(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService) :

@@ -7,5 +7,5 @@ namespace StabilityMatrix.Api;
 public interface ICivitApi
 {
     [Get("/api/v1/models")]
-    Task<CivitModelsResponse> GetModels([Body] CivitModelsRequest request);
+    Task<CivitModelsResponse> GetModels(CivitModelsRequest request);
 }

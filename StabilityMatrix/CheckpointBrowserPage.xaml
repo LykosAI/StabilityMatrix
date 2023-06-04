@@ -15,20 +15,73 @@
     xmlns:models="clr-namespace:StabilityMatrix.Models"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:api="clr-namespace:StabilityMatrix.Models.Api"
+    xmlns:converters="clr-namespace:StabilityMatrix.Converters">
+
+    <Page.Resources>
+        <converters:ValueConverterGroup x:Key="InvertAndVisibilitate">
+            <converters:BoolNegationConverter />
+            <BooleanToVisibilityConverter />
+        </converters:ValueConverterGroup>
+        
+        <converters:UriToBitmapConverter x:Key="UriToBitmapConverter" />
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+
+        <DataTemplate DataType="{x:Type api:CivitModel}" x:Key="CivitModelTemplate">
+            <ui:Card Width="240">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock
+                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                        Margin="0,0,0,0"
+                        Text="{Binding Name}"
+                        VerticalAlignment="Center" />
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                        Margin="0,2,0,0"
+                        Text="{Binding ModelVersions[0].Name}"
+                        VerticalAlignment="Center" />
+                    <Image
+                        Source="{Binding ModelVersions[0].Images[0].Url, Converter={StaticResource UriToBitmapConverter}}" />
+                </StackPanel>
+            </ui:Card>
+        </DataTemplate>
+    </Page.Resources>
 
     <Grid>
-        <TextBlock
-            FontSize="24"
-            HorizontalAlignment="Center"
-            Text="Imagine very nice UI here."
-            VerticalAlignment="Center" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
         <StackPanel Margin="16" Orientation="Vertical">
-            <ui:TextBox PlaceholderText="Query" Text="{Binding SearchQuery, Mode=TwoWay}" />
+            <ui:TextBox PlaceholderText="Query"
+                        Text="{Binding SearchQuery, Mode=TwoWay, 
+                            UpdateSourceTrigger=PropertyChanged}" />
             <ui:Button
                 Command="{Binding SearchModelsCommand}"
-                Content="Search"
-                Margin="0,16,0,0" />
+                Width="80"
+                IsDefault="True"
+                Margin="0,16,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <ui:ProgressRing Height="16" Width="16" 
+                                     VerticalAlignment="Center" 
+                                     IsIndeterminate="True"
+                                     Visibility="{Binding SearchModelsCommand.IsRunning, 
+                                        Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    <TextBlock Text="Search" VerticalAlignment="Center" Margin="0,0,0,0"
+                               Visibility="{Binding SearchModelsCommand.IsRunning, 
+                                        Converter={StaticResource InvertAndVisibilitate}}"/>
+                </StackPanel>
+            </ui:Button>
         </StackPanel>
+
+        <ui:DynamicScrollViewer Grid.Row="1" Padding="8" Margin="8" CanContentScroll="True">
+            <ui:VirtualizingGridView
+                ItemTemplate="{StaticResource CivitModelTemplate}"
+                ItemsSource="{Binding CivitModels}"
+                PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel"
+                SpacingMode="StartAndEndOnly" />
+        </ui:DynamicScrollViewer>
     </Grid>
 </Page>

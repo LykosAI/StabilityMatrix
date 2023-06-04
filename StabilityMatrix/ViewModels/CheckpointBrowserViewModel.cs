@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
@@ -14,7 +15,13 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     
     [ObservableProperty]
     private string? searchQuery;
-    
+
+    [ObservableProperty] 
+    private ObservableCollection<CivitModel> civitModels;
+
+    [ObservableProperty] 
+    private bool showNsfw;
+
     public CheckpointBrowserViewModel(ICivitApi civitApi)
     {
         this.civitApi = civitApi;
@@ -27,13 +34,16 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         {
             return;
         }
-
+        
         var models = await civitApi.GetModels(new CivitModelsRequest
         {
             Query = SearchQuery,
-            Limit = 5,
-            Nsfw = true,
+            Limit = 10,
+            Nsfw = ShowNsfw.ToString().ToLower(),
+            Sort = CivitSortMode.HighestRated
         });
+        
+        CivitModels = new ObservableCollection<CivitModel>(models.Items);
         
         Logger.Debug($"Found {models.Items.Length} models");
     }

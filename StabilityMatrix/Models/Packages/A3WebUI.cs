@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
+using StabilityMatrix.Python;
 using StabilityMatrix.Services;
 
 namespace StabilityMatrix.Models.Packages;
@@ -97,7 +98,7 @@ public class A3WebUI : BaseGitPackage
             var allReleases = await GetAllReleases();
             return allReleases.Select(r => new PackageVersion {TagName = r.TagName!, ReleaseNotesMarkdown = r.Body});
         }
-        else // branch mode1
+        else // branch mode
         {
             var allBranches = await GetAllBranches();
             return allBranches.Select(b => new PackageVersion
@@ -105,6 +106,41 @@ public class A3WebUI : BaseGitPackage
                 TagName = $"{b.Name}",
                 ReleaseNotesMarkdown = string.Empty
             });
+        }
+    }
+
+    public override async Task InstallPackage(bool isUpdate = false)
+    {
+        UnzipPackage(isUpdate);
+        OnInstallProgressChanged(-1); // Indeterminate progress bar
+
+        Logger.Debug("Setting up venv");
+        await SetupVenv(InstallLocation);
+        var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
+        
+        void HandleConsoleOutput(string? s)
+        {
+            Debug.WriteLine($"venv stdout: {s}");
+            OnConsoleOutput(s);
+        }
+        
+        // install prereqs
+        await venvRunner.PipInstall(venvRunner.GetTorchInstallCommand(), InstallLocation, HandleConsoleOutput);
+        if (HardwareHelper.HasNvidiaGpu())
+        {
+            await venvRunner.PipInstall("xformers", InstallLocation, HandleConsoleOutput);
+        }
+
+        await venvRunner.PipInstall("-r requirements.txt", InstallLocation, HandleConsoleOutput);
+        
+        Logger.Debug("Finished installing requirements");
+        if (isUpdate)
+        {
+            OnUpdateComplete("Update complete");
+        }
+        else
+        {
+            OnInstallComplete("Install complete");
         }
     }
 

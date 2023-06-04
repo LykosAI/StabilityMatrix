@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace StabilityMatrix.Models;
+namespace StabilityMatrix.Helper;
 
 public static class FileTransfers
 {

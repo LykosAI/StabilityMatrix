@@ -4,9 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Threading;
 using System.Threading.Tasks;
 using NLog;
 using Octokit;
@@ -15,7 +12,6 @@ using StabilityMatrix.Helper.Cache;
 using StabilityMatrix.Python;
 using StabilityMatrix.Services;
 using ApiException = Refit.ApiException;
-using FileMode = System.IO.FileMode;
 
 namespace StabilityMatrix.Models.Packages;
 

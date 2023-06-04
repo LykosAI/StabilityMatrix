@@ -1,6 +1,4 @@
 ﻿using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
 using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Controls.Window;

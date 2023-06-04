@@ -13,5 +13,7 @@ public enum CivitModelType
     AestheticGradient,
     LORA,
     Controlnet,
-    Poses
+    Poses,
+    Model,
+    LoCon
 }

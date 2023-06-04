@@ -24,12 +24,12 @@
             <converters:BoolNegationConverter />
             <BooleanToVisibilityConverter />
         </converters:ValueConverterGroup>
-        
+
         <converters:UriToBitmapConverter x:Key="UriToBitmapConverter" />
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
         <DataTemplate DataType="{x:Type api:CivitModel}" x:Key="CivitModelTemplate">
-            <ui:Card Width="240">
+            <ui:Card MaxHeight="400" Width="330">
                 <StackPanel Orientation="Vertical">
                     <TextBlock
                         Foreground="{DynamicResource TextFillColorPrimaryBrush}"
@@ -43,7 +43,11 @@
                         Text="{Binding ModelVersions[0].Name}"
                         VerticalAlignment="Center" />
                     <Image
-                        Source="{Binding ModelVersions[0].Images[0].Url, Converter={StaticResource UriToBitmapConverter}}" />
+                        Source="{Binding ModelVersions[0].Images[0].Url,
+                            Converter={StaticResource UriToBitmapConverter}}"
+                        Margin="0,8,0,8"
+                        MaxHeight="300"
+                        Stretch="UniformToFill" />
                 </StackPanel>
             </ui:Card>
         </DataTemplate>
@@ -53,35 +57,94 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <StackPanel Margin="16" Orientation="Vertical">
-            <ui:TextBox PlaceholderText="Query"
-                        Text="{Binding SearchQuery, Mode=TwoWay, 
+
+        <StackPanel Margin="8" Orientation="Vertical">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <ui:TextBox PlaceholderText="Query"
+                            HorizontalAlignment="Stretch"
+                            Margin="0,0,8,0"
+                            Text="{Binding SearchQuery, Mode=TwoWay, 
                             UpdateSourceTrigger=PropertyChanged}" />
-            <ui:Button
-                Command="{Binding SearchModelsCommand}"
-                Width="80"
-                IsDefault="True"
-                Margin="0,16,0,0">
-                <StackPanel Orientation="Horizontal">
-                    <ui:ProgressRing Height="16" Width="16" 
-                                     VerticalAlignment="Center" 
-                                     IsIndeterminate="True"
-                                     Visibility="{Binding SearchModelsCommand.IsRunning, 
-                                        Converter={StaticResource BoolToVisibilityConverter}}"/>
-                    <TextBlock Text="Search" VerticalAlignment="Center" Margin="0,0,0,0"
-                               Visibility="{Binding SearchModelsCommand.IsRunning, 
-                                        Converter={StaticResource InvertAndVisibilitate}}"/>
+
+                <ui:Button Grid.Column="1"
+                           Command="{Binding SearchModelsCommand}"
+                           Width="80"
+                           IsDefault="True"
+                           VerticalAlignment="Stretch"
+                           Appearance="Primary">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:ProgressRing Height="20" Width="20"
+                                         VerticalAlignment="Center"
+                                         IsIndeterminate="True"
+                                         Visibility="{Binding SearchModelsCommand.IsRunning, 
+                                        Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <TextBlock Text="Search" VerticalAlignment="Center" Margin="0,0,0,0"
+                                   Visibility="{Binding SearchModelsCommand.IsRunning, 
+                                        Converter={StaticResource InvertAndVisibilitate}}" />
+                    </StackPanel>
+                </ui:Button>
+            </Grid>
+            <DockPanel>
+                <StackPanel Orientation="Vertical" Margin="8">
+                    <Label Content="Sort" />
+                    <ComboBox
+                        ItemsSource="{Binding AllSortModes}"
+                        MinWidth="100"
+                        SelectedItem="{Binding SortMode}" />
                 </StackPanel>
-            </ui:Button>
+
+                <StackPanel Orientation="Vertical" Margin="0,8">
+                    <Label Content="Period" />
+                    <ComboBox
+                        ItemsSource="{Binding AllCivitPeriods}"
+                        MinWidth="100"
+                        SelectedItem="{Binding SelectedPeriod}" />
+                </StackPanel>
+
+                <CheckBox Content="Show NSFW Content" Margin="8,8,0,0" HorizontalAlignment="Right"
+                          FontSize="12" IsChecked="{Binding ShowNsfw, Mode=TwoWay}" />
+            </DockPanel>
+
         </StackPanel>
 
-        <ui:DynamicScrollViewer Grid.Row="1" Padding="8" Margin="8" CanContentScroll="True">
+        <ui:DynamicScrollViewer Grid.Row="1" CanContentScroll="True">
             <ui:VirtualizingGridView
                 ItemTemplate="{StaticResource CivitModelTemplate}"
                 ItemsSource="{Binding CivitModels}"
                 PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel"
                 SpacingMode="StartAndEndOnly" />
         </ui:DynamicScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Vertical" HorizontalAlignment="Center" Margin="8"
+                    Visibility="{Binding HasSearched, Converter={StaticResource BoolToVisibilityConverter}}">
+            <TextBlock TextAlignment="Center" Margin="0,0,4,4">
+                <Run Text="Page" />
+                <Run Text="{Binding CurrentPageNumber, FallbackValue=1}" />
+                <Run Text="/"/>
+                <Run Text="{Binding TotalPages, FallbackValue=5}" />
+            </TextBlock>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <ui:Button Margin="0,0,8,0"
+                           IsEnabled="{Binding CanGoToPreviousPage}"
+                           Command="{Binding PreviousPageCommand}">
+                    <ui:SymbolIcon Symbol="ArrowPrevious24" />
+                </ui:Button>
+                <ui:Button IsEnabled="{Binding CanGoToNextPage}"
+                           Command="{Binding NextPageCommand}">
+                    <ui:SymbolIcon Symbol="ArrowNext24" />
+                </ui:Button>
+            </StackPanel>
+        </StackPanel>
+        
+        <ui:ProgressRing Grid.Row="0" Grid.RowSpan="3" IsIndeterminate="True"
+                         Visibility="{Binding SearchModelsCommand.IsRunning, 
+                            Converter={StaticResource BoolToVisibilityConverter}}" />
     </Grid>
 </Page>

@@ -9,11 +9,11 @@ namespace StabilityMatrix.ViewModels;
 public partial class ProgressViewModel : ObservableObject
 {
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ProgressTextVisibility))]
-    private string progressText;
+    [NotifyPropertyChangedFor(nameof(TextVisibility))]
+    private string text;
     
     [ObservableProperty]
-    private double progressValue;
+    private double value;
     
     [ObservableProperty]
     private bool isIndeterminate;
@@ -24,5 +24,5 @@ public partial class ProgressViewModel : ObservableObject
     
     public Visibility ProgressVisibility => IsProgressVisible? Visibility.Visible : Visibility.Collapsed;
     
-    public Visibility ProgressTextVisibility => string.IsNullOrEmpty(ProgressText) ? Visibility.Collapsed : Visibility.Visible;
+    public Visibility TextVisibility => string.IsNullOrEmpty(Text) ? Visibility.Collapsed : Visibility.Visible;
 }

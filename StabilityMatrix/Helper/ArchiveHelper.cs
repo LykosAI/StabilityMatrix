@@ -46,9 +46,7 @@ public static class ArchiveHelper
         progress?.Report(new ProgressReport(-1, isIndeterminate: true));
 
         var count = 0ul;
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
-        
+
         // Get true size
         var (total, _) = await TestArchive(archivePath);
 
@@ -58,11 +56,6 @@ public static class ArchiveHelper
             total = (ulong) new FileInfo(archivePath).Length;
         }
 
-        // Total read is the
-        stopwatch.Stop();
-        Logger.Info("Read archive size in {} s", stopwatch.Elapsed.TotalSeconds);
-        stopwatch.Restart();
-        
         // Create an DispatchTimer that monitors the progress of the extraction
         var progressMonitor = progress switch {
             null => null,
@@ -103,8 +96,6 @@ public static class ArchiveHelper
         }, TaskCreationOptions.LongRunning);
         
         progress?.Report(new ProgressReport(progress: 1));
-        
-        stopwatch.Stop();
-        Logger.Info("Finished extracting archive {} in {}s", archivePath, stopwatch.Elapsed.TotalSeconds);
+        Logger.Info("Finished extracting archive {}", archivePath);
     }
 }

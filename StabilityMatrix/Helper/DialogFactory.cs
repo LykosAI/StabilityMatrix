@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using StabilityMatrix.Models;
+using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 
@@ -11,15 +12,20 @@ public class DialogFactory : IDialogFactory
     private readonly LaunchOptionsDialogViewModel launchOptionsDialogViewModel;
     private readonly InstallerViewModel installerViewModel;
     private readonly OneClickInstallViewModel oneClickInstallViewModel;
+    private readonly InstallerWindowDialogService installerWindowDialogService;
     private readonly ISettingsManager settingsManager;
 
-    public DialogFactory(IContentDialogService contentDialogService, LaunchOptionsDialogViewModel launchOptionsDialogViewModel, 
-        ISettingsManager settingsManager, InstallerViewModel installerViewModel, OneClickInstallViewModel oneClickInstallViewModel)
+    public DialogFactory(IContentDialogService contentDialogService,
+        LaunchOptionsDialogViewModel launchOptionsDialogViewModel,
+        ISettingsManager settingsManager, InstallerViewModel installerViewModel,
+        OneClickInstallViewModel oneClickInstallViewModel,
+        InstallerWindowDialogService installerWindowDialogService)
     {
         this.contentDialogService = contentDialogService;
         this.launchOptionsDialogViewModel = launchOptionsDialogViewModel;
         this.installerViewModel = installerViewModel;
         this.oneClickInstallViewModel = oneClickInstallViewModel;
+        this.installerWindowDialogService = installerWindowDialogService;
         this.settingsManager = settingsManager;
     }
 
@@ -38,6 +44,6 @@ public class DialogFactory : IDialogFactory
     
     public InstallerWindow CreateInstallerWindow()
     {
-        return new InstallerWindow(installerViewModel);
+        return new InstallerWindow(installerViewModel, installerWindowDialogService);
     }
 }

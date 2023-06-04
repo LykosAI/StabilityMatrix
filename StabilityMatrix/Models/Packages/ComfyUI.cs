@@ -20,6 +20,9 @@ public class ComfyUI : BaseGitPackage
     public override string DisplayName { get; set; } = "ComfyUI";
     public override string Author => "comfyanonymous";
     public override string LaunchCommand => "main.py";
+
+    public override Uri PreviewImageUri =>
+        new("https://github.com/comfyanonymous/ComfyUI/raw/master/comfyui_screenshot.png");
     public override bool ShouldIgnoreReleases => true;
 
     public ComfyUI(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService) :

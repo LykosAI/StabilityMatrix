@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Threading;
 using NLog;
 using SharpCompress.Common;
@@ -67,7 +68,7 @@ public static class ArchiveHelper
             {
                 // Ignore 0 counts
                 if (count == 0) return;
-                progress!.Report(new ProgressReport(count, total));
+                Application.Current.Dispatcher.Invoke(() => progress!.Report(new ProgressReport(count, total)));
             };
         }
 

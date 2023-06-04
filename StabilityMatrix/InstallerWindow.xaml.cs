@@ -1,4 +1,7 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Controls.Window;
 
@@ -13,13 +16,17 @@ namespace StabilityMatrix
     public sealed partial class InstallerWindow : FluentWindow
     {
         private readonly InstallerViewModel viewModel;
+        private readonly InstallerWindowDialogService dialogService;
 
-        public InstallerWindow(InstallerViewModel viewModel)
+        public InstallerWindow(InstallerViewModel viewModel, InstallerWindowDialogService dialogService)
         {
             this.viewModel = viewModel;
+            this.dialogService = dialogService;
             InitializeComponent();
             DataContext = viewModel;
             viewModel.PackageInstalled += (_, _) => Close();
+            
+            dialogService.SetContentPresenter(InstallerContentDialog);
         }
 
         private async void InstallPage_OnLoaded(object sender, RoutedEventArgs e)

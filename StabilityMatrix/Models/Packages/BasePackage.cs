@@ -13,6 +13,7 @@ public abstract class BasePackage
     public abstract string Author { get; }
     public abstract string GithubUrl { get; }
     public abstract string LaunchCommand { get; }
+    public abstract Uri PreviewImageUri { get; }
     public virtual bool ShouldIgnoreReleases => false;
     public virtual bool UpdateAvailable { get; set; }
     public abstract Task<string?> DownloadPackage(string version, bool isCommitHash, bool isUpdate = false);

@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -14,9 +16,13 @@ using StabilityMatrix.Models;
 using StabilityMatrix.Models.Packages;
 using StabilityMatrix.Python;
 using StabilityMatrix.Services;
+using Wpf.Ui.Contracts;
+using Wpf.Ui.Controls;
+using Wpf.Ui.Controls.ContentDialogControl;
 using Wpf.Ui.Controls.Window;
 using Application = System.Windows.Application;
 using EventManager = StabilityMatrix.Helper.EventManager;
+using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
 using PackageVersion = StabilityMatrix.Models.PackageVersion;
 
 namespace StabilityMatrix.ViewModels;
@@ -26,10 +32,9 @@ public partial class InstallerViewModel : ObservableObject
     private readonly ISettingsManager settingsManager;
     private readonly ILogger<InstallerViewModel> logger;
     private readonly IPyRunner pyRunner;
-    private readonly IPackageFactory packageFactory;
     private readonly ISharedFolders sharedFolders;
     private readonly IPrerequisiteHelper prerequisiteHelper;
-    private readonly IDownloadService downloadService;
+    private readonly IContentDialogService contentDialogService;
     private readonly ISnackbarService snackbarService;
 
     [ObservableProperty]
@@ -98,15 +103,14 @@ public partial class InstallerViewModel : ObservableObject
 
     public InstallerViewModel(ISettingsManager settingsManager, ILogger<InstallerViewModel> logger, IPyRunner pyRunner,
         IPackageFactory packageFactory, ISnackbarService snackbarService, ISharedFolders sharedFolders,
-        IPrerequisiteHelper prerequisiteHelper, IDownloadService downloadService)
+        IPrerequisiteHelper prerequisiteHelper, InstallerWindowDialogService contentDialogService)
     {
         this.settingsManager = settingsManager;
         this.logger = logger;
         this.pyRunner = pyRunner;
-        this.packageFactory = packageFactory;
         this.sharedFolders = sharedFolders;
         this.prerequisiteHelper = prerequisiteHelper;
-        this.downloadService = downloadService;
+        this.contentDialogService = contentDialogService;
         this.snackbarService = snackbarService;
 
         ProgressText = "";
@@ -123,15 +127,6 @@ public partial class InstallerViewModel : ObservableObject
 
         SelectedPackage = AvailablePackages[0];
         InstallName = SelectedPackage.DisplayName;
-    }
-
-    [RelayCommand]
-    private async Task Install()
-    {
-        await ActuallyInstall();
-        snackbarService.ShowSnackbarAsync($"Package {SelectedPackage.Name} installed successfully!",
-            "Success", LogLevel.Trace);
-        OnPackageInstalled();
     }
 
     public async Task OnLoaded()
@@ -164,6 +159,40 @@ public partial class InstallerViewModel : ObservableObject
         }
 
         ReleaseNotes = SelectedVersion.ReleaseNotesMarkdown;
+    }
+    
+    [RelayCommand]
+    private async Task Install()
+    {
+        await ActuallyInstall();
+        snackbarService.ShowSnackbarAsync($"Package {SelectedPackage.Name} installed successfully!",
+            "Success", LogLevel.Trace);
+        OnPackageInstalled();
+    }
+
+    [RelayCommand]
+    private async Task ShowPreview()
+    {
+        var bitmap = new BitmapImage(SelectedPackage.PreviewImageUri);
+        var dialog = contentDialogService.CreateDialog();
+        dialog.Content = new Image
+        {
+            Source = bitmap, 
+            Stretch = Stretch.Uniform, 
+            MaxHeight = 500,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+        dialog.PrimaryButtonText = "Open in Browser";
+        
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = SelectedPackage.PreviewImageUri.ToString(),
+                UseShellExecute = true
+            });
+        }
     }
 
     partial void OnSelectedPackageChanged(BasePackage? value)
@@ -365,10 +394,9 @@ public partial class InstallerViewModel : ObservableObject
         void InstallProgressHandler(object? _, ProgressReport progress)
         {
             IsIndeterminate = progress.IsIndeterminate;
-            if (progress.IsIndeterminate || ProgressValue == -1)
+            if (progress.IsIndeterminate)
             {
                 ProgressText = "Getting a few things ready...";
-                ProgressValue = -1;
             }
             else
             {

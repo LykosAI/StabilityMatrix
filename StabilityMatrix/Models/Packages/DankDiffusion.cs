@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
@@ -17,6 +18,8 @@ public class DankDiffusion : BaseGitPackage
     public override string DisplayName { get; set; } = "Dank Diffusion";
     public override string Author => "mohnjiles";
     public override string LaunchCommand { get; }
+    public override Uri PreviewImageUri { get; }
+
     public override Task RunPackage(string installedPackagePath, string arguments)
     {
         throw new System.NotImplementedException();

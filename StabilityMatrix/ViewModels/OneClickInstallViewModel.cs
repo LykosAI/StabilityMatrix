@@ -74,8 +74,8 @@ public partial class OneClickInstallViewModel : ObservableObject
 
         void DownloadProgressHandler(object? _, ProgressReport progress)
         {
-            SubHeaderText = $"Downloading git... ({progress.Progress}%)";
-            OneClickInstallProgress = Convert.ToInt32(progress.Progress);
+            SubHeaderText = $"Downloading git... ({progress.Percentage:N0}%)";
+            OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
         }
 
         void DownloadFinishedHandler(object? _, ProgressReport downloadLocation)
@@ -86,8 +86,8 @@ public partial class OneClickInstallViewModel : ObservableObject
         
         void InstallProgressHandler(object? _, ProgressReport progress)
         {
-            SubHeaderText = $"Installing git... ({progress.Progress:N1}%)";
-            OneClickInstallProgress = Convert.ToInt32(progress.Progress);
+            SubHeaderText = $"Installing git... ({progress.Percentage:N0}%)";
+            OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
         }
 
         void InstallFinishedHandler(object? _, ProgressReport __)

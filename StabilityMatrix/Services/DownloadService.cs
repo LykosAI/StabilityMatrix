@@ -63,9 +63,7 @@ public class DownloadService : IDownloadService
             }
             else
             {
-                var progress = (int)(totalBytesRead * 100d / contentLength);
-                logger.LogDebug($"Progress; {progress}");
-                
+                var progress = totalBytesRead / (double) contentLength;
                 OnDownloadProgressChanged(progress);
             }
         }
@@ -74,7 +72,7 @@ public class DownloadService : IDownloadService
         OnDownloadComplete(downloadLocation);
     }
 
-    private void OnDownloadProgressChanged(int progress) =>
+    private void OnDownloadProgressChanged(double progress) =>
         DownloadProgressChanged?.Invoke(this, new ProgressReport(progress));
 
     private void OnDownloadComplete(string path) =>

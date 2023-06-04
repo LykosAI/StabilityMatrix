@@ -5,7 +5,6 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Threading;
-using ICSharpCode.SharpZipLib.BZip2;
 using NLog;
 using SharpCompress.Common;
 using SharpCompress.Readers;
@@ -35,23 +34,6 @@ public static class ArchiveHelper
         return new ArchiveInfo(size, compressed);
     }
 
-    private static ulong GetSizeBZip2(string archivePath)
-    {
-        using var countStream = File.OpenRead(archivePath); 
-        using var bzipStream = new BZip2InputStream(countStream);
-        bzipStream.IsStreamOwner = true;
-        
-        var readBytes = 0ul;
-        while (true)
-        {
-            var result = bzipStream.ReadByte();
-            if (result == -1) break;
-            readBytes++;
-        }
-        
-        return readBytes;
-    }
-
     /// <summary>
     /// Extract an archive to the output directory.
     /// </summary>
@@ -68,7 +50,7 @@ public static class ArchiveHelper
         stopwatch.Start();
         
         // Get true size
-        var (total, compressed) = await TestArchive(archivePath);
+        var (total, _) = await TestArchive(archivePath);
 
         // If not available, use the size of the archive file
         if (total == 0)

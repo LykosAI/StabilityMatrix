@@ -1,4 +1,6 @@
-﻿namespace StabilityMatrix.Models;
+﻿using System;
+
+namespace StabilityMatrix.Models;
 
 public record struct ProgressReport
 {
@@ -17,6 +19,7 @@ public record struct ProgressReport
     public string? Title { get; init; }
     public string? Message { get; init; }
     public bool IsIndeterminate { get; init; } = false;
+    public float Percentage => (float) Math.Ceiling(Math.Clamp(Progress ?? 0, 0, 1) * 100);
     
     public ProgressReport(double progress, string? title = null, string? message = null, bool isIndeterminate = false)
     {

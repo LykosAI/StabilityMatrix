@@ -1,5 +1,5 @@
 using System.Windows;
-using Markdown.Xaml;
+using MdXaml;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Controls.Navigation;
 

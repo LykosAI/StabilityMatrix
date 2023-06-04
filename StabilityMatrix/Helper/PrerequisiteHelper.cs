@@ -1,19 +1,11 @@
 ﻿using System;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Threading;
 using Microsoft.Extensions.Logging;
 using Octokit;
-using SharpCompress.Archives;
-using SharpCompress.Common;
-using SharpCompress.Factories;
-using SharpCompress.Readers;
 using StabilityMatrix.Models;
 using StabilityMatrix.Services;
-using Application = System.Windows.Application;
 
 namespace StabilityMatrix.Helper;
 

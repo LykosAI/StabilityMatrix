@@ -25,9 +25,9 @@ public static class FileTransfers
             await using var inStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             var fileSize = (ulong) inStream.Length;
             var fileName = Path.GetFileName(sourcePath);
+            currentFiles++;
             await CopyStream(inStream , outStream, fileReadBytes =>
             {
-                currentFiles++;
                 var lastRead = totalReadForFile;
                 totalReadForFile = Convert.ToUInt64(fileReadBytes);
                 totalRead += totalReadForFile - lastRead;

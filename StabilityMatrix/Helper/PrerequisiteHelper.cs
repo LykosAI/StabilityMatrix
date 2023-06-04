@@ -86,6 +86,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         await ArchiveHelper.Extract(PortableGitDownloadPath, PortableGitInstallDir, progress);
 
         logger.LogInformation("Extracted Git");
+        File.Delete(PortableGitDownloadPath);
         OnInstallComplete(this, new ProgressReport(progress: 1f));
     }
 

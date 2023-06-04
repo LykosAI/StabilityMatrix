@@ -16,7 +16,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Controls">
 
     <ui:ContentDialog.Resources>
         <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
@@ -43,7 +44,8 @@
         </TextBlock>
 
         <StackPanel Grid.Row="2" VerticalAlignment="Center">
-            <ProgressBar Maximum="100" Value="{Binding OneClickInstallProgress}"
+            <ProgressBar Maximum="100" 
+                         controls:ProgressBarSmoother.SmoothValue="{Binding OneClickInstallProgress}"
                          Visibility="{Binding ProgressBarVisibility}"
                          IsIndeterminate="{Binding IsIndeterminate}"
                          Margin="16" />

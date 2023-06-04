@@ -22,6 +22,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
     private readonly ILogger<PrerequisiteHelper> logger;
     private readonly IGitHubClient gitHubClient;
     private readonly IDownloadService downloadService;
+    private readonly ISettingsManager settingsManager;
 
     private static readonly string PortableGitInstallDir =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix",
@@ -36,11 +37,12 @@ public class PrerequisiteHelper : IPrerequisiteHelper
     public static readonly string GitBinPath = Path.Combine(PortableGitInstallDir, "bin");
 
     public PrerequisiteHelper(ILogger<PrerequisiteHelper> logger, IGitHubClient gitHubClient,
-        IDownloadService downloadService)
+        IDownloadService downloadService, ISettingsManager settingsManager)
     {
         this.logger = logger;
         this.gitHubClient = gitHubClient;
         this.downloadService = downloadService;
+        this.settingsManager = settingsManager;
     }
 
     public event EventHandler<ProgressReport>? DownloadProgressChanged;
@@ -89,6 +91,9 @@ public class PrerequisiteHelper : IPrerequisiteHelper
 
         OnInstallProgressChanged(this, new ProgressReport(-1, isIndeterminate: true));
         File.Delete(PortableGitDownloadPath);
+        // Also add git to the path
+        settingsManager.AddPathExtension(GitBinPath);
+        settingsManager.InsertPathExtensions();
         OnInstallComplete(this, new ProgressReport(progress: 1f));
     }
 

@@ -15,6 +15,7 @@ public class SettingsManager : ISettingsManager
     private static readonly string SettingsPath =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix",
             SettingsFileName);
+    private readonly string? originalEnvPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
 
     public Settings Settings { get; private set; } = new();
 
@@ -63,6 +64,30 @@ public class SettingsManager : ISettingsManager
     {
         Settings.IsNavExpanded = navExpanded;
         SaveSettings();
+    }
+    
+    public void AddPathExtension(string pathExtension)
+    {
+        Settings.PathExtensions ??= new List<string>();
+        Settings.PathExtensions.Add(pathExtension);
+        SaveSettings();
+    }
+
+    public string GetPathExtensionsAsString()
+    {
+        return string.Join(";", Settings.PathExtensions ?? new List<string>());
+    }
+
+    /// <summary>
+    /// Insert path extensions to the front of the PATH environment variable
+    /// </summary>
+    public void InsertPathExtensions()
+    {
+        if (Settings.PathExtensions == null) return;
+        var toInsert = GetPathExtensionsAsString();
+        // Append the original path, if any
+        toInsert += originalEnvPath ?? "";
+        Environment.SetEnvironmentVariable("PATH", toInsert, EnvironmentVariableTarget.Process);
     }
 
     public void UpdatePackageVersionNumber(Guid id, string? newVersion)

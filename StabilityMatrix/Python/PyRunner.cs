@@ -50,7 +50,7 @@ public class PyRunner : IPyRunner
         // Get existing PATH
         var currentEnvPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
         // Append Python path to PATH
-        Environment.SetEnvironmentVariable("PATH", $"{PrerequisiteHelper.GitBinPath};{currentEnvPath};{HomePath}", EnvironmentVariableTarget.Process);
+        Environment.SetEnvironmentVariable("PATH", $"{HomePath};{currentEnvPath}", EnvironmentVariableTarget.Process);
 
         Logger.Info("Initializing Python runtime with DLL: {DllPath}", DllPath);
         // Check PythonDLL exists

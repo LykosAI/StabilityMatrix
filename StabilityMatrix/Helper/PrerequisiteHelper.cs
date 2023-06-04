@@ -81,8 +81,8 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         {
             var count = 0ul;
             var total = Convert.ToUInt64(new FileInfo(PortableGitDownloadPath).Length);
-            using var stream = File.OpenRead(PortableGitDownloadPath);
-            using var archive = ReaderFactory.Open(stream);
+            using var fileStream = File.OpenRead(PortableGitDownloadPath);
+            using var archive = ReaderFactory.Open(fileStream);
             while (archive.MoveToNextEntry())
             {
                 archive.WriteEntryToDirectory(PortableGitInstallDir, new ExtractionOptions
@@ -102,6 +102,8 @@ public class PrerequisiteHelper : IPrerequisiteHelper
                     OnInstallProgressChanged(this, new ProgressReport(progress: progressPercent)));
             }
             
+            fileStream.Close();
+            File.Delete(PortableGitDownloadPath);
         });
         
         OnInstallComplete(this, new ProgressReport(progress: 100f));

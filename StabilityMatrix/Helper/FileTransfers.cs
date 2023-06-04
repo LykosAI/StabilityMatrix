@@ -40,7 +40,7 @@ public static class FileTransfers
     private static async Task CopyStream(Stream from, Stream to, Action<long> progress)
     {
         var buffer = new byte[BufferSize];
-        var totalRead = 0;
+        long totalRead = 0;
 
         while (totalRead < from.Length)
         {

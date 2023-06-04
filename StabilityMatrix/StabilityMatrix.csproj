@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="7-Zip.CommandLine" Version="18.1.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
     <PackageReference Include="FuzzySharp" Version="2.0.2" />
     <PackageReference Include="Markdown.Xaml" Version="1.0.0" />
@@ -73,5 +74,9 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy $(Pkg7-Zip_CommandLine)\tools\x64\7za.exe $(OutDir)\Assets\" />
+  </Target>
 
 </Project>

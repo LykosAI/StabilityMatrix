@@ -2,11 +2,14 @@
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using Microsoft.Extensions.Logging;
 using Octokit;
 using SharpCompress.Archives;
 using SharpCompress.Common;
+using SharpCompress.Factories;
 using SharpCompress.Readers;
 using StabilityMatrix.Models;
 using StabilityMatrix.Services;
@@ -19,6 +22,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
     private readonly ILogger<PrerequisiteHelper> logger;
     private readonly IGitHubClient gitHubClient;
     private readonly IDownloadService downloadService;
+    private readonly ISettingsManager settingsManager;
 
     private static readonly string PortableGitInstallDir =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix",
@@ -33,11 +37,12 @@ public class PrerequisiteHelper : IPrerequisiteHelper
     public static readonly string GitBinPath = Path.Combine(PortableGitInstallDir, "bin");
 
     public PrerequisiteHelper(ILogger<PrerequisiteHelper> logger, IGitHubClient gitHubClient,
-        IDownloadService downloadService)
+        IDownloadService downloadService, ISettingsManager settingsManager)
     {
         this.logger = logger;
         this.gitHubClient = gitHubClient;
         this.downloadService = downloadService;
+        this.settingsManager = settingsManager;
     }
 
     public event EventHandler<ProgressReport>? DownloadProgressChanged;
@@ -76,37 +81,20 @@ public class PrerequisiteHelper : IPrerequisiteHelper
     
     private async Task UnzipGit()
     {
-        Directory.CreateDirectory(PortableGitInstallDir);
-        await Task.Run(() =>
-        {
-            var count = 0ul;
-            var total = Convert.ToUInt64(new FileInfo(PortableGitDownloadPath).Length);
-            using var fileStream = File.OpenRead(PortableGitDownloadPath);
-            using var archive = ReaderFactory.Open(fileStream);
-            while (archive.MoveToNextEntry())
-            {
-                archive.WriteEntryToDirectory(PortableGitInstallDir, new ExtractionOptions
-                {
-                    Overwrite = true,
-                    ExtractFullPath = true,
-                });
-                if (!archive.Entry.IsDirectory)
-                {
-                    count += Convert.ToUInt64(archive.Entry.CompressedSize);
-                }
+        var progress = new Progress<ProgressReport>();
+        progress.ProgressChanged += OnInstallProgressChanged;
 
-                var progressPercent = (float) count / total * 100;
-                progressPercent /= 2.9f; // idk how to count lol
-                
-                Application.Current.Dispatcher.Invoke(() =>
-                    OnInstallProgressChanged(this, new ProgressReport(progress: progressPercent)));
-            }
-            
-            fileStream.Close();
-            File.Delete(PortableGitDownloadPath);
-        });
-        
-        OnInstallComplete(this, new ProgressReport(progress: 100f));
+        OnInstallProgressChanged(this, new ProgressReport(-1, isIndeterminate: true));
+        await ArchiveHelper.Extract(PortableGitDownloadPath, PortableGitInstallDir, progress);
+
+        logger.LogInformation("Extracted Git");
+
+        OnInstallProgressChanged(this, new ProgressReport(-1, isIndeterminate: true));
+        File.Delete(PortableGitDownloadPath);
+        // Also add git to the path
+        settingsManager.AddPathExtension(GitBinPath);
+        settingsManager.InsertPathExtensions();
+        OnInstallComplete(this, new ProgressReport(progress: 1f));
     }
 
     private void OnDownloadProgressChanged(object? sender, ProgressReport progress) => DownloadProgressChanged?.Invoke(sender, progress);

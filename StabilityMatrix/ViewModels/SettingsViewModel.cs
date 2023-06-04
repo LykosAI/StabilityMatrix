@@ -1,11 +1,19 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Markdown.Xaml;
 using Ookii.Dialogs.Wpf;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
@@ -23,6 +31,8 @@ public partial class SettingsViewModel : ObservableObject
     private readonly ISettingsManager settingsManager;
     private readonly IPyRunner pyRunner;
     private readonly ISnackbarService snackbarService;
+    public static string LicensesPath => Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Assets\licenses.json"));
+    public TextToFlowDocumentConverter? TextToFlowDocumentConverter { get; set; }
 
     public ObservableCollection<string> AvailableThemes => new()
     {
@@ -55,6 +65,15 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty] 
     private WindowBackdropType windowBackdropType;
+
+    public string AppVersion => $"Version {GetAppVersion()}";
+    
+    private string GetAppVersion()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        var fvi = FileVersionInfo.GetVersionInfo(assembly.Location).FileVersion;
+        return fvi ?? "(Unknown)";
+    }
     
     partial void OnSelectedThemeChanged(string value)
     {
@@ -140,6 +159,28 @@ public partial class SettingsViewModel : ObservableObject
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var appPath = Path.Combine(appDataPath, "StabilityMatrix");
         Process.Start("explorer.exe", appPath);
+    }
+
+    [RelayCommand]
+    private async Task OpenLicenseDialog()
+    {
+        // Read json
+        var licenses = JsonSerializer.Deserialize<IEnumerable<LicenseInfo>>(await File.ReadAllTextAsync(LicensesPath));
+        var flowViewer = new FlowDocumentScrollViewer();
+        var markdownText = "";
+        foreach (var license in licenses)
+        {
+            markdownText += $"## [{license.PackageName}]({license.PackageUrl}) by {string.Join(", ", license.Authors)}\n\n";
+            markdownText += $"{license.Copyright}\n\n";
+            markdownText += $"[{license.LicenseUrl}]({license.LicenseUrl})\n\n";
+        }
+        flowViewer.Document = TextToFlowDocumentConverter!.Convert(markdownText, typeof(FlowDocument), null, CultureInfo.CurrentCulture) as FlowDocument;
+
+        var dialog = contentDialogService.CreateDialog();
+        dialog.Title = "License and Open Source Notices";
+        dialog.Content = flowViewer;
+        dialog.IsPrimaryButtonEnabled = false;
+        await dialog.ShowAsync();
     }
 
     private void ApplyTheme(string value)

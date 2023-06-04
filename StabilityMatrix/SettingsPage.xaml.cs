@@ -1,4 +1,5 @@
 using System.Windows;
+using Markdown.Xaml;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Controls.Navigation;
 
@@ -15,6 +16,9 @@ namespace StabilityMatrix
             DataContext = ViewModel;
 
             InitializeComponent();
+            
+            var textToFlowDocumentConverter = Resources["TextToFlowDocumentConverter"] as TextToFlowDocumentConverter;
+            ViewModel.TextToFlowDocumentConverter = textToFlowDocumentConverter;
         }
 
         private async void SettingsPage_OnLoaded(object sender, RoutedEventArgs e)

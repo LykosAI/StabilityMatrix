@@ -11,4 +11,5 @@ public class Settings
     public List<InstalledPackage> InstalledPackages { get; set; } = new();
     public Guid? ActiveInstalledPackage { get; set; }
     public bool IsNavExpanded { get; set; }
+    public List<string>? PathExtensions { get; set; }
 }

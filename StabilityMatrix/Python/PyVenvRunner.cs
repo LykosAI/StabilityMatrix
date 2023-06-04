@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using NLog;
 using StabilityMatrix.Helper;
@@ -13,6 +14,8 @@ namespace StabilityMatrix.Python;
 /// </summary>
 public class PyVenvRunner : IDisposable
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
     /// <summary>
     /// The process running the python executable.
     /// </summary>
@@ -33,15 +36,20 @@ public class PyVenvRunner : IDisposable
     /// </summary>
     public string PipPath => RootPath + @"\Scripts\pip.exe";
 
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
+    /// <summary>
+    /// List of substrings to suppress from the output.
+    /// When a line contains any of these substrings, it will not be forwarded to callbacks.
+    /// A corresponding Info log will be written instead.
+    /// </summary>
+    public List<string> SuppressOutput { get; } = new() { "fatal: not a git repository" };
+    
     public PyVenvRunner(string path)
     {
         RootPath = path;
     }
 
     // Whether the activate script exists
-    public bool Exists() => System.IO.File.Exists(PythonPath);
+    public bool Exists() => File.Exists(PythonPath);
 
     /// <summary>
     /// Creates a venv at the configured path.
@@ -54,9 +62,9 @@ public class PyVenvRunner : IDisposable
         }
 
         // Create RootPath if it doesn't exist
-        if (!System.IO.Directory.Exists(RootPath))
+        if (!Directory.Exists(RootPath))
         {
-            System.IO.Directory.CreateDirectory(RootPath);
+            Directory.CreateDirectory(RootPath);
         }
 
         // Create venv
@@ -118,6 +126,17 @@ public class PyVenvRunner : IDisposable
         }
 
         Logger.Debug($"Launching RunDetached at {PythonPath} with args {arguments}");
+        
+        var filteredOutput = outputDataReceived == null ? null : new Action<string?>(s =>
+        {
+            if (s == null) return;
+            if (SuppressOutput.Any(s.Contains))
+            {
+                Logger.Info("Filtered output: {S}", s);
+                return;
+            }
+            outputDataReceived?.Invoke(s);
+        });
 
         if (unbuffered)
         {
@@ -125,12 +144,12 @@ public class PyVenvRunner : IDisposable
             {
                 {"PYTHONUNBUFFERED", "1"}
             };
-            Process = ProcessRunner.StartProcess(PythonPath, "-u " + arguments, workingDirectory, outputDataReceived,
+            Process = ProcessRunner.StartProcess(PythonPath, "-u " + arguments, workingDirectory, filteredOutput,
                 env);
         }
         else
         {
-            Process = ProcessRunner.StartProcess(PythonPath, arguments, outputDataReceived: outputDataReceived,
+            Process = ProcessRunner.StartProcess(PythonPath, arguments, outputDataReceived: filteredOutput,
                 workingDirectory: workingDirectory);
         }
 

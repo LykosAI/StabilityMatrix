@@ -179,13 +179,13 @@ public partial class PackageManagerViewModel : ObservableObject
                 "Some files could not be deleted. Please close any open files in the package directory and try again.");
             if (taskResult.IsSuccessful)
             {
+                snackbarService.ShowSnackbarAsync($"Package {SelectedPackage.DisplayName} uninstalled", "Success",
+                    LogLevel.Trace);
                 settingsManager.RemoveInstalledPackage(SelectedPackage);
             }
             await OnLoaded();
             IsUninstalling = false;
             InstallButtonEnabled = true;
-            snackbarService.ShowSnackbarAsync($"Package {SelectedPackage.DisplayName} uninstalled", "Success",
-                LogLevel.Trace);
         }
     }
     

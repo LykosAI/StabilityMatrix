@@ -352,8 +352,8 @@ public partial class InstallerViewModel : ObservableObject
     {
         void DownloadProgressHandler(object? _, ProgressReport progress)
         {
-            ProgressText = $"Downloading git... ({progress.Progress}%)";
-            ProgressValue = Convert.ToInt32(progress.Progress);
+            ProgressText = $"Downloading git... ({progress.Percentage:N0}%)";
+            ProgressValue = Convert.ToInt32(progress.Percentage);
         }
 
         void DownloadFinishedHandler(object? _, ProgressReport downloadLocation)
@@ -364,8 +364,17 @@ public partial class InstallerViewModel : ObservableObject
         
         void InstallProgressHandler(object? _, ProgressReport progress)
         {
-            ProgressText = $"Installing git... ({progress.Progress:N1}%)";
-            ProgressValue = Convert.ToInt32(progress.Progress);
+            IsIndeterminate = progress.IsIndeterminate;
+            if (progress.IsIndeterminate || ProgressValue == -1)
+            {
+                ProgressText = "Getting a few things ready...";
+                ProgressValue = -1;
+            }
+            else
+            {
+                ProgressText = $"Installing git... ({Math.Ceiling(progress.Percentage)}%)";
+                ProgressValue = (int) progress.Percentage;
+            }
         }
 
         void InstallFinishedHandler(object? _, ProgressReport __)

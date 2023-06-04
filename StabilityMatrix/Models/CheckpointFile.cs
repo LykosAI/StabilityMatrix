@@ -27,7 +27,7 @@ public class CheckpointFile
     
     public string FileName => Path.GetFileName(FilePath);
 
-    private static readonly string[] SupportedCheckpointExtensions = { ".safetensors", ".pt" };
+    private static readonly string[] SupportedCheckpointExtensions = { ".safetensors", ".pt", ".ckpt", ".pth" };
     private static readonly string[] SupportedImageExtensions = { ".png", ".jpg", ".jpeg" };
 
 

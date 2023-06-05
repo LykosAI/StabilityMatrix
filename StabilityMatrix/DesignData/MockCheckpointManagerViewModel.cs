@@ -40,6 +40,7 @@ public class MockCheckpointManagerViewModel : CheckpointManagerViewModel
             new()
             {
                 Title = "Lora",
+                IsCurrentDragTarget = true,
                 CheckpointFiles = new()
                 {
                     new()

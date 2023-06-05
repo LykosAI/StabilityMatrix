@@ -29,6 +29,12 @@
 
         <DataTemplate DataType="{x:Type models:CheckpointFile}" x:Key="CheckpointFileDataTemplate">
             <ui:CardAction Height="96" Width="240">
+                <ui:CardAction.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Rename" />
+                        <MenuItem Command="{Binding DeleteCommand}" Header="Delete" />
+                    </ContextMenu>
+                </ui:CardAction.ContextMenu>
                 <StackPanel Orientation="Vertical">
                     <ui:Image
                         CornerRadius="4"
@@ -79,15 +85,22 @@
                         PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel"
                         SpacingMode="StartAndEndOnly" />
                     <Border
-                        BorderThickness="1,1,1,1"
                         CornerRadius="8"
                         Grid.RowSpan="4"
                         IsEnabled="False"
                         Name="OnDragBlurBorder"
-                        Visibility="{Binding IsDragBlurEnabled, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=Visible}">
+                        Visibility="{Binding IsDragBlurEnabled, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <Border.Background>
-                            <SolidColorBrush Color="#EE202020"/>
+                            <SolidColorBrush Color="#EE202020" />
                         </Border.Background>
+                    </Border>
+                    <Border
+                        BorderThickness="1,1,1,1"
+                        CornerRadius="8"
+                        Grid.RowSpan="4"
+                        IsEnabled="False"
+                        Name="OnDragDashBorder"
+                        Visibility="{Binding IsCurrentDragTarget, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <Border.BorderBrush>
                             <DrawingBrush
                                 TileMode="Tile"
@@ -123,7 +136,8 @@
                             HorizontalAlignment="Center"
                             Name="ImportProgressText"
                             Text="{Binding Progress.Text, FallbackValue=Importing checkpoint.safetensors}"
-                            VerticalAlignment="Center" />
+                            VerticalAlignment="Center"
+                            Visibility="{Binding Progress.TextVisibility}" />
                         <ProgressBar
                             Effect="{StaticResource TextDropShadowEffect}"
                             HorizontalAlignment="Stretch"

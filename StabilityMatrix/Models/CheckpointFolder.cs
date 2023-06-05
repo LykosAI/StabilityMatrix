@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -12,7 +13,7 @@ using StabilityMatrix.ViewModels;
 
 namespace StabilityMatrix.Models;
 
-public partial class CheckpointFolder : ObservableObject
+public class CheckpointFolder : ObservableObject
 {
     /// <summary>
     /// Absolute path to the folder.
@@ -40,7 +41,33 @@ public partial class CheckpointFolder : ObservableObject
     
     public RelayCommand OnPreviewDragEnterCommand => new(() => IsCurrentDragTarget = true);
     public RelayCommand OnPreviewDragLeaveCommand => new(() => IsCurrentDragTarget = false);
+
+    public CheckpointFolder()
+    {
+        CheckpointFiles.CollectionChanged += OnCheckpointFilesChanged;
+    }
     
+    // On collection changes
+    private void OnCheckpointFilesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.NewItems == null) return;
+        // On new added items, add event handler for deletion
+        foreach (CheckpointFile item in e.NewItems)
+        {
+            item.Deleted += OnCheckpointFileDelete;
+        }
+    }
+
+    /// <summary>
+    /// Handler for CheckpointFile requesting to be deleted from the collection.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="file"></param>
+    private void OnCheckpointFileDelete(object? sender, CheckpointFile file)
+    {
+        Application.Current.Dispatcher.Invoke(() => CheckpointFiles.Remove(file));
+    }
+
     [RelayCommand]
     private async Task OnPreviewDropAsync(DragEventArgs e)
     {
@@ -64,19 +91,14 @@ public partial class CheckpointFolder : ObservableObject
     {
         Progress.IsIndeterminate = true;
         Progress.IsProgressVisible = true;
-        var copyPaths = files.ToDictionary(k => k, v => System.IO.Path.Combine(DirectoryPath, System.IO.Path.GetFileName(v)));
+        var copyPaths = files.ToDictionary(k => k, v => Path.Combine(DirectoryPath, Path.GetFileName(v)));
         
         var progress = new Progress<ProgressReport>(report =>
         {
             Progress.IsIndeterminate = false;
             Progress.Value = report.Percentage;
-            var progressText = $"Importing {report.Title}";
             // For multiple files, add count
-            if (copyPaths.Count > 1)
-            {
-                progressText += $" ({report.Message})";
-            }
-            Progress.Text = progressText;
+            Progress.Text = copyPaths.Count > 1 ? $"Importing {report.Title} ({report.Message})" : $"Importing {report.Title}";
         });
 
         await FileTransfers.CopyFiles(copyPaths, progress);

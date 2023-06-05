@@ -3,12 +3,18 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace StabilityMatrix.Models;
 
-public class CheckpointFile
+public partial class CheckpointFile : ObservableObject
 {
+    // Event for when this file is deleted
+    public event EventHandler<CheckpointFile>? Deleted;
+    
     /// <summary>
     /// Absolute path to the checkpoint file.
     /// </summary>
@@ -30,6 +36,23 @@ public class CheckpointFile
     private static readonly string[] SupportedCheckpointExtensions = { ".safetensors", ".pt", ".ckpt", ".pth" };
     private static readonly string[] SupportedImageExtensions = { ".png", ".jpg", ".jpeg" };
 
+    [RelayCommand]
+    public void Delete()
+    {
+        if (File.Exists(FilePath))
+        {
+            Task.Run(() =>
+            {
+                File.Delete(FilePath);
+                Deleted?.Invoke(this, this);
+            });
+        }
+
+        if (PreviewImagePath != null && File.Exists(PreviewImagePath))
+        {
+            Task.Run(() => File.Delete(PreviewImagePath));
+        }
+    } 
 
     /// <summary>
     /// Indexes directory and yields all checkpoint files.

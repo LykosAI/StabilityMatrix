@@ -84,7 +84,7 @@
 
                 <ui:TextBox PlaceholderText="Query"
                             HorizontalAlignment="Stretch"
-                            Margin="8,0,8,0"
+                            Margin="8,0,0,0"
                             Text="{Binding SearchQuery, Mode=TwoWay, 
                             UpdateSourceTrigger=PropertyChanged}" />
 
@@ -93,7 +93,7 @@
                            Width="80"
                            IsDefault="True"
                            VerticalAlignment="Stretch"
-                           Margin="0,0,0,8"
+                           Margin="8,0,8,0"
                            Appearance="Primary">
                     <StackPanel Orientation="Horizontal">
                         <ui:ProgressRing Height="20" Width="20"
@@ -124,7 +124,7 @@
                         SelectedItem="{Binding SelectedPeriod}" />
                 </StackPanel>
 
-                <CheckBox Content="Show NSFW Content" Margin="8,8,0,0" HorizontalAlignment="Right"
+                <CheckBox Content="Show NSFW Content" Margin="8,8,8,0" HorizontalAlignment="Right"
                           FontSize="12" IsChecked="{Binding ShowNsfw, Mode=TwoWay}" />
             </DockPanel>
 

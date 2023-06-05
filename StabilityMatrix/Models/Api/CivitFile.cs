@@ -25,4 +25,7 @@ public class CivitFile
 
     [JsonPropertyName("downloadUrl")]
     public string DownloadUrl { get; set; }
+    
+    [JsonPropertyName("hashes")]
+    public CivitFileHashes Hashes { get; set; }
 }

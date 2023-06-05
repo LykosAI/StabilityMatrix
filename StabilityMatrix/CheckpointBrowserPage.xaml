@@ -29,7 +29,7 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
         <DataTemplate DataType="{x:Type api:CivitModel}" x:Key="CivitModelTemplate">
-            <ui:Card MaxHeight="400" Width="330">
+            <ui:Card MaxHeight="450" Width="330">
                 <StackPanel Orientation="Vertical">
                     <TextBlock
                         Foreground="{DynamicResource TextFillColorPrimaryBrush}"
@@ -48,6 +48,21 @@
                         Margin="0,8,0,8"
                         MaxHeight="300"
                         Stretch="UniformToFill" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <ui:Button Content="Import" 
+                                   HorizontalAlignment="Stretch"
+                                   Appearance="Primary" 
+                                   Margin="0,8,0,0"/>
+                        <ui:Button Grid.Column="1" 
+                                   HorizontalAlignment="Stretch"
+                                   Content="Open in Browser"
+                                   Appearance="Secondary" 
+                                   Margin="8,8,0,0"/>
+                    </Grid>
                 </StackPanel>
             </ui:Card>
         </DataTemplate>
@@ -69,7 +84,7 @@
 
                 <ui:TextBox PlaceholderText="Query"
                             HorizontalAlignment="Stretch"
-                            Margin="0,0,8,0"
+                            Margin="8,0,8,0"
                             Text="{Binding SearchQuery, Mode=TwoWay, 
                             UpdateSourceTrigger=PropertyChanged}" />
 
@@ -78,6 +93,7 @@
                            Width="80"
                            IsDefault="True"
                            VerticalAlignment="Stretch"
+                           Margin="0,0,0,8"
                            Appearance="Primary">
                     <StackPanel Orientation="Horizontal">
                         <ui:ProgressRing Height="20" Width="20"
@@ -85,7 +101,7 @@
                                          IsIndeterminate="True"
                                          Visibility="{Binding SearchModelsCommand.IsRunning, 
                                         Converter={StaticResource BoolToVisibilityConverter}}" />
-                        <TextBlock Text="Search" VerticalAlignment="Center" Margin="0,0,0,0"
+                        <TextBlock Text="Search" VerticalAlignment="Center"
                                    Visibility="{Binding SearchModelsCommand.IsRunning, 
                                         Converter={StaticResource InvertAndVisibilitate}}" />
                     </StackPanel>

@@ -1,7 +1,7 @@
 <ui:FluentWindow
     ExtendsContentIntoTitleBar="True"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-    Height="700"
+    Height="750"
     Icon="Assets/Icon.ico"
     Loaded="MainWindow_OnLoaded"
     Title="Stability Matrix"
@@ -47,9 +47,9 @@
                 x:Name="RootNavigation">
                 <ui:NavigationView.Header>
                     <ui:BreadcrumbBar
-                        FontSize="28"
+                        FontSize="24"
                         FontWeight="DemiBold"
-                        Margin="42,32,0,16" />
+                        Margin="24,16,0,16" />
                 </ui:NavigationView.Header>
                 <ui:NavigationView.MenuItems>
                     <ui:NavigationViewItem

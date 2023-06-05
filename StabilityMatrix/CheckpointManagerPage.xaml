@@ -84,13 +84,9 @@
                         Grid.RowSpan="4"
                         IsEnabled="False"
                         Name="OnDragBlurBorder"
-                        Opacity=".9"
                         Visibility="{Binding IsDragBlurEnabled, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=Visible}">
                         <Border.Background>
-                            <LinearGradientBrush EndPoint="1,1" StartPoint="0,0">
-                                <GradientStop Color="#8F202020" Offset="0.0" />
-                                <GradientStop Color="#8F202020" Offset="1.0" />
-                            </LinearGradientBrush>
+                            <SolidColorBrush Color="#EE202020"/>
                         </Border.Background>
                         <Border.BorderBrush>
                             <DrawingBrush

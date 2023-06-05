@@ -41,6 +41,9 @@ public class A3WebUI : BaseGitPackage
         [SharedFolderType.VAE] = "models/VAE",
         [SharedFolderType.DeepDanbooru] = "models/deepbooru",
         [SharedFolderType.Karlo] = "models/karlo",
+        [SharedFolderType.TextualInversion] = "embeddings",
+        [SharedFolderType.Hypernetwork] = "models/hypernetworks",
+        [SharedFolderType.ControlNet] = "models/ControlNet"
     };
 
     public override List<LaunchOptionDefinition> LaunchOptions => new()

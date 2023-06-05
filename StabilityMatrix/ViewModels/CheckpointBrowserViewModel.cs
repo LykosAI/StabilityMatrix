@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Api;
+using StabilityMatrix.Models;
 using StabilityMatrix.Models.Api;
+using StabilityMatrix.Services;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -15,6 +19,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly ICivitApi civitApi;
+    private readonly IDownloadService downloadService;
     private const int MaxModelsPerPage = 14;
 
     [ObservableProperty] private string? searchQuery;
@@ -28,13 +33,18 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     [ObservableProperty] private bool hasSearched;
     [ObservableProperty] private bool canGoToNextPage;
     [ObservableProperty] private bool canGoToPreviousPage;
+    [ObservableProperty] private int importProgress;
+    [ObservableProperty] private string importStatus;
+    [ObservableProperty] private bool isIndeterminate;
 
     public IEnumerable<CivitPeriod> AllCivitPeriods => Enum.GetValues(typeof(CivitPeriod)).Cast<CivitPeriod>();
     public IEnumerable<CivitSortMode> AllSortModes => Enum.GetValues(typeof(CivitSortMode)).Cast<CivitSortMode>();
 
-    public CheckpointBrowserViewModel(ICivitApi civitApi)
+    public CheckpointBrowserViewModel(ICivitApi civitApi, IDownloadService downloadService)
     {
         this.civitApi = civitApi;
+        this.downloadService = downloadService;
+        
         SelectedPeriod = CivitPeriod.Month;
         SortMode = CivitSortMode.HighestRated;
         HasSearched = false;
@@ -87,6 +97,48 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     {
         CurrentPageNumber++;
         await TrySearchAgain(false);
+    }
+
+    [RelayCommand]
+    private async Task Import(CivitModel model)
+    {
+        IsIndeterminate = false;
+        ImportStatus = "Downloading...";
+
+        var latestModelFile = model.ModelVersions[0].Files[0];
+        
+        var downloadPath = Path.Combine(SharedFolders.SharedFoldersPath,
+            SharedFolders.SharedFolderTypeToName(model.Type.ToSharedFolderType()), latestModelFile.Name);
+
+        downloadService.DownloadProgressChanged += DownloadServiceOnDownloadProgressChanged;
+        downloadService.DownloadComplete += DownloadServiceOnDownloadComplete;
+        
+        await downloadService.DownloadToFileAsync(latestModelFile.DownloadUrl, downloadPath);
+        
+        downloadService.DownloadProgressChanged -= DownloadServiceOnDownloadProgressChanged;
+        downloadService.DownloadComplete -= DownloadServiceOnDownloadComplete;
+    }
+
+    private void DownloadServiceOnDownloadComplete(object? sender, ProgressReport e)
+    {
+        ImportStatus = "Import complete!";
+        ImportProgress = 100;
+    }
+
+    private void DownloadServiceOnDownloadProgressChanged(object? sender, ProgressReport e)
+    {
+        ImportProgress = (int)e.Percentage;
+        ImportStatus = $"Importing... {e.Percentage}%";
+    }
+
+    [RelayCommand]
+    private void OpenModel(CivitModel model)
+    {
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = $"https://civitai.com/models/{model.Id}",
+            UseShellExecute = true
+        });
     }
 
     partial void OnShowNsfwChanged(bool oldValue, bool newValue)

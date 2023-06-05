@@ -19,4 +19,10 @@ public class CivitFile
     
     [JsonPropertyName("metadata")]
     public CivitFileMetadata Metadata { get; set; }
+
+    [JsonPropertyName("name")]
+    public string Name { get; set; }
+
+    [JsonPropertyName("downloadUrl")]
+    public string DownloadUrl { get; set; }
 }

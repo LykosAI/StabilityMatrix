@@ -10,11 +10,11 @@ public class SharedFolders : ISharedFolders
 {
     private const string SharedFoldersName = "Models";
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    public string SharedFoldersPath { get; } =
+    public static string SharedFoldersPath =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix",
             SharedFoldersName);
 
-    public string SharedFolderTypeToName(SharedFolderType folderType)
+    public static string SharedFolderTypeToName(SharedFolderType folderType)
     {
         return Enum.GetName(typeof(SharedFolderType), folderType)!;
     }

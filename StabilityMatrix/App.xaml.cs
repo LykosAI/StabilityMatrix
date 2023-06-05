@@ -87,7 +87,7 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<InstallerViewModel>();
             serviceCollection.AddTransient<OneClickInstallViewModel>();
             serviceCollection.AddTransient<CheckpointManagerViewModel>();
-            serviceCollection.AddTransient<CheckpointBrowserViewModel>();
+            serviceCollection.AddSingleton<CheckpointBrowserViewModel>();
             
             var settingsManager = new SettingsManager();
             serviceCollection.AddSingleton<ISettingsManager>(settingsManager);

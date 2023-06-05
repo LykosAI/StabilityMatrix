@@ -23,6 +23,9 @@ public class CivitModelVersion
     [JsonPropertyName("trainedWords")]
     public string[] TrainedWords { get; set; }
     
+    [JsonPropertyName("baseModel")]
+    public string? BaseModel { get; set; }
+    
     [JsonPropertyName("files")]
     public CivitFile[] Files { get; set; }
     

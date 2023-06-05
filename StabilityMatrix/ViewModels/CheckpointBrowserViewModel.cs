@@ -23,7 +23,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     private const int MaxModelsPerPage = 14;
 
     [ObservableProperty] private string? searchQuery;
-    [ObservableProperty] private ObservableCollection<CivitModel>? civitModels;
+    [ObservableProperty] private ObservableCollection<CheckpointBrowserCardViewModel>? modelCards;
     [ObservableProperty] private bool showNsfw;
     [ObservableProperty] private bool showMainLoadingSpinner;
     [ObservableProperty] private CivitPeriod selectedPeriod;
@@ -33,8 +33,6 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     [ObservableProperty] private bool hasSearched;
     [ObservableProperty] private bool canGoToNextPage;
     [ObservableProperty] private bool canGoToPreviousPage;
-    [ObservableProperty] private int importProgress;
-    [ObservableProperty] private string importStatus;
     [ObservableProperty] private bool isIndeterminate;
 
     public IEnumerable<CivitPeriod> AllCivitPeriods => Enum.GetValues(typeof(CivitPeriod)).Cast<CivitPeriod>();
@@ -77,7 +75,8 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         TotalPages = models.Metadata.TotalPages;
         CanGoToPreviousPage = CurrentPageNumber > 1;
         CanGoToNextPage = CurrentPageNumber < TotalPages;
-        CivitModels = new ObservableCollection<CivitModel>(models.Items);
+        ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(models.Items.Select(
+            m => new CheckpointBrowserCardViewModel { CivitModel = m }));
         ShowMainLoadingSpinner = false;
 
         Logger.Debug($"Found {models.Items.Length} models");
@@ -99,48 +98,6 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         await TrySearchAgain(false);
     }
 
-    [RelayCommand]
-    private async Task Import(CivitModel model)
-    {
-        IsIndeterminate = false;
-        ImportStatus = "Downloading...";
-
-        var latestModelFile = model.ModelVersions[0].Files[0];
-        
-        var downloadPath = Path.Combine(SharedFolders.SharedFoldersPath,
-            SharedFolders.SharedFolderTypeToName(model.Type.ToSharedFolderType()), latestModelFile.Name);
-
-        downloadService.DownloadProgressChanged += DownloadServiceOnDownloadProgressChanged;
-        downloadService.DownloadComplete += DownloadServiceOnDownloadComplete;
-        
-        await downloadService.DownloadToFileAsync(latestModelFile.DownloadUrl, downloadPath);
-        
-        downloadService.DownloadProgressChanged -= DownloadServiceOnDownloadProgressChanged;
-        downloadService.DownloadComplete -= DownloadServiceOnDownloadComplete;
-    }
-
-    private void DownloadServiceOnDownloadComplete(object? sender, ProgressReport e)
-    {
-        ImportStatus = "Import complete!";
-        ImportProgress = 100;
-    }
-
-    private void DownloadServiceOnDownloadProgressChanged(object? sender, ProgressReport e)
-    {
-        ImportProgress = (int)e.Percentage;
-        ImportStatus = $"Importing... {e.Percentage}%";
-    }
-
-    [RelayCommand]
-    private void OpenModel(CivitModel model)
-    {
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = $"https://civitai.com/models/{model.Id}",
-            UseShellExecute = true
-        });
-    }
-
     partial void OnShowNsfwChanged(bool oldValue, bool newValue)
     {
         TrySearchAgain();
@@ -159,7 +116,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     private async Task TrySearchAgain(bool shouldUpdatePageNumber = true)
     {
         if (!hasSearched) return;
-        CivitModels?.Clear();
+        ModelCards?.Clear();
 
         if (shouldUpdatePageNumber)
         {

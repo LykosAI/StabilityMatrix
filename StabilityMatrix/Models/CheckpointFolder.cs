@@ -13,7 +13,7 @@ using StabilityMatrix.ViewModels;
 
 namespace StabilityMatrix.Models;
 
-public class CheckpointFolder : ObservableObject
+public partial class CheckpointFolder : ObservableObject
 {
     /// <summary>
     /// Absolute path to the folder.

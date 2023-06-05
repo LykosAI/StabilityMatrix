@@ -78,12 +78,11 @@
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
                 <Grid>
-                    <ui:VirtualizingGridView
+                    <ui:VirtualizingItemsControl
                         ItemTemplate="{StaticResource CheckpointFileDataTemplate}"
                         ItemsSource="{Binding CheckpointFiles}"
                         Padding="5"
-                        PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel"
-                        SpacingMode="StartAndEndOnly" />
+                        PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel" />
                     <Border
                         CornerRadius="8"
                         Grid.RowSpan="4"

@@ -8,4 +8,7 @@ public interface ICivitApi
 {
     [Get("/api/v1/models")]
     Task<CivitModelsResponse> GetModels(CivitModelsRequest request);
+    
+    [Get("/api/v1/model-versions/by-hash")]
+    Task<CivitModelVersion> GetModelVersionByHash([Query] string hash);
 }

@@ -74,6 +74,11 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                     "Download failed hash validation", LogLevel.Warning);
                 return;
             }
+            else
+            {
+                snackbarService.ShowSnackbarAsync($"{model.Type} {model.Name} imported successfully!",
+                    "Import complete", LogLevel.Trace);
+            }
         }
         
         Text = "Import complete!";

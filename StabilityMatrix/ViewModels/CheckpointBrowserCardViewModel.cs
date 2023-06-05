@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Extensions;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Api;
@@ -47,7 +48,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         var fileExpectedSha256 = latestModelFile.Hashes.SHA256;
         
         var downloadPath = Path.Combine(SharedFolders.SharedFoldersPath,
-            SharedFolders.SharedFolderTypeToName(model.Type.ToSharedFolderType()), latestModelFile.Name);
+            model.Type.ConvertTo<SharedFolderType>().GetStringValue(), latestModelFile.Name);
 
         var downloadProgress = new Progress<ProgressReport>(progress =>
         {

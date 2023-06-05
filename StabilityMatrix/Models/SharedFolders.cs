@@ -2,6 +2,7 @@
 using System.IO;
 using NCode.ReparsePoints;
 using NLog;
+using StabilityMatrix.Extensions;
 using StabilityMatrix.Models.Packages;
 
 namespace StabilityMatrix.Models;
@@ -30,7 +31,7 @@ public class SharedFolders : ISharedFolders
         var provider = ReparsePointFactory.Provider;
         foreach (var (folderType, relativePath) in sharedFolders)
         {
-            var source = Path.GetFullPath(Path.Combine(SharedFoldersPath, SharedFolderTypeToName(folderType)));
+            var source = Path.GetFullPath(Path.Combine(SharedFoldersPath, folderType.GetStringValue()));
             var destination = Path.GetFullPath(Path.Combine(installPath, relativePath));
             // Create source folder if it doesn't exist
             if (!Directory.Exists(source))

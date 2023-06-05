@@ -76,7 +76,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         CanGoToPreviousPage = CurrentPageNumber > 1;
         CanGoToNextPage = CurrentPageNumber < TotalPages;
         ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(models.Items.Select(
-            m => new CheckpointBrowserCardViewModel { CivitModel = m }));
+            m => new CheckpointBrowserCardViewModel(m, downloadService)));
         ShowMainLoadingSpinner = false;
 
         Logger.Debug($"Found {models.Items.Length} models");

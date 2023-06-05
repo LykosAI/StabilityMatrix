@@ -22,7 +22,7 @@ public partial class ProgressViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(ProgressVisibility))]
     private bool isProgressVisible;
     
-    public Visibility ProgressVisibility => IsProgressVisible? Visibility.Visible : Visibility.Collapsed;
+    public virtual Visibility ProgressVisibility => IsProgressVisible ? Visibility.Visible : Visibility.Collapsed;
     
-    public Visibility TextVisibility => string.IsNullOrEmpty(Text) ? Visibility.Collapsed : Visibility.Visible;
+    public virtual Visibility TextVisibility => string.IsNullOrEmpty(Text) ? Visibility.Collapsed : Visibility.Visible;
 }

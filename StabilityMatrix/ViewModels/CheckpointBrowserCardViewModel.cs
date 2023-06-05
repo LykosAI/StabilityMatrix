@@ -1,34 +1,28 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Net.Mime;
 using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
+using System.Windows;
 using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Api;
+using StabilityMatrix.Services;
 
 namespace StabilityMatrix.ViewModels;
 
-public partial class CheckpointBrowserCardViewModel : ObservableObject
+public partial class CheckpointBrowserCardViewModel : ProgressViewModel
 {
+    private readonly IDownloadService downloadService;
     public CivitModel CivitModel { get; init; }
-    
-    [ObservableProperty] private int importProgress;
-    [ObservableProperty] private string importStatus;
-    
-    public CheckpointBrowserCardViewModel(CivitModel civitModel)
-    {
-        CivitModel = civitModel;
-    }
-    private void DownloadServiceOnDownloadComplete(object? sender, ProgressReport e)
-    {
-        ImportStatus = "Import complete!";
-        ImportProgress = 100;
-    }
 
-    private void DownloadServiceOnDownloadProgressChanged(object? sender, ProgressReport e)
+    public override Visibility ProgressVisibility => Value > 0 ? Visibility.Visible : Visibility.Collapsed;
+    public override Visibility TextVisibility => Value > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+    public CheckpointBrowserCardViewModel(CivitModel civitModel, IDownloadService downloadService)
     {
-        ImportProgress = (int)e.Percentage;
-        ImportStatus = $"Importing... {e.Percentage}%";
+        this.downloadService = downloadService;
+        CivitModel = civitModel;
     }
 
     [RelayCommand]
@@ -44,20 +38,21 @@ public partial class CheckpointBrowserCardViewModel : ObservableObject
     [RelayCommand]
     private async Task Import(CivitModel model)
     {
-        IsIndeterminate = false;
-        ImportStatus = "Downloading...";
+        Text = "Downloading...";
 
         var latestModelFile = model.ModelVersions[0].Files[0];
         
         var downloadPath = Path.Combine(SharedFolders.SharedFoldersPath,
             SharedFolders.SharedFolderTypeToName(model.Type.ToSharedFolderType()), latestModelFile.Name);
 
-        downloadService.DownloadProgressChanged += DownloadServiceOnDownloadProgressChanged;
-        downloadService.DownloadComplete += DownloadServiceOnDownloadComplete;
+        var progress = new Progress<ProgressReport>(progress =>
+        {
+            Value = progress.Percentage;
+            Text = $"Importing... {progress.Percentage}%";
+        });
+        await downloadService.DownloadToFileAsync(latestModelFile.DownloadUrl, downloadPath, progress: progress);
         
-        await downloadService.DownloadToFileAsync(latestModelFile.DownloadUrl, downloadPath);
-        
-        downloadService.DownloadProgressChanged -= DownloadServiceOnDownloadProgressChanged;
-        downloadService.DownloadComplete -= DownloadServiceOnDownloadComplete;
+        Text = "Import complete!";
+        Value = 100;
     }
 }

@@ -10,22 +10,25 @@ public class MockCheckpointBrowserViewModel : CheckpointBrowserViewModel
 {
     public MockCheckpointBrowserViewModel() : base(null!, null!)
     {
-        CivitModels = new ObservableCollection<CivitModel>
+        ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>
         {
-            new()
+            new (null!, null!)
             {
-                Name = "bb95 Furry Mix",
-                ModelVersions = new[]
+                CivitModel = new()
                 {
-                    new CivitModelVersion
+                    Name = "bb95 Furry Mix",
+                    ModelVersions = new[]
                     {
-                        Name = "v7.0",
-                        Images = new[]
+                        new CivitModelVersion
                         {
-                            new CivitImage
+                            Name = "v7.0",
+                            Images = new[]
                             {
-                                Url =
-                                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/1547f350-461a-4cd0-a753-0544aa81e4fc/width=450/00000-4137473915.jpeg"
+                                new CivitImage
+                                {
+                                    Url =
+                                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/1547f350-461a-4cd0-a753-0544aa81e4fc/width=450/00000-4137473915.jpeg"
+                                }
                             }
                         }
                     }

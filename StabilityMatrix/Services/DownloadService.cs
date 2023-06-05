@@ -19,11 +19,9 @@ public class DownloadService : IDownloadService
         this.logger = logger;
         this.httpClientFactory = httpClientFactory;
     }
-    
-    public event EventHandler<ProgressReport>? DownloadProgressChanged;
-    public event EventHandler<ProgressReport>? DownloadComplete;
-    
-    public async Task DownloadToFileAsync(string downloadUrl, string downloadLocation, int bufferSize = ushort.MaxValue)
+
+    public async Task DownloadToFileAsync(string downloadUrl, string downloadLocation, int bufferSize = ushort.MaxValue,
+        IProgress<ProgressReport>? progress = null)
     {
         using var client = httpClientFactory.CreateClient();
         client.Timeout = TimeSpan.FromMinutes(5);
@@ -47,7 +45,7 @@ public class DownloadService : IDownloadService
         var isIndeterminate = contentLength == 0;
 
         await using var stream = await response.Content.ReadAsStreamAsync();
-        var totalBytesRead = 0;
+        var totalBytesRead = 0L;
         while (true)
         {
             var buffer = new byte[bufferSize];
@@ -59,22 +57,15 @@ public class DownloadService : IDownloadService
 
             if (isIndeterminate)
             {
-                OnDownloadProgressChanged(-1);
+                progress?.Report(new ProgressReport(-1, isIndeterminate: true));
             }
             else
             {
-                var progress = totalBytesRead / (double) contentLength;
-                OnDownloadProgressChanged(progress);
+                progress?.Report(new ProgressReport(current: Convert.ToUInt64(totalBytesRead),
+                    total: Convert.ToUInt64(contentLength)));
             }
         }
 
         await file.FlushAsync();
-        OnDownloadComplete(downloadLocation);
     }
-
-    private void OnDownloadProgressChanged(double progress) =>
-        DownloadProgressChanged?.Invoke(this, new ProgressReport(progress));
-
-    private void OnDownloadComplete(string path) =>
-        DownloadComplete?.Invoke(this, new ProgressReport(progress: 100f, message: path));
 }

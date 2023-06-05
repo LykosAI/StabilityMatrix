@@ -59,13 +59,13 @@ public class PrerequisiteHelper : IPrerequisiteHelper
 
         if (!File.Exists(PortableGitDownloadPath))
         {
-            downloadService.DownloadProgressChanged += OnDownloadProgressChanged;
-            downloadService.DownloadComplete += OnDownloadComplete;
+            var progress = new Progress<ProgressReport>(progress =>
+            {
+                OnDownloadProgressChanged(this, progress);
+            });
 
-            await downloadService.DownloadToFileAsync(portableGitUrl, PortableGitDownloadPath);
-
-            downloadService.DownloadProgressChanged -= OnDownloadProgressChanged;
-            downloadService.DownloadComplete -= OnDownloadComplete;
+            await downloadService.DownloadToFileAsync(portableGitUrl, PortableGitDownloadPath, progress: progress);
+            OnDownloadComplete(this, new ProgressReport(progress: 1f));
         }
 
         await UnzipGit();

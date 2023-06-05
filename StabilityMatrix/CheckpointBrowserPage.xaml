@@ -8,7 +8,6 @@
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     x:Class="StabilityMatrix.CheckpointBrowserPage"
-    x:Name="CheckpointBrowserPg"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:api="clr-namespace:StabilityMatrix.Models.Api"
     xmlns:converters="clr-namespace:StabilityMatrix.Converters"
@@ -41,18 +40,18 @@
                         FontSize="11"
                         Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                         Margin="0,2,0,0"
-                        Text="{Binding ModelVersions[0].Name}"
+                        Text="{Binding CivitModel.ModelVersions[0].Name}"
                         VerticalAlignment="Center" />
                     <Grid>
                         <Image
                             Margin="0,8,0,8"
                             MaxHeight="300"
-                            Source="{Binding ModelVersions[0].Images[0].Url, Converter={StaticResource UriToBitmapConverter}}"
+                            Source="{Binding CivitModel.ModelVersions[0].Images[0].Url, Converter={StaticResource UriToBitmapConverter}}"
                             Stretch="UniformToFill" />
                         <ui:Button
                             Appearance="Info"
                             Command="{Binding OpenModelCommand}"
-                            CommandParameter="{Binding}"
+                            CommandParameter="{Binding CivitModel}"
                             HorizontalAlignment="Right"
                             Margin="0,16,8,0"
                             VerticalAlignment="Top">
@@ -64,21 +63,21 @@
                             HorizontalAlignment="Stretch"
                             Margin="0,8,0,8"
                             VerticalAlignment="Stretch"
-                            Visibility="{Binding DataContext.ImportCommand.IsRunning, Source={x:Reference CheckpointBrowserPg}, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            Visibility="{Binding ImportCommand.IsRunning, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <StackPanel
                             HorizontalAlignment="Stretch"
                             Orientation="Vertical"
                             VerticalAlignment="Center"
-                            Visibility="{Binding DataContext.ImportCommand.IsRunning, Source={x:Reference CheckpointBrowserPg}, Converter={StaticResource BoolToVisibilityConverter}}">
+                            Visibility="{Binding ImportCommand.IsRunning, Converter={StaticResource BoolToVisibilityConverter}}">
                             <ui:ProgressRing
                                 HorizontalAlignment="Center"
                                 IsIndeterminate="False"
-                                Progress="{Binding DataContext.ImportProgress, Source={x:Reference CheckpointBrowserPg}}"
+                                Progress="{Binding Value}"
                                 VerticalAlignment="Center" />
                             <TextBlock
                                 HorizontalAlignment="Center"
                                 Margin="0,8,0,0"
-                                Text="{Binding ImportStatus, FallbackValue=Importing...}"
+                                Text="{Binding Text, FallbackValue=Importing...}"
                                 VerticalAlignment="Center" />
                         </StackPanel>
                     </Grid>
@@ -88,8 +87,8 @@
                         </Grid.ColumnDefinitions>
                         <ui:Button
                             Appearance="Primary"
-                            Command="{Binding DataContext.ImportCommand, Source={x:Reference CheckpointBrowserPg}}"
-                            CommandParameter="{Binding}"
+                            Command="{Binding ImportCommand}"
+                            CommandParameter="{Binding CivitModel}"
                             Content="Import"
                             HorizontalAlignment="Stretch"
                             Margin="0,8,0,0" />

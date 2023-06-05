@@ -108,19 +108,13 @@ public abstract class BaseGitPackage : BasePackage
             Directory.CreateDirectory(DownloadLocation.Replace($"{Name}.zip", ""));
         }
 
-        void DownloadProgressHandler(object? _, ProgressReport progress) =>
+        var progress = new Progress<ProgressReport>(progress =>
+        {
             DownloadServiceOnDownloadProgressChanged(progress, isUpdate);
-
-        void DownloadFinishedHandler(object? _, ProgressReport downloadLocation) =>
-            DownloadServiceOnDownloadFinished(downloadLocation, isUpdate);
-
-        DownloadService.DownloadProgressChanged += DownloadProgressHandler;
-        DownloadService.DownloadComplete += DownloadFinishedHandler;
+        });
         
-        await DownloadService.DownloadToFileAsync(downloadUrl, DownloadLocation);
-        
-        DownloadService.DownloadProgressChanged -= DownloadProgressHandler;
-        DownloadService.DownloadComplete -= DownloadFinishedHandler;
+        await DownloadService.DownloadToFileAsync(downloadUrl, DownloadLocation, progress: progress);
+        DownloadServiceOnDownloadFinished(new ProgressReport(100, "Download Complete"), isUpdate);
         
         return version;
     }

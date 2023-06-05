@@ -5,6 +5,7 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Polly.Contrib.WaitAndRetry;
 using StabilityMatrix.Models;
 
 namespace StabilityMatrix.Services;
@@ -29,26 +30,28 @@ public class DownloadService : IDownloadService
         await using var file = new FileStream(downloadLocation, FileMode.Create, FileAccess.Write, FileShare.None);
         
         long contentLength = 0;
-        var retryCount = 0;
-        
+
         var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
         contentLength = response.Content.Headers.ContentLength ?? 0;
         
-        while (contentLength == 0 && retryCount++ < 5)
+        var delays = Backoff.DecorrelatedJitterBackoffV2(
+            TimeSpan.FromMilliseconds(50), retryCount: 3);
+        
+        foreach (var delay in delays)
         {
+            if (contentLength > 0) break;
             logger.LogDebug("Retrying get-headers for content-length");
-            Thread.Sleep(50);
+            await Task.Delay(delay);
             response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
             contentLength = response.Content.Headers.ContentLength ?? 0;
         }
-
         var isIndeterminate = contentLength == 0;
 
         await using var stream = await response.Content.ReadAsStreamAsync();
         var totalBytesRead = 0L;
+        var buffer = new byte[bufferSize];
         while (true)
         {
-            var buffer = new byte[bufferSize];
             var bytesRead = await stream.ReadAsync(buffer);
             if (bytesRead == 0) break;
             await file.WriteAsync(buffer.AsMemory(0, bytesRead));

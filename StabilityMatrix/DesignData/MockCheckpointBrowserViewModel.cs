@@ -8,11 +8,11 @@ namespace StabilityMatrix.DesignData;
 [DesignOnly(true)]
 public class MockCheckpointBrowserViewModel : CheckpointBrowserViewModel
 {
-    public MockCheckpointBrowserViewModel() : base(null!, null!)
+    public MockCheckpointBrowserViewModel() : base(null!, null!, null!)
     {
         ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>
         {
-            new (null!, null!)
+            new (null!, null!, null!)
             {
                 CivitModel = new()
                 {

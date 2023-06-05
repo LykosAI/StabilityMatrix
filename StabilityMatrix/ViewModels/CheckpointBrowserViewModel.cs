@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Api;
-using StabilityMatrix.Models;
+using StabilityMatrix.Helper;
 using StabilityMatrix.Models.Api;
 using StabilityMatrix.Services;
 
@@ -20,6 +18,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly ICivitApi civitApi;
     private readonly IDownloadService downloadService;
+    private readonly ISnackbarService snackbarService;
     private const int MaxModelsPerPage = 14;
 
     [ObservableProperty] private string? searchQuery;
@@ -38,10 +37,11 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     public IEnumerable<CivitPeriod> AllCivitPeriods => Enum.GetValues(typeof(CivitPeriod)).Cast<CivitPeriod>();
     public IEnumerable<CivitSortMode> AllSortModes => Enum.GetValues(typeof(CivitSortMode)).Cast<CivitSortMode>();
 
-    public CheckpointBrowserViewModel(ICivitApi civitApi, IDownloadService downloadService)
+    public CheckpointBrowserViewModel(ICivitApi civitApi, IDownloadService downloadService, ISnackbarService snackbarService)
     {
         this.civitApi = civitApi;
         this.downloadService = downloadService;
+        this.snackbarService = snackbarService;
         
         SelectedPeriod = CivitPeriod.Month;
         SortMode = CivitSortMode.HighestRated;
@@ -76,7 +76,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         CanGoToPreviousPage = CurrentPageNumber > 1;
         CanGoToNextPage = CurrentPageNumber < TotalPages;
         ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(models.Items.Select(
-            m => new CheckpointBrowserCardViewModel(m, downloadService)));
+            m => new CheckpointBrowserCardViewModel(m, downloadService, snackbarService)));
         ShowMainLoadingSpinner = false;
 
         Logger.Debug($"Found {models.Items.Length} models");

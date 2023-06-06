@@ -36,7 +36,7 @@
         <DataTemplate DataType="{x:Type models:CheckpointFile}" x:Key="CheckpointFileDataTemplate">
             <Border>
                 <i:Interaction.Behaviors>
-                    <i:MouseDragElementBehavior DragBegun="MouseDragElementBehavior_OnDragBegun" />
+                    <i:MouseDragElementBehavior />
                 </i:Interaction.Behaviors>
                 <ui:Card
                     Height="96"

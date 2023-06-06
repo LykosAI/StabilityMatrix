@@ -39,7 +39,7 @@ public partial class CheckpointFile : ObservableObject
     
     public string FileName => Path.GetFileName(FilePath);
 
-    private static readonly string[] SupportedCheckpointExtensions = { ".safetensors", ".pt", ".ckpt", ".pth" };
+    private static readonly string[] SupportedCheckpointExtensions = { ".safetensors", ".pt", ".ckpt", ".pth", "bin" };
     private static readonly string[] SupportedImageExtensions = { ".png", ".jpg", ".jpeg" };
 
     partial void OnConnectedModelChanged(ConnectedModelInfo? value)

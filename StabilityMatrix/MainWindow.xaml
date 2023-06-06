@@ -2,16 +2,17 @@
     ExtendsContentIntoTitleBar="True"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     Height="750"
-    Icon="Assets/Icon.ico"
+    Icon="pack://application:,,,/Assets/Icon.ico"
     Loaded="MainWindow_OnLoaded"
     Title="Stability Matrix"
+    UseLayoutRounding="True"
     Width="1100"
     WindowBackdropType="Acrylic"
     WindowStartupLocation="CenterScreen"
     d:DataContext="{d:DesignInstance Type=viewModels:MainWindowViewModel,
                                      IsDesignTimeCreatable=True}"
-    d:DesignHeight="500"
-    d:DesignWidth="700"
+    d:DesignHeight="750"
+    d:DesignWidth="1100"
     mc:Ignorable="d"
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
@@ -23,6 +24,23 @@
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ui:FluentWindow.Resources>
+        <!--  Discord Icon  -->
+        <DrawingImage x:Key="DiscordIconWhite">
+            <DrawingImage.Drawing>
+                <DrawingGroup ClipGeometry="M0,0 V96.36 H127.14 V0 H0 Z">
+                    <DrawingGroup Opacity="1">
+                        <DrawingGroup Opacity="1">
+                            <DrawingGroup Opacity="1">
+                                <GeometryDrawing Brush="{DynamicResource TextFillColorPrimaryBrush}" Geometry="F1 M127.14,96.36z M0,0z M107.7,8.07A105.15,105.15,0,0,0,81.47,0A72.06,72.06,0,0,0,78.11,6.83A97.68,97.68,0,0,0,49,6.83A72.37,72.37,0,0,0,45.64,0A105.89,105.89,0,0,0,19.39,8.09C2.79,32.65,-1.71,56.6,0.54,80.21L0.54,80.21A105.73,105.73,0,0,0,32.71,96.36A77.7,77.7,0,0,0,39.6,85.25A68.42,68.42,0,0,1,28.75,80.07C29.66,79.41,30.55,78.73,31.41,78.07A75.57,75.57,0,0,0,95.73,78.07C96.6,78.78,97.49,79.46,98.39,80.07A68.68,68.68,0,0,1,87.52,85.26A77,77,0,0,0,94.41,96.36A105.25,105.25,0,0,0,126.6,80.22L126.6,80.22C129.24,52.84,122.09,29.11,107.7,8.07z M42.45,65.69C36.18,65.69 31,60 31,53 31,46 36,40.26 42.43,40.26 48.86,40.26 54,46 53.89,53 53.78,60 48.84,65.69 42.45,65.69z M84.69,65.69C78.41,65.69 73.25,60 73.25,53 73.25,46 78.25,40.26 84.69,40.26 91.13,40.26 96.23,46 96.12,53 96.01,60 91.08,65.69 84.69,65.69z" />
+                            </DrawingGroup>
+                        </DrawingGroup>
+                    </DrawingGroup>
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
+    </ui:FluentWindow.Resources>
 
     <ui:FluentWindow.TaskbarItemInfo>
         <TaskbarItemInfo ProgressState="{Binding ProgressState}" ProgressValue="{Binding ProgressValue}" />
@@ -41,9 +59,9 @@
         </ui:TitleBar>
         <Grid Grid.Row="1">
             <ui:NavigationView
-                IsBackButtonVisible="Collapsed"
                 PaneClosed="RootNavigation_OnPaneClosed"
                 PaneOpened="RootNavigation_OnPaneOpened"
+                UseLayoutRounding="True"
                 x:Name="RootNavigation">
                 <ui:NavigationView.Header>
                     <ui:BreadcrumbBar
@@ -52,36 +70,51 @@
                         Margin="24,16,0,16" />
                 </ui:NavigationView.Header>
                 <ui:NavigationView.MenuItems>
+                    <!--  Main pages  -->
                     <ui:NavigationViewItem
                         Content="Launch"
+                        Icon="{ui:SymbolIcon Rocket24}"
                         IsActive="true"
-                        TargetPageType="{x:Type local:LaunchPage}">
-                        <ui:NavigationViewItem.Icon>
-                            <ui:SymbolIcon Symbol="Rocket24" />
-                        </ui:NavigationViewItem.Icon>
-                    </ui:NavigationViewItem>
-                    <ui:NavigationViewItem Content="Package Manager" TargetPageType="{x:Type local:PackageManagerPage}">
-                        <ui:NavigationViewItem.Icon>
-                            <ui:SymbolIcon Symbol="Box24" />
-                        </ui:NavigationViewItem.Icon>
-                    </ui:NavigationViewItem>
-                    <ui:NavigationViewItem Content="Checkpoints" TargetPageType="{x:Type local:CheckpointManagerPage}">
-                        <ui:NavigationViewItem.Icon>
-                            <ui:SymbolIcon Symbol="Notebook24" />
-                        </ui:NavigationViewItem.Icon>
-                    </ui:NavigationViewItem>
-                    <ui:NavigationViewItem Content="Get Checkpoints" TargetPageType="{x:Type local:CheckpointBrowserPage}">
-                        <ui:NavigationViewItem.Icon>
-                            <ui:SymbolIcon Symbol="NotebookAdd24" />
-                        </ui:NavigationViewItem.Icon>
-                    </ui:NavigationViewItem>
-                    <ui:NavigationViewItem Content="Text2Image (Beta™)" TargetPageType="{x:Type local:TextToImagePage}">
-                        <ui:NavigationViewItem.Icon>
-                            <ui:SymbolIcon Symbol="Image24" />
-                        </ui:NavigationViewItem.Icon>
-                    </ui:NavigationViewItem>
+                        TargetPageType="{x:Type local:LaunchPage}" />
+                    <ui:NavigationViewItem
+                        Content="Package Manager"
+                        Icon="{ui:SymbolIcon Box24}"
+                        TargetPageType="{x:Type local:PackageManagerPage}" />
+                    <ui:NavigationViewItem
+                        Content="Checkpoints"
+                        Icon="{ui:SymbolIcon Notebook24}"
+                        TargetPageType="{x:Type local:CheckpointManagerPage}" />
+                    <ui:NavigationViewItem
+                        Content="Get Checkpoints"
+                        Icon="{ui:SymbolIcon NotebookAdd24}"
+                        TargetPageType="{x:Type local:CheckpointBrowserPage}" />
+                    <ui:NavigationViewItem
+                        Content="Text2Image (Beta™)"
+                        Icon="{ui:SymbolIcon Image24}"
+                        TargetPageType="{x:Type local:TextToImagePage}" />
                 </ui:NavigationView.MenuItems>
                 <ui:NavigationView.FooterMenuItems>
+                    <!--  Footer menus  -->
+                    <ui:NavigationViewItem Content="Become a Patron">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:ImageIcon
+                                Height="15"
+                                HorizontalAlignment="Center"
+                                Source="{StaticResource PatreonIconColored}"
+                                Width="15" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
+
+                    <ui:NavigationViewItem Content="Join our Discord Server">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:ImageIcon
+                                Height="12"
+                                HorizontalAlignment="Center"
+                                Source="{StaticResource DiscordIconWhite}"
+                                Width="16" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
+
                     <ui:NavigationViewItem Content="Settings" TargetPageType="{x:Type local:SettingsPage}">
                         <ui:NavigationViewItem.Icon>
                             <ui:SymbolIcon Symbol="Settings24" />
@@ -90,7 +123,20 @@
                 </ui:NavigationView.FooterMenuItems>
                 <ui:NavigationView.ContentOverlay>
                     <Grid>
+                        <!--  Main snackbar  -->
                         <ui:Snackbar x:Name="RootSnackbar" />
+                        <!--  Notification snackbar  -->
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="0.4*" />
+                                <ColumnDefinition Width="0.6*" />
+                            </Grid.ColumnDefinitions>
+                            <ui:Snackbar
+                                Grid.Column="1"
+                                MinHeight="130"
+                                MinWidth="200"
+                                x:Name="NotificationSnackbar" />
+                        </Grid>
                     </Grid>
                 </ui:NavigationView.ContentOverlay>
             </ui:NavigationView>

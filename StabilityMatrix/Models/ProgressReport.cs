@@ -30,7 +30,6 @@ public record struct ProgressReport
         Title = title;
         Message = message;
         IsIndeterminate = isIndeterminate;
-        LogManager.GetCurrentClassLogger().Log(LogLevel.Info, this);
     }
     
     public ProgressReport(ulong current, ulong total, string? title = null, string? message = null, bool isIndeterminate = false)
@@ -41,7 +40,6 @@ public record struct ProgressReport
         Title = title;
         Message = message;
         IsIndeterminate = isIndeterminate;
-        LogManager.GetCurrentClassLogger().Log(LogLevel.Info, this);
     }
     
     public ProgressReport(ulong current, string? title = null, string? message = null)
@@ -50,6 +48,5 @@ public record struct ProgressReport
         Title = title;
         Message = message;
         IsIndeterminate = true;
-        LogManager.GetCurrentClassLogger().Log(LogLevel.Info, this);
     }
 }

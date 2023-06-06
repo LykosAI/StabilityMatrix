@@ -26,4 +26,5 @@ public enum SharedFolderType
     LDSR,
     CLIP,
     ScuNET,
+    GLIGEN,
 }

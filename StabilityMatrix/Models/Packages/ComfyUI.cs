@@ -30,6 +30,21 @@ public class ComfyUI : BaseGitPackage
     {
     }
 
+    // https://github.com/comfyanonymous/ComfyUI/blob/master/folder_paths.py#L11
+    public override Dictionary<SharedFolderType, string> SharedFolders => new()
+    {
+        [SharedFolderType.StableDiffusion] = "models/Stable-diffusion",
+        [SharedFolderType.Lora] = "models/loras",
+        [SharedFolderType.CLIP] = "models/clip",
+        [SharedFolderType.TextualInversion] = "models/embeddings",
+        [SharedFolderType.Diffusers] = "models/diffusers",
+        [SharedFolderType.ApproxVAE] = "models/vae_approx",
+        [SharedFolderType.ControlNet] = "models/controlnet",
+        [SharedFolderType.GLIGEN] = "models/gligen",
+        [SharedFolderType.ESRGAN] = "models/upscale_models",
+        [SharedFolderType.Hypernetwork] = "models/hypernetworks",
+    };
+    
     public override List<LaunchOptionDefinition> LaunchOptions => new()
     {
         new()

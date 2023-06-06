@@ -98,8 +98,9 @@ public abstract class BaseGitPackage : BasePackage
         var allReleases = await GithubApi.GetAllReleases(Author, Name);
         return allReleases;
     }
-    
-    public override async Task<string?> DownloadPackage(string version, bool isCommitHash, bool isUpdate = false)
+
+    public override async Task<string?> DownloadPackage(string version, bool isCommitHash,
+        IProgress<ProgressReport>? progress = null)
     {
         var downloadUrl = GetDownloadUrl(version, isCommitHash);
 
@@ -108,106 +109,51 @@ public abstract class BaseGitPackage : BasePackage
             Directory.CreateDirectory(DownloadLocation.Replace($"{Name}.zip", ""));
         }
 
-        var progress = new Progress<ProgressReport>(progress =>
-        {
-            DownloadServiceOnDownloadProgressChanged(progress, isUpdate);
-        });
-        
         await DownloadService.DownloadToFileAsync(downloadUrl, DownloadLocation, progress: progress);
-        DownloadServiceOnDownloadFinished(new ProgressReport(100, "Download Complete"), isUpdate);
-        
+        progress?.Report(new ProgressReport(100, message: "Download Complete"));
+
         return version;
     }
 
-    private void DownloadServiceOnDownloadProgressChanged(ProgressReport progress, bool isUpdate)
+    public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
     {
-        if (isUpdate)
-        {
-            OnUpdateProgressChanged(Convert.ToInt32(progress.Progress));
-        }
-        else
-        {
-            OnDownloadProgressChanged(Convert.ToInt32(progress.Progress));
-        }
-    }
-    
-    private void DownloadServiceOnDownloadFinished(ProgressReport downloadLocation, bool isUpdate)
-    {
-        if (isUpdate)
-        {
-            OnUpdateComplete(downloadLocation.Message);
-        }
-        else
-        {
-            OnDownloadComplete(downloadLocation.Message);
-        }
+        await UnzipPackage(progress);
+        progress?.Report(new ProgressReport(1f, $"{DisplayName} installed successfully"));
     }
 
-    protected void UnzipPackage(bool isUpdate = false)
+    protected Task UnzipPackage(IProgress<ProgressReport>? progress = null)
     {
-        if (isUpdate)
-        {
-            OnInstallProgressChanged(0);
-        }
-        else
-        {
-            OnUpdateProgressChanged(0);
-        }
-
-        Directory.CreateDirectory(InstallLocation);
-
         using var zip = ZipFile.OpenRead(DownloadLocation);
         var zipDirName = string.Empty;
         var totalEntries = zip.Entries.Count;
         var currentEntry = 0;
-
+        
         foreach (var entry in zip.Entries)
         {
+            currentEntry++;
             if (string.IsNullOrWhiteSpace(entry.Name) && entry.FullName.EndsWith("/"))
             {
                 if (string.IsNullOrWhiteSpace(zipDirName))
                 {
                     zipDirName = entry.FullName;
-                    continue;
                 }
-
+        
                 var folderPath = Path.Combine(InstallLocation,
                     entry.FullName.Replace(zipDirName, string.Empty));
                 Directory.CreateDirectory(folderPath);
                 continue;
             }
-
-
+        
+        
             var destinationPath = Path.GetFullPath(Path.Combine(InstallLocation,
                 entry.FullName.Replace(zipDirName, string.Empty)));
             entry.ExtractToFile(destinationPath, true);
-            currentEntry++;
-
-            var progressValue = (int)((double)currentEntry / totalEntries * 100);
-
-            if (isUpdate)
-            {
-                OnUpdateProgressChanged(progressValue);
-            }
-            else
-            {
-                OnInstallProgressChanged(progressValue);
-            }
-        }
-    }
-    
-    public override Task InstallPackage(bool isUpdate = false)
-    {
-        UnzipPackage(isUpdate);
         
-        if (isUpdate)
-        {
-            OnUpdateComplete("Update complete");
+            progress?.Report(new ProgressReport(current: Convert.ToUInt64(currentEntry),
+                total: Convert.ToUInt64(totalEntries)));
         }
-        else
-        {
-            OnInstallComplete("Installation complete");
-        }
+        
+        progress?.Report(new ProgressReport(1f, $"{DisplayName} installed successfully"));
 
         return Task.CompletedTask;
     }
@@ -245,27 +191,28 @@ public abstract class BaseGitPackage : BasePackage
         }
     }
 
-    public override async Task<string> Update(InstalledPackage installedPackage)
+    public override async Task<string> Update(InstalledPackage installedPackage,
+        IProgress<ProgressReport>? progress = null)
     {
         if (string.IsNullOrWhiteSpace(installedPackage.InstalledBranch))
         {
             var releases = await GetAllReleases();
             var latestRelease = releases.First();
-            await DownloadPackage(latestRelease.TagName, false, true);
-            await InstallPackage(true);
+            await DownloadPackage(latestRelease.TagName, false, progress);
+            await InstallPackage(progress);
             return latestRelease.TagName;
         }
         else
         {
             var allCommits = await GetAllCommits(installedPackage.InstalledBranch);
             var latestCommit = allCommits.First();
-            await DownloadPackage(latestCommit.Sha, true, true);
-            await InstallPackage(true);
+            await DownloadPackage(latestCommit.Sha, true, progress);
+            await InstallPackage(progress);
             return latestCommit.Sha;
         }
     }
 
-    
+
     public override Task Shutdown()
     {
         VenvRunner?.Dispose();

@@ -65,10 +65,12 @@ public class DownloadService : IDownloadService
             else
             {
                 progress?.Report(new ProgressReport(current: Convert.ToUInt64(totalBytesRead),
-                    total: Convert.ToUInt64(contentLength)));
+                    total: Convert.ToUInt64(contentLength), message: "Downloading..."));
             }
         }
 
         await file.FlushAsync();
+        
+        progress?.Report(new ProgressReport(1f, message: "Download complete!"));
     }
 }

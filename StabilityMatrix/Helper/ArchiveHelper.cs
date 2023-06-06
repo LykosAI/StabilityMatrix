@@ -67,7 +67,7 @@ public static class ArchiveHelper
             {
                 // Ignore 0 counts
                 if (count == 0) return;
-                Application.Current.Dispatcher.Invoke(() => progress!.Report(new ProgressReport(count, total)));
+                Application.Current.Dispatcher.Invoke(() => progress!.Report(new ProgressReport(count, total, message: "Extracting")));
             };
         }
 
@@ -95,7 +95,8 @@ public static class ArchiveHelper
             }
         }, TaskCreationOptions.LongRunning);
         
-        progress?.Report(new ProgressReport(progress: 1));
+        progress?.Report(new ProgressReport(progress: 1, message: "Done extracting"));
+        progressMonitor?.Stop();
         Logger.Info("Finished extracting archive {}", archivePath);
     }
 }

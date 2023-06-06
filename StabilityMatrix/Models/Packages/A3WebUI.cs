@@ -112,10 +112,10 @@ public class A3WebUI : BaseGitPackage
         }
     }
 
-    public override async Task InstallPackage(bool isUpdate = false)
+    public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
     {
-        UnzipPackage(isUpdate);
-        OnInstallProgressChanged(-1); // Indeterminate progress bar
+        await UnzipPackage(progress);
+        progress?.Report(new ProgressReport(-1, isIndeterminate: true));
 
         Logger.Debug("Setting up venv");
         await SetupVenv(InstallLocation);
@@ -137,14 +137,7 @@ public class A3WebUI : BaseGitPackage
         await venvRunner.PipInstall("-r requirements.txt", InstallLocation, HandleConsoleOutput);
         
         Logger.Debug("Finished installing requirements");
-        if (isUpdate)
-        {
-            OnUpdateComplete("Update complete");
-        }
-        else
-        {
-            OnInstallComplete("Install complete");
-        }
+        progress?.Report(new ProgressReport(1f, "Install complete"));
     }
 
     public override async Task RunPackage(string installedPackagePath, string arguments)

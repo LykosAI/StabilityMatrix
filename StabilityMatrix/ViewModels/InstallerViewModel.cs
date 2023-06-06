@@ -327,7 +327,8 @@ public partial class InstallerViewModel : ObservableObject
         
         ProgressText = "Done";
         IsIndeterminate = false;
-        SelectedPackageOnProgressChanged(this, 100);
+        ProgressValue = 100;
+        EventManager.Instance.OnGlobalProgressChanged(100);
 
         var branch = isCurrentlyReleaseMode ? null : SelectedVersion.TagName;
 
@@ -356,20 +357,31 @@ public partial class InstallerViewModel : ObservableObject
     
     private Task<string?> DownloadPackage(string version, bool isCommitHash)
     {
-        SelectedPackage.DownloadProgressChanged += SelectedPackageOnProgressChanged;
-        SelectedPackage.DownloadComplete += (_, _) => ProgressText = "Download Complete";
-        SelectedPackage.ConsoleOutput += SelectedPackageOnConsoleOutput;
         ProgressText = "Downloading package...";
-        return SelectedPackage.DownloadPackage(version, isCommitHash);
+        
+        var progress = new Progress<ProgressReport>(progress =>
+        {
+            IsIndeterminate = progress.IsIndeterminate;
+            ProgressValue = Convert.ToInt32(progress.Percentage);
+            EventManager.Instance.OnGlobalProgressChanged(ProgressValue);
+        });
+        
+        return SelectedPackage.DownloadPackage(version, isCommitHash, progress);
     }
 
     private async Task InstallPackage()
     {
-        SelectedPackage.InstallProgressChanged += SelectedPackageOnProgressChanged;
-        SelectedPackage.InstallComplete += (_, _) => ProgressText = "Install Complete";
         SelectedPackage.ConsoleOutput += SelectedPackageOnConsoleOutput;
         ProgressText = "Installing package...";
-        await SelectedPackage.InstallPackage();
+        
+        var progress = new Progress<ProgressReport>(progress =>
+        {
+            IsIndeterminate = progress.IsIndeterminate;
+            ProgressValue = Convert.ToInt32(progress.Percentage);
+            EventManager.Instance.OnGlobalProgressChanged(ProgressValue);
+        });
+        
+        await SelectedPackage.InstallPackage(progress);
     }
 
     private void SelectedPackageOnConsoleOutput(object? sender, string e)
@@ -379,64 +391,25 @@ public partial class InstallerViewModel : ObservableObject
 
     private async Task InstallGitIfNecessary()
     {
-        void DownloadProgressHandler(object? _, ProgressReport progress)
+        var progressHandler = new Progress<ProgressReport>(progress =>
         {
-            ProgressText = $"Downloading git... ({progress.Percentage:N0}%)";
-            ProgressValue = Convert.ToInt32(progress.Percentage);
-        }
-
-        void DownloadFinishedHandler(object? _, ProgressReport downloadLocation)
-        {
-            ProgressText = "Git download complete";
-            ProgressValue = 100;
-        }
-        
-        void InstallProgressHandler(object? _, ProgressReport progress)
-        {
-            IsIndeterminate = progress.IsIndeterminate;
-            if (progress.IsIndeterminate)
+            if (progress.Message != null && progress.Message.Contains("Downloading"))
             {
-                ProgressText = "Getting a few things ready...";
+                ProgressText = $"Downloading Git... {progress.Percentage:N0}%";
+            }
+            else if (string.IsNullOrWhiteSpace(progress.Message))
+            {
+                ProgressText = $"Installing Git... {progress.Percentage:N0}%";
             }
             else
             {
-                ProgressText = $"Installing git... ({Math.Ceiling(progress.Percentage)}%)";
-                ProgressValue = (int) progress.Percentage;
+                ProgressText = progress.Message;
             }
-        }
 
-        void InstallFinishedHandler(object? _, ProgressReport __)
-        {
-            ProgressText = "Git install complete";
-            ProgressValue = 100;
-        }
+            ProgressValue = Convert.ToInt32(progress.Percentage);
+        });
 
-        prerequisiteHelper.DownloadProgressChanged += DownloadProgressHandler;
-        prerequisiteHelper.DownloadComplete += DownloadFinishedHandler;
-        prerequisiteHelper.InstallProgressChanged += InstallProgressHandler;
-        prerequisiteHelper.InstallComplete += InstallFinishedHandler;
-
-        await prerequisiteHelper.InstallGitIfNecessary();
-        
-        prerequisiteHelper.DownloadProgressChanged -= DownloadProgressHandler;
-        prerequisiteHelper.DownloadComplete -= DownloadFinishedHandler;
-        prerequisiteHelper.InstallProgressChanged -= InstallProgressHandler;
-        prerequisiteHelper.InstallComplete -= InstallFinishedHandler;
-    }
-    
-    private void SelectedPackageOnProgressChanged(object? sender, int progress)
-    {
-        if (progress == -1)
-        {
-            IsIndeterminate = true;
-        }
-        else
-        {
-            IsIndeterminate = false;
-            ProgressValue = progress;
-        }
-        
-        EventManager.Instance.OnGlobalProgressChanged(progress);
+        await prerequisiteHelper.InstallGitIfNecessary(progressHandler);
     }
 
     private void OnPackageInstalled() => PackageInstalled?.Invoke(this, EventArgs.Empty);

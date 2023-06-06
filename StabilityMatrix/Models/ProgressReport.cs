@@ -1,4 +1,7 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
+using NLog;
+using LogLevel = NLog.LogLevel;
 
 namespace StabilityMatrix.Models;
 

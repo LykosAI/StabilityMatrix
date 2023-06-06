@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NLog;
@@ -104,18 +105,18 @@ public static class ProcessRunner
     /// <param name="process">Process to check.</param>
     /// <param name="expectedExitCode">Expected exit code.</param>
     /// <exception cref="ProcessException">Thrown if exit code does not match expected value.</exception>
-    public static async Task ValidateExitConditionAsync(Process process, int expectedExitCode = 0)
+    public static Task ValidateExitConditionAsync(Process process, int expectedExitCode = 0, string? stdout = null, string? stderr = null)
     {
         var exitCode = process.ExitCode;
-        if (exitCode != expectedExitCode)
+        if (exitCode == expectedExitCode)
         {
-            var pName = process.StartInfo.FileName;
-            var stdout = await process.StandardOutput.ReadToEndAsync();
-            var stderr = await process.StandardError.ReadToEndAsync();
-            var msg = $"Process {pName} failed with exit-code {exitCode}. stdout: '{stdout}', stderr: '{stderr}'";
-            Logger.Error(msg);
-            throw new ProcessException(msg);
+            return Task.CompletedTask;
         }
+
+        var pName = process.StartInfo.FileName;
+        var msg = $"Process {pName} failed with exit-code {exitCode}. stdout: '{stdout}', stderr: '{stderr}'";
+        Logger.Error(msg);
+        throw new ProcessException(msg);
     }
 
     /// <summary>
@@ -127,7 +128,11 @@ public static class ProcessRunner
     /// <exception cref="ProcessException">Thrown if exit code does not match expected value.</exception>
     public static async Task WaitForExitConditionAsync(Process process, int expectedExitCode = 0, CancellationToken cancelToken = default)
     {
+        var stdout = new StringBuilder();
+        var stderr = new StringBuilder();
+        process.OutputDataReceived += (_, args) => stdout.Append(args.Data);
+        process.ErrorDataReceived += (_, args) => stderr.Append(args.Data);
         await process.WaitForExitAsync(cancelToken);
-        await ValidateExitConditionAsync(process, expectedExitCode);
+        await ValidateExitConditionAsync(process, expectedExitCode, stdout.ToString(), stderr.ToString());
     }
 }

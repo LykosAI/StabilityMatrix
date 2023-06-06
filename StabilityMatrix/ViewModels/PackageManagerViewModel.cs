@@ -257,15 +257,28 @@ public partial class PackageManagerViewModel : ObservableObject
 
         ProgressText = $"Updating {SelectedPackage.DisplayName} to latest version...";
         package.InstallLocation = SelectedPackage.Path!;
-        package.UpdateProgressChanged += SelectedPackageOnProgressChanged;
-        package.UpdateComplete += (_, _) =>
+        var progress = new Progress<ProgressReport>(progress =>
         {
-            SelectedPackageOnProgressChanged(this, 100);
-            ProgressText = "Update complete";
-            SelectedPackage.UpdateAvailable = false;
-            UpdateAvailable = false;
-        };
-        var updateResult = await package.Update(SelectedPackage);
+            var percent = Convert.ToInt32(progress.Percentage);
+            if (progress.IsIndeterminate || progress.Progress == -1)
+            {
+                IsIndeterminate = true;
+            }
+            else
+            {
+                IsIndeterminate = false;
+                ProgressValue = percent;
+            }
+
+            ProgressText = $"Updating {SelectedPackage.DisplayName} to latest version... {percent:N0}%";
+            EventManager.Instance.OnGlobalProgressChanged(percent);
+        });
+        var updateResult = await package.Update(SelectedPackage, progress);
+        
+        ProgressText = "Update complete";
+        SelectedPackage.UpdateAvailable = false;
+        UpdateAvailable = false;
+        
         settingsManager.UpdatePackageVersionNumber(SelectedPackage.Id, updateResult);
         await OnLoaded();
     }
@@ -276,21 +289,5 @@ public partial class PackageManagerViewModel : ObservableObject
         var installWindow = dialogFactory.CreateInstallerWindow();
         installWindow.ShowDialog();
         await OnLoaded();
-    }
-
-    private void SelectedPackageOnProgressChanged(object? sender, int progress)
-    {
-        if (progress == -1)
-        {
-            IsIndeterminate = true;
-        }
-        else
-        {
-            IsIndeterminate = false;
-            ProgressValue = progress;
-            ProgressText = $"Updating {SelectedPackage.DisplayName} to latest version... {progress}%";
-        }
-        
-        EventManager.Instance.OnGlobalProgressChanged(progress);
     }
 }

@@ -23,6 +23,7 @@ public partial class OneClickInstallViewModel : ObservableObject
     
     [ObservableProperty] private string headerText;
     [ObservableProperty] private string subHeaderText;
+    [ObservableProperty] private string subSubHeaderText;
     [ObservableProperty] private bool showInstallButton;
     [ObservableProperty] private bool isIndeterminate;
     
@@ -71,41 +72,25 @@ public partial class OneClickInstallViewModel : ObservableObject
         var a1111 = packageFactory.FindPackageByName(DefaultPackageName)!;
         HeaderText = "Installing Stable Diffusion WebUI...";
 
-        void DownloadProgressHandler(object? _, ProgressReport progress)
+        var progressHandler = new Progress<ProgressReport>(progress =>
         {
-            SubHeaderText = $"Downloading git... ({progress.Percentage:N0}%)";
+            if (progress.Message != null && progress.Message.Contains("Downloading"))
+            {
+                SubHeaderText = $"Downloading Git... {progress.Percentage:N0}%";
+            }
+            else if (string.IsNullOrWhiteSpace(progress.Message))
+            {
+                SubHeaderText = $"Installing Git... {progress.Percentage:N0}%";
+            }
+            else
+            {
+                SubHeaderText = progress.Message;
+            }
+
             OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
-        }
+        });
 
-        void DownloadFinishedHandler(object? _, ProgressReport downloadLocation)
-        {
-            SubHeaderText = "Git download complete";
-            OneClickInstallProgress = 100;
-        }
-        
-        void InstallProgressHandler(object? _, ProgressReport progress)
-        {
-            SubHeaderText = $"Installing git... ({progress.Percentage:N0}%)";
-            OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
-        }
-
-        void InstallFinishedHandler(object? _, ProgressReport __)
-        {
-            SubHeaderText = "Git install complete";
-            OneClickInstallProgress = 100;
-        }
-
-        prerequisiteHelper.DownloadProgressChanged += DownloadProgressHandler;
-        prerequisiteHelper.DownloadComplete += DownloadFinishedHandler;
-        prerequisiteHelper.InstallProgressChanged += InstallProgressHandler;
-        prerequisiteHelper.InstallComplete += InstallFinishedHandler;
-
-        await prerequisiteHelper.InstallGitIfNecessary();
-        
-        prerequisiteHelper.DownloadProgressChanged -= DownloadProgressHandler;
-        prerequisiteHelper.DownloadComplete -= DownloadFinishedHandler;
-        prerequisiteHelper.InstallProgressChanged -= InstallProgressHandler;
-        prerequisiteHelper.InstallComplete -= InstallFinishedHandler;
+        await prerequisiteHelper.InstallGitIfNecessary(progressHandler);
 
         SubHeaderText = "Installing prerequisites...";
         IsIndeterminate = true;
@@ -124,6 +109,8 @@ public partial class OneClickInstallViewModel : ObservableObject
         SubHeaderText = "Getting latest version...";
         var latestVersion = await a1111.GetLatestVersion();
         a1111.InstallLocation += "\\stable-diffusion-webui";
+        a1111.ConsoleOutput += (_, output) => SubSubHeaderText = output;
+        
         await DownloadPackage(a1111, latestVersion);
         await InstallPackage(a1111);
         
@@ -155,20 +142,35 @@ public partial class OneClickInstallViewModel : ObservableObject
         EventManager.Instance.OnOneClickInstallFinished();
     }
 
-    private Task<string?> DownloadPackage(BasePackage selectedPackage, string version)
+    private async Task DownloadPackage(BasePackage selectedPackage, string version)
     {
-        selectedPackage.DownloadProgressChanged += SelectedPackageOnProgressChanged;
-        selectedPackage.DownloadComplete += (_, _) => SubHeaderText = "Download Complete";
         SubHeaderText = "Downloading package...";
-        return selectedPackage.DownloadPackage(version, false);
+        
+        var progress = new Progress<ProgressReport>(progress =>
+        {
+            IsIndeterminate = progress.IsIndeterminate;
+            OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
+            EventManager.Instance.OnGlobalProgressChanged(OneClickInstallProgress);
+        });
+        
+        await selectedPackage.DownloadPackage(version, false, progress);
+        SubHeaderText = "Download Complete";
+        OneClickInstallProgress = 100;
     }
 
     private async Task InstallPackage(BasePackage selectedPackage)
     {
-        selectedPackage.InstallProgressChanged += SelectedPackageOnProgressChanged;
-        selectedPackage.InstallComplete += (_, _) => HeaderText = "Install Complete";
+        selectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output;
         SubHeaderText = "Installing package...";
-        await selectedPackage.InstallPackage();
+        
+        var progress = new Progress<ProgressReport>(progress =>
+        {
+            IsIndeterminate = progress.IsIndeterminate;
+            OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
+            EventManager.Instance.OnGlobalProgressChanged(OneClickInstallProgress);
+        });
+        
+        await selectedPackage.InstallPackage(progress);
     }
     
     private void SelectedPackageOnProgressChanged(object? sender, int progress)
@@ -183,6 +185,5 @@ public partial class OneClickInstallViewModel : ObservableObject
             OneClickInstallProgress = progress;
         }
         
-        EventManager.Instance.OnGlobalProgressChanged(progress);
     }
 }

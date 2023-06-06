@@ -85,14 +85,12 @@ public class ComfyUI : BaseGitPackage
         });
     }
 
-    public override async Task InstallPackage(bool isUpdate = false)
+    public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
     {
-        UnzipPackage(isUpdate);
+        await UnzipPackage(progress);
         
         // Setup dependencies
-        OnInstallProgressChanged(-1); // Indeterminate progress bar
-        // Setup venv
-        Logger.Debug("Setting up venv");
+        progress?.Report(new ProgressReport(-1, isIndeterminate: true));
         await SetupVenv(InstallLocation);
         var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
         
@@ -117,14 +115,7 @@ public class ComfyUI : BaseGitPackage
         await venvRunner.PipInstall("-r requirements.txt", InstallLocation, HandleConsoleOutput);
         
         Logger.Debug("Finished installing requirements!");
-        if (isUpdate)
-        {
-            OnUpdateComplete("Update complete");
-        }
-        else
-        {
-            OnInstallComplete("Install complete");
-        }
+        progress?.Report(new ProgressReport(1, isIndeterminate: false));
     }
     
     public override async Task RunPackage(string installedPackagePath, string arguments)

@@ -37,13 +37,10 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         this.settingsManager = settingsManager;
     }
 
-    public event EventHandler<ProgressReport>? DownloadProgressChanged;
-    public event EventHandler<ProgressReport>? DownloadComplete;
-
     public event EventHandler<ProgressReport>? InstallProgressChanged;
     public event EventHandler<ProgressReport>? InstallComplete;
 
-    public async Task InstallGitIfNecessary()
+    public async Task InstallGitIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         if (File.Exists(GitExePath))
         {
@@ -59,24 +56,16 @@ public class PrerequisiteHelper : IPrerequisiteHelper
 
         if (!File.Exists(PortableGitDownloadPath))
         {
-            var progress = new Progress<ProgressReport>(progress =>
-            {
-                OnDownloadProgressChanged(this, progress);
-            });
-
             await downloadService.DownloadToFileAsync(portableGitUrl, PortableGitDownloadPath, progress: progress);
-            OnDownloadComplete(this, new ProgressReport(progress: 1f));
+            progress?.Report(new ProgressReport(progress: 1f, message: "Git download complete"));
         }
 
-        await UnzipGit();
+        await UnzipGit(progress);
     }
     
-    private async Task UnzipGit()
+    private async Task UnzipGit(IProgress<ProgressReport>? progress = null)
     {
-        var progress = new Progress<ProgressReport>();
-        progress.ProgressChanged += OnInstallProgressChanged;
-
-        OnInstallProgressChanged(this, new ProgressReport(-1, isIndeterminate: true));
+        progress?.Report(new ProgressReport(-1, isIndeterminate: true, message: ""));
         await ArchiveHelper.Extract(PortableGitDownloadPath, PortableGitInstallDir, progress);
 
         logger.LogInformation("Extracted Git");
@@ -89,8 +78,6 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         OnInstallComplete(this, new ProgressReport(progress: 1f));
     }
 
-    private void OnDownloadProgressChanged(object? sender, ProgressReport progress) => DownloadProgressChanged?.Invoke(sender, progress);
-    private void OnDownloadComplete(object? sender, ProgressReport progress) => DownloadComplete?.Invoke(sender, progress);
     private void OnInstallProgressChanged(object? sender, ProgressReport progress) => InstallProgressChanged?.Invoke(sender, progress);
     private void OnInstallComplete(object? sender, ProgressReport progress) => InstallComplete?.Invoke(sender, progress);
 }

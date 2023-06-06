@@ -49,7 +49,6 @@
     <Content Include="Assets\Icon.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <None Remove="Assets\Git-2.40.1-64-bit.exe" />
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -90,8 +89,9 @@
     </Page>
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy $(Pkg7-Zip_CommandLine)\tools\x64\7za.exe $(OutDir)\Assets\" />
+  <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
+    <Exec Command="if not exist $(PublishDir)\Assets mkdir $(PublishDir)\Assets" />
+    <Exec Command="copy $(Pkg7-Zip_CommandLine)\tools\x64\7za.exe $(PublishDir)\Assets\" />
   </Target>
-
+  
 </Project>

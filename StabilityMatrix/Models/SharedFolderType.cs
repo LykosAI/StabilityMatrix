@@ -10,6 +10,10 @@ public enum SharedFolderType
     Lora,
     LyCORIS,
     ESRGAN,
+    GFPGAN,
+    BSRGAN,
+    Codeformer,
+    Diffusers,
     RealESRGAN,
     SwinIR,
     VAE,
@@ -18,5 +22,8 @@ public enum SharedFolderType
     DeepDanbooru,
     TextualInversion,
     Hypernetwork,
-    ControlNet
+    ControlNet,
+    LDSR,
+    CLIP,
+    ScuNET,
 }

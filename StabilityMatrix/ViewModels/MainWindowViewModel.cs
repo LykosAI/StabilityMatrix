@@ -6,6 +6,7 @@ using System.Windows.Threading;
 using System.Windows.Shell;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Services;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls.Window;
 using EventManager = StabilityMatrix.Helper.EventManager;
@@ -16,11 +17,13 @@ public partial class MainWindowViewModel : ObservableObject
 {
     private readonly ISettingsManager settingsManager;
     private readonly IDialogFactory dialogFactory;
+    private readonly INotificationBarService notificationBarService;
 
-    public MainWindowViewModel(ISettingsManager settingsManager, IDialogFactory dialogFactory)
+    public MainWindowViewModel(ISettingsManager settingsManager, IDialogFactory dialogFactory, INotificationBarService notificationBarService)
     {
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
+        this.notificationBarService = notificationBarService;
     }
 
     [ObservableProperty]
@@ -54,6 +57,8 @@ public partial class MainWindowViewModel : ObservableObject
 
             await dialog.ShowAsync();
         }
+
+        notificationBarService.ShowStartupNotifications();
     }
 
     /// <summary>

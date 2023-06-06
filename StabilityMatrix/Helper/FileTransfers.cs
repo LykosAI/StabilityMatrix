@@ -54,14 +54,15 @@ public static class FileTransfers
     private static async Task CopyStream(Stream from, Stream to, Action<long> progress)
     {
         var shared = ArrayPool<byte>.Shared;
-        var buffer = shared.Rent((int) GetBufferSize((ulong) from.Length));
+        var bufferSize = (int) GetBufferSize((ulong) from.Length);
+        var buffer = shared.Rent(bufferSize);
         var totalRead = 0L;
         
         try
         {
             while (totalRead < from.Length)
             {
-                var read = await from.ReadAsync(buffer.AsMemory(0, BufferSize));
+                var read = await from.ReadAsync(buffer.AsMemory(0, bufferSize));
                 await to.WriteAsync(buffer.AsMemory(0, read));
                 totalRead += read;
                 progress(totalRead);

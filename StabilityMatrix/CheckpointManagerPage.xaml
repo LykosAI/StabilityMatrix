@@ -34,103 +34,108 @@
             x:Key="TextDropShadowEffect" />
 
         <DataTemplate DataType="{x:Type models:CheckpointFile}" x:Key="CheckpointFileDataTemplate">
-            <ui:Card
-                Height="96"
-                Margin="8"
-                Width="240">
-                <ui:Card.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="Rename" />
-                        <MenuItem Command="{Binding DeleteCommand}" Header="Delete" />
-                    </ContextMenu>
-                </ui:Card.ContextMenu>
-                <Grid>
-                    <!--  Main contents, hidden when IsLoading is true  -->
-                    <Grid
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        Visibility="{Binding IsLoading, Converter={StaticResource InvertAndVisibleOrHidden}}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="0.2*" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Orientation="Vertical">
-                            <ui:Image
-                                CornerRadius="4"
-                                Margin="4,4,4,8"
-                                MinHeight="256"
-                                MinWidth="200"
-                                Source="{Binding PreviewImage}"
-                                Stretch="UniformToFill"
-                                Visibility="Collapsed"
-                                Width="128" />
-                            <TextBlock
-                                Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                Margin="0,0,0,0"
-                                Text="{Binding Title}"
-                                VerticalAlignment="Center" />
-                            <TextBlock
-                                FontSize="11"
-                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                Margin="0,2,0,0"
-                                Text="{Binding FileName}"
-                                VerticalAlignment="Center" />
-                        </StackPanel>
-                        <Grid Grid.Column="1">
-                            <ui:Button
-                                Background="Transparent"
-                                BorderBrush="Transparent"
-                                FontSize="20"
-                                HorizontalAlignment="Right"
-                                IsEnabled="False"
-                                MaxHeight="48"
-                                MaxWidth="64"
-                                Padding="0"
-                                VerticalAlignment="Top"
-                                Visibility="{Binding IsConnectedModel, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                <ui:Button.Icon>
-                                    <ui:SymbolIcon
-                                        FontSize="12"
-                                        Foreground="LightGreen"
-                                        Symbol="CloudCheckmark24"
-                                        ToolTip="Connected Model" />
-                                </ui:Button.Icon>
-                            </ui:Button>
-                            <ui:Button
-                                Background="Transparent"
-                                BorderBrush="Transparent"
-                                FontSize="20"
-                                HorizontalAlignment="Right"
-                                IsEnabled="False"
-                                MaxHeight="48"
-                                MaxWidth="64"
-                                Padding="0"
-                                VerticalAlignment="Top"
-                                Visibility="Collapsed">
-                                <ui:Button.Icon>
-                                    <ui:SymbolIcon
-                                        FontSize="12"
-                                        Foreground="OrangeRed"
-                                        Symbol="CloudArrowUp24"
-                                        ToolTip="Update Available" />
-                                </ui:Button.Icon>
-                            </ui:Button>
+            <Border>
+                <i:Interaction.Behaviors>
+                    <i:MouseDragElementBehavior DragBegun="MouseDragElementBehavior_OnDragBegun" />
+                </i:Interaction.Behaviors>
+                <ui:Card
+                    Height="96"
+                    Margin="8"
+                    Width="240">
+                    <ui:Card.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Rename" />
+                            <MenuItem Command="{Binding DeleteCommand}" Header="Delete" />
+                        </ContextMenu>
+                    </ui:Card.ContextMenu>
+                    <Grid>
+                        <!--  Main contents, hidden when IsLoading is true  -->
+                        <Grid
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            Visibility="{Binding IsLoading, Converter={StaticResource InvertAndVisibleOrHidden}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="0.2*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Vertical">
+                                <ui:Image
+                                    CornerRadius="4"
+                                    Margin="4,4,4,8"
+                                    MinHeight="256"
+                                    MinWidth="200"
+                                    Source="{Binding PreviewImage}"
+                                    Stretch="UniformToFill"
+                                    Visibility="Collapsed"
+                                    Width="128" />
+                                <TextBlock
+                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                    Margin="0,0,0,0"
+                                    Text="{Binding Title}"
+                                    VerticalAlignment="Center" />
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                    Margin="0,2,0,0"
+                                    Text="{Binding FileName}"
+                                    VerticalAlignment="Center" />
+                            </StackPanel>
+                            <Grid Grid.Column="1">
+                                <ui:Button
+                                    Background="Transparent"
+                                    BorderBrush="Transparent"
+                                    FontSize="20"
+                                    HorizontalAlignment="Right"
+                                    IsEnabled="False"
+                                    MaxHeight="48"
+                                    MaxWidth="64"
+                                    Padding="0"
+                                    VerticalAlignment="Top"
+                                    Visibility="{Binding IsConnectedModel, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <ui:Button.Icon>
+                                        <ui:SymbolIcon
+                                            FontSize="12"
+                                            Foreground="LightGreen"
+                                            Symbol="CloudCheckmark24"
+                                            ToolTip="Connected Model" />
+                                    </ui:Button.Icon>
+                                </ui:Button>
+                                <ui:Button
+                                    Background="Transparent"
+                                    BorderBrush="Transparent"
+                                    FontSize="20"
+                                    HorizontalAlignment="Right"
+                                    IsEnabled="False"
+                                    MaxHeight="48"
+                                    MaxWidth="64"
+                                    Padding="0"
+                                    VerticalAlignment="Top"
+                                    Visibility="Collapsed">
+                                    <ui:Button.Icon>
+                                        <ui:SymbolIcon
+                                            FontSize="12"
+                                            Foreground="OrangeRed"
+                                            Symbol="CloudArrowUp24"
+                                            ToolTip="Update Available" />
+                                    </ui:Button.Icon>
+                                </ui:Button>
+                            </Grid>
                         </Grid>
-                    </Grid>
 
-                    <!--  Progress ring  -->
-                    <ui:ProgressRing
-                        Grid.Row="0"
-                        Height="32"
-                        HorizontalAlignment="Center"
-                        IsEnabled="{Binding IsLoading}"
-                        IsIndeterminate="True"
-                        Padding="0"
-                        VerticalAlignment="Center"
-                        Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
-                        Width="32" />
-                </Grid>
-            </ui:Card>
+                        <!--  Progress ring  -->
+                        <ui:ProgressRing
+                            Grid.Row="0"
+                            Height="32"
+                            HorizontalAlignment="Center"
+                            IsEnabled="{Binding IsLoading}"
+                            IsIndeterminate="True"
+                            Padding="0"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            Width="32" />
+                    </Grid>
+                </ui:Card>
+            </Border>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type models:CheckpointFolder}" x:Key="CheckpointFolderGridDataTemplate">

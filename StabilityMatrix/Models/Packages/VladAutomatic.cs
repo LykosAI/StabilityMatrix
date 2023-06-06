@@ -25,6 +25,27 @@ public class VladAutomatic : BaseGitPackage
         base(githubApi, settingsManager, downloadService)
     {
     }
+    
+    // https://github.com/vladmandic/automatic/blob/master/modules/shared.py#L324
+    public override Dictionary<SharedFolderType, string> SharedFolders => new()
+    {
+        [SharedFolderType.StableDiffusion] = "models/Stable-diffusion",
+        [SharedFolderType.Diffusers] = "models/Diffusers",
+        [SharedFolderType.VAE] = "models/VAE",
+        [SharedFolderType.TextualInversion] = "models/embeddings",
+        [SharedFolderType.Hypernetwork] = "models/hypernetworks",
+        [SharedFolderType.Codeformer] = "models/Codeformer",
+        [SharedFolderType.GFPGAN] = "models/GFPGAN",
+        [SharedFolderType.BSRGAN] = "models/BSRGAN",
+        [SharedFolderType.ESRGAN] = "models/ESRGAN",
+        [SharedFolderType.RealESRGAN] = "models/RealESRGAN",
+        [SharedFolderType.ScuNET] = "models/ScuNET",
+        [SharedFolderType.SwinIR] = "models/SwinIR",
+        [SharedFolderType.LDSR] = "models/LDSR",
+        [SharedFolderType.CLIP] = "models/CLIP",
+        [SharedFolderType.Lora] = "models/Lora",
+        [SharedFolderType.LyCORIS] = "models/LyCORIS",
+    };
 
     public override List<LaunchOptionDefinition> LaunchOptions => new()
     {

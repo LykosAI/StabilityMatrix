@@ -100,6 +100,7 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<Wpf.Ui.Contracts.ISnackbarService, Wpf.Ui.Services.SnackbarService>();
             serviceCollection.AddSingleton<IPrerequisiteHelper, PrerequisiteHelper>();
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
+            serviceCollection.AddSingleton<INotificationBarService, NotificationBarService>();
             serviceCollection.AddSingleton<IDownloadService, DownloadService>();
             serviceCollection.AddTransient<IGitHubClient, GitHubClient>(_ =>
             {

@@ -9,20 +9,6 @@ namespace StabilityMatrix.Helper;
 
 public static class FileHash
 {
-    /// <summary>
-    /// Determines suitable buffer size based on stream length.
-    /// </summary>
-    /// <param name="totalBytes"></param>
-    /// <returns></returns>
-    private static ulong GetBufferSize(ulong totalBytes) => totalBytes switch
-    {
-        < Size.MiB => 8 * Size.KiB,
-        < 100 * Size.MiB => 16 * Size.KiB,
-        < 500 * Size.MiB => Size.MiB,
-        < Size.GiB => 16 * Size.MiB,
-        _ => 32 * Size.MiB
-    };
-    
     public static async Task<string> GetHashAsync(HashAlgorithm hashAlgorithm, Stream stream, byte[] buffer, Action<ulong>? progress = default)
     {
         ulong totalBytesRead = 0;
@@ -55,7 +41,7 @@ public static class FileHash
 
         var totalBytes = Convert.ToUInt64(new FileInfo(filePath).Length);
         var shared = ArrayPool<byte>.Shared;
-        var buffer = shared.Rent((int) GetBufferSize(totalBytes));
+        var buffer = shared.Rent((int) FileTransfers.GetBufferSize(totalBytes));
         try
         {
             await using var stream = File.OpenRead(filePath);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,7 +10,20 @@ namespace StabilityMatrix.Helper;
 
 public static class FileTransfers
 {
-    public const int BufferSize = 10240;
+    /// <summary>
+    /// Determines suitable buffer size based on stream length.
+    /// </summary>
+    /// <param name="totalBytes"></param>
+    /// <returns></returns>
+    public static ulong GetBufferSize(ulong totalBytes) => totalBytes switch
+    {
+        < Size.MiB => 8 * Size.KiB,
+        < 100 * Size.MiB => 16 * Size.KiB,
+        < 500 * Size.MiB => Size.MiB,
+        < Size.GiB => 16 * Size.MiB,
+        _ => 32 * Size.MiB
+    };
+    
     public static async Task CopyFiles(Dictionary<string, string> files, IProgress<ProgressReport>? fileProgress = default, IProgress<ProgressReport>? totalProgress = default)
     {
         var totalFiles = files.Count;
@@ -39,15 +53,23 @@ public static class FileTransfers
 
     private static async Task CopyStream(Stream from, Stream to, Action<long> progress)
     {
-        var buffer = new byte[BufferSize];
+        var shared = ArrayPool<byte>.Shared;
+        var buffer = shared.Rent((int) GetBufferSize((ulong) from.Length));
         var totalRead = 0L;
-
-        while (totalRead < from.Length)
+        
+        try
         {
-            var read = await from.ReadAsync(buffer.AsMemory(0, BufferSize));
-            await to.WriteAsync(buffer.AsMemory(0, read));
-            totalRead += read;
-            progress(totalRead);
+            while (totalRead < from.Length)
+            {
+                var read = await from.ReadAsync(buffer.AsMemory(0, BufferSize));
+                await to.WriteAsync(buffer.AsMemory(0, read));
+                totalRead += read;
+                progress(totalRead);
+            }
+        }
+        finally
+        {
+            shared.Return(buffer);
         }
     }
 }

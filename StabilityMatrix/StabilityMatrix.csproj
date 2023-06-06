@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="7-Zip.CommandLine" Version="18.1.0" />
+    <PackageReference Include="AsyncAwaitBestPractices" Version="6.0.6" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
     <PackageReference Include="FuzzySharp" Version="2.0.2" />
     <PackageReference Include="MdXaml" Version="1.19.2" />
@@ -32,6 +33,7 @@
     <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     <PackageReference Include="Refit" Version="6.3.2" />
     <PackageReference Include="Refit.HttpClientFactory" Version="6.3.2" />
+    <PackageReference Include="Sentry" Version="3.33.0" />
     <PackageReference Include="SharpCompress" Version="0.33.0" />
     <PackageReference Include="WPF-UI" Version="3.0.0-preview.2" />
     <PackageReference Include="pythonnet" Version="3.0.1" />

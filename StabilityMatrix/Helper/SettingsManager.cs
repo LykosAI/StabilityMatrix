@@ -86,7 +86,10 @@ public class SettingsManager : ISettingsManager
         if (Settings.PathExtensions == null) return;
         var toInsert = GetPathExtensionsAsString();
         // Append the original path, if any
-        toInsert += originalEnvPath ?? "";
+        if (originalEnvPath != null)
+        {
+            toInsert += $";{originalEnvPath}";
+        }
         Environment.SetEnvironmentVariable("PATH", toInsert, EnvironmentVariableTarget.Process);
     }
 

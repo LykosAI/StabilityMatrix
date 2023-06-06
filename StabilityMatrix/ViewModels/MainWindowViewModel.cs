@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Threading;
 using System.Windows.Shell;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Services;
 using Wpf.Ui.Appearance;
@@ -59,6 +60,18 @@ public partial class MainWindowViewModel : ObservableObject
         }
 
         notificationBarService.ShowStartupNotifications();
+    }
+    
+    [RelayCommand]
+    private void OpenLinkPatreon()
+    {
+        ProcessRunner.OpenUrl("https://www.patreon.com/StabilityMatrix");
+    }
+    
+    [RelayCommand]
+    private void OpenLinkDiscord()
+    {
+        ProcessRunner.OpenUrl("https://discord.gg/TUrgfECxHz");
     }
 
     /// <summary>

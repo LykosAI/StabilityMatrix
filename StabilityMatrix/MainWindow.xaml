@@ -95,7 +95,7 @@
                 </ui:NavigationView.MenuItems>
                 <ui:NavigationView.FooterMenuItems>
                     <!--  Footer menus  -->
-                    <ui:NavigationViewItem Content="Become a Patron">
+                    <ui:NavigationViewItem Command="{Binding OpenLinkPatreonCommand}" Content="Become a Patron">
                         <ui:NavigationViewItem.Icon>
                             <ui:ImageIcon
                                 Height="15"
@@ -105,7 +105,7 @@
                         </ui:NavigationViewItem.Icon>
                     </ui:NavigationViewItem>
 
-                    <ui:NavigationViewItem Content="Join our Discord Server">
+                    <ui:NavigationViewItem Command="{Binding OpenLinkDiscordCommand}" Content="Join our Discord Server">
                         <ui:NavigationViewItem.Icon>
                             <ui:ImageIcon
                                 Height="12"

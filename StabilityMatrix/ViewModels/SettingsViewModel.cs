@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
@@ -180,6 +181,13 @@ public partial class SettingsViewModel : ObservableObject
         dialog.Content = flowViewer;
         dialog.IsPrimaryButtonEnabled = false;
         await dialog.ShowAsync();
+    }
+
+    [RelayCommand]
+    [DoesNotReturn]
+    private void DebugTriggerException()
+    {
+        throw new Exception("Test exception");
     }
 
     private void ApplyTheme(string value)

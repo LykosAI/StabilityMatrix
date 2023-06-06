@@ -6,7 +6,6 @@ namespace StabilityMatrix.Services;
 
 public interface IDownloadService
 {
-    event EventHandler<ProgressReport>? DownloadProgressChanged;
-    event EventHandler<ProgressReport>? DownloadComplete;
-    Task DownloadToFileAsync(string downloadUrl, string downloadLocation, int bufferSize = ushort.MaxValue);
+    Task DownloadToFileAsync(string downloadUrl, string downloadLocation, int bufferSize = ushort.MaxValue,
+        IProgress<ProgressReport>? progress = null);
 }

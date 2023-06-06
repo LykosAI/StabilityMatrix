@@ -1,0 +1,209 @@
+﻿<Page
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    d:DataContext="{d:DesignInstance designData:MockCheckpointBrowserViewModel,
+                                     IsDesignTimeCreatable=True}"
+    d:DesignHeight="600"
+    d:DesignWidth="650"
+    mc:Ignorable="d"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    x:Class="StabilityMatrix.CheckpointBrowserPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:api="clr-namespace:StabilityMatrix.Models.Api"
+    xmlns:converters="clr-namespace:StabilityMatrix.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:designData="clr-namespace:StabilityMatrix.DesignData"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:StabilityMatrix.Models"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Page.Resources>
+        <converters:ValueConverterGroup x:Key="InvertAndVisibilitate">
+            <converters:BoolNegationConverter />
+            <BooleanToVisibilityConverter />
+        </converters:ValueConverterGroup>
+
+        <converters:UriToBitmapConverter x:Key="UriToBitmapConverter" />
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+
+        <DataTemplate DataType="{x:Type viewModels:CheckpointBrowserCardViewModel}" x:Key="CivitModelTemplate">
+            <ui:Card MaxHeight="450" Width="330">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock
+                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                        Margin="0,0,0,0"
+                        Text="{Binding CivitModel.Name}"
+                        VerticalAlignment="Center" />
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                        Margin="0,2,0,0"
+                        Text="{Binding CivitModel.ModelVersions[0].Name}"
+                        VerticalAlignment="Center" />
+                    <Grid>
+                        <Image
+                            Margin="0,8,0,8"
+                            MaxHeight="300"
+                            Source="{Binding CivitModel.ModelVersions[0].Images[0].Url, Converter={StaticResource UriToBitmapConverter}}"
+                            Stretch="UniformToFill" />
+                        <ui:Button
+                            Appearance="Info"
+                            Command="{Binding OpenModelCommand}"
+                            CommandParameter="{Binding CivitModel}"
+                            HorizontalAlignment="Right"
+                            Margin="0,16,8,0"
+                            VerticalAlignment="Top">
+                            <ui:SymbolIcon Symbol="Open48" />
+                        </ui:Button>
+
+                        <Rectangle
+                            Fill="#DD000000"
+                            HorizontalAlignment="Stretch"
+                            Margin="0,8,0,8"
+                            VerticalAlignment="Stretch"
+                            Visibility="{Binding ImportCommand.IsRunning, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <StackPanel
+                            HorizontalAlignment="Stretch"
+                            Orientation="Vertical"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding ImportCommand.IsRunning, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <ui:ProgressRing
+                                HorizontalAlignment="Center"
+                                IsIndeterminate="False"
+                                Progress="{Binding Value}"
+                                VerticalAlignment="Center" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                Margin="0,8,0,0"
+                                Text="{Binding Text, FallbackValue=Importing...}"
+                                VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*" />
+                        </Grid.ColumnDefinitions>
+                        <ui:Button
+                            Appearance="Primary"
+                            Command="{Binding ImportCommand}"
+                            CommandParameter="{Binding CivitModel}"
+                            Content="Import"
+                            HorizontalAlignment="Stretch"
+                            Margin="0,8,0,0" />
+                    </Grid>
+                </StackPanel>
+            </ui:Card>
+        </DataTemplate>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="8" Orientation="Vertical">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <ui:TextBox
+                    HorizontalAlignment="Stretch"
+                    Margin="8,0,0,0"
+                    PlaceholderText="Query"
+                    Text="{Binding SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                <ui:Button
+                    Appearance="Primary"
+                    Command="{Binding SearchModelsCommand}"
+                    Grid.Column="1"
+                    IsDefault="True"
+                    Margin="8,0,8,0"
+                    VerticalAlignment="Stretch"
+                    Width="80">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:ProgressRing
+                            Height="20"
+                            IsIndeterminate="True"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding SearchModelsCommand.IsRunning, Converter={StaticResource BoolToVisibilityConverter}}"
+                            Width="20" />
+                        <TextBlock
+                            Text="Search"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding SearchModelsCommand.IsRunning, Converter={StaticResource InvertAndVisibilitate}}" />
+                    </StackPanel>
+                </ui:Button>
+            </Grid>
+            <DockPanel>
+                <StackPanel Margin="8" Orientation="Vertical">
+                    <Label Content="Sort" />
+                    <ComboBox
+                        ItemsSource="{Binding AllSortModes}"
+                        MinWidth="100"
+                        SelectedItem="{Binding SortMode}" />
+                </StackPanel>
+
+                <StackPanel Margin="0,8" Orientation="Vertical">
+                    <Label Content="Period" />
+                    <ComboBox
+                        ItemsSource="{Binding AllCivitPeriods}"
+                        MinWidth="100"
+                        SelectedItem="{Binding SelectedPeriod}" />
+                </StackPanel>
+
+                <CheckBox
+                    Content="Show NSFW Content"
+                    FontSize="12"
+                    HorizontalAlignment="Right"
+                    IsChecked="{Binding ShowNsfw, Mode=TwoWay}"
+                    Margin="8,8,8,0" />
+            </DockPanel>
+
+        </StackPanel>
+
+        <ui:DynamicScrollViewer CanContentScroll="True" Grid.Row="1">
+            <ui:VirtualizingGridView
+                ItemTemplate="{StaticResource CivitModelTemplate}"
+                ItemsSource="{Binding ModelCards}"
+                PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel"
+                SpacingMode="StartAndEndOnly" />
+        </ui:DynamicScrollViewer>
+
+        <StackPanel
+            Grid.Row="2"
+            HorizontalAlignment="Center"
+            Margin="8"
+            Orientation="Vertical"
+            Visibility="{Binding HasSearched, Converter={StaticResource BoolToVisibilityConverter}}">
+            <TextBlock Margin="0,0,4,4" TextAlignment="Center">
+                <Run Text="Page" />
+                <Run Text="{Binding CurrentPageNumber, FallbackValue=1}" />
+                <Run Text="/" />
+                <Run Text="{Binding TotalPages, FallbackValue=5}" />
+            </TextBlock>
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                <ui:Button
+                    Command="{Binding PreviousPageCommand}"
+                    IsEnabled="{Binding CanGoToPreviousPage}"
+                    Margin="0,0,8,0">
+                    <ui:SymbolIcon Symbol="ArrowPrevious24" />
+                </ui:Button>
+                <ui:Button Command="{Binding NextPageCommand}" IsEnabled="{Binding CanGoToNextPage}">
+                    <ui:SymbolIcon Symbol="ArrowNext24" />
+                </ui:Button>
+            </StackPanel>
+        </StackPanel>
+
+        <ui:ProgressRing
+            Grid.Row="0"
+            Grid.RowSpan="3"
+            IsIndeterminate="True"
+            Visibility="{Binding SearchModelsCommand.IsRunning, Converter={StaticResource BoolToVisibilityConverter}}" />
+    </Grid>
+</Page>

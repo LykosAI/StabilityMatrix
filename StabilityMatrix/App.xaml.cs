@@ -74,8 +74,9 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<PackageManagerPage>();
             serviceCollection.AddTransient<TextToImagePage>();
             serviceCollection.AddTransient<CheckpointManagerPage>();
+            serviceCollection.AddTransient<CheckpointBrowserPage>();
             serviceCollection.AddTransient<InstallerWindow>();
-            
+
             serviceCollection.AddTransient<MainWindowViewModel>();
             serviceCollection.AddTransient<SnackbarViewModel>();
             serviceCollection.AddTransient<LaunchOptionsDialogViewModel>();
@@ -86,6 +87,7 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<InstallerViewModel>();
             serviceCollection.AddTransient<OneClickInstallViewModel>();
             serviceCollection.AddTransient<CheckpointManagerViewModel>();
+            serviceCollection.AddSingleton<CheckpointBrowserViewModel>();
             
             var settingsManager = new SettingsManager();
             serviceCollection.AddSingleton<ISettingsManager>(settingsManager);
@@ -134,6 +136,13 @@ namespace StabilityMatrix
                 {
                     c.BaseAddress = new Uri("http://localhost:7860");
                     c.Timeout = TimeSpan.FromSeconds(2);
+                })
+                .AddPolicyHandler(retryPolicy);
+            serviceCollection.AddRefitClient<ICivitApi>(defaultRefitSettings)
+                .ConfigureHttpClient(c =>
+                {
+                    c.BaseAddress = new Uri("https://civitai.com");
+                    c.Timeout = TimeSpan.FromSeconds(8);
                 })
                 .AddPolicyHandler(retryPolicy);
 

@@ -103,6 +103,10 @@
                                 Command="{Binding PingWebApiCommand}"
                                 Content="Ping Web API"
                                 Margin="8" />
+                            <Button
+                                Command="{Binding DebugTriggerExceptionCommand}"
+                                Content="Trigger Exception"
+                                Margin="8" />
                         </StackPanel>
                     </StackPanel>
                 </ui:Card>

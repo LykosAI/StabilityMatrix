@@ -14,6 +14,11 @@ public class UriToBitmapConverter : IValueConverter
             return new BitmapImage(uri);
         }
 
+        if (value is string uriString)
+        {
+            return new BitmapImage(new Uri(uriString));
+        }
+
         return null;
     }
 

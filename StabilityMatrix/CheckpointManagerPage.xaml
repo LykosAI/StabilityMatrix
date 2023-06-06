@@ -9,8 +9,10 @@
     mc:Ignorable="d"
     x:Class="StabilityMatrix.CheckpointManagerPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:converters="clr-namespace:StabilityMatrix.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:designData="clr-namespace:StabilityMatrix.DesignData"
+    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:StabilityMatrix.Models"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
@@ -18,31 +20,122 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Page.Resources>
+        <converters:ValueConverterGroup x:Key="InvertAndVisibleOrHidden">
+            <converters:BoolNegationConverter />
+            <converters:BooleanToHiddenVisibleConverter />
+        </converters:ValueConverterGroup>
+
+        <DropShadowEffect
+            BlurRadius="8"
+            Color="#FF000000"
+            Direction="0"
+            Opacity="0.2"
+            ShadowDepth="0"
+            x:Key="TextDropShadowEffect" />
+
         <DataTemplate DataType="{x:Type models:CheckpointFile}" x:Key="CheckpointFileDataTemplate">
-            <ui:CardAction Height="96" Width="240">
-                <StackPanel Orientation="Vertical">
-                    <ui:Image
-                        CornerRadius="4"
-                        Margin="4,4,4,8"
-                        MinHeight="256"
-                        MinWidth="200"
-                        Source="{Binding PreviewImage}"
-                        Stretch="UniformToFill"
-                        Visibility="Collapsed"
-                        Width="128" />
-                    <TextBlock
-                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                        Margin="0,0,0,0"
-                        Text="{Binding Title}"
-                        VerticalAlignment="Center" />
-                    <TextBlock
-                        FontSize="11"
-                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                        Margin="0,2,0,0"
-                        Text="{Binding FileName}"
-                        VerticalAlignment="Center" />
-                </StackPanel>
-            </ui:CardAction>
+            <Border>
+                <i:Interaction.Behaviors>
+                    <i:MouseDragElementBehavior />
+                </i:Interaction.Behaviors>
+                <ui:Card
+                    Height="96"
+                    Margin="8"
+                    Width="240">
+                    <ui:Card.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Rename" />
+                            <MenuItem Command="{Binding DeleteCommand}" Header="Delete" />
+                        </ContextMenu>
+                    </ui:Card.ContextMenu>
+                    <Grid>
+                        <!--  Main contents, hidden when IsLoading is true  -->
+                        <Grid
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            Visibility="{Binding IsLoading, Converter={StaticResource InvertAndVisibleOrHidden}}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="0.2*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Vertical">
+                                <ui:Image
+                                    CornerRadius="4"
+                                    Margin="4,4,4,8"
+                                    MinHeight="256"
+                                    MinWidth="200"
+                                    Source="{Binding PreviewImage}"
+                                    Stretch="UniformToFill"
+                                    Visibility="Collapsed"
+                                    Width="128" />
+                                <TextBlock
+                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                    Margin="0,0,0,0"
+                                    Text="{Binding Title}"
+                                    VerticalAlignment="Center" />
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                    Margin="0,2,0,0"
+                                    Text="{Binding FileName}"
+                                    VerticalAlignment="Center" />
+                            </StackPanel>
+                            <Grid Grid.Column="1">
+                                <ui:Button
+                                    Background="Transparent"
+                                    BorderBrush="Transparent"
+                                    FontSize="20"
+                                    HorizontalAlignment="Right"
+                                    IsEnabled="False"
+                                    MaxHeight="48"
+                                    MaxWidth="64"
+                                    Padding="0"
+                                    VerticalAlignment="Top"
+                                    Visibility="{Binding IsConnectedModel, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <ui:Button.Icon>
+                                        <ui:SymbolIcon
+                                            FontSize="12"
+                                            Foreground="LightGreen"
+                                            Symbol="CloudCheckmark24"
+                                            ToolTip="Connected Model" />
+                                    </ui:Button.Icon>
+                                </ui:Button>
+                                <ui:Button
+                                    Background="Transparent"
+                                    BorderBrush="Transparent"
+                                    FontSize="20"
+                                    HorizontalAlignment="Right"
+                                    IsEnabled="False"
+                                    MaxHeight="48"
+                                    MaxWidth="64"
+                                    Padding="0"
+                                    VerticalAlignment="Top"
+                                    Visibility="Collapsed">
+                                    <ui:Button.Icon>
+                                        <ui:SymbolIcon
+                                            FontSize="12"
+                                            Foreground="OrangeRed"
+                                            Symbol="CloudArrowUp24"
+                                            ToolTip="Update Available" />
+                                    </ui:Button.Icon>
+                                </ui:Button>
+                            </Grid>
+                        </Grid>
+
+                        <!--  Progress ring  -->
+                        <ui:ProgressRing
+                            Grid.Row="0"
+                            Height="32"
+                            HorizontalAlignment="Center"
+                            IsEnabled="{Binding IsLoading}"
+                            IsIndeterminate="True"
+                            Padding="0"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            Width="32" />
+                    </Grid>
+                </ui:Card>
+            </Border>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type models:CheckpointFolder}" x:Key="CheckpointFolderGridDataTemplate">
@@ -51,12 +144,88 @@
                 Header="{Binding Title}"
                 IsExpanded="True"
                 Margin="8">
-                <ui:VirtualizingGridView
-                    ItemTemplate="{StaticResource CheckpointFileDataTemplate}"
-                    ItemsSource="{Binding CheckpointFiles}"
-                    Padding="5"
-                    PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel"
-                    SpacingMode="StartAndEndOnly" />
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="PreviewDragEnter">
+                        <i:InvokeCommandAction Command="{Binding OnPreviewDragEnterCommand}" />
+                    </i:EventTrigger>
+                    <i:EventTrigger EventName="PreviewDragLeave">
+                        <i:InvokeCommandAction Command="{Binding OnPreviewDragLeaveCommand}" />
+                    </i:EventTrigger>
+                    <i:EventTrigger EventName="PreviewDrop">
+                        <i:InvokeCommandAction Command="{Binding PreviewDropCommand}" PassEventArgsToCommand="True" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+                <Grid>
+                    <ui:VirtualizingItemsControl
+                        ItemTemplate="{StaticResource CheckpointFileDataTemplate}"
+                        ItemsSource="{Binding CheckpointFiles}"
+                        Padding="5"
+                        PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel" />
+                    <Border
+                        CornerRadius="8"
+                        Grid.RowSpan="4"
+                        IsEnabled="False"
+                        Name="OnDragBlurBorder"
+                        Visibility="{Binding IsDragBlurEnabled, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Border.Background>
+                            <SolidColorBrush Color="#EE202020" />
+                        </Border.Background>
+                    </Border>
+                    <Border
+                        BorderThickness="1,1,1,1"
+                        CornerRadius="8"
+                        Grid.RowSpan="4"
+                        IsEnabled="False"
+                        Name="OnDragDashBorder"
+                        Visibility="{Binding IsCurrentDragTarget, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Border.BorderBrush>
+                            <DrawingBrush
+                                TileMode="Tile"
+                                Viewport="0,0,8,8"
+                                ViewportUnits="Absolute">
+                                <DrawingBrush.Drawing>
+                                    <DrawingGroup>
+                                        <GeometryDrawing Brush="White">
+                                            <GeometryDrawing.Geometry>
+                                                <GeometryGroup>
+                                                    <RectangleGeometry Rect="0,0,50,50" />
+                                                    <RectangleGeometry Rect="50,50,50,50" />
+                                                </GeometryGroup>
+                                            </GeometryDrawing.Geometry>
+                                        </GeometryDrawing>
+                                    </DrawingGroup>
+                                </DrawingBrush.Drawing>
+                            </DrawingBrush>
+                        </Border.BorderBrush>
+                    </Border>
+                    <VirtualizingStackPanel Orientation="Vertical" VerticalAlignment="Center">
+                        <TextBlock
+                            Effect="{StaticResource TextDropShadowEffect}"
+                            FontSize="24"
+                            HorizontalAlignment="Center"
+                            Name="OnDragText"
+                            Text="Drop a file here to import"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding IsCurrentDragTarget, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=Visible}" />
+                        <TextBlock
+                            Effect="{StaticResource TextDropShadowEffect}"
+                            FontSize="18"
+                            HorizontalAlignment="Center"
+                            Name="ImportProgressText"
+                            Text="{Binding Progress.Text, FallbackValue=Importing checkpoint.safetensors}"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding Progress.TextVisibility}" />
+                        <ProgressBar
+                            Effect="{StaticResource TextDropShadowEffect}"
+                            HorizontalAlignment="Stretch"
+                            IsIndeterminate="{Binding Progress.IsIndeterminate, FallbackValue=False}"
+                            Margin="64,8"
+                            Name="ImportProgressBar"
+                            Value="{Binding Progress.Value, FallbackValue=20}"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding Progress.ProgressVisibility, FallbackValue=Visible}" />
+                    </VirtualizingStackPanel>
+                </Grid>
             </Expander>
         </DataTemplate>
 
@@ -82,7 +251,7 @@
                     HorizontalAlignment="Stretch"
                     ItemTemplate="{StaticResource CheckpointFolderGridDataTemplate}"
                     ItemsSource="{Binding CheckpointFolders, Mode=OneWay}"
-                    Margin="16,16,16,16" />
+                    Margin="8" />
             </StackPanel>
         </Grid>
     </ui:DynamicScrollViewer>

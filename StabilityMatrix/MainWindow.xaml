@@ -1,19 +1,20 @@
 <ui:FluentWindow
     ExtendsContentIntoTitleBar="True"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-    Height="700"
+    Height="750"
     Icon="Assets/Icon.ico"
     Loaded="MainWindow_OnLoaded"
     Title="Stability Matrix"
     Width="1100"
     WindowBackdropType="Acrylic"
-    d:DesignHeight="500"
-    d:DesignWidth="700"
+    WindowStartupLocation="CenterScreen"
     d:DataContext="{d:DesignInstance Type=viewModels:MainWindowViewModel,
                                      IsDesignTimeCreatable=True}"
+    d:DesignHeight="500"
+    d:DesignWidth="700"
+    mc:Ignorable="d"
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-    mc:Ignorable="d"
     x:Class="StabilityMatrix.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -46,9 +47,9 @@
                 x:Name="RootNavigation">
                 <ui:NavigationView.Header>
                     <ui:BreadcrumbBar
-                        FontSize="28"
+                        FontSize="24"
                         FontWeight="DemiBold"
-                        Margin="42,32,0,16" />
+                        Margin="24,16,0,16" />
                 </ui:NavigationView.Header>
                 <ui:NavigationView.MenuItems>
                     <ui:NavigationViewItem
@@ -67,6 +68,11 @@
                     <ui:NavigationViewItem Content="Checkpoints" TargetPageType="{x:Type local:CheckpointManagerPage}">
                         <ui:NavigationViewItem.Icon>
                             <ui:SymbolIcon Symbol="Notebook24" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
+                    <ui:NavigationViewItem Content="Get Checkpoints" TargetPageType="{x:Type local:CheckpointBrowserPage}">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:SymbolIcon Symbol="NotebookAdd24" />
                         </ui:NavigationViewItem.Icon>
                     </ui:NavigationViewItem>
                     <ui:NavigationViewItem Content="Text2Image (Beta™)" TargetPageType="{x:Type local:TextToImagePage}">
@@ -89,7 +95,7 @@
                 </ui:NavigationView.ContentOverlay>
             </ui:NavigationView>
         </Grid>
-        
+
         <ContentPresenter Grid.Row="1" x:Name="RootContentDialog" />
     </Grid>
 </ui:FluentWindow>

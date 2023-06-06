@@ -5,6 +5,7 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Polly.Contrib.WaitAndRetry;
 using StabilityMatrix.Models;
 
 namespace StabilityMatrix.Services;
@@ -19,11 +20,9 @@ public class DownloadService : IDownloadService
         this.logger = logger;
         this.httpClientFactory = httpClientFactory;
     }
-    
-    public event EventHandler<ProgressReport>? DownloadProgressChanged;
-    public event EventHandler<ProgressReport>? DownloadComplete;
-    
-    public async Task DownloadToFileAsync(string downloadUrl, string downloadLocation, int bufferSize = ushort.MaxValue)
+
+    public async Task DownloadToFileAsync(string downloadUrl, string downloadLocation, int bufferSize = ushort.MaxValue,
+        IProgress<ProgressReport>? progress = null)
     {
         using var client = httpClientFactory.CreateClient();
         client.Timeout = TimeSpan.FromMinutes(5);
@@ -31,26 +30,28 @@ public class DownloadService : IDownloadService
         await using var file = new FileStream(downloadLocation, FileMode.Create, FileAccess.Write, FileShare.None);
         
         long contentLength = 0;
-        var retryCount = 0;
-        
+
         var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
         contentLength = response.Content.Headers.ContentLength ?? 0;
         
-        while (contentLength == 0 && retryCount++ < 5)
+        var delays = Backoff.DecorrelatedJitterBackoffV2(
+            TimeSpan.FromMilliseconds(50), retryCount: 3);
+        
+        foreach (var delay in delays)
         {
+            if (contentLength > 0) break;
             logger.LogDebug("Retrying get-headers for content-length");
-            Thread.Sleep(50);
+            await Task.Delay(delay);
             response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
             contentLength = response.Content.Headers.ContentLength ?? 0;
         }
-
         var isIndeterminate = contentLength == 0;
 
         await using var stream = await response.Content.ReadAsStreamAsync();
-        var totalBytesRead = 0;
+        var totalBytesRead = 0L;
+        var buffer = new byte[bufferSize];
         while (true)
         {
-            var buffer = new byte[bufferSize];
             var bytesRead = await stream.ReadAsync(buffer);
             if (bytesRead == 0) break;
             await file.WriteAsync(buffer.AsMemory(0, bytesRead));
@@ -59,22 +60,15 @@ public class DownloadService : IDownloadService
 
             if (isIndeterminate)
             {
-                OnDownloadProgressChanged(-1);
+                progress?.Report(new ProgressReport(-1, isIndeterminate: true));
             }
             else
             {
-                var progress = totalBytesRead / (double) contentLength;
-                OnDownloadProgressChanged(progress);
+                progress?.Report(new ProgressReport(current: Convert.ToUInt64(totalBytesRead),
+                    total: Convert.ToUInt64(contentLength)));
             }
         }
 
         await file.FlushAsync();
-        OnDownloadComplete(downloadLocation);
     }
-
-    private void OnDownloadProgressChanged(double progress) =>
-        DownloadProgressChanged?.Invoke(this, new ProgressReport(progress));
-
-    private void OnDownloadComplete(string path) =>
-        DownloadComplete?.Invoke(this, new ProgressReport(progress: 100f, message: path));
 }

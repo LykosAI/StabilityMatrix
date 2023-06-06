@@ -23,17 +23,17 @@ public partial class CheckpointManagerViewModel : ObservableObject
     public async Task OnLoaded()
     {
         // Get all folders within the shared folder root
-        if (string.IsNullOrWhiteSpace(sharedFolders.SharedFoldersPath))
+        if (string.IsNullOrWhiteSpace(SharedFolders.SharedFoldersPath))
         {
             return;
         }
         // Skip if the shared folder root doesn't exist
-        if (!Directory.Exists(sharedFolders.SharedFoldersPath))
+        if (!Directory.Exists(SharedFolders.SharedFoldersPath))
         {
-            Logger.Debug($"Skipped shared folder index - {sharedFolders.SharedFoldersPath} doesn't exist");
+            Logger.Debug($"Skipped shared folder index - {SharedFolders.SharedFoldersPath} doesn't exist");
             return;
         }
-        var folders = Directory.GetDirectories(sharedFolders.SharedFoldersPath);
+        var folders = Directory.GetDirectories(SharedFolders.SharedFoldersPath);
         
         CheckpointFolders.Clear();
 

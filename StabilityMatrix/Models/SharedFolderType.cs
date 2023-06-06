@@ -16,4 +16,7 @@ public enum SharedFolderType
     ApproxVAE,
     Karlo,
     DeepDanbooru,
+    TextualInversion,
+    Hypernetwork,
+    ControlNet
 }

@@ -94,17 +94,17 @@ public partial class MainWindowViewModel : ObservableObject
             if (Application.Current.MainWindow != null)
             {
                 WindowBackdrop.ApplyBackdrop(Application.Current.MainWindow,
-                    settingsManager.Settings.WindowBackdropType);
+                    settingsManager.Settings.WindowBackdropType ?? WindowBackdropType.Mica);
             }
 
             var theme = settingsManager.Settings.Theme;
             switch (theme)
             {
                 case "Dark":
-                    Theme.Apply(ThemeType.Dark, settingsManager.Settings.WindowBackdropType);
+                    Theme.Apply(ThemeType.Dark, settingsManager.Settings.WindowBackdropType ?? WindowBackdropType.Mica);
                     break;
                 case "Light":
-                    Theme.Apply(ThemeType.Light, settingsManager.Settings.WindowBackdropType);
+                    Theme.Apply(ThemeType.Light, settingsManager.Settings.WindowBackdropType ?? WindowBackdropType.Mica);
                     break;
             }
         });

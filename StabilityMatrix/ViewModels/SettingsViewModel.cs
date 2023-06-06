@@ -57,7 +57,7 @@ public partial class SettingsViewModel : ObservableObject
         this.a3WebApi = a3WebApi;
         this.pyRunner = pyRunner;
         SelectedTheme = settingsManager.Settings.Theme ?? "Dark";
-        WindowBackdropType = settingsManager.Settings.WindowBackdropType;
+        WindowBackdropType = settingsManager.Settings.WindowBackdropType ?? WindowBackdropType.Mica;
     }
 
     [ObservableProperty]

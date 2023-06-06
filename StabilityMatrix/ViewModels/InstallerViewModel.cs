@@ -93,7 +93,7 @@ public partial class InstallerViewModel : ObservableObject
     private bool showDuplicateWarning;
 
 
-    public WindowBackdropType WindowBackdropType => settingsManager.Settings.WindowBackdropType;
+    public WindowBackdropType WindowBackdropType => settingsManager.Settings.WindowBackdropType ?? Wpf.Ui.Controls.Window.WindowBackdropType.Mica;
     public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
 
     public string ReleaseLabelText => IsReleaseMode ? "Version" : "Branch";

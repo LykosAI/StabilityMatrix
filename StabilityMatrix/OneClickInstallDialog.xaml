@@ -29,21 +29,27 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="1*" />
             <RowDefinition Height="0.25*" />
         </Grid.RowDefinitions>
-        <TextBlock Text="{Binding HeaderText}"
+        <TextBlock Text="{Binding HeaderText, FallbackValue=Installing Stable Diffusion WebUI...}"
                    TextWrapping="Wrap"
                    VerticalAlignment="Top" HorizontalAlignment="Center"
                    FontSize="36" FontWeight="Light" Margin="8" />
         <TextBlock Grid.Row="1"
-                   Text="{Binding SubHeaderText}"
+                   Text="{Binding SubHeaderText, FallbackValue=Installing git...}"
                    TextWrapping="Wrap" TextAlignment="Center"
                    VerticalAlignment="Top" HorizontalAlignment="Center"
-                   FontSize="16" FontWeight="Light" Margin="8">
-        </TextBlock>
+                   FontSize="16" FontWeight="Light" Margin="8"/>
+        
+        <TextBlock Grid.Row="2"
+                   Text="{Binding SubSubHeaderText, FallbackValue=Installing git...}"
+                   TextWrapping="Wrap" TextAlignment="Center"
+                   VerticalAlignment="Top" HorizontalAlignment="Center"
+                   FontSize="10" Margin="8"/>
 
-        <StackPanel Grid.Row="2" VerticalAlignment="Center">
+        <StackPanel Grid.Row="3" VerticalAlignment="Center">
             <ProgressBar Maximum="100" 
                          controls:ProgressBarSmoother.SmoothValue="{Binding OneClickInstallProgress}"
                          Visibility="{Binding ProgressBarVisibility}"
@@ -60,7 +66,7 @@
                 Padding="16, 8, 16, 8" />
         </StackPanel>
 
-        <ui:Button Grid.Row="3"
+        <ui:Button Grid.Row="4"
                 Appearance="Transparent"
                 Visibility="{Binding ShowInstallButton, Converter={StaticResource BoolToVisConverter}}"
                 Command="{Binding ToggleAdvancedModeCommand}"

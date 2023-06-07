@@ -88,7 +88,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             if (sha256 != fileExpectedSha256.ToLowerInvariant())
             {
                 Text = "Import Failed!";
-                DelayedClearProgress(TimeSpan.FromSeconds(800));
+                DelayedClearProgress(TimeSpan.FromMilliseconds(800));
                 snackbarService.ShowSnackbarAsync(
                     "This may be caused by network or server issues from CivitAI, please try again in a few minutes.",
                     "Download failed hash validation", LogLevel.Warning).SafeFireAndForget();

@@ -33,4 +33,9 @@ public partial class CheckpointBrowserPage : Page
             parent.RaiseEvent(eventArg);
         }
     }
+
+    private void FrameworkElement_OnRequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
+    {
+        e.Handled = true;
+    }
 }

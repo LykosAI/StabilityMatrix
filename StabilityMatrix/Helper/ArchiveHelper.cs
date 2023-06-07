@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
@@ -22,12 +23,63 @@ public static class ArchiveHelper
     public static string SevenZipPath => Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeSevenZipPath));
     
     private static readonly Regex Regex7ZOutput = new(@"(?<=Size:\s*)\d+|(?<=Compressed:\s*)\d+");
-
+    private static readonly Regex Regex7ZProgressDigits = new(@"(?<=\s*)\d+(?=%)");
+    private static readonly Regex Regex7ZProgressFull = new(@"(\d+)%.*- (.*)");
+    
     public static async Task<ArchiveInfo> TestArchive(string archivePath)
     {
         var process = ProcessRunner.StartProcess(SevenZipPath, new[] {"t", archivePath});
         await process.WaitForExitAsync();
         var output = await process.StandardOutput.ReadToEndAsync();
+        var matches = Regex7ZOutput.Matches(output);
+        var size = ulong.Parse(matches[0].Value);
+        var compressed = ulong.Parse(matches[1].Value);
+        return new ArchiveInfo(size, compressed);
+    }
+    
+    public static async Task<ArchiveInfo> Extract7Z(string archivePath, string extractDirectory)
+    {
+        var process = ProcessRunner.StartProcess(SevenZipPath, new[]
+        {
+            "x", archivePath, $"-o{ProcessRunner.Quote(extractDirectory)}", "-y"
+        });
+        await process.WaitForExitAsync();
+        var output = await process.StandardOutput.ReadToEndAsync();
+        var matches = Regex7ZOutput.Matches(output);
+        var size = ulong.Parse(matches[0].Value);
+        var compressed = ulong.Parse(matches[1].Value);
+        return new ArchiveInfo(size, compressed);
+    }
+    
+    public static async Task<ArchiveInfo> Extract7Z(string archivePath, string extractDirectory, IProgress<ProgressReport> progress)
+    {
+        var outputStore = new StringBuilder();
+        var onOutput = new Action<string?>(s =>
+        {
+            // Parse progress
+            Logger.Trace($"7z: {s}");
+            outputStore.AppendLine(s);
+            var match = Regex7ZProgressFull.Match(s ?? "");
+            if (match.Success)
+            {
+                var percent = int.Parse(match.Groups[1].Value);
+                var currentFile = match.Groups[2].Value;
+                progress.Report(new ProgressReport(percent / (float) 100, "Extracting", currentFile, type: ProgressType.Extract));
+            }
+        });
+        progress.Report(new ProgressReport(-1, isIndeterminate: true, type: ProgressType.Extract));
+        
+        // Need -bsp1 for progress reports
+        var process = ProcessRunner.StartProcess(SevenZipPath, new[]
+        {
+            "x", archivePath, $"-o{ProcessRunner.Quote(extractDirectory)}", "-y", "-bsp1"
+        }, outputDataReceived: onOutput);
+        
+        await process.WaitForExitAsync();
+        
+        progress.Report(new ProgressReport(1, "Finished extracting", type: ProgressType.Extract));
+        
+        var output = outputStore.ToString();
         var matches = Regex7ZOutput.Matches(output);
         var size = ulong.Parse(matches[0].Value);
         var compressed = ulong.Parse(matches[1].Value);

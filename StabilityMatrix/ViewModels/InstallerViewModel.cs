@@ -397,7 +397,7 @@ public partial class InstallerViewModel : ObservableObject
             {
                 ProgressText = $"Downloading Git... {progress.Percentage:N0}%";
             }
-            else if (string.IsNullOrWhiteSpace(progress.Message))
+            else if (progress.Type == ProgressType.Extract)
             {
                 ProgressText = $"Installing Git... {progress.Percentage:N0}%";
             }

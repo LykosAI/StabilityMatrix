@@ -8,7 +8,7 @@ node("Windows") {
     }
 
     stage('Checkout') {
-        git branch: env.BRANCH_NAME, credentialsId: 'jenkins-shared-pipeline', url: "https://github.com/${author}/${repoName}.git"
+        git branch: env.BRANCH_NAME, credentialsId: 'Ionite', url: "https://github.com/${author}/${repoName}.git"
     }
 
     stage('Build') {

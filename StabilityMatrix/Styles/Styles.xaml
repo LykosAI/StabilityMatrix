@@ -99,4 +99,16 @@
          <Setter Property="Background" Value="LightGray"/> 
      </Style> 
 
+      <DrawingImage x:Key="PatreonIconColored">
+              <DrawingImage.Drawing>
+                      <DrawingGroup ClipGeometry="M0,-4.5 V251.5 H256 V0 H-4.5 Z">
+                              <DrawingGroup.Transform>
+                                      <TranslateTransform X="0" Y="4.5" />
+                              </DrawingGroup.Transform>
+                              <DrawingGroup Opacity="1">
+                                      <GeometryDrawing Brush="#FFFF424D" Geometry="F1 M256,256z M0,0z M45.1355837,0L45.1355837,246.35001 0,246.35001 0,0 45.1355837,0z M163.657111,0C214.65668,0 256,41.3433196 256,92.3428889 256,143.342458 214.65668,184.685778 163.657111,184.685778 112.657542,184.685778 71.3142222,143.342458 71.3142222,92.3428889 71.3142222,41.3433196 112.657542,0 163.657111,0z" />
+                              </DrawingGroup>
+                      </DrawingGroup>
+              </DrawingImage.Drawing>
+      </DrawingImage>
 </ResourceDictionary>

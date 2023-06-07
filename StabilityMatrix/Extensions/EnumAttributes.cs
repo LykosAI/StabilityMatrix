@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.Windows.Ink;
 
 namespace StabilityMatrix.Extensions;
 

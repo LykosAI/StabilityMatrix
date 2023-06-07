@@ -37,9 +37,6 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         this.settingsManager = settingsManager;
     }
 
-    public event EventHandler<ProgressReport>? InstallProgressChanged;
-    public event EventHandler<ProgressReport>? InstallComplete;
-
     public async Task InstallGitIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         if (File.Exists(GitExePath))
@@ -76,14 +73,10 @@ public class PrerequisiteHelper : IPrerequisiteHelper
 
         logger.LogInformation("Extracted Git");
 
-        OnInstallProgressChanged(this, new ProgressReport(-1, isIndeterminate: true));
         File.Delete(PortableGitDownloadPath);
         // Also add git to the path
         settingsManager.AddPathExtension(GitBinPath);
         settingsManager.InsertPathExtensions();
-        OnInstallComplete(this, new ProgressReport(progress: 1f));
     }
 
-    private void OnInstallProgressChanged(object? sender, ProgressReport progress) => InstallProgressChanged?.Invoke(sender, progress);
-    private void OnInstallComplete(object? sender, ProgressReport progress) => InstallComplete?.Invoke(sender, progress);
 }

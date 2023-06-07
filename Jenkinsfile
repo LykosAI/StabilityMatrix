@@ -15,7 +15,7 @@ node("Windows") {
         bat "dotnet test StabilityMatrix.Tests"
     }
 
-    stage('Build') {
+    stage('Publish') {
         bat "dotnet publish -c Release -o out -r win-x64 --self-contained true"
     }
 
@@ -23,7 +23,9 @@ node("Windows") {
         version = VersionNumber projectStartDate: '', versionNumberString: '${BUILD_DATE_FORMATTED, "yy"}.${BUILD_WEEK}.${BUILDS_THIS_WEEK}', versionPrefix: '', worstResultForIncrement: 'SUCCESS'
     }
 
-    stage ('Archive Artifacts') {
-        archiveArtifacts artifacts: 'out/**/*.*', followSymlinks: false
+    if (env.BRANCH_NAME == "main") {
+        stage ('Archive Artifacts') {
+            archiveArtifacts artifacts: 'out/**/*.*', followSymlinks: false
+        }
     }
 }

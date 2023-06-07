@@ -1,5 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using Refit;
+﻿using Refit;
 
 namespace StabilityMatrix.Models.Api;
 

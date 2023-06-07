@@ -55,16 +55,13 @@
     <None Update="appsettings.Development.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Remove="Assets\Icon.png" />
     <Resource Include="Assets\Icon.png" />
-    <None Remove="Assets\licenses.json" />
     <Content Include="Assets\licenses.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\7za - LICENSE.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <None Remove="Assets\noimage.png" />
     <Resource Include="Assets\noimage.png" />
   </ItemGroup>
 

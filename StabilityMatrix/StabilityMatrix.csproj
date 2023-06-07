@@ -61,9 +61,6 @@
     <Content Include="Assets\licenses.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Remove="Assets\patreon_icon_fiery_coral.png" />
-    <None Remove="Assets\discord_icon_clyde_white.png" />
-    <None Remove="Assets\7za - LICENSE.txt" />
     <Content Include="Assets\7za - LICENSE.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

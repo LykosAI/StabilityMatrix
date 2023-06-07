@@ -9,6 +9,8 @@ using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
+using StabilityMatrix.Extensions;
+using StabilityMatrix.Models.Api;
 
 namespace StabilityMatrix.Models;
 
@@ -34,6 +36,9 @@ public partial class CheckpointFile : ObservableObject
 
     [ObservableProperty] private ConnectedModelInfo? connectedModel;
     public bool IsConnectedModel => ConnectedModel != null;
+    
+    [ObservableProperty] private string fpType = string.Empty;
+    [ObservableProperty] private string baseModel = string.Empty;
 
     [ObservableProperty] private bool isLoading;
     
@@ -41,12 +46,16 @@ public partial class CheckpointFile : ObservableObject
 
     private static readonly string[] SupportedCheckpointExtensions = { ".safetensors", ".pt", ".ckpt", ".pth", "bin" };
     private static readonly string[] SupportedImageExtensions = { ".png", ".jpg", ".jpeg" };
+    private static readonly string[] SupportedMetadataExtensions = { ".json" };
 
     partial void OnConnectedModelChanged(ConnectedModelInfo? value)
     {
         if (value == null) return;
         // Update title, first check user defined, then connected model name
         Title = value.UserTitle ?? value.ModelName;
+        // Update fp type and base model
+        FpType = value.FileMetadata.Fp?.GetStringValue().ToUpperInvariant() ?? "";
+        BaseModel = value.BaseModel ?? "";
     }
 
     [RelayCommand]
@@ -92,7 +101,10 @@ public partial class CheckpointFile : ObservableObject
     public static IEnumerable<CheckpointFile> FromDirectoryIndex(string directory, SearchOption searchOption = SearchOption.TopDirectoryOnly)
     {
         // Get all files with supported extensions
-        var allExtensions = SupportedCheckpointExtensions.Concat(SupportedImageExtensions).ToImmutableHashSet();
+        var allExtensions = SupportedCheckpointExtensions
+            .Concat(SupportedImageExtensions)
+            .Concat(SupportedMetadataExtensions)
+            .ToImmutableHashSet();
 
         var files = allExtensions.AsParallel()
             .SelectMany(pattern => Directory.EnumerateFiles(directory, $"*{pattern}", searchOption)).ToDictionary<string, string>(Path.GetFileName);
@@ -122,7 +134,7 @@ public partial class CheckpointFile : ObservableObject
             }
 
             // Check for preview image
-            var previewImage = SupportedImageExtensions.Select(ext => $"{checkpointFile.FileName}.preview.{ext}").FirstOrDefault(files.ContainsKey);
+            var previewImage = SupportedImageExtensions.Select(ext => $"{fileNameWithoutExtension}.preview{ext}").FirstOrDefault(files.ContainsKey);
             if (previewImage != null)
             {
                 checkpointFile.PreviewImagePath = Path.Combine(directory, previewImage);

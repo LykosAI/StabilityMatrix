@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
+using AsyncAwaitBestPractices;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Extensions;
@@ -57,7 +59,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     {
         Text = "Downloading...";
 
-        var latestModelFile = model.ModelVersions[0].Files[0];
+        var latestVersion = model.ModelVersions[0];
+        var latestModelFile = latestVersion.Files[0];
         var fileExpectedSha256 = latestModelFile.Hashes.SHA256;
         
         var downloadFolder = Path.Combine(SharedFolders.SharedFoldersPath,
@@ -85,19 +88,36 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             if (sha256 != fileExpectedSha256.ToLowerInvariant())
             {
                 Text = "Import Failed!";
-                DelayedClearProgress(TimeSpan.FromSeconds(800));
-                await snackbarService.ShowSnackbarAsync(
+                DelayedClearProgress(TimeSpan.FromMilliseconds(800));
+                snackbarService.ShowSnackbarAsync(
                     "This may be caused by network or server issues from CivitAI, please try again in a few minutes.",
-                    "Download failed hash validation", LogLevel.Warning);
+                    "Download failed hash validation", LogLevel.Warning).SafeFireAndForget();
                 return;
             }
-            else
-            {
-                snackbarService.ShowSnackbarAsync($"{model.Type} {model.Name} imported successfully!",
-                    "Import complete", LogLevel.Trace);
-            }
+            snackbarService.ShowSnackbarAsync($"{model.Type} {model.Name} imported successfully!",
+                "Import complete", LogLevel.Trace).SafeFireAndForget();
         }
         
+        IsIndeterminate = true;
+        
+        // Save connected model info
+        var modelFileName = Path.GetFileNameWithoutExtension(latestModelFile.Name);
+        var modelInfo = new ConnectedModelInfo(CivitModel, latestVersion, latestModelFile, DateTime.UtcNow);
+        await modelInfo.SaveJsonToDirectory(downloadFolder, modelFileName);
+        
+        // If available, save a model image
+        if (latestVersion.Images.Any())
+        {
+            var image = latestVersion.Images[0];
+            var imageExtension = Path.GetExtension(image.Url).TrimStart('.');
+            if (imageExtension is "jpg" or "jpeg" or "png")
+            {
+                var imageDownloadPath = Path.GetFullPath(Path.Combine(downloadFolder, $"{modelFileName}.preview.{imageExtension}"));
+                await downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
+            }
+        }
+
+        IsIndeterminate = false;
         Text = "Import complete!";
         Value = 100;
         DelayedClearProgress(TimeSpan.FromMilliseconds(800));

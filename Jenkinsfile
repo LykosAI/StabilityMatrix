@@ -12,7 +12,7 @@ node("Windows") {
     }
 
     stage('Build') {
-        bat "dotnet publish -c Release -o out --self-contained true"
+        bat "dotnet publish -c Release -o out -r win-x64 --self-contained true"
     }
 
     stage('Set Version') {

@@ -10,6 +10,10 @@ node("Windows") {
     stage('Checkout') {
         git branch: env.BRANCH_NAME, credentialsId: 'Ionite', url: "https://github.com/${author}/${repoName}.git"
     }
+    
+    stage('Test') {
+        bat "dotnet test StabilityMatrix.Tests"
+    }
 
     stage('Build') {
         bat "dotnet publish -c Release -o out -r win-x64 --self-contained true"

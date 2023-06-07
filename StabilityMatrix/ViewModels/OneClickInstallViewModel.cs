@@ -81,7 +81,7 @@ public partial class OneClickInstallViewModel : ObservableObject
             {
                 SubHeaderText = $"Downloading Git... {progress.Percentage:N0}%";
             }
-            else if (progress.Message?.Contains("Extracting") ?? false)
+            else if (progress.Type == ProgressType.Extract)
             {
                 SubHeaderText = $"Installing Git... {progress.Percentage:N0}%";
             }

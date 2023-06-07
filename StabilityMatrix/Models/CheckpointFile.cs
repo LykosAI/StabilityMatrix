@@ -41,6 +41,7 @@ public partial class CheckpointFile : ObservableObject
 
     private static readonly string[] SupportedCheckpointExtensions = { ".safetensors", ".pt", ".ckpt", ".pth", "bin" };
     private static readonly string[] SupportedImageExtensions = { ".png", ".jpg", ".jpeg" };
+    private static readonly string[] SupportedMetadataExtensions = { ".json" };
 
     partial void OnConnectedModelChanged(ConnectedModelInfo? value)
     {
@@ -92,7 +93,10 @@ public partial class CheckpointFile : ObservableObject
     public static IEnumerable<CheckpointFile> FromDirectoryIndex(string directory, SearchOption searchOption = SearchOption.TopDirectoryOnly)
     {
         // Get all files with supported extensions
-        var allExtensions = SupportedCheckpointExtensions.Concat(SupportedImageExtensions).ToImmutableHashSet();
+        var allExtensions = SupportedCheckpointExtensions
+            .Concat(SupportedImageExtensions)
+            .Concat(SupportedMetadataExtensions)
+            .ToImmutableHashSet();
 
         var files = allExtensions.AsParallel()
             .SelectMany(pattern => Directory.EnumerateFiles(directory, $"*{pattern}", searchOption)).ToDictionary<string, string>(Path.GetFileName);

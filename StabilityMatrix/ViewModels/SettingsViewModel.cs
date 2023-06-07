@@ -14,6 +14,7 @@ using System.Windows.Documents;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MdXaml;
+using Microsoft.Extensions.Logging;
 using Ookii.Dialogs.Wpf;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
@@ -61,6 +62,9 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [ObservableProperty]
+    private bool isDebugPanelEnabled;
+
+    [ObservableProperty]
     private string selectedTheme;
 
     [ObservableProperty] 
@@ -97,6 +101,25 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private string? gitInfo;
 
     [ObservableProperty] private string? testProperty;
+
+    [ObservableProperty] private bool isVersionFlyoutOpen;
+
+    private const int AppVersionClickCountThreshold = 7;
+    
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(VersionFlyoutText))]
+    private int appVersionClickCount;
+    
+    public string VersionFlyoutText => $"You are {AppVersionClickCountThreshold - AppVersionClickCount} clicks away from enabling Debug options.";
+
+    partial void OnIsVersionFlyoutOpenChanged(bool value)
+    {
+        // If set to false (from timeout) clear click count
+        if (!value)
+        {
+            AppVersionClickCount = 0;
+        }
+    }
 
     public AsyncRelayCommand PythonVersionCommand => new(async () =>
     {
@@ -181,6 +204,42 @@ public partial class SettingsViewModel : ObservableObject
         dialog.Content = flowViewer;
         dialog.IsPrimaryButtonEnabled = false;
         await dialog.ShowAsync();
+    }
+
+    /// <summary>
+    /// Click app version 7 times to enable debug options
+    /// </summary>
+    [RelayCommand]
+    private async Task AppVersionClickAsync()
+    {
+        // Ignore if already enabled
+        if (IsDebugPanelEnabled) return;
+        switch (AppVersionClickCount)
+        {
+            // Open flyout on 3rd click
+            case 2:
+                // Show the flyout
+                IsVersionFlyoutOpen = true;
+                AppVersionClickCount++;
+                break;
+            // Reached threshold
+            case AppVersionClickCountThreshold - 1:
+            {
+                // Close flyout
+                IsVersionFlyoutOpen = false;
+                // Enable debug options
+                IsDebugPanelEnabled = true;
+                const string msg = "Warning: Improper use may corrupt application state or cause loss of data.";
+                var dialog = snackbarService.ShowSnackbarAsync(msg, "Debug options enabled",
+                    LogLevel.Information);
+                await dialog;
+                break;
+            }
+            default:
+                // Otherwise, increment click count
+                AppVersionClickCount++;
+                break;
+        }
     }
 
     [RelayCommand]

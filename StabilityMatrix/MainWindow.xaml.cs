@@ -1,7 +1,10 @@
 using System;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Media;
+using Octokit;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.Navigation;
@@ -20,7 +23,7 @@ namespace StabilityMatrix
         private readonly ISettingsManager settingsManager;
 
         public MainWindow(IPageService pageService, IContentDialogService contentDialogService,
-            MainWindowViewModel mainWindowViewModel, ISettingsManager settingsManager, ISnackbarService snackbarService)
+            MainWindowViewModel mainWindowViewModel, ISettingsManager settingsManager, ISnackbarService snackbarService, INotificationBarService notificationBarService)
         {
             InitializeComponent();
 
@@ -33,6 +36,7 @@ namespace StabilityMatrix
             RootNavigation.SetPageService(pageService);
 
             snackbarService.SetSnackbarControl(RootSnackbar);
+            notificationBarService.SetSnackbarControl(NotificationSnackbar);
             contentDialogService.SetContentPresenter(RootContentDialog);
             
             EventManager.Instance.PageChangeRequested += InstanceOnPageChangeRequested;

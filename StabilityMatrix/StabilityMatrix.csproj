@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="7-Zip.CommandLine" Version="18.1.0" />
+    <PackageReference Include="AsyncAwaitBestPractices" Version="6.0.6" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
     <PackageReference Include="FuzzySharp" Version="2.0.2" />
     <PackageReference Include="MdXaml" Version="1.19.2" />
@@ -32,6 +33,7 @@
     <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     <PackageReference Include="Refit" Version="6.3.2" />
     <PackageReference Include="Refit.HttpClientFactory" Version="6.3.2" />
+    <PackageReference Include="Sentry" Version="3.33.0" />
     <PackageReference Include="SharpCompress" Version="0.33.0" />
     <PackageReference Include="WPF-UI" Version="3.0.0-preview.2" />
     <PackageReference Include="pythonnet" Version="3.0.1" />
@@ -46,9 +48,7 @@
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
     <None Remove="Assets\Icon.ico" />
-    <Content Include="Assets\Icon.ico">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Resource Include="Assets\Icon.ico" />
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -56,12 +56,13 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Remove="Assets\Icon.png" />
-    <Content Include="Assets\Icon.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Resource Include="Assets\Icon.png" />
     <None Remove="Assets\licenses.json" />
     <Content Include="Assets\licenses.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\7za - LICENSE.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 

@@ -13,6 +13,12 @@ namespace StabilityMatrix.Helper;
 public static class ProcessRunner
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    
+    public static void OpenUrl(string url)
+    {
+        Logger.Debug($"Opening URL '{url}'");
+        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+    }
 
     public static async Task<string> GetProcessOutputAsync(string fileName, string arguments)
     {

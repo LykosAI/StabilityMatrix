@@ -5,6 +5,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
+using AsyncAwaitBestPractices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,7 @@ using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
 using Polly.Timeout;
 using Refit;
+using Sentry;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
@@ -37,7 +39,11 @@ namespace StabilityMatrix
     public partial class App : Application
     {
         private ServiceProvider? serviceProvider;
-        
+        public static bool IsSentryEnabled => !Debugger.IsAttached || Environment
+            .GetEnvironmentVariable("DEBUG_SENTRY")?.ToLowerInvariant() == "true";
+        public static bool IsExceptionWindowEnabled => !Debugger.IsAttached || Environment
+            .GetEnvironmentVariable("DEBUG_EXCEPTION_WINDOW")?.ToLowerInvariant() == "true";
+
         public static IConfiguration Config { get; set; }
 
         public App()
@@ -47,16 +53,36 @@ namespace StabilityMatrix
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true)
                 .Build();
+            // This needs to be done before OnStartup
+            // Or Sentry will not be initialized correctly
+            ConfigureErrorHandling();
+        }
+
+        private void ConfigureErrorHandling()
+        {
+            if (IsSentryEnabled)
+            {
+                SentrySdk.Init(o =>
+                {
+                    o.Dsn = "https://eac7a5ea065d44cf9a8565e0f1817da2@o4505314753380352.ingest.sentry.io/4505314756067328";
+                    o.StackTraceMode = StackTraceMode.Enhanced;
+                    o.TracesSampleRate = 1.0;
+                    o.IsGlobalModeEnabled = true;
+                    // Enables Sentry's "Release Health" feature.
+                    o.AutoSessionTracking = true;
+                    // 1.0 to capture 100% of transactions for performance monitoring.
+                    o.TracesSampleRate = 1.0;
+                });
+            }
+
+            if (IsSentryEnabled || IsExceptionWindowEnabled)
+            {
+                DispatcherUnhandledException += App_DispatcherUnhandledException;
+            }
         }
 
         private void App_OnStartup(object sender, StartupEventArgs e)
         {
-            // Configure window exception handler when not in debug mode
-            if (!Debugger.IsAttached)
-            {
-                DispatcherUnhandledException += App_DispatcherUnhandledException;
-            }
-
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddSingleton<IPageService, PageService>();
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
@@ -100,6 +126,7 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<Wpf.Ui.Contracts.ISnackbarService, Wpf.Ui.Services.SnackbarService>();
             serviceCollection.AddSingleton<IPrerequisiteHelper, PrerequisiteHelper>();
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();
+            serviceCollection.AddSingleton<INotificationBarService, NotificationBarService>();
             serviceCollection.AddSingleton<IDownloadService, DownloadService>();
             serviceCollection.AddTransient<IGitHubClient, GitHubClient>(_ =>
             {
@@ -163,6 +190,14 @@ namespace StabilityMatrix
                 log.SetMinimumLevel(LogLevel.Trace);
                 log.AddNLog(logConfig);
             });
+            
+            // Default error handling for 'SafeFireAndForget'
+            SafeFireAndForgetExtensions.Initialize();
+            SafeFireAndForgetExtensions.SetDefaultExceptionHandling(ex =>
+            {
+                var logger = serviceProvider?.GetRequiredService<ILogger<App>>();
+                logger?.LogError(ex, "Background Task failed: {ExceptionMessage}", ex.Message);
+            });
 
             serviceProvider = serviceCollection.BuildServiceProvider();
             var window = serviceProvider.GetRequiredService<MainWindow>();
@@ -177,18 +212,27 @@ namespace StabilityMatrix
         [DoesNotReturn]
         private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
+            if (SentrySdk.IsEnabled)
+            {
+                SentrySdk.CaptureException(e.Exception);
+            }
+            
             var logger = serviceProvider?.GetRequiredService<ILogger<App>>();
             logger?.LogCritical(e.Exception, "Unhandled Exception: {ExceptionMessage}", e.Exception.Message);
-            var vm = new ExceptionWindowViewModel
+            
+            if (IsExceptionWindowEnabled)
             {
-                Exception = e.Exception
-            };
-            var exceptionWindow = new ExceptionWindow
-            {
-                DataContext = vm,
-                Owner = MainWindow
-            };
-            exceptionWindow.ShowDialog();
+                var vm = new ExceptionWindowViewModel
+                {
+                    Exception = e.Exception
+                };
+                var exceptionWindow = new ExceptionWindow
+                {
+                    DataContext = vm,
+                    Owner = MainWindow
+                };
+                exceptionWindow.ShowDialog();
+            }
             e.Handled = true;
             Environment.Exit(1);
         }

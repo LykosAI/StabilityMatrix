@@ -29,6 +29,12 @@ public class MockCheckpointManagerViewModel : CheckpointManagerViewModel
                     {
                         Title = "Example Realistic",
                         FilePath = "exr-v21.safetensors",
+                        ConnectedModel = new()
+                        {
+                            ModelName = "Example Realistic",
+                            VersionName = "Hybrid v41",
+                            ModelDescription = "Example Description",
+                        }
                     },
                     new()
                     {

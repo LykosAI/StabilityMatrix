@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text.Json;
-using StabilityMatrix.Extensions;
 using StabilityMatrix.Models.Api;
 
 namespace StabilityMatrix.Models;
@@ -24,7 +23,7 @@ public class ConnectedModelInfo
     // User settings
     public string? UserTitle { get; set; }
     public string? ThumbnailImageUrl { get; set; }
-    
+
     public ConnectedModelInfo(CivitModel civitModel, CivitModelVersion civitModelVersion, CivitFile civitFile, DateTime importedAt)
     {
         ModelId = civitModel.Id;

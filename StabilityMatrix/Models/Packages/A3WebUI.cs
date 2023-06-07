@@ -134,7 +134,7 @@ public class A3WebUI : BaseGitPackage
             await venvRunner.PipInstall("xformers", InstallLocation, HandleConsoleOutput);
         }
 
-        await venvRunner.PipInstall("-r requirements.txt", InstallLocation, HandleConsoleOutput);
+        await venvRunner.PipInstall("-r requirements_versions.txt", InstallLocation, HandleConsoleOutput);
         
         Logger.Debug("Finished installing requirements");
         progress?.Report(new ProgressReport(1f, "Install complete"));

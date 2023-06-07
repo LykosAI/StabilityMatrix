@@ -61,7 +61,7 @@
                 Command="{Binding InstallCommand}"
                 FontSize="32"
                 HorizontalAlignment="Center"
-                Appearance="Primary"
+                Appearance="Success"
                 Margin="16"
                 Padding="16, 8, 16, 8" />
         </StackPanel>

@@ -176,7 +176,11 @@
                 ItemsSource="{Binding ModelCards}"
                 PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel"/>
         </ui:DynamicScrollViewer>
-
+        
+        <TextBlock Grid.Row="2" Text="Data provided by CivitAI"
+                   VerticalAlignment="Bottom"
+                   Margin="16, 8"/>
+        
         <StackPanel
             Grid.Row="2"
             HorizontalAlignment="Center"

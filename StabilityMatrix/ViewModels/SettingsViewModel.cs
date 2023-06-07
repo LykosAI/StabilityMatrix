@@ -229,7 +229,7 @@ public partial class SettingsViewModel : ObservableObject
                 IsVersionFlyoutOpen = false;
                 // Enable debug options
                 IsDebugPanelEnabled = true;
-                const string msg = "Warning: Improper use may corrupt application state or cause lost of data.";
+                const string msg = "Warning: Improper use may corrupt application state or cause loss of data.";
                 var dialog = snackbarService.ShowSnackbarAsync(msg, "Debug options enabled",
                     LogLevel.Information);
                 await dialog;

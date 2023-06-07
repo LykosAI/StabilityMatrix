@@ -4,9 +4,7 @@ node("Windows") {
     def version = ""
 
     stage('Clean') {
-        bat """set folder="${env.WORKSPACE}"
-        cd /d %folder%
-        for /F "delims=" %%i in (\'dir /b\') do (rmdir "%%i" /s/q || del "%%i" /s/q)"""
+        deleteDir()
     }
 
     stage('Checkout') {

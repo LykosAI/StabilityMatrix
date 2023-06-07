@@ -21,6 +21,7 @@
     xmlns:xaml="clr-namespace:MdXaml;assembly=MdXaml">
 
     <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
         <xaml:Markdown
             AssetPathRoot="{x:Static system:Environment.CurrentDirectory}"
             DocumentStyle="{StaticResource DocumentStyle}"
@@ -33,6 +34,13 @@
             SeparatorStyle="{StaticResource SeparatorStyle}"
             x:Key="Markdown" />
         <xaml:TextToFlowDocumentConverter Markdown="{StaticResource Markdown}" x:Key="TextToFlowDocumentConverter" />
+
+        <Style
+            BasedOn="{StaticResource {x:Type ui:Flyout}}"
+            TargetType="{x:Type ui:Flyout}"
+            x:Key="VersionFlyoutStyle">
+            <Setter Property="Popup.StaysOpen" Value="True" />
+        </Style>
     </Page.Resources>
 
     <!--  Scroll view  -->
@@ -65,19 +73,6 @@
                             FontSize="16"
                             FontWeight="Bold"
                             Margin="0,8"
-                            Text="Debug Info" />
-                        <TextBlock Margin="8" Text="{Binding GpuInfo, FallbackValue=3dfx Voodoo 5 6000 - 128MB VRAM}" />
-                        <TextBlock Margin="8" Text="{Binding GitInfo}" />
-                        <TextBlock Margin="8" Text="{Binding TestProperty, FallbackValue=TestProperty}" />
-                    </StackPanel>
-                </ui:Card>
-
-                <ui:Card Margin="8">
-                    <StackPanel HorizontalAlignment="Left" Orientation="Vertical">
-                        <TextBlock
-                            FontSize="16"
-                            FontWeight="Bold"
-                            Margin="0,8"
                             Text="Embedded Python" />
                         <!--  Add a button to show messagebox for python version  -->
                         <Button
@@ -87,13 +82,16 @@
                     </StackPanel>
                 </ui:Card>
 
-                <ui:Card Margin="8">
+                <ui:Card Margin="8" Visibility="{Binding IsDebugPanelEnabled, Converter={StaticResource BoolToVisibilityConverter}}">
                     <StackPanel HorizontalAlignment="Left" Orientation="Vertical">
                         <TextBlock
                             FontSize="16"
                             FontWeight="Bold"
                             Margin="0,8"
                             Text="Debug" />
+                        <TextBlock Margin="8" Text="{Binding GpuInfo, FallbackValue=3dfx Voodoo 5 6000 - 128MB VRAM}" />
+                        <TextBlock Margin="8" Text="{Binding GitInfo}" />
+                        <TextBlock Margin="8" Text="{Binding TestProperty, FallbackValue=TestProperty}" />
                         <StackPanel Orientation="Horizontal">
                             <Button
                                 Command="{Binding AddInstallationCommand}"
@@ -147,7 +145,23 @@
                             FontWeight="Medium"
                             Margin="8"
                             Text="Stability Matrix" />
-                        <TextBlock Margin="8,0,8,8" Text="{Binding AppVersion, FallbackValue=Version 1.0.0}" />
+                        <Grid>
+                            <ui:Flyout
+                                Content="{Binding VersionFlyoutText}"
+                                IsOpen="{Binding IsVersionFlyoutOpen, Mode=TwoWay}"
+                                Name="VersionFlyout"
+                                Placement="Top"
+                                Style="{StaticResource VersionFlyoutStyle}"
+                                Visibility="Visible" />
+                            <Button
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Command="{Binding AppVersionClickCommand}"
+                                Content="{Binding AppVersion, FallbackValue=Version 1.0.0}"
+                                Margin="8,0,8,8"
+                                Padding="2,0,2,0" />
+                        </Grid>
+
 
                         <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
                             <ui:Button

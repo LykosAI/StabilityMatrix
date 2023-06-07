@@ -4,7 +4,7 @@
     Loaded="CheckpointManagerPage_OnLoaded"
     d:DataContext="{d:DesignInstance Type=designData:MockCheckpointManagerViewModel,
                                      IsDesignTimeCreatable=True}"
-    d:DesignHeight="500"
+    d:DesignHeight="1000"
     d:DesignWidth="650"
     mc:Ignorable="d"
     x:Class="StabilityMatrix.CheckpointManagerPage"
@@ -20,6 +20,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        <converters:StringNullOrEmptyToVisibilityConverter x:Key="StringNullOrEmptyToVisibilityConverter" />
+        <converters:BooleanToHiddenVisibleConverter x:Key="BoolToHiddenVisibleConverter" />
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
         <converters:ValueConverterGroup x:Key="InvertAndVisibleOrHidden">
             <converters:BoolNegationConverter />
             <converters:BooleanToHiddenVisibleConverter />
@@ -34,14 +38,16 @@
             x:Key="TextDropShadowEffect" />
 
         <DataTemplate DataType="{x:Type models:CheckpointFile}" x:Key="CheckpointFileDataTemplate">
-            <Border>
+            <Border Background="Transparent" BorderThickness="0">
                 <i:Interaction.Behaviors>
                     <i:MouseDragElementBehavior />
                 </i:Interaction.Behaviors>
                 <ui:Card
-                    Height="96"
-                    Margin="8"
-                    Width="240">
+                    Margin="8,8,8,8"
+                    MaxHeight="512"
+                    MaxWidth="300"
+                    MinWidth="240"
+                    Padding="12,16">
                     <ui:Card.ContextMenu>
                         <ContextMenu>
                             <MenuItem Header="Rename" />
@@ -50,76 +56,116 @@
                     </ui:Card.ContextMenu>
                     <Grid>
                         <!--  Main contents, hidden when IsLoading is true  -->
-                        <Grid
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch"
-                            Visibility="{Binding IsLoading, Converter={StaticResource InvertAndVisibleOrHidden}}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="0.2*" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Orientation="Vertical">
-                                <ui:Image
-                                    CornerRadius="4"
-                                    Margin="4,4,4,8"
-                                    MinHeight="256"
-                                    MinWidth="200"
-                                    Source="{Binding PreviewImage}"
-                                    Stretch="UniformToFill"
-                                    Visibility="Collapsed"
-                                    Width="128" />
-                                <TextBlock
-                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                    Margin="0,0,0,0"
-                                    Text="{Binding Title}"
-                                    VerticalAlignment="Center" />
-                                <TextBlock
-                                    FontSize="11"
-                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                    Margin="0,2,0,0"
-                                    Text="{Binding FileName}"
-                                    VerticalAlignment="Center" />
-                            </StackPanel>
-                            <Grid Grid.Column="1">
-                                <Button
-                                    Background="Transparent"
-                                    BorderBrush="Transparent"
-                                    FontSize="20"
-                                    HorizontalAlignment="Right"
-                                    IsEnabled="True"
-                                    MaxHeight="48"
-                                    MaxWidth="64"
-                                    Padding="0"
-                                    ToolTip="Connected Model"
-                                    VerticalAlignment="Top"
-                                    Visibility="{Binding IsConnectedModel, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                    <ui:SymbolIcon
+                        <VirtualizingStackPanel Orientation="Vertical">
+                            <ui:Image
+                                CornerRadius="4"
+                                Margin="0,0,0,8"
+                                Source="{Binding PreviewImagePath}"
+                                Stretch="Uniform"
+                                Visibility="Collapsed" />
+                            <Grid
+                                HorizontalAlignment="Stretch"
+                                Name="ModelInfoGrid"
+                                VerticalAlignment="Stretch"
+                                Visibility="{Binding IsLoading, Converter={StaticResource InvertAndVisibleOrHidden}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="0.6*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock
+                                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                        Text="{Binding Title}"
+                                        TextWrapping="WrapWithOverflow" />
+                                    <TextBlock
                                         FontSize="12"
-                                        Foreground="LightGreen"
-                                        Symbol="CloudCheckmark24"
-                                        ToolTip="Connected Model" />
-                                </Button>
-                                <ui:Button
-                                    Background="Transparent"
-                                    BorderBrush="Transparent"
-                                    FontSize="20"
-                                    HorizontalAlignment="Right"
-                                    IsEnabled="False"
-                                    MaxHeight="48"
-                                    MaxWidth="64"
-                                    Padding="0"
-                                    VerticalAlignment="Top"
-                                    Visibility="Collapsed">
-                                    <ui:Button.Icon>
+                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                        Text="{Binding ConnectedModel.VersionName, FallbackValue=''}"
+                                        TextWrapping="WrapWithOverflow"
+                                        Visibility="{Binding IsConnectedModel, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                        Margin="0,4,0,4"
+                                        Text="{Binding FileName}"
+                                        TextWrapping="WrapWithOverflow"
+                                        VerticalAlignment="Bottom" />
+                                </StackPanel>
+                                <Grid Grid.Column="1" Visibility="{Binding IsConnectedModel, Mode=OneWay, Converter={StaticResource BoolToHiddenVisibleConverter}}">
+                                    <Button
+                                        Background="Transparent"
+                                        BorderBrush="Transparent"
+                                        FontSize="20"
+                                        HorizontalAlignment="Right"
+                                        IsEnabled="True"
+                                        MaxHeight="48"
+                                        MaxWidth="64"
+                                        Padding="0"
+                                        ToolTip="Connected Model"
+                                        VerticalAlignment="Top"
+                                        Visibility="{Binding IsConnectedModel, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                                         <ui:SymbolIcon
                                             FontSize="12"
-                                            Foreground="OrangeRed"
-                                            Symbol="CloudArrowUp24"
-                                            ToolTip="Update Available" />
-                                    </ui:Button.Icon>
-                                </ui:Button>
+                                            Foreground="LightGreen"
+                                            Symbol="CloudCheckmark24"
+                                            ToolTip="Connected Model" />
+                                    </Button>
+                                    <ui:Button
+                                        Background="Transparent"
+                                        BorderBrush="Transparent"
+                                        FontSize="20"
+                                        HorizontalAlignment="Right"
+                                        IsEnabled="False"
+                                        MaxHeight="48"
+                                        MaxWidth="64"
+                                        Padding="0"
+                                        VerticalAlignment="Top"
+                                        Visibility="Collapsed">
+                                        <ui:Button.Icon>
+                                            <ui:SymbolIcon
+                                                FontSize="12"
+                                                Foreground="OrangeRed"
+                                                Symbol="CloudArrowUp24"
+                                                ToolTip="Update Available" />
+                                        </ui:Button.Icon>
+                                    </ui:Button>
+                                    <VirtualizingStackPanel
+                                        HorizontalAlignment="Right"
+                                        Orientation="Horizontal"
+                                        VerticalAlignment="Bottom"
+                                        Visibility="{Binding IsConnectedModel, Mode=OneWay, Converter={StaticResource BoolToHiddenVisibleConverter}}">
+                                        <ui:Card
+                                            Height="18"
+                                            Margin="4,0,0,0"
+                                            Padding="3"
+                                            Visibility="{Binding FpType, Converter={StaticResource StringNullOrEmptyToVisibilityConverter}, FallbackValue=Collapsed}"
+                                            Width="40">
+                                            <TextBlock
+                                                FontSize="10"
+                                                FontWeight="Medium"
+                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                HorizontalAlignment="Center"
+                                                Text="{Binding FpType}"
+                                                VerticalAlignment="Center" />
+                                        </ui:Card>
+                                        <ui:Card
+                                            Height="18"
+                                            Margin="4,0,0,0"
+                                            Padding="3"
+                                            Visibility="{Binding BaseModel, Converter={StaticResource StringNullOrEmptyToVisibilityConverter}, FallbackValue=Collapsed}"
+                                            Width="40">
+                                            <TextBlock
+                                                FontSize="10"
+                                                FontWeight="Medium"
+                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                HorizontalAlignment="Center"
+                                                Text="{Binding BaseModel}"
+                                                VerticalAlignment="Center" />
+                                        </ui:Card>
+                                    </VirtualizingStackPanel>
+                                </Grid>
                             </Grid>
-                        </Grid>
+                        </VirtualizingStackPanel>
 
                         <!--  Progress ring  -->
                         <ui:ProgressRing
@@ -240,18 +286,29 @@
     </Page.Resources>
 
     <!--  Folder Cards  -->
-    <ui:DynamicScrollViewer
-        CanContentScroll="True"
-        HorizontalScrollBarVisibility="Disabled"
-        VerticalScrollBarVisibility="Auto">
-        <Grid>
-            <StackPanel Orientation="Vertical">
-                <ItemsControl
-                    HorizontalAlignment="Stretch"
-                    ItemTemplate="{StaticResource CheckpointFolderGridDataTemplate}"
-                    ItemsSource="{Binding CheckpointFolders, Mode=OneWay}"
-                    Margin="8" />
-            </StackPanel>
-        </Grid>
-    </ui:DynamicScrollViewer>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="0.1*" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <VirtualizingStackPanel Margin="16,8" Orientation="Horizontal">
+            <ui:ToggleSwitch Content="Preview Images" />
+        </VirtualizingStackPanel>
+        <ui:DynamicScrollViewer
+            CanContentScroll="True"
+            Grid.Row="1"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <StackPanel Orientation="Vertical">
+                    <ItemsControl
+                        HorizontalAlignment="Stretch"
+                        ItemTemplate="{StaticResource CheckpointFolderGridDataTemplate}"
+                        ItemsSource="{Binding CheckpointFolders, Mode=OneWay}"
+                        Margin="8" />
+                </StackPanel>
+            </Grid>
+        </ui:DynamicScrollViewer>
+    </Grid>
+
 </Page>

@@ -81,25 +81,24 @@
                                     VerticalAlignment="Center" />
                             </StackPanel>
                             <Grid Grid.Column="1">
-                                <ui:Button
+                                <Button
                                     Background="Transparent"
                                     BorderBrush="Transparent"
                                     FontSize="20"
                                     HorizontalAlignment="Right"
-                                    IsEnabled="False"
+                                    IsEnabled="True"
                                     MaxHeight="48"
                                     MaxWidth="64"
                                     Padding="0"
+                                    ToolTip="Connected Model"
                                     VerticalAlignment="Top"
                                     Visibility="{Binding IsConnectedModel, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                    <ui:Button.Icon>
-                                        <ui:SymbolIcon
-                                            FontSize="12"
-                                            Foreground="LightGreen"
-                                            Symbol="CloudCheckmark24"
-                                            ToolTip="Connected Model" />
-                                    </ui:Button.Icon>
-                                </ui:Button>
+                                    <ui:SymbolIcon
+                                        FontSize="12"
+                                        Foreground="LightGreen"
+                                        Symbol="CloudCheckmark24"
+                                        ToolTip="Connected Model" />
+                                </Button>
                                 <ui:Button
                                     Background="Transparent"
                                     BorderBrush="Transparent"

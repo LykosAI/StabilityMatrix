@@ -22,7 +22,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
 
     private static readonly string PortableGitDownloadPath =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix",
-            "PortableGit.tar.bz2");
+            "PortableGit.7z.exe");
     
     private static readonly string GitExePath = Path.Combine(PortableGitInstallDir, "bin", "git.exe");
     
@@ -52,7 +52,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
 
         var latestRelease = await gitHubClient.Repository.Release.GetLatest("git-for-windows", "git");
         var portableGitUrl = latestRelease.Assets
-            .First(a => a.Name.EndsWith("64-bit.tar.bz2")).BrowserDownloadUrl;
+            .First(a => a.Name.EndsWith("64-bit.7z.exe")).BrowserDownloadUrl;
 
         if (!File.Exists(PortableGitDownloadPath))
         {
@@ -66,7 +66,14 @@ public class PrerequisiteHelper : IPrerequisiteHelper
     private async Task UnzipGit(IProgress<ProgressReport>? progress = null)
     {
         progress?.Report(new ProgressReport(-1, isIndeterminate: true, message: ""));
-        await ArchiveHelper.Extract(PortableGitDownloadPath, PortableGitInstallDir, progress);
+        if (progress == null)
+        {
+            await ArchiveHelper.Extract7Z(PortableGitDownloadPath, PortableGitInstallDir);
+        }
+        else
+        {
+            await ArchiveHelper.Extract7Z(PortableGitDownloadPath, PortableGitInstallDir, progress);
+        }
 
         logger.LogInformation("Extracted Git");
 

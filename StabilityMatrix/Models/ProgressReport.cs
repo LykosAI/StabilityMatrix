@@ -23,16 +23,18 @@ public record struct ProgressReport
     public string? Message { get; init; }
     public bool IsIndeterminate { get; init; } = false;
     public float Percentage => (float) Math.Ceiling(Math.Clamp(Progress ?? 0, 0, 1) * 100);
+    public ProgressType Type { get; init; } = ProgressType.Generic;
     
-    public ProgressReport(double progress, string? title = null, string? message = null, bool isIndeterminate = false)
+    public ProgressReport(double progress, string? title = null, string? message = null, bool isIndeterminate = false, ProgressType type = ProgressType.Generic)
     {
         Progress = progress;
         Title = title;
         Message = message;
         IsIndeterminate = isIndeterminate;
+        Type = type;
     }
     
-    public ProgressReport(ulong current, ulong total, string? title = null, string? message = null, bool isIndeterminate = false)
+    public ProgressReport(ulong current, ulong total, string? title = null, string? message = null, bool isIndeterminate = false, ProgressType type = ProgressType.Generic)
     {
         Current = current;
         Total = total;
@@ -40,13 +42,15 @@ public record struct ProgressReport
         Title = title;
         Message = message;
         IsIndeterminate = isIndeterminate;
+        Type = type;
     }
     
-    public ProgressReport(ulong current, string? title = null, string? message = null)
+    public ProgressReport(ulong current, string? title = null, string? message = null, ProgressType type = ProgressType.Generic)
     {
         Current = current;
         Title = title;
         Message = message;
         IsIndeterminate = true;
+        Type = type;
     }
 }

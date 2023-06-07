@@ -1,5 +1,8 @@
 ﻿using System;
+using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using StabilityMatrix.Extensions;
 using StabilityMatrix.Models.Api;
 
@@ -18,14 +21,18 @@ public class ConnectedModelInfo
     public string VersionDescription { get; set; }
     public string? BaseModel { get; set; }
     public CivitFileMetadata FileMetadata { get; set; }
-    public DateTime ImportedAt { get; set; }
+    public DateTimeOffset ImportedAt { get; set; }
     public CivitFileHashes Hashes { get; set; }
 
     // User settings
     public string? UserTitle { get; set; }
     public string? ThumbnailImageUrl { get; set; }
     
-    public ConnectedModelInfo(CivitModel civitModel, CivitModelVersion civitModelVersion, CivitFile civitFile, DateTime importedAt)
+    public ConnectedModelInfo()
+    {
+    }
+    
+    public ConnectedModelInfo(CivitModel civitModel, CivitModelVersion civitModelVersion, CivitFile civitFile, DateTimeOffset importedAt)
     {
         ModelId = civitModel.Id;
         ModelName = civitModel.Name;
@@ -44,6 +51,19 @@ public class ConnectedModelInfo
     
     public static ConnectedModelInfo? FromJson(string json)
     {
-        return JsonSerializer.Deserialize<ConnectedModelInfo>(json);
+        return JsonSerializer.Deserialize<ConnectedModelInfo>(json, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull } );
+    }
+
+    /// <summary>
+    /// Saves the model info to a json file in the specified directory.
+    /// Overwrites existing files.
+    /// </summary>
+    /// <param name="directoryPath">Path of directory to save file</param>
+    /// <param name="modelFileName">Model file name without extensions</param>
+    public async Task SaveJsonToDirectory(string directoryPath, string modelFileName)
+    {
+        var name = modelFileName + ".cm-info.json";
+        var json = JsonSerializer.Serialize(this);
+        await File.WriteAllTextAsync(Path.Combine(directoryPath, name), json);
     }
 }

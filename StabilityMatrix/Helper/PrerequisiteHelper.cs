@@ -65,7 +65,6 @@ public class PrerequisiteHelper : IPrerequisiteHelper
     
     private async Task UnzipGit(IProgress<ProgressReport>? progress = null)
     {
-        progress?.Report(new ProgressReport(-1, isIndeterminate: true, message: ""));
         if (progress == null)
         {
             await ArchiveHelper.Extract7Z(PortableGitDownloadPath, PortableGitInstallDir);

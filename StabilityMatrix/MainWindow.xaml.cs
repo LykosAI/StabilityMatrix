@@ -1,8 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.Windows;
-using System.Windows.Media;
-using Octokit;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;

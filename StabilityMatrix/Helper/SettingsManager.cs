@@ -29,6 +29,8 @@ public class SettingsManager : ISettingsManager
         if (!File.Exists(SettingsPath))
         {
             File.Create(SettingsPath).Close();
+            Settings.Theme = "Dark";
+            Settings.WindowBackdropType = WindowBackdropType.Mica;
             var defaultSettingsJson = JsonSerializer.Serialize(Settings);
             File.WriteAllText(SettingsPath, defaultSettingsJson);
         }
@@ -139,6 +141,12 @@ public class SettingsManager : ISettingsManager
     public void SetWindowBackdropType(WindowBackdropType backdropType)
     {
         Settings.WindowBackdropType = backdropType;
+        SaveSettings();
+    }
+    
+    public void SetHasSeenWelcomeNotification(bool hasSeenWelcomeNotification)
+    {
+        Settings.HasSeenWelcomeNotification = hasSeenWelcomeNotification;
         SaveSettings();
     }
 

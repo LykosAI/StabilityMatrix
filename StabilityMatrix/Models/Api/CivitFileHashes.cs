@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace StabilityMatrix.Models.Api;
+﻿namespace StabilityMatrix.Models.Api;
 
 public class CivitFileHashes
 {

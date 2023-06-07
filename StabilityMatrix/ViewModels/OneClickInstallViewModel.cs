@@ -73,7 +73,7 @@ public partial class OneClickInstallViewModel : ObservableObject
     private async Task DoInstall()
     {
         var a1111 = packageFactory.FindPackageByName(DefaultPackageName)!;
-        HeaderText = "Installing Stable Diffusion WebUI...";
+        HeaderText = "Installing Stable Diffusion WebUI";
 
         var progressHandler = new Progress<ProgressReport>(progress =>
         {
@@ -81,11 +81,11 @@ public partial class OneClickInstallViewModel : ObservableObject
             {
                 SubHeaderText = $"Downloading Git... {progress.Percentage:N0}%";
             }
-            else if (string.IsNullOrWhiteSpace(progress.Message))
+            else if (progress.Message?.Contains("Extracting") ?? false)
             {
                 SubHeaderText = $"Installing Git... {progress.Percentage:N0}%";
             }
-            else
+            else if (progress.Message != null)
             {
                 SubHeaderText = progress.Message;
             }
@@ -116,6 +116,9 @@ public partial class OneClickInstallViewModel : ObservableObject
         
         await DownloadPackage(a1111, latestVersion);
         await InstallPackage(a1111);
+
+        SubHeaderText = "Setting up shared folder links...";
+        sharedFolders.SetupLinksForPackage(a1111, a1111.InstallLocation);
         
         var package = new InstalledPackage
         {
@@ -164,7 +167,7 @@ public partial class OneClickInstallViewModel : ObservableObject
     private async Task InstallPackage(BasePackage selectedPackage)
     {
         selectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output;
-        SubHeaderText = "Installing package...";
+        SubHeaderText = "Downloading and installing package requirements...";
         
         var progress = new Progress<ProgressReport>(progress =>
         {

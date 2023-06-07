@@ -64,6 +64,8 @@
     <Content Include="Assets\7za - LICENSE.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Remove="Assets\noimage.png" />
+    <Resource Include="Assets\noimage.png" />
   </ItemGroup>
 
   <ItemGroup>

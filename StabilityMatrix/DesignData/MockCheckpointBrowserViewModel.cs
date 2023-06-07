@@ -1,5 +1,7 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows.Media.Imaging;
 using StabilityMatrix.Models.Api;
 using StabilityMatrix.ViewModels;
 
@@ -12,7 +14,7 @@ public class MockCheckpointBrowserViewModel : CheckpointBrowserViewModel
     {
         ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>
         {
-            new (null!, null!, null!)
+            new(null!, null!, null!)
             {
                 CivitModel = new()
                 {
@@ -32,7 +34,9 @@ public class MockCheckpointBrowserViewModel : CheckpointBrowserViewModel
                             }
                         }
                     }
-                }
+                },
+                CardImage = new BitmapImage(new Uri(
+                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/1547f350-461a-4cd0-a753-0544aa81e4fc/width=450/00000-4137473915.jpeg"))
             }
         };
     }

@@ -19,6 +19,7 @@ public partial class OneClickInstallViewModel : ObservableObject
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly ILogger<MainWindowViewModel> logger;
     private readonly IPyRunner pyRunner;
+    private readonly ISharedFolders sharedFolders;
     private const string DefaultPackageName = "stable-diffusion-webui";
     
     [ObservableProperty] private string headerText;
@@ -36,13 +37,15 @@ public partial class OneClickInstallViewModel : ObservableObject
         OneClickInstallProgress > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
 
     public OneClickInstallViewModel(ISettingsManager settingsManager, IPackageFactory packageFactory,
-        IPrerequisiteHelper prerequisiteHelper, ILogger<MainWindowViewModel> logger, IPyRunner pyRunner)
+        IPrerequisiteHelper prerequisiteHelper, ILogger<MainWindowViewModel> logger, IPyRunner pyRunner,
+        ISharedFolders sharedFolders)
     {
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         this.prerequisiteHelper = prerequisiteHelper;
         this.logger = logger;
         this.pyRunner = pyRunner;
+        this.sharedFolders = sharedFolders;
 
         HeaderText = "Welcome to Stability Matrix!";
         SubHeaderText =

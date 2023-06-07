@@ -61,6 +61,7 @@
             <ui:NavigationView
                 PaneClosed="RootNavigation_OnPaneClosed"
                 PaneOpened="RootNavigation_OnPaneOpened"
+                IsBackButtonVisible="Collapsed"
                 UseLayoutRounding="True"
                 x:Name="RootNavigation">
                 <ui:NavigationView.Header>

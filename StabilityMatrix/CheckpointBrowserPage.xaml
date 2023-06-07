@@ -29,7 +29,7 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
         <DataTemplate DataType="{x:Type viewModels:CheckpointBrowserCardViewModel}" x:Key="CivitModelTemplate">
-            <ui:Card MaxHeight="450" Width="330">
+            <ui:Card MaxHeight="450" Width="330" Margin="8">
                 <StackPanel Orientation="Vertical">
                     <TextBlock
                         Foreground="{DynamicResource TextFillColorPrimaryBrush}"
@@ -46,7 +46,7 @@
                         <Image
                             Margin="0,8,0,8"
                             MaxHeight="300"
-                            Source="{Binding CivitModel.ModelVersions[0].Images[0].Url, Converter={StaticResource UriToBitmapConverter}}"
+                            Source="{Binding CardImage}"
                             Stretch="UniformToFill" />
                         <ui:Button
                             Appearance="Info"
@@ -55,7 +55,10 @@
                             HorizontalAlignment="Right"
                             Margin="0,16,8,0"
                             VerticalAlignment="Top">
-                            <ui:SymbolIcon Symbol="Open48" />
+                            <ui:Button.Icon>
+                                <ui:SymbolIcon Symbol="Open24" />
+                            </ui:Button.Icon>
+                            
                         </ui:Button>
 
                         <Rectangle
@@ -168,11 +171,10 @@
         </StackPanel>
 
         <ui:DynamicScrollViewer CanContentScroll="True" Grid.Row="1">
-            <ui:VirtualizingGridView
+            <ui:VirtualizingItemsControl RequestBringIntoView="FrameworkElement_OnRequestBringIntoView"
                 ItemTemplate="{StaticResource CivitModelTemplate}"
                 ItemsSource="{Binding ModelCards}"
-                PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel"
-                SpacingMode="StartAndEndOnly" />
+                PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel"/>
         </ui:DynamicScrollViewer>
 
         <StackPanel

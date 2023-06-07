@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media.Imaging;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Extensions;
@@ -18,6 +21,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     private readonly IDownloadService downloadService;
     private readonly ISnackbarService snackbarService;
     public CivitModel CivitModel { get; init; }
+    public BitmapImage CardImage { get; init; }
 
     public override Visibility ProgressVisibility => Value > 0 ? Visibility.Visible : Visibility.Collapsed;
     public override Visibility TextVisibility => Value > 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -27,6 +31,16 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         this.downloadService = downloadService;
         this.snackbarService = snackbarService;
         CivitModel = civitModel;
+
+        if (civitModel.ModelVersions.Any() && civitModel.ModelVersions[0].Images.Any())
+        {
+            CardImage = new BitmapImage(new Uri(civitModel.ModelVersions[0].Images[0].Url));
+        }
+        else
+        {
+            CardImage = new BitmapImage(
+                new Uri("pack://application:,,,/StabilityMatrix;component/Assets/noimage.png"));
+        }
     }
 
     [RelayCommand]

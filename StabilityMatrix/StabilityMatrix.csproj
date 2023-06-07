@@ -65,9 +65,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Remove="Assets\noimage.png" />
-    <Resource Include="Assets\noimage.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
+    <Resource Include="Assets\noimage.png" />
   </ItemGroup>
 
   <ItemGroup>

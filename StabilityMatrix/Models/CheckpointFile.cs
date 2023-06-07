@@ -9,6 +9,8 @@ using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
+using StabilityMatrix.Extensions;
+using StabilityMatrix.Models.Api;
 
 namespace StabilityMatrix.Models;
 
@@ -34,6 +36,9 @@ public partial class CheckpointFile : ObservableObject
 
     [ObservableProperty] private ConnectedModelInfo? connectedModel;
     public bool IsConnectedModel => ConnectedModel != null;
+    
+    [ObservableProperty] private string fpType = string.Empty;
+    [ObservableProperty] private string baseModel = string.Empty;
 
     [ObservableProperty] private bool isLoading;
     
@@ -48,6 +53,9 @@ public partial class CheckpointFile : ObservableObject
         if (value == null) return;
         // Update title, first check user defined, then connected model name
         Title = value.UserTitle ?? value.ModelName;
+        // Update fp type and base model
+        FpType = value.FileMetadata.Fp?.GetStringValue().ToUpperInvariant() ?? "";
+        BaseModel = value.BaseModel ?? "";
     }
 
     [RelayCommand]
@@ -126,7 +134,7 @@ public partial class CheckpointFile : ObservableObject
             }
 
             // Check for preview image
-            var previewImage = SupportedImageExtensions.Select(ext => $"{checkpointFile.FileName}.preview.{ext}").FirstOrDefault(files.ContainsKey);
+            var previewImage = SupportedImageExtensions.Select(ext => $"{fileNameWithoutExtension}.preview{ext}").FirstOrDefault(files.ContainsKey);
             if (previewImage != null)
             {
                 checkpointFile.PreviewImagePath = Path.Combine(directory, previewImage);

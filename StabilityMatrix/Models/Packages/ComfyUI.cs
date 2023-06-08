@@ -25,8 +25,9 @@ public class ComfyUI : BaseGitPackage
         new("https://github.com/comfyanonymous/ComfyUI/raw/master/comfyui_screenshot.png");
     public override bool ShouldIgnoreReleases => true;
 
-    public ComfyUI(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService) :
-        base(githubApi, settingsManager, downloadService)
+    public ComfyUI(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService,
+        IPrerequisiteHelper prerequisiteHelper) :
+        base(githubApi, settingsManager, downloadService, prerequisiteHelper)
     {
     }
 
@@ -88,34 +89,8 @@ public class ComfyUI : BaseGitPackage
     public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
     {
         await UnzipPackage(progress);
-        
-        // Setup dependencies
-        progress?.Report(new ProgressReport(-1, isIndeterminate: true));
-        await SetupVenv(InstallLocation);
-        var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
-        
-        void HandleConsoleOutput(string? s)
-        {
-            Debug.WriteLine($"venv stdout: {s}");
-            OnConsoleOutput(s);
-        }
-        
-        // Install torch
-        Logger.Debug("Starting torch install...");
-        await venvRunner.PipInstall(venvRunner.GetTorchInstallCommand(), InstallLocation, HandleConsoleOutput);
-        
-        // Install xformers if nvidia
-        if (HardwareHelper.HasNvidiaGpu())
-        {
-            await venvRunner.PipInstall("xformers", InstallLocation, HandleConsoleOutput);
-        }
-
-        // Install requirements
-        Logger.Debug("Starting requirements install...");
-        await venvRunner.PipInstall("-r requirements.txt", InstallLocation, HandleConsoleOutput);
-        
-        Logger.Debug("Finished installing requirements!");
-        progress?.Report(new ProgressReport(1, isIndeterminate: false));
+        await PrerequisiteHelper.SetupPythonDependencies(InstallLocation, "requirements.txt", progress,
+            OnConsoleOutput);
     }
     
     public override async Task RunPackage(string installedPackagePath, string arguments)

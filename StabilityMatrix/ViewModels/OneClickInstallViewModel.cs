@@ -79,11 +79,11 @@ public partial class OneClickInstallViewModel : ObservableObject
         {
             if (progress.Message != null && progress.Message.Contains("Downloading"))
             {
-                SubHeaderText = $"Downloading Git... {progress.Percentage:N0}%";
+                SubHeaderText = $"Downloading prerequisites... {progress.Percentage:N0}%";
             }
             else if (progress.Type == ProgressType.Extract)
             {
-                SubHeaderText = $"Installing Git... {progress.Percentage:N0}%";
+                SubHeaderText = $"Installing git... {progress.Percentage:N0}%";
             }
             else if (progress.Message != null)
             {
@@ -92,8 +92,9 @@ public partial class OneClickInstallViewModel : ObservableObject
 
             OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
         });
-
+        
         await prerequisiteHelper.InstallGitIfNecessary(progressHandler);
+        await prerequisiteHelper.InstallVcRedistIfNecessary(progressHandler);
 
         SubHeaderText = "Installing prerequisites...";
         IsIndeterminate = true;
@@ -177,19 +178,5 @@ public partial class OneClickInstallViewModel : ObservableObject
         });
         
         await selectedPackage.InstallPackage(progress);
-    }
-    
-    private void SelectedPackageOnProgressChanged(object? sender, int progress)
-    {
-        if (progress == -1)
-        {
-            IsIndeterminate = true;
-        }
-        else
-        {
-            IsIndeterminate = false;
-            OneClickInstallProgress = progress;
-        }
-        
     }
 }

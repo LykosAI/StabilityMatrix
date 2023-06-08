@@ -21,11 +21,12 @@ public class VladAutomatic : BaseGitPackage
         new("https://github.com/vladmandic/automatic/raw/master/html/black-orange.jpg");
     public override bool ShouldIgnoreReleases => true;
 
-    public VladAutomatic(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService) :
-        base(githubApi, settingsManager, downloadService)
+    public VladAutomatic(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService,
+        IPrerequisiteHelper prerequisiteHelper) :
+        base(githubApi, settingsManager, downloadService, prerequisiteHelper)
     {
     }
-    
+
     // https://github.com/vladmandic/automatic/blob/master/modules/shared.py#L324
     public override Dictionary<SharedFolderType, string> SharedFolders => new()
     {
@@ -86,6 +87,19 @@ public class VladAutomatic : BaseGitPackage
             TagName = $"{b.Name}", 
             ReleaseNotesMarkdown = string.Empty
         });
+    }
+    
+    public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
+    {
+        await UnzipPackage(progress);
+        
+        var gitInitProcess =
+            ProcessRunner.StartProcess(Path.Combine(Helper.PrerequisiteHelper.GitBinPath, "git.exe"), "init",
+                InstallLocation);
+        await gitInitProcess.WaitForExitAsync();
+        
+        await PrerequisiteHelper.SetupPythonDependencies(InstallLocation, "requirements.txt", progress,
+            OnConsoleOutput);
     }
 
     public override async Task RunPackage(string installedPackagePath, string arguments)

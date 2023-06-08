@@ -50,7 +50,7 @@ public abstract class BasePackage
     public event EventHandler<int>? Exited;
     public event EventHandler<string>? StartupComplete;
 
-    public void OnConsoleOutput(string output) => ConsoleOutput?.Invoke(this, output);
+    public void OnConsoleOutput(string? output) => ConsoleOutput?.Invoke(this, output);
     public void OnExit(int exitCode) => Exited?.Invoke(this, exitCode);
     public void OnStartupComplete(string url) => StartupComplete?.Invoke(this, url);
 }

@@ -395,11 +395,11 @@ public partial class InstallerViewModel : ObservableObject
         {
             if (progress.Message != null && progress.Message.Contains("Downloading"))
             {
-                ProgressText = $"Downloading Git... {progress.Percentage:N0}%";
+                ProgressText = $"Downloading prerequisites... {progress.Percentage:N0}%";
             }
             else if (progress.Type == ProgressType.Extract)
             {
-                ProgressText = $"Installing Git... {progress.Percentage:N0}%";
+                ProgressText = $"Installing git... {progress.Percentage:N0}%";
             }
             else
             {
@@ -409,6 +409,7 @@ public partial class InstallerViewModel : ObservableObject
             ProgressValue = Convert.ToInt32(progress.Percentage);
         });
 
+        await prerequisiteHelper.InstallVcRedistIfNecessary(progressHandler);
         await prerequisiteHelper.InstallGitIfNecessary(progressHandler);
     }
 

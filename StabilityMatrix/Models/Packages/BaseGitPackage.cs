@@ -26,6 +26,7 @@ public abstract class BaseGitPackage : BasePackage
     protected readonly IGithubApiCache GithubApi;
     protected readonly ISettingsManager SettingsManager;
     protected readonly IDownloadService DownloadService;
+    protected readonly IPrerequisiteHelper PrerequisiteHelper;
     protected PyVenvRunner? VenvRunner;
     
     /// <summary>
@@ -48,11 +49,13 @@ public abstract class BaseGitPackage : BasePackage
             : $"https://api.github.com/repos/{Author}/{Name}/zipball/{tagName}";
     }
 
-    protected BaseGitPackage(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService)
+    protected BaseGitPackage(IGithubApiCache githubApi, ISettingsManager settingsManager,
+        IDownloadService downloadService, IPrerequisiteHelper prerequisiteHelper)
     {
         GithubApi = githubApi;
         SettingsManager = settingsManager;
-        this.DownloadService = downloadService;
+        DownloadService = downloadService;
+        PrerequisiteHelper = prerequisiteHelper;
     }
 
     protected Task<Release> GetLatestRelease()

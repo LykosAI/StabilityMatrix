@@ -23,8 +23,9 @@ public class A3WebUI : BaseGitPackage
     public string RelativeArgsDefinitionScriptPath => "modules.cmd_args";
 
 
-    public A3WebUI(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService) :
-        base(githubApi, settingsManager, downloadService)
+    public A3WebUI(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService,
+        IPrerequisiteHelper prerequisiteHelper) :
+        base(githubApi, settingsManager, downloadService, prerequisiteHelper)
     {
     }
 
@@ -115,29 +116,8 @@ public class A3WebUI : BaseGitPackage
     public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
     {
         await UnzipPackage(progress);
-        progress?.Report(new ProgressReport(-1, isIndeterminate: true));
-
-        Logger.Debug("Setting up venv");
-        await SetupVenv(InstallLocation);
-        var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
-        
-        void HandleConsoleOutput(string? s)
-        {
-            Debug.WriteLine($"venv stdout: {s}");
-            OnConsoleOutput(s);
-        }
-        
-        // install prereqs
-        await venvRunner.PipInstall(venvRunner.GetTorchInstallCommand(), InstallLocation, HandleConsoleOutput);
-        if (HardwareHelper.HasNvidiaGpu())
-        {
-            await venvRunner.PipInstall("xformers", InstallLocation, HandleConsoleOutput);
-        }
-
-        await venvRunner.PipInstall("-r requirements_versions.txt", InstallLocation, HandleConsoleOutput);
-        
-        Logger.Debug("Finished installing requirements");
-        progress?.Report(new ProgressReport(1f, "Install complete"));
+        await PrerequisiteHelper.SetupPythonDependencies(InstallLocation, "requirements_versions.txt", progress,
+            OnConsoleOutput);
     }
 
     public override async Task RunPackage(string installedPackagePath, string arguments)

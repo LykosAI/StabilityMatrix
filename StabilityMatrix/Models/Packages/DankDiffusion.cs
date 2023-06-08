@@ -9,8 +9,9 @@ namespace StabilityMatrix.Models.Packages;
 
 public class DankDiffusion : BaseGitPackage
 {
-    public DankDiffusion(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService) :
-        base(githubApi, settingsManager, downloadService)
+    public DankDiffusion(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService,
+        IPrerequisiteHelper prerequisiteHelper) :
+        base(githubApi, settingsManager, downloadService, prerequisiteHelper)
     {
     }
 

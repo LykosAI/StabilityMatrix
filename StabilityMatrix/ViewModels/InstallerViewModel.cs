@@ -401,11 +401,16 @@ public partial class InstallerViewModel : ObservableObject
             {
                 ProgressText = $"Installing git... {progress.Percentage:N0}%";
             }
+            else if (progress.Title != null && progress.Title.Contains("Unpacking"))
+            {
+                ProgressText = $"Unpacking resources... {progress.Percentage:N0}%";
+            }
             else
             {
                 ProgressText = progress.Message;
             }
 
+            IsIndeterminate = progress.IsIndeterminate;
             ProgressValue = Convert.ToInt32(progress.Percentage);
         });
 

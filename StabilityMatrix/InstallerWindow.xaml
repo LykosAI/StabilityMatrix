@@ -1,7 +1,7 @@
 <ui:FluentWindow
     ExtendsContentIntoTitleBar="True"
     Height="700"
-    Icon="Assets/Icon.ico"
+    Icon="pack://application:,,,/Assets/Icon.ico"
     Loaded="InstallPage_OnLoaded"
     Title="Stability Matrix - Installer"
     Width="1100"

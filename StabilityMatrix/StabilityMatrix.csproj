@@ -10,6 +10,7 @@
     <ApplicationIcon>Assets\Icon.ico</ApplicationIcon>
     <LangVersion>11</LangVersion>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <DefaultItemExcludes>Assets\Python310\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -81,9 +82,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Assets\Python310\**">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Resource Include="Assets\Python310\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

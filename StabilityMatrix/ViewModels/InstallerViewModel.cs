@@ -409,8 +409,7 @@ public partial class InstallerViewModel : ObservableObject
             ProgressValue = Convert.ToInt32(progress.Percentage);
         });
 
-        await prerequisiteHelper.InstallVcRedistIfNecessary(progressHandler);
-        await prerequisiteHelper.InstallGitIfNecessary(progressHandler);
+        await prerequisiteHelper.InstallAllIfNecessary(progressHandler);
     }
 
     private void OnPackageInstalled() => PackageInstalled?.Invoke(this, EventArgs.Empty);

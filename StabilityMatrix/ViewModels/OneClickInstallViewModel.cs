@@ -93,8 +93,7 @@ public partial class OneClickInstallViewModel : ObservableObject
             OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
         });
         
-        await prerequisiteHelper.InstallGitIfNecessary(progressHandler);
-        await prerequisiteHelper.InstallVcRedistIfNecessary(progressHandler);
+        await prerequisiteHelper.InstallAllIfNecessary(progressHandler);
 
         SubHeaderText = "Installing prerequisites...";
         IsIndeterminate = true;

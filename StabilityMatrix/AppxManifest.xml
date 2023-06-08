@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10" xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities" IgnorableNamespaces="uap uap10 rescap">
+  <!--Package created by MSIX Packaging Tool version: 1.2023.319.0-->
+  <Identity Name="StabilityMatrix" Publisher="CN=Lykos, O=Lykos, C=US" Version="1.0.2.0" ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>Stability Matrix</DisplayName>
+    <PublisherDisplayName>Stability Matrix LLC</PublisherDisplayName>
+    <Description>None</Description>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <uap10:PackageIntegrity>
+      <uap10:Content Enforcement="on" />
+    </uap10:PackageIntegrity>
+  </Properties>
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22000.1" />
+  </Dependencies>
+  <Applications>
+    <Application Id="STABILITYMATRIX" Executable="StabilityMatrix.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements BackgroundColor="transparent" DisplayName="StabilityMatrix" Square150x150Logo="Assets\STABILITYMATRIX-Square150x150Logo.png" Square44x44Logo="Assets\STABILITYMATRIX-Square44x44Logo.png" Description="StabilityMatrix">
+        <uap:DefaultTile Wide310x150Logo="Assets\STABILITYMATRIX-Wide310x150Logo.png" Square310x310Logo="Assets\STABILITYMATRIX-Square310x310Logo.png" Square71x71Logo="Assets\STABILITYMATRIX-Square71x71Logo.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

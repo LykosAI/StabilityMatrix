@@ -18,7 +18,7 @@ public class PyRunner : IPyRunner
     private static readonly string AppDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
     private static readonly string HomeDir = Path.Combine(AppDataDir, "StabilityMatrix");
     
-    public static string PythonDir => Path.Combine(HomeDir, "Python310");
+    public static string PythonDir => Path.Combine(HomeDir, "Assets", "Python310");
     public static string PythonDllPath => Path.Combine(PythonDir, "python310.dll");
     public static string PythonExePath => Path.Combine(PythonDir, "python.exe");
     public static string GetPipPath => Path.Combine(PythonDir, "get-pip.pyc");

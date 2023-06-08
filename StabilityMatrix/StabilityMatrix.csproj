@@ -53,12 +53,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <Resource Include="Assets\Icon.png" />
-    <Content Include="Assets\licenses.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\7za - LICENSE.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Resource Include="Assets\licenses.json" />
     <Resource Include="Assets\noimage.png" />
     <None Update="Assets\STABILITYMATRIX-Square44x44Logo.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -82,7 +77,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Assets\Python310\**" CopyToOutputDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Assets\7za.exe" />
+    <EmbeddedResource Include="Assets\7za - LICENSE.txt" />
+    <EmbeddedResource Include="Assets\Python310\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -102,10 +99,5 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
-
-  <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
-    <Exec Command="if not exist $(PublishDir)\Assets mkdir $(PublishDir)\Assets" />
-    <Exec Command="copy $(Pkg7-Zip_CommandLine)\tools\x64\7za.exe $(PublishDir)\Assets\" />
-  </Target>
   
 </Project>

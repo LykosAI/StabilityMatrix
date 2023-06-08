@@ -91,7 +91,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
             progress?.Report(new ProgressReport(current, total, "Unpacking resources..."));
         }
         
-        progress?.Report(new ProgressReport(1, "Unpacking complete"));
+        progress?.Report(new ProgressReport(1f, "Unpacking complete"));
         
         // Check files exist
         if (!File.Exists(SevenZipPath))

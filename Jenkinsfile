@@ -25,7 +25,7 @@ node("Windows") {
 
     if (env.BRANCH_NAME == "main") {
         stage ('Archive Artifacts') {
-            archiveArtifacts artifacts: 'out/**/*.*', followSymlinks: false
+            archiveArtifacts artifacts: 'out/*.exe', followSymlinks: false
         }
     }
 }

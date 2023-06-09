@@ -71,6 +71,12 @@ public class ComfyUI : BaseGitPackage
             Name = "Auto-Launch",
             Options = new() { "--auto-launch" }
         },
+        new()
+        {
+            Name = "Use CPU only",
+            InitialValue = !HardwareHelper.HasNvidiaGpu(),
+            Options = new() {"--cpu"}
+        },
         LaunchOptionDefinition.Extras
     };
 

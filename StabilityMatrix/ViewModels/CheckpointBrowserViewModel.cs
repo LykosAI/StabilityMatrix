@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
+using Refit;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models.Api;
@@ -27,6 +30,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     [ObservableProperty] private bool showMainLoadingSpinner;
     [ObservableProperty] private CivitPeriod selectedPeriod;
     [ObservableProperty] private CivitSortMode sortMode;
+    [ObservableProperty] private CivitModelType selectedModelType;
     [ObservableProperty] private int currentPageNumber;
     [ObservableProperty] private int totalPages;
     [ObservableProperty] private bool hasSearched;
@@ -36,6 +40,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
 
     public IEnumerable<CivitPeriod> AllCivitPeriods => Enum.GetValues(typeof(CivitPeriod)).Cast<CivitPeriod>();
     public IEnumerable<CivitSortMode> AllSortModes => Enum.GetValues(typeof(CivitSortMode)).Cast<CivitSortMode>();
+    public IEnumerable<CivitModelType> AllModelTypes => Enum.GetValues(typeof(CivitModelType)).Cast<CivitModelType>();
 
     public CheckpointBrowserViewModel(ICivitApi civitApi, IDownloadService downloadService, ISnackbarService snackbarService)
     {
@@ -45,6 +50,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         
         SelectedPeriod = CivitPeriod.Month;
         SortMode = CivitSortMode.HighestRated;
+        SelectedModelType = CivitModelType.All;
         HasSearched = false;
         CurrentPageNumber = 1;
         CanGoToPreviousPage = false;
@@ -61,25 +67,42 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         
         ShowMainLoadingSpinner = true;
 
-        var models = await civitApi.GetModels(new CivitModelsRequest
+        var modelRequest = new CivitModelsRequest
         {
             Query = SearchQuery,
             Limit = MaxModelsPerPage,
             Nsfw = ShowNsfw.ToString().ToLower(),
             Sort = SortMode,
             Period = SelectedPeriod,
-            Page = CurrentPageNumber
-        });
+            Page = CurrentPageNumber,
+        };
 
-        HasSearched = true;
-        TotalPages = models.Metadata.TotalPages;
-        CanGoToPreviousPage = CurrentPageNumber > 1;
-        CanGoToNextPage = CurrentPageNumber < TotalPages;
-        ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(models.Items.Select(
-            m => new CheckpointBrowserCardViewModel(m, downloadService, snackbarService)));
+        if (SelectedModelType != CivitModelType.All)
+        {
+            modelRequest.Types = new[] {SelectedModelType};
+        }
+
+        try
+        {
+            var models = await civitApi.GetModels(modelRequest);
+
+            HasSearched = true;
+            TotalPages = models.Metadata.TotalPages;
+            CanGoToPreviousPage = CurrentPageNumber > 1;
+            CanGoToNextPage = CurrentPageNumber < TotalPages;
+            ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(models.Items.Select(
+                m => new CheckpointBrowserCardViewModel(m, downloadService, snackbarService)));
+            Logger.Debug($"Found {models.Items.Length} models");
+        }
+        catch (ApiException e)
+        {
+            snackbarService.ShowSnackbarAsync("Please try again in a few minutes",
+                "CivitAI can't be reached right now").SafeFireAndForget();
+            Logger.Log(LogLevel.Error, e);
+        }
+
         ShowMainLoadingSpinner = false;
 
-        Logger.Debug($"Found {models.Items.Length} models");
     }
 
     [RelayCommand]
@@ -100,22 +123,27 @@ public partial class CheckpointBrowserViewModel : ObservableObject
 
     partial void OnShowNsfwChanged(bool oldValue, bool newValue)
     {
-        TrySearchAgain();
+        TrySearchAgain().SafeFireAndForget();
     }
 
     partial void OnSelectedPeriodChanged(CivitPeriod oldValue, CivitPeriod newValue)
     {
-        TrySearchAgain();
+        TrySearchAgain().SafeFireAndForget();
     }
 
     partial void OnSortModeChanged(CivitSortMode oldValue, CivitSortMode newValue)
     {
-        TrySearchAgain();
+        TrySearchAgain().SafeFireAndForget();
+    }
+    
+    partial void OnSelectedModelTypeChanged(CivitModelType oldValue, CivitModelType newValue)
+    {
+        TrySearchAgain().SafeFireAndForget();
     }
 
     private async Task TrySearchAgain(bool shouldUpdatePageNumber = true)
     {
-        if (!hasSearched) return;
+        if (!HasSearched) return;
         ModelCards?.Clear();
 
         if (shouldUpdatePageNumber)

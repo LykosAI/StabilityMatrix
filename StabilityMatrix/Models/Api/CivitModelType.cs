@@ -23,5 +23,6 @@ public enum CivitModelType
     [ConvertTo<SharedFolderType>(SharedFolderType.StableDiffusion)]
     Model,
     [ConvertTo<SharedFolderType>(SharedFolderType.LyCORIS)]
-    LoCon
+    LoCon,
+    All,
 }

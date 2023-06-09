@@ -139,7 +139,7 @@
                             HorizontalAlignment="Left"
                             HorizontalContentAlignment="Left"
                             Margin="8"
-                            Source="pack://application:,,,/Assets/Icon.ico"
+                            Source="pack://application:,,,/Assets/Icon.png"
                             Width="112" />
                         <TextBlock
                             FontWeight="Medium"

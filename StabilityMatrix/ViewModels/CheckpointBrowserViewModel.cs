@@ -96,9 +96,9 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         }
         catch (ApiException e)
         {
-            snackbarService.ShowSnackbarAsync("Please try again in a few minutes.",
-                "CivitAI can't be reached right now.").SafeFireAndForget();
-            Logger.Log(NLog.LogLevel.Error, e);
+            snackbarService.ShowSnackbarAsync("Please try again in a few minutes",
+                "CivitAI can't be reached right now").SafeFireAndForget();
+            Logger.Log(LogLevel.Error, e);
         }
 
         ShowMainLoadingSpinner = false;

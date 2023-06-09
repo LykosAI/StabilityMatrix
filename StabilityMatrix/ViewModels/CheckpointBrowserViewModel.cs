@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -95,8 +96,8 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         }
         catch (ApiException e)
         {
-            snackbarService.ShowSnackbarAsync("The service may be unavailable. Please try again later.",
-                "Data could not be retrieved").SafeFireAndForget();
+            snackbarService.ShowSnackbarAsync("Please try again in a few minutes.",
+                "CivitAI can't be reached right now.").SafeFireAndForget();
             Logger.Log(NLog.LogLevel.Error, e);
         }
 

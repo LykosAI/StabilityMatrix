@@ -86,6 +86,24 @@ public class A3WebUI : BaseGitPackage
             DefaultValue = true,
             Options = new() {"--api"}
         },
+        new()
+        {
+            Name = "Use CPU only",
+            InitialValue = !HardwareHelper.HasNvidiaGpu(),
+            Options = new() {"--cpu"}
+        },
+        new()
+        {
+            Name = "Skip Torch CUDA Check",
+            InitialValue = !HardwareHelper.HasNvidiaGpu(),
+            Options = new() {"--skip-torch-cuda-test"}
+        },
+        new()
+        {
+            Name = "Skip Python Version Check",
+            InitialValue = true,
+            Options = new() {"--skip-python-version-check"}
+        },
         LaunchOptionDefinition.Extras
     };
 

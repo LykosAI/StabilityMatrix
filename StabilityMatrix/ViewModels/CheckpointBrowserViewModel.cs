@@ -27,6 +27,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     [ObservableProperty] private bool showMainLoadingSpinner;
     [ObservableProperty] private CivitPeriod selectedPeriod;
     [ObservableProperty] private CivitSortMode sortMode;
+    [ObservableProperty] private CivitModelType selectedModelType;
     [ObservableProperty] private int currentPageNumber;
     [ObservableProperty] private int totalPages;
     [ObservableProperty] private bool hasSearched;
@@ -36,6 +37,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
 
     public IEnumerable<CivitPeriod> AllCivitPeriods => Enum.GetValues(typeof(CivitPeriod)).Cast<CivitPeriod>();
     public IEnumerable<CivitSortMode> AllSortModes => Enum.GetValues(typeof(CivitSortMode)).Cast<CivitSortMode>();
+    public IEnumerable<CivitModelType> AllModelTypes => Enum.GetValues(typeof(CivitModelType)).Cast<CivitModelType>();
 
     public CheckpointBrowserViewModel(ICivitApi civitApi, IDownloadService downloadService, ISnackbarService snackbarService)
     {
@@ -45,6 +47,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         
         SelectedPeriod = CivitPeriod.Month;
         SortMode = CivitSortMode.HighestRated;
+        SelectedModelType = CivitModelType.All;
         HasSearched = false;
         CurrentPageNumber = 1;
         CanGoToPreviousPage = false;
@@ -61,15 +64,22 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         
         ShowMainLoadingSpinner = true;
 
-        var models = await civitApi.GetModels(new CivitModelsRequest
+        var modelRequest = new CivitModelsRequest
         {
             Query = SearchQuery,
             Limit = MaxModelsPerPage,
             Nsfw = ShowNsfw.ToString().ToLower(),
             Sort = SortMode,
             Period = SelectedPeriod,
-            Page = CurrentPageNumber
-        });
+            Page = CurrentPageNumber,
+        };
+
+        if (SelectedModelType != CivitModelType.All)
+        {
+            modelRequest.Types = new[] {SelectedModelType};
+        }
+        
+        var models = await civitApi.GetModels(modelRequest);
 
         HasSearched = true;
         TotalPages = models.Metadata.TotalPages;
@@ -109,6 +119,11 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     }
 
     partial void OnSortModeChanged(CivitSortMode oldValue, CivitSortMode newValue)
+    {
+        TrySearchAgain();
+    }
+    
+    partial void OnSelectedModelTypeChanged(CivitModelType oldValue, CivitModelType newValue)
     {
         TrySearchAgain();
     }

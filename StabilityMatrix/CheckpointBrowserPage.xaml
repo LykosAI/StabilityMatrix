@@ -58,8 +58,31 @@
                             <ui:Button.Icon>
                                 <ui:SymbolIcon Symbol="Open24" />
                             </ui:Button.Icon>
-                            
                         </ui:Button>
+                        
+                        <ui:Card
+                            Height="20"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Background="#661467B5"
+                            Margin="4,16,0,0"
+                            Padding="3">
+                            <Grid>
+                                <Border>
+                                    <Border.Effect>
+                                        <BlurEffect Radius="7" KernelType="Gaussian"/>
+                                    </Border.Effect>
+                                </Border>
+                                
+                            <TextBlock
+                                FontSize="10"
+                                FontWeight="Medium"
+                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                HorizontalAlignment="Center"
+                                Text="{Binding CivitModel.Type}"
+                                VerticalAlignment="Center" />
+                            </Grid>
+                        </ui:Card>
 
                         <Rectangle
                             Fill="#DD000000"
@@ -158,6 +181,14 @@
                         ItemsSource="{Binding AllCivitPeriods}"
                         MinWidth="100"
                         SelectedItem="{Binding SelectedPeriod}" />
+                </StackPanel>
+                
+                <StackPanel Margin="8" Orientation="Vertical">
+                    <Label Content="Model Type" />
+                    <ComboBox
+                        ItemsSource="{Binding AllModelTypes}"
+                        MinWidth="100"
+                        SelectedItem="{Binding SelectedModelType}" />
                 </StackPanel>
 
                 <CheckBox

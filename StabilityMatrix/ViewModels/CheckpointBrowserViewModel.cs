@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
+using Refit;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models.Api;
@@ -78,18 +80,28 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         {
             modelRequest.Types = new[] {SelectedModelType};
         }
-        
-        var models = await civitApi.GetModels(modelRequest);
 
-        HasSearched = true;
-        TotalPages = models.Metadata.TotalPages;
-        CanGoToPreviousPage = CurrentPageNumber > 1;
-        CanGoToNextPage = CurrentPageNumber < TotalPages;
-        ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(models.Items.Select(
-            m => new CheckpointBrowserCardViewModel(m, downloadService, snackbarService)));
+        try
+        {
+            var models = await civitApi.GetModels(modelRequest);
+
+            HasSearched = true;
+            TotalPages = models.Metadata.TotalPages;
+            CanGoToPreviousPage = CurrentPageNumber > 1;
+            CanGoToNextPage = CurrentPageNumber < TotalPages;
+            ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(models.Items.Select(
+                m => new CheckpointBrowserCardViewModel(m, downloadService, snackbarService)));
+            Logger.Debug($"Found {models.Items.Length} models");
+        }
+        catch (ApiException e)
+        {
+            snackbarService.ShowSnackbarAsync("The service may be unavailable. Please try again later.",
+                "Data could not be retrieved").SafeFireAndForget();
+            Logger.Log(NLog.LogLevel.Error, e);
+        }
+
         ShowMainLoadingSpinner = false;
 
-        Logger.Debug($"Found {models.Items.Length} models");
     }
 
     [RelayCommand]
@@ -110,27 +122,27 @@ public partial class CheckpointBrowserViewModel : ObservableObject
 
     partial void OnShowNsfwChanged(bool oldValue, bool newValue)
     {
-        TrySearchAgain();
+        TrySearchAgain().SafeFireAndForget();
     }
 
     partial void OnSelectedPeriodChanged(CivitPeriod oldValue, CivitPeriod newValue)
     {
-        TrySearchAgain();
+        TrySearchAgain().SafeFireAndForget();
     }
 
     partial void OnSortModeChanged(CivitSortMode oldValue, CivitSortMode newValue)
     {
-        TrySearchAgain();
+        TrySearchAgain().SafeFireAndForget();
     }
     
     partial void OnSelectedModelTypeChanged(CivitModelType oldValue, CivitModelType newValue)
     {
-        TrySearchAgain();
+        TrySearchAgain().SafeFireAndForget();
     }
 
     private async Task TrySearchAgain(bool shouldUpdatePageNumber = true)
     {
-        if (!hasSearched) return;
+        if (!HasSearched) return;
         ModelCards?.Clear();
 
         if (shouldUpdatePageNumber)

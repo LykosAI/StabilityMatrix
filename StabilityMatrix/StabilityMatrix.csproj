@@ -11,6 +11,7 @@
     <LangVersion>11</LangVersion>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <DefaultItemExcludes>Assets\**</DefaultItemExcludes>
+    <PublishSingleFile>true</PublishSingleFile>
   </PropertyGroup>
 
   <ItemGroup>

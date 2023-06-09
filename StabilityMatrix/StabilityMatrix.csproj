@@ -10,6 +10,7 @@
     <ApplicationIcon>Assets\Icon.ico</ApplicationIcon>
     <LangVersion>11</LangVersion>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <DefaultItemExcludes>Assets\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,16 +35,13 @@
     <PackageReference Include="Refit" Version="6.3.2" />
     <PackageReference Include="Refit.HttpClientFactory" Version="6.3.2" />
     <PackageReference Include="Sentry" Version="3.33.0" />
+    <PackageReference Include="Sentry.NLog" Version="3.33.0" />
     <PackageReference Include="SharpCompress" Version="0.33.0" />
     <PackageReference Include="WPF-UI" Version="3.0.0-preview.2" />
     <PackageReference Include="pythonnet" Version="3.0.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Assets\StoreLogo.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <None Remove="Assets\Icon.ico" />
     <Resource Include="Assets\Icon.ico" />
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -52,38 +50,15 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <Resource Include="Assets\Icon.png" />
-    <Content Include="Assets\licenses.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\7za - LICENSE.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Resource Include="Assets\licenses.json" />
     <Resource Include="Assets\noimage.png" />
-    <None Update="Assets\STABILITYMATRIX-Square44x44Logo.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\STABILITYMATRIX-Square71x71Logo.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\STABILITYMATRIX-Square150x150Logo.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\STABILITYMATRIX-Square310x310Logo.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\STABILITYMATRIX-Wide310x150Logo.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Remove="AppxManifest.xml" />
-    <Content Include="AppxManifest.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Assets\Python310\**">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <EmbeddedResource Include="Assets\7za.exe" />
+    <EmbeddedResource Include="Assets\7za - LICENSE.txt" />
+    <EmbeddedResource Include="Assets\get-pip.pyc" />
+    <EmbeddedResource Include="Assets\venv\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -103,10 +78,5 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
-
-  <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
-    <Exec Command="if not exist $(PublishDir)\Assets mkdir $(PublishDir)\Assets" />
-    <Exec Command="copy $(Pkg7-Zip_CommandLine)\tools\x64\7za.exe $(PublishDir)\Assets\" />
-  </Target>
   
 </Project>

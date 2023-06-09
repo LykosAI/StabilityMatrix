@@ -85,16 +85,20 @@ public partial class OneClickInstallViewModel : ObservableObject
             {
                 SubHeaderText = $"Installing git... {progress.Percentage:N0}%";
             }
+            else if (progress.Title != null && progress.Title.Contains("Unpacking"))
+            {
+                SubHeaderText = $"Unpacking resources... {progress.Percentage:N0}%";
+            }
             else if (progress.Message != null)
             {
                 SubHeaderText = progress.Message;
             }
-
+            
+            IsIndeterminate = progress.IsIndeterminate;
             OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
         });
         
-        await prerequisiteHelper.InstallGitIfNecessary(progressHandler);
-        await prerequisiteHelper.InstallVcRedistIfNecessary(progressHandler);
+        await prerequisiteHelper.InstallAllIfNecessary(progressHandler);
 
         SubHeaderText = "Installing prerequisites...";
         IsIndeterminate = true;

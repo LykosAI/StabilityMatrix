@@ -32,7 +32,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly ISettingsManager settingsManager;
     private readonly IPyRunner pyRunner;
     private readonly ISnackbarService snackbarService;
-    public static string LicensesPath => Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Assets\licenses.json"));
+    private static string LicensesPath => "pack://application:,,,/Assets/licenses.json";
     public TextToFlowDocumentConverter? TextToFlowDocumentConverter { get; set; }
 
     public ObservableCollection<string> AvailableThemes => new()

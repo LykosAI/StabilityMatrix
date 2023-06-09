@@ -28,6 +28,7 @@ using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Services;
 using Application = System.Windows.Application;
+using ConfigurationExtensions = NLog.ConfigurationExtensions;
 using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
 using SnackbarService = StabilityMatrix.Helper.SnackbarService;
 
@@ -183,7 +184,23 @@ namespace StabilityMatrix
             logConfig.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, fileTarget);
             logConfig.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, debugTarget);
             NLog.LogManager.Configuration = logConfig;
+            // Add Sentry to NLog if enabled
+            if (IsSentryEnabled)
+            {
+                ConfigurationExtensions.AddSentry(logConfig, o =>
+                {
+                    // Optionally specify a separate format for message
+                    o.Layout = "${message}";
+                    // Optionally specify a separate format for breadcrumbs
+                    o.BreadcrumbLayout = "${logger}: ${message}";
+                    // Debug and higher are stored as breadcrumbs (default is Info)
+                    o.MinimumBreadcrumbLevel = NLog.LogLevel.Debug;
+                    // Error and higher is sent as event (default is Error)
+                    o.MinimumEventLevel = NLog.LogLevel.Error;
+                });
+            }
 
+            NLog.LogManager.Configuration = logConfig;
             serviceCollection.AddLogging(log =>
             {
                 log.ClearProviders();

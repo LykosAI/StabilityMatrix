@@ -11,7 +11,6 @@ using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
 using StabilityMatrix.Python;
 using StabilityMatrix.Services;
-using ApiException = Refit.ApiException;
 
 namespace StabilityMatrix.Models.Packages;
 
@@ -189,7 +188,7 @@ public abstract class BaseGitPackage : BasePackage
         }
         catch (ApiException e)
         {
-            Logger.Error(e, "Failed to check for updates");
+            Logger.Warn(e, "Failed to check for package updates");
             return false;
         }
     }

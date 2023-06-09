@@ -7,7 +7,7 @@
     Title="Stability Matrix"
     UseLayoutRounding="True"
     Width="1100"
-    WindowBackdropType="Acrylic"
+    WindowBackdropType="Mica"
     WindowStartupLocation="CenterScreen"
     d:DataContext="{d:DesignInstance Type=viewModels:MainWindowViewModel,
                                      IsDesignTimeCreatable=True}"

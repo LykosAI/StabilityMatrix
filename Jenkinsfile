@@ -16,7 +16,7 @@ node("Windows") {
     }
 
     stage('Publish') {
-        bat "dotnet publish .\\StabilityMatrix\\StabilityMatrix.csproj -c Release -o out -r win-x64 --self-contained true"
+        bat "dotnet publish .\\StabilityMatrix\\StabilityMatrix.csproj -c Release -o out -r win-x64 -p:PublishSingleFile=true --self-contained true"
     }
 
     stage('Set Version') {

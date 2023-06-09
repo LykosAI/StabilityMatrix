@@ -19,8 +19,10 @@ public record struct ArchiveInfo(ulong Size, ulong CompressedSize);
 public static class ArchiveHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    private const string RelativeSevenZipPath = @"Assets\7za.exe";
-    public static string SevenZipPath => Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, RelativeSevenZipPath));
+    
+    private static readonly string AppDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+    private static readonly string HomeDir = Path.Combine(AppDataDir, "StabilityMatrix");
+    public static string SevenZipPath => Path.Combine(HomeDir, "Assets", "7za.exe");
     
     private static readonly Regex Regex7ZOutput = new(@"(?<=Size:\s*)\d+|(?<=Compressed:\s*)\d+");
     private static readonly Regex Regex7ZProgressDigits = new(@"(?<=\s*)\d+(?=%)");
@@ -35,6 +37,19 @@ public static class ArchiveHelper
         var size = ulong.Parse(matches[0].Value);
         var compressed = ulong.Parse(matches[1].Value);
         return new ArchiveInfo(size, compressed);
+    }
+
+    public static async Task AddToArchive7Z(string archivePath, string sourceDirectory)
+    {
+        // Start 7z in the parent directory of the source directory
+        var sourceParent = Directory.GetParent(sourceDirectory)?.FullName ?? "";
+        // We must pass in as `directory\` for archive path to be correct
+        var sourceDirName = new DirectoryInfo(sourceDirectory).Name;
+        var process = ProcessRunner.StartProcess(SevenZipPath, new[]
+        {
+            "a", archivePath, sourceDirName + @"\", "-y"
+        }, workingDirectory: sourceParent);
+        await ProcessRunner.WaitForExitConditionAsync(process);
     }
     
     public static async Task<ArchiveInfo> Extract7Z(string archivePath, string extractDirectory)

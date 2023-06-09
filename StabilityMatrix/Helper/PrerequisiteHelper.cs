@@ -21,6 +21,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
     private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
     private const string VcRedistDownloadUrl = "https://aka.ms/vs/16/release/vc_redist.x64.exe";
+    private const string PythonDownloadUrl = "https://www.python.org/ftp/python/3.10.11/python-3.10.11-embed-amd64.zip";
 
     private static readonly string AppDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
     private static readonly string HomeDir = Path.Combine(AppDataDir, "StabilityMatrix");
@@ -29,8 +30,14 @@ public class PrerequisiteHelper : IPrerequisiteHelper
 
     private static readonly string AssetsDir = Path.Combine(HomeDir, "Assets");
     private static readonly string SevenZipPath = Path.Combine(AssetsDir, "7za.exe");
+    
+    private static readonly string PythonDownloadPath = Path.Combine(AssetsDir, "python-3.10.11-embed-amd64.zip");
     private static readonly string PythonDir = Path.Combine(AssetsDir, "Python310");
     private static readonly string PythonDllPath = Path.Combine(PythonDir, "python310.dll");
+    private static readonly string PythonLibraryZipPath = Path.Combine(PythonDir, "python310.zip");
+    private static readonly string GetPipPath = Path.Combine(PythonDir, "get-pip.pyc");
+    // Temporary directory to extract venv to during python install
+    private static readonly string VenvTempDir = Path.Combine(PythonDir, "venv");
     
     private static readonly string PortableGitInstallDir = Path.Combine(HomeDir, "PortableGit");
     private static readonly string PortableGitDownloadPath = Path.Combine(HomeDir, "PortableGit.7z.exe");
@@ -50,6 +57,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
     {
         await InstallVcRedistIfNecessary(progress);
         await UnpackResourcesIfNecessary(progress);
+        await InstallPythonIfNecessary(progress);
         await InstallGitIfNecessary(progress);
     }
 
@@ -58,50 +66,138 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         return Assembly.GetExecutingAssembly().GetManifestResourceNames();
     }
 
-    public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
+    private async Task ExtractEmbeddedResource(string resourceName, string outputDirectory)
     {
-        // Run if either 7za or python dll are not present
-        if (File.Exists(SevenZipPath) && File.Exists(PythonDllPath)) return;
-        // Start Progress
-        progress?.Report(new ProgressReport(-1, "Unpacking resources...", isIndeterminate: true));
+        // Convert resource name to file name
+        // from "StabilityMatrix.Assets.Python310.libssl-1_1.dll"
+        // to "Python310\libssl-1_1.dll"
+        var fileExt = Path.GetExtension(resourceName);
+        var fileName = resourceName
+            .Replace(fileExt, "")
+            .Replace("StabilityMatrix.Assets.", "")
+            .Replace(".", Path.DirectorySeparatorChar.ToString()) + fileExt;
+        await using var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)!;
+        if (resourceStream == null)
+        {
+            throw new Exception($"Resource {resourceName} not found");
+        }
+        await using var fileStream = File.Create(Path.Combine(outputDirectory, fileName));
+        await resourceStream.CopyToAsync(fileStream);
+    }
+
+    /// <summary>
+    /// Extracts all embedded resources starting with resourceDir to outputDirectory
+    /// </summary>
+    private async Task ExtractAllEmbeddedResources(string resourceDir, string outputDirectory, string resourceRoot = "StabilityMatrix.Assets.")
+    {
+        Directory.CreateDirectory(outputDirectory);
         // Unpack from embedded resources
-        var resources = GetEmbeddedResources().Where(r => r.StartsWith("StabilityMatrix.Assets")).ToArray();
+        var resources = GetEmbeddedResources().Where(r => r.StartsWith(resourceDir)).ToArray();
         var total = resources.Length;
         logger.LogInformation("Unpacking {Num} embedded resources... [{Resources}]", total, string.Join(",", resources));
-        // Create directories
-        Directory.CreateDirectory(AssetsDir);
-        Directory.CreateDirectory(PythonDir);
+
         // Unpack all resources
-        var current = 0;
         foreach (var resourceName in resources)
         {
-            current++;
             // Convert resource name to file name
             // from "StabilityMatrix.Assets.Python310.libssl-1_1.dll"
             // to "Python310\libssl-1_1.dll"
             var fileExt = Path.GetExtension(resourceName);
             var fileName = resourceName
                 .Replace(fileExt, "")
-                .Replace("StabilityMatrix.Assets.", "")
+                .Replace(resourceRoot, "")
                 .Replace(".", Path.DirectorySeparatorChar.ToString()) + fileExt;
             // Unpack resource
             await using var resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)!;
-            await using var fileStream = File.Create(Path.Combine(AssetsDir, fileName));
+            var outputFilePath = Path.Combine(outputDirectory, fileName);
+            // Create missing directories
+            var outputDir = Path.GetDirectoryName(outputFilePath);
+            if (outputDir != null)
+            {
+                Directory.CreateDirectory(outputDir);
+            }
+            await using var fileStream = File.Create(outputFilePath);
             await resourceStream.CopyToAsync(fileStream);
-            progress?.Report(new ProgressReport(current, total, "Unpacking resources..."));
+        }
+    }
+
+    public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        // Skip if all files exist
+        if (File.Exists(SevenZipPath) && File.Exists(PythonDllPath) && File.Exists(PythonLibraryZipPath))
+        {
+            return;
+        }
+        // Start Progress
+        progress?.Report(new ProgressReport(-1, "Unpacking resources...", isIndeterminate: true));
+        // Create directories
+        Directory.CreateDirectory(AssetsDir);
+        Directory.CreateDirectory(PythonDir);
+        
+        // Run if 7za missing
+        if (!File.Exists(SevenZipPath))
+        {
+            await ExtractEmbeddedResource("StabilityMatrix.Assets.7za.exe", AssetsDir);
+            await ExtractEmbeddedResource("StabilityMatrix.Assets.7za - LICENSE.txt", AssetsDir);
         }
         
         progress?.Report(new ProgressReport(1f, "Unpacking complete"));
+    }
+
+    public async Task InstallPythonIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        if (File.Exists(PythonDllPath))
+        {
+            logger.LogDebug("Python already installed at {PythonDllPath}", PythonDllPath);
+            return;
+        }
         
-        // Check files exist
-        if (!File.Exists(SevenZipPath))
+        logger.LogInformation("Python not found at {PythonDllPath}, downloading...", PythonDllPath);
+        
+        Directory.CreateDirectory(AssetsDir);
+        
+        if (!File.Exists(PythonDownloadPath))
         {
-            throw new FileNotFoundException("7za.exe not found after unpacking");
+            await downloadService.DownloadToFileAsync(PythonDownloadUrl, PythonDownloadPath, progress: progress);
+            progress?.Report(new ProgressReport(progress: 1f, message: "Python download complete"));
         }
-        if (!File.Exists(PythonDllPath))
+        
+        progress?.Report(new ProgressReport(-1, "Installing Python...", isIndeterminate: true));
+        
+        // Delete existing python dir
+        if (Directory.Exists(PythonDir))
         {
-            throw new FileNotFoundException("Python310.dll not found after unpacking");
+            Directory.Delete(PythonDir, true);
         }
+        // Unzip python
+        await ArchiveHelper.Extract7Z(PythonDownloadPath, PythonDir);
+        
+        try
+        {
+            // Extract embedded venv
+            await ExtractAllEmbeddedResources("StabilityMatrix.Assets.venv", PythonDir);
+            // Add venv to python's library zip
+            await ArchiveHelper.AddToArchive7Z(PythonLibraryZipPath, VenvTempDir);
+        }
+        finally
+        {
+            // Remove venv
+            if (Directory.Exists(VenvTempDir))
+            {
+                Directory.Delete(VenvTempDir, true);
+            }
+        }
+        
+        // Extract get-pip.pyc
+        await ExtractEmbeddedResource("StabilityMatrix.Assets.get-pip.pyc", PythonDir);
+        
+        // We need to uncomment the #import site line in python310._pth for pip to work
+        var pythonPthPath = Path.Combine(PythonDir, "python310._pth");
+        var pythonPthContent = await File.ReadAllTextAsync(pythonPthPath);
+        pythonPthContent = pythonPthContent.Replace("#import site", "import site");
+        await File.WriteAllTextAsync(pythonPthPath, pythonPthContent);
+        
+        progress?.Report(new ProgressReport(1f, "Python install complete"));
     }
 
     public async Task InstallGitIfNecessary(IProgress<ProgressReport>? progress = null)

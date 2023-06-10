@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using NLog;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
-using StabilityMatrix.Python;
 using StabilityMatrix.Services;
 
 namespace StabilityMatrix.Models.Packages;
@@ -109,8 +108,7 @@ public class ComfyUI : BaseGitPackage
 
             if (s.Contains("To see the GUI go to", StringComparison.OrdinalIgnoreCase))
             {
-                var regex = new Regex(
-                    @"(https?:\/\/)([^:\s]+):(\d+)");
+                var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
                 var match = regex.Match(s);
                 if (match.Success)
                 {

@@ -10,7 +10,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Extensions;
-using StabilityMatrix.Models.Api;
 
 namespace StabilityMatrix.Models;
 

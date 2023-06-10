@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
@@ -75,7 +76,7 @@ public class VladAutomatic : BaseGitPackage
         LaunchOptionDefinition.Extras
     };
 
-    public override string ExtraLaunchArguments => "--skip-git";
+    public override string ExtraLaunchArguments => "";
 
     public override Task<string> GetLatestVersion() => Task.FromResult("master");
 
@@ -91,15 +92,27 @@ public class VladAutomatic : BaseGitPackage
     
     public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
     {
-        await UnzipPackage(progress);
-        
-        var gitInitProcess =
-            ProcessRunner.StartProcess(Path.Combine(Helper.PrerequisiteHelper.GitBinPath, "git.exe"), "init",
-                InstallLocation);
-        await gitInitProcess.WaitForExitAsync();
-        
         await PrerequisiteHelper.SetupPythonDependencies(InstallLocation, "requirements.txt", progress,
             OnConsoleOutput);
+    }
+
+    public override async Task<string?> DownloadPackage(string version, bool isCommitHash, IProgress<ProgressReport>? progress = null)
+    {
+        progress?.Report(new ProgressReport(0.1f, message: "Downloading package...", isIndeterminate: true, type: ProgressType.Download));
+        
+        Directory.CreateDirectory(InstallLocation);
+        
+        var gitCloneProcess =
+            ProcessRunner.StartProcess(Path.Combine(Helper.PrerequisiteHelper.GitBinPath, "git.exe"),
+                "clone https://github.com/vladmandic/automatic.git .", InstallLocation);
+        await gitCloneProcess.WaitForExitAsync();
+
+        var gitCheckoutProcess =
+            ProcessRunner.StartProcess(Path.Combine(Helper.PrerequisiteHelper.GitBinPath, "git.exe"),
+                $"checkout {version}", InstallLocation);
+        await gitCheckoutProcess.WaitForExitAsync();
+        
+        return version;
     }
 
     public override async Task RunPackage(string installedPackagePath, string arguments)
@@ -109,13 +122,15 @@ public class VladAutomatic : BaseGitPackage
         void HandleConsoleOutput(string? s)
         {
             if (s == null) return;
-            if (s.Contains("model loaded", StringComparison.OrdinalIgnoreCase))
+            if (s.Contains("Running on local URL", StringComparison.OrdinalIgnoreCase))
             {
-                OnStartupComplete(WebUrl);
-            }
-            if (s.Contains("Running on", StringComparison.OrdinalIgnoreCase))
-            {
-                WebUrl = s.Split(" ")[5];
+                var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
+                var match = regex.Match(s);
+                if (match.Success)
+                {
+                    WebUrl = match.Value;
+                    OnStartupComplete(WebUrl);
+                }
             }
             Debug.WriteLine($"process stdout: {s}");
             OnConsoleOutput($"{s}\n");

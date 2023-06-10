@@ -3,7 +3,6 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using StabilityMatrix.Extensions;
 using StabilityMatrix.Models.Api;
 
 namespace StabilityMatrix.Models;

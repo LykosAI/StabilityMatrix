@@ -27,4 +27,8 @@ public interface ISettingsManager
     void SaveLaunchArgs(Guid packageId, List<LaunchOption> launchArgs);
     void SetWindowBackdropType(WindowBackdropType backdropType);
     void SetHasSeenWelcomeNotification(bool hasSeenWelcomeNotification);
+    string? GetActivePackageHost();
+    string? GetActivePackagePort();
+    void SetWebApiHost(string? host);
+    void SetWebApiPort(string? port);
 }

@@ -159,13 +159,6 @@ namespace StabilityMatrix
                 .WaitAndRetryAsync(delay);
 
             // Add Refit clients
-            serviceCollection.AddRefitClient<IA3WebApi>(defaultRefitSettings)
-                .ConfigureHttpClient(c =>
-                {
-                    c.BaseAddress = new Uri("http://localhost:7860");
-                    c.Timeout = TimeSpan.FromSeconds(2);
-                })
-                .AddPolicyHandler(retryPolicy);
             serviceCollection.AddRefitClient<ICivitApi>(defaultRefitSettings)
                 .ConfigureHttpClient(c =>
                 {
@@ -173,6 +166,10 @@ namespace StabilityMatrix
                     c.Timeout = TimeSpan.FromSeconds(8);
                 })
                 .AddPolicyHandler(retryPolicy);
+            
+            // Add Refit client managers
+            var a3WebApiManager = new A3WebApiManager(settingsManager);
+            serviceCollection.AddSingleton<IA3WebApiManager>(a3WebApiManager);
 
             // Logging configuration
             var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");

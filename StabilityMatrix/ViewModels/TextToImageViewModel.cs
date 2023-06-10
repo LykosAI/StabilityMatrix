@@ -16,7 +16,7 @@ namespace StabilityMatrix.ViewModels;
 public partial class TextToImageViewModel : ObservableObject
 {
     private readonly ILogger<TextToImageViewModel> logger;
-    private readonly IA3WebApi a3WebApi;
+    private readonly IA3WebApiManager a3WebApiManager;
     private readonly ISnackbarService snackbarService;
     private readonly PageContentDialogService pageContentDialogService;
     private AsyncDispatcherTimer? progressQueryTimer;
@@ -54,10 +54,10 @@ public partial class TextToImageViewModel : ObservableObject
     
     public Visibility ProgressBarVisibility => ProgressValue > 0 ? Visibility.Visible : Visibility.Collapsed;
     
-    public TextToImageViewModel(IA3WebApi a3WebApi, ILogger<TextToImageViewModel> logger, ISnackbarService snackbarService, PageContentDialogService pageContentDialogService)
+    public TextToImageViewModel(IA3WebApiManager a3WebApiManager, ILogger<TextToImageViewModel> logger, ISnackbarService snackbarService, PageContentDialogService pageContentDialogService)
     {
         this.logger = logger;
-        this.a3WebApi = a3WebApi;
+        this.a3WebApiManager = a3WebApiManager;
         this.snackbarService = snackbarService;
         this.pageContentDialogService = pageContentDialogService;
         positivePromptText = "Positive";
@@ -82,7 +82,7 @@ public partial class TextToImageViewModel : ObservableObject
     {
         try
         { 
-            await a3WebApi.GetPing();
+            await a3WebApiManager.Client.GetPing();
             ConnectionFailed = false;
         }
         catch (Exception e)
@@ -136,7 +136,7 @@ public partial class TextToImageViewModel : ObservableObject
     private async Task OnProgressTrackingTick()
     {
         var request = new ProgressRequest();
-        var task = a3WebApi.GetProgress(request);
+        var task = a3WebApiManager.Client.GetProgress(request);
         var responseResult = await snackbarService.TryAsync(task, "Failed to get progress");
         if (!responseResult.IsSuccessful || responseResult.Result == null)
         {
@@ -195,7 +195,7 @@ public partial class TextToImageViewModel : ObservableObject
             NegativePrompt = NegativePromptText,
             Steps = GenerationSteps,
         };
-        var task = a3WebApi.TextToImage(request);
+        var task = a3WebApiManager.Client.TextToImage(request);
         
         // Progress track while waiting for response
         StartProgressTracking();

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using StabilityMatrix.Api;
 using StabilityMatrix.Models;
 using Wpf.Ui.Controls.Window;
 
@@ -16,6 +17,8 @@ public class SettingsManager : ISettingsManager
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix",
             SettingsFileName);
     private readonly string? originalEnvPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
+    
+    public IA3WebApi? A3WebApi { get; set; }
 
     public Settings Settings { get; private set; } = new();
 
@@ -149,7 +152,43 @@ public class SettingsManager : ISettingsManager
         Settings.HasSeenWelcomeNotification = hasSeenWelcomeNotification;
         SaveSettings();
     }
+    
+    public string? GetActivePackageHost()
+    {
+        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == Settings.ActiveInstalledPackage);
+        if (package == null) return null;
+        var hostOption = package.LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "host");
+        if (hostOption?.OptionValue != null)
+        {
+            return hostOption.OptionValue as string;
+        }
+        return hostOption?.DefaultValue as string;
+    }
 
+    public string? GetActivePackagePort()
+    {
+        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == Settings.ActiveInstalledPackage);
+        if (package == null) return null;
+        var portOption = package.LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "port");
+        if (portOption?.OptionValue != null)
+        {
+            return portOption.OptionValue as string;
+        }
+        return portOption?.DefaultValue as string;
+    }
+    
+    public void SetWebApiHost(string? host)
+    {
+        Settings.WebApiHost = host;
+        SaveSettings();
+    }
+    
+    public void SetWebApiPort(string? port)
+    {
+        Settings.WebApiPort = port;
+        SaveSettings();
+    }
+    
     private void LoadSettings()
     {
         var settingsContent = File.ReadAllText(SettingsPath);

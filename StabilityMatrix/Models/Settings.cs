@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Wpf.Ui.Controls.Window;
 
 namespace StabilityMatrix.Models;
@@ -13,4 +14,11 @@ public class Settings
     public bool IsNavExpanded { get; set; }
     public bool HasSeenWelcomeNotification { get; set; }
     public List<string>? PathExtensions { get; set; }
+    public string? WebApiHost { get; set; }
+    public string? WebApiPort { get; set; }
+    
+    public InstalledPackage? GetActiveInstalledPackage()
+    {
+        return InstalledPackages.FirstOrDefault(x => x.Id == ActiveInstalledPackage);
+    }
 }

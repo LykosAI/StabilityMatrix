@@ -1,13 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
+using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Api;
+using StabilityMatrix.Extensions;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Models;
 using StabilityMatrix.Models.Api;
 using StabilityMatrix.Services;
 
@@ -51,9 +55,19 @@ public partial class TextToImageViewModel : ObservableObject
     
     [ObservableProperty]
     private BitmapImage? imagePreview;
+
+    [ObservableProperty]
+    private CheckpointFolder? diffusionCheckpointFolder;
     
     public Visibility ProgressBarVisibility => ProgressValue > 0 ? Visibility.Visible : Visibility.Collapsed;
     
+    public List<string> Samplers { get; } = new()
+    {
+        "Euler a", 
+        "Euler", 
+        "DPM++ 2M Karras"
+    };
+
     public TextToImageViewModel(IA3WebApiManager a3WebApiManager, ILogger<TextToImageViewModel> logger, ISnackbarService snackbarService, PageContentDialogService pageContentDialogService)
     {
         this.logger = logger;
@@ -75,6 +89,21 @@ public partial class TextToImageViewModel : ObservableObject
         {
             await CheckConnection();
         }
+        
+        // Set the diffusion checkpoint folder
+        var sdModelsDir = Path.Join(SharedFolders.SharedFoldersPath, SharedFolderType.StableDiffusion.GetStringValue());
+        if (!Directory.Exists(sdModelsDir))
+        {
+            logger.LogWarning("Skipped model folder index - {SdModelsDir} does not exist", sdModelsDir);
+            return;
+        }
+        DiffusionCheckpointFolder = new CheckpointFolder
+        {
+            Title = Path.GetFileName(sdModelsDir),
+            DirectoryPath = sdModelsDir
+        };
+        // Index the folder
+        await DiffusionCheckpointFolder.IndexAsync();
     }
 
     // Checks connection, if unsuccessful, shows a content dialog to retry

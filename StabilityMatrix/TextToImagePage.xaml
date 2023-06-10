@@ -38,6 +38,31 @@
                     Margin="8,8,8,16"
                     VerticalAlignment="Stretch">
                     <VirtualizingStackPanel>
+                        <!--  Checkpoint  -->
+                        <ui:Card
+                            HorizontalAlignment="Stretch"
+                            Margin="0,4"
+                            Padding="8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    FontSize="15"
+                                    Grid.Column="0"
+                                    Margin="8"
+                                    Text="Model"
+                                    VerticalAlignment="Center" />
+                                <ComboBox
+                                    DisplayMemberPath="FileName"
+                                    Grid.Column="1"
+                                    ItemsSource="{Binding DiffusionCheckpointFolder.CheckpointFiles}"
+                                    Margin="8"
+                                    MinWidth="200"
+                                    SelectedValuePath="FileName" />
+                            </Grid>
+                        </ui:Card>
                         <!--  Prompt card  -->
                         <ui:Card
                             HorizontalAlignment="Stretch"
@@ -87,9 +112,9 @@
                                         Margin="8"
                                         Text="Sampler"
                                         VerticalAlignment="Center" />
-                                    <ListBox
+                                    <ComboBox
                                         Grid.Column="1"
-                                        ItemsSource=""
+                                        ItemsSource="{Binding Samplers}"
                                         Margin="8"
                                         MinWidth="200" />
                                     <TextBlock

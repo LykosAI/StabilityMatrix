@@ -15,4 +15,10 @@ public interface IA3WebApi
     
     [Get("/sdapi/v1/progress")]
     Task<ProgressResponse> GetProgress([Body] ProgressRequest request);
+    
+    [Get("/sdapi/v1/options")]
+    Task<A3Options> GetOptions();
+    
+    [Post("/sdapi/v1/options")]
+    Task SetOptions([Body] A3Options request);
 }

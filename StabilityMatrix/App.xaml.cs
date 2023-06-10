@@ -168,7 +168,10 @@ namespace StabilityMatrix
                 .AddPolicyHandler(retryPolicy);
             
             // Add Refit client managers
-            var a3WebApiManager = new A3WebApiManager(settingsManager);
+            var a3WebApiManager = new A3WebApiManager(settingsManager)
+            {
+                RefitSettings = defaultRefitSettings
+            };
             serviceCollection.AddSingleton<IA3WebApiManager>(a3WebApiManager);
 
             // Logging configuration

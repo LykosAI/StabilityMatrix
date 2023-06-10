@@ -152,8 +152,7 @@ public class A3WebUI : BaseGitPackage
 
             if (s.Contains("Running on", StringComparison.OrdinalIgnoreCase))
             {
-                var regex = new Regex(
-                    "(?:https?|ftp)://[-a-zA-Z0-9.]+(:(6553[0-5]|655[0-2][0-9]|65[0-4][0-9][0-9]|6[0-4][0-9][0-9][0-9]|\\d{2,4}|[1-9]))?");
+                var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
                 var match = regex.Match(s);
                 if (match.Success)
                 {

@@ -109,8 +109,7 @@ public class ComfyUI : BaseGitPackage
 
             if (s.Contains("To see the GUI go to", StringComparison.OrdinalIgnoreCase))
             {
-                var regex = new Regex(
-                    @"(https?:\/\/)([^:\s]+):(\d+)");
+                var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
                 var match = regex.Match(s);
                 if (match.Success)
                 {

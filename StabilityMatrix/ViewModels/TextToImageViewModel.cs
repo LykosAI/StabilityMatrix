@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
@@ -59,6 +60,9 @@ public partial class TextToImageViewModel : ObservableObject
     [ObservableProperty]
     private CheckpointFolder? diffusionCheckpointFolder;
     
+    [ObservableProperty]
+    private CheckpointFile? selectedCheckpointFile;
+    
     public Visibility ProgressBarVisibility => ProgressValue > 0 ? Visibility.Visible : Visibility.Collapsed;
     
     public List<string> Samplers { get; } = new()
@@ -104,6 +108,18 @@ public partial class TextToImageViewModel : ObservableObject
         };
         // Index the folder
         await DiffusionCheckpointFolder.IndexAsync();
+        // Set the active model from the api
+        await SetActiveModelFromApi();
+    }
+
+    private async Task SetActiveModelFromApi()
+    {
+        var options = await a3WebApiManager.Client.GetOptions();
+        // Find file
+        var checkpointFile = DiffusionCheckpointFolder?
+            .CheckpointFiles.FirstOrDefault(f => f.FileName == options.SdModelCheckpoint);
+        logger.LogInformation("Set active checkpoint from api {CheckpointFile}", checkpointFile?.FileName);
+        SelectedCheckpointFile = checkpointFile;
     }
 
     // Checks connection, if unsuccessful, shows a content dialog to retry

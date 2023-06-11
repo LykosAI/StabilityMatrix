@@ -82,7 +82,7 @@ public class A3WebUI : BaseGitPackage
         new()
         {
             Name = "API",
-            DefaultValue = true,
+            InitialValue = true,
             Options = new() {"--api"}
         },
         new()

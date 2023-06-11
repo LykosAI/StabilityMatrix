@@ -345,8 +345,9 @@ public partial class SettingsViewModel : ObservableObject
         // Set from launch options
         WebApiActivePackageHost = settingsManager.GetActivePackageHost();
         WebApiActivePackagePort = settingsManager.GetActivePackagePort();
-        // Okay if both not null
-        if (WebApiActivePackageHost != null && WebApiActivePackagePort != null) return;
+        // Okay if both not empty
+        if (!string.IsNullOrWhiteSpace(WebApiActivePackageHost) && 
+            !string.IsNullOrWhiteSpace(WebApiActivePackagePort)) return;
         
         // Also check default values
         var currentInstall = settingsManager.Settings.GetActiveInstalledPackage();

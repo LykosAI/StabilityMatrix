@@ -114,12 +114,17 @@ public partial class TextToImageViewModel : ObservableObject
 
     private async Task SetActiveModelFromApi()
     {
-        var options = await a3WebApiManager.Client.GetOptions();
-        // Find file
-        var checkpointFile = DiffusionCheckpointFolder?
-            .CheckpointFiles.FirstOrDefault(f => f.FileName == options.SdModelCheckpoint);
-        logger.LogInformation("Set active checkpoint from api {CheckpointFile}", checkpointFile?.FileName);
-        SelectedCheckpointFile = checkpointFile;
+        var task = a3WebApiManager.Client.GetOptions();
+        var responseResult = await snackbarService.TryAsync(task, "Failed to get options");
+        if (responseResult is {IsSuccessful: true, Result: not null})
+        {
+            // Find file
+            var options = responseResult.Result;
+            var checkpointFile = DiffusionCheckpointFolder?
+                .CheckpointFiles.FirstOrDefault(f => f.FileName == options.SdModelCheckpoint);
+            logger.LogInformation("Set active checkpoint from api {CheckpointFile}", checkpointFile?.FileName);
+            SelectedCheckpointFile = checkpointFile;
+        }
     }
 
     // Checks connection, if unsuccessful, shows a content dialog to retry

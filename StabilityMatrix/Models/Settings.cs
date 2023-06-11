@@ -16,7 +16,7 @@ public class Settings
     public List<string>? PathExtensions { get; set; }
     public string? WebApiHost { get; set; }
     public string? WebApiPort { get; set; }
-    
+
     public InstalledPackage? GetActiveInstalledPackage()
     {
         return InstalledPackages.FirstOrDefault(x => x.Id == ActiveInstalledPackage);

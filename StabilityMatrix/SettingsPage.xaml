@@ -140,7 +140,7 @@
                     </StackPanel>
                 </ui:Card>
 
-                <ui:Card Margin="8" Visibility="{Binding IsDebugPanelEnabled, Converter={StaticResource BoolToVisibilityConverter}}">
+                <ui:Card Margin="8" Visibility="{Binding IsDebugModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}">
                     <StackPanel HorizontalAlignment="Left" Orientation="Vertical">
                         <TextBlock
                             FontSize="16"

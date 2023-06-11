@@ -26,6 +26,7 @@ using StabilityMatrix.Python;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.Window;
+using EventManager = StabilityMatrix.Helper.EventManager;
 using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
 
 namespace StabilityMatrix.ViewModels;
@@ -101,11 +102,12 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [ObservableProperty]
-    private bool isDebugPanelEnabled;
-
+    private bool isDebugModeEnabled;
+    partial void OnIsDebugModeEnabledChanged(bool value) => EventManager.Instance.OnDevModeSettingChanged(value);
+    
     [ObservableProperty]
     private string selectedTheme;
-
+    
     [ObservableProperty] 
     private WindowBackdropType windowBackdropType;
 
@@ -285,7 +287,7 @@ public partial class SettingsViewModel : ObservableObject
     private async Task AppVersionClickAsync()
     {
         // Ignore if already enabled
-        if (IsDebugPanelEnabled) return;
+        if (IsDebugModeEnabled) return;
         switch (AppVersionClickCount)
         {
             // Open flyout on 3rd click
@@ -300,7 +302,7 @@ public partial class SettingsViewModel : ObservableObject
                 // Close flyout
                 IsVersionFlyoutOpen = false;
                 // Enable debug options
-                IsDebugPanelEnabled = true;
+                IsDebugModeEnabled = true;
                 const string msg = "Warning: Improper use may corrupt application state or cause loss of data.";
                 var dialog = snackbarService.ShowSnackbarAsync(msg, "Debug options enabled",
                     LogLevel.Information);

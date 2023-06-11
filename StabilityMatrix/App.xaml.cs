@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
@@ -116,11 +117,8 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<CheckpointManagerViewModel>();
             serviceCollection.AddSingleton<CheckpointBrowserViewModel>();
             
-            var settingsManager = new SettingsManager();
-            serviceCollection.AddSingleton<ISettingsManager>(settingsManager);
-            // Insert path extensions
-            settingsManager.InsertPathExtensions();
-            
+            serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
+
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, VladAutomatic>();
             serviceCollection.AddSingleton<BasePackage, ComfyUI>();
@@ -159,13 +157,6 @@ namespace StabilityMatrix
                 .WaitAndRetryAsync(delay);
 
             // Add Refit clients
-            serviceCollection.AddRefitClient<IA3WebApi>(defaultRefitSettings)
-                .ConfigureHttpClient(c =>
-                {
-                    c.BaseAddress = new Uri("http://localhost:7860");
-                    c.Timeout = TimeSpan.FromSeconds(2);
-                })
-                .AddPolicyHandler(retryPolicy);
             serviceCollection.AddRefitClient<ICivitApi>(defaultRefitSettings)
                 .ConfigureHttpClient(c =>
                 {
@@ -173,6 +164,16 @@ namespace StabilityMatrix
                     c.Timeout = TimeSpan.FromSeconds(8);
                 })
                 .AddPolicyHandler(retryPolicy);
+
+            serviceCollection.AddHttpClient("A3Client").AddPolicyHandler(retryPolicy);
+            
+            // Add Refit client managers
+            serviceCollection.AddSingleton<IA3WebApiManager>(services =>
+                new A3WebApiManager(services.GetRequiredService<ISettingsManager>(),
+                    services.GetRequiredService<IHttpClientFactory>())
+                {
+                    RefitSettings = defaultRefitSettings,
+                });
 
             // Logging configuration
             var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");
@@ -217,6 +218,10 @@ namespace StabilityMatrix
             });
 
             serviceProvider = serviceCollection.BuildServiceProvider();
+            
+            // Insert path extensions
+            serviceProvider.GetRequiredService<ISettingsManager>().InsertPathExtensions();
+            
             var window = serviceProvider.GetRequiredService<MainWindow>();
             window.Show();
         }

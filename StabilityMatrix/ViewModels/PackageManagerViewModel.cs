@@ -226,8 +226,15 @@ public partial class PackageManagerViewModel : ObservableObject
         if (new DirectoryInfo(targetDirectory).LinkTarget != null)
         {
             logger.LogInformation("Removing junction point {TargetDirectory}", targetDirectory);
-            Directory.Delete(targetDirectory, false);
-            return;
+            try
+            {
+                Directory.Delete(targetDirectory, false);
+                return;
+            }
+            catch (IOException ex)
+            {
+                throw new IOException($"Failed to delete junction point {targetDirectory}", ex);
+            }
         }
         // Recursively delete all subdirectories
         var subdirectoryEntries = Directory.GetDirectories(targetDirectory);
@@ -239,11 +246,25 @@ public partial class PackageManagerViewModel : ObservableObject
         var fileEntries = Directory.GetFiles(targetDirectory);
         foreach (var filePath in fileEntries)
         {
-            File.SetAttributes(filePath, FileAttributes.Normal);
-            File.Delete(filePath);
+            try
+            {
+                File.SetAttributes(filePath, FileAttributes.Normal);
+                File.Delete(filePath);
+            }
+            catch (IOException ex)
+            {
+                throw new IOException($"Failed to delete file {filePath}", ex);
+            }
         }
         // Delete the target directory itself
-        Directory.Delete(targetDirectory, false);
+        try
+        {
+            Directory.Delete(targetDirectory, false);
+        }
+        catch (IOException ex)
+        {
+            throw new IOException($"Failed to delete directory {targetDirectory}", ex);
+        }
     }
 
     private async Task UpdateSelectedPackage()

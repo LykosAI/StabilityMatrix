@@ -30,6 +30,7 @@ public static class ProcessRunner
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.CreateNoWindow = true;
         process.Start();
+        ProcessTracker.AddProcess(process);
 
         var output = await process.StandardOutput.ReadToEndAsync();
         await process.WaitForExitAsync();
@@ -73,6 +74,7 @@ public static class ProcessRunner
         }
 
         process.Start();
+        ProcessTracker.AddProcess(process);
 
         if (outputDataReceived != null)
         {
@@ -110,7 +112,10 @@ public static class ProcessRunner
     /// </summary>
     /// <param name="process">Process to check.</param>
     /// <param name="expectedExitCode">Expected exit code.</param>
+    /// <param name="stdout">Process stdout.</param>
+    /// <param name="stderr">Process stderr.</param>
     /// <exception cref="ProcessException">Thrown if exit code does not match expected value.</exception>
+    // ReSharper disable once MemberCanBePrivate.Global
     public static Task ValidateExitConditionAsync(Process process, int expectedExitCode = 0, string? stdout = null, string? stderr = null)
     {
         var exitCode = process.ExitCode;

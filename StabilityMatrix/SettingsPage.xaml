@@ -10,6 +10,7 @@
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     x:Class="StabilityMatrix.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:controls="clr-namespace:StabilityMatrix.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:StabilityMatrix"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -67,6 +68,64 @@
                     </StackPanel>
                 </ui:Card>
 
+                <!--  Text2Image host port settings  -->
+                <ui:Card Margin="8">
+                    <StackPanel HorizontalAlignment="Left">
+                        <TextBlock
+                            FontSize="16"
+                            FontWeight="Bold"
+                            Margin="0,8"
+                            Text="Text2Image" />
+                        <TextBlock
+                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                            Margin="4,0,0,4"
+                            Text="Uses the launch settings of the active package by default" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="0.2*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="0.2*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock
+                                        Margin="8"
+                                        Text="Host"
+                                        VerticalAlignment="Center" />
+                                    <ui:TextBox
+                                        ClearButtonEnabled="True"
+                                        Grid.Column="1"
+                                        Margin="8"
+                                        PlaceholderEnabled="True"
+                                        PlaceholderText="{Binding WebApiActivePackageHost}"
+                                        Width="280" />
+                                </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="0.2*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock
+                                        Margin="8"
+                                        Text="Port"
+                                        VerticalAlignment="Center" />
+                                    <ui:TextBox
+                                        ClearButtonEnabled="True"
+                                        Grid.Column="1"
+                                        Margin="8"
+                                        PlaceholderEnabled="True"
+                                        PlaceholderText="{Binding WebApiActivePackagePort}"
+                                        Width="280" />
+                                </Grid>
+                            </StackPanel>
+                            <controls:RefreshBadge DataContext="{Binding Text2ImageRefreshBadge}" Grid.Column="1" />
+                        </Grid>
+                    </StackPanel>
+                </ui:Card>
+
                 <ui:Card Margin="8">
                     <StackPanel HorizontalAlignment="Left" Orientation="Vertical">
                         <TextBlock
@@ -74,7 +133,6 @@
                             FontWeight="Bold"
                             Margin="0,8"
                             Text="Embedded Python" />
-                        <!--  Add a button to show messagebox for python version  -->
                         <Button
                             Command="{Binding PythonVersionCommand}"
                             Content="Check Version Info"
@@ -82,7 +140,7 @@
                     </StackPanel>
                 </ui:Card>
 
-                <ui:Card Margin="8" Visibility="{Binding IsDebugPanelEnabled, Converter={StaticResource BoolToVisibilityConverter}}">
+                <ui:Card Margin="8" Visibility="{Binding IsDebugModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}">
                     <StackPanel HorizontalAlignment="Left" Orientation="Vertical">
                         <TextBlock
                             FontSize="16"

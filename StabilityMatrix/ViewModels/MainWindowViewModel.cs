@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -25,11 +26,13 @@ public partial class MainWindowViewModel : ObservableObject
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
         this.notificationBarService = notificationBarService;
+        
+        // Listen to dev mode event
+        EventManager.Instance.DevModeSettingChanged += (_, value) => IsTextToImagePageEnabled = value;
     }
 
     [ObservableProperty]
     private float progressValue;
-
 
     [ObservableProperty] 
     private bool isIndeterminate;
@@ -37,6 +40,8 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]   
     private TaskbarItemProgressState progressState;
 
+    [ObservableProperty]
+    private bool isTextToImagePageEnabled;
 
     public async Task OnLoaded()
     {

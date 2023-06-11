@@ -26,6 +26,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <ui:FluentWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <!--  Discord Icon  -->
         <DrawingImage x:Key="DiscordIconWhite">
             <DrawingImage.Drawing>
@@ -59,9 +60,9 @@
         </ui:TitleBar>
         <Grid Grid.Row="1">
             <ui:NavigationView
+                IsBackButtonVisible="Collapsed"
                 PaneClosed="RootNavigation_OnPaneClosed"
                 PaneOpened="RootNavigation_OnPaneOpened"
-                IsBackButtonVisible="Collapsed"
                 UseLayoutRounding="True"
                 x:Name="RootNavigation">
                 <ui:NavigationView.Header>
@@ -92,7 +93,8 @@
                     <ui:NavigationViewItem
                         Content="Text2Image (Beta™)"
                         Icon="{ui:SymbolIcon Image24}"
-                        TargetPageType="{x:Type local:TextToImagePage}" />
+                        TargetPageType="{x:Type local:TextToImagePage}"
+                        Visibility="{Binding IsTextToImagePageEnabled, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 </ui:NavigationView.MenuItems>
                 <ui:NavigationView.FooterMenuItems>
                     <!--  Footer menus  -->

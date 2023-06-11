@@ -5,17 +5,20 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MdXaml;
 using Microsoft.Extensions.Logging;
 using Ookii.Dialogs.Wpf;
+using Refit;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
@@ -23,13 +26,16 @@ using StabilityMatrix.Python;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.Window;
+using EventManager = StabilityMatrix.Helper.EventManager;
 using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
 
 namespace StabilityMatrix.ViewModels;
 
 public partial class SettingsViewModel : ObservableObject
 {
+    private readonly ILogger<SettingsViewModel> logger;
     private readonly ISettingsManager settingsManager;
+    private readonly IPackageFactory packageFactory;
     private readonly IPyRunner pyRunner;
     private readonly ISnackbarService snackbarService;
     private static string LicensesPath => "pack://application:,,,/Assets/licenses.json";
@@ -48,25 +54,60 @@ public partial class SettingsViewModel : ObservableObject
         WindowBackdropType.Tabbed
     };
     private readonly IContentDialogService contentDialogService;
-    private readonly IA3WebApi a3WebApi;
+    private readonly IA3WebApiManager a3WebApiManager;
 
-    public SettingsViewModel(ISettingsManager settingsManager, IContentDialogService contentDialogService, IA3WebApi a3WebApi, IPyRunner pyRunner, ISnackbarService snackbarService)
+
+    [ObservableProperty] private string? webApiHost;
+    [ObservableProperty] private string? webApiPort;
+    [ObservableProperty] private string? webApiActivePackageHost;
+    [ObservableProperty] private string? webApiActivePackagePort;
+    
+    partial void OnWebApiHostChanged(string? value)
     {
+        settingsManager.SetWebApiHost(value);
+        a3WebApiManager.ResetClient();
+    }
+    
+    partial void OnWebApiPortChanged(string? value)
+    {
+        settingsManager.SetWebApiPort(value);
+        a3WebApiManager.ResetClient();
+    }
+
+    public RefreshBadgeViewModel Text2ImageRefreshBadge { get; } = new()
+    {
+        SuccessToolTipText = "Connected",
+        WorkingToolTipText = "Trying to connect...",
+        FailToolTipText = "Failed to connect",
+    };
+
+    public SettingsViewModel(
+        ISettingsManager settingsManager, 
+        IContentDialogService contentDialogService, 
+        IA3WebApiManager a3WebApiManager, 
+        IPyRunner pyRunner, 
+        ISnackbarService snackbarService, 
+        ILogger<SettingsViewModel> logger, 
+        IPackageFactory packageFactory)
+    {
+        this.logger = logger;
         this.settingsManager = settingsManager;
+        this.packageFactory = packageFactory;
         this.contentDialogService = contentDialogService;
         this.snackbarService = snackbarService;
-        this.a3WebApi = a3WebApi;
+        this.a3WebApiManager = a3WebApiManager;
         this.pyRunner = pyRunner;
         SelectedTheme = settingsManager.Settings.Theme ?? "Dark";
         WindowBackdropType = settingsManager.Settings.WindowBackdropType ?? WindowBackdropType.Mica;
     }
 
     [ObservableProperty]
-    private bool isDebugPanelEnabled;
-
+    private bool isDebugModeEnabled;
+    partial void OnIsDebugModeEnabledChanged(bool value) => EventManager.Instance.OnDevModeSettingChanged(value);
+    
     [ObservableProperty]
     private string selectedTheme;
-
+    
     [ObservableProperty] 
     private WindowBackdropType windowBackdropType;
 
@@ -163,7 +204,7 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task PingWebApi()
     {
-        var result = await snackbarService.TryAsync(a3WebApi.GetPing(), "Failed to ping web api");
+        var result = await snackbarService.TryAsync(a3WebApiManager.Client.GetPing(), "Failed to ping web api");
 
         if (result.IsSuccessful)
         {
@@ -173,6 +214,39 @@ public partial class SettingsViewModel : ObservableObject
             dialog.PrimaryButtonText = "Ok";
             await dialog.ShowAsync();
         }
+    }
+
+    private Task<bool> TryPingWebApi()
+    {
+        return TryPingWebApi(TimeSpan.FromMilliseconds(150));
+    }
+
+    private async Task<bool> TryPingWebApi(TimeSpan? minimumDelay)
+    {
+        bool result;
+        var timer = minimumDelay != null ? Stopwatch.StartNew() : null;
+        try
+        {
+            await a3WebApiManager.Client.GetPing();
+            result = true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogInformation(ex, "Ping failed");
+            result = false;
+        }
+        
+        // Wait if minimum delay is set
+        if (minimumDelay != null)
+        {
+            var delay = minimumDelay.Value - timer!.Elapsed;
+            if (delay > TimeSpan.Zero)
+            {
+                await Task.Delay(delay);
+            }
+        }
+
+        return result;
     }
     
     [RelayCommand]
@@ -213,7 +287,7 @@ public partial class SettingsViewModel : ObservableObject
     private async Task AppVersionClickAsync()
     {
         // Ignore if already enabled
-        if (IsDebugPanelEnabled) return;
+        if (IsDebugModeEnabled) return;
         switch (AppVersionClickCount)
         {
             // Open flyout on 3rd click
@@ -228,7 +302,7 @@ public partial class SettingsViewModel : ObservableObject
                 // Close flyout
                 IsVersionFlyoutOpen = false;
                 // Enable debug options
-                IsDebugPanelEnabled = true;
+                IsDebugModeEnabled = true;
                 const string msg = "Warning: Improper use may corrupt application state or cause loss of data.";
                 var dialog = snackbarService.ShowSnackbarAsync(msg, "Debug options enabled",
                     LogLevel.Information);
@@ -265,6 +339,28 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
+    // Sets default port and host for web api fields
+    public void SetWebApiDefaults()
+    {
+        // Set from launch options
+        WebApiActivePackageHost = settingsManager.GetActivePackageHost();
+        WebApiActivePackagePort = settingsManager.GetActivePackagePort();
+        // Okay if both not empty
+        if (!string.IsNullOrWhiteSpace(WebApiActivePackageHost) && 
+            !string.IsNullOrWhiteSpace(WebApiActivePackagePort)) return;
+        
+        // Also check default values
+        var currentInstall = settingsManager.Settings.GetActiveInstalledPackage();
+        if (currentInstall?.PackageName == null) return;
+        var currentPackage = packageFactory.FindPackageByName(currentInstall.PackageName);
+        if (currentPackage == null) return;
+        // Set default port and host
+        WebApiActivePackageHost ??= currentPackage.LaunchOptions
+            .FirstOrDefault(x => x.Name.ToLowerInvariant() == "host")?.DefaultValue as string; ;
+        WebApiActivePackagePort ??= currentPackage.LaunchOptions
+            .FirstOrDefault(x => x.Name.ToLowerInvariant() == "port")?.DefaultValue as string;
+    }
+
     public async Task OnLoaded()
     {
         SelectedTheme = string.IsNullOrWhiteSpace(settingsManager.Settings.Theme)
@@ -273,5 +369,11 @@ public partial class SettingsViewModel : ObservableObject
         GitInfo = await ProcessRunner.GetProcessOutputAsync("git", "--version");
 
         TestProperty = $"{SystemParameters.PrimaryScreenHeight} x {SystemParameters.PrimaryScreenWidth}";
+        
+        // Set defaults
+        SetWebApiDefaults();
+        // Refresh text2image connection badge
+        Text2ImageRefreshBadge.RefreshFunc = TryPingWebApi;
+        Text2ImageRefreshBadge.RefreshCommand.ExecuteAsync(null).SafeFireAndForget();
     }
 }

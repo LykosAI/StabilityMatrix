@@ -1,13 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
+using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Api;
+using StabilityMatrix.Extensions;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Models;
 using StabilityMatrix.Models.Api;
 using StabilityMatrix.Services;
 
@@ -16,7 +21,7 @@ namespace StabilityMatrix.ViewModels;
 public partial class TextToImageViewModel : ObservableObject
 {
     private readonly ILogger<TextToImageViewModel> logger;
-    private readonly IA3WebApi a3WebApi;
+    private readonly IA3WebApiManager a3WebApiManager;
     private readonly ISnackbarService snackbarService;
     private readonly PageContentDialogService pageContentDialogService;
     private AsyncDispatcherTimer? progressQueryTimer;
@@ -51,13 +56,26 @@ public partial class TextToImageViewModel : ObservableObject
     
     [ObservableProperty]
     private BitmapImage? imagePreview;
+
+    [ObservableProperty]
+    private CheckpointFolder? diffusionCheckpointFolder;
+    
+    [ObservableProperty]
+    private CheckpointFile? selectedCheckpointFile;
     
     public Visibility ProgressBarVisibility => ProgressValue > 0 ? Visibility.Visible : Visibility.Collapsed;
     
-    public TextToImageViewModel(IA3WebApi a3WebApi, ILogger<TextToImageViewModel> logger, ISnackbarService snackbarService, PageContentDialogService pageContentDialogService)
+    public List<string> Samplers { get; } = new()
+    {
+        "Euler a", 
+        "Euler", 
+        "DPM++ 2M Karras"
+    };
+
+    public TextToImageViewModel(IA3WebApiManager a3WebApiManager, ILogger<TextToImageViewModel> logger, ISnackbarService snackbarService, PageContentDialogService pageContentDialogService)
     {
         this.logger = logger;
-        this.a3WebApi = a3WebApi;
+        this.a3WebApiManager = a3WebApiManager;
         this.snackbarService = snackbarService;
         this.pageContentDialogService = pageContentDialogService;
         positivePromptText = "Positive";
@@ -75,6 +93,38 @@ public partial class TextToImageViewModel : ObservableObject
         {
             await CheckConnection();
         }
+        
+        // Set the diffusion checkpoint folder
+        var sdModelsDir = Path.Join(SharedFolders.SharedFoldersPath, SharedFolderType.StableDiffusion.GetStringValue());
+        if (!Directory.Exists(sdModelsDir))
+        {
+            logger.LogWarning("Skipped model folder index - {SdModelsDir} does not exist", sdModelsDir);
+            return;
+        }
+        DiffusionCheckpointFolder = new CheckpointFolder
+        {
+            Title = Path.GetFileName(sdModelsDir),
+            DirectoryPath = sdModelsDir
+        };
+        // Index the folder
+        await DiffusionCheckpointFolder.IndexAsync();
+        // Set the active model from the api
+        await SetActiveModelFromApi();
+    }
+
+    private async Task SetActiveModelFromApi()
+    {
+        var task = a3WebApiManager.Client.GetOptions();
+        var responseResult = await snackbarService.TryAsync(task, "Failed to get options");
+        if (responseResult is {IsSuccessful: true, Result: not null})
+        {
+            // Find file
+            var options = responseResult.Result;
+            var checkpointFile = DiffusionCheckpointFolder?
+                .CheckpointFiles.FirstOrDefault(f => f.FileName == options.SdModelCheckpoint);
+            logger.LogInformation("Set active checkpoint from api {CheckpointFile}", checkpointFile?.FileName);
+            SelectedCheckpointFile = checkpointFile;
+        }
     }
 
     // Checks connection, if unsuccessful, shows a content dialog to retry
@@ -82,7 +132,7 @@ public partial class TextToImageViewModel : ObservableObject
     {
         try
         { 
-            await a3WebApi.GetPing();
+            await a3WebApiManager.Client.GetPing();
             ConnectionFailed = false;
         }
         catch (Exception e)
@@ -136,7 +186,7 @@ public partial class TextToImageViewModel : ObservableObject
     private async Task OnProgressTrackingTick()
     {
         var request = new ProgressRequest();
-        var task = a3WebApi.GetProgress(request);
+        var task = a3WebApiManager.Client.GetProgress(request);
         var responseResult = await snackbarService.TryAsync(task, "Failed to get progress");
         if (!responseResult.IsSuccessful || responseResult.Result == null)
         {
@@ -195,7 +245,7 @@ public partial class TextToImageViewModel : ObservableObject
             NegativePrompt = NegativePromptText,
             Steps = GenerationSteps,
         };
-        var task = a3WebApi.TextToImage(request);
+        var task = a3WebApiManager.Client.TextToImage(request);
         
         // Progress track while waiting for response
         StartProgressTracking();

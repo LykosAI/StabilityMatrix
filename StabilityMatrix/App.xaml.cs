@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows;
@@ -163,13 +164,15 @@ namespace StabilityMatrix
                     c.Timeout = TimeSpan.FromSeconds(8);
                 })
                 .AddPolicyHandler(retryPolicy);
+
+            serviceCollection.AddHttpClient("A3Client").AddPolicyHandler(retryPolicy);
             
             // Add Refit client managers
             serviceCollection.AddSingleton<IA3WebApiManager>(services =>
-                new A3WebApiManager(services.GetRequiredService<ISettingsManager>())
+                new A3WebApiManager(services.GetRequiredService<ISettingsManager>(),
+                    services.GetRequiredService<IHttpClientFactory>())
                 {
                     RefitSettings = defaultRefitSettings,
-                    RetryPolicy = retryPolicy
                 });
 
             // Logging configuration

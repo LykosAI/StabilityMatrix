@@ -8,35 +8,36 @@ namespace StabilityMatrix.Api;
 
 public class A3WebApiManager : IA3WebApiManager
 {
-    private IA3WebApi? _client;
+    private IA3WebApi? client;
     public IA3WebApi Client
     {
         get
         {
             // Return the existing client if it exists
-            if (_client != null)
+            if (client != null)
             {
-                return _client;
+                return client;
             }
             // Create a new client and store it otherwise
-            _client = CreateClient();
-            return _client;
+            client = CreateClient();
+            return client;
         }
     }
     
     private readonly ISettingsManager settingsManager;
-    public AsyncRetryPolicy<HttpResponseMessage>? RetryPolicy { get; init; }
+    private readonly IHttpClientFactory httpClientFactory;
     public RefitSettings? RefitSettings { get; init; }
     public string? BaseUrl { get; set; }
     
-    public A3WebApiManager(ISettingsManager settingsManager)
+    public A3WebApiManager(ISettingsManager settingsManager, IHttpClientFactory httpClientFactory)
     {
         this.settingsManager = settingsManager;
+        this.httpClientFactory = httpClientFactory;
     }
 
     public void ResetClient()
     {
-        _client = null;
+        client = null;
     }
 
     private IA3WebApi CreateClient()
@@ -59,7 +60,9 @@ public class A3WebApiManager : IA3WebApiManager
             BaseUrl = "http://localhost:7860";
         }
 
-        var client = RestService.For<IA3WebApi>(BaseUrl, RefitSettings);
-        return client;
+        var httpClient = httpClientFactory.CreateClient("A3Client");
+        httpClient.BaseAddress = new Uri(BaseUrl);
+        var api = RestService.For<IA3WebApi>(httpClient, RefitSettings);
+        return api;
     }
 }

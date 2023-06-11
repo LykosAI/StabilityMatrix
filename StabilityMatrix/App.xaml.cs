@@ -116,11 +116,8 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<CheckpointManagerViewModel>();
             serviceCollection.AddSingleton<CheckpointBrowserViewModel>();
             
-            var settingsManager = new SettingsManager();
-            serviceCollection.AddSingleton<ISettingsManager>(settingsManager);
-            // Insert path extensions
-            settingsManager.InsertPathExtensions();
-            
+            serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
+
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, VladAutomatic>();
             serviceCollection.AddSingleton<BasePackage, ComfyUI>();
@@ -168,11 +165,12 @@ namespace StabilityMatrix
                 .AddPolicyHandler(retryPolicy);
             
             // Add Refit client managers
-            var a3WebApiManager = new A3WebApiManager(settingsManager)
-            {
-                RefitSettings = defaultRefitSettings
-            };
-            serviceCollection.AddSingleton<IA3WebApiManager>(a3WebApiManager);
+            serviceCollection.AddSingleton<IA3WebApiManager>(services =>
+                new A3WebApiManager(services.GetRequiredService<ISettingsManager>())
+                {
+                    RefitSettings = defaultRefitSettings,
+                    RetryPolicy = retryPolicy
+                });
 
             // Logging configuration
             var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");
@@ -217,6 +215,10 @@ namespace StabilityMatrix
             });
 
             serviceProvider = serviceCollection.BuildServiceProvider();
+            
+            // Insert path extensions
+            serviceProvider.GetRequiredService<ISettingsManager>().InsertPathExtensions();
+            
             var window = serviceProvider.GetRequiredService<MainWindow>();
             window.Show();
         }

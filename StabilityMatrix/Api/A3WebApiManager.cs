@@ -24,12 +24,12 @@ public class A3WebApiManager : IA3WebApiManager
         }
     }
     
-    private readonly SettingsManager settingsManager;
+    private readonly ISettingsManager settingsManager;
     public AsyncRetryPolicy<HttpResponseMessage>? RetryPolicy { get; init; }
     public RefitSettings? RefitSettings { get; init; }
     public string? BaseUrl { get; set; }
     
-    public A3WebApiManager(SettingsManager settingsManager)
+    public A3WebApiManager(ISettingsManager settingsManager)
     {
         this.settingsManager = settingsManager;
     }

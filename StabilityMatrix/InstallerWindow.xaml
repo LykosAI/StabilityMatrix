@@ -60,7 +60,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <ui:TitleBar Background="#191919" Foreground="White">
+        <ui:TitleBar Background="{ui:ThemeResource ApplicationBackgroundBrush}">
             <ui:TitleBar.Header>
                 <TextBlock Margin="16,8" Text="Stability Matrix" />
             </ui:TitleBar.Header>

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,7 @@ using StabilityMatrix.Python;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.ContentDialogControl;
 using EventManager = StabilityMatrix.Helper.EventManager;
+using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -28,6 +30,7 @@ public partial class LaunchViewModel : ObservableObject
     private readonly ILogger<LaunchViewModel> logger;
     private readonly IPyRunner pyRunner;
     private readonly IDialogFactory dialogFactory;
+    private readonly ISnackbarService snackbarService;
 
     private BasePackage? runningPackage;
     private bool clearingPackages = false;
@@ -72,7 +75,8 @@ public partial class LaunchViewModel : ObservableObject
         LaunchOptionsDialogViewModel launchOptionsDialogViewModel,
         ILogger<LaunchViewModel> logger,
         IPyRunner pyRunner,
-        IDialogFactory dialogFactory)
+        IDialogFactory dialogFactory,
+        ISnackbarService snackbarService)
     {
         this.pyRunner = pyRunner;
         this.dialogFactory = dialogFactory;
@@ -81,6 +85,7 @@ public partial class LaunchViewModel : ObservableObject
         this.logger = logger;
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
+        this.snackbarService = snackbarService;
         SetProcessRunning(false);
         
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
@@ -109,30 +114,55 @@ public partial class LaunchViewModel : ObservableObject
 
     public AsyncRelayCommand LaunchCommand => new(async () =>
     {
-        // Clear console
-        ConsoleOutput = "";
+        var activeInstall = SelectedPackage;
 
-        if (SelectedPackage == null)
+        if (activeInstall == null)
         {
-            ConsoleOutput = "No package selected";
+            // No selected package: error snackbar
+            snackbarService.ShowSnackbarAsync(
+                "You must install and select a package before launching", 
+                "No package selected").SafeFireAndForget();
             return;
         }
+        
+        var activeInstallName = activeInstall.PackageName;
+        var basePackage = string.IsNullOrWhiteSpace(activeInstallName) 
+            ? null : packageFactory.FindPackageByName(activeInstallName);
+        
+        if (basePackage == null)
+        {
+            logger.LogWarning("During launch, package name '{PackageName}' did not match a definition", activeInstallName);
+            snackbarService.ShowSnackbarAsync(
+                "Install package name did not match a definition. Please reinstall and let us know about this issue.", 
+                "Package name invalid").SafeFireAndForget();
+            return;
+        }
+        
+        // If this is the first launch (LaunchArgs is null),
+        // load and save a launch options dialog in background
+        // so that dynamic initial values are saved.
+        if (activeInstall.LaunchArgs == null)
+        {
+            var definitions = basePackage.LaunchOptions;
+            // Open a config page and save it
+            var dialog = dialogFactory.CreateLaunchOptionsDialog(definitions, activeInstall);
+            var args = dialog.AsLaunchArgs();
+            settingsManager.SaveLaunchArgs(activeInstall.Id, args);
+        }
 
+        // Clear console
+        ConsoleOutput = "";
+        
         await pyRunner.Initialize();
 
         // Get path from package
-        var packagePath = SelectedPackage.Path!;
-        var basePackage = packageFactory.FindPackageByName(SelectedPackage.PackageName!);
-        if (basePackage == null)
-        {
-            throw new InvalidOperationException("Package not found");
-        }
+        var packagePath = activeInstall.Path!;
 
         basePackage.ConsoleOutput += OnConsoleOutput;
         basePackage.Exited += OnExit;
         basePackage.StartupComplete += RunningPackageOnStartupComplete;
         // Load user launch args from settings and convert to string
-        var userArgs = settingsManager.GetLaunchArgs(SelectedPackage.Id);
+        var userArgs = settingsManager.GetLaunchArgs(activeInstall.Id);
         var userArgsString = string.Join(" ", userArgs.Select(opt => opt.ToArgString()));
         // Join with extras, if any
         userArgsString = string.Join(" ", userArgsString, basePackage.ExtraLaunchArguments);

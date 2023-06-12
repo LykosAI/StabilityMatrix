@@ -64,15 +64,9 @@
                             Height="20"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
-                            Background="#661467B5"
+                            Background="#AA1467B5"
                             Margin="4,16,0,0"
                             Padding="3">
-                            <Grid>
-                                <Border>
-                                    <Border.Effect>
-                                        <BlurEffect Radius="7" KernelType="Gaussian"/>
-                                    </Border.Effect>
-                                </Border>
                                 
                             <TextBlock
                                 FontSize="10"
@@ -81,7 +75,6 @@
                                 HorizontalAlignment="Center"
                                 Text="{Binding CivitModel.Type}"
                                 VerticalAlignment="Center" />
-                            </Grid>
                         </ui:Card>
 
                         <Rectangle

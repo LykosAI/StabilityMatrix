@@ -1,6 +1,4 @@
 ﻿<Page
-    Background="{DynamicResource ApplicationBackgroundBrush}"
-    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     Loaded="CheckpointManagerPage_OnLoaded"
     d:DataContext="{d:DesignInstance Type=designData:MockCheckpointManagerViewModel,
                                      IsDesignTimeCreatable=True}"

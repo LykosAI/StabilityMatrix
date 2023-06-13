@@ -31,4 +31,6 @@ public interface ISettingsManager
     string? GetActivePackagePort();
     void SetWebApiHost(string? host);
     void SetWebApiPort(string? port);
+    void SetModelsDirectory(string? directory);
+    void SetFirstLaunchSetupComplete(bool firstLaunchSetupCompleted);
 }

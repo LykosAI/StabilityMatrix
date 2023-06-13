@@ -80,6 +80,17 @@ public static class Size
     public const ulong KiB = 1024;
     public const ulong MiB = KiB * 1024;
     public const ulong GiB = MiB * 1024;
+    
+    public static string FormatBytes(ulong bytes)
+    {
+        return bytes switch
+        {
+            < KiB => $"{bytes} B",
+            < MiB => $"{bytes / (double) KiB:0.0} KiB",
+            < GiB => $"{bytes / (double) MiB:0.0} MiB",
+            _ => $"{bytes / (double) GiB:0.0} GiB"
+        };
+    }
 }
 
 public enum Level
@@ -93,7 +104,7 @@ public enum Level
 public record GpuInfo
 {
     public string? Name { get; init; } = string.Empty;
-    public ulong? MemoryBytes { get; init; }
+    public ulong MemoryBytes { get; init; }
     public Level? MemoryLevel => MemoryBytes switch
     {
         <= 0 => Level.Unknown,

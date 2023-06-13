@@ -49,8 +49,8 @@ public partial class RefreshBadgeViewModel : ObservableObject
     
     public SolidColorBrush ColorBrush => State switch
     {
-        ProgressState.Success => AppBrushes.SuccessGreen,
-        ProgressState.Failed => AppBrushes.FailedRed,
+        ProgressState.Success => SuccessColorBrush,
+        ProgressState.Failed => FailColorBrush,
         _ => Brushes.Gray,
     };
 

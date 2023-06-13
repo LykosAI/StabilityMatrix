@@ -4,6 +4,7 @@ using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
+using StabilityMatrix.Controls;
 using StabilityMatrix.Models;
 using Wpf.Ui.Common;
 using Wpf.Ui.Controls;
@@ -22,6 +23,9 @@ public partial class RefreshBadgeViewModel : ObservableObject
     public SymbolIcon InactiveIcon = new(SymbolRegular.Circle12);
     public SymbolIcon SuccessIcon = new(SymbolRegular.CheckmarkCircle12, true);
     public SymbolIcon FailIcon = new(SymbolRegular.ErrorCircle12);
+    
+    public SolidColorBrush SuccessColorBrush = AppBrushes.SuccessGreen;
+    public SolidColorBrush FailColorBrush = AppBrushes.FailedRed;
     
     public Func<Task<bool>>? RefreshFunc { get; set; }
 
@@ -45,8 +49,8 @@ public partial class RefreshBadgeViewModel : ObservableObject
     
     public SolidColorBrush ColorBrush => State switch
     {
-        ProgressState.Success => (SolidColorBrush) new BrushConverter().ConvertFrom("#4caf50")!,
-        ProgressState.Failed => (SolidColorBrush) new BrushConverter().ConvertFrom("#f44336")!,
+        ProgressState.Success => AppBrushes.SuccessGreen,
+        ProgressState.Failed => AppBrushes.FailedRed,
         _ => Brushes.Gray,
     };
 

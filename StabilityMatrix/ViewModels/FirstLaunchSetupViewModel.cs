@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Controls;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
@@ -56,6 +57,12 @@ public partial class FirstLaunchSetupViewModel : ObservableObject
     public void OnLoaded()
     {
         CheckHardwareBadge.RefreshCommand.ExecuteAsync(null).SafeFireAndForget();
+    }
+
+    [RelayCommand]
+    private void OpenLicenseLink()
+    {
+        ProcessRunner.OpenUrl("https://lykos.ai/matrix/license");
     }
 
 

@@ -83,17 +83,19 @@
                 <!--  Checkbox  -->
                 <Grid Grid.Row="1" HorizontalAlignment="Center">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="0.15*" />
                         <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <CheckBox IsChecked="{Binding EulaAccepted, Mode=TwoWay}" Margin="16,0,0,0" />
-                    <TextBlock
-                        FontSize="13"
+                    <CheckBox
                         Grid.Column="1"
-                        VerticalAlignment="Center">
-                        <Run>I have read and agree to the</Run>
-                        <Hyperlink NavigateUri="https://lykos.ai/matrix/license">License Agreement.</Hyperlink>
-                    </TextBlock>
+                        HorizontalAlignment="Left"
+                        IsChecked="{Binding EulaAccepted, Mode=TwoWay}"
+                        Margin="16,0,0,0">
+                        <TextBlock FontSize="13" VerticalAlignment="Center">
+                            <Run>I have read and agree to the</Run>
+                            <Hyperlink Command="{Binding OpenLicenseLinkCommand}" NavigateUri="https://lykos.ai/matrix/license">License Agreement.</Hyperlink>
+                        </TextBlock>
+                    </CheckBox>
                 </Grid>
             </Grid>
             <!--  Buttons  -->

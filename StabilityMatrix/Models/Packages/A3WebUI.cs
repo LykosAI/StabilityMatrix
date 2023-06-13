@@ -117,17 +117,17 @@ public class A3WebUI : BaseGitPackage
         if (isReleaseMode)
         {
             var allReleases = await GetAllReleases();
-            return allReleases.Select(r => new PackageVersion {TagName = r.TagName!, ReleaseNotesMarkdown = r.Body});
+            return allReleases.Where(r => r.Prerelease == false).Select(r => new PackageVersion
+                {TagName = r.TagName!, ReleaseNotesMarkdown = r.Body});
         }
-        else // branch mode
+
+        // else, branch mode
+        var allBranches = await GetAllBranches();
+        return allBranches.Select(b => new PackageVersion
         {
-            var allBranches = await GetAllBranches();
-            return allBranches.Select(b => new PackageVersion
-            {
-                TagName = $"{b.Name}",
-                ReleaseNotesMarkdown = string.Empty
-            });
-        }
+            TagName = $"{b.Name}",
+            ReleaseNotesMarkdown = string.Empty
+        });
     }
 
     public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)

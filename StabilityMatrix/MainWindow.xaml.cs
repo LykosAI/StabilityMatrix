@@ -61,5 +61,10 @@ namespace StabilityMatrix
         {
             settingsManager.SetNavExpanded(false);
         }
+
+        private void MainWindow_OnClosed(object? sender, EventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
     }
 }

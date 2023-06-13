@@ -206,7 +206,6 @@ public class SettingsManager : ISettingsManager
         {
             Converters = { new JsonStringEnumConverter() }
         })!;
-        Settings.SetDefaults();
     }
 
     private void SaveSettings()

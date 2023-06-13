@@ -20,18 +20,7 @@ public class Settings
     public List<string>? PathExtensions { get; set; }
     public string? WebApiHost { get; set; }
     public string? WebApiPort { get; set; }
-
-    [NotNull]
-    public string? ModelsDirectory { get; set; }
-    
-    /// <summary>
-    /// Sets default values for settings
-    /// </summary>
-    [MemberNotNull(nameof(ModelsDirectory))]
-    public void SetDefaults()
-    {
-        ModelsDirectory ??= Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix", "Models");
-    }
+    public string ModelsDirectory { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix", "Models");
 
     public InstalledPackage? GetActiveInstalledPackage()
     {

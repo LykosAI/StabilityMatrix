@@ -50,6 +50,7 @@ namespace StabilityMatrix
 
         public App()
         {
+            Current.ShutdownMode = ShutdownMode.OnExplicitShutdown;
             Config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
@@ -104,6 +105,7 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<CheckpointManagerPage>();
             serviceCollection.AddTransient<CheckpointBrowserPage>();
             serviceCollection.AddTransient<InstallerWindow>();
+            serviceCollection.AddTransient<FirstLaunchSetupWindow>();
 
             serviceCollection.AddTransient<MainWindowViewModel>();
             serviceCollection.AddTransient<SnackbarViewModel>();
@@ -116,6 +118,7 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<OneClickInstallViewModel>();
             serviceCollection.AddTransient<CheckpointManagerViewModel>();
             serviceCollection.AddSingleton<CheckpointBrowserViewModel>();
+            serviceCollection.AddSingleton<FirstLaunchSetupViewModel>();
             
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
 
@@ -220,7 +223,23 @@ namespace StabilityMatrix
             serviceProvider = serviceCollection.BuildServiceProvider();
             
             // Insert path extensions
-            serviceProvider.GetRequiredService<ISettingsManager>().InsertPathExtensions();
+            var settingsManager = serviceProvider.GetRequiredService<ISettingsManager>();
+            settingsManager.InsertPathExtensions();
+
+            // First time setup if needed
+            if (!settingsManager.Settings.FirstLaunchSetupComplete)
+            {
+                var setupWindow = serviceProvider.GetRequiredService<FirstLaunchSetupWindow>();
+                if (setupWindow.ShowDialog() ?? false)
+                {
+                    settingsManager.SetFirstLaunchSetupComplete(true);
+                }
+                else
+                {
+                    Current.Shutdown();
+                    return;
+                }
+            }
             
             var window = serviceProvider.GetRequiredService<MainWindow>();
             window.Show();
@@ -256,6 +275,7 @@ namespace StabilityMatrix
                 exceptionWindow.ShowDialog();
             }
             e.Handled = true;
+            Current.Shutdown(1);
             Environment.Exit(1);
         }
     }

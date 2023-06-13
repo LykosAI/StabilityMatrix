@@ -21,6 +21,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     private readonly ICivitApi civitApi;
     private readonly IDownloadService downloadService;
     private readonly ISnackbarService snackbarService;
+    private readonly ISettingsManager settingsManager;
     private const int MaxModelsPerPage = 14;
 
     [ObservableProperty] private string? searchQuery;
@@ -41,11 +42,12 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     public IEnumerable<CivitSortMode> AllSortModes => Enum.GetValues(typeof(CivitSortMode)).Cast<CivitSortMode>();
     public IEnumerable<CivitModelType> AllModelTypes => Enum.GetValues(typeof(CivitModelType)).Cast<CivitModelType>();
 
-    public CheckpointBrowserViewModel(ICivitApi civitApi, IDownloadService downloadService, ISnackbarService snackbarService)
+    public CheckpointBrowserViewModel(ICivitApi civitApi, IDownloadService downloadService, ISnackbarService snackbarService, ISettingsManager settingsManager)
     {
         this.civitApi = civitApi;
         this.downloadService = downloadService;
         this.snackbarService = snackbarService;
+        this.settingsManager = settingsManager;
         
         SelectedPeriod = CivitPeriod.Month;
         SortMode = CivitSortMode.HighestRated;
@@ -90,7 +92,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
             CanGoToPreviousPage = CurrentPageNumber > 1;
             CanGoToNextPage = CurrentPageNumber < TotalPages;
             ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(models.Items.Select(
-                m => new CheckpointBrowserCardViewModel(m, downloadService, snackbarService)));
+                m => new CheckpointBrowserCardViewModel(m, downloadService, snackbarService, settingsManager)));
             Logger.Debug($"Found {models.Items.Length} models");
         }
         catch (ApiException e)

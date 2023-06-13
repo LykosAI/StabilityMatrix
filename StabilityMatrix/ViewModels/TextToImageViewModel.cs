@@ -24,6 +24,7 @@ public partial class TextToImageViewModel : ObservableObject
     private readonly IA3WebApiManager a3WebApiManager;
     private readonly ISnackbarService snackbarService;
     private readonly PageContentDialogService pageContentDialogService;
+    private readonly ISettingsManager settingsManager;
     private AsyncDispatcherTimer? progressQueryTimer;
 
     [ObservableProperty]
@@ -72,12 +73,13 @@ public partial class TextToImageViewModel : ObservableObject
         "DPM++ 2M Karras"
     };
 
-    public TextToImageViewModel(IA3WebApiManager a3WebApiManager, ILogger<TextToImageViewModel> logger, ISnackbarService snackbarService, PageContentDialogService pageContentDialogService)
+    public TextToImageViewModel(IA3WebApiManager a3WebApiManager, ILogger<TextToImageViewModel> logger, ISnackbarService snackbarService, PageContentDialogService pageContentDialogService, ISettingsManager settingsManager)
     {
         this.logger = logger;
         this.a3WebApiManager = a3WebApiManager;
         this.snackbarService = snackbarService;
         this.pageContentDialogService = pageContentDialogService;
+        this.settingsManager = settingsManager;
         positivePromptText = "Positive";
         negativePromptText = "Negative";
         generationSteps = 10;
@@ -95,7 +97,7 @@ public partial class TextToImageViewModel : ObservableObject
         }
         
         // Set the diffusion checkpoint folder
-        var sdModelsDir = Path.Join(SharedFolders.SharedFoldersPath, SharedFolderType.StableDiffusion.GetStringValue());
+        var sdModelsDir = Path.Join(settingsManager.Settings.ModelsDirectory, SharedFolderType.StableDiffusion.GetStringValue());
         if (!Directory.Exists(sdModelsDir))
         {
             logger.LogWarning("Skipped model folder index - {SdModelsDir} does not exist", sdModelsDir);

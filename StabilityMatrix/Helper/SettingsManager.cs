@@ -17,8 +17,6 @@ public class SettingsManager : ISettingsManager
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix",
             SettingsFileName);
     private readonly string? originalEnvPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
-    
-    public IA3WebApi? A3WebApi { get; set; }
 
     public Settings Settings { get; private set; } = new();
 
@@ -186,6 +184,18 @@ public class SettingsManager : ISettingsManager
     public void SetWebApiPort(string? port)
     {
         Settings.WebApiPort = port;
+        SaveSettings();
+    }
+    
+    public void SetModelsDirectory(string? directory)
+    {
+        Settings.ModelsDirectory = directory;
+        SaveSettings();
+    }
+    
+    public void SetFirstLaunchSetupComplete(bool value)
+    {
+        Settings.FirstLaunchSetupComplete = value;
         SaveSettings();
     }
     

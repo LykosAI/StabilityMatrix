@@ -20,16 +20,18 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
 {
     private readonly IDownloadService downloadService;
     private readonly ISnackbarService snackbarService;
+    private readonly ISettingsManager settingsManager;
     public CivitModel CivitModel { get; init; }
     public BitmapImage CardImage { get; init; }
 
     public override Visibility ProgressVisibility => Value > 0 ? Visibility.Visible : Visibility.Collapsed;
     public override Visibility TextVisibility => Value > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-    public CheckpointBrowserCardViewModel(CivitModel civitModel, IDownloadService downloadService, ISnackbarService snackbarService)
+    public CheckpointBrowserCardViewModel(CivitModel civitModel, IDownloadService downloadService, ISnackbarService snackbarService, ISettingsManager settingsManager)
     {
         this.downloadService = downloadService;
         this.snackbarService = snackbarService;
+        this.settingsManager = settingsManager;
         CivitModel = civitModel;
 
         if (civitModel.ModelVersions.Any() && civitModel.ModelVersions[0].Images.Any())
@@ -62,7 +64,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         var latestModelFile = latestVersion.Files[0];
         var fileExpectedSha256 = latestModelFile.Hashes.SHA256;
         
-        var downloadFolder = Path.Combine(SharedFolders.SharedFoldersPath,
+        var downloadFolder = Path.Combine(settingsManager.Settings.ModelsDirectory,
             model.Type.ConvertTo<SharedFolderType>().GetStringValue());
         // Folders might be missing if user didn't install any packages yet
         Directory.CreateDirectory(downloadFolder);

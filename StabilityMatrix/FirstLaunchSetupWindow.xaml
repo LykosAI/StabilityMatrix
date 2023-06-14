@@ -1,0 +1,120 @@
+﻿<ui:FluentWindow
+    ExtendsContentIntoTitleBar="True"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    Height="450"
+    Loaded="FirstLaunchSetupWindow_OnLoaded"
+    ResizeMode="NoResize"
+    Title="FirstLaunchSetupWindow"
+    Width="700"
+    WindowBackdropType="Mica"
+    WindowCornerPreference="Round"
+    WindowStartupLocation="CenterScreen"
+    d:DataContext="{d:DesignInstance Type=designData:MockFirstLaunchSetupViewModel,
+                                     IsDesignTimeCreatable=True}"
+    mc:Ignorable="d"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    x:Class="StabilityMatrix.FirstLaunchSetupWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:controls="clr-namespace:StabilityMatrix.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:designData="clr-namespace:StabilityMatrix.DesignData"
+    xmlns:local="clr-namespace:StabilityMatrix"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ui:FluentWindow.Resources>
+        <converters:StringNullOrEmptyToVisibilityConverter x:Key="StringToVisibilityConverter" />
+    </ui:FluentWindow.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0.8*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <StackPanel
+            Margin="64"
+            Orientation="Vertical"
+            VerticalAlignment="Center">
+            <ui:Image Source="pack://application:,,,/Assets/Icon.png" Width="128" />
+        </StackPanel>
+        <Grid Grid.Column="1">
+            <Grid Margin="0,16,32,32">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="0.6*" />
+                </Grid.RowDefinitions>
+                <!--  Texts  -->
+                <StackPanel Margin="32,64,0,0">
+                    <TextBlock FontSize="24" Text="Let's get started" />
+                    <!--  Loading icon and text  -->
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="0.15*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <controls:RefreshBadge DataContext="{Binding CheckHardwareBadge}" VerticalAlignment="Center" />
+                        <TextBlock
+                            FontSize="14"
+                            Grid.Column="1"
+                            Margin="8,8"
+                            Text="{Binding CheckHardwareBadge.CurrentToolTip}"
+                            TextWrapping="WrapWithOverflow"
+                            VerticalAlignment="Center" />
+                    </Grid>
+                    <BulletDecorator Margin="0,8" Visibility="{Binding GpuInfoText, Converter={StaticResource StringToVisibilityConverter}}">
+                        <BulletDecorator.Bullet>
+                            <Ellipse
+                                Fill="{DynamicResource TextFillColorPrimaryBrush}"
+                                Height="8"
+                                Width="8" />
+                        </BulletDecorator.Bullet>
+                        <TextBlock
+                            FontSize="16"
+                            Margin="8,0"
+                            Text="{Binding GpuInfoText, FallbackValue=Nvidia RTX 4070}"
+                            TextWrapping="Wrap" />
+                    </BulletDecorator>
+
+                </StackPanel>
+                <!--  Checkbox  -->
+                <Grid Grid.Row="1" HorizontalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <CheckBox
+                        Grid.Column="1"
+                        HorizontalAlignment="Left"
+                        IsChecked="{Binding EulaAccepted, Mode=TwoWay}"
+                        Margin="16,0,0,0">
+                        <TextBlock FontSize="13" VerticalAlignment="Center">
+                            <Run>I have read and agree to the</Run>
+                            <Hyperlink Command="{Binding OpenLicenseLinkCommand}" NavigateUri="https://lykos.ai/matrix/license">License Agreement.</Hyperlink>
+                        </TextBlock>
+                    </CheckBox>
+                </Grid>
+            </Grid>
+            <!--  Buttons  -->
+            <UniformGrid
+                HorizontalAlignment="Right"
+                Margin="32,8"
+                MaxWidth="170"
+                VerticalAlignment="Bottom">
+                <ui:Button
+                    Appearance="Danger"
+                    Click="QuitButton_OnClick"
+                    Content="Quit" />
+                <ui:Button
+                    Appearance="Info"
+                    Click="ContinueButton_OnClick"
+                    Content="Continue"
+                    IsEnabled="{Binding EulaAccepted, Mode=OneWay}" />
+            </UniformGrid>
+
+        </Grid>
+    </Grid>
+</ui:FluentWindow>

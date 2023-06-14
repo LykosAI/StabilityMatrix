@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using NLog;
+using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 
 namespace StabilityMatrix.ViewModels;
@@ -13,27 +14,30 @@ public partial class CheckpointManagerViewModel : ObservableObject
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly ISharedFolders sharedFolders;
+    private readonly ISettingsManager settingsManager;
     public ObservableCollection<CheckpointFolder> CheckpointFolders { get; set; } = new();
     
-    public CheckpointManagerViewModel(ISharedFolders sharedFolders)
+    public CheckpointManagerViewModel(ISharedFolders sharedFolders, ISettingsManager settingsManager)
     {
         this.sharedFolders = sharedFolders;
+        this.settingsManager = settingsManager;
     }
     
     public async Task OnLoaded()
     {
+        var modelsDirectory = settingsManager.Settings.ModelsDirectory;
         // Get all folders within the shared folder root
-        if (string.IsNullOrWhiteSpace(SharedFolders.SharedFoldersPath))
+        if (string.IsNullOrWhiteSpace(modelsDirectory))
         {
             return;
         }
         // Skip if the shared folder root doesn't exist
-        if (!Directory.Exists(SharedFolders.SharedFoldersPath))
+        if (!Directory.Exists(modelsDirectory))
         {
-            Logger.Debug($"Skipped shared folder index - {SharedFolders.SharedFoldersPath} doesn't exist");
+            Logger.Debug($"Skipped shared folder index - {modelsDirectory} doesn't exist");
             return;
         }
-        var folders = Directory.GetDirectories(SharedFolders.SharedFoldersPath);
+        var folders = Directory.GetDirectories(modelsDirectory);
         
         CheckpointFolders.Clear();
 

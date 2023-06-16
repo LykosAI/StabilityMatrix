@@ -2,16 +2,24 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using System.Windows;
 using AsyncAwaitBestPractices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using NLog;
 using NLog.Config;
 using NLog.Extensions.Logging;
+using NLog.Layouts;
+using NLog.Targets;
 using Octokit;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
@@ -33,6 +41,7 @@ using Wpf.Ui.Services;
 using Application = System.Windows.Application;
 using ConfigurationExtensions = NLog.ConfigurationExtensions;
 using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 using SnackbarService = StabilityMatrix.Helper.SnackbarService;
 
 namespace StabilityMatrix
@@ -42,6 +51,7 @@ namespace StabilityMatrix
     /// </summary>
     public partial class App : Application
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private ServiceProvider? serviceProvider;
         public static bool IsSentryEnabled => !Debugger.IsAttached || Environment
             .GetEnvironmentVariable("DEBUG_SENTRY")?.ToLowerInvariant() == "true";
@@ -92,24 +102,28 @@ namespace StabilityMatrix
 
         private static LoggingConfiguration ConfigureLogging()
         {
-            // Logging configuration
-            var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");
             var logConfig = new LoggingConfiguration();
-            // File logging
-            var fileTarget = new NLog.Targets.FileTarget("logfile") { FileName = logPath };
-            // Log trace+ to debug console
-            var debugTarget = new NLog.Targets.DebuggerTarget("debugger") { Layout = "${message}" };
-            logConfig.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, fileTarget);
+            
+            var fileTarget = new FileTarget("logfile")
+            {
+                ArchiveOldFileOnStartup = true,
+                FileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/app.log",
+                ArchiveFileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/app.{#}.log",
+                ArchiveNumbering = ArchiveNumberingMode.Rolling,
+                MaxArchiveFiles = 2
+            };
+            var debugTarget = new DebuggerTarget("debugger") { Layout = "${message}" };
+            logConfig.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, fileTarget);
             logConfig.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, debugTarget);
+            
             NLog.LogManager.Configuration = logConfig;
             // Add Sentry to NLog if enabled
             if (IsSentryEnabled)
             {
                 ConfigurationExtensions.AddSentry(logConfig, o =>
                 {
-                    // Optionally specify a separate format for message
+                    o.InitializeSdk = false;
                     o.Layout = "${message}";
-                    // Optionally specify a separate format for breadcrumbs
                     o.BreadcrumbLayout = "${logger}: ${message}";
                     // Debug and higher are stored as breadcrumbs (default is Info)
                     o.MinimumBreadcrumbLevel = NLog.LogLevel.Debug;
@@ -199,12 +213,34 @@ namespace StabilityMatrix
                 })
             };
             
+            // HTTP Policies
+            var retryStatusCodes = new[] {
+                HttpStatusCode.RequestTimeout, // 408
+                HttpStatusCode.InternalServerError, // 500
+                HttpStatusCode.BadGateway, // 502
+                HttpStatusCode.ServiceUnavailable, // 503
+                HttpStatusCode.GatewayTimeout // 504
+            };
             var delay = Backoff
-                .DecorrelatedJitterBackoffV2(medianFirstRetryDelay: TimeSpan.FromSeconds(1), retryCount: 5);
+                .DecorrelatedJitterBackoffV2(medianFirstRetryDelay: TimeSpan.FromMilliseconds(80), retryCount: 5);
             var retryPolicy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .Or<TimeoutRejectedException>()
+                .OrResult(r => retryStatusCodes.Contains(r.StatusCode))
                 .WaitAndRetryAsync(delay);
+            // Shorter timeout for local requests
+            var localTimeout = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(3));
+            var localDelay = Backoff
+                .DecorrelatedJitterBackoffV2(medianFirstRetryDelay: TimeSpan.FromMilliseconds(50), retryCount: 3);
+            var localRetryPolicy = HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .Or<TimeoutRejectedException>()
+                .OrResult(r => retryStatusCodes.Contains(r.StatusCode))
+                .WaitAndRetryAsync(localDelay, onRetryAsync: (x, y) =>
+                {
+                    Debug.WriteLine("Retrying local request...");
+                    return Task.CompletedTask;
+                });
 
             // Add Refit clients
             serviceCollection.AddRefitClient<ICivitApi>(defaultRefitSettings)
@@ -215,9 +251,9 @@ namespace StabilityMatrix
                 })
                 .AddPolicyHandler(retryPolicy);
 
-            serviceCollection.AddHttpClient("A3Client").AddPolicyHandler(retryPolicy);
-            
             // Add Refit client managers
+            serviceCollection.AddHttpClient("A3Client")
+                .AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));
             serviceCollection.AddSingleton<IA3WebApiManager>(services =>
                 new A3WebApiManager(services.GetRequiredService<ISettingsManager>(),
                     services.GetRequiredService<IHttpClientFactory>())
@@ -229,16 +265,19 @@ namespace StabilityMatrix
             serviceCollection.AddLogging(log =>
             {
                 log.ClearProviders();
+                log.AddFilter("Microsoft.Extensions.Http", LogLevel.Warning);
                 log.SetMinimumLevel(LogLevel.Trace);
                 log.AddNLog(logConfig);
             });
+            
+            // Remove HTTPClientFactory logging
+            serviceCollection.RemoveAll<IHttpMessageHandlerBuilderFilter>();
             
             // Default error handling for 'SafeFireAndForget'
             SafeFireAndForgetExtensions.Initialize();
             SafeFireAndForgetExtensions.SetDefaultExceptionHandling(ex =>
             {
-                var logger = serviceProvider?.GetRequiredService<ILogger<App>>();
-                logger?.LogError(ex, "Background Task failed: {ExceptionMessage}", ex.Message);
+                Logger?.Warn(ex, "Background Task failed: {ExceptionMessage}", ex.Message);
             });
 
             // Insert path extensions

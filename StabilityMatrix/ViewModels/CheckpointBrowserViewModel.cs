@@ -13,6 +13,7 @@ using StabilityMatrix.Api;
 using StabilityMatrix.Database;
 using StabilityMatrix.Extensions;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Models;
 using StabilityMatrix.Models.Api;
 using StabilityMatrix.Services;
 
@@ -26,6 +27,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     private readonly ISnackbarService snackbarService;
     private readonly ISettingsManager settingsManager;
     private readonly ILiteDbContext liteDbContext;
+    private readonly UIState uiState;
     private const int MaxModelsPerPage = 14;
     private Stopwatch queryTimer = new();
 
@@ -52,13 +54,15 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         IDownloadService downloadService, 
         ISnackbarService snackbarService, 
         ISettingsManager settingsManager,
-        ILiteDbContext liteDbContext)
+        ILiteDbContext liteDbContext,
+        UIState uiState)
     {
         this.civitApi = civitApi;
         this.downloadService = downloadService;
         this.snackbarService = snackbarService;
         this.settingsManager = settingsManager;
         this.liteDbContext = liteDbContext;
+        this.uiState = uiState;
         
         SelectedPeriod = CivitPeriod.Month;
         SortMode = CivitSortMode.HighestRated;

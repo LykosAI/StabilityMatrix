@@ -128,6 +128,7 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
             serviceCollection.AddSingleton<PageContentDialogService>();
             serviceCollection.AddSingleton<InstallerWindowDialogService>();
+            serviceCollection.AddSingleton<UIState>();
             serviceCollection.AddSingleton<Wpf.Ui.Contracts.ISnackbarService, Wpf.Ui.Services.SnackbarService>();
             serviceCollection.AddSingleton<IPackageFactory, PackageFactory>();
             serviceCollection.AddSingleton<IPyRunner, PyRunner>();

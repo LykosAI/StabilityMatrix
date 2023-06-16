@@ -10,6 +10,7 @@ using AsyncAwaitBestPractices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using NLog.Config;
 using NLog.Extensions.Logging;
 using Octokit;
 using Polly;
@@ -19,6 +20,7 @@ using Polly.Timeout;
 using Refit;
 using Sentry;
 using StabilityMatrix.Api;
+using StabilityMatrix.Database;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
 using StabilityMatrix.Models;
@@ -47,6 +49,8 @@ namespace StabilityMatrix
             .GetEnvironmentVariable("DEBUG_EXCEPTION_WINDOW")?.ToLowerInvariant() == "true";
 
         public static IConfiguration Config { get; set; }
+        
+        private readonly LoggingConfiguration logConfig;
 
         public App()
         {
@@ -59,6 +63,8 @@ namespace StabilityMatrix
             // This needs to be done before OnStartup
             // Or Sentry will not be initialized correctly
             ConfigureErrorHandling();
+            // Setup logging
+            logConfig = ConfigureLogging();
         }
 
         private void ConfigureErrorHandling()
@@ -82,6 +88,37 @@ namespace StabilityMatrix
             {
                 DispatcherUnhandledException += App_DispatcherUnhandledException;
             }
+        }
+
+        private static LoggingConfiguration ConfigureLogging()
+        {
+            // Logging configuration
+            var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");
+            var logConfig = new NLog.Config.LoggingConfiguration();
+            // File logging
+            var fileTarget = new NLog.Targets.FileTarget("logfile") { FileName = logPath };
+            // Log trace+ to debug console
+            var debugTarget = new NLog.Targets.DebuggerTarget("debugger") { Layout = "${message}" };
+            logConfig.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, fileTarget);
+            logConfig.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, debugTarget);
+            NLog.LogManager.Configuration = logConfig;
+            // Add Sentry to NLog if enabled
+            if (IsSentryEnabled)
+            {
+                ConfigurationExtensions.AddSentry(logConfig, o =>
+                {
+                    // Optionally specify a separate format for message
+                    o.Layout = "${message}";
+                    // Optionally specify a separate format for breadcrumbs
+                    o.BreadcrumbLayout = "${logger}: ${message}";
+                    // Debug and higher are stored as breadcrumbs (default is Info)
+                    o.MinimumBreadcrumbLevel = NLog.LogLevel.Debug;
+                    // Error and higher is sent as event (default is Error)
+                    o.MinimumEventLevel = NLog.LogLevel.Error;
+                });
+            }
+
+            return logConfig;
         }
 
         private void App_OnStartup(object sender, StartupEventArgs e)
@@ -120,7 +157,8 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<CheckpointBrowserViewModel>();
             serviceCollection.AddSingleton<FirstLaunchSetupViewModel>();
             
-            serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
+            var settingsManager = new SettingsManager();
+            serviceCollection.AddSingleton<ISettingsManager>(settingsManager);
 
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, VladAutomatic>();
@@ -143,6 +181,15 @@ namespace StabilityMatrix
             serviceCollection.AddMemoryCache();
             serviceCollection.AddSingleton<IGithubApiCache, GithubApiCache>();
 
+            // Setup LiteDb
+            var connectionString = Config["TempDatabase"] switch
+            {
+                "True" => ":temp:",
+                _ => settingsManager.DatabasePath
+            };
+            serviceCollection.AddSingleton<ILiteDbContext>(new LiteDbContext(connectionString));
+
+            // Configure Refit and Polly
             var defaultRefitSettings = new RefitSettings
             {
                 ContentSerializer = new SystemTextJsonContentSerializer(new JsonSerializerOptions
@@ -151,7 +198,6 @@ namespace StabilityMatrix
                 })
             };
             
-            // Polly retry policy for Refit
             var delay = Backoff
                 .DecorrelatedJitterBackoffV2(medianFirstRetryDelay: TimeSpan.FromSeconds(1), retryCount: 5);
             var retryPolicy = HttpPolicyExtensions
@@ -177,34 +223,8 @@ namespace StabilityMatrix
                 {
                     RefitSettings = defaultRefitSettings,
                 });
-
-            // Logging configuration
-            var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");
-            var logConfig = new NLog.Config.LoggingConfiguration();
-            // File logging
-            var fileTarget = new NLog.Targets.FileTarget("logfile") { FileName = logPath };
-            // Log trace+ to debug console
-            var debugTarget = new NLog.Targets.DebuggerTarget("debugger") { Layout = "${message}" };
-            logConfig.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, fileTarget);
-            logConfig.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, debugTarget);
-            NLog.LogManager.Configuration = logConfig;
-            // Add Sentry to NLog if enabled
-            if (IsSentryEnabled)
-            {
-                ConfigurationExtensions.AddSentry(logConfig, o =>
-                {
-                    // Optionally specify a separate format for message
-                    o.Layout = "${message}";
-                    // Optionally specify a separate format for breadcrumbs
-                    o.BreadcrumbLayout = "${logger}: ${message}";
-                    // Debug and higher are stored as breadcrumbs (default is Info)
-                    o.MinimumBreadcrumbLevel = NLog.LogLevel.Debug;
-                    // Error and higher is sent as event (default is Error)
-                    o.MinimumEventLevel = NLog.LogLevel.Error;
-                });
-            }
-
-            NLog.LogManager.Configuration = logConfig;
+            
+            // Add logging
             serviceCollection.AddLogging(log =>
             {
                 log.ClearProviders();
@@ -220,11 +240,10 @@ namespace StabilityMatrix
                 logger?.LogError(ex, "Background Task failed: {ExceptionMessage}", ex.Message);
             });
 
-            serviceProvider = serviceCollection.BuildServiceProvider();
-            
             // Insert path extensions
-            var settingsManager = serviceProvider.GetRequiredService<ISettingsManager>();
             settingsManager.InsertPathExtensions();
+            
+            serviceProvider = serviceCollection.BuildServiceProvider();
 
             // First time setup if needed
             if (!settingsManager.Settings.FirstLaunchSetupComplete)

@@ -29,7 +29,6 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     private readonly ILiteDbContext liteDbContext;
     private readonly UIState uiState;
     private const int MaxModelsPerPage = 14;
-    private Stopwatch queryTimer = new();
 
     [ObservableProperty] private string? searchQuery;
     [ObservableProperty] private ObservableCollection<CheckpointBrowserCardViewModel>? modelCards;
@@ -78,6 +77,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     /// </summary>
     private async Task CivitModelQuery(CivitModelsRequest request)
     {
+        var timer = Stopwatch.StartNew();
         var queryText = request.Query;
         try
         {
@@ -85,10 +85,10 @@ public partial class CheckpointBrowserViewModel : ObservableObject
             var models = modelsResponse.Items;
             if (models is null)
             {
-                Logger.Debug("CivitAI Query '{Text}' returned no results ({Elapsed} ms)", queryText, queryTimer.Elapsed.TotalMilliseconds);
+                Logger.Debug("CivitAI Query '{Text}' returned no results ({Elapsed} ms)", queryText, timer.Elapsed.TotalMilliseconds);
                 return;
             }
-            Logger.Debug("CivitAI Query '{Text}' returned {Results} results ({Elapsed} ms)", queryText, models.Count, queryTimer.Elapsed.TotalMilliseconds);
+            Logger.Debug("CivitAI Query '{Text}' returned {Results} results ({Elapsed} ms)", queryText, models.Count, timer.Elapsed.TotalMilliseconds);
             // Database update calls will invoke `OnModelsUpdated`
             // Add to database
             await liteDbContext.UpsertCivitModelAsync(models);
@@ -156,9 +156,8 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     private async Task SearchModels()
     {
         if (string.IsNullOrWhiteSpace(SearchQuery)) return;
-
-        // Start timers and progress
-        queryTimer.Restart();
+        
+        var timer = Stopwatch.StartNew();
         ShowMainLoadingSpinner = true;
 
         // Build request
@@ -182,17 +181,18 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         // If cached, update model cards
         if (cachedQuery?.Items is not null && cachedQuery.Items.Any())
         {
-            var elapsed = queryTimer.Elapsed.TotalMilliseconds;
-            Logger.Debug("Using cached query for '{Text}' [{RequestHash}] ({Elapsed} ms)", SearchQuery, modelRequest.GetHashCode(), elapsed);
+            var elapsed = timer.Elapsed;
+            Logger.Debug("Using cached query for {Text} [{RequestHash}] (in {Elapsed:F1} s)", 
+                SearchQuery, modelRequest.GetHashCode(), elapsed.TotalSeconds);
             UpdateModelCards(cachedQuery.Items, cachedQuery.Metadata);
-            Logger.Debug("Updated model cards ({Elapsed} ms)", queryTimer.Elapsed.TotalMilliseconds - elapsed);
-            
+
             // Start remote query (background mode)
             // Skip when last query was less than 2 min ago
-            var diffMinutes = (DateTimeOffset.UtcNow - cachedQuery.InsertedAt)?.TotalMinutes;
-            if (diffMinutes < 2)
+            var timeSinceCache = DateTimeOffset.UtcNow - cachedQuery.InsertedAt;
+            if (timeSinceCache?.TotalMinutes < 2)
             {
-                Logger.Debug($"Last query was ({diffMinutes}) < 2 minutes ago, skipping remote query");
+                Logger.Debug("Cached query was less than 2 minutes ago ({Seconds:F0} s), skipping remote query",
+                    timeSinceCache.Value.TotalSeconds);
                 return;
             }
             CivitModelQuery(modelRequest).SafeFireAndForget();

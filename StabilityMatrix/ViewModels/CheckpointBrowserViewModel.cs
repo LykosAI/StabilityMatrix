@@ -29,7 +29,6 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     private readonly ISnackbarService snackbarService;
     private readonly ISettingsManager settingsManager;
     private readonly ILiteDbContext liteDbContext;
-    private readonly UIState uiState;
     private const int MaxModelsPerPage = 14;
 
     [ObservableProperty] private ObservableCollection<CheckpointBrowserCardViewModel>? modelCards;
@@ -57,15 +56,13 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         IDownloadService downloadService, 
         ISnackbarService snackbarService, 
         ISettingsManager settingsManager,
-        ILiteDbContext liteDbContext,
-        UIState uiState)
+        ILiteDbContext liteDbContext)
     {
         this.civitApi = civitApi;
         this.downloadService = downloadService;
         this.snackbarService = snackbarService;
         this.settingsManager = settingsManager;
         this.liteDbContext = liteDbContext;
-        this.uiState = uiState;
 
         ShowNsfw = settingsManager.Settings.ModelBrowserNsfwEnabled;
         SelectedPeriod = CivitPeriod.Month;

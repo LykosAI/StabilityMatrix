@@ -85,10 +85,10 @@ public partial class CheckpointBrowserViewModel : ObservableObject
             var models = modelsResponse.Items;
             if (models is null)
             {
-                Logger.Debug("CivitAI Query '{Text}' returned no results ({Elapsed} ms)", queryText, timer.Elapsed.TotalMilliseconds);
+                Logger.Debug("CivitAI Query {Text} returned no results (in {Elapsed:F1} s)", queryText, timer.Elapsed.TotalSeconds);
                 return;
             }
-            Logger.Debug("CivitAI Query '{Text}' returned {Results} results ({Elapsed} ms)", queryText, models.Count, timer.Elapsed.TotalMilliseconds);
+            Logger.Debug("CivitAI Query {Text} returned {Results} results (in {Elapsed:F1} s)", queryText, models.Count, timer.Elapsed.TotalSeconds);
             // Database update calls will invoke `OnModelsUpdated`
             // Add to database
             await liteDbContext.UpsertCivitModelAsync(models);

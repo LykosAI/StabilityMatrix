@@ -8,7 +8,7 @@ using StabilityMatrix.Models.Api;
 
 namespace StabilityMatrix.Database;
 
-public class LiteDbContext : ILiteDbContext
+public class LiteDbContext : ILiteDbContext, IDisposable
 {
     public LiteDatabaseAsync Database { get; }
 
@@ -30,34 +30,32 @@ public class LiteDbContext : ILiteDbContext
     
     public async Task<bool> UpsertCivitModelAsync(CivitModel civitModel)
     {
-        // Insert model versions first
-        var versions = civitModel.ModelVersions;
-        await CivitModelVersions.UpsertAsync(versions);
-        // Then insert the model
+        // Insert model versions first then model
+        var versionsUpdated = await CivitModelVersions.UpsertAsync(civitModel.ModelVersions);
         var updated = await CivitModels.UpsertAsync(civitModel);
-        // Notify listeners
-        if (updated)
+        // Notify listeners on any change
+        var anyUpdated = versionsUpdated > 0 || updated;
+        if (anyUpdated)
         {
             CivitModelsChanged?.Invoke(this, EventArgs.Empty);
         }
-
-        return updated;
+        return anyUpdated;
     }
     
     public async Task<bool> UpsertCivitModelAsync(IEnumerable<CivitModel> civitModels)
     {
         var civitModelsArray = civitModels.ToArray();
-        // Get all model versions
-        var versions = civitModelsArray.SelectMany(model => model.ModelVersions);
-        await CivitModelVersions.UpsertAsync(versions);
-        // Then insert the models
-        var updated = await CivitModels.UpsertAsync(civitModelsArray) > 0;
-        // Notify listeners
-        if (updated)
+        // Get all model versions then insert models
+        var versions = civitModelsArray.SelectMany(model => model.ModelVersions ?? new());
+        var versionsUpdated = await CivitModelVersions.UpsertAsync(versions);
+        var updated = await CivitModels.UpsertAsync(civitModelsArray);
+        // Notify listeners on any change
+        var anyUpdated = versionsUpdated > 0 || updated > 0;
+        if (updated > 0 || versionsUpdated > 0)
         {
             CivitModelsChanged?.Invoke(this, EventArgs.Empty);
         }
-        return updated;
+        return anyUpdated;
     }
     
     // Add to cache
@@ -70,5 +68,11 @@ public class LiteDbContext : ILiteDbContext
         }
 
         return changed;
+    }
+
+    public void Dispose()
+    {
+        Database.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

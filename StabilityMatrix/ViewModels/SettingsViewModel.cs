@@ -261,8 +261,25 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task OpenLicenseDialog()
     {
+        IEnumerable<LicenseInfo> licenses;
         // Read json
-        var licenses = JsonSerializer.Deserialize<IEnumerable<LicenseInfo>>(await File.ReadAllTextAsync(LicensesPath));
+        try
+        {
+            var stream = Application.GetResourceStream(new Uri(LicensesPath));
+            using var reader = new StreamReader(stream!.Stream);
+            var licenseText = await reader.ReadToEndAsync();
+            licenses = JsonSerializer.Deserialize<IEnumerable<LicenseInfo>>(licenseText)
+                ?? throw new Exception("Failed to deserialize licenses");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to read licenses");
+            snackbarService.ShowSnackbarAsync(
+                "An embedded resource could not be read. Please try reinstalling the application.", 
+                "Failed to read 'licenses.json'").SafeFireAndForget();
+            return;
+        }
+
         var flowViewer = new FlowDocumentScrollViewer();
         var markdownText = "";
         foreach (var license in licenses)

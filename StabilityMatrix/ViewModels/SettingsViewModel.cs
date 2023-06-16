@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,6 +19,7 @@ using CommunityToolkit.Mvvm.Input;
 using MdXaml;
 using Microsoft.Extensions.Logging;
 using Ookii.Dialogs.Wpf;
+using Polly.Timeout;
 using Refit;
 using StabilityMatrix.Api;
 using StabilityMatrix.Helper;
@@ -216,37 +218,24 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
-    private Task<bool> TryPingWebApi()
+    private async Task<bool> TryPingWebApi()
     {
-        return TryPingWebApi(TimeSpan.FromMilliseconds(150));
-    }
-
-    private async Task<bool> TryPingWebApi(TimeSpan? minimumDelay)
-    {
-        bool result;
-        var timer = minimumDelay != null ? Stopwatch.StartNew() : null;
+        await using var minimumDelay = new MinimumDelay(100, 200);
         try
         {
             await a3WebApiManager.Client.GetPing();
-            result = true;
+            return true;
         }
-        catch (Exception ex)
+        catch (TimeoutRejectedException)
         {
-            logger.LogInformation(ex, "Ping failed");
-            result = false;
+            logger.LogInformation("Ping timed out");
+            return false;
         }
-        
-        // Wait if minimum delay is set
-        if (minimumDelay != null)
+        catch (ApiException ex)
         {
-            var delay = minimumDelay.Value - timer!.Elapsed;
-            if (delay > TimeSpan.Zero)
-            {
-                await Task.Delay(delay);
-            }
+            logger.LogInformation("Ping failed with status [{StatusCode}]: {Content}", ex.StatusCode, ex.ReasonPhrase);
+            return false;
         }
-
-        return result;
     }
     
     [RelayCommand]

@@ -34,7 +34,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         this.settingsManager = settingsManager;
         CivitModel = civitModel;
 
-        if (civitModel.ModelVersions.Any() && civitModel.ModelVersions[0].Images.Any())
+        if (civitModel.ModelVersions?.Count > 0 && civitModel.ModelVersions[0].Images.Any())
         {
             CardImage = new BitmapImage(new Uri(civitModel.ModelVersions[0].Images[0].Url));
         }
@@ -54,11 +54,19 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             UseShellExecute = true
         });
     }
-    
+
     [RelayCommand]
     private async Task Import(CivitModel model)
     {
         Text = "Downloading...";
+        
+        if (!(model.ModelVersions?.Count > 0))
+        {
+            snackbarService.ShowSnackbarAsync(
+                "This model has no versions available for download",
+                "Download failed", LogLevel.Warning).SafeFireAndForget();
+            return;
+        }
 
         var latestVersion = model.ModelVersions[0];
         var latestModelFile = latestVersion.Files[0];

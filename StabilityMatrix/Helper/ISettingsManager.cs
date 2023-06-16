@@ -7,6 +7,9 @@ namespace StabilityMatrix.Helper;
 
 public interface ISettingsManager
 {
+    public string AppDataDir { get; }
+    public string AppHomeDir { get; }
+    public string DatabasePath { get; }
     Settings Settings { get; }
     void SetTheme(string theme);
     void AddInstalledPackage(InstalledPackage p);

@@ -1,4 +1,6 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
+using LiteDB;
 
 namespace StabilityMatrix.Models.Api;
 
@@ -31,6 +33,7 @@ public class CivitModel
     [JsonPropertyName("stats")]
     public CivitModelStats Stats { get; set; }
 
+    [BsonRef("ModelVersions")]
     [JsonPropertyName("modelVersions")]
-    public CivitModelVersion[] ModelVersions { get; set; }
+    public List<CivitModelVersion>? ModelVersions { get; set; }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
@@ -8,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
 using System.Diagnostics;
+using System.Windows.Data;
 using Refit;
 using StabilityMatrix.Api;
 using StabilityMatrix.Database;
@@ -30,8 +32,10 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     private readonly UIState uiState;
     private const int MaxModelsPerPage = 14;
 
-    [ObservableProperty] private string? searchQuery;
     [ObservableProperty] private ObservableCollection<CheckpointBrowserCardViewModel>? modelCards;
+    [ObservableProperty] private ICollectionView? modelCardsView;
+
+    [ObservableProperty] private string? searchQuery;
     [ObservableProperty] private bool showNsfw;
     [ObservableProperty] private bool showMainLoadingSpinner;
     [ObservableProperty] private CivitPeriod selectedPeriod;
@@ -43,7 +47,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     [ObservableProperty] private bool canGoToNextPage;
     [ObservableProperty] private bool canGoToPreviousPage;
     [ObservableProperty] private bool isIndeterminate;
-
+    
     public IEnumerable<CivitPeriod> AllCivitPeriods => Enum.GetValues(typeof(CivitPeriod)).Cast<CivitPeriod>();
     public IEnumerable<CivitSortMode> AllSortModes => Enum.GetValues(typeof(CivitSortMode)).Cast<CivitSortMode>();
     public IEnumerable<CivitModelType> AllModelTypes => Enum.GetValues(typeof(CivitModelType)).Cast<CivitModelType>();
@@ -62,7 +66,8 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         this.settingsManager = settingsManager;
         this.liteDbContext = liteDbContext;
         this.uiState = uiState;
-        
+
+        ShowNsfw = settingsManager.Settings.ModelBrowserNsfwEnabled;
         SelectedPeriod = CivitPeriod.Month;
         SortMode = CivitSortMode.HighestRated;
         SelectedModelType = CivitModelType.All;
@@ -70,6 +75,15 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         CurrentPageNumber = 1;
         CanGoToPreviousPage = false;
         CanGoToNextPage = true;
+    }
+
+    /// <summary>
+    /// Filter predicate for model cards
+    /// </summary>
+    private bool FilterModelCardsPredicate(object? item)
+    {
+        if (item is not CheckpointBrowserCardViewModel card) return false;
+        return !card.CivitModel.Nsfw || ShowNsfw;
     }
 
     /// <summary>
@@ -132,7 +146,8 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         else
         {
             var updateCards = models
-                .Select(model => new CheckpointBrowserCardViewModel(model, downloadService, snackbarService, settingsManager));
+                .Select(model => new CheckpointBrowserCardViewModel(model, 
+                    downloadService, snackbarService, settingsManager));
             ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(updateCards);
         }
         TotalPages = metadata?.TotalPages ?? 1;
@@ -144,28 +159,19 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         HasSearched = true;
     }
 
-    /// <summary>
-    /// Handler for database changes.
-    /// Refreshes the model cards.
-    /// </summary>
-    private async Task OnDatabaseChanged()
-    {
-    }
-
     [RelayCommand]
     private async Task SearchModels()
     {
         if (string.IsNullOrWhiteSpace(SearchQuery)) return;
         
         var timer = Stopwatch.StartNew();
-        ShowMainLoadingSpinner = true;
 
         // Build request
         var modelRequest = new CivitModelsRequest
         {
             Query = SearchQuery,
             Limit = MaxModelsPerPage,
-            Nsfw = ShowNsfw.ToString().ToLower(),
+            Nsfw = "true", // Handled by local view filter
             Sort = SortMode,
             Period = SelectedPeriod,
             Page = CurrentPageNumber,
@@ -200,6 +206,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         else
         {
             // Not cached, wait for remote query
+            ShowMainLoadingSpinner = true;
             await CivitModelQuery(modelRequest);
         }
     }
@@ -220,9 +227,25 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         await TrySearchAgain(false);
     }
 
-    partial void OnShowNsfwChanged(bool oldValue, bool newValue)
+    // On changes to ModelCards, update the view source
+    partial void OnModelCardsChanged(ObservableCollection<CheckpointBrowserCardViewModel>? value)
     {
-        TrySearchAgain().SafeFireAndForget();
+        if (value is null)
+        {
+            ModelCardsView = null;
+        }
+        // Create new view
+        var view = new ListCollectionView(value!)
+        {
+            Filter = FilterModelCardsPredicate,
+        };
+        ModelCardsView = view;
+    }
+    
+    partial void OnShowNsfwChanged(bool value)
+    {
+        settingsManager.SetModelBrowserNsfwEnabled(value);
+        ModelCardsView?.Refresh();
     }
 
     partial void OnSelectedPeriodChanged(CivitPeriod oldValue, CivitPeriod newValue)

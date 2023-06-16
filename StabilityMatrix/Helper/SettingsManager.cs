@@ -34,6 +34,8 @@ public class SettingsManager : ISettingsManager
 
     public Settings Settings { get; private set; } = new();
 
+    public event EventHandler<bool>? ModelBrowserNsfwEnabledChanged;
+    
     public SettingsManager()
     {
         if (!Directory.Exists(SettingsPath.Replace(SettingsFileName, "")))
@@ -210,6 +212,13 @@ public class SettingsManager : ISettingsManager
     public void SetFirstLaunchSetupComplete(bool value)
     {
         Settings.FirstLaunchSetupComplete = value;
+        SaveSettings();
+    }
+    
+    public void SetModelBrowserNsfwEnabled(bool value)
+    {
+        Settings.ModelBrowserNsfwEnabled = value;
+        ModelBrowserNsfwEnabledChanged?.Invoke(this, value);
         SaveSettings();
     }
     

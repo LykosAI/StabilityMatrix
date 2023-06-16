@@ -94,7 +94,7 @@ namespace StabilityMatrix
         {
             // Logging configuration
             var logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log.txt");
-            var logConfig = new NLog.Config.LoggingConfiguration();
+            var logConfig = new LoggingConfiguration();
             // File logging
             var fileTarget = new NLog.Targets.FileTarget("logfile") { FileName = logPath };
             // Log trace+ to debug console
@@ -268,6 +268,8 @@ namespace StabilityMatrix
         private void App_OnExit(object sender, ExitEventArgs e)
         {
             serviceProvider?.GetRequiredService<LaunchViewModel>().OnShutdown();
+            Current.Dispatcher.InvokeShutdown();
+            Environment.Exit(0);
         }
         
         [DoesNotReturn]

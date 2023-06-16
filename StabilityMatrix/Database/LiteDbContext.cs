@@ -8,7 +8,7 @@ using StabilityMatrix.Models.Api;
 
 namespace StabilityMatrix.Database;
 
-public class LiteDbContext : ILiteDbContext, IDisposable
+public class LiteDbContext : ILiteDbContext
 {
     public LiteDatabaseAsync Database { get; }
 

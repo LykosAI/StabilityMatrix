@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using System;
 using LiteDB.Async;
 using StabilityMatrix.Models.Api;
 
 namespace StabilityMatrix.Database;
 
-public interface ILiteDbContext
+public interface ILiteDbContext : IDisposable
 {
     LiteDatabaseAsync Database { get; }
     

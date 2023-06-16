@@ -268,8 +268,7 @@ namespace StabilityMatrix
         private void App_OnExit(object sender, ExitEventArgs e)
         {
             serviceProvider?.GetRequiredService<LaunchViewModel>().OnShutdown();
-            Current.Dispatcher.InvokeShutdown();
-            Environment.Exit(0);
+            serviceProvider?.GetRequiredService<ILiteDbContext>().Dispose();
         }
         
         [DoesNotReturn]

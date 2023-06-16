@@ -10,7 +10,7 @@ namespace StabilityMatrix.DesignData;
 [DesignOnly(true)]
 public class MockCheckpointBrowserViewModel : CheckpointBrowserViewModel
 {
-    public MockCheckpointBrowserViewModel() : base(null!, null!, null!, null!, null!)
+    public MockCheckpointBrowserViewModel() : base(null!, null!, null!, null!, null!, null!)
     {
         ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>
         {

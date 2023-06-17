@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace StabilityMatrix.Models.Api;
@@ -27,10 +28,10 @@ public class CivitModelVersion
     public string? BaseModel { get; set; }
     
     [JsonPropertyName("files")]
-    public CivitFile[] Files { get; set; }
+    public List<CivitFile>? Files { get; set; }
     
     [JsonPropertyName("images")]
-    public CivitImage[] Images { get; set; }
+    public List<CivitImage>? Images { get; set; }
     
     [JsonPropertyName("stats")]
     public CivitModelStats Stats { get; set; }

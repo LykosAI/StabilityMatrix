@@ -3,6 +3,7 @@ using System.Buffers;
 using System.IO;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Blake3;
 using StabilityMatrix.Models;
 
 namespace StabilityMatrix.Helper;
@@ -57,5 +58,39 @@ public static class FileHash
             shared.Return(buffer);
         }
 
+    }
+
+    public static async Task<string> GetBlake3Async(string filePath, IProgress<ProgressReport>? progress = default)
+    {
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException($"Could not find file: {filePath}");
+        }
+        
+        var totalBytes = Convert.ToUInt64(new FileInfo(filePath).Length);
+        var readBytes = 0ul;
+        var shared = ArrayPool<byte>.Shared;
+        var buffer = shared.Rent((int) FileTransfers.GetBufferSize(totalBytes));
+        try
+        {
+            await using var stream = File.OpenRead(filePath);
+            using var hasher = Hasher.New();
+            while (true)
+            {
+                var bytesRead = await stream.ReadAsync(buffer);
+                if (bytesRead == 0)
+                {
+                    break;
+                }
+                readBytes += (ulong) bytesRead;
+                hasher.Update(buffer.AsSpan(0, bytesRead));
+                progress?.Report(new ProgressReport(readBytes, totalBytes));
+            }
+            return hasher.Finalize().ToString();
+        }
+        finally
+        {
+            shared.Return(buffer);
+        }
     }
 }

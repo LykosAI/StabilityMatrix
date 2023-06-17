@@ -8,7 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -22,6 +21,7 @@ using Ookii.Dialogs.Wpf;
 using Polly.Timeout;
 using Refit;
 using StabilityMatrix.Api;
+using StabilityMatrix.Database;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using StabilityMatrix.Python;
@@ -40,6 +40,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IPackageFactory packageFactory;
     private readonly IPyRunner pyRunner;
     private readonly ISnackbarService snackbarService;
+    private readonly ILiteDbContext liteDbContext;
     private static string LicensesPath => "pack://application:,,,/Assets/licenses.json";
     public TextToFlowDocumentConverter? TextToFlowDocumentConverter { get; set; }
 
@@ -58,6 +59,8 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IContentDialogService contentDialogService;
     private readonly IA3WebApiManager a3WebApiManager;
 
+    [ObservableProperty] private bool isFileSearchFlyoutOpen;
+    [ObservableProperty] private double fileSearchProgress;
 
     [ObservableProperty] private string? webApiHost;
     [ObservableProperty] private string? webApiPort;
@@ -90,7 +93,8 @@ public partial class SettingsViewModel : ObservableObject
         IPyRunner pyRunner, 
         ISnackbarService snackbarService, 
         ILogger<SettingsViewModel> logger, 
-        IPackageFactory packageFactory)
+        IPackageFactory packageFactory,
+        ILiteDbContext liteDbContext)
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
@@ -99,6 +103,7 @@ public partial class SettingsViewModel : ObservableObject
         this.snackbarService = snackbarService;
         this.a3WebApiManager = a3WebApiManager;
         this.pyRunner = pyRunner;
+        this.liteDbContext = liteDbContext;
         SelectedTheme = settingsManager.Settings.Theme ?? "Dark";
         WindowBackdropType = settingsManager.Settings.WindowBackdropType ?? WindowBackdropType.Mica;
     }
@@ -177,6 +182,7 @@ public partial class SettingsViewModel : ObservableObject
         await dialog.ShowAsync();
     });
 
+    // Debug card commands
     public RelayCommand AddInstallationCommand => new(() =>
     {
         // Show dialog box to choose a folder
@@ -202,6 +208,67 @@ public partial class SettingsViewModel : ObservableObject
         // Add package to settings
         settingsManager.AddInstalledPackage(package);
     });
+
+    // Debug card commands
+    [RelayCommand]
+    private async Task ModelFileSearchAsync()
+    {
+        // Show dialog box to choose a file
+        var fileDialog = new VistaOpenFileDialog
+        {
+            CheckFileExists = true,
+        };
+        if (fileDialog.ShowDialog() != true) return;
+        var path = fileDialog.FileName;
+        // Hash file
+        var timer = Stopwatch.StartNew();
+        IsFileSearchFlyoutOpen = true;
+        var progress = new Progress<ProgressReport>(report => FileSearchProgress = report.Percentage);
+        var fileHash = await FileHash.GetBlake3Async(path, progress);
+        var timeTakenHash = timer.Elapsed.TotalSeconds;
+        IsFileSearchFlyoutOpen = false;
+        // Search for file
+        timer.Restart();
+        
+        var modelVersion = await liteDbContext.CivitModelVersions.Query()
+           .Where(mv => mv.Files!
+                .Select(f => f.Hashes)
+                .Select(hashes => hashes.BLAKE3)
+                .Any(hash => hash == fileHash))
+            .FirstOrDefaultAsync();
+        var model = modelVersion != null
+             ? await liteDbContext.CivitModels.Query()
+                 .Include(m => m.ModelVersions)
+                 .Where(m => m.ModelVersions!
+                     .Select(v => v.Id)
+                     .Any(id => id == modelVersion.Id))
+                 .FirstOrDefaultAsync() : null;
+
+         timer.Stop();
+        var timeTakenSearch = timer.Elapsed.TotalSeconds;
+        // Not found
+        if (model == null)
+        {
+            var dialog = contentDialogService.CreateDialog();
+            dialog.Title = "Model file search";
+            dialog.Content = $"File not found in database. Hash: {fileHash}\n" +
+                             $"Time taken to hash: {timeTakenHash:F1} s\n" +
+                             $"Time taken to search: {timeTakenSearch:F1} s";
+            await dialog.ShowAsync();
+        }
+        else
+        {
+            // Found
+            var dialog = contentDialogService.CreateDialog();
+            dialog.Title = "Model file search";
+            dialog.Content = $"File found in database. Hash: {fileHash}\n" +
+                             $"Model: {model.Name}\n" +
+                             $"Version: {modelVersion.Name}\n" +
+                             $"Time taken to hash: {timeTakenHash:F1} s\n" +
+                             $"Time taken to search: {timeTakenSearch:F1} s";
+            await dialog.ShowAsync();
+        }
+    }
 
     [RelayCommand]
     private async Task PingWebApi()

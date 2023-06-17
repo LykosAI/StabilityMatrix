@@ -69,7 +69,7 @@
                 </ui:Card>
 
                 <!--  Text2Image host port settings  -->
-                <ui:Card Margin="8">
+                <ui:Card Margin="8" Visibility="{Binding IsDebugModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}">
                     <StackPanel HorizontalAlignment="Left">
                         <TextBlock
                             FontSize="16"

@@ -24,7 +24,7 @@ public class MockCheckpointBrowserViewModel : CheckpointBrowserViewModel
                         new CivitModelVersion
                         {
                             Name = "v7.0",
-                            Images = new[]
+                            Images = new()
                             {
                                 new CivitImage
                                 {

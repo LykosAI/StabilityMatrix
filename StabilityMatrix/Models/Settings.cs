@@ -21,6 +21,7 @@ public class Settings
     public string? WebApiHost { get; set; }
     public string? WebApiPort { get; set; }
     public string ModelsDirectory { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix", "Models");
+    public bool ModelBrowserNsfwEnabled { get; set; }
 
     public InstalledPackage? GetActiveInstalledPackage()
     {

@@ -22,7 +22,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     private readonly ISnackbarService snackbarService;
     private readonly ISettingsManager settingsManager;
     public CivitModel CivitModel { get; init; }
-    public BitmapImage CardImage { get; init; }
+    public BitmapImage CardImage { get; set; }
 
     public override Visibility ProgressVisibility => Value > 0 ? Visibility.Visible : Visibility.Collapsed;
     public override Visibility TextVisibility => Value > 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -33,16 +33,32 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         this.snackbarService = snackbarService;
         this.settingsManager = settingsManager;
         CivitModel = civitModel;
+        CardImage = GetImage();
+        
+        this.settingsManager.ModelBrowserNsfwEnabledChanged += OnNsfwModeChanged;
+    }
+    
+    // Choose and load image based on nsfw setting
+    private BitmapImage GetImage()
+    {
+        var nsfwEnabled = settingsManager.Settings.ModelBrowserNsfwEnabled;
+        var version = CivitModel.ModelVersions?.FirstOrDefault();
+        var images = version?.Images;
 
-        if (civitModel.ModelVersions.Any() && civitModel.ModelVersions[0].Images.Any())
+        var image = images?.FirstOrDefault(image => nsfwEnabled || image.Nsfw == "None");
+        if (image != null)
         {
-            CardImage = new BitmapImage(new Uri(civitModel.ModelVersions[0].Images[0].Url));
+            return new BitmapImage(new Uri(image.Url));
         }
-        else
-        {
-            CardImage = new BitmapImage(
-                new Uri("pack://application:,,,/StabilityMatrix;component/Assets/noimage.png"));
-        }
+        // Otherwise Default image
+        return new BitmapImage(
+            new Uri("pack://application:,,,/StabilityMatrix;component/Assets/noimage.png"));
+    }
+
+    // On any mode changes, update the image
+    private void OnNsfwModeChanged(object? sender, bool value)
+    {
+        CardImage = GetImage();
     }
 
     [RelayCommand]
@@ -54,11 +70,19 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             UseShellExecute = true
         });
     }
-    
+
     [RelayCommand]
     private async Task Import(CivitModel model)
     {
         Text = "Downloading...";
+        
+        if (!(model.ModelVersions?.Count > 0))
+        {
+            snackbarService.ShowSnackbarAsync(
+                "This model has no versions available for download",
+                "Download failed", LogLevel.Warning).SafeFireAndForget();
+            return;
+        }
 
         var latestVersion = model.ModelVersions[0];
         var latestModelFile = latestVersion.Files[0];

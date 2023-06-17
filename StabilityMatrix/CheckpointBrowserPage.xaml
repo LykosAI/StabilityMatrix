@@ -29,7 +29,12 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
         <DataTemplate DataType="{x:Type viewModels:CheckpointBrowserCardViewModel}" x:Key="CivitModelTemplate">
-            <ui:Card MaxHeight="450" Width="330" Margin="8">
+            <ui:Card
+                Margin="8"
+                MaxHeight="450"
+                Name="ModelCard"
+                Width="330">
+
                 <StackPanel Orientation="Vertical">
                     <TextBlock
                         Foreground="{DynamicResource TextFillColorPrimaryBrush}"
@@ -59,15 +64,15 @@
                                 <ui:SymbolIcon Symbol="Open24" />
                             </ui:Button.Icon>
                         </ui:Button>
-                        
+
                         <ui:Card
+                            Background="#AA1467B5"
                             Height="20"
                             HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            Background="#AA1467B5"
                             Margin="4,16,0,0"
-                            Padding="3">
-                                
+                            Padding="3"
+                            VerticalAlignment="Top">
+
                             <TextBlock
                                 FontSize="10"
                                 FontWeight="Medium"
@@ -175,7 +180,7 @@
                         MinWidth="100"
                         SelectedItem="{Binding SelectedPeriod}" />
                 </StackPanel>
-                
+
                 <StackPanel Margin="8" Orientation="Vertical">
                     <Label Content="Model Type" />
                     <ComboBox
@@ -195,16 +200,19 @@
         </StackPanel>
 
         <ui:DynamicScrollViewer CanContentScroll="True" Grid.Row="1">
-            <ui:VirtualizingItemsControl RequestBringIntoView="FrameworkElement_OnRequestBringIntoView"
+            <ui:VirtualizingItemsControl
                 ItemTemplate="{StaticResource CivitModelTemplate}"
-                ItemsSource="{Binding ModelCards}"
-                PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel"/>
+                ItemsSource="{Binding ModelCardsView}"
+                PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel"
+                RequestBringIntoView="FrameworkElement_OnRequestBringIntoView" />
         </ui:DynamicScrollViewer>
-        
-        <TextBlock Grid.Row="2" Text="Data provided by CivitAI"
-                   VerticalAlignment="Bottom"
-                   Margin="16, 8"/>
-        
+
+        <TextBlock
+            Grid.Row="2"
+            Margin="16,8"
+            Text="Data provided by CivitAI"
+            VerticalAlignment="Bottom" />
+
         <StackPanel
             Grid.Row="2"
             HorizontalAlignment="Center"
@@ -234,6 +242,6 @@
             Grid.Row="0"
             Grid.RowSpan="3"
             IsIndeterminate="True"
-            Visibility="{Binding SearchModelsCommand.IsRunning, Converter={StaticResource BoolToVisibilityConverter}}" />
+            Visibility="{Binding ShowMainLoadingSpinner, Converter={StaticResource BoolToVisibilityConverter}}" />
     </Grid>
 </Page>

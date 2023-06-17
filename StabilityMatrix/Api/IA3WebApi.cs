@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using Refit;
 using StabilityMatrix.Models.Api;
 
@@ -8,17 +9,17 @@ namespace StabilityMatrix.Api;
 public interface IA3WebApi
 {
     [Get("/internal/ping")]
-    Task<string> GetPing();
+    Task<string> GetPing(CancellationToken cancellationToken = default);
     
     [Post("/sdapi/v1/txt2img")]
-    Task<ImageResponse> TextToImage([Body] TextToImageRequest request);
+    Task<ImageResponse> TextToImage([Body] TextToImageRequest request, CancellationToken cancellationToken = default);
     
     [Get("/sdapi/v1/progress")]
-    Task<ProgressResponse> GetProgress([Body] ProgressRequest request);
+    Task<ProgressResponse> GetProgress([Body] ProgressRequest request, CancellationToken cancellationToken = default);
     
     [Get("/sdapi/v1/options")]
-    Task<A3Options> GetOptions();
+    Task<A3Options> GetOptions(CancellationToken cancellationToken = default);
     
     [Post("/sdapi/v1/options")]
-    Task SetOptions([Body] A3Options request);
+    Task SetOptions([Body] A3Options request, CancellationToken cancellationToken = default);
 }

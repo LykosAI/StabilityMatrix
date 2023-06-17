@@ -7,7 +7,13 @@ namespace StabilityMatrix.Helper;
 
 public interface ISettingsManager
 {
+    public string AppDataDir { get; }
+    public string AppHomeDir { get; }
+    public string DatabasePath { get; }
+    
     Settings Settings { get; }
+    event EventHandler<bool>? ModelBrowserNsfwEnabledChanged;
+    
     void SetTheme(string theme);
     void AddInstalledPackage(InstalledPackage p);
     void RemoveInstalledPackage(InstalledPackage p);
@@ -33,4 +39,5 @@ public interface ISettingsManager
     void SetWebApiPort(string? port);
     void SetModelsDirectory(string? directory);
     void SetFirstLaunchSetupComplete(bool firstLaunchSetupCompleted);
+    void SetModelBrowserNsfwEnabled(bool value);
 }

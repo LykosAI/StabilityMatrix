@@ -12,14 +12,30 @@ namespace StabilityMatrix.Helper;
 
 public class SettingsManager : ISettingsManager
 {
+    /// <summary>
+    /// Directory of %AppData%
+    /// </summary>
+    // ReSharper disable once MemberCanBePrivate.Global
+    public string AppDataDir => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+    
+    /// <summary>
+    /// Directory of %AppData%\StabilityMatrix
+    /// </summary>
+    public string AppHomeDir => Path.Combine(AppDataDir, "StabilityMatrix");
+    
+    /// <summary>
+    /// Path to database file
+    /// </summary>
+    public string DatabasePath => Path.Combine(AppHomeDir, "StabilityMatrix.db");
+    
     private const string SettingsFileName = "settings.json";
-    private static readonly string SettingsPath =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix",
-            SettingsFileName);
+    private string SettingsPath => Path.Combine(AppHomeDir, SettingsFileName);
     private readonly string? originalEnvPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
 
     public Settings Settings { get; private set; } = new();
 
+    public event EventHandler<bool>? ModelBrowserNsfwEnabledChanged;
+    
     public SettingsManager()
     {
         if (!Directory.Exists(SettingsPath.Replace(SettingsFileName, "")))
@@ -196,6 +212,13 @@ public class SettingsManager : ISettingsManager
     public void SetFirstLaunchSetupComplete(bool value)
     {
         Settings.FirstLaunchSetupComplete = value;
+        SaveSettings();
+    }
+    
+    public void SetModelBrowserNsfwEnabled(bool value)
+    {
+        Settings.ModelBrowserNsfwEnabled = value;
+        ModelBrowserNsfwEnabledChanged?.Invoke(this, value);
         SaveSettings();
     }
     

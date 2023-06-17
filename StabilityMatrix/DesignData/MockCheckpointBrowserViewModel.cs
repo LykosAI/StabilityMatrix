@@ -10,7 +10,7 @@ namespace StabilityMatrix.DesignData;
 [DesignOnly(true)]
 public class MockCheckpointBrowserViewModel : CheckpointBrowserViewModel
 {
-    public MockCheckpointBrowserViewModel() : base(null!, null!, null!, null!)
+    public MockCheckpointBrowserViewModel() : base(null!, null!, null!, null!, null!)
     {
         ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>
         {
@@ -19,12 +19,12 @@ public class MockCheckpointBrowserViewModel : CheckpointBrowserViewModel
                 CivitModel = new()
                 {
                     Name = "bb95 Furry Mix",
-                    ModelVersions = new[]
+                    ModelVersions = new()
                     {
                         new CivitModelVersion
                         {
                             Name = "v7.0",
-                            Images = new[]
+                            Images = new()
                             {
                                 new CivitImage
                                 {

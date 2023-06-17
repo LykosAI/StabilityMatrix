@@ -1,15 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
+using System.Diagnostics;
+using System.Windows.Data;
 using Refit;
 using StabilityMatrix.Api;
+using StabilityMatrix.Database;
+using StabilityMatrix.Extensions;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Models;
 using StabilityMatrix.Models.Api;
 using StabilityMatrix.Services;
 
@@ -22,10 +28,13 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     private readonly IDownloadService downloadService;
     private readonly ISnackbarService snackbarService;
     private readonly ISettingsManager settingsManager;
+    private readonly ILiteDbContext liteDbContext;
     private const int MaxModelsPerPage = 14;
 
-    [ObservableProperty] private string? searchQuery;
     [ObservableProperty] private ObservableCollection<CheckpointBrowserCardViewModel>? modelCards;
+    [ObservableProperty] private ICollectionView? modelCardsView;
+
+    [ObservableProperty] private string? searchQuery;
     [ObservableProperty] private bool showNsfw;
     [ObservableProperty] private bool showMainLoadingSpinner;
     [ObservableProperty] private CivitPeriod selectedPeriod;
@@ -37,18 +46,25 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     [ObservableProperty] private bool canGoToNextPage;
     [ObservableProperty] private bool canGoToPreviousPage;
     [ObservableProperty] private bool isIndeterminate;
-
+    
     public IEnumerable<CivitPeriod> AllCivitPeriods => Enum.GetValues(typeof(CivitPeriod)).Cast<CivitPeriod>();
     public IEnumerable<CivitSortMode> AllSortModes => Enum.GetValues(typeof(CivitSortMode)).Cast<CivitSortMode>();
     public IEnumerable<CivitModelType> AllModelTypes => Enum.GetValues(typeof(CivitModelType)).Cast<CivitModelType>();
 
-    public CheckpointBrowserViewModel(ICivitApi civitApi, IDownloadService downloadService, ISnackbarService snackbarService, ISettingsManager settingsManager)
+    public CheckpointBrowserViewModel(
+        ICivitApi civitApi, 
+        IDownloadService downloadService, 
+        ISnackbarService snackbarService, 
+        ISettingsManager settingsManager,
+        ILiteDbContext liteDbContext)
     {
         this.civitApi = civitApi;
         this.downloadService = downloadService;
         this.snackbarService = snackbarService;
         this.settingsManager = settingsManager;
-        
+        this.liteDbContext = liteDbContext;
+
+        ShowNsfw = settingsManager.Settings.ModelBrowserNsfwEnabled;
         SelectedPeriod = CivitPeriod.Month;
         SortMode = CivitSortMode.HighestRated;
         SelectedModelType = CivitModelType.All;
@@ -58,42 +74,54 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         CanGoToNextPage = true;
     }
 
-    [RelayCommand]
-    private async Task SearchModels()
+    /// <summary>
+    /// Filter predicate for model cards
+    /// </summary>
+    private bool FilterModelCardsPredicate(object? item)
     {
-        if (string.IsNullOrWhiteSpace(SearchQuery))
-        {
-            return;
-        }
-        
-        ShowMainLoadingSpinner = true;
+        if (item is not CheckpointBrowserCardViewModel card) return false;
+        return !card.CivitModel.Nsfw || ShowNsfw;
+    }
 
-        var modelRequest = new CivitModelsRequest
-        {
-            Query = SearchQuery,
-            Limit = MaxModelsPerPage,
-            Nsfw = ShowNsfw.ToString().ToLower(),
-            Sort = SortMode,
-            Period = SelectedPeriod,
-            Page = CurrentPageNumber,
-        };
-
-        if (SelectedModelType != CivitModelType.All)
-        {
-            modelRequest.Types = new[] {SelectedModelType};
-        }
-
+    /// <summary>
+    /// Background update task
+    /// </summary>
+    private async Task CivitModelQuery(CivitModelsRequest request)
+    {
+        var timer = Stopwatch.StartNew();
+        var queryText = request.Query;
         try
         {
-            var models = await civitApi.GetModels(modelRequest);
-
-            HasSearched = true;
-            TotalPages = models.Metadata.TotalPages;
-            CanGoToPreviousPage = CurrentPageNumber > 1;
-            CanGoToNextPage = CurrentPageNumber < TotalPages;
-            ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(models.Items.Select(
-                m => new CheckpointBrowserCardViewModel(m, downloadService, snackbarService, settingsManager)));
-            Logger.Debug($"Found {models.Items.Length} models");
+            var modelsResponse = await civitApi.GetModels(request);
+            var models = modelsResponse.Items;
+            if (models is null)
+            {
+                Logger.Debug("CivitAI Query {Text} returned no results (in {Elapsed:F1} s)", queryText, timer.Elapsed.TotalSeconds);
+                return;
+            }
+            Logger.Debug("CivitAI Query {Text} returned {Results} results (in {Elapsed:F1} s)", queryText, models.Count, timer.Elapsed.TotalSeconds);
+            // Database update calls will invoke `OnModelsUpdated`
+            // Add to database
+            await liteDbContext.UpsertCivitModelAsync(models);
+            // Add as cache entry
+            var cacheNew = await liteDbContext.UpsertCivitModelQueryCacheEntryAsync(new()
+            {
+                Id = ObjectHash.GetMd5Guid(request),
+                InsertedAt = DateTimeOffset.UtcNow,
+                Request = request,
+                Items = models,
+                Metadata = modelsResponse.Metadata
+            });
+            
+            if (cacheNew)
+            {
+                Logger.Debug("New cache entry, updating model cards");
+                UpdateModelCards(models, modelsResponse.Metadata);
+            }
+            else
+            {
+                Logger.Debug("Cache entry already exists, not updating model cards");
+            }
         }
         catch (ApiException e)
         {
@@ -101,9 +129,83 @@ public partial class CheckpointBrowserViewModel : ObservableObject
                 "CivitAI can't be reached right now").SafeFireAndForget();
             Logger.Log(LogLevel.Error, e);
         }
-
+    }
+    
+    /// <summary>
+    /// Updates model cards using api response object.
+    /// </summary>
+    private void UpdateModelCards(IEnumerable<CivitModel>? models, CivitMetadata? metadata) 
+    {
+        if (models is null)
+        {
+            ModelCards?.Clear();
+        }
+        else
+        {
+            var updateCards = models
+                .Select(model => new CheckpointBrowserCardViewModel(model, 
+                    downloadService, snackbarService, settingsManager));
+            ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(updateCards);
+        }
+        TotalPages = metadata?.TotalPages ?? 1;
+        CanGoToPreviousPage = CurrentPageNumber > 1;
+        CanGoToNextPage = CurrentPageNumber < TotalPages;
+        // Status update
         ShowMainLoadingSpinner = false;
+        IsIndeterminate = false;
+        HasSearched = true;
+    }
 
+    [RelayCommand]
+    private async Task SearchModels()
+    {
+        if (string.IsNullOrWhiteSpace(SearchQuery)) return;
+        
+        var timer = Stopwatch.StartNew();
+
+        // Build request
+        var modelRequest = new CivitModelsRequest
+        {
+            Query = SearchQuery,
+            Limit = MaxModelsPerPage,
+            Nsfw = "true", // Handled by local view filter
+            Sort = SortMode,
+            Period = SelectedPeriod,
+            Page = CurrentPageNumber,
+        };
+        if (SelectedModelType != CivitModelType.All)
+        {
+            modelRequest.Types = new[] {SelectedModelType};
+        }
+        // See if query is cached
+        var cachedQuery = await liteDbContext.CivitModelQueryCache
+            .IncludeAll()
+            .FindByIdAsync(ObjectHash.GetMd5Guid(modelRequest));
+        // If cached, update model cards
+        if (cachedQuery?.Items is not null && cachedQuery.Items.Any())
+        {
+            var elapsed = timer.Elapsed;
+            Logger.Debug("Using cached query for {Text} [{RequestHash}] (in {Elapsed:F1} s)", 
+                SearchQuery, modelRequest.GetHashCode(), elapsed.TotalSeconds);
+            UpdateModelCards(cachedQuery.Items, cachedQuery.Metadata);
+
+            // Start remote query (background mode)
+            // Skip when last query was less than 2 min ago
+            var timeSinceCache = DateTimeOffset.UtcNow - cachedQuery.InsertedAt;
+            if (timeSinceCache?.TotalMinutes < 2)
+            {
+                Logger.Debug("Cached query was less than 2 minutes ago ({Seconds:F0} s), skipping remote query",
+                    timeSinceCache.Value.TotalSeconds);
+                return;
+            }
+            CivitModelQuery(modelRequest).SafeFireAndForget();
+        }
+        else
+        {
+            // Not cached, wait for remote query
+            ShowMainLoadingSpinner = true;
+            await CivitModelQuery(modelRequest);
+        }
     }
 
     [RelayCommand]
@@ -122,9 +224,25 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         await TrySearchAgain(false);
     }
 
-    partial void OnShowNsfwChanged(bool oldValue, bool newValue)
+    // On changes to ModelCards, update the view source
+    partial void OnModelCardsChanged(ObservableCollection<CheckpointBrowserCardViewModel>? value)
     {
-        TrySearchAgain().SafeFireAndForget();
+        if (value is null)
+        {
+            ModelCardsView = null;
+        }
+        // Create new view
+        var view = new ListCollectionView(value!)
+        {
+            Filter = FilterModelCardsPredicate,
+        };
+        ModelCardsView = view;
+    }
+    
+    partial void OnShowNsfwChanged(bool value)
+    {
+        settingsManager.SetModelBrowserNsfwEnabled(value);
+        ModelCardsView?.Refresh();
     }
 
     partial void OnSelectedPeriodChanged(CivitPeriod oldValue, CivitPeriod newValue)

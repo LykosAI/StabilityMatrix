@@ -69,7 +69,7 @@
                 </ui:Card>
 
                 <!--  Text2Image host port settings  -->
-                <ui:Card Margin="8">
+                <ui:Card Margin="8" Visibility="{Binding IsDebugModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}">
                     <StackPanel HorizontalAlignment="Left">
                         <TextBlock
                             FontSize="16"
@@ -150,6 +150,13 @@
                         <TextBlock Margin="8" Text="{Binding GpuInfo, FallbackValue=3dfx Voodoo 5 6000 - 128MB VRAM}" />
                         <TextBlock Margin="8" Text="{Binding GitInfo}" />
                         <TextBlock Margin="8" Text="{Binding TestProperty, FallbackValue=TestProperty}" />
+                        <ui:Flyout
+                            HorizontalAlignment="Right"
+                            IsOpen="{Binding IsFileSearchFlyoutOpen, Mode=TwoWay}"
+                            Placement="Top"
+                            Style="{StaticResource VersionFlyoutStyle}">
+                            <ProgressBar MinWidth="100" Value="{Binding FileSearchProgress}" />
+                        </ui:Flyout>
                         <StackPanel Orientation="Horizontal">
                             <Button
                                 Command="{Binding AddInstallationCommand}"
@@ -162,6 +169,10 @@
                             <Button
                                 Command="{Binding DebugTriggerExceptionCommand}"
                                 Content="Trigger Exception"
+                                Margin="8" />
+                            <Button
+                                Command="{Binding ModelFileSearchCommand}"
+                                Content="Model File Search"
                                 Margin="8" />
                         </StackPanel>
                     </StackPanel>

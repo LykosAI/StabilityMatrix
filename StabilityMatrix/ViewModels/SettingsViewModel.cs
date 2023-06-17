@@ -18,8 +18,10 @@ using CommunityToolkit.Mvvm.Input;
 using MdXaml;
 using Microsoft.Extensions.Logging;
 using Ookii.Dialogs.Wpf;
+using Polly.Timeout;
 using Refit;
 using StabilityMatrix.Api;
+using StabilityMatrix.Database;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using StabilityMatrix.Python;
@@ -38,6 +40,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IPackageFactory packageFactory;
     private readonly IPyRunner pyRunner;
     private readonly ISnackbarService snackbarService;
+    private readonly ILiteDbContext liteDbContext;
     private static string LicensesPath => "pack://application:,,,/Assets/licenses.json";
     public TextToFlowDocumentConverter? TextToFlowDocumentConverter { get; set; }
 
@@ -56,6 +59,8 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IContentDialogService contentDialogService;
     private readonly IA3WebApiManager a3WebApiManager;
 
+    [ObservableProperty] private bool isFileSearchFlyoutOpen;
+    [ObservableProperty] private double fileSearchProgress;
 
     [ObservableProperty] private string? webApiHost;
     [ObservableProperty] private string? webApiPort;
@@ -88,7 +93,8 @@ public partial class SettingsViewModel : ObservableObject
         IPyRunner pyRunner, 
         ISnackbarService snackbarService, 
         ILogger<SettingsViewModel> logger, 
-        IPackageFactory packageFactory)
+        IPackageFactory packageFactory,
+        ILiteDbContext liteDbContext)
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
@@ -97,6 +103,7 @@ public partial class SettingsViewModel : ObservableObject
         this.snackbarService = snackbarService;
         this.a3WebApiManager = a3WebApiManager;
         this.pyRunner = pyRunner;
+        this.liteDbContext = liteDbContext;
         SelectedTheme = settingsManager.Settings.Theme ?? "Dark";
         WindowBackdropType = settingsManager.Settings.WindowBackdropType ?? WindowBackdropType.Mica;
     }
@@ -175,6 +182,7 @@ public partial class SettingsViewModel : ObservableObject
         await dialog.ShowAsync();
     });
 
+    // Debug card commands
     public RelayCommand AddInstallationCommand => new(() =>
     {
         // Show dialog box to choose a folder
@@ -201,6 +209,67 @@ public partial class SettingsViewModel : ObservableObject
         settingsManager.AddInstalledPackage(package);
     });
 
+    // Debug card commands
+    [RelayCommand]
+    private async Task ModelFileSearchAsync()
+    {
+        // Show dialog box to choose a file
+        var fileDialog = new VistaOpenFileDialog
+        {
+            CheckFileExists = true,
+        };
+        if (fileDialog.ShowDialog() != true) return;
+        var path = fileDialog.FileName;
+        // Hash file
+        var timer = Stopwatch.StartNew();
+        IsFileSearchFlyoutOpen = true;
+        var progress = new Progress<ProgressReport>(report => FileSearchProgress = report.Percentage);
+        var fileHash = await FileHash.GetBlake3Async(path, progress);
+        var timeTakenHash = timer.Elapsed.TotalSeconds;
+        IsFileSearchFlyoutOpen = false;
+        // Search for file
+        timer.Restart();
+        
+        var modelVersion = await liteDbContext.CivitModelVersions.Query()
+           .Where(mv => mv.Files!
+                .Select(f => f.Hashes)
+                .Select(hashes => hashes.BLAKE3)
+                .Any(hash => hash == fileHash))
+            .FirstOrDefaultAsync();
+        var model = modelVersion != null
+             ? await liteDbContext.CivitModels.Query()
+                 .Include(m => m.ModelVersions)
+                 .Where(m => m.ModelVersions!
+                     .Select(v => v.Id)
+                     .Any(id => id == modelVersion.Id))
+                 .FirstOrDefaultAsync() : null;
+
+         timer.Stop();
+        var timeTakenSearch = timer.Elapsed.TotalSeconds;
+        // Not found
+        if (model == null)
+        {
+            var dialog = contentDialogService.CreateDialog();
+            dialog.Title = "Model file search";
+            dialog.Content = $"File not found in database. Hash: {fileHash}\n" +
+                             $"Time taken to hash: {timeTakenHash:F1} s\n" +
+                             $"Time taken to search: {timeTakenSearch:F1} s";
+            await dialog.ShowAsync();
+        }
+        else
+        {
+            // Found
+            var dialog = contentDialogService.CreateDialog();
+            dialog.Title = "Model file search";
+            dialog.Content = $"File found in database. Hash: {fileHash}\n" +
+                             $"Model: {model.Name}\n" +
+                             $"Version: {modelVersion.Name}\n" +
+                             $"Time taken to hash: {timeTakenHash:F1} s\n" +
+                             $"Time taken to search: {timeTakenSearch:F1} s";
+            await dialog.ShowAsync();
+        }
+    }
+
     [RelayCommand]
     private async Task PingWebApi()
     {
@@ -216,37 +285,24 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
-    private Task<bool> TryPingWebApi()
+    private async Task<bool> TryPingWebApi()
     {
-        return TryPingWebApi(TimeSpan.FromMilliseconds(150));
-    }
-
-    private async Task<bool> TryPingWebApi(TimeSpan? minimumDelay)
-    {
-        bool result;
-        var timer = minimumDelay != null ? Stopwatch.StartNew() : null;
+        await using var minimumDelay = new MinimumDelay(100, 200);
         try
         {
             await a3WebApiManager.Client.GetPing();
-            result = true;
+            return true;
         }
-        catch (Exception ex)
+        catch (TimeoutRejectedException)
         {
-            logger.LogInformation(ex, "Ping failed");
-            result = false;
+            logger.LogInformation("Ping timed out");
+            return false;
         }
-        
-        // Wait if minimum delay is set
-        if (minimumDelay != null)
+        catch (ApiException ex)
         {
-            var delay = minimumDelay.Value - timer!.Elapsed;
-            if (delay > TimeSpan.Zero)
-            {
-                await Task.Delay(delay);
-            }
+            logger.LogInformation("Ping failed with status [{StatusCode}]: {Content}", ex.StatusCode, ex.ReasonPhrase);
+            return false;
         }
-
-        return result;
     }
     
     [RelayCommand]
@@ -261,8 +317,25 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task OpenLicenseDialog()
     {
+        IEnumerable<LicenseInfo> licenses;
         // Read json
-        var licenses = JsonSerializer.Deserialize<IEnumerable<LicenseInfo>>(await File.ReadAllTextAsync(LicensesPath));
+        try
+        {
+            var stream = Application.GetResourceStream(new Uri(LicensesPath));
+            using var reader = new StreamReader(stream!.Stream);
+            var licenseText = await reader.ReadToEndAsync();
+            licenses = JsonSerializer.Deserialize<IEnumerable<LicenseInfo>>(licenseText)
+                ?? throw new Exception("Failed to deserialize licenses");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to read licenses");
+            snackbarService.ShowSnackbarAsync(
+                "An embedded resource could not be read. Please try reinstalling the application.", 
+                "Failed to read 'licenses.json'").SafeFireAndForget();
+            return;
+        }
+
         var flowViewer = new FlowDocumentScrollViewer();
         var markdownText = "";
         foreach (var license in licenses)

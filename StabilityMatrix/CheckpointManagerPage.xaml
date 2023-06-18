@@ -9,6 +9,7 @@
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     x:Class="StabilityMatrix.CheckpointManagerPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:controls="clr-namespace:StabilityMatrix.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:designData="clr-namespace:StabilityMatrix.DesignData"
@@ -342,9 +343,9 @@
                             IsIndeterminate="{Binding Progress.IsIndeterminate, FallbackValue=False}"
                             Margin="64,8"
                             Name="ImportProgressBar"
-                            Value="{Binding Progress.Value, FallbackValue=20}"
                             VerticalAlignment="Center"
-                            Visibility="{Binding Progress.ProgressVisibility, FallbackValue=Visible}" />
+                            Visibility="{Binding Progress.ProgressVisibility, FallbackValue=Visible}"
+                            controls:ProgressBarSmoother.SmoothValue="{Binding Progress.Value, FallbackValue=20}" />
                     </VirtualizingStackPanel>
                 </Grid>
             </Expander>
@@ -423,8 +424,9 @@
             Margin="16,0"
             Orientation="Horizontal">
             <ComboBox
+                HorizontalAlignment="Right"
                 ItemsSource="{Binding CheckpointFolders}"
-                MinWidth="150"
+                MinWidth="180"
                 SelectedIndex="0">
                 <ComboBox.ItemContainerStyle>
                     <Style TargetType="ComboBoxItem">

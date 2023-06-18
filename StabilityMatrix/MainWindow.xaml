@@ -2,12 +2,12 @@
     Closed="MainWindow_OnClosed"
     ExtendsContentIntoTitleBar="True"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-    Height="750"
+    Height="900"
     Icon="pack://application:,,,/Assets/Icon.ico"
     Loaded="MainWindow_OnLoaded"
     Title="Stability Matrix"
     UseLayoutRounding="True"
-    Width="1100"
+    Width="1300"
     WindowBackdropType="Mica"
     WindowStartupLocation="CenterScreen"
     d:DataContext="{d:DesignInstance Type=viewModels:MainWindowViewModel,
@@ -62,6 +62,7 @@
         <Grid Grid.Row="1">
             <ui:NavigationView
                 IsBackButtonVisible="Collapsed"
+                OpenPaneLength="260"
                 PaneClosed="RootNavigation_OnPaneClosed"
                 PaneOpened="RootNavigation_OnPaneOpened"
                 UseLayoutRounding="True"

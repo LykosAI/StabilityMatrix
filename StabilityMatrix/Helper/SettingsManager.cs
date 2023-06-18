@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using StabilityMatrix.Api;
+using System.Threading;
 using StabilityMatrix.Models;
 using Wpf.Ui.Controls.Window;
 
@@ -12,6 +12,8 @@ namespace StabilityMatrix.Helper;
 
 public class SettingsManager : ISettingsManager
 {
+    private static readonly ReaderWriterLockSlim FileLock = new();
+
     /// <summary>
     /// Directory of %AppData%
     /// </summary>
@@ -221,23 +223,60 @@ public class SettingsManager : ISettingsManager
         ModelBrowserNsfwEnabledChanged?.Invoke(this, value);
         SaveSettings();
     }
+
+    public void SetSharedFolderCategoryVisible(SharedFolderType type, bool visible)
+    {
+        Settings.SharedFolderVisibleCategories ??= new SharedFolderType();
+        if (visible)
+        {
+            Settings.SharedFolderVisibleCategories |= type;
+        }
+        else
+        {
+            Settings.SharedFolderVisibleCategories &= ~type;
+        }
+        SaveSettings();
+    }
+    
+    public bool IsSharedFolderCategoryVisible(SharedFolderType type)
+    {
+        // False for default
+        if (type == 0) return false;
+        return Settings.SharedFolderVisibleCategories?.HasFlag(type) ?? false;
+    }
     
     private void LoadSettings()
     {
-        var settingsContent = File.ReadAllText(SettingsPath);
-        Settings = JsonSerializer.Deserialize<Settings>(settingsContent, new JsonSerializerOptions
+        FileLock.EnterReadLock();
+        try
         {
-            Converters = { new JsonStringEnumConverter() }
-        })!;
+            var settingsContent = File.ReadAllText(SettingsPath);
+            Settings = JsonSerializer.Deserialize<Settings>(settingsContent, new JsonSerializerOptions
+            {
+                Converters = { new JsonStringEnumConverter() }
+            })!;
+        }
+        finally
+        {
+            FileLock.ExitReadLock();
+        }
     }
 
     private void SaveSettings()
     {
-        var json = JsonSerializer.Serialize(Settings, new JsonSerializerOptions
+        FileLock.TryEnterWriteLock(1000);
+        try
         {
-            WriteIndented = true,
-            Converters = { new JsonStringEnumConverter() }
-        });
-        File.WriteAllText(SettingsPath, json);
+            var json = JsonSerializer.Serialize(Settings, new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Converters = { new JsonStringEnumConverter() }
+            });
+            File.WriteAllText(SettingsPath, json);
+        }
+        finally
+        {
+            FileLock.ExitWriteLock();
+        }
     }
 }

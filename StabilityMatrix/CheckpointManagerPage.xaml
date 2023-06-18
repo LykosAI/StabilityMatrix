@@ -189,7 +189,7 @@
                                             FontSize="12"
                                             Foreground="DimGray"
                                             Symbol="CloudOff24"
-                                            ToolTip="Connected Model" />
+                                            ToolTip="Local Model" />
                                     </Button>
                                     <ui:Button
                                         Background="Transparent"

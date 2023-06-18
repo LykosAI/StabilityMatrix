@@ -15,12 +15,14 @@ public partial class CheckpointManagerViewModel : ObservableObject
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly ISharedFolders sharedFolders;
     private readonly ISettingsManager settingsManager;
+    private readonly IDialogFactory dialogFactory;
     public ObservableCollection<CheckpointFolder> CheckpointFolders { get; set; } = new();
     
-    public CheckpointManagerViewModel(ISharedFolders sharedFolders, ISettingsManager settingsManager)
+    public CheckpointManagerViewModel(ISharedFolders sharedFolders, ISettingsManager settingsManager, IDialogFactory dialogFactory)
     {
         this.sharedFolders = sharedFolders;
         this.settingsManager = settingsManager;
+        this.dialogFactory = dialogFactory;
     }
     
     public async Task OnLoaded()
@@ -46,7 +48,11 @@ public partial class CheckpointManagerViewModel : ObservableObject
         // Index all folders
         var tasks = folders.Select(f => Task.Run(async () =>
             {
-                var checkpointFolder = new CheckpointFolder {Title = Path.GetFileName(f), DirectoryPath = f};
+                var checkpointFolder = new CheckpointFolder(dialogFactory, settingsManager)
+                {
+                    Title = Path.GetFileName(f), 
+                    DirectoryPath = f
+                };
                 await checkpointFolder.IndexAsync();
                 indexedFolders.Add(checkpointFolder);
             })).ToList();

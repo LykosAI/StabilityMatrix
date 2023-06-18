@@ -104,7 +104,9 @@
                                     HorizontalAlignment="Left"
                                     IsEnabled="True"
                                     Margin="4"
-                                    Orientation="Vertical">
+                                    Orientation="Vertical"
+                                    ToolTipService.BetweenShowDelay="100"
+                                    ToolTipService.InitialShowDelay="300">
                                     <!--  Tooltip for title and version  -->
                                     <StackPanel.ToolTip>
                                         <ToolTip Padding="8">

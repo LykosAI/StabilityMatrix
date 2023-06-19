@@ -15,15 +15,33 @@ namespace StabilityMatrix.Models;
 
 public partial class CheckpointFolder : ObservableObject
 {
+    private readonly IDialogFactory dialogFactory;
+    private readonly ISettingsManager settingsManager;
+    // ReSharper disable once FieldCanBeMadeReadOnly.Local
+    private bool useCategoryVisibility;
+    
     /// <summary>
     /// Absolute path to the folder.
     /// </summary>
     public string DirectoryPath { get; init; } = string.Empty;
-    
+
     /// <summary>
     /// Custom title for UI.
     /// </summary>
-    public string Title { get; init; } = string.Empty;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FolderType))]
+    [NotifyPropertyChangedFor(nameof(TitleWithFilesCount))]
+    private string title = string.Empty;
+
+    private SharedFolderType FolderType => Enum.TryParse(Title, out SharedFolderType type)
+        ? type
+        : new SharedFolderType();
+
+    /// <summary>
+    /// True if the category is enabled for the manager page.
+    /// </summary>
+    [ObservableProperty]
+    private bool isCategoryEnabled = true;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsDragBlurEnabled))]
@@ -32,24 +50,51 @@ public partial class CheckpointFolder : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsDragBlurEnabled))]
     private bool isImportInProgress;
-
+    
     public bool IsDragBlurEnabled => IsCurrentDragTarget || IsImportInProgress;
+    public string TitleWithFilesCount => CheckpointFiles.Any() ? $"{Title} ({CheckpointFiles.Count})" : Title;
     
     public ProgressViewModel Progress { get; } = new();
 
-    public ObservableCollection<CheckpointFile> CheckpointFiles { get; set; } = new();
+    public ObservableCollection<CheckpointFile> CheckpointFiles { get; init; } = new();
     
     public RelayCommand OnPreviewDragEnterCommand => new(() => IsCurrentDragTarget = true);
     public RelayCommand OnPreviewDragLeaveCommand => new(() => IsCurrentDragTarget = false);
 
-    public CheckpointFolder()
+    public CheckpointFolder(IDialogFactory dialogFactory, ISettingsManager settingsManager, bool useCategoryVisibility = true)
     {
+        this.dialogFactory = dialogFactory;
+        this.settingsManager = settingsManager;
+        this.useCategoryVisibility = useCategoryVisibility;
         CheckpointFiles.CollectionChanged += OnCheckpointFilesChanged;
     }
     
+    /// <summary>
+    /// When title is set, set the category enabled state from settings.
+    /// </summary>
+    // ReSharper disable once UnusedParameterInPartialMethod
+    partial void OnTitleChanged(string value)
+    {
+        if (!useCategoryVisibility) return;
+        IsCategoryEnabled = settingsManager.IsSharedFolderCategoryVisible(FolderType);
+    }
+    
+    /// <summary>
+    /// When toggling the category enabled state, save it to settings.
+    /// </summary>
+    partial void OnIsCategoryEnabledChanged(bool value)
+    {
+        if (!useCategoryVisibility) return;
+        if (value != settingsManager.IsSharedFolderCategoryVisible(FolderType))
+        {
+            settingsManager.SetSharedFolderCategoryVisible(FolderType, value);
+        }
+    }
+
     // On collection changes
     private void OnCheckpointFilesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        OnPropertyChanged(nameof(TitleWithFilesCount));
         if (e.NewItems == null) return;
         // On new added items, add event handler for deletion
         foreach (CheckpointFile item in e.NewItems)
@@ -73,9 +118,8 @@ public partial class CheckpointFolder : ObservableObject
     {
         IsImportInProgress = true;
         IsCurrentDragTarget = false;
-        
-        var files = e.Data.GetData(DataFormats.FileDrop) as string[];
-        if (files == null || files.Length < 1)
+
+        if (e.Data.GetData(DataFormats.FileDrop) is not string[] files || files.Length < 1)
         {
             IsImportInProgress = false;
             return;
@@ -129,8 +173,8 @@ public partial class CheckpointFolder : ObservableObject
     {
         var checkpointFiles = await (progress switch
         {
-            null => Task.Run(() => CheckpointFile.FromDirectoryIndex(DirectoryPath)),
-            _ => Task.Run(() => CheckpointFile.FromDirectoryIndex(DirectoryPath, progress))
+            null => Task.Run(() => CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath)),
+            _ => Task.Run(() => CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath, progress))
         });
 
         CheckpointFiles.Clear();

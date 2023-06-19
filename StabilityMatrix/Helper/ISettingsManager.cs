@@ -40,4 +40,6 @@ public interface ISettingsManager
     void SetModelsDirectory(string? directory);
     void SetFirstLaunchSetupComplete(bool firstLaunchSetupCompleted);
     void SetModelBrowserNsfwEnabled(bool value);
+    void SetSharedFolderCategoryVisible(SharedFolderType type, bool visible);
+    bool IsSharedFolderCategoryVisible(SharedFolderType type);
 }

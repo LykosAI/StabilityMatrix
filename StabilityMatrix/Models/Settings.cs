@@ -23,6 +23,11 @@ public class Settings
     public string ModelsDirectory { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix", "Models");
     public bool ModelBrowserNsfwEnabled { get; set; }
 
+    public SharedFolderType? SharedFolderVisibleCategories { get; set; } =
+        SharedFolderType.StableDiffusion | 
+        SharedFolderType.Lora | 
+        SharedFolderType.LyCORIS;
+
     public InstalledPackage? GetActiveInstalledPackage()
     {
         return InstalledPackages.FirstOrDefault(x => x.Id == ActiveInstalledPackage);

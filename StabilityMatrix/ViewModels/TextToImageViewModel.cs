@@ -103,7 +103,7 @@ public partial class TextToImageViewModel : ObservableObject
             logger.LogWarning("Skipped model folder index - {SdModelsDir} does not exist", sdModelsDir);
             return;
         }
-        DiffusionCheckpointFolder = new CheckpointFolder
+        DiffusionCheckpointFolder = new CheckpointFolder(null!, null!) // TODO: refactor to not use view models
         {
             Title = Path.GetFileName(sdModelsDir),
             DirectoryPath = sdModelsDir

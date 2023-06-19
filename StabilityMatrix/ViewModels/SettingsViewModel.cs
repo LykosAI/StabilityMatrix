@@ -227,45 +227,35 @@ public partial class SettingsViewModel : ObservableObject
         var fileHash = await FileHash.GetBlake3Async(path, progress);
         var timeTakenHash = timer.Elapsed.TotalSeconds;
         IsFileSearchFlyoutOpen = false;
+
         // Search for file
         timer.Restart();
+        var (model, version) = 
+            await liteDbContext.FindCivitModelFromFileHashAsync(fileHash);
         
-        var modelVersion = await liteDbContext.CivitModelVersions.Query()
-           .Where(mv => mv.Files!
-                .Select(f => f.Hashes)
-                .Select(hashes => hashes.BLAKE3)
-                .Any(hash => hash == fileHash))
-            .FirstOrDefaultAsync();
-        var model = modelVersion != null
-             ? await liteDbContext.CivitModels.Query()
-                 .Include(m => m.ModelVersions)
-                 .Where(m => m.ModelVersions!
-                     .Select(v => v.Id)
-                     .Any(id => id == modelVersion.Id))
-                 .FirstOrDefaultAsync() : null;
+        timer.Stop();
+        var timeTakenSearch = timer.Elapsed.TotalMilliseconds;
 
-         timer.Stop();
-        var timeTakenSearch = timer.Elapsed.TotalSeconds;
+        var generalText =
+            $"Time taken to hash: {timeTakenHash:F2} s\n" +
+            $"Time taken to search: {timeTakenSearch:F1} ms\n";
+        
         // Not found
         if (model == null)
         {
             var dialog = contentDialogService.CreateDialog();
-            dialog.Title = "Model file search";
-            dialog.Content = $"File not found in database. Hash: {fileHash}\n" +
-                             $"Time taken to hash: {timeTakenHash:F1} s\n" +
-                             $"Time taken to search: {timeTakenSearch:F1} s";
+            dialog.Title = "Model not found :(";
+            dialog.Content = $"File not found in database. Hash: {fileHash}\n" + generalText;
             await dialog.ShowAsync();
         }
         else
         {
             // Found
             var dialog = contentDialogService.CreateDialog();
-            dialog.Title = "Model file search";
+            dialog.Title = "Model found!";
             dialog.Content = $"File found in database. Hash: {fileHash}\n" +
                              $"Model: {model.Name}\n" +
-                             $"Version: {modelVersion.Name}\n" +
-                             $"Time taken to hash: {timeTakenHash:F1} s\n" +
-                             $"Time taken to search: {timeTakenSearch:F1} s";
+                             $"Version: {version!.Name}\n" + generalText; 
             await dialog.ShowAsync();
         }
     }
@@ -336,19 +326,25 @@ public partial class SettingsViewModel : ObservableObject
             return;
         }
 
-        var flowViewer = new FlowDocumentScrollViewer();
+        var flowViewer = new FlowDocumentScrollViewer
+        {
+            MaxHeight = 400,
+            MaxWidth = 600,
+        };
         var markdownText = "";
         foreach (var license in licenses)
         {
-            markdownText += $"## [{license.PackageName}]({license.PackageUrl}) by {string.Join(", ", license.Authors)}\n\n";
+            markdownText += $"## [**{license.PackageName}**]({license.PackageUrl}) by {string.Join(", ", license.Authors)}\n\n";
             markdownText += $"{license.Copyright}\n\n";
             markdownText += $"[{license.LicenseUrl}]({license.LicenseUrl})\n\n";
         }
-        flowViewer.Document = TextToFlowDocumentConverter!.Convert(markdownText, typeof(FlowDocument), null, CultureInfo.CurrentCulture) as FlowDocument;
+        flowViewer.Document = TextToFlowDocumentConverter!.Convert(markdownText, typeof(FlowDocument), null!, CultureInfo.CurrentCulture) as FlowDocument;
 
         var dialog = contentDialogService.CreateDialog();
         dialog.Title = "License and Open Source Notices";
         dialog.Content = flowViewer;
+        dialog.DialogMaxHeight = 1000;
+        dialog.DialogMaxWidth = 900;
         dialog.IsPrimaryButtonEnabled = false;
         await dialog.ShowAsync();
     }

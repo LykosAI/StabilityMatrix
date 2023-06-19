@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
+using LiteDB;
 using LiteDB.Async;
 using StabilityMatrix.Extensions;
 using StabilityMatrix.Models.Api;
@@ -24,8 +27,27 @@ public class LiteDbContext : ILiteDbContext
     {
         Database = new LiteDatabaseAsync(connectionString);
 
+        // Register reference fields
         LiteDBExtensions.Register<CivitModel, CivitModelVersion>(m => m.ModelVersions, "CivitModelVersions");
         LiteDBExtensions.Register<CivitModelQueryCacheEntry, CivitModel>(e => e.Items, "CivitModels");
+    }
+    
+    public async Task<(CivitModel?, CivitModelVersion?)> FindCivitModelFromFileHashAsync(string hashBlake3)
+    {
+        var version = await CivitModelVersions.Query()
+            .Where(mv => mv.Files!
+                .Select(f => f.Hashes)
+                .Select(hashes => hashes.BLAKE3)
+                .Any(hash => hash == hashBlake3))
+            .FirstOrDefaultAsync();
+        if (version is null) return (null, null);
+        var model = await CivitModels.Query()
+            .Include(m => m.ModelVersions)
+            .Where(m => m.ModelVersions!
+                .Select(v => v.Id)
+                .Any(id => id == version.Id))
+            .FirstOrDefaultAsync();
+        return (model, version);
     }
     
     public async Task<bool> UpsertCivitModelAsync(CivitModel civitModel)

@@ -49,7 +49,11 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     
     public IEnumerable<CivitPeriod> AllCivitPeriods => Enum.GetValues(typeof(CivitPeriod)).Cast<CivitPeriod>();
     public IEnumerable<CivitSortMode> AllSortModes => Enum.GetValues(typeof(CivitSortMode)).Cast<CivitSortMode>();
-    public IEnumerable<CivitModelType> AllModelTypes => Enum.GetValues(typeof(CivitModelType)).Cast<CivitModelType>();
+
+    public IEnumerable<CivitModelType> AllModelTypes => Enum.GetValues(typeof(CivitModelType))
+        .Cast<CivitModelType>()
+        .Where(t => t != CivitModelType.AestheticGradient && t != CivitModelType.Poses)
+        .OrderBy(t => t.ToString());
 
     public CheckpointBrowserViewModel(
         ICivitApi civitApi, 
@@ -67,7 +71,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         ShowNsfw = settingsManager.Settings.ModelBrowserNsfwEnabled;
         SelectedPeriod = CivitPeriod.Month;
         SortMode = CivitSortMode.HighestRated;
-        SelectedModelType = CivitModelType.All;
+        SelectedModelType = CivitModelType.Checkpoint;
         HasSearched = false;
         CurrentPageNumber = 1;
         CanGoToPreviousPage = false;

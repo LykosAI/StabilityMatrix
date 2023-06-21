@@ -1,0 +1,41 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.repository == 'LykosAI/StabilityMatrix'
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x'
+            
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet publish .\\StabilityMatrix\\StabilityMatrix.csproj -o out -c Release -r win-x64 -p:PublishReadyToRun=true --self-contained true --no-restore
+        
+      # Make a zip file of the build (only StabilityMatrix.exe)
+      - name: Zip Artifact
+        run: Compress-Archive -Path .\\out\\StabilityMatrix.exe -DestinationPath .\\out\\StabilityMatrix.zip
+
+      - name: Upload Artifacts
+        if: ${{ github.event_name == 'push' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: .\\out\\StabilityMatrix.zip

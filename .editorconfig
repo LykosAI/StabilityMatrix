@@ -1,9 +1,6 @@
 ﻿root = true
 
-[*]
-indent_size = 4
+[*.cs]
 max_line_length = 100
-
 csharp_style_var_for_built_in_types = true
-
 dotnet_sort_system_directives_first = true

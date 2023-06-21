@@ -24,10 +24,10 @@ jobs:
           dotnet-version: '6.0.x'
             
       - name: Install dependencies
-        run: dotnet restore
+        run: dotnet restore -p:PublishReadyToRun=true
 
       - name: Build
-        run: dotnet publish .\\StabilityMatrix\\StabilityMatrix.csproj -o out -c Release -r win-x64 -p:PublishReadyToRun=true --self-contained true --no-restore
+        run: dotnet publish .\\StabilityMatrix\\StabilityMatrix.csproj -o out -c Release -r win-x64 -p:PublishReadyToRun=true --self-contained true
         
       # Make a zip file of the build (only StabilityMatrix.exe)
       - name: Zip Artifact

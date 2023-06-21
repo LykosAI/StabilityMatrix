@@ -173,14 +173,17 @@ public partial class CheckpointBrowserViewModel : ObservableObject
             Period = SelectedPeriod,
             Page = CurrentPageNumber,
         };
+        
         if (SelectedModelType != CivitModelType.All)
         {
             modelRequest.Types = new[] {SelectedModelType};
         }
+        
         // See if query is cached
         var cachedQuery = await liteDbContext.CivitModelQueryCache
             .IncludeAll()
             .FindByIdAsync(ObjectHash.GetMd5Guid(modelRequest));
+        
         // If cached, update model cards
         if (cachedQuery?.Items is not null && cachedQuery.Items.Any())
         {
@@ -198,6 +201,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
                     timeSinceCache.Value.TotalSeconds);
                 return;
             }
+            
             CivitModelQuery(modelRequest).SafeFireAndForget();
         }
         else

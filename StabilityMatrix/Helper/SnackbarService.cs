@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using System;
+using AsyncAwaitBestPractices;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Models;
 using StabilityMatrix.ViewModels;
@@ -63,7 +64,7 @@ public class SnackbarService : ISnackbarService
         }
         catch (Exception e)
         {
-            ShowSnackbarAsync(message, level: level, timeoutMilliseconds: timeoutMilliseconds);
+            ShowSnackbarAsync(message, level: level, timeoutMilliseconds: timeoutMilliseconds).SafeFireAndForget();
             return new TaskResult<T>
             {
                 Exception = e

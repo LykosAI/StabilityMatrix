@@ -1,0 +1,36 @@
+﻿name: Version Bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_mask:
+        type: string
+        description: Version Bump Mask
+        default: "0.0.1.0"
+        required: false
+      
+      version_overwrite:
+        type: string
+        description: Version Overwrite Mask
+        default: "*.*.*.*"
+        required: false
+
+jobs:
+  version-bump:
+    name: Version Bump
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: 6.0.x
+
+      - name: Bump versions
+        uses: SiqiLu/dotnet-bump-version@2.0.0
+        with:
+          version_files: "**/*.csproj"
+          version_mask: ${{ github.event.inputs.version_mask }}
+          version_overwrite: ${{ github.event.inputs.version_overwrite }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}

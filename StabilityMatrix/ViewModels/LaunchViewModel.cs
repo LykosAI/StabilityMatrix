@@ -36,16 +36,13 @@ public partial class LaunchViewModel : ObservableObject
     private bool clearingPackages = false;
 
     [ObservableProperty] private string consoleInput = "";
-
     [ObservableProperty] private string consoleOutput = "";
-
     [ObservableProperty] private Visibility launchButtonVisibility;
-
     [ObservableProperty] private Visibility stopButtonVisibility;
-
     [ObservableProperty] private bool isLaunchTeachingTipsOpen = false;
+    [ObservableProperty] private bool showWebUiButton;
 
-
+    private string webUiUrl = string.Empty;
     private InstalledPackage? selectedPackage;
 
     public InstalledPackage? SelectedPackage
@@ -106,10 +103,14 @@ public partial class LaunchViewModel : ObservableObject
 
     private void ToastNotificationManagerCompatOnOnActivated(ToastNotificationActivatedEventArgsCompat e)
     {
-        if (e.Argument.StartsWith("http"))
+        if (!e.Argument.StartsWith("http"))
+            return;
+
+        if (string.IsNullOrWhiteSpace(webUiUrl))
         {
-            Process.Start(new ProcessStartInfo(e.Argument) {UseShellExecute = true});
+            webUiUrl = e.Argument;
         }
+        LaunchWebUi();
     }
 
     public AsyncRelayCommand LaunchCommand => new(async () =>
@@ -215,11 +216,19 @@ public partial class LaunchViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
+    private void LaunchWebUi()
+    {
+        Process.Start(new ProcessStartInfo(webUiUrl) {UseShellExecute = true});
+    }
+
     private void RunningPackageOnStartupComplete(object? sender, string url)
     {
+        webUiUrl = url;
+        ShowWebUiButton = true;
         new ToastContentBuilder()
             .AddText("Stable Diffusion Web UI ready to go!")
-            .AddButton("Launch Web UI", ToastActivationType.Foreground, url)
+            .AddButton("Open Web UI", ToastActivationType.Foreground, url)
             .Show();
     }
 

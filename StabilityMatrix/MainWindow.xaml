@@ -2,12 +2,12 @@
     Closed="MainWindow_OnClosed"
     ExtendsContentIntoTitleBar="True"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-    Height="900"
+    Height="700"
     Icon="pack://application:,,,/Assets/Icon.ico"
     Loaded="MainWindow_OnLoaded"
     Title="Stability Matrix"
     UseLayoutRounding="True"
-    Width="1300"
+    Width="1100"
     WindowBackdropType="Mica"
     WindowStartupLocation="CenterScreen"
     d:DataContext="{d:DesignInstance Type=viewModels:MainWindowViewModel,
@@ -81,7 +81,7 @@
                         IsActive="true"
                         TargetPageType="{x:Type local:LaunchPage}" />
                     <ui:NavigationViewItem
-                        Content="Package Manager"
+                        Content="Packages"
                         Icon="{ui:SymbolIcon Box24}"
                         TargetPageType="{x:Type local:PackageManagerPage}" />
                     <ui:NavigationViewItem
@@ -89,8 +89,8 @@
                         Icon="{ui:SymbolIcon Notebook24}"
                         TargetPageType="{x:Type local:CheckpointManagerPage}" />
                     <ui:NavigationViewItem
-                        Content="Get Checkpoints"
-                        Icon="{ui:SymbolIcon NotebookAdd24}"
+                        Content="Model Browser"
+                        Icon="{ui:SymbolIcon BrainCircuit24}"
                         TargetPageType="{x:Type local:CheckpointBrowserPage}" />
                     <ui:NavigationViewItem
                         Content="Text2Image (Beta™)"

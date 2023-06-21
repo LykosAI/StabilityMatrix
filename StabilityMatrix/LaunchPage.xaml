@@ -13,14 +13,14 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:designViewModels="clr-namespace:StabilityMatrix.DesignData"
-    xmlns:local="clr-namespace:StabilityMatrix"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:StabilityMatrix.Models"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        
         <!--  Manually copied style since can't inherit: https://github.com/lepoco/wpfui/blob/main/src/Wpf.Ui/Styles/Controls/ComboBox.xaml  -->
         <ControlTemplate TargetType="{x:Type ComboBoxItem}" x:Key="SelectPackageDropDownStyle">
             <Grid>
@@ -91,6 +91,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Grid>
@@ -205,5 +206,13 @@
                 TextWrapping="Wrap"
                 VerticalAlignment="Stretch" />
         </ScrollViewer>
+        <ui:Button Grid.Row="2" Grid.ColumnSpan="2"
+                Margin="24,0,24,8"
+                Command="{Binding LaunchWebUiCommand}"
+                Appearance="Success"                
+                FontSize="12"
+                HorizontalAlignment="Stretch"
+                Visibility="{Binding ShowWebUiButton, Converter={StaticResource BoolToVisConverter}}"
+                Content="Open Web UI"/>
     </Grid>
 </Page>

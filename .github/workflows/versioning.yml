@@ -60,7 +60,7 @@ jobs:
           dotnet-version: 6.0.x
 
       - name: Bump versions
-        uses: SiqiLu/dotnet-bump-version@2.1.0
+        uses: SiqiLu/dotnet-bump-version@2.0.0
         with:
           version_files: "**/*.csproj"
           version_mask: ${{ env.version_mask }}

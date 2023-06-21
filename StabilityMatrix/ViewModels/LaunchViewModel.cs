@@ -219,7 +219,7 @@ public partial class LaunchViewModel : ObservableObject
     [RelayCommand]
     private void LaunchWebUi()
     {
-        Process.Start(new ProcessStartInfo(webUiUrl) {UseShellExecute = true});
+        ProcessRunner.OpenUrl(webUiUrl);
     }
 
     private void RunningPackageOnStartupComplete(object? sender, string url)

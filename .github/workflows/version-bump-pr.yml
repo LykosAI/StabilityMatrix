@@ -16,7 +16,7 @@ jobs:
         id: get_merged_pull_request
         uses: actions-ecosystem/action-get-merged-pull-request@v1.0.1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Set Outputs
         run: |
           echo "pr_number=${{ steps.get_merged_pull_request.outputs.number }}" >> "$GITHUB_OUTPUT"

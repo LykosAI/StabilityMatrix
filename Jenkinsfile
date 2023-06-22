@@ -15,17 +15,19 @@ node("Windows") {
         bat "dotnet test StabilityMatrix.Tests"
     }
 
-    stage('Publish') {
-        bat "dotnet publish .\\StabilityMatrix\\StabilityMatrix.csproj -c Release -o out -r win-x64 -p:PublishSingleFile=true --self-contained true"
-    }
-
-    stage('Set Version') {
-        version = VersionNumber projectStartDate: '', versionNumberString: '${BUILD_DATE_FORMATTED, "yy"}.${BUILD_WEEK}.${BUILDS_THIS_WEEK}', versionPrefix: '', worstResultForIncrement: 'SUCCESS'
-    }
-
-    if (env.BRANCH_NAME == "main") {
+    if (env.BRANCH_NAME == 'main') {
+        stage('Set Version') {
+            version = VersionNumber projectStartDate: '', versionNumberString: '1.0.${BUILDS_ALL_TIME}.0', versionPrefix: '', worstResultForIncrement: 'SUCCESS'
+        }
+        stage('Publish') {
+            bat "dotnet publish .\\StabilityMatrix\\StabilityMatrix.csproj -c Release -o out -r win-x64 -p:PublishSingleFile=true -p:Version=${version} --self-contained true"
+        }
         stage ('Archive Artifacts') {
             archiveArtifacts artifacts: 'out/*.exe', followSymlinks: false
+        }
+    } else {
+        stage('Publish') {
+            bat "dotnet publish .\\StabilityMatrix\\StabilityMatrix.csproj -c Release -o out -r win-x64 -p:PublishSingleFile=true --self-contained true"
         }
     }
 }

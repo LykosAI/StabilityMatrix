@@ -1,7 +1,7 @@
 # Stability Matrix
 
 [![Build](https://github.com/LykosAI/StabilityMatrix/actions/workflows/build.yml/badge.svg)](https://github.com/LykosAI/StabilityMatrix/actions/workflows/build.yml)
-![https://discord.com/invite/TUrgfECxHz](https://img.shields.io/discord/1115555685476868168?logo=discord&logoColor=white&label=Discord%20Server)
+[![Discord Server](https://img.shields.io/discord/1115555685476868168?logo=discord&logoColor=white&label=Discord%20Server)](https://discord.com/invite/TUrgfECxHz)
 
 [auto1111]: https://github.com/AUTOMATIC1111/stable-diffusion-webui
 [comfy]: https://github.com/comfyanonymous/ComfyUI

@@ -27,15 +27,19 @@ jobs:
         run: dotnet restore -p:PublishReadyToRun=true
 
       - name: Build
-        run: dotnet publish .\\StabilityMatrix\\StabilityMatrix.csproj -o out -c Release -r win-x64 -p:PublishReadyToRun=true --self-contained true
+        run: |
+          dotnet publish ./StabilityMatrix/StabilityMatrix.csproj -o out -c Release -r win-x64 -p:PublishReadyToRun=true --self-contained true
+          mv ./out/StabilityMatrix.exe StabilityMatrix.exe
+          rm -r ./out
         
-      # Make a zip file of the build (only StabilityMatrix.exe)
-      - name: Zip Artifact
-        run: Compress-Archive -Path .\\out\\StabilityMatrix.exe -DestinationPath .\\out\\StabilityMatrix.zip
+      - name: Build (No Included .NET)
+        run: |
+          dotnet publish ./StabilityMatrix/StabilityMatrix.csproj -o out -c Release -r win-x64 -p:PublishReadyToRun=true -p:PublishSingleFile=true --self-contained false
+          mv ./out/StabilityMatrix.exe StabilityMatrix-dotNET.exe
 
       - name: Upload Artifacts
         if: ${{ github.event_name == 'push' }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: build
-          path: .\\out\\StabilityMatrix.zip
+          path: "*.exe"

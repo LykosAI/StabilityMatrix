@@ -27,19 +27,4 @@ jobs:
         run: dotnet restore -p:PublishReadyToRun=true
 
       - name: Build
-        run: |
-          dotnet publish ./StabilityMatrix/StabilityMatrix.csproj -o out -c Release -r win-x64 -p:PublishReadyToRun=true -p:PublishSingleFile=true --self-contained true
-          mv ./out/StabilityMatrix.exe StabilityMatrix.exe
-          rm -r ./out
-        
-      - name: Build (No Included .NET)
-        run: |
-          dotnet publish ./StabilityMatrix/StabilityMatrix.csproj -o out -c Release -r win-x64 -p:PublishReadyToRun=true -p:PublishSingleFile=true --self-contained false
-          mv ./out/StabilityMatrix.exe StabilityMatrix-dotNET.exe
-
-      - name: Upload Artifacts
-        if: ${{ github.event_name == 'push' }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: build
-          path: "*.exe"
+        run: dotnet publish ./StabilityMatrix/StabilityMatrix.csproj -o out -c Release -r win-x64 -p:PublishSingleFile=true --self-contained true

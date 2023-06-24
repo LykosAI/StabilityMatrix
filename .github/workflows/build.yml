@@ -28,7 +28,7 @@ jobs:
 
       - name: Build
         run: |
-          dotnet publish ./StabilityMatrix/StabilityMatrix.csproj -o out -c Release -r win-x64 -p:PublishReadyToRun=true --self-contained true
+          dotnet publish ./StabilityMatrix/StabilityMatrix.csproj -o out -c Release -r win-x64 -p:PublishReadyToRun=true -p:PublishSingleFile=true --self-contained true
           mv ./out/StabilityMatrix.exe StabilityMatrix.exe
           rm -r ./out
         

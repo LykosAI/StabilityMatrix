@@ -226,10 +226,20 @@ public partial class LaunchViewModel : ObservableObject
     {
         webUiUrl = url;
         ShowWebUiButton = true;
-        new ToastContentBuilder()
-            .AddText("Stable Diffusion Web UI ready to go!")
-            .AddButton("Open Web UI", ToastActivationType.Foreground, url)
-            .Show();
+        // Uwp toasts has upstream issues on some machines
+        // https://github.com/CommunityToolkit/WindowsCommunityToolkit/issues/4858
+        try
+        {
+            new ToastContentBuilder()
+                .AddText("Stable Diffusion Web UI ready to go!")
+                .AddButton("Open Web UI", ToastActivationType.Foreground, url)
+                .Show();
+        }
+        catch (Exception e)
+        {
+            logger.LogWarning("Failed to show Windows notification: {Message}", e.Message);
+        }
+
     }
 
     public void OnLoaded()

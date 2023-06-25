@@ -34,16 +34,16 @@ node("Windows") {
         if (env.TAG_NAME) {
             stage('Sentry Release') {
                 bat "pip install sentry-cli"
-                SENTRY_ORG = "stability-matrix"
-                SENTRY_PROJECT = "dotnet"
-                SENTRY_ENVIRONMENT = "production"
-                SENTRY_RELEASE = "StabilityMatrix@${version}"
+                def sentry_org = "stability-matrix"
+                def sentry_project = "dotnet"
+                def sentry_environment = "production"
+                def sentry_release = "StabilityMatrix@${version}"
                 
-                bat "sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE"
-                bat "sentry-cli releases set-commits $SENTRY_RELEASE --auto"
-                bat "sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps path-to-sourcemaps-if-applicable"
-                bat "sentry-cli releases finalize $SENTRY_RELEASE"
-                bat "sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_ENVIRONMENT"
+                bat "sentry-cli releases new -p ${sentry_project} ${sentry_release}"
+                bat "sentry-cli releases set-commits ${sentry_release} --auto"
+                bat "sentry-cli releases files ${sentry_release} upload-sourcemaps ./out"
+                bat "sentry-cli releases finalize ${sentry_release}"
+                bat "sentry-cli releases deploys ${sentry_release} new -e ${sentry_environment}"
             }
         }
         

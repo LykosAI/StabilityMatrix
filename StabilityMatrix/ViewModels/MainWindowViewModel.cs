@@ -7,7 +7,9 @@ using System.Windows.Threading;
 using System.Windows.Shell;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Options;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Models.Configs;
 using StabilityMatrix.Services;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls.Window;
@@ -20,12 +22,14 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly ISettingsManager settingsManager;
     private readonly IDialogFactory dialogFactory;
     private readonly INotificationBarService notificationBarService;
+    private readonly DebugOptions debugOptions;
 
-    public MainWindowViewModel(ISettingsManager settingsManager, IDialogFactory dialogFactory, INotificationBarService notificationBarService)
+    public MainWindowViewModel(ISettingsManager settingsManager, IDialogFactory dialogFactory, INotificationBarService notificationBarService, IOptions<DebugOptions> debugOptions)
     {
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
         this.notificationBarService = notificationBarService;
+        this.debugOptions = debugOptions.Value;
         
         // Listen to dev mode event
         EventManager.Instance.DevModeSettingChanged += (_, value) => IsTextToImagePageEnabled = value;
@@ -47,8 +51,8 @@ public partial class MainWindowViewModel : ObservableObject
     {
         SetTheme();
         EventManager.Instance.GlobalProgressChanged += OnGlobalProgressChanged;
-
-        if (!settingsManager.Settings.InstalledPackages.Any())
+        
+        if (debugOptions.ShowOneClickInstall || !settingsManager.Settings.InstalledPackages.Any())
         {
             var dialog = dialogFactory.CreateOneClickInstallDialog();
             dialog.IsPrimaryButtonEnabled = false;

@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+    branches: [ main ]
+
+jobs:
+  release:
+    if: github.repository == 'ionite34/StabilityMatrix'
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set Tag
+        run: |
+          VERSION=${GITHUB_REF#refs/*/}
+          VERSION=${VERSION#v}
+          VERSION=${VERSION}.0
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+          
+      - name: Remove old artifacts
+        uses: c-hive/gha-remove-artifacts@v1
+        with:
+          age: '90 seconds'
+          skip-tags: false
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Install dependencies
+        run: dotnet restore -p:PublishReadyToRun=true
+
+      - name: Build
+        run: dotnet publish ./StabilityMatrix/StabilityMatrix.csproj -o out -c Release -r win-x64 \
+          -p:Version=${RELEASE_VERSION} -p:FileVersion=${RELEASE_VERSION} -p:AssemblyVersion=${RELEASE_VERSION} \
+          -p:PublishReadyToRun=true -p:PublishSingleFile=true --self-contained true
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: StabilityMatrix
+          path: ./out/StabilityMatrix.exe

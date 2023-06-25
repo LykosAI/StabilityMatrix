@@ -148,7 +148,6 @@
                             Margin="0,8"
                             Text="Debug" />
                         <TextBlock Margin="8" Text="{Binding GpuInfo, FallbackValue=3dfx Voodoo 5 6000 - 128MB VRAM}" />
-                        <TextBlock Margin="8" Text="{Binding GitInfo}" />
                         <TextBlock Margin="8" Text="{Binding TestProperty, FallbackValue=TestProperty}" />
                         <ui:Flyout
                             HorizontalAlignment="Right"

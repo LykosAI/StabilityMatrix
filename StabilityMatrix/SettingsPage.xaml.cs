@@ -21,9 +21,9 @@ namespace StabilityMatrix
             ViewModel.TextToFlowDocumentConverter = textToFlowDocumentConverter;
         }
 
-        private async void SettingsPage_OnLoaded(object sender, RoutedEventArgs e)
+        private void SettingsPage_OnLoaded(object sender, RoutedEventArgs e)
         {
-            await ViewModel.OnLoaded();
+            ViewModel.OnLoaded();
         }
 
         public SettingsViewModel ViewModel { get; }

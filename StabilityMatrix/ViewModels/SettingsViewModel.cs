@@ -123,8 +123,8 @@ public partial class SettingsViewModel : ObservableObject
     private string GetAppVersion()
     {
         var assembly = Assembly.GetExecutingAssembly();
-        var fvi = FileVersionInfo.GetVersionInfo(assembly.Location).FileVersion;
-        return fvi ?? "(Unknown)";
+        var version = assembly.GetName().Version;
+        return version == null ? "(Unknown)" : $"{version.Major}.{version.Minor}.{version.Build}";
     }
     
     partial void OnSelectedThemeChanged(string value)

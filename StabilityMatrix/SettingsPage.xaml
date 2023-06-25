@@ -225,7 +225,7 @@
                                 Background="Transparent"
                                 BorderThickness="0"
                                 Command="{Binding AppVersionClickCommand}"
-                                Content="{Binding AppVersion, FallbackValue=Version 1.0.0}"
+                                Content="{Binding AppVersion, Mode=OneWay, FallbackValue=Version 0.0.0}"
                                 Margin="8,0,8,8"
                                 Padding="2,0,2,0" />
                         </Grid>

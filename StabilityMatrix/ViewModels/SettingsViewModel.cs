@@ -146,8 +146,6 @@ public partial class SettingsViewModel : ObservableObject
     private string gpuInfo =
         $"{HardwareHelper.GetGpuChipName()} ({HardwareHelper.GetGpuMemoryBytes() / 1024 / 1024 / 1024} GB)";
 
-    [ObservableProperty] private string? gitInfo;
-
     [ObservableProperty] private string? testProperty;
 
     [ObservableProperty] private bool isVersionFlyoutOpen;
@@ -425,17 +423,16 @@ public partial class SettingsViewModel : ObservableObject
         if (currentPackage == null) return;
         // Set default port and host
         WebApiActivePackageHost ??= currentPackage.LaunchOptions
-            .FirstOrDefault(x => x.Name.ToLowerInvariant() == "host")?.DefaultValue as string; ;
+            .FirstOrDefault(x => x.Name.ToLowerInvariant() == "host")?.DefaultValue as string;
         WebApiActivePackagePort ??= currentPackage.LaunchOptions
             .FirstOrDefault(x => x.Name.ToLowerInvariant() == "port")?.DefaultValue as string;
     }
 
-    public async Task OnLoaded()
+    public void OnLoaded()
     {
         SelectedTheme = string.IsNullOrWhiteSpace(settingsManager.Settings.Theme)
             ? "Dark"
             : settingsManager.Settings.Theme;
-        GitInfo = await ProcessRunner.GetProcessOutputAsync("git", "--version");
 
         TestProperty = $"{SystemParameters.PrimaryScreenHeight} x {SystemParameters.PrimaryScreenWidth}";
         

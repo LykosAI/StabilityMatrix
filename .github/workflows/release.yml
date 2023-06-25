@@ -36,7 +36,9 @@ jobs:
         run: dotnet restore -p:PublishReadyToRun=true
 
       - name: Build
-        run: dotnet publish ./StabilityMatrix/StabilityMatrix.csproj -o out -c Release -r win-x64 -p:Version=${RELEASE_VERSION} -p:PublishReadyToRun=true -p:PublishSingleFile=true --self-contained true
+        run: dotnet publish ./StabilityMatrix/StabilityMatrix.csproj -o out -c Release -r win-x64 \
+          -p:Version=${RELEASE_VERSION} -p:FileVersion=${RELEASE_VERSION} -p:AssemblyVersion=${RELEASE_VERSION} \
+          -p:PublishReadyToRun=true -p:PublishSingleFile=true --self-contained true
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v2

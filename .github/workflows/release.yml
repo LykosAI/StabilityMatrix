@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - '*'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
     branches: [ main ]
 
 jobs:
@@ -14,12 +14,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - uses: olegtarasov/get-tag@v2.1.2
+        id: tag_name
+        with:
+          tagRegex: "v(.*)"
+
       - name: Set Tag
-        run: |
-          VERSION=${GITHUB_REF#refs/*/}
-          VERSION=${VERSION#v}
-          VERSION=${VERSION}.0
-          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+        with:
+          tag_name: ${{ steps.tag_name.outputs.tag }}
+        run: echo "RELEASE_VERSION=${GIT_TAG_NAME}.0" >> $GITHUB_ENV
           
       - name: Remove old artifacts
         uses: c-hive/gha-remove-artifacts@v1

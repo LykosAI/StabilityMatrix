@@ -32,6 +32,7 @@ using StabilityMatrix.Database;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.Configs;
 using StabilityMatrix.Models.Packages;
 using StabilityMatrix.Python;
 using StabilityMatrix.Services;
@@ -53,13 +54,16 @@ namespace StabilityMatrix
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private ServiceProvider? serviceProvider;
+        
+        // ReSharper disable once MemberCanBePrivate.Global
         public static bool IsSentryEnabled => !Debugger.IsAttached || Environment
             .GetEnvironmentVariable("DEBUG_SENTRY")?.ToLowerInvariant() == "true";
+        // ReSharper disable once MemberCanBePrivate.Global
         public static bool IsExceptionWindowEnabled => !Debugger.IsAttached || Environment
             .GetEnvironmentVariable("DEBUG_EXCEPTION_WINDOW")?.ToLowerInvariant() == "true";
-
-        public static IConfiguration Config { get; set; }
         
+        public static IConfiguration Config { get; set; } = null!;
+
         private readonly LoggingConfiguration logConfig;
 
         public App()
@@ -120,7 +124,7 @@ namespace StabilityMatrix
             // Add Sentry to NLog if enabled
             if (IsSentryEnabled)
             {
-                ConfigurationExtensions.AddSentry(logConfig, o =>
+                logConfig.AddSentry(o =>
                 {
                     o.InitializeSdk = false;
                     o.Layout = "${message}";
@@ -170,6 +174,8 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<CheckpointManagerViewModel>();
             serviceCollection.AddSingleton<CheckpointBrowserViewModel>();
             serviceCollection.AddSingleton<FirstLaunchSetupViewModel>();
+
+            serviceCollection.Configure<DebugOptions>(Config.GetSection(nameof(DebugOptions)));
             
             var settingsManager = new SettingsManager();
             serviceCollection.AddSingleton<ISettingsManager>(settingsManager);

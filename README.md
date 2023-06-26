@@ -9,7 +9,7 @@
 
 An easy to use, powerful package manager for Stable Diffusion Web UIs, and managing model checkpoints.
 
-Latest Release: [v1.0.0](https://github.com/LykosAI/StabilityMatrix/releases/latest)
+Download Latest: ![Release](https://img.shields.io/github/v/release/LykosAI/StabilityMatrix?link=https%3A%2F%2Fgithub.com%2FLykosAI%2FStabilityMatrix%2Freleases%2Flatest)
 
 ## Features
 - One click install and update for Stable Diffusion Web UIs, no dependencies needed

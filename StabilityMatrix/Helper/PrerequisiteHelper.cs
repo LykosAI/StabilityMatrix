@@ -51,6 +51,12 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         this.downloadService = downloadService;
         this.settingsManager = settingsManager;
     }
+
+    public async Task RunGit(params string[] args)
+    {
+        var process = ProcessRunner.StartProcess(GitExePath, args);
+        await ProcessRunner.WaitForExitConditionAsync(process);
+    }
     
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
     {

@@ -1,6 +1,9 @@
 name: Release
 
 on:
+  workflow_dispatch:
+  release:
+    types: [ published ]
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'

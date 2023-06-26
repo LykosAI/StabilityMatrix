@@ -3,13 +3,14 @@
 [![Build](https://github.com/LykosAI/StabilityMatrix/actions/workflows/build.yml/badge.svg)](https://github.com/LykosAI/StabilityMatrix/actions/workflows/build.yml)
 [![Discord Server](https://img.shields.io/discord/1115555685476868168?logo=discord&logoColor=white&label=Discord%20Server)](https://discord.com/invite/TUrgfECxHz)
 
+[release]: https://github.com/LykosAI/StabilityMatrix/releases/latest
 [auto1111]: https://github.com/AUTOMATIC1111/stable-diffusion-webui
 [comfy]: https://github.com/comfyanonymous/ComfyUI
 [sdnext]: https://github.com/vladmandic/automatic
 
 An easy to use, powerful package manager for Stable Diffusion Web UIs, and managing model checkpoints.
 
-Download Latest: ![Release](https://img.shields.io/github/v/release/LykosAI/StabilityMatrix?link=https%3A%2F%2Fgithub.com%2FLykosAI%2FStabilityMatrix%2Freleases%2Flatest)
+Download Latest: [![Release](https://img.shields.io/github/v/release/LykosAI/StabilityMatrix?link=https%3A%2F%2Fgithub.com%2FLykosAI%2FStabilityMatrix%2Freleases%2Flatest)][release]
 
 ## Features
 - One click install and update for Stable Diffusion Web UIs, no dependencies needed

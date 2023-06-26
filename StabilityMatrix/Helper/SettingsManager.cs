@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using NLog;
 using StabilityMatrix.Models;
+using StabilityMatrix.Python;
 using Wpf.Ui.Controls.Window;
 
 namespace StabilityMatrix.Helper;
@@ -74,8 +75,8 @@ public class SettingsManager : ISettingsManager
     // Set static classes requiring library path
     private void SetStaticLibraryPaths()
     {
-        // ArchiveHelper
         ArchiveHelper.HomeDir = LibraryDir;
+        PyRunner.HomeDir = LibraryDir;
     }
 
     /// <summary>

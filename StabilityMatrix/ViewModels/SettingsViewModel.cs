@@ -41,6 +41,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IPyRunner pyRunner;
     private readonly ISnackbarService snackbarService;
     private readonly ILiteDbContext liteDbContext;
+    private readonly IPrerequisiteHelper prerequisiteHelper;
     private static string LicensesPath => "pack://application:,,,/Assets/licenses.json";
     public TextToFlowDocumentConverter? TextToFlowDocumentConverter { get; set; }
 
@@ -61,6 +62,8 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty] private bool isFileSearchFlyoutOpen;
     [ObservableProperty] private double fileSearchProgress;
+
+    [ObservableProperty] private bool isPythonInstalling;
 
     [ObservableProperty] private string? webApiHost;
     [ObservableProperty] private string? webApiPort;
@@ -94,7 +97,8 @@ public partial class SettingsViewModel : ObservableObject
         ISnackbarService snackbarService, 
         ILogger<SettingsViewModel> logger, 
         IPackageFactory packageFactory,
-        ILiteDbContext liteDbContext)
+        ILiteDbContext liteDbContext,
+        IPrerequisiteHelper prerequisiteHelper)
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
@@ -104,6 +108,7 @@ public partial class SettingsViewModel : ObservableObject
         this.a3WebApiManager = a3WebApiManager;
         this.pyRunner = pyRunner;
         this.liteDbContext = liteDbContext;
+        this.prerequisiteHelper = prerequisiteHelper;
         SelectedTheme = settingsManager.Settings.Theme ?? "Dark";
         WindowBackdropType = settingsManager.Settings.WindowBackdropType ?? WindowBackdropType.Mica;
     }
@@ -169,6 +174,16 @@ public partial class SettingsViewModel : ObservableObject
 
     public AsyncRelayCommand PythonVersionCommand => new(async () =>
     {
+        // Ensure python installed
+        if (!prerequisiteHelper.IsPythonInstalled)
+        {
+            IsPythonInstalling = true;
+            // Need 7z as well for site packages repack
+            await prerequisiteHelper.UnpackResourcesIfNecessary();
+            await prerequisiteHelper.InstallPythonIfNecessary();
+            IsPythonInstalling = false;
+        }
+
         // Get python version
         await pyRunner.Initialize();
         var result = await pyRunner.GetVersionInfo();

@@ -4,10 +4,6 @@ on:
   workflow_dispatch:
   release:
     types: [ published ]
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
-    branches: [ main ]
 
 jobs:
   release:
@@ -42,9 +38,7 @@ jobs:
         run: dotnet restore -p:PublishReadyToRun=true
 
       - name: Build
-        run: dotnet publish ./StabilityMatrix/StabilityMatrix.csproj -o out -c Release -r win-x64 \
-          -p:Version=$env:RELEASE_VERSION -p:FileVersion=$env:RELEASE_VERSION -p:AssemblyVersion=$env:RELEASE_VERSION \
-          -p:PublishReadyToRun=true -p:PublishSingleFile=true --self-contained true
+        run: dotnet publish ./StabilityMatrix/StabilityMatrix.csproj -o out -c Release -r win-x64 -p:Version=$env:RELEASE_VERSION -p:FileVersion=$env:RELEASE_VERSION -p:AssemblyVersion=$env:RELEASE_VERSION -p:PublishReadyToRun=true -p:PublishSingleFile=true --self-contained true
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v2

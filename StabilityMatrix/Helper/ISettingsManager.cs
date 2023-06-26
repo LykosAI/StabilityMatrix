@@ -7,12 +7,14 @@ namespace StabilityMatrix.Helper;
 
 public interface ISettingsManager
 {
-    public string AppDataDir { get; }
-    public string AppHomeDir { get; }
-    public string DatabasePath { get; }
-    
     Settings Settings { get; }
     event EventHandler<bool>? ModelBrowserNsfwEnabledChanged;
+
+    bool IsPortableMode { get; }
+    string LibraryDir { get; }
+    string DatabasePath { get; }
+    bool TryFindLibrary();
+    IEnumerable<InstalledPackage> GetOldInstalledPackages();
     
     void SetTheme(string theme);
     void AddInstalledPackage(InstalledPackage p);

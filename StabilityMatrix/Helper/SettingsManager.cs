@@ -43,6 +43,7 @@ public class SettingsManager : ISettingsManager
         if (IsPortableMode)
         {
             LibraryDir = Path.Combine(appDir, "Data");
+            SetStaticLibraryPaths();
             return true;
         }
         
@@ -58,6 +59,7 @@ public class SettingsManager : ISettingsManager
                 if (!string.IsNullOrWhiteSpace(library?.LibraryPath))
                 {
                     LibraryDir = library.LibraryPath;
+                    SetStaticLibraryPaths();
                     return true;
                 }
             }
@@ -66,8 +68,14 @@ public class SettingsManager : ISettingsManager
                 Logger.Warn("Failed to read library.json in AppData: {Message}", e.Message);
             }
         }
-
         return false;
+    }
+
+    // Set static classes requiring library path
+    private void SetStaticLibraryPaths()
+    {
+        // ArchiveHelper
+        ArchiveHelper.HomeDir = LibraryDir;
     }
 
     /// <summary>

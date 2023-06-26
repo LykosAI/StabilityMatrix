@@ -19,9 +19,9 @@ public record struct ArchiveInfo(ulong Size, ulong CompressedSize);
 public static class ArchiveHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
-    private static readonly string AppDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-    private static readonly string HomeDir = Path.Combine(AppDataDir, "StabilityMatrix");
+
+    // HomeDir is set by ISettingsManager.TryFindLibrary()
+    public static string HomeDir { get; set; } = string.Empty;
     public static string SevenZipPath => Path.Combine(HomeDir, "Assets", "7za.exe");
     
     private static readonly Regex Regex7ZOutput = new(@"(?<=Size:\s*)\d+|(?<=Compressed:\s*)\d+");

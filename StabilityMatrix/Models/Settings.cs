@@ -10,6 +10,7 @@ namespace StabilityMatrix.Models;
 
 public class Settings
 {
+    public int? Version { get; set; } = 1;
     public bool FirstLaunchSetupComplete { get; set; }
     public string? Theme { get; set; }
     public WindowBackdropType? WindowBackdropType { get; set; }

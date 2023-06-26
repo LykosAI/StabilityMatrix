@@ -22,12 +22,6 @@ jobs:
         run: |
           echo "Using tag ${{ env.GIT_TAG_NAME }}"
           echo "RELEASE_VERSION=${{ env.GIT_TAG_NAME }}.0" >> $env:GITHUB_ENV
-          
-      - name: Remove old artifacts
-        uses: c-hive/gha-remove-artifacts@v1
-        with:
-          age: '90 seconds'
-          skip-tags: false
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v3
@@ -39,6 +33,13 @@ jobs:
 
       - name: Build
         run: dotnet publish ./StabilityMatrix/StabilityMatrix.csproj -o out -c Release -r win-x64 -p:Version=$env:RELEASE_VERSION -p:FileVersion=$env:RELEASE_VERSION -p:AssemblyVersion=$env:RELEASE_VERSION -p:PublishReadyToRun=true -p:PublishSingleFile=true --self-contained true
+
+      - name: Remove old artifacts
+        uses: c-hive/gha-remove-artifacts@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          age: '90 seconds'
+          skip-tags: false
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v2

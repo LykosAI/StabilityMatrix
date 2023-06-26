@@ -75,6 +75,7 @@ public class SettingsManager : ISettingsManager
     // Set static classes requiring library path
     private void SetStaticLibraryPaths()
     {
+        GlobalConfig.LibraryDir = LibraryDir;
         ArchiveHelper.HomeDir = LibraryDir;
         PyRunner.HomeDir = LibraryDir;
     }

@@ -18,14 +18,25 @@ public class InstalledPackage
     // Package version
     public string? PackageVersion { get; set; }
     public string? InstalledBranch { get; set; }
-
     public string? DisplayVersion { get; set; }
-
-    // Install path
+    
+    // Old type absolute path
+    [Obsolete("Use LibraryPath instead. (Kept for migration)")]
     public string? Path { get; set; }
+    
+    /// <summary>
+    /// Relative path from the library root.
+    /// </summary>
+    public string? LibraryPath { get; set; }
+    
+    /// <summary>
+    /// Full path to the package, using LibraryPath and GlobalConfig.LibraryDir.
+    /// </summary>
+    public string? FullPath => LibraryPath != null ? System.IO.Path.Combine(GlobalConfig.LibraryDir, LibraryPath) : null;
+    
     public string? LaunchCommand { get; set; }
     public List<LaunchOption>? LaunchArgs { get; set; }
     public DateTimeOffset? LastUpdateCheck { get; set; }
 
-    [JsonIgnore] public bool UpdateAvailable { get; set; } = false;
+    [JsonIgnore] public bool UpdateAvailable { get; set; }
 }

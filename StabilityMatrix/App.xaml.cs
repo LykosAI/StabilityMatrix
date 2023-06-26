@@ -10,6 +10,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows;
 using AsyncAwaitBestPractices;
+using AutoUpdaterDotNET;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -141,6 +142,24 @@ namespace StabilityMatrix
 
         private void App_OnStartup(object sender, StartupEventArgs e)
         {
+            var updatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+                "Update\\StabilityMatrix.exe");
+            
+            if (AppDomain.CurrentDomain.BaseDirectory.EndsWith("Update\\"))
+            {
+                File.Copy(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "StabilityMatrix.exe"),
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "StabilityMatrix.exe"), true);
+                Process.Start(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..",
+                    "StabilityMatrix.exe"));
+                Current.Shutdown();
+                return;
+            }
+            
+            if (File.Exists(updatePath))
+            {
+                File.Delete(updatePath);
+            }
+
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddSingleton<IPageService, PageService>();
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
@@ -170,6 +189,7 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<PackageManagerViewModel>();
             serviceCollection.AddSingleton<TextToImageViewModel>();
             serviceCollection.AddTransient<InstallerViewModel>();
+            serviceCollection.AddTransient<SelectInstallLocationsViewModel>();
             serviceCollection.AddTransient<OneClickInstallViewModel>();
             serviceCollection.AddTransient<CheckpointManagerViewModel>();
             serviceCollection.AddSingleton<CheckpointBrowserViewModel>();
@@ -304,9 +324,15 @@ namespace StabilityMatrix
                     return;
                 }
             }
-            
+
             var window = serviceProvider.GetRequiredService<MainWindow>();
             window.Show();
+            
+            AutoUpdater.Synchronous = true;
+            AutoUpdater.DownloadPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Update");
+            AutoUpdater.ExecutablePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Update", "StabilityMatrix.exe");
+            // TODO: make this github url?
+            AutoUpdater.Start("https://update.danksite.xyz/update.xml");
         }
 
         private void App_OnExit(object sender, ExitEventArgs e)

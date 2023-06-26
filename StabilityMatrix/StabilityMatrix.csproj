@@ -16,6 +16,7 @@
   <ItemGroup>
     <PackageReference Include="7-Zip.CommandLine" Version="18.1.0" />
     <PackageReference Include="AsyncAwaitBestPractices" Version="6.0.6" />
+    <PackageReference Include="Autoupdater.NET.Official" Version="1.8.3" />
     <PackageReference Include="Blake3" Version="0.5.1" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
     <PackageReference Include="FuzzySharp" Version="2.0.2" />
@@ -81,6 +82,11 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Update="CheckpointBrowserPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <XamlRuntime>Wpf</XamlRuntime>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="SelectInstallLocationsDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <XamlRuntime>Wpf</XamlRuntime>
       <SubType>Designer</SubType>

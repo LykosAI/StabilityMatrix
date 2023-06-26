@@ -54,7 +54,7 @@ public partial class MainWindowViewModel : ObservableObject
         
         if (debugOptions.ShowOneClickInstall || !settingsManager.Settings.InstalledPackages.Any())
         {
-            var dialog = dialogFactory.CreateOneClickInstallDialog();
+            var dialog = dialogFactory.CreateInstallLocationsDialog();
             dialog.IsPrimaryButtonEnabled = false;
             dialog.IsSecondaryButtonEnabled = false;
             dialog.IsFooterVisible = false;

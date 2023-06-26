@@ -19,6 +19,7 @@ public class DialogFactory : IDialogFactory
     private readonly LaunchOptionsDialogViewModel launchOptionsDialogViewModel;
     private readonly InstallerViewModel installerViewModel;
     private readonly OneClickInstallViewModel oneClickInstallViewModel;
+    private readonly SelectInstallLocationsViewModel selectInstallLocationsViewModel;
     private readonly InstallerWindowDialogService installerWindowDialogService;
     private readonly ISettingsManager settingsManager;
 
@@ -26,12 +27,14 @@ public class DialogFactory : IDialogFactory
         LaunchOptionsDialogViewModel launchOptionsDialogViewModel,
         ISettingsManager settingsManager, InstallerViewModel installerViewModel,
         OneClickInstallViewModel oneClickInstallViewModel,
+        SelectInstallLocationsViewModel selectInstallLocationsViewModel,
         InstallerWindowDialogService installerWindowDialogService)
     {
         this.contentDialogService = contentDialogService;
         this.launchOptionsDialogViewModel = launchOptionsDialogViewModel;
         this.installerViewModel = installerViewModel;
         this.oneClickInstallViewModel = oneClickInstallViewModel;
+        this.selectInstallLocationsViewModel = selectInstallLocationsViewModel;
         this.installerWindowDialogService = installerWindowDialogService;
         this.settingsManager = settingsManager;
     }
@@ -130,5 +133,11 @@ public class DialogFactory : IDialogFactory
     public InstallerWindow CreateInstallerWindow()
     {
         return new InstallerWindow(installerViewModel, installerWindowDialogService);
+    }
+
+    public SelectInstallLocationsDialog CreateInstallLocationsDialog()
+    {
+        return new SelectInstallLocationsDialog(contentDialogService,
+            selectInstallLocationsViewModel);
     }
 }

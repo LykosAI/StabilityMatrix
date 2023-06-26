@@ -23,8 +23,6 @@ jobs:
           tagRegex: "v(.*)"
 
       - name: Set Tag
-        with:
-          tag_name: ${{ steps.tag_name.outputs.tag }}
         run: echo "RELEASE_VERSION=${GIT_TAG_NAME}.0" >> $GITHUB_ENV
           
       - name: Remove old artifacts

@@ -29,7 +29,7 @@ public class SharedFolders : ISharedFolders
         var provider = ReparsePointFactory.Provider;
         foreach (var (folderType, relativePath) in sharedFolders)
         {
-            var source = Path.Combine(settingsManager.Settings.ModelsDirectory, folderType.GetStringValue());
+            var source = Path.Combine(settingsManager.ModelsDirectory, folderType.GetStringValue());
             var destination = Path.GetFullPath(Path.Combine(installPath, relativePath));
             // Create source folder if it doesn't exist
             if (!Directory.Exists(source))

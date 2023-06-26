@@ -25,9 +25,10 @@ public class SettingsManager : ISettingsManager
     // Dynamic paths from library
     public string DatabasePath => Path.Combine(LibraryDir, "StabilityMatrix.db");
     private string SettingsPath => Path.Combine(LibraryDir, "settings.json");
+    public string ModelsDirectory => Path.Combine(LibraryDir, "Models");
 
     public Settings Settings { get; private set; } = new();
-$""
+
     public event EventHandler<bool>? ModelBrowserNsfwEnabledChanged;
 
     /// <summary>
@@ -260,13 +261,7 @@ $""
         Settings.WebApiPort = port;
         SaveSettings();
     }
-    
-    public void SetModelsDirectory(string? directory)
-    {
-        Settings.ModelsDirectory = directory;
-        SaveSettings();
-    }
-    
+
     public void SetFirstLaunchSetupComplete(bool value)
     {
         Settings.FirstLaunchSetupComplete = value;

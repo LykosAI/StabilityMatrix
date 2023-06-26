@@ -23,7 +23,9 @@ jobs:
           tagRegex: "v(.*)"
 
       - name: Set Tag
-        run: echo "RELEASE_VERSION=${GIT_TAG_NAME}.0" >> $GITHUB_ENV
+        run: |
+          echo "Using tag ${{ env.GIT_TAG_NAME }}"
+          echo "RELEASE_VERSION=${{ env.GIT_TAG_NAME }}.0" >> $env:GITHUB_ENV
           
       - name: Remove old artifacts
         uses: c-hive/gha-remove-artifacts@v1
@@ -41,7 +43,7 @@ jobs:
 
       - name: Build
         run: dotnet publish ./StabilityMatrix/StabilityMatrix.csproj -o out -c Release -r win-x64 \
-          -p:Version=${RELEASE_VERSION} -p:FileVersion=${RELEASE_VERSION} -p:AssemblyVersion=${RELEASE_VERSION} \
+          -p:Version=$env:RELEASE_VERSION -p:FileVersion=$env:RELEASE_VERSION -p:AssemblyVersion=$env:RELEASE_VERSION \
           -p:PublishReadyToRun=true -p:PublishSingleFile=true --self-contained true
 
       - name: Upload Artifact

@@ -133,10 +133,25 @@
                             FontWeight="Bold"
                             Margin="0,8"
                             Text="Embedded Python" />
-                        <Button
-                            Command="{Binding PythonVersionCommand}"
-                            Content="Check Version Info"
-                            Margin="8" />
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Button
+                                Command="{Binding PythonVersionCommand}"
+                                Content="Check Version Info"
+                                Margin="8" />
+                            <!--  Progress for python install if needed  -->
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding IsPythonInstalling, Converter={StaticResource BoolToVisibilityConverter}, FallbackValue=Collapsed}">
+                                <ui:ProgressRing
+                                    Height="24"
+                                    IsEnabled="{Binding IsPythonInstalling}"
+                                    IsIndeterminate="True"
+                                    Margin="8"
+                                    Width="24" />
+                                <TextBlock
+                                    Margin="4"
+                                    Text="Preparing Environment"
+                                    VerticalAlignment="Center" />
+                            </StackPanel>
+                        </StackPanel>
                     </StackPanel>
                 </ui:Card>
 

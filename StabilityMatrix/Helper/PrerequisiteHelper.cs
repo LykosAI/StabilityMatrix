@@ -43,6 +43,8 @@ public class PrerequisiteHelper : IPrerequisiteHelper
     private static readonly string PortableGitDownloadPath = Path.Combine(HomeDir, "PortableGit.7z.exe");
     private static readonly string GitExePath = Path.Combine(PortableGitInstallDir, "bin", "git.exe");
     public static readonly string GitBinPath = Path.Combine(PortableGitInstallDir, "bin");
+    
+    public bool IsPythonInstalled => File.Exists(PythonDllPath);
 
     public PrerequisiteHelper(ILogger<PrerequisiteHelper> logger, IGitHubClient gitHubClient,
         IDownloadService downloadService, ISettingsManager settingsManager)

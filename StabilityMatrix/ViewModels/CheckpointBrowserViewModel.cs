@@ -52,7 +52,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
 
     public IEnumerable<CivitModelType> AllModelTypes => Enum.GetValues(typeof(CivitModelType))
         .Cast<CivitModelType>()
-        .Where(t => t != CivitModelType.AestheticGradient && t != CivitModelType.Poses)
+        .Where(t => t == CivitModelType.All || t.ConvertTo<SharedFolderType>() > 0)
         .OrderBy(t => t.ToString());
 
     public CheckpointBrowserViewModel(
@@ -104,6 +104,17 @@ public partial class CheckpointBrowserViewModel : ObservableObject
                 return;
             }
             Logger.Debug("CivitAI Query {Text} returned {Results} results (in {Elapsed:F1} s)", queryText, models.Count, timer.Elapsed.TotalSeconds);
+            
+            var unknown = models.Where(m => m.Type == CivitModelType.Unknown).ToList();
+            if (unknown.Any())
+            {
+                var names = unknown.Select(m => m.Name).ToList();
+                Logger.Warn("Excluded {Unknown} unknown model types: {Models}", unknown.Count, names);
+            }
+            
+            // Filter out unknown model types
+            models = models.Where(m => m.Type.ConvertTo<SharedFolderType>() > 0).ToList();
+            
             // Database update calls will invoke `OnModelsUpdated`
             // Add to database
             await liteDbContext.UpsertCivitModelAsync(models);

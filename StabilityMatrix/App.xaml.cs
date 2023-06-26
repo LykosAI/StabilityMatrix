@@ -139,6 +139,33 @@ namespace StabilityMatrix
             return logConfig;
         }
 
+        // Find library and initialize settings
+        private static SettingsManager CreateSettingsManager()
+        {
+            var settings = new SettingsManager();
+            var found = settings.TryFindLibrary();
+            // Not found, we need to show dialog to choose library location
+            if (!found)
+            {
+                // See if this is an existing user for message variation
+                var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var settingsPath = Path.Combine(appDataPath, "StabilityMatrix", "settings.json");
+                var isExistingUser = File.Exists(settingsPath);
+                
+                // TODO: Show dialog
+                
+                // 1. For portable mode, call settings.SetPortableMode()
+                // 2. For custom path, call settings.SetLibraryPath(path)
+                
+                // TryFindLibrary should succeed now unless weird issue
+                if (!settings.TryFindLibrary())
+                {
+                    throw new Exception("Could not set library path.");
+                }
+            }
+            return settings;
+        }
+
         private void App_OnStartup(object sender, StartupEventArgs e)
         {
             var serviceCollection = new ServiceCollection();
@@ -177,7 +204,7 @@ namespace StabilityMatrix
 
             serviceCollection.Configure<DebugOptions>(Config.GetSection(nameof(DebugOptions)));
             
-            var settingsManager = new SettingsManager();
+            var settingsManager = CreateSettingsManager();
             serviceCollection.AddSingleton<ISettingsManager>(settingsManager);
 
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();

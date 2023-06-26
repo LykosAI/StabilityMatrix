@@ -96,9 +96,9 @@ public class SettingsManager : ISettingsManager
     
     /// <summary>
     /// Enable and create settings files for portable mode
-    /// This creates the ./Data directory and the `.sm-portable` marker file
+    /// Creates the ./Data directory and the `.sm-portable` marker file
     /// </summary>
-    public void SetupPortableMode()
+    public void SetPortableMode()
     {
         // Get app directory
         var appDir = AppContext.BaseDirectory;

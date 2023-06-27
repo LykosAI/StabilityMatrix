@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,6 +12,7 @@ using StabilityMatrix.Helper;
 using StabilityMatrix.Models.Configs;
 using StabilityMatrix.Services;
 using Wpf.Ui.Appearance;
+using Wpf.Ui.Controls.ContentDialogControl;
 using Wpf.Ui.Controls.Window;
 using EventManager = StabilityMatrix.Helper.EventManager;
 
@@ -25,13 +25,17 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly INotificationBarService notificationBarService;
     private readonly DebugOptions debugOptions;
 
-    public MainWindowViewModel(ISettingsManager settingsManager, IDialogFactory dialogFactory, INotificationBarService notificationBarService, IOptions<DebugOptions> debugOptions)
+    public MainWindowViewModel(
+        ISettingsManager settingsManager, 
+        IDialogFactory dialogFactory, 
+        INotificationBarService notificationBarService, 
+        IOptions<DebugOptions> debugOptions)
     {
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
         this.notificationBarService = notificationBarService;
         this.debugOptions = debugOptions.Value;
-        
+
         // Listen to dev mode event
         EventManager.Instance.DevModeSettingChanged += (_, value) => IsTextToImagePageEnabled = value;
     }
@@ -102,13 +106,17 @@ public partial class MainWindowViewModel : ObservableObject
         var isExistingUser = File.Exists(settingsPath);
             
         // need to show dialog to choose library location
-        while (!settingsManager.TryFindLibrary())
+        if (!settingsManager.TryFindLibrary())
         {
             var dialog = dialogFactory.CreateInstallLocationsDialog();
             dialog.IsPrimaryButtonEnabled = false;
             dialog.IsSecondaryButtonEnabled = false;
             dialog.IsFooterVisible = false;
-            await dialog.ShowAsync();
+            var result = await dialog.ShowAsync();
+            if (result != ContentDialogResult.Primary)
+            {
+                Application.Current.Shutdown();
+            }
 
             // 1. For portable mode, call settings.SetPortableMode()
             var viewModel = (dialog.DataContext as SelectInstallLocationsViewModel)!;
@@ -121,6 +129,12 @@ public partial class MainWindowViewModel : ObservableObject
             {
                 settingsManager.SetLibraryPath(viewModel.DataDirectory);
             }
+        }
+        
+        // Try to find library again, should be found now
+        if (!settingsManager.TryFindLibrary())
+        {
+            throw new Exception("Could not find library after setting path");
         }
     }
 

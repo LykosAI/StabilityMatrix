@@ -7,18 +7,15 @@ namespace StabilityMatrix;
 
 public partial class SelectInstallLocationsDialog : ContentDialog
 {
-    private readonly SelectInstallLocationsViewModel viewModel;
-
     public SelectInstallLocationsDialog(IContentDialogService dialogService, SelectInstallLocationsViewModel viewModel) : base(
         dialogService.GetContentPresenter())
     {
-        this.viewModel = viewModel;
         InitializeComponent();
         DataContext = viewModel;
     }
 
     private void ContinueButton_OnClick(object sender, RoutedEventArgs e)
     {
-        Hide();
+        Hide(ContentDialogResult.Primary);
     }
 }

@@ -23,9 +23,25 @@ public class SettingsManager : ISettingsManager
     private readonly string? originalEnvPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
     
     // Library properties
-    public bool IsPortableMode { get; set; }
-    public string LibraryDir { get; set; } = string.Empty;
-    
+    public bool IsPortableMode { get; private set; }
+    private string? libraryDir;
+    public string LibraryDir
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(libraryDir))
+            {
+                throw new InvalidOperationException("LibraryDir is not set");
+            }
+            return libraryDir;
+        }
+        private set
+        {
+            libraryDir = value;
+            LibraryDirChanged?.Invoke(this, value);
+        }
+    }
+
     // Dynamic paths from library
     public string DatabasePath => Path.Combine(LibraryDir, "StabilityMatrix.db");
     private string SettingsPath => Path.Combine(LibraryDir, "settings.json");
@@ -33,7 +49,9 @@ public class SettingsManager : ISettingsManager
 
     public Settings Settings { get; private set; } = new();
 
+    // Events
     public event EventHandler<bool>? ModelBrowserNsfwEnabledChanged;
+    public event EventHandler<string>? LibraryDirChanged; 
 
     /// <summary>
     /// Attempts to locate and set the library path

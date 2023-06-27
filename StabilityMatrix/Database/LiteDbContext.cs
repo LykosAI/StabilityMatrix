@@ -13,7 +13,16 @@ namespace StabilityMatrix.Database;
 
 public class LiteDbContext : ILiteDbContext
 {
-    public LiteDatabaseAsync Database { get; }
+    private LiteDatabaseAsync? database;
+    public LiteDatabaseAsync Database 
+    {
+        get
+        {
+            if (database is null) throw new InvalidOperationException("Database not set before access");
+            return database;
+        }
+        private set => database = value;
+    }
 
     // Notification events
     public event EventHandler? CivitModelsChanged;
@@ -23,7 +32,10 @@ public class LiteDbContext : ILiteDbContext
     public ILiteCollectionAsync<CivitModelVersion> CivitModelVersions => Database.GetCollection<CivitModelVersion>("CivitModelVersions");
     public ILiteCollectionAsync<CivitModelQueryCacheEntry> CivitModelQueryCache => Database.GetCollection<CivitModelQueryCacheEntry>("CivitModelQueryCache");
 
-    public LiteDbContext(string connectionString)
+    /// <summary>
+    /// Loads the database from the specified connection string.
+    /// </summary>
+    public void Initialize(string connectionString)
     {
         Database = new LiteDatabaseAsync(connectionString);
 
@@ -94,7 +106,7 @@ public class LiteDbContext : ILiteDbContext
 
     public void Dispose()
     {
-        Database.Dispose();
+        database?.Dispose();
         GC.SuppressFinalize(this);
     }
 }

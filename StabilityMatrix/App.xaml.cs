@@ -17,6 +17,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NLog;
 using NLog.Config;
 using NLog.Extensions.Logging;
@@ -225,21 +226,23 @@ namespace StabilityMatrix
                 client.Credentials = new Credentials(githubApiKey);
                 return client;
             });
+            
+            // Database
+            serviceCollection.AddSingleton<ILiteDbContext, LiteDbContext>(provider =>
+            {
+                var liteDbContext = new LiteDbContext();
+                // Register to initialize the database when LibraryDir is set
+                var settingsManager = provider.GetRequiredService<ISettingsManager>();
+                settingsManager.LibraryDirChanged += (_, libraryDir) =>
+                {
+                    liteDbContext.Initialize(libraryDir);
+                };
+                return liteDbContext;
+            });
+            
+            // Caches
             serviceCollection.AddMemoryCache();
             serviceCollection.AddSingleton<IGithubApiCache, GithubApiCache>();
-
-            
-            serviceCollection.AddSingleton<ILiteDbContext>(provider =>
-            {
-                var settingsManager = provider.GetRequiredService<ISettingsManager>();
-                // Setup LiteDb
-                var connectionString = Config["TempDatabase"] switch
-                {
-                    "True" => ":temp:",
-                    _ => settingsManager.DatabasePath
-                };
-                return new LiteDbContext(connectionString);
-            });
 
             // Configure Refit and Polly
             var defaultRefitSettings = new RefitSettings

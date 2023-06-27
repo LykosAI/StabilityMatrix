@@ -8,8 +8,11 @@ namespace StabilityMatrix.Helper;
 public interface ISettingsManager
 {
     Settings Settings { get; }
+    
+    // Events
     event EventHandler<bool>? ModelBrowserNsfwEnabledChanged;
-
+    event EventHandler<string>? LibraryDirChanged; 
+    
     // Library settings
     bool IsPortableMode { get; }
     string LibraryDir { get; }

@@ -10,6 +10,7 @@ namespace StabilityMatrix.Models;
 
 public class Settings
 {
+    public int? Version { get; set; } = 1;
     public bool FirstLaunchSetupComplete { get; set; }
     public string? Theme { get; set; }
     public WindowBackdropType? WindowBackdropType { get; set; }
@@ -20,7 +21,6 @@ public class Settings
     public List<string>? PathExtensions { get; set; }
     public string? WebApiHost { get; set; }
     public string? WebApiPort { get; set; }
-    public string ModelsDirectory { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix", "Models");
     public bool ModelBrowserNsfwEnabled { get; set; }
 
     public SharedFolderType? SharedFolderVisibleCategories { get; set; } =

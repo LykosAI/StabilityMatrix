@@ -5,56 +5,123 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using NLog;
 using StabilityMatrix.Models;
+using StabilityMatrix.Python;
 using Wpf.Ui.Controls.Window;
 
 namespace StabilityMatrix.Helper;
 
 public class SettingsManager : ISettingsManager
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly ReaderWriterLockSlim FileLock = new();
 
-    /// <summary>
-    /// Directory of %AppData%
-    /// </summary>
-    // ReSharper disable once MemberCanBePrivate.Global
-    public string AppDataDir => Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-    
-    /// <summary>
-    /// Directory of %AppData%\StabilityMatrix
-    /// </summary>
-    public string AppHomeDir => Path.Combine(AppDataDir, "StabilityMatrix");
-    
-    /// <summary>
-    /// Path to database file
-    /// </summary>
-    public string DatabasePath => Path.Combine(AppHomeDir, "StabilityMatrix.db");
-    
-    private const string SettingsFileName = "settings.json";
-    private string SettingsPath => Path.Combine(AppHomeDir, SettingsFileName);
     private readonly string? originalEnvPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
+    
+    // Library properties
+    public bool IsPortableMode { get; set; }
+    public string LibraryDir { get; set; } = string.Empty;
+    
+    // Dynamic paths from library
+    public string DatabasePath => Path.Combine(LibraryDir, "StabilityMatrix.db");
+    private string SettingsPath => Path.Combine(LibraryDir, "settings.json");
+    public string ModelsDirectory => Path.Combine(LibraryDir, "Models");
 
     public Settings Settings { get; private set; } = new();
 
     public event EventHandler<bool>? ModelBrowserNsfwEnabledChanged;
-    
-    public SettingsManager()
+
+    /// <summary>
+    /// Attempts to locate and set the library path
+    /// Return true if found, false otherwise
+    /// </summary>
+    public bool TryFindLibrary()
     {
-        if (!Directory.Exists(SettingsPath.Replace(SettingsFileName, "")))
+        // 1. Check portable mode
+        var appDir = AppContext.BaseDirectory;
+        IsPortableMode = File.Exists(Path.Combine(appDir, ".sm-portable"));
+        if (IsPortableMode)
         {
-            Directory.CreateDirectory(SettingsPath.Replace(SettingsFileName, ""));
+            LibraryDir = Path.Combine(appDir, "Data");
+            SetStaticLibraryPaths();
+            return true;
         }
-
-        if (!File.Exists(SettingsPath))
+        
+        // 2. Check %APPDATA%/StabilityMatrix/library.json
+        var appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var libraryJsonPath = Path.Combine(appDataDir, "StabilityMatrix", "library.json");
+        if (File.Exists(libraryJsonPath))
         {
-            File.Create(SettingsPath).Close();
-            Settings.Theme = "Dark";
-            Settings.WindowBackdropType = WindowBackdropType.Mica;
-            var defaultSettingsJson = JsonSerializer.Serialize(Settings);
-            File.WriteAllText(SettingsPath, defaultSettingsJson);
+            try
+            {
+                var libraryJson = File.ReadAllText(libraryJsonPath);
+                var library = JsonSerializer.Deserialize<LibrarySettings>(libraryJson);
+                if (!string.IsNullOrWhiteSpace(library?.LibraryPath))
+                {
+                    LibraryDir = library.LibraryPath;
+                    SetStaticLibraryPaths();
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Warn("Failed to read library.json in AppData: {Message}", e.Message);
+            }
         }
+        return false;
+    }
 
-        LoadSettings();
+    // Set static classes requiring library path
+    private void SetStaticLibraryPaths()
+    {
+        GlobalConfig.LibraryDir = LibraryDir;
+        ArchiveHelper.HomeDir = LibraryDir;
+        PyRunner.HomeDir = LibraryDir;
+    }
+
+    /// <summary>
+    /// Save a new library path to %APPDATA%/StabilityMatrix/library.json
+    /// </summary>
+    public void SetLibraryPath(string path)
+    {
+        var appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var homeDir = Path.Combine(appDataDir, "StabilityMatrix");
+        Directory.CreateDirectory(homeDir);
+        var libraryJsonPath = Path.Combine(homeDir, "library.json");
+        
+        var library = new LibrarySettings { LibraryPath = path };
+        var libraryJson = JsonSerializer.Serialize(library, new JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText(libraryJsonPath, libraryJson);
+    } 
+    
+    /// <summary>
+    /// Enable and create settings files for portable mode
+    /// Creates the ./Data directory and the `.sm-portable` marker file
+    /// </summary>
+    public void SetPortableMode()
+    {
+        // Get app directory
+        var appDir = AppContext.BaseDirectory;
+        // Create data directory
+        var dataDir = Path.Combine(appDir, "Data");
+        Directory.CreateDirectory(dataDir);
+        // Create marker file
+        File.Create(Path.Combine(dataDir, ".sm-portable")).Close();
+    }
+
+    /// <summary>
+    /// Iterable of installed packages using the old absolute path format.
+    /// Can be called with Any() to check if the user needs to migrate.
+    /// </summary>
+    public IEnumerable<InstalledPackage> GetOldInstalledPackages()
+    {
+        var installed = Settings.InstalledPackages;
+        // Absolute paths are old formats requiring migration
+        foreach (var package in installed.Where(package => Path.IsPathRooted(package.Path)))
+        {
+            yield return package;
+        }
     }
 
     public void SetTheme(string theme)
@@ -204,13 +271,7 @@ public class SettingsManager : ISettingsManager
         Settings.WebApiPort = port;
         SaveSettings();
     }
-    
-    public void SetModelsDirectory(string? directory)
-    {
-        Settings.ModelsDirectory = directory;
-        SaveSettings();
-    }
-    
+
     public void SetFirstLaunchSetupComplete(bool value)
     {
         Settings.FirstLaunchSetupComplete = value;
@@ -245,11 +306,25 @@ public class SettingsManager : ISettingsManager
         return Settings.SharedFolderVisibleCategories?.HasFlag(type) ?? false;
     }
     
+    /// <summary>
+    /// Loads settings from the settings file
+    /// If the settings file does not exist, it will be created with default values
+    /// </summary>
     private void LoadSettings()
     {
         FileLock.EnterReadLock();
         try
         {
+            if (!File.Exists(SettingsPath))
+            {
+                File.Create(SettingsPath).Close();
+                Settings.Theme = "Dark";
+                Settings.WindowBackdropType = WindowBackdropType.Mica;
+                var defaultSettingsJson = JsonSerializer.Serialize(Settings);
+                File.WriteAllText(SettingsPath, defaultSettingsJson);
+                return;
+            }
+
             var settingsContent = File.ReadAllText(SettingsPath);
             Settings = JsonSerializer.Deserialize<Settings>(settingsContent, new JsonSerializerOptions
             {

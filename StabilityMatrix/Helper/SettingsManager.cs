@@ -315,6 +315,7 @@ public class SettingsManager : ISettingsManager
     {
         if (!File.Exists(GlobalSettingsPath))
         {
+            Directory.CreateDirectory(Path.GetDirectoryName(GlobalSettingsPath)!);
             File.Create(GlobalSettingsPath).Close();
             return false;
         }

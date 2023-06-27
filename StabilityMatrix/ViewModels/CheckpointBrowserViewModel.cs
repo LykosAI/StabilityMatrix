@@ -333,8 +333,8 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     private void UpdateResultsText()
     {
         NoResultsFound = ModelCardsView?.IsEmpty ?? true;
-        NoResultsText = ModelCards == null || ModelCards.Count == 0
-            ? "No results found"
-            : $"{ModelCards?.Count} results hidden by filters";
+        NoResultsText = ModelCards?.Count > 0
+            ? $"{ModelCards.Count} results hidden by filters"
+            : "No results found";
     }
 }

@@ -329,6 +329,8 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     private void UpdateResultsText()
     {
         NoResultsFound = ModelCardsView?.IsEmpty ?? true;
-        NoResultsText = ShowNsfw ? "No results found" : "No SFW results found";
+        NoResultsText = ModelCards?.Count == 0
+            ? "No results found"
+            : $"{ModelCards?.Count} results hidden by filters";
     }
 }

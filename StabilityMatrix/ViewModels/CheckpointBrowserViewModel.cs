@@ -46,13 +46,15 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     [ObservableProperty] private bool canGoToNextPage;
     [ObservableProperty] private bool canGoToPreviousPage;
     [ObservableProperty] private bool isIndeterminate;
+    [ObservableProperty] private bool noResultsFound;
+    [ObservableProperty] private string noResultsText;
     
     public IEnumerable<CivitPeriod> AllCivitPeriods => Enum.GetValues(typeof(CivitPeriod)).Cast<CivitPeriod>();
     public IEnumerable<CivitSortMode> AllSortModes => Enum.GetValues(typeof(CivitSortMode)).Cast<CivitSortMode>();
 
     public IEnumerable<CivitModelType> AllModelTypes => Enum.GetValues(typeof(CivitModelType))
         .Cast<CivitModelType>()
-        .Where(t => t != CivitModelType.AestheticGradient && t != CivitModelType.Poses)
+        .Where(t => t == CivitModelType.All || t.ConvertTo<SharedFolderType>() > 0)
         .OrderBy(t => t.ToString());
 
     public CheckpointBrowserViewModel(
@@ -100,10 +102,25 @@ public partial class CheckpointBrowserViewModel : ObservableObject
             var models = modelsResponse.Items;
             if (models is null)
             {
-                Logger.Debug("CivitAI Query {Text} returned no results (in {Elapsed:F1} s)", queryText, timer.Elapsed.TotalSeconds);
+                Logger.Debug("CivitAI Query {Text} returned no results (in {Elapsed:F1} s)",
+                    queryText, timer.Elapsed.TotalSeconds);
                 return;
             }
-            Logger.Debug("CivitAI Query {Text} returned {Results} results (in {Elapsed:F1} s)", queryText, models.Count, timer.Elapsed.TotalSeconds);
+
+            Logger.Debug("CivitAI Query {Text} returned {Results} results (in {Elapsed:F1} s)",
+                queryText, models.Count, timer.Elapsed.TotalSeconds);
+
+            var unknown = models.Where(m => m.Type == CivitModelType.Unknown).ToList();
+            if (unknown.Any())
+            {
+                var names = unknown.Select(m => m.Name).ToList();
+                Logger.Warn("Excluded {Unknown} unknown model types: {Models}", unknown.Count,
+                    names);
+            }
+
+            // Filter out unknown model types
+            models = models.Where(m => m.Type.ConvertTo<SharedFolderType>() > 0).ToList();
+
             // Database update calls will invoke `OnModelsUpdated`
             // Add to database
             await liteDbContext.UpsertCivitModelAsync(models);
@@ -116,7 +133,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
                 Items = models,
                 Metadata = modelsResponse.Metadata
             });
-            
+
             if (cacheNew)
             {
                 Logger.Debug("New cache entry, updating model cards");
@@ -132,6 +149,11 @@ public partial class CheckpointBrowserViewModel : ObservableObject
             snackbarService.ShowSnackbarAsync("Please try again in a few minutes",
                 "CivitAI can't be reached right now").SafeFireAndForget();
             Logger.Log(LogLevel.Error, e);
+        }
+        finally
+        {
+            ShowMainLoadingSpinner = false;
+            UpdateResultsText();
         }
     }
     
@@ -160,23 +182,43 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         HasSearched = true;
     }
 
+    private string previousSearchQuery = string.Empty;
+
     [RelayCommand]
     private async Task SearchModels()
     {
         if (string.IsNullOrWhiteSpace(SearchQuery)) return;
-        
         var timer = Stopwatch.StartNew();
-
+        
+        if (SearchQuery != previousSearchQuery)
+        {
+            // Reset page number
+            CurrentPageNumber = 1;
+            previousSearchQuery = SearchQuery;
+        }
+        
         // Build request
         var modelRequest = new CivitModelsRequest
         {
-            Query = SearchQuery,
             Limit = MaxModelsPerPage,
             Nsfw = "true", // Handled by local view filter
             Sort = SortMode,
             Period = SelectedPeriod,
             Page = CurrentPageNumber,
         };
+
+        if (SearchQuery.StartsWith("#"))
+        {
+            modelRequest.Tag = SearchQuery[1..];
+        }
+        else if (SearchQuery.StartsWith("@"))
+        {
+            modelRequest.Username = SearchQuery[1..];
+        }
+        else
+        {
+            modelRequest.Query = SearchQuery;
+        }
         
         if (SelectedModelType != CivitModelType.All)
         {
@@ -189,7 +231,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
             .FindByIdAsync(ObjectHash.GetMd5Guid(modelRequest));
         
         // If cached, update model cards
-        if (cachedQuery?.Items is not null && cachedQuery.Items.Any())
+        if (cachedQuery is not null)
         {
             var elapsed = timer.Elapsed;
             Logger.Debug("Using cached query for {Text} [{RequestHash}] (in {Elapsed:F1} s)", 
@@ -199,14 +241,13 @@ public partial class CheckpointBrowserViewModel : ObservableObject
             // Start remote query (background mode)
             // Skip when last query was less than 2 min ago
             var timeSinceCache = DateTimeOffset.UtcNow - cachedQuery.InsertedAt;
-            if (timeSinceCache?.TotalMinutes < 2)
+            if (timeSinceCache?.TotalMinutes >= 2)
             {
-                Logger.Debug("Cached query was less than 2 minutes ago ({Seconds:F0} s), skipping remote query",
+                CivitModelQuery(modelRequest).SafeFireAndForget();
+                Logger.Debug(
+                    "Cached query was more than 2 minutes ago ({Seconds:F0} s), updating cache with remote query",
                     timeSinceCache.Value.TotalSeconds);
-                return;
             }
-            
-            CivitModelQuery(modelRequest).SafeFireAndForget();
         }
         else
         {
@@ -214,6 +255,8 @@ public partial class CheckpointBrowserViewModel : ObservableObject
             ShowMainLoadingSpinner = true;
             await CivitModelQuery(modelRequest);
         }
+        
+        UpdateResultsText();
     }
 
     [RelayCommand]
@@ -251,6 +294,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     {
         settingsManager.SetModelBrowserNsfwEnabled(value);
         ModelCardsView?.Refresh();
+        UpdateResultsText();
     }
 
     partial void OnSelectedPeriodChanged(CivitPeriod oldValue, CivitPeriod newValue)
@@ -280,5 +324,13 @@ public partial class CheckpointBrowserViewModel : ObservableObject
 
         // execute command instead of calling method directly so that the IsRunning property gets updated
         await SearchModelsCommand.ExecuteAsync(null);
+    }
+
+    private void UpdateResultsText()
+    {
+        NoResultsFound = ModelCardsView?.IsEmpty ?? true;
+        NoResultsText = ModelCards?.Count == 0
+            ? "No results found"
+            : $"{ModelCards?.Count} results hidden by filters";
     }
 }

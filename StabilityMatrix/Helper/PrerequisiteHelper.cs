@@ -212,9 +212,8 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         
         logger.LogInformation($"Git not found at {GitExePath}, downloading...");
 
-        var latestRelease = await gitHubClient.Repository.Release.GetLatest("git-for-windows", "git");
-        var portableGitUrl = latestRelease.Assets
-            .First(a => a.Name.EndsWith("64-bit.7z.exe")).BrowserDownloadUrl;
+        var portableGitUrl =
+            "https://github.com/git-for-windows/git/releases/download/v2.41.0.windows.1/PortableGit-2.41.0-64-bit.7z.exe";
 
         if (!File.Exists(PortableGitDownloadPath))
         {

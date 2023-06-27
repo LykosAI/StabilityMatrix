@@ -118,7 +118,7 @@ public partial class InstallerViewModel : ObservableObject
         InstallButtonText = "Install";
         ProgressValue = 0;
         InstallPath =
-            $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages";
+            $"{settingsManager.LibraryDir}\\Packages";
         IsReleaseMode = true;
         IsReleaseModeEnabled = true;
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -139,32 +140,7 @@ namespace StabilityMatrix
             return logConfig;
         }
 
-        // Find library and initialize settings
-        private static SettingsManager CreateSettingsManager()
-        {
-            var settings = new SettingsManager();
-            var found = settings.TryFindLibrary();
-            // Not found, we need to show dialog to choose library location
-            if (!found)
-            {
-                // See if this is an existing user for message variation
-                var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                var settingsPath = Path.Combine(appDataPath, "StabilityMatrix", "settings.json");
-                var isExistingUser = File.Exists(settingsPath);
-                
-                // TODO: Show dialog
-                
-                // 1. For portable mode, call settings.SetPortableMode()
-                // 2. For custom path, call settings.SetLibraryPath(path)
-                
-                // TryFindLibrary should succeed now unless weird issue
-                if (!settings.TryFindLibrary())
-                {
-                    throw new Exception("Could not set library path.");
-                }
-            }
-            return settings;
-        }
+        
 
         private void App_OnStartup(object sender, StartupEventArgs e)
         {
@@ -183,7 +159,14 @@ namespace StabilityMatrix
             
             if (File.Exists(updatePath))
             {
-                File.Delete(updatePath);
+                try
+                {
+                    File.Delete(updatePath);
+                }
+                catch (Exception exception)
+                {
+                    Logger.Error(exception, "Failed to delete update file");
+                }
             }
 
             var serviceCollection = new ServiceCollection();
@@ -222,10 +205,8 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<FirstLaunchSetupViewModel>();
 
             serviceCollection.Configure<DebugOptions>(Config.GetSection(nameof(DebugOptions)));
-            
-            var settingsManager = CreateSettingsManager();
-            serviceCollection.AddSingleton<ISettingsManager>(settingsManager);
 
+            serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, VladAutomatic>();
             serviceCollection.AddSingleton<BasePackage, ComfyUI>();
@@ -247,13 +228,18 @@ namespace StabilityMatrix
             serviceCollection.AddMemoryCache();
             serviceCollection.AddSingleton<IGithubApiCache, GithubApiCache>();
 
-            // Setup LiteDb
-            var connectionString = Config["TempDatabase"] switch
+            
+            serviceCollection.AddSingleton<ILiteDbContext>(provider =>
             {
-                "True" => ":temp:",
-                _ => settingsManager.DatabasePath
-            };
-            serviceCollection.AddSingleton<ILiteDbContext>(new LiteDbContext(connectionString));
+                var settingsManager = provider.GetRequiredService<ISettingsManager>();
+                // Setup LiteDb
+                var connectionString = Config["TempDatabase"] switch
+                {
+                    "True" => ":temp:",
+                    _ => settingsManager.DatabasePath
+                };
+                return new LiteDbContext(connectionString);
+            });
 
             // Configure Refit and Polly
             var defaultRefitSettings = new RefitSettings
@@ -331,18 +317,17 @@ namespace StabilityMatrix
                 Logger?.Warn(ex, "Background Task failed: {ExceptionMessage}", ex.Message);
             });
 
-            // Insert path extensions
-            settingsManager.InsertPathExtensions();
-            
             serviceProvider = serviceCollection.BuildServiceProvider();
+            
+            var settingsManager = serviceProvider.GetRequiredService<ISettingsManager>();
 
             // First time setup if needed
-            if (!settingsManager.Settings.FirstLaunchSetupComplete)
+            if (!settingsManager.IsEulaAccepted())
             {
                 var setupWindow = serviceProvider.GetRequiredService<FirstLaunchSetupWindow>();
                 if (setupWindow.ShowDialog() ?? false)
                 {
-                    settingsManager.SetFirstLaunchSetupComplete(true);
+                    settingsManager.SetEulaAccepted();
                 }
                 else
                 {

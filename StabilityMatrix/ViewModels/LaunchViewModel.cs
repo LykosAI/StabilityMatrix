@@ -157,7 +157,7 @@ public partial class LaunchViewModel : ObservableObject
         await pyRunner.Initialize();
 
         // Get path from package
-        var packagePath = activeInstall.Path!;
+        var packagePath = $"{settingsManager.LibraryDir}\\{activeInstall.LibraryPath!}";
 
         basePackage.ConsoleOutput += OnConsoleOutput;
         basePackage.Exited += OnExit;

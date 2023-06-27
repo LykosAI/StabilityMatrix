@@ -16,7 +16,10 @@ public class SettingsManager : ISettingsManager
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly ReaderWriterLockSlim FileLock = new();
-
+    private static readonly string GlobalSettingsPath =
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix",
+            "global.json");
+    
     private readonly string? originalEnvPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
     
     // Library properties
@@ -40,34 +43,36 @@ public class SettingsManager : ISettingsManager
     {
         // 1. Check portable mode
         var appDir = AppContext.BaseDirectory;
-        IsPortableMode = File.Exists(Path.Combine(appDir, ".sm-portable"));
+        IsPortableMode = File.Exists(Path.Combine(appDir, "Data", ".sm-portable"));
         if (IsPortableMode)
         {
             LibraryDir = Path.Combine(appDir, "Data");
             SetStaticLibraryPaths();
+            LoadSettings();
             return true;
         }
         
         // 2. Check %APPDATA%/StabilityMatrix/library.json
         var appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var libraryJsonPath = Path.Combine(appDataDir, "StabilityMatrix", "library.json");
-        if (File.Exists(libraryJsonPath))
+        if (!File.Exists(libraryJsonPath)) 
+            return false;
+        
+        try
         {
-            try
+            var libraryJson = File.ReadAllText(libraryJsonPath);
+            var library = JsonSerializer.Deserialize<LibrarySettings>(libraryJson);
+            if (!string.IsNullOrWhiteSpace(library?.LibraryPath))
             {
-                var libraryJson = File.ReadAllText(libraryJsonPath);
-                var library = JsonSerializer.Deserialize<LibrarySettings>(libraryJson);
-                if (!string.IsNullOrWhiteSpace(library?.LibraryPath))
-                {
-                    LibraryDir = library.LibraryPath;
-                    SetStaticLibraryPaths();
-                    return true;
-                }
+                LibraryDir = library.LibraryPath;
+                SetStaticLibraryPaths();
+                LoadSettings();
+                return true;
             }
-            catch (Exception e)
-            {
-                Logger.Warn("Failed to read library.json in AppData: {Message}", e.Message);
-            }
+        }
+        catch (Exception e)
+        {
+            Logger.Warn("Failed to read library.json in AppData: {Message}", e.Message);
         }
         return false;
     }
@@ -305,6 +310,26 @@ public class SettingsManager : ISettingsManager
         if (type == 0) return false;
         return Settings.SharedFolderVisibleCategories?.HasFlag(type) ?? false;
     }
+
+    public bool IsEulaAccepted()
+    {
+        if (!File.Exists(GlobalSettingsPath))
+        {
+            File.Create(GlobalSettingsPath).Close();
+            return false;
+        }
+
+        var json = File.ReadAllText(GlobalSettingsPath);
+        var globalSettings = JsonSerializer.Deserialize<GlobalSettings>(json);
+        return globalSettings?.EulaAccepted ?? false;
+    }
+
+    public void SetEulaAccepted()
+    {
+        var globalSettings = new GlobalSettings {EulaAccepted = true};
+        var json = JsonSerializer.Serialize(globalSettings);
+        File.WriteAllText(GlobalSettingsPath, json);
+    }
     
     /// <summary>
     /// Loads settings from the settings file
@@ -339,7 +364,7 @@ public class SettingsManager : ISettingsManager
 
     private void SaveSettings()
     {
-        FileLock.TryEnterWriteLock(1000);
+        FileLock.TryEnterWriteLock(100000);
         try
         {
             var json = JsonSerializer.Serialize(Settings, new JsonSerializerOptions

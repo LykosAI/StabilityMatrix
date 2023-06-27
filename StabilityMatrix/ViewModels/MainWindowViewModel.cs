@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -52,9 +53,15 @@ public partial class MainWindowViewModel : ObservableObject
         SetTheme();
         EventManager.Instance.GlobalProgressChanged += OnGlobalProgressChanged;
         
+        // show path selection window if no paths are set
+        await DoSettingsCheck();
+        
+        // Insert path extensions
+        settingsManager.InsertPathExtensions();
+
         if (debugOptions.ShowOneClickInstall || !settingsManager.Settings.InstalledPackages.Any())
         {
-            var dialog = dialogFactory.CreateInstallLocationsDialog();
+            var dialog = dialogFactory.CreateOneClickInstallDialog();
             dialog.IsPrimaryButtonEnabled = false;
             dialog.IsSecondaryButtonEnabled = false;
             dialog.IsFooterVisible = false;
@@ -81,6 +88,40 @@ public partial class MainWindowViewModel : ObservableObject
     private void OpenLinkDiscord()
     {
         ProcessRunner.OpenUrl("https://discord.gg/TUrgfECxHz");
+    }
+    
+    private async Task DoSettingsCheck()
+    {
+        var found = settingsManager.TryFindLibrary();
+        if (found) 
+            return;
+            
+        // See if this is an existing user for message variation
+        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var settingsPath = Path.Combine(appDataPath, "StabilityMatrix", "settings.json");
+        var isExistingUser = File.Exists(settingsPath);
+            
+        // need to show dialog to choose library location
+        while (!settingsManager.TryFindLibrary())
+        {
+            var dialog = dialogFactory.CreateInstallLocationsDialog();
+            dialog.IsPrimaryButtonEnabled = false;
+            dialog.IsSecondaryButtonEnabled = false;
+            dialog.IsFooterVisible = false;
+            await dialog.ShowAsync();
+
+            // 1. For portable mode, call settings.SetPortableMode()
+            var viewModel = (dialog.DataContext as SelectInstallLocationsViewModel)!;
+            if (viewModel.IsPortableMode)
+            {
+                settingsManager.SetPortableMode();
+            }
+            // 2. For custom path, call settings.SetLibraryPath(path)
+            else
+            {
+                settingsManager.SetLibraryPath(viewModel.DataDirectory);
+            }
+        }
     }
 
     /// <summary>

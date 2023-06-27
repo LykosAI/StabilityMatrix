@@ -16,4 +16,9 @@ public partial class SelectInstallLocationsDialog : ContentDialog
         InitializeComponent();
         DataContext = viewModel;
     }
+
+    private void ContinueButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        Hide();
+    }
 }

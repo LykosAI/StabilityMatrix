@@ -33,7 +33,7 @@ public partial class SelectInstallLocationsViewModel : ObservableObject
         
         DataDirectory = path;
     }
-    
+
     partial void OnIsPortableModeChanged(bool value)
     {
         DataDirectory = value

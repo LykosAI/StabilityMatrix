@@ -49,4 +49,17 @@ public interface ISettingsManager
     void SetModelBrowserNsfwEnabled(bool value);
     void SetSharedFolderCategoryVisible(SharedFolderType type, bool visible);
     bool IsSharedFolderCategoryVisible(SharedFolderType type);
+    bool IsEulaAccepted();
+    void SetEulaAccepted();
+
+    /// <summary>
+    /// Save a new library path to %APPDATA%/StabilityMatrix/library.json
+    /// </summary>
+    void SetLibraryPath(string path);
+
+    /// <summary>
+    /// Enable and create settings files for portable mode
+    /// Creates the ./Data directory and the `.sm-portable` marker file
+    /// </summary>
+    void SetPortableMode();
 }

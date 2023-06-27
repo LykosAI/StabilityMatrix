@@ -46,6 +46,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     [ObservableProperty] private bool canGoToNextPage;
     [ObservableProperty] private bool canGoToPreviousPage;
     [ObservableProperty] private bool isIndeterminate;
+    [ObservableProperty] private bool noResultsFound;
     
     public IEnumerable<CivitPeriod> AllCivitPeriods => Enum.GetValues(typeof(CivitPeriod)).Cast<CivitPeriod>();
     public IEnumerable<CivitSortMode> AllSortModes => Enum.GetValues(typeof(CivitSortMode)).Cast<CivitSortMode>();
@@ -100,21 +101,25 @@ public partial class CheckpointBrowserViewModel : ObservableObject
             var models = modelsResponse.Items;
             if (models is null)
             {
-                Logger.Debug("CivitAI Query {Text} returned no results (in {Elapsed:F1} s)", queryText, timer.Elapsed.TotalSeconds);
+                Logger.Debug("CivitAI Query {Text} returned no results (in {Elapsed:F1} s)",
+                    queryText, timer.Elapsed.TotalSeconds);
                 return;
             }
-            Logger.Debug("CivitAI Query {Text} returned {Results} results (in {Elapsed:F1} s)", queryText, models.Count, timer.Elapsed.TotalSeconds);
-            
+
+            Logger.Debug("CivitAI Query {Text} returned {Results} results (in {Elapsed:F1} s)",
+                queryText, models.Count, timer.Elapsed.TotalSeconds);
+
             var unknown = models.Where(m => m.Type == CivitModelType.Unknown).ToList();
             if (unknown.Any())
             {
                 var names = unknown.Select(m => m.Name).ToList();
-                Logger.Warn("Excluded {Unknown} unknown model types: {Models}", unknown.Count, names);
+                Logger.Warn("Excluded {Unknown} unknown model types: {Models}", unknown.Count,
+                    names);
             }
-            
+
             // Filter out unknown model types
             models = models.Where(m => m.Type.ConvertTo<SharedFolderType>() > 0).ToList();
-            
+
             // Database update calls will invoke `OnModelsUpdated`
             // Add to database
             await liteDbContext.UpsertCivitModelAsync(models);
@@ -127,7 +132,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
                 Items = models,
                 Metadata = modelsResponse.Metadata
             });
-            
+
             if (cacheNew)
             {
                 Logger.Debug("New cache entry, updating model cards");
@@ -137,12 +142,17 @@ public partial class CheckpointBrowserViewModel : ObservableObject
             {
                 Logger.Debug("Cache entry already exists, not updating model cards");
             }
+            NoResultsFound = !models.Any();
         }
         catch (ApiException e)
         {
             snackbarService.ShowSnackbarAsync("Please try again in a few minutes",
                 "CivitAI can't be reached right now").SafeFireAndForget();
             Logger.Log(LogLevel.Error, e);
+        }
+        finally
+        {
+            ShowMainLoadingSpinner = false;
         }
     }
     
@@ -154,6 +164,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         if (models is null)
         {
             ModelCards?.Clear();
+            NoResultsFound = true;
         }
         else
         {
@@ -161,6 +172,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
                 .Select(model => new CheckpointBrowserCardViewModel(model, 
                     downloadService, snackbarService, settingsManager));
             ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(updateCards);
+            NoResultsFound = false;
         }
         TotalPages = metadata?.TotalPages ?? 1;
         CanGoToPreviousPage = CurrentPageNumber > 1;
@@ -171,22 +183,30 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         HasSearched = true;
     }
 
+    private string previousSearchQuery = string.Empty;
+
     [RelayCommand]
     private async Task SearchModels()
     {
         if (string.IsNullOrWhiteSpace(SearchQuery)) return;
-        
         var timer = Stopwatch.StartNew();
-
+        
+        if (SearchQuery != previousSearchQuery)
+        {
+            // Reset page number
+            CurrentPageNumber = 1;
+            previousSearchQuery = SearchQuery;
+        }
+        
         // Build request
         var modelRequest = new CivitModelsRequest
         {
-            Query = SearchQuery,
             Limit = MaxModelsPerPage,
             Nsfw = "true", // Handled by local view filter
             Sort = SortMode,
             Period = SelectedPeriod,
             Page = CurrentPageNumber,
+            Tag = SearchQuery
         };
         
         if (SelectedModelType != CivitModelType.All)

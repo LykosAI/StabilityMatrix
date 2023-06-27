@@ -5,7 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using NLog;
+using Salaros.Configuration;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Models;
 
 namespace StabilityMatrix.Python;
 
@@ -102,6 +104,39 @@ public class PyVenvRunner : IDisposable
     {
         await PipInstall(GetTorchInstallCommand(), outputDataReceived: outputDataReceived);
     }
+
+    /// <summary>
+    /// Set current python path to pyvenv.cfg
+    /// This should be called before using the venv, in case user moves the venv directory.
+    /// </summary>
+    private void SetPyvenvCfg(string pythonDirectory)
+    {
+        // Skip if we are not created yet
+        if (!Exists()) return;
+
+        // Path to pyvenv.cfg
+        var cfgPath = Path.Combine(RootPath, "pyvenv.cfg");
+        if (!File.Exists(cfgPath))
+        {
+            throw new FileNotFoundException("pyvenv.cfg not found", cfgPath);
+        }
+        
+        Logger.Info("Updating pyvenv.cfg with embedded Python directory {PyDir}", pythonDirectory);
+        
+        // Insert a top section
+        var topSection = "[top]" + Environment.NewLine;
+        var cfg = new ConfigParser(topSection + File.ReadAllText(cfgPath));
+        
+        // Need to set all path keys - home, base-prefix, base-exec-prefix, base-executable
+        cfg.SetValue("top", "home", pythonDirectory);
+        cfg.SetValue("top", "base-prefix", pythonDirectory);
+        cfg.SetValue("top", "base-exec-prefix", pythonDirectory);
+        cfg.SetValue("top", "base-executable", Path.Combine(pythonDirectory, "python.exe"));
+        
+        // Convert to string for writing, strip the top section
+        var cfgString = cfg.ToString().Replace(topSection, "");
+        File.WriteAllText(cfgPath, cfgString);
+    }
     
     /// <summary>
     /// Run a pip install command. Waits for the process to exit.
@@ -113,6 +148,7 @@ public class PyVenvRunner : IDisposable
         {
             throw new FileNotFoundException("pip not found", PipPath);
         }
+        SetPyvenvCfg(PyRunner.PythonDir);
         Process = ProcessRunner.StartProcess(PythonPath, $"-m pip install {args}", workingDirectory ?? RootPath, outputDataReceived);
         await ProcessRunner.WaitForExitConditionAsync(Process);
     }
@@ -124,9 +160,10 @@ public class PyVenvRunner : IDisposable
         {
             throw new InvalidOperationException("Venv python process does not exist");
         }
-
-        Logger.Debug($"Launching RunDetached at {PythonPath} with args {arguments}");
+        SetPyvenvCfg(PyRunner.PythonDir);
         
+        Logger.Debug($"Launching RunDetached at {PythonPath} with args {arguments}");
+
         var filteredOutput = outputDataReceived == null ? null : new Action<string?>(s =>
         {
             if (s == null) return;

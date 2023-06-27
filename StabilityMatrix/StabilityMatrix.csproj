@@ -39,6 +39,7 @@
       <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
       <PackageReference Include="Refit" Version="6.3.2" />
       <PackageReference Include="Refit.HttpClientFactory" Version="6.3.2" />
+      <PackageReference Include="Salaros.ConfigParser" Version="0.3.8" />
       <PackageReference Include="Sentry" Version="3.33.0" />
       <PackageReference Include="Sentry.NLog" Version="3.33.0" />
       <PackageReference Include="SharpCompress" Version="0.33.0" />

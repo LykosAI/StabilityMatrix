@@ -139,7 +139,7 @@
                 <ui:TextBox
                     HorizontalAlignment="Stretch"
                     Margin="8,0,0,0"
-                    PlaceholderText="Query"
+                    PlaceholderText="Search models, #tags, or @users"
                     Text="{Binding SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
                 <ui:Button
@@ -238,6 +238,15 @@
             </StackPanel>
         </StackPanel>
 
+        <TextBlock
+            Grid.Row="0"
+            Grid.RowSpan="3"
+            FontSize="20"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Text="{Binding NoResultsText, FallbackValue=No results found}"
+            Visibility="{Binding NoResultsFound, Converter={StaticResource BoolToVisibilityConverter}}" />
+        
         <ui:ProgressRing
             Grid.Row="0"
             Grid.RowSpan="3"

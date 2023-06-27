@@ -8,10 +8,13 @@ public interface IPrerequisiteHelper
 {
     string GitBinPath { get; }
     
+    bool IsPythonInstalled { get; }
+ 
     Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null);
     Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null);
     Task InstallGitIfNecessary(IProgress<ProgressReport>? progress = null);
     Task InstallVcRedistIfNecessary(IProgress<ProgressReport>? progress = null);
+    Task InstallPythonIfNecessary(IProgress<ProgressReport>? progress = null);
 
     /// <summary>
     /// Run embedded git with the given arguments.

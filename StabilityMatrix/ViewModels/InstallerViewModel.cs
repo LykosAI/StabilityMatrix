@@ -117,8 +117,6 @@ public partial class InstallerViewModel : ObservableObject
         SecondaryProgressText = "";
         InstallButtonText = "Install";
         ProgressValue = 0;
-        InstallPath =
-            $"{settingsManager.LibraryDir}\\Packages";
         IsReleaseMode = true;
         IsReleaseModeEnabled = true;
 
@@ -127,6 +125,12 @@ public partial class InstallerViewModel : ObservableObject
 
         SelectedPackage = AvailablePackages[0];
         InstallName = SelectedPackage.DisplayName;
+        
+        // Set InstallPath when library changes
+        settingsManager.LibraryDirChanged += (_, libraryDir) =>
+        {
+            InstallPath = Path.Combine(libraryDir, "Packages");
+        };
     }
 
     public async Task OnLoaded()

@@ -294,6 +294,10 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     {
         settingsManager.SetModelBrowserNsfwEnabled(value);
         ModelCardsView?.Refresh();
+        
+        if (!HasSearched) 
+            return;
+        
         UpdateResultsText();
     }
 
@@ -329,7 +333,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     private void UpdateResultsText()
     {
         NoResultsFound = ModelCardsView?.IsEmpty ?? true;
-        NoResultsText = ModelCards?.Count == 0
+        NoResultsText = ModelCards == null || ModelCards.Count == 0
             ? "No results found"
             : $"{ModelCards?.Count} results hidden by filters";
     }

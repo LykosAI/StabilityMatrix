@@ -316,6 +316,12 @@ public partial class SettingsViewModel : ObservableObject
         var appPath = Path.Combine(appDataPath, "StabilityMatrix");
         Process.Start("explorer.exe", appPath);
     }
+    
+    [RelayCommand]
+    private void OpenLibraryDirectory()
+    {
+        Process.Start("explorer.exe", settingsManager.LibraryDir);
+    }
 
     [RelayCommand]
     private async Task OpenLicenseDialog()

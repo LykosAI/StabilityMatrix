@@ -97,7 +97,7 @@ public partial class TextToImageViewModel : ObservableObject
         }
         
         // Set the diffusion checkpoint folder
-        var sdModelsDir = Path.Join(settingsManager.Settings.ModelsDirectory, SharedFolderType.StableDiffusion.GetStringValue());
+        var sdModelsDir = Path.Join(settingsManager.ModelsDirectory, SharedFolderType.StableDiffusion.GetStringValue());
         if (!Directory.Exists(sdModelsDir))
         {
             logger.LogWarning("Skipped model folder index - {SdModelsDir} does not exist", sdModelsDir);

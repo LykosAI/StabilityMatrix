@@ -18,7 +18,6 @@ using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Config;
 using NLog.Extensions.Logging;
-using NLog.Layouts;
 using NLog.Targets;
 using Octokit;
 using Polly;
@@ -334,9 +333,13 @@ namespace StabilityMatrix
                 };
                 var exceptionWindow = new ExceptionWindow
                 {
-                    DataContext = vm,
-                    Owner = MainWindow
+                    DataContext = vm
                 };
+
+                if (MainWindow?.IsActive ?? false)
+                {
+                    exceptionWindow.Owner = MainWindow;
+                }
                 exceptionWindow.ShowDialog();
             }
             e.Handled = true;

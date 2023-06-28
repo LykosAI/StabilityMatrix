@@ -48,11 +48,8 @@ public class PyVenvRunner : IDisposable
     {
         RootPath = path;
     }
-
-    /// <summary>
-    /// Return true if the venv has a Scripts\python.exe file.
-    /// </summary>
-    /// <returns></returns>
+    
+    /// <returns>True if the venv has a Scripts\python.exe file</returns>
     public bool Exists() => File.Exists(PythonPath);
 
     /// <summary>

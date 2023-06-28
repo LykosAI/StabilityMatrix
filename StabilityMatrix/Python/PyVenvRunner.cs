@@ -64,10 +64,7 @@ public class PyVenvRunner : IDisposable
         }
 
         // Create RootPath if it doesn't exist
-        if (!Directory.Exists(RootPath))
-        {
-            Directory.CreateDirectory(RootPath);
-        }
+        Directory.CreateDirectory(RootPath);
 
         // Create venv
         var venvProc = ProcessRunner.StartProcess(PyRunner.PythonExePath, $"-m virtualenv --always-copy \"{RootPath}\"");

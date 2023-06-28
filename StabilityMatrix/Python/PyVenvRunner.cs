@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using NLog;
 using Salaros.Configuration;
 using StabilityMatrix.Helper;
-using StabilityMatrix.Models;
 
 namespace StabilityMatrix.Python;
 
@@ -153,8 +152,12 @@ public class PyVenvRunner : IDisposable
         await ProcessRunner.WaitForExitConditionAsync(Process);
     }
 
-    public void RunDetached(string arguments, Action<string?>? outputDataReceived, Action<int>? onExit = null,
-        bool unbuffered = true, string workingDirectory = "")
+    public void RunDetached(
+        string arguments, 
+        Action<string?>? outputDataReceived, 
+        Action<int>? onExit = null,
+        bool unbuffered = true, 
+        string workingDirectory = "")
     {
         if (!Exists())
         {

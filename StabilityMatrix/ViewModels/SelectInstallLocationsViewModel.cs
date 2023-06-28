@@ -2,10 +2,12 @@
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using NLog;
 using Ookii.Dialogs.Wpf;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
@@ -14,6 +16,8 @@ namespace StabilityMatrix.ViewModels;
 
 public partial class SelectInstallLocationsViewModel : ObservableObject
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    
     private const string ValidExistingDirectoryText = "Valid existing data directory found";
     private const string InvalidDirectoryText =
         "Directory must be empty or have a valid settings.json file";
@@ -75,15 +79,19 @@ public partial class SelectInstallLocationsViewModel : ObservableObject
             try
             {
                 var jsonText = await File.ReadAllTextAsync(settingsPath);
-                var _ = JsonSerializer.Deserialize<Settings>(jsonText);
+                var _ = JsonSerializer.Deserialize<Settings>(jsonText, new JsonSerializerOptions
+                {
+                    Converters = { new JsonStringEnumConverter() }
+                });
                 // If successful, show existing badge
                 IsStatusBadgeVisible = true;
                 IsDirectoryValid = true;
                 DirectoryStatusText = ValidExistingDirectoryText;
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Logger.Info("Failed to deserialize settings.json: {Msg}", e.Message);
                 // If not, show error badge, and set directory to invalid to prevent continuing
                 IsStatusBadgeVisible = true;
                 IsDirectoryValid = false;

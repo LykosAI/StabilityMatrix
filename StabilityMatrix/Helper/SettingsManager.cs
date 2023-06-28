@@ -381,7 +381,7 @@ public class SettingsManager : ISettingsManager
         }
     }
 
-    private void SaveSettings()
+    public void SaveSettings()
     {
         FileLock.TryEnterWriteLock(100000);
         try

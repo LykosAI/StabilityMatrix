@@ -136,6 +136,12 @@ public partial class MainWindowViewModel : ObservableObject
         {
             throw new Exception("Could not find library after setting path");
         }
+        
+        // Check if there are old packages, if so show migration dialog
+        if (settingsManager.GetOldInstalledPackages().Any())
+        {
+            
+        }
     }
 
     /// <summary>

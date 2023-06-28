@@ -28,4 +28,5 @@ public interface IDialogFactory
     OneClickInstallDialog CreateOneClickInstallDialog();
     InstallerWindow CreateInstallerWindow();
     SelectInstallLocationsDialog CreateInstallLocationsDialog();
+    DataDirectoryMigrationDialog CreateDataDirectoryMigrationDialog();
 }

@@ -1,5 +1,8 @@
 ﻿<ui:ContentDialog
     CloseButtonText="Close"
+    DialogHeight="720"
+    DialogWidth="840"
+    Loaded="SelectInstallLocationsDialog_OnLoaded"
     Title="Select Data Directory"
     d:DataContext="{d:DesignInstance Type=viewModels:SelectInstallLocationsViewModel,
                                      IsDesignTimeCreatable=True}"
@@ -10,67 +13,102 @@
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     x:Class="StabilityMatrix.SelectInstallLocationsDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:controls="clr-namespace:StabilityMatrix.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:StabilityMatrix"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:converters="clr-namespace:StabilityMatrix.Converters">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <ui:ContentDialog.Resources>
         <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
-        <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}"
-               TargetType="{x:Type local:SelectInstallLocationsDialog}" />
+        <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:SelectInstallLocationsDialog}" />
         <converters:BoolNegationConverter x:Key="BoolNegationConverter" />
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </ui:ContentDialog.Resources>
 
-    <Grid MaxHeight="900" VerticalAlignment="Stretch" Margin="16">
+    <Grid Height="600" Margin="16,0,16,16">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,32">
-            <Label Content="Data Directory" Margin="0,16,0,0" />
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <Label
+                Content="Data Directory"
+                FontSize="13"
+                Margin="0,16,0,0" />
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <ui:TextBox Margin="0,0,8,0"
-                            Height="36"
-                            VerticalAlignment="Stretch"
-                            IsEnabled="{Binding IsPortableMode, Converter={StaticResource BoolNegationConverter}}"
-                            PlaceholderEnabled="True"
-                            PlaceholderText="{Binding DefaultInstallLocation}"
-                            Text="{Binding DataDirectory, UpdateSourceTrigger=PropertyChanged}" />
+                <ui:TextBox
+                    Height="36"
+                    IsEnabled="{Binding IsPortableMode, Converter={StaticResource BoolNegationConverter}}"
+                    Margin="0,0,8,0"
+                    PlaceholderEnabled="True"
+                    PlaceholderText="{Binding DefaultInstallLocation}"
+                    Text="{Binding DataDirectory, UpdateSourceTrigger=PropertyChanged}"
+                    VerticalAlignment="Stretch" />
 
-                <ui:Button Grid.Column="1" HorizontalAlignment="Stretch" Height="36"
-                           IsEnabled="{Binding IsPortableMode, Converter={StaticResource BoolNegationConverter}}"
-                           Command="{Binding ShowFolderBrowserDialogCommand}">
+                <ui:Button
+                    Command="{Binding ShowFolderBrowserDialogCommand}"
+                    Grid.Column="1"
+                    Height="36"
+                    HorizontalAlignment="Stretch"
+                    IsEnabled="{Binding IsPortableMode, Converter={StaticResource BoolNegationConverter}}">
                     <ui:Button.Icon>
                         <ui:SymbolIcon Symbol="FolderOpen24" />
                     </ui:Button.Icon>
                 </ui:Button>
             </Grid>
-            <Label Content="This is where the model checkpoints, LORAs, web UIs, settings, etc. will be installed."
-                   FontSize="11"
-                   Margin="0,8,0,0" />
+            <Label
+                Content="This is where the model checkpoints, LORAs, web UIs, settings, etc. will be installed."
+                FontSize="12"
+                Margin="0,8,0,0" />
 
-            <CheckBox Content="Portable Mode" Margin="0,32,0,0"
-                      IsChecked="{Binding IsPortableMode, Mode=TwoWay}" />
-            <TextBlock
-                HorizontalAlignment="Left"
-                Text="If Portable Mode is selected, all data will be stored in the same directory as the application. You can move the application and its 'Data' folder to a different location or computer, and it will still work."
-                TextWrapping="Wrap"
-                MaxWidth="600"
-                FontSize="11"
-                Margin="0,8,0,32" />
+            <CheckBox
+                Content="Portable Mode"
+                IsChecked="{Binding IsPortableMode, Mode=TwoWay}"
+                Margin="0,16,0,0" />
+
+            <ui:InfoBar
+                IsClosable="False"
+                IsOpen="True"
+                Margin="0,8,0,0"
+                Padding="8,16"
+                Title="In Portable Mode, all data and settings will be stored in the same directory as the application. You will be able to move the application with its 'Data' folder to a different location or computer." />
         </StackPanel>
 
-        <ui:Button Grid.Row="1" Content="Continue" Appearance="Success" HorizontalAlignment="Center" FontSize="24" Click="ContinueButton_OnClick" />
+        <!--  Indicator of existing or new data directory  -->
+        <StackPanel
+            Grid.Row="1"
+            HorizontalAlignment="Center"
+            Margin="8,0,8,8"
+            Orientation="Horizontal"
+            Visibility="{Binding IsStatusBadgeVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <controls:RefreshBadge DataContext="{Binding RefreshBadgeViewModel}" />
+            <TextBlock
+                FontSize="14"
+                Text="{Binding RefreshBadgeViewModel.CurrentToolTip}"
+                VerticalAlignment="Center" />
+        </StackPanel>
+
+        <ui:Button
+            Appearance="Success"
+            Click="ContinueButton_OnClick"
+            Content="Continue"
+            FontSize="16"
+            Grid.Row="2"
+            HorizontalAlignment="Center"
+            IsEnabled="{Binding IsDirectoryValid}"
+            Margin="8"
+            Padding="16,8" />
     </Grid>
 
 </ui:ContentDialog>

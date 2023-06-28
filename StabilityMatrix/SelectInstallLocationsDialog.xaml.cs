@@ -18,4 +18,9 @@ public partial class SelectInstallLocationsDialog : ContentDialog
     {
         Hide(ContentDialogResult.Primary);
     }
+
+    private void SelectInstallLocationsDialog_OnLoaded(object sender, RoutedEventArgs e)
+    {
+        ((SelectInstallLocationsViewModel) DataContext).OnLoaded();
+    }
 }

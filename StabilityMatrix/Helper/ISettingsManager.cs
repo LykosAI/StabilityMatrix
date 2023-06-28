@@ -65,4 +65,5 @@ public interface ISettingsManager
     /// Creates the ./Data directory and the `.sm-portable` marker file
     /// </summary>
     void SetPortableMode();
+    void SaveSettings();
 }

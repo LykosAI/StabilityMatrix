@@ -203,7 +203,7 @@ public partial class LaunchViewModel : ObservableObject
         // Use dynamic parsed args over static
         if (package is IArgParsable parsable)
         {
-            var rootPath = activeInstall.Path!;
+            var rootPath = activeInstall.FullPath!;
             var moduleName = parsable.RelativeArgsDefinitionScriptPath;
             var parser = new ArgParser(pyRunner, rootPath, moduleName);
             definitions = await parser.GetArgsAsync();

@@ -34,8 +34,8 @@ public class InstalledPackage
     /// <summary>
     /// Full path to the package, using LibraryPath and GlobalConfig.LibraryDir.
     /// </summary>
-    // [JsonIgnore]
-    // public string? FullPath => LibraryPath != null ? System.IO.Path.Combine(GlobalConfig.LibraryDir, LibraryPath) : null;
+    [JsonIgnore]
+    public string? FullPath => LibraryPath != null ? System.IO.Path.Combine(GlobalConfig.LibraryDir, LibraryPath) : null;
     
     public string? LaunchCommand { get; set; }
     public List<LaunchOption>? LaunchArgs { get; set; }

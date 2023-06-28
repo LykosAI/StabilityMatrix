@@ -111,9 +111,9 @@
                 </TextBlock>
                 <TextBlock
                     FontSize="12"
-                    Margin="0,5,0,5"
-                    Text="{Binding SelectedPackage.Path, FallbackValue=C:\Users\Example\Downloads}" />
-                <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
+                    Margin="0,5,0,5" 
+                    Text="{Binding SelectedPackage.FullPath, FallbackValue=Packages\stable-diffusion}" />
+                    <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
                     <ui:Button
                         Appearance="Success"
                         Command="{Binding InstallCommand}"

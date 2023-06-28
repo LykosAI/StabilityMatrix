@@ -215,10 +215,6 @@
                     </StackPanel>
                 </StackPanel>
 
-                <Label Content="Install Location" Margin="0,16,0,0" />
-                <ui:TextBox Margin="0,0,0,8"
-                            Text="{Binding InstallPath, UpdateSourceTrigger=PropertyChanged}" />
-
                 <Label Content="Display Name" Margin="0,16,0,0" />
                 <StackPanel Orientation="Horizontal"
                             Visibility="{Binding ShowDuplicateWarning, Converter={StaticResource BoolToVisConverter}}">

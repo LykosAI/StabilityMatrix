@@ -59,9 +59,6 @@ public partial class InstallerViewModel : ObservableObject
     [ObservableProperty]
     private string installButtonText;
 
-    [ObservableProperty]
-    private string installPath;
-
     [ObservableProperty] 
     private string installName;
     
@@ -125,12 +122,6 @@ public partial class InstallerViewModel : ObservableObject
 
         SelectedPackage = AvailablePackages[0];
         InstallName = SelectedPackage.DisplayName;
-        
-        // Set InstallPath when library changes
-        settingsManager.LibraryDirChanged += (_, libraryDir) =>
-        {
-            InstallPath = Path.Combine(libraryDir, "Packages");
-        };
     }
 
     public async Task OnLoaded()
@@ -255,16 +246,11 @@ public partial class InstallerViewModel : ObservableObject
         OnSelectedPackageChanged(SelectedPackage);
     }
 
-    partial void OnInstallNameChanged(string oldValue, string newValue)
+    partial void OnInstallNameChanged(string? oldValue, string newValue)
     {
-        var path = Path.GetFullPath($"{InstallPath}\\{newValue}");
-        ShowDuplicateWarning = settingsManager.Settings.InstalledPackages.Any(p => p.Path.Equals(path));
-    }
-
-    partial void OnInstallPathChanged(string oldValue, string newValue)
-    {
-        var path = Path.GetFullPath($"{newValue}\\{InstallName}");
-        ShowDuplicateWarning = settingsManager.Settings.InstalledPackages.Any(p => p.Path.Equals(path));
+        ShowDuplicateWarning =
+            settingsManager.Settings.InstalledPackages.Any(p =>
+                p.LibraryPath.Equals($"Packages\\{newValue}"));
     }
 
     partial void OnSelectedVersionChanged(PackageVersion? value)
@@ -303,7 +289,7 @@ public partial class InstallerViewModel : ObservableObject
         
         await InstallGitIfNecessary();
 
-        SelectedPackage.InstallLocation = $"{InstallPath}\\{InstallName}";
+        SelectedPackage.InstallLocation = $"{settingsManager.LibraryDir}\\Packages\\{InstallName}";
         SelectedPackage.DisplayName = InstallName;
 
         if (!PyRunner.PipInstalled || !PyRunner.VenvInstalled)
@@ -339,7 +325,7 @@ public partial class InstallerViewModel : ObservableObject
         var package = new InstalledPackage
         {
             DisplayName = SelectedPackage.DisplayName,
-            Path = SelectedPackage.InstallLocation,
+            LibraryPath = $"Packages\\{InstallName}",
             Id = Guid.NewGuid(),
             PackageName = SelectedPackage.Name,
             PackageVersion = version,

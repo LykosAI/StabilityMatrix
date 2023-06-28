@@ -1,7 +1,5 @@
 ﻿<ui:ContentDialog
     CloseButtonText="Close"
-    DialogHeight="720"
-    DialogWidth="840"
     Loaded="SelectInstallLocationsDialog_OnLoaded"
     Title="Select Data Directory"
     d:DataContext="{d:DesignInstance Type=viewModels:SelectInstallLocationsViewModel,
@@ -29,7 +27,10 @@
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </ui:ContentDialog.Resources>
 
-    <Grid Height="500" Margin="16,0,16,16">
+    <Grid
+        Margin="16,0,16,16"
+        MaxWidth="700"
+        MinHeight="400">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />

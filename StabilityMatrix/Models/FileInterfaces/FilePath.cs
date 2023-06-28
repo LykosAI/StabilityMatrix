@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace StabilityMatrix.Models.FileInterfaces;
@@ -55,7 +54,7 @@ public class FilePath : FileSystemPath, IPathObject
     
     /// <summary> Deletes the file </summary>
     public void Delete() => File.Delete(FullPath);
-    
+
     // Implicit conversions to and from string
     public static implicit operator string(FilePath path) => path.FullPath;
     public static implicit operator FilePath(string path) => new(path);

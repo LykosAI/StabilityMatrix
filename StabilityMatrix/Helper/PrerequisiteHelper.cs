@@ -158,9 +158,9 @@ public class PrerequisiteHelper : IPrerequisiteHelper
             logger.LogDebug("Python already installed at {PythonDllPath}", PythonDllPath);
             return;
         }
-        
+
         logger.LogInformation("Python not found at {PythonDllPath}, downloading...", PythonDllPath);
-        
+
         Directory.CreateDirectory(AssetsDir);
         
         if (!File.Exists(PythonDownloadPath))
@@ -170,6 +170,13 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         }
         
         progress?.Report(new ProgressReport(-1, "Installing Python...", isIndeterminate: true));
+        
+        // We also need 7z if it's not already unpacked
+        if (!File.Exists(SevenZipPath))
+        {
+            await ExtractEmbeddedResource("StabilityMatrix.Assets.7za.exe", AssetsDir);
+            await ExtractEmbeddedResource("StabilityMatrix.Assets.7za - LICENSE.txt", AssetsDir);
+        }
         
         // Delete existing python dir
         if (Directory.Exists(PythonDir))

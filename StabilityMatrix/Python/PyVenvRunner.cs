@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using NLog;
 using Salaros.Configuration;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Models.FileInterfaces;
 
 namespace StabilityMatrix.Python;
 
@@ -25,17 +26,17 @@ public class PyVenvRunner : IDisposable
     /// <summary>
     /// The path to the venv root directory.
     /// </summary>
-    public string RootPath { get; private set; }
+    public DirectoryPath RootPath { get; }
 
     /// <summary>
     /// The path to the python executable.
     /// </summary>
-    public string PythonPath => RootPath + @"\Scripts\python.exe";
+    public FilePath PythonPath => RootPath + @"\Scripts\python.exe";
 
     /// <summary>
     /// The path to the pip executable.
     /// </summary>
-    public string PipPath => RootPath + @"\Scripts\pip.exe";
+    public FilePath PipPath => RootPath + @"\Scripts\pip.exe";
 
     /// <summary>
     /// List of substrings to suppress from the output.
@@ -44,13 +45,13 @@ public class PyVenvRunner : IDisposable
     /// </summary>
     public List<string> SuppressOutput { get; } = new() { "fatal: not a git repository" };
     
-    public PyVenvRunner(string path)
+    public PyVenvRunner(DirectoryPath path)
     {
         RootPath = path;
     }
-    
+
     /// <returns>True if the venv has a Scripts\python.exe file</returns>
-    public bool Exists() => File.Exists(PythonPath);
+    public bool Exists() => PythonPath.Exists;
 
     /// <summary>
     /// Creates a venv at the configured path.
@@ -63,10 +64,11 @@ public class PyVenvRunner : IDisposable
         }
 
         // Create RootPath if it doesn't exist
-        Directory.CreateDirectory(RootPath);
+        RootPath.Create();
 
         // Create venv
-        var venvProc = ProcessRunner.StartProcess(PyRunner.PythonExePath, $"-m virtualenv --always-copy \"{RootPath}\"");
+        var args = new string[] { "-m", "virtualenv", "--always-copy", RootPath };
+        var venvProc = ProcessRunner.StartProcess(PyRunner.PythonExePath, args);
         await venvProc.WaitForExitAsync();
 
         // Check return code
@@ -91,14 +93,6 @@ public class PyVenvRunner : IDisposable
         }
 
         return "torch torchvision torchaudio";
-    }
-
-    /// <summary>
-    /// Install torch with pip, automatically chooses between Cuda and CPU.
-    /// </summary>
-    public async Task InstallTorch(Action<string?>? outputDataReceived = null)
-    {
-        await PipInstall(GetTorchInstallCommand(), outputDataReceived: outputDataReceived);
     }
 
     /// <summary>
@@ -134,6 +128,14 @@ public class PyVenvRunner : IDisposable
         File.WriteAllText(cfgPath, cfgString);
     }
     
+    /// <summary>
+    /// Install torch with pip, automatically chooses between Cuda and CPU.
+    /// </summary>
+    public async Task InstallTorch(Action<string?>? outputDataReceived = null)
+    {
+        await PipInstall(GetTorchInstallCommand(), outputDataReceived: outputDataReceived);
+    }
+
     /// <summary>
     /// Run a pip install command. Waits for the process to exit.
     /// workingDirectory defaults to RootPath.

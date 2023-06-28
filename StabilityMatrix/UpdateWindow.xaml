@@ -54,6 +54,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -84,26 +85,33 @@
             <Run Text="installed. Would you like to download it now?"/>
         </TextBlock>
         
-        <Border Grid.Row="3"
+        <TextBlock Grid.Row="3" 
+                   Text="Release Notes" 
+                   FontSize="16"
+                   Margin="32,16,32,0"/>
+        
+        <Border Grid.Row="4"
                    Margin="32, 16"
                    CornerRadius="16"
                    Background="#66000000"/>
         <FlowDocumentScrollViewer
-            Grid.Row="3"
+            Grid.Row="4"
             Margin="32,16"
             Document="{Binding ReleaseNotes, Converter={StaticResource TextToFlowDocumentConverter}}"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch" />
         
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,16">
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,16">
             <ui:Button Content="Remind Me Later"
                        Margin="0,0,8,0"
                        FontSize="18"
+                       Click="RemindMeLaterButton_OnClick"
                        Appearance="Info"/>
             
             <ui:Button Content="Install Now"
                        Margin="8,0,0,0"
                        FontSize="18"
+                       Command="{Binding InstallUpdateCommand}"
                        Appearance="Success"/>
         </StackPanel>
         

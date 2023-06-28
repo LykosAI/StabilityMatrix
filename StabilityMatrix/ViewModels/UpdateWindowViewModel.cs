@@ -1,8 +1,8 @@
-﻿using System.Net;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Threading.Tasks;
 using AutoUpdaterDotNET;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Helper;
 using Wpf.Ui.Controls.Window;
 
@@ -36,6 +36,15 @@ public partial class UpdateWindowViewModel : ObservableObject
         else
         {
             ReleaseNotes = "## Unable to load release notes";
+        }
+    }
+
+    [RelayCommand]
+    private void InstallUpdate()
+    {
+        if (AutoUpdater.DownloadUpdate(UpdateInfo))
+        {
+            System.Windows.Application.Current.Shutdown();
         }
     }
 }

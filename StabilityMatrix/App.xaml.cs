@@ -145,9 +145,6 @@ namespace StabilityMatrix
 
         private void App_OnStartup(object sender, StartupEventArgs e)
         {
-            var updatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
-                "Update\\StabilityMatrix.exe");
-            
             if (AppDomain.CurrentDomain.BaseDirectory.EndsWith("Update\\"))
             {
                 File.Copy(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "StabilityMatrix.exe"),
@@ -158,11 +155,12 @@ namespace StabilityMatrix
                 return;
             }
             
-            if (File.Exists(updatePath))
+            var updateDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Update");
+            if (Directory.Exists(updateDir))
             {
                 try
                 {
-                    File.Delete(updatePath);
+                    Directory.Delete(updateDir, true);
                 }
                 catch (Exception exception)
                 {

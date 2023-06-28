@@ -34,7 +34,7 @@ public class UpdateHelper : IUpdateHelper
         AutoUpdater.DownloadPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Update");
         AutoUpdater.ExecutablePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Update", "StabilityMatrix.exe");
         // TODO: make this github url?
-        AutoUpdater.Start("https://update.danksite.xyz/update.xml");
+        AutoUpdater.Start("https://cdn.lykos.ai/update.xml");
     }
 
     private void AutoUpdaterOnCheckForUpdateEvent(UpdateInfoEventArgs args)
@@ -43,7 +43,7 @@ public class UpdateHelper : IUpdateHelper
         {
             EventManager.Instance.OnUpdateAvailable(args);
         }
-        else
+        else if (args.Error != null)
         {
             logger.LogError(args.Error, "Error while checking for update");
         }

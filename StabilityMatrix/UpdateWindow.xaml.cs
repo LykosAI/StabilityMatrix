@@ -19,4 +19,9 @@ public partial class UpdateWindow : FluentWindow
     {
         await viewModel.OnLoaded();
     }
+
+    private void RemindMeLaterButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
 }

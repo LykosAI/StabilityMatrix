@@ -198,6 +198,7 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<LaunchViewModel>();
             serviceCollection.AddSingleton<PackageManagerViewModel>();
             serviceCollection.AddSingleton<TextToImageViewModel>();
+            serviceCollection.AddTransient<UpdateWindowViewModel>();
             serviceCollection.AddTransient<InstallerViewModel>();
             serviceCollection.AddTransient<SelectInstallLocationsViewModel>();
             serviceCollection.AddTransient<DataDirectoryMigrationViewModel>();
@@ -208,6 +209,7 @@ namespace StabilityMatrix
 
             serviceCollection.Configure<DebugOptions>(Config.GetSection(nameof(DebugOptions)));
 
+            serviceCollection.AddSingleton<IUpdateHelper, UpdateHelper>();
             serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, VladAutomatic>();
@@ -343,11 +345,8 @@ namespace StabilityMatrix
             var window = serviceProvider.GetRequiredService<MainWindow>();
             window.Show();
             
-            AutoUpdater.Synchronous = true;
-            AutoUpdater.DownloadPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Update");
-            AutoUpdater.ExecutablePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Update", "StabilityMatrix.exe");
-            // TODO: make this github url?
-            AutoUpdater.Start("https://update.danksite.xyz/update.xml");
+            var updateHelper = serviceProvider.GetRequiredService<IUpdateHelper>();
+            updateHelper.StartCheckingForUpdates();
         }
 
         private void App_OnExit(object sender, ExitEventArgs e)

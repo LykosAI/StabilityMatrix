@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
 using Wpf.Ui.Controls.Window;
 
-namespace StabilityMatrix.Models;
+namespace StabilityMatrix.Models.Settings;
 
 public class Settings
 {
@@ -29,6 +26,8 @@ public class Settings
         SharedFolderType.StableDiffusion | 
         SharedFolderType.Lora | 
         SharedFolderType.LyCORIS;
+
+    public WindowSettings? WindowSettings { get; set; }
 
     public InstalledPackage? GetActiveInstalledPackage()
     {

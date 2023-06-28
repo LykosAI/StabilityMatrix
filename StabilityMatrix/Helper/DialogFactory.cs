@@ -140,13 +140,21 @@ public class DialogFactory : IDialogFactory
 
     public SelectInstallLocationsDialog CreateInstallLocationsDialog()
     {
-        return new SelectInstallLocationsDialog(contentDialogService,
+        var dialog = new SelectInstallLocationsDialog(contentDialogService,
             selectInstallLocationsViewModel);
+        dialog.IsPrimaryButtonEnabled = false;
+        dialog.IsSecondaryButtonEnabled = false;
+        dialog.IsFooterVisible = false;
+        return dialog;
     }
     
     public DataDirectoryMigrationDialog CreateDataDirectoryMigrationDialog()
     {
-        return new DataDirectoryMigrationDialog(contentDialogService, 
+        var dialog = new DataDirectoryMigrationDialog(contentDialogService, 
             dataDirectoryMigrationViewModel);
+        dialog.IsPrimaryButtonEnabled = false;
+        dialog.IsSecondaryButtonEnabled = false;
+        dialog.IsFooterVisible = false;
+        return dialog;
     }
 }

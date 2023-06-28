@@ -238,7 +238,8 @@ namespace StabilityMatrix
                 var settingsManager = provider.GetRequiredService<ISettingsManager>();
                 settingsManager.LibraryDirChanged += (_, libraryDir) =>
                 {
-                    liteDbContext.Initialize(libraryDir);
+                    var connectionString = $"Filename={Path.Combine(libraryDir, "StabilityMatrix.db")};Mode=Exclusive";
+                    liteDbContext.Initialize(connectionString);
                 };
                 return liteDbContext;
             });

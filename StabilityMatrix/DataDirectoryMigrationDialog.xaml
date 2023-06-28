@@ -1,5 +1,7 @@
 ﻿<ui:ContentDialog
     CloseButtonText="Close"
+    DialogHeight="720"
+    DialogWidth="840"
     Loaded="DataDirectoryMigrationDialog_OnLoaded"
     Title="Select Data Directory"
     d:DataContext="{d:DesignInstance Type=viewModels:DataDirectoryMigrationViewModel,
@@ -23,7 +25,7 @@
     <ui:ContentDialog.Resources>
         <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
         <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:SelectInstallLocationsDialog}" />
-        <converters:BoolNegationConverter x:Key="BoolNegationConverter" />
+        <converters:StringNullOrEmptyToVisibilityConverter x:Key="StringNullOrEmptyToVisibilityConverter" />
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </ui:ContentDialog.Resources>
 
@@ -45,13 +47,13 @@
                 TextWrapping="Wrap" />
             <ui:InfoBar
                 IsClosable="False"
-                IsOpen="True"
+                IsOpen="{Binding AutoMigrateText, Converter={StaticResource StringNullOrEmptyToVisibilityConverter}}"
                 Margin="8"
                 Severity="Success"
                 Title="{Binding AutoMigrateText, FallbackValue=5 Packages will be automatically migrated to the new format}" />
             <ui:InfoBar
                 IsClosable="False"
-                IsOpen="True"
+                IsOpen="{Binding NeedsMoveMigrateText, Converter={StaticResource StringNullOrEmptyToVisibilityConverter}}"
                 Margin="8"
                 Severity="Informational"
                 Title="{Binding NeedsMoveMigrateText, FallbackValue=2 Packages are not relative to the Data Directory and will be moved this may take a few minutes}" />

@@ -11,6 +11,7 @@ using NLog;
 using Ookii.Dialogs.Wpf;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.Settings;
 
 namespace StabilityMatrix.ViewModels;
 

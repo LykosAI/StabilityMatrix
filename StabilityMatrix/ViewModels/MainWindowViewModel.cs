@@ -131,9 +131,6 @@ public partial class MainWindowViewModel : ObservableObject
         if (!settingsManager.TryFindLibrary())
         {
             var dialog = dialogFactory.CreateInstallLocationsDialog();
-            dialog.IsPrimaryButtonEnabled = false;
-            dialog.IsSecondaryButtonEnabled = false;
-            dialog.IsFooterVisible = false;
             var result = await dialog.ShowAsync();
             if (result != ContentDialogResult.Primary)
             {
@@ -162,7 +159,12 @@ public partial class MainWindowViewModel : ObservableObject
         // Check if there are old packages, if so show migration dialog
         if (settingsManager.GetOldInstalledPackages().Any())
         {
-            
+            var dialog = dialogFactory.CreateDataDirectoryMigrationDialog();
+            var result = await dialog.ShowAsync();
+            if (result != ContentDialogResult.Primary)
+            {
+                Application.Current.Shutdown();
+            }
         }
     }
 

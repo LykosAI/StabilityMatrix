@@ -144,7 +144,9 @@ public class SettingsManager : ISettingsManager
     {
         var installed = Settings.InstalledPackages;
         // Absolute paths are old formats requiring migration
-        foreach (var package in installed.Where(package => Path.IsPathRooted(package.Path)))
+#pragma warning disable CS0618
+        foreach (var package in installed.Where(package => package.Path != null))
+#pragma warning restore CS0618
         {
             yield return package;
         }

@@ -47,7 +47,7 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
         // Get all old packages
         var oldPackages = settingsManager.GetOldInstalledPackages().ToArray();
         // Attempt to migrate with pure, and count successful migrations
-        AutoMigrateCount = oldPackages.Count(p => p.TryPureMigratePath());
+        AutoMigrateCount = oldPackages.Count(p => p.CanPureMigratePath());
         // Any remaining packages need to be moved
         NeedsMoveMigrateCount = oldPackages.Length - AutoMigrateCount;
     }

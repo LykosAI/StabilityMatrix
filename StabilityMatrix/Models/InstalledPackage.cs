@@ -90,6 +90,24 @@ public class InstalledPackage
     }
 
     /// <summary>
+    ///  Check if the old Path can be migrated to the new LibraryPath.
+    /// </summary>
+    /// <param name="libraryDirectory"></param>
+    /// <returns></returns>
+    public bool CanPureMigratePath(string? libraryDirectory = null)
+    {
+#pragma warning disable CS0618
+        var oldPath = Path;
+#pragma warning restore CS0618
+        if (oldPath == null) return false;
+        
+        // Check if the path is a sub-path of the library
+        var library = libraryDirectory ?? GlobalConfig.LibraryDir;
+        var relativePath = GetSubPath(library, oldPath);
+        return relativePath != null;
+    }
+
+    /// <summary>
     /// Migrate the old Path to the new LibraryPath.
     /// If libraryDirectory is null, GlobalConfig.LibraryDir is used.
     /// Will move the package directory to Library/Packages if not relative.

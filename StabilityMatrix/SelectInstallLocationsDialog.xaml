@@ -29,7 +29,7 @@
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </ui:ContentDialog.Resources>
 
-    <Grid Height="600" Margin="16,0,16,16">
+    <Grid Height="500" Margin="16,0,16,16">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />

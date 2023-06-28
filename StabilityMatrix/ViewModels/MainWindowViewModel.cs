@@ -118,35 +118,35 @@ public partial class MainWindowViewModel : ObservableObject
     
     private async Task DoSettingsCheck()
     {
-        var found = settingsManager.TryFindLibrary();
-        if (found) 
-            return;
-            
-        // See if this is an existing user for message variation
-        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var settingsPath = Path.Combine(appDataPath, "StabilityMatrix", "settings.json");
-        var isExistingUser = File.Exists(settingsPath);
-            
-        // need to show dialog to choose library location
+        // Check if library path is set
         if (!settingsManager.TryFindLibrary())
         {
-            var dialog = dialogFactory.CreateInstallLocationsDialog();
-            var result = await dialog.ShowAsync();
-            if (result != ContentDialogResult.Primary)
+            // See if this is an existing user for message variation
+            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var settingsPath = Path.Combine(appDataPath, "StabilityMatrix", "settings.json");
+            var isExistingUser = File.Exists(settingsPath);
+            
+            // need to show dialog to choose library location
+            if (!settingsManager.TryFindLibrary())
             {
-                Application.Current.Shutdown();
-            }
+                var dialog = dialogFactory.CreateInstallLocationsDialog();
+                var result = await dialog.ShowAsync();
+                if (result != ContentDialogResult.Primary)
+                {
+                    Application.Current.Shutdown();
+                }
 
-            // 1. For portable mode, call settings.SetPortableMode()
-            var viewModel = (dialog.DataContext as SelectInstallLocationsViewModel)!;
-            if (viewModel.IsPortableMode)
-            {
-                settingsManager.SetPortableMode();
-            }
-            // 2. For custom path, call settings.SetLibraryPath(path)
-            else
-            {
-                settingsManager.SetLibraryPath(viewModel.DataDirectory);
+                // 1. For portable mode, call settings.SetPortableMode()
+                var viewModel = (dialog.DataContext as SelectInstallLocationsViewModel)!;
+                if (viewModel.IsPortableMode)
+                {
+                    settingsManager.SetPortableMode();
+                }
+                // 2. For custom path, call settings.SetLibraryPath(path)
+                else
+                {
+                    settingsManager.SetLibraryPath(viewModel.DataDirectory);
+                }
             }
         }
         

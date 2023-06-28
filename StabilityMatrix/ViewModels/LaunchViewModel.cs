@@ -31,6 +31,7 @@ public partial class LaunchViewModel : ObservableObject
     private readonly IPyRunner pyRunner;
     private readonly IDialogFactory dialogFactory;
     private readonly ISnackbarService snackbarService;
+    private readonly ISharedFolders sharedFolders;
 
     private BasePackage? runningPackage;
     private bool clearingPackages = false;
@@ -73,7 +74,8 @@ public partial class LaunchViewModel : ObservableObject
         ILogger<LaunchViewModel> logger,
         IPyRunner pyRunner,
         IDialogFactory dialogFactory,
-        ISnackbarService snackbarService)
+        ISnackbarService snackbarService,
+        ISharedFolders sharedFolders)
     {
         this.pyRunner = pyRunner;
         this.dialogFactory = dialogFactory;
@@ -83,6 +85,7 @@ public partial class LaunchViewModel : ObservableObject
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         this.snackbarService = snackbarService;
+        this.sharedFolders = sharedFolders;
         SetProcessRunning(false);
         
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
@@ -162,9 +165,14 @@ public partial class LaunchViewModel : ObservableObject
         basePackage.ConsoleOutput += OnConsoleOutput;
         basePackage.Exited += OnExit;
         basePackage.StartupComplete += RunningPackageOnStartupComplete;
+        
+        // Update shared folder links (in case library paths changed)
+        sharedFolders.UpdateLinksForPackage(basePackage, packagePath);
+        
         // Load user launch args from settings and convert to string
         var userArgs = settingsManager.GetLaunchArgs(activeInstall.Id);
         var userArgsString = string.Join(" ", userArgs.Select(opt => opt.ToArgString()));
+        
         // Join with extras, if any
         userArgsString = string.Join(" ", userArgsString, basePackage.ExtraLaunchArguments);
         await basePackage.RunPackage(packagePath, userArgsString);

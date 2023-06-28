@@ -14,7 +14,7 @@ public class MockLaunchViewModel : LaunchViewModel
     public MockLaunchViewModel() : base(
         null!, null!, null!, 
         null!, null!, null!,
-        null!, null!)
+        null!, null!, null!)
     {
         InstalledPackages = new()
         {
@@ -25,7 +25,7 @@ public class MockLaunchViewModel : LaunchViewModel
                 PackageVersion = "1.0.0",
                 DisplayVersion = "1.0.0",
                 InstalledBranch = "main",
-                Path = @"C:\Users\AppData\StabilityMatrix\mock-package",
+                LibraryPath = @"Packages\mock-package",
             }
         };
         SelectedPackage = InstalledPackages[0];

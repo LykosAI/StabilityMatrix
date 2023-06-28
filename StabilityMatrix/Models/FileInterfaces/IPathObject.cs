@@ -23,5 +23,5 @@ public interface IPathObject
     void Delete();
 
     /// <summary> Deletes the file system object asynchronously. </summary>
-    Task DeleteAsync() => Task.Run(Delete);
+    public Task DeleteAsync() => Task.Run(Delete);
 }

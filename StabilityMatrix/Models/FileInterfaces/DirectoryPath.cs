@@ -62,9 +62,12 @@ public class DirectoryPath : FileSystemPath, IPathObject
     
     /// <summary> Creates the directory. </summary>
     public void Create() => Directory.CreateDirectory(FullPath);
-    
-    /// <summary> Deletes the directory </summary>
+
+    /// <summary> Deletes the directory. </summary>
     public void Delete() => Directory.Delete(FullPath);
+    
+    /// <summary> Deletes the directory asynchronously. </summary>
+    public Task DeleteAsync() => Task.Run(Delete);
     
     /// <summary> Deletes the directory. </summary>
     public void Delete(bool recursive) => Directory.Delete(FullPath, recursive);

@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using NLog;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Python;
 using Wpf.Ui.Controls.ContentDialogControl;
@@ -12,6 +14,7 @@ namespace StabilityMatrix.ViewModels;
 
 public partial class DataDirectoryMigrationViewModel : ObservableObject
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly ISettingsManager settingsManager;
     private readonly IPrerequisiteHelper prerequisiteHelper;
 
@@ -75,12 +78,16 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
         }
 
         var libraryPath = settingsManager.LibraryDir;
-        var oldPackages = settingsManager.GetOldInstalledPackages();
-        
+        var oldPackages = settingsManager.GetOldInstalledPackages().ToArray();
+
         foreach (var package in oldPackages)
         {
             MigrateProgressCount++;
+#pragma warning disable CS0618
+            Logger.Info($"Migrating package {MigrateProgressCount} of {oldPackages.Length} at path {package.Path}");
+#pragma warning restore CS0618
             await package.MigratePath();
+            
             // Save after each step in case interrupted
             settingsManager.SaveSettings();
             

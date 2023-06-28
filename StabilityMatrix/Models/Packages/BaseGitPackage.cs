@@ -180,7 +180,7 @@ public abstract class BaseGitPackage : BasePackage
             else
             {
                 var allCommits = await GetAllCommits(package.InstalledBranch);
-                if (!(allCommits != null && allCommits.Any()))
+                if (allCommits == null || !allCommits.Any())
                 {
                     Logger.Warn("No commits found for {Package}", package.PackageName);
                     return false;

@@ -70,7 +70,7 @@ public class PyVenvRunner : IDisposable
         }
 
         // Create venv
-        var venvProc = ProcessRunner.StartProcess(PyRunner.PythonExePath, $"-m virtualenv \"{RootPath}\"");
+        var venvProc = ProcessRunner.StartProcess(PyRunner.PythonExePath, $"-m virtualenv --always-copy \"{RootPath}\"");
         await venvProc.WaitForExitAsync();
 
         // Check return code

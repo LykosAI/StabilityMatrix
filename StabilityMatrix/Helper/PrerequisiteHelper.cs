@@ -295,6 +295,13 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         progress?.Report(new ProgressReport(1, isIndeterminate: false));
     }
 
+    public void UpdatePathExtensions()
+    {
+        settingsManager.Settings.PathExtensions?.Clear();
+        settingsManager.AddPathExtension(GitBinPath);
+        settingsManager.InsertPathExtensions();
+    }
+
     private async Task UnzipGit(IProgress<ProgressReport>? progress = null)
     {
         if (progress == null)

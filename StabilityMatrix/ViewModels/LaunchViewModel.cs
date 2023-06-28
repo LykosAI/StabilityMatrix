@@ -281,6 +281,7 @@ public partial class LaunchViewModel : ObservableObject
         runningPackage = null;
         SetProcessRunning(false);
         ConsoleOutput += $"{Environment.NewLine}Stopped process at {DateTimeOffset.Now}{Environment.NewLine}";
+        ShowWebUiButton = false;
         return Task.CompletedTask;
     }
 
@@ -340,6 +341,7 @@ public partial class LaunchViewModel : ObservableObject
             ConsoleOutput += $"Venv process exited with code {exitCode}";
             ScrollNeeded?.Invoke(this, EventArgs.Empty);
             SetProcessRunning(false);
+            ShowWebUiButton = false;
         });
     }
 }

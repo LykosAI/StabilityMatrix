@@ -23,4 +23,6 @@ public interface IPrerequisiteHelper
 
     Task SetupPythonDependencies(string installLocation, string requirementsFileName,
         IProgress<ProgressReport>? progress = null, Action<string?>? onConsoleOutput = null);
+
+    void UpdatePathExtensions();
 }

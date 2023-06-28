@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using System.Windows.Shell;
+using AutoUpdaterDotNET;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Options;
@@ -23,17 +24,22 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly ISettingsManager settingsManager;
     private readonly IDialogFactory dialogFactory;
     private readonly INotificationBarService notificationBarService;
+    private readonly UpdateWindowViewModel updateWindowViewModel;
     private readonly DebugOptions debugOptions;
+
+    private UpdateInfoEventArgs? updateInfo;
 
     public MainWindowViewModel(
         ISettingsManager settingsManager, 
         IDialogFactory dialogFactory, 
-        INotificationBarService notificationBarService, 
+        INotificationBarService notificationBarService,
+        UpdateWindowViewModel updateWindowViewModel,
         IOptions<DebugOptions> debugOptions)
     {
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
         this.notificationBarService = notificationBarService;
+        this.updateWindowViewModel = updateWindowViewModel;
         this.debugOptions = debugOptions.Value;
 
         // Listen to dev mode event
@@ -52,10 +58,18 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private bool isTextToImagePageEnabled;
 
+    [ObservableProperty] 
+    private bool isUpdateAvailable;
+
     public async Task OnLoaded()
     {
         SetTheme();
         EventManager.Instance.GlobalProgressChanged += OnGlobalProgressChanged;
+        EventManager.Instance.UpdateAvailable += (_, args) =>
+        {
+            IsUpdateAvailable = true;
+            updateInfo = args;
+        };
         
         // show path selection window if no paths are set
         await DoSettingsCheck();
@@ -92,6 +106,14 @@ public partial class MainWindowViewModel : ObservableObject
     private void OpenLinkDiscord()
     {
         ProcessRunner.OpenUrl("https://discord.gg/TUrgfECxHz");
+    }
+
+    [RelayCommand]
+    private void DoUpdate()
+    {
+        updateWindowViewModel.UpdateInfo = updateInfo;
+        var updateWindow = new UpdateWindow(updateWindowViewModel);
+        updateWindow.ShowDialog();
     }
     
     private async Task DoSettingsCheck()

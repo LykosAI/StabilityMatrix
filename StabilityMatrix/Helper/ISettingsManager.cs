@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.Settings;
 using Wpf.Ui.Controls.Window;
 
 namespace StabilityMatrix.Helper;

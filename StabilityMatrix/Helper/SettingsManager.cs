@@ -5,8 +5,10 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using AutoUpdaterDotNET;
 using NLog;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.Settings;
 using StabilityMatrix.Python;
 using Wpf.Ui.Controls.Window;
 
@@ -16,9 +18,10 @@ public class SettingsManager : ISettingsManager
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly ReaderWriterLockSlim FileLock = new();
-    private static readonly string GlobalSettingsPath =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix",
-            "global.json");
+
+    private static readonly string GlobalSettingsPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix",
+        "global.json");
     
     private readonly string? originalEnvPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
     

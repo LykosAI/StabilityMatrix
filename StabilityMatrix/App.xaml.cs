@@ -56,14 +56,14 @@ namespace StabilityMatrix
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private ServiceProvider? serviceProvider;
-        
+
         // ReSharper disable once MemberCanBePrivate.Global
         public static bool IsSentryEnabled => !Debugger.IsAttached || Environment
             .GetEnvironmentVariable("DEBUG_SENTRY")?.ToLowerInvariant() == "true";
         // ReSharper disable once MemberCanBePrivate.Global
         public static bool IsExceptionWindowEnabled => !Debugger.IsAttached || Environment
             .GetEnvironmentVariable("DEBUG_EXCEPTION_WINDOW")?.ToLowerInvariant() == "true";
-        
+
         public static IConfiguration Config { get; set; } = null!;
 
         private readonly LoggingConfiguration logConfig;
@@ -109,7 +109,7 @@ namespace StabilityMatrix
         private static LoggingConfiguration ConfigureLogging()
         {
             var logConfig = new LoggingConfiguration();
-            
+
             var fileTarget = new FileTarget("logfile")
             {
                 ArchiveOldFileOnStartup = true,
@@ -121,7 +121,7 @@ namespace StabilityMatrix
             var debugTarget = new DebuggerTarget("debugger") { Layout = "${message}" };
             logConfig.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, fileTarget);
             logConfig.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, debugTarget);
-            
+
             NLog.LogManager.Configuration = logConfig;
             // Add Sentry to NLog if enabled
             if (IsSentryEnabled)
@@ -141,7 +141,7 @@ namespace StabilityMatrix
             return logConfig;
         }
 
-        
+
 
         private void App_OnStartup(object sender, StartupEventArgs e)
         {
@@ -154,7 +154,7 @@ namespace StabilityMatrix
                 Current.Shutdown();
                 return;
             }
-            
+
             var updateDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Update");
             if (Directory.Exists(updateDir))
             {
@@ -178,7 +178,7 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<IPyRunner, PyRunner>();
             serviceCollection.AddSingleton<ISharedFolders, SharedFolders>();
             serviceCollection.AddTransient<IDialogFactory, DialogFactory>();
-            
+
             serviceCollection.AddTransient<MainWindow>();
             serviceCollection.AddTransient<SettingsPage>();
             serviceCollection.AddTransient<LaunchPage>();
@@ -223,11 +223,11 @@ namespace StabilityMatrix
                 var githubApiKey = Config["GithubApiKey"];
                 if (string.IsNullOrWhiteSpace(githubApiKey))
                     return client;
-                
+
                 client.Credentials = new Credentials(githubApiKey);
                 return client;
             });
-            
+
             // Database
             serviceCollection.AddSingleton<ILiteDbContext, LiteDbContext>(provider =>
             {
@@ -241,7 +241,7 @@ namespace StabilityMatrix
                 };
                 return liteDbContext;
             });
-            
+
             // Caches
             serviceCollection.AddMemoryCache();
             serviceCollection.AddSingleton<IGithubApiCache, GithubApiCache>();
@@ -254,7 +254,7 @@ namespace StabilityMatrix
                     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 })
             };
-            
+
             // HTTP Policies
             var retryStatusCodes = new[] {
                 HttpStatusCode.RequestTimeout, // 408
@@ -302,19 +302,21 @@ namespace StabilityMatrix
                 {
                     RefitSettings = defaultRefitSettings,
                 });
-            
+
             // Add logging
-            serviceCollection.AddLogging(log =>
+            serviceCollection.AddLogging(builder =>
             {
-                log.ClearProviders();
-                log.AddFilter("Microsoft.Extensions.Http", LogLevel.Warning);
-                log.SetMinimumLevel(LogLevel.Trace);
-                log.AddNLog(logConfig);
+                builder.ClearProviders();
+                builder.AddFilter("Microsoft.Extensions.Http", LogLevel.Warning)
+                       .AddFilter("Microsoft", LogLevel.Warning)
+                       .AddFilter("System", LogLevel.Warning);
+                builder.SetMinimumLevel(LogLevel.Debug);
+                builder.AddNLog(logConfig);
             });
-            
+
             // Remove HTTPClientFactory logging
             serviceCollection.RemoveAll<IHttpMessageHandlerBuilderFilter>();
-            
+
             // Default error handling for 'SafeFireAndForget'
             SafeFireAndForgetExtensions.Initialize();
             SafeFireAndForgetExtensions.SetDefaultExceptionHandling(ex =>
@@ -323,7 +325,7 @@ namespace StabilityMatrix
             });
 
             serviceProvider = serviceCollection.BuildServiceProvider();
-            
+
             var settingsManager = serviceProvider.GetRequiredService<ISettingsManager>();
 
             // First time setup if needed
@@ -343,7 +345,7 @@ namespace StabilityMatrix
 
             var window = serviceProvider.GetRequiredService<MainWindow>();
             window.Show();
-            
+
             var updateHelper = serviceProvider.GetRequiredService<IUpdateHelper>();
             updateHelper.StartCheckingForUpdates();
         }
@@ -353,7 +355,7 @@ namespace StabilityMatrix
             serviceProvider?.GetRequiredService<LaunchViewModel>().OnShutdown();
             serviceProvider?.GetRequiredService<ILiteDbContext>().Dispose();
         }
-        
+
         [DoesNotReturn]
         private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
@@ -361,10 +363,10 @@ namespace StabilityMatrix
             {
                 SentrySdk.CaptureException(e.Exception);
             }
-            
+
             var logger = serviceProvider?.GetRequiredService<ILogger<App>>();
             logger?.LogCritical(e.Exception, "Unhandled Exception: {ExceptionMessage}", e.Exception.Message);
-            
+
             if (IsExceptionWindowEnabled)
             {
                 var vm = new ExceptionWindowViewModel

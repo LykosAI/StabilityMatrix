@@ -180,7 +180,12 @@ public abstract class BaseGitPackage : BasePackage
             else
             {
                 var allCommits = await GetAllCommits(package.InstalledBranch);
-                var latestCommitHash = allCommits.First().Sha;
+                if (!(allCommits != null && allCommits.Any()))
+                {
+                    Logger.Warn("No commits found for {Package}", package.PackageName);
+                    return false;
+                }
+                var latestCommitHash = allCommits[0].Sha;
                 return latestCommitHash != currentVersion;
             }
             

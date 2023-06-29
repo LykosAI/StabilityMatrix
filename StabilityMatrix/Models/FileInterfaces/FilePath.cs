@@ -1,8 +1,11 @@
-﻿using System.IO;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace StabilityMatrix.Models.FileInterfaces;
 
+[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class FilePath : FileSystemPath, IPathObject
 {
     private FileInfo? _info;
@@ -54,6 +57,35 @@ public class FilePath : FileSystemPath, IPathObject
     
     /// <summary> Deletes the file </summary>
     public void Delete() => File.Delete(FullPath);
+    
+    // Methods specific to files
+    
+    /// <summary> Read text </summary>
+    public string ReadAllText() => File.ReadAllText(FullPath);
+    
+    /// <summary> Read text asynchronously </summary>
+    public Task<string> ReadAllTextAsync(CancellationToken ct = default)
+    {
+        return File.ReadAllTextAsync(FullPath, ct);
+    }
+    
+    /// <summary> Read bytes </summary>
+    public byte[] ReadAllBytes() => File.ReadAllBytes(FullPath);
+    
+    /// <summary> Read bytes asynchronously </summary>
+    public Task<byte[]> ReadAllBytesAsync(CancellationToken ct = default)
+    {
+        return File.ReadAllBytesAsync(FullPath, ct);
+    }
+    
+    /// <summary> Write bytes </summary>
+    public void WriteAllBytes(byte[] bytes) => File.WriteAllBytes(FullPath, bytes);
+    
+    /// <summary> Write bytes asynchronously </summary>
+    public Task WriteAllBytesAsync(byte[] bytes, CancellationToken ct = default)
+    {
+        return File.WriteAllBytesAsync(FullPath, bytes, ct);
+    }
 
     // Implicit conversions to and from string
     public static implicit operator string(FilePath path) => path.FullPath;

@@ -1,34 +1,79 @@
-﻿using System.Linq;
+using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
-using CefSharp;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Web.WebView2.Core;
 using NLog;
 
 namespace StabilityMatrix.ViewModels;
 
+public record struct NavigationResult(Uri? Uri, List<CoreWebView2Cookie>? Cookies);
+
 public partial class WebLoginViewModel : ObservableObject
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    // Login Url, set externally on dialog creation
+    [ObservableProperty] private string? loginUrl;
+    // Bound current url source
+    [ObservableProperty] private Uri? currentUri;
+    // Always true after first navigation completed
+    [ObservableProperty] private bool isContentLoaded;
+    
+    // Events
+    public event EventHandler<NavigationResult> NavigationCompleted = delegate { };
+    public event EventHandler<NavigationResult> SourceChanged = delegate { };
+
     public void OnLoaded()
     {
     }
 
-    public async Task OnRefresh()
+    /// <summary>
+    /// Called on navigation source changes.
+    /// </summary>
+    public void OnSourceChanged(Uri? source, List<CoreWebView2Cookie>? cookies)
     {
-        var result = await IsUserLoggedIn();
+        Logger.Debug($"WebView source changed to {source} ({cookies?.Count} cookies)");
+        SourceChanged.Invoke(this, new NavigationResult(source, cookies));
     }
     
-    private async Task<bool> IsUserLoggedIn()
+    /// <summary>
+    /// Called on navigation completed. (After scrollbar patch)
+    /// </summary>
+    public void OnNavigationCompleted(Uri? uri)
     {
-        var cookieVisitor = new TaskCookieVisitor();
-        Cef.GetGlobalCookieManager().VisitUrlCookies("https://www.patreon.com", true, cookieVisitor);
-        var cookies = await cookieVisitor.Task;
-        Logger.Debug($"Found {cookies.Count} cookies");
-        // Print names
-        foreach (var cookie in cookies)
+        Logger.Debug($"WebView loaded: {uri}");
+        NavigationCompleted.Invoke(this, new NavigationResult(uri, null));
+        IsContentLoaded = true;
+    }
+    
+    /// <summary>
+    /// Waits for navigation to a specific uri
+    /// </summary>
+    public async Task WaitForNavigation(Uri uri, CancellationToken ct = default)
+    {
+        Logger.Debug($"Waiting for navigation to {uri}");
+        
+        var navigationTask = new TaskCompletionSource<bool>();
+        
+        var handler = new EventHandler<NavigationResult>((_, result) =>
         {
-            Logger.Debug($"Cookie ({cookie.Name}={cookie.Value})");
+            navigationTask.TrySetResult(true);
+        });
+        
+        NavigationCompleted += handler;
+        try
+        {
+            await using (ct.Register(() => navigationTask.TrySetCanceled()))
+            {
+                CurrentUri = uri;
+                await navigationTask.Task;
+            }
         }
-        return cookies.Any(cookie => cookie.Name == "session_id");
+        finally
+        {
+            NavigationCompleted -= handler;
+        }
     }
 }

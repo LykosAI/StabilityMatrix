@@ -13,14 +13,13 @@
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     x:Class="StabilityMatrix.WebLoginDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
-    xmlns:cefSharp="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
     xmlns:converters="clr-namespace:StabilityMatrix.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:StabilityMatrix"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
+    xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <ui:ContentDialog.Resources>
@@ -40,34 +39,26 @@
 
     <Grid Margin="0,0,0,12">
         <Border
-            BorderBrush="{DynamicResource ApplicationBackgroundBrush}"
-            BorderThickness="0"
-            CornerRadius="8"
-            Padding="8,8">
-            <Grid>
-                <!--  Rounded mask (stretches to fill Grid)  -->
-                <Border
-                    Background="White"
-                    CornerRadius="8"
-                    Name="Mask" />
-                <!--  Main content container  -->
-                <StackPanel
-                    MaxHeight="600"
+            BorderBrush="Transparent"
+            BorderThickness="8"
+            CornerRadius="4"
+            Padding="8">
+
+            <DockPanel
+                Background="{DynamicResource ApplicationBackgroundBrush}"
+                MaxHeight="600"
+                MinHeight="500"
+                MinWidth="400">
+                <!--  Content  -->
+                <wv2:WebView2
+                    DefaultBackgroundColor="Transparent"
                     MinHeight="500"
-                    MinWidth="400">
-                    <!--  Use a VisualBrush of 'mask' as the opacity mask  -->
-                    <StackPanel.OpacityMask>
-                        <VisualBrush Visual="{Binding ElementName=Mask}" />
-                    </StackPanel.OpacityMask>
-                    <!--  Content  -->
-                    <cefSharp:ChromiumWebBrowser
-                        Address="www.patreon.com/login"
-                        AddressChanged="Browser_OnAddressChanged"
-                        FrameLoadEnd="Browser_OnFrameLoadEnd"
-                        MinHeight="500"
-                        x:Name="Browser" />
-                </StackPanel>
-            </Grid>
+                    Name="LoginWebView"
+                    NavigationCompleted="LoginWebView_OnNavigationCompleted"
+                    Source="{Binding CurrentUri, Mode=TwoWay}"
+                    SourceChanged="LoginWebView_OnSourceChanged" />
+            </DockPanel>
+
         </Border>
     </Grid>
 

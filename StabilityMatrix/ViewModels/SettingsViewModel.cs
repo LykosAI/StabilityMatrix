@@ -271,8 +271,18 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task LoginAsync()
     {
+        var uri = new Uri("https://www.patreon.com/login");
+        
         var dialog = dialogFactory.CreateWebLoginDialog();
-        var result = await dialog.ShowAsync();
+        var loginViewModel = dialog.ViewModel;
+        loginViewModel.CurrentUri = uri;
+        
+        // Pre-navigate before showing dialog
+        // var task = loginViewModel.WaitForNavigation(uri);
+        // var result = await snackbarService.TryAsync(task, "Failed to load login page");
+
+        var dialogResult = await dialog.ShowAsync();
+        // TODO: Handle dialog result
     }
 
     [RelayCommand]

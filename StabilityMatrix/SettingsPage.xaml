@@ -132,6 +132,22 @@
                             FontSize="16"
                             FontWeight="Bold"
                             Margin="0,8"
+                            Text="Update Preferences" />
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Button
+                                Command="{Binding LoginCommand}"
+                                Content="Login"
+                                Margin="8" />
+                        </StackPanel>
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card Margin="8">
+                    <StackPanel HorizontalAlignment="Left" Orientation="Vertical">
+                        <TextBlock
+                            FontSize="16"
+                            FontWeight="Bold"
+                            Margin="0,8"
                             Text="Embedded Python" />
                         <StackPanel Orientation="Horizontal">
                             <ui:Button

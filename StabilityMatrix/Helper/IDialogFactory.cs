@@ -29,4 +29,5 @@ public interface IDialogFactory
     InstallerWindow CreateInstallerWindow();
     SelectInstallLocationsDialog CreateInstallLocationsDialog();
     DataDirectoryMigrationDialog CreateDataDirectoryMigrationDialog();
+    WebLoginDialog CreateWebLoginDialog();
 }

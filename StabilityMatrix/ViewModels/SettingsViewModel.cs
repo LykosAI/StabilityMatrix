@@ -37,6 +37,7 @@ public partial class SettingsViewModel : ObservableObject
 {
     private readonly ILogger<SettingsViewModel> logger;
     private readonly ISettingsManager settingsManager;
+    private readonly IDialogFactory dialogFactory;
     private readonly IPackageFactory packageFactory;
     private readonly IPyRunner pyRunner;
     private readonly ISnackbarService snackbarService;
@@ -91,7 +92,8 @@ public partial class SettingsViewModel : ObservableObject
 
     public SettingsViewModel(
         ISettingsManager settingsManager, 
-        IContentDialogService contentDialogService, 
+        IContentDialogService contentDialogService,
+        IDialogFactory dialogFactory,
         IA3WebApiManager a3WebApiManager, 
         IPyRunner pyRunner, 
         ISnackbarService snackbarService, 
@@ -104,6 +106,7 @@ public partial class SettingsViewModel : ObservableObject
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         this.contentDialogService = contentDialogService;
+        this.dialogFactory = dialogFactory;
         this.snackbarService = snackbarService;
         this.a3WebApiManager = a3WebApiManager;
         this.pyRunner = pyRunner;
@@ -271,6 +274,13 @@ public partial class SettingsViewModel : ObservableObject
                              $"Version: {version!.Name}\n" + generalText; 
             await dialog.ShowAsync();
         }
+    }
+
+    [RelayCommand]
+    private async Task LoginAsync()
+    {
+        var dialog = dialogFactory.CreateWebLoginDialog();
+        var result = await dialog.ShowAsync();
     }
 
     [RelayCommand]

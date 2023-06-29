@@ -200,6 +200,7 @@ namespace StabilityMatrix
             serviceCollection.AddTransient<InstallerViewModel>();
             serviceCollection.AddTransient<SelectInstallLocationsViewModel>();
             serviceCollection.AddTransient<DataDirectoryMigrationViewModel>();
+            serviceCollection.AddTransient<WebLoginViewModel>();
             serviceCollection.AddTransient<OneClickInstallViewModel>();
             serviceCollection.AddTransient<CheckpointManagerViewModel>();
             serviceCollection.AddSingleton<CheckpointBrowserViewModel>();

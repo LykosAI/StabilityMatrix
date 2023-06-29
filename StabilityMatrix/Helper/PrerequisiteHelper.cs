@@ -101,9 +101,10 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         // Unpack from embedded resources
         var resources = GetEmbeddedResources().Where(r => r.StartsWith(resourceDir)).ToArray();
         var total = resources.Length;
-        logger.LogInformation("Unpacking {Num} embedded resources... [{Resources}]", total, string.Join(",", resources));
+        logger.LogInformation("Unpacking {Num} embedded resources...", total);
 
         // Unpack all resources
+        var copied = new List<string>();
         foreach (var resourceName in resources)
         {
             // Convert resource name to file name
@@ -125,7 +126,9 @@ public class PrerequisiteHelper : IPrerequisiteHelper
             }
             await using var fileStream = File.Create(outputFilePath);
             await resourceStream.CopyToAsync(fileStream);
+            copied.Add(outputFilePath);
         }
+        logger.LogInformation("Successfully unpacked {Num} embedded resources: [{Resources}]", total, string.Join(",", copied));
     }
 
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)

@@ -216,7 +216,7 @@ namespace StabilityMatrix
                     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 })
             };
-            
+
             // HTTP Policies
             var retryStatusCodes = new[] {
                 HttpStatusCode.RequestTimeout, // 408
@@ -247,7 +247,9 @@ namespace StabilityMatrix
                 });
 
             // Add Refit clients
-            serviceCollection.AddRefitClient<ICivitApi>(defaultRefitSettings)
+            // @NuarkNoir: When passing config to this method we are loosing sizeKB from response, who knows why.
+            // @NuarkNoit: Another solution, anyone?
+            serviceCollection.AddRefitClient<ICivitApi>()
                 .ConfigureHttpClient(c =>
                 {
                     c.BaseAddress = new Uri("https://civitai.com");

@@ -35,5 +35,5 @@ public static class GlobalConfig
     /// Full path to the fixed home directory.
     /// Currently %APPDATA%\StabilityMatrix
     ///</summary>
-    public static FilePath HomeDir { get; } = AppDataDir + "StabilityMatrix";
+    public static FilePath HomeDir { get; } = AppDataDir + @"StabilityMatrix\";
 }

@@ -229,13 +229,9 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<ILiteDbContext, LiteDbContext>(provider =>
             {
                 var liteDbContext = new LiteDbContext();
-                // Register to initialize the database when LibraryDir is set
                 var settingsManager = provider.GetRequiredService<ISettingsManager>();
-                settingsManager.LibraryDirChanged += (_, libraryDir) =>
-                {
-                    var connectionString = $"Filename={Path.Combine(libraryDir, "StabilityMatrix.db")};Mode=Exclusive";
-                    liteDbContext.Initialize(connectionString);
-                };
+                var connectionString = $"Filename={Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db")};Mode=Exclusive";
+                liteDbContext.Initialize(connectionString);
                 return liteDbContext;
             });
 

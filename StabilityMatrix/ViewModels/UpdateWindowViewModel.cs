@@ -7,7 +7,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
-using StabilityMatrix.Services;
 using Wpf.Ui.Controls.Window;
 
 namespace StabilityMatrix.ViewModels;

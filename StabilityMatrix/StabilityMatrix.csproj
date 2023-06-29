@@ -16,7 +16,6 @@
   <ItemGroup>
     <PackageReference Include="7-Zip.CommandLine" Version="18.1.0" />
     <PackageReference Include="AsyncAwaitBestPractices" Version="6.0.6" />
-    <PackageReference Include="Autoupdater.NET.Official" Version="1.8.3" />
     <PackageReference Include="Blake3" Version="0.5.1" />
     <PackageReference Include="CefSharp.Wpf.NETCore" Version="114.2.100" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />

@@ -1,5 +1,4 @@
 ﻿using System;
-using AutoUpdaterDotNET;
 using StabilityMatrix.Models;
 
 namespace StabilityMatrix.Helper;

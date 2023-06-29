@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -8,7 +6,6 @@ using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Python;
-using Wpf.Ui.Controls.ContentDialogControl;
 
 namespace StabilityMatrix.ViewModels;
 

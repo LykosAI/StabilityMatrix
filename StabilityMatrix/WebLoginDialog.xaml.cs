@@ -1,9 +1,5 @@
-﻿using System.Diagnostics;
-using System.Windows;
-using System.Windows.Controls;
+﻿using System.Windows;
 using CefSharp;
-using Microsoft.Web.WebView2.Core;
-using Microsoft.Web.WebView2.Wpf;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.ContentDialogControl;

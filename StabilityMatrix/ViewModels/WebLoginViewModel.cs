@@ -1,8 +1,6 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using CefSharp;
-using CefSharp.Wpf;
 using CommunityToolkit.Mvvm.ComponentModel;
 using NLog;
 

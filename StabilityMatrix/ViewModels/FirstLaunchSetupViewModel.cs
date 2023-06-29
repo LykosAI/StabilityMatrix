@@ -5,9 +5,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Controls;
 using StabilityMatrix.Helper;
-using StabilityMatrix.Models;
-using Wpf.Ui.Common;
-using Wpf.Ui.Controls.IconElements;
 
 namespace StabilityMatrix.ViewModels;
 

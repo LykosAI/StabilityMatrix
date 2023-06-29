@@ -226,18 +226,7 @@ namespace StabilityMatrix
             });
 
             // Database
-            serviceCollection.AddSingleton<ILiteDbContext, LiteDbContext>(provider =>
-            {
-                var liteDbContext = new LiteDbContext();
-                // Register to initialize the database when LibraryDir is set
-                var settingsManager = provider.GetRequiredService<ISettingsManager>();
-                settingsManager.LibraryDirChanged += (_, libraryDir) =>
-                {
-                    var connectionString = $"Filename={Path.Combine(libraryDir, "StabilityMatrix.db")};Mode=Exclusive";
-                    liteDbContext.Initialize(connectionString);
-                };
-                return liteDbContext;
-            });
+            serviceCollection.AddSingleton<ILiteDbContext, LiteDbContext>();
 
             // Caches
             serviceCollection.AddMemoryCache();
@@ -330,6 +319,12 @@ namespace StabilityMatrix
             serviceProvider = serviceCollection.BuildServiceProvider();
 
             var settingsManager = serviceProvider.GetRequiredService<ISettingsManager>();
+            var liteDbContext = serviceProvider.GetRequiredService<ILiteDbContext>();
+            settingsManager.LibraryDirChanged += (_, libraryDir) =>
+            {
+                var connectionString = $"Filename={Path.Combine(libraryDir, "StabilityMatrix.db")};Mode=Exclusive";
+                liteDbContext.Initialize(connectionString);
+            };
 
             // First time setup if needed
             if (!settingsManager.IsEulaAccepted())

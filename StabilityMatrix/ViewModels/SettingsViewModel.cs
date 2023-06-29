@@ -126,15 +126,8 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] 
     private WindowBackdropType windowBackdropType;
 
-    public string AppVersion => $"Version {GetAppVersion()}";
-    
-    private string GetAppVersion()
-    {
-        var assembly = Assembly.GetExecutingAssembly();
-        var version = assembly.GetName().Version;
-        return version == null ? "(Unknown)" : $"{version.Major}.{version.Minor}.{version.Build}";
-    }
-    
+    public string AppVersion => $"Version {Utilities.GetAppVersion()}";
+
     partial void OnSelectedThemeChanged(string value)
     {
         settingsManager.SetTheme(value);

@@ -77,30 +77,33 @@
                    FontSize="18"
                    TextWrapping="Wrap"
                    TextAlignment="Center"
-                   Margin="16,32,16,0">
-            <Run Text="Stability Matrix"/>
-            <Run Text="v"/><Run Text="{Binding UpdateInfo.CurrentVersion, FallbackValue=0.0.0.0}"/>
-            <Run Text="is now available. You have version"/>
-            <Run Text="v"/><Run Text="{Binding UpdateInfo.InstalledVersion, FallbackValue=0.0.0.0}"/>
-            <Run Text="installed. Would you like to download it now?"/>
-        </TextBlock>
+                   Text="{Binding UpdateText, FallbackValue=Update available and stuff}"
+                   Margin="16,32,16,0"/>
         
         <TextBlock Grid.Row="3" 
                    Text="Release Notes" 
                    FontSize="16"
+                   Visibility="{Binding ShowProgressBar, Converter={StaticResource InvertAndVisibilitate}}"
                    Margin="32,16,32,0"/>
         
-        <Border Grid.Row="4"
-                   Margin="32, 16"
-                   CornerRadius="16"
-                   Background="#66000000"/>
-        <FlowDocumentScrollViewer
-            Grid.Row="4"
-            Margin="32,16"
-            Document="{Binding ReleaseNotes, Converter={StaticResource TextToFlowDocumentConverter}}"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch" />
+        <ProgressBar Grid.Row="4" 
+                     Height="200"
+                     Value="{Binding ProgressValue}"
+                     Visibility="{Binding ShowProgressBar, Converter={StaticResource BoolToVisConverter}}"
+                     Margin="32"/>
         
+        <Grid Grid.Row="4"
+              Visibility="{Binding ShowProgressBar, Converter={StaticResource InvertAndVisibilitate}}">
+            <Border Margin="32, 16"
+                    CornerRadius="16"
+                    Background="#66000000"/>
+            
+            <FlowDocumentScrollViewer
+                Margin="32,16"
+                Document="{Binding ReleaseNotes, Converter={StaticResource TextToFlowDocumentConverter}}"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch" />
+        </Grid>
         <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,16">
             <ui:Button Content="Remind Me Later"
                        Margin="0,0,8,0"

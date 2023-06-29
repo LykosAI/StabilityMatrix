@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Options;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Models;
 using StabilityMatrix.Models.Configs;
 using StabilityMatrix.Services;
 using Wpf.Ui.Appearance;
@@ -27,7 +28,7 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly UpdateWindowViewModel updateWindowViewModel;
     private readonly DebugOptions debugOptions;
 
-    private UpdateInfoEventArgs? updateInfo;
+    private UpdateInfo? updateInfo;
 
     public MainWindowViewModel(
         ISettingsManager settingsManager, 

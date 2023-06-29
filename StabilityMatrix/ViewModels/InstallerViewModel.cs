@@ -154,6 +154,10 @@ public partial class InstallerViewModel : ObservableObject
         }
 
         ReleaseNotes = SelectedVersion.ReleaseNotesMarkdown;
+        
+        ShowDuplicateWarning =
+            settingsManager.Settings.InstalledPackages.Any(p =>
+                p.LibraryPath.Equals($"Packages\\{InstallName}"));
     }
     
     [RelayCommand]

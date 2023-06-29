@@ -271,6 +271,7 @@ namespace StabilityMatrix
                 .Or<TimeoutRejectedException>()
                 .OrResult(r => retryStatusCodes.Contains(r.StatusCode))
                 .WaitAndRetryAsync(delay);
+            
             // Shorter timeout for local requests
             var localTimeout = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(3));
             var localDelay = Backoff
@@ -284,6 +285,10 @@ namespace StabilityMatrix
                     Debug.WriteLine("Retrying local request...");
                     return Task.CompletedTask;
                 });
+            
+            // named client for update
+            serviceCollection.AddHttpClient("UpdateClient")
+                .AddPolicyHandler(retryPolicy);
 
             // Add Refit clients
             serviceCollection.AddRefitClient<ICivitApi>(defaultRefitSettings)
@@ -297,6 +302,7 @@ namespace StabilityMatrix
             // Add Refit client managers
             serviceCollection.AddHttpClient("A3Client")
                 .AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));
+            
             serviceCollection.AddSingleton<IA3WebApiManager>(services =>
                 new A3WebApiManager(services.GetRequiredService<ISettingsManager>(),
                     services.GetRequiredService<IHttpClientFactory>())

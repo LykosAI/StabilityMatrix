@@ -31,12 +31,12 @@ public class PyVenvRunner : IDisposable
     /// <summary>
     /// The path to the python executable.
     /// </summary>
-    public FilePath PythonPath => RootPath + @"\Scripts\python.exe";
+    public FilePath PythonPath => RootPath + @"Scripts\python.exe";
 
     /// <summary>
     /// The path to the pip executable.
     /// </summary>
-    public FilePath PipPath => RootPath + @"\Scripts\pip.exe";
+    public FilePath PipPath => RootPath + @"Scripts\pip.exe";
 
     /// <summary>
     /// List of substrings to suppress from the output.

@@ -1,6 +1,13 @@
-﻿namespace StabilityMatrix.Helper;
+﻿using System;
+using System.Threading.Tasks;
+using StabilityMatrix.Models;
+
+namespace StabilityMatrix.Helper;
 
 public interface IUpdateHelper
 {
-    void StartCheckingForUpdates();
+    Task StartCheckingForUpdates();
+
+    Task DownloadUpdate(UpdateInfo updateInfo,
+        IProgress<ProgressReport> progress);
 }

@@ -74,7 +74,9 @@ public class DirectoryPath : FileSystemPath, IPathObject
 
     /// <summary> Deletes the directory asynchronously. </summary>
     public Task DeleteAsync(bool recursive) => Task.Run(() => Delete(recursive));
-    
+
+    public override string ToString() => FullPath;
+
     // DirectoryPath + DirectoryPath = DirectoryPath
     public static DirectoryPath operator +(DirectoryPath path, DirectoryPath other) => new(Path.Combine(path, other.FullPath));
     

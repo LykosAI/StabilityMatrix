@@ -1,9 +1,13 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Diagnostics;
+using System.Net.Http;
 using System.Threading.Tasks;
-using AutoUpdaterDotNET;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Models;
+using StabilityMatrix.Services;
 using Wpf.Ui.Controls.Window;
 
 namespace StabilityMatrix.ViewModels;
@@ -12,23 +16,32 @@ public partial class UpdateWindowViewModel : ObservableObject
 {
     private readonly ISettingsManager settingsManager;
     private readonly IHttpClientFactory httpClientFactory;
+    private readonly IUpdateHelper updateHelper;
 
-    public UpdateWindowViewModel(ISettingsManager settingsManager, IHttpClientFactory httpClientFactory)
+    public UpdateWindowViewModel(ISettingsManager settingsManager,
+        IHttpClientFactory httpClientFactory, IUpdateHelper updateHelper)
     {
         this.settingsManager = settingsManager;
         this.httpClientFactory = httpClientFactory;
+        this.updateHelper = updateHelper;
     }
 
     [ObservableProperty] private string? releaseNotes;
+    [ObservableProperty] private string? updateText;
+    [ObservableProperty] private int progressValue;
+    [ObservableProperty] private bool showProgressBar;
+    
 
-    public UpdateInfoEventArgs? UpdateInfo { get; set; }
+    public UpdateInfo? UpdateInfo { get; set; }
     public WindowBackdropType WindowBackdropType => settingsManager.Settings.WindowBackdropType ??
                                                     WindowBackdropType.Mica;
 
     public async Task OnLoaded()
     {
-        using var client = httpClientFactory.CreateClient();
-        var response = await client.GetAsync(UpdateInfo?.ChangelogURL);
+        UpdateText = $"Stability Matrix v{UpdateInfo?.Version} is now available! You currently have v{Utilities.GetAppVersion()}. Would you like to update now?";
+        
+        var client = httpClientFactory.CreateClient();
+        var response = await client.GetAsync(UpdateInfo?.ChangelogUrl);
         if (response.IsSuccessStatusCode)
         {
             ReleaseNotes = await response.Content.ReadAsStringAsync();
@@ -40,11 +53,28 @@ public partial class UpdateWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void InstallUpdate()
+    private async Task InstallUpdate()
     {
-        if (AutoUpdater.DownloadUpdate(UpdateInfo))
+        if (UpdateInfo == null)
         {
-            System.Windows.Application.Current.Shutdown();
+            return;
         }
+        
+        ShowProgressBar = true;
+        UpdateText = $"Downloading update v{UpdateInfo.Version}...";
+        await updateHelper.DownloadUpdate(UpdateInfo, new Progress<ProgressReport>(report =>
+        {
+            ProgressValue = Convert.ToInt32(report.Percentage);
+        }));
+        
+        UpdateText = "Update complete. Restarting Stability Matrix in 3 seconds...";
+        await Task.Delay(1000);
+        UpdateText = "Update complete. Restarting Stability Matrix in 2 seconds...";
+        await Task.Delay(1000);
+        UpdateText = "Update complete. Restarting Stability Matrix in 1 second...";
+        await Task.Delay(1000);
+
+        Process.Start(UpdateHelper.ExecutablePath);
+        Application.Current.Shutdown();
     }
 }

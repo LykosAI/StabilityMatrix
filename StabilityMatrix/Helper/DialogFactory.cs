@@ -21,6 +21,7 @@ public class DialogFactory : IDialogFactory
     private readonly OneClickInstallViewModel oneClickInstallViewModel;
     private readonly SelectInstallLocationsViewModel selectInstallLocationsViewModel;
     private readonly DataDirectoryMigrationViewModel dataDirectoryMigrationViewModel;
+    private readonly WebLoginViewModel webLoginViewModel;
     private readonly InstallerWindowDialogService installerWindowDialogService;
     private readonly ISettingsManager settingsManager;
 
@@ -30,7 +31,8 @@ public class DialogFactory : IDialogFactory
         OneClickInstallViewModel oneClickInstallViewModel,
         SelectInstallLocationsViewModel selectInstallLocationsViewModel,
         DataDirectoryMigrationViewModel dataDirectoryMigrationViewModel,
-        InstallerWindowDialogService installerWindowDialogService)
+        InstallerWindowDialogService installerWindowDialogService,
+        WebLoginViewModel webLoginViewModel)
     {
         this.contentDialogService = contentDialogService;
         this.launchOptionsDialogViewModel = launchOptionsDialogViewModel;
@@ -38,6 +40,7 @@ public class DialogFactory : IDialogFactory
         this.oneClickInstallViewModel = oneClickInstallViewModel;
         this.selectInstallLocationsViewModel = selectInstallLocationsViewModel;
         this.dataDirectoryMigrationViewModel = dataDirectoryMigrationViewModel;
+        this.webLoginViewModel = webLoginViewModel;
         this.installerWindowDialogService = installerWindowDialogService;
         this.settingsManager = settingsManager;
     }
@@ -49,15 +52,15 @@ public class DialogFactory : IDialogFactory
         launchOptionsDialogViewModel.Initialize(definitions, userLaunchArgs);
         return new LaunchOptionsDialog(contentDialogService, launchOptionsDialogViewModel);
     }
-    
+
     /// <summary>
     /// Creates a dialog that allows the user to enter text for each field name.
     /// Return a list of strings that correspond to the field names.
     /// If cancel is pressed, return null.
     /// <param name="fields">List of (fieldName, placeholder)</param>
     /// </summary>
-    public async Task<List<string>?> ShowTextEntryDialog(string title, 
-        IEnumerable<(string, string)> fields, 
+    public async Task<List<string>?> ShowTextEntryDialog(string title,
+        IEnumerable<(string, string)> fields,
         string closeButtonText = "Cancel",
         string saveButtonText = "Save")
     {
@@ -67,11 +70,11 @@ public class DialogFactory : IDialogFactory
         dialog.CloseButtonText = closeButtonText;
         dialog.PrimaryButtonText = saveButtonText;
         dialog.IsPrimaryButtonEnabled = true;
-        
+
         var textBoxes = new List<TextBox>();
         var stackPanel = new StackPanel();
         dialog.Content = stackPanel;
-        
+
         foreach (var (fieldName, fieldPlaceholder) in fields)
         {
             var textBox = new TextBox
@@ -84,7 +87,7 @@ public class DialogFactory : IDialogFactory
             stackPanel.Children.Add(new Card
             {
                 Content = new StackPanel
-                {   
+                {
                     Children =
                     {
                         new TextBlock
@@ -106,7 +109,7 @@ public class DialogFactory : IDialogFactory
         }
         return null;
     }
-    
+
     /// <summary>
     /// Creates and shows a confirmation dialog.
     /// Return true if the user clicks the primary button.
@@ -127,12 +130,12 @@ public class DialogFactory : IDialogFactory
         var result = await dialog.ShowAsync();
         return result == ContentDialogResult.Primary;
     }
-    
+
     public OneClickInstallDialog CreateOneClickInstallDialog()
     {
         return new OneClickInstallDialog(contentDialogService, oneClickInstallViewModel);
     }
-    
+
     public InstallerWindow CreateInstallerWindow()
     {
         return new InstallerWindow(installerViewModel, installerWindowDialogService);
@@ -147,14 +150,22 @@ public class DialogFactory : IDialogFactory
         dialog.IsFooterVisible = false;
         return dialog;
     }
-    
+
     public DataDirectoryMigrationDialog CreateDataDirectoryMigrationDialog()
     {
-        var dialog = new DataDirectoryMigrationDialog(contentDialogService, 
+        var dialog = new DataDirectoryMigrationDialog(contentDialogService,
             dataDirectoryMigrationViewModel);
         dialog.IsPrimaryButtonEnabled = false;
         dialog.IsSecondaryButtonEnabled = false;
         dialog.IsFooterVisible = false;
         return dialog;
+    }
+
+    public WebLoginDialog CreateWebLoginDialog()
+    {
+        return new WebLoginDialog(contentDialogService, webLoginViewModel)
+        {
+            CloseButtonText = "Cancel",
+        };
     }
 }

@@ -6,6 +6,7 @@ namespace StabilityMatrix.Updater;
 
 public class UpdateInfo
 {
+#pragma warning disable CS8618
     [JsonRequired]
     [JsonPropertyName("version")]
     public Version Version { get; set; }
@@ -31,15 +32,5 @@ public class UpdateInfo
     
     [JsonPropertyName("type")]
     public UpdateType? Type { get; set; }
-
-    public UpdateInfo(Version version, DateTimeOffset releaseDate, UpdateChannel channel, string downloadUrl, string changelogUrl, string? signature = null, UpdateType? updateType = null)
-    {
-        Version = version;
-        ReleaseDate = releaseDate;
-        Channel = channel;
-        DownloadUrl = downloadUrl;
-        ChangelogUrl = changelogUrl;
-        Signature = signature;
-        Type = updateType;
-    }
+#pragma warning restore CS8618
 }

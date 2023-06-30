@@ -20,9 +20,11 @@ public class PrerequisiteHelper : IPrerequisiteHelper
     private readonly IGitHubClient gitHubClient;
     private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
+    
     private const string VcRedistDownloadUrl = "https://aka.ms/vs/16/release/vc_redist.x64.exe";
     private const string PythonDownloadUrl = "https://www.python.org/ftp/python/3.10.11/python-3.10.11-embed-amd64.zip";
-
+    private const string PythonDownloadHashBlake3 = "24923775f2e07392063aaa0c78fbd4ae0a320e1fc9c6cfbab63803402279fe5a";
+    
     private string HomeDir => settingsManager.LibraryDir;
     
     private string VcRedistDownloadPath => Path.Combine(HomeDir, "vcredist.x64.exe");
@@ -166,55 +168,87 @@ public class PrerequisiteHelper : IPrerequisiteHelper
 
         Directory.CreateDirectory(AssetsDir);
         
-        if (!File.Exists(PythonDownloadPath))
+        // Delete existing python zip if it exists
+        if (File.Exists(PythonLibraryZipPath))
         {
-            await downloadService.DownloadToFileAsync(PythonDownloadUrl, PythonDownloadPath, progress: progress);
-            progress?.Report(new ProgressReport(progress: 1f, message: "Python download complete"));
+            File.Delete(PythonLibraryZipPath);
         }
         
-        progress?.Report(new ProgressReport(-1, "Installing Python...", isIndeterminate: true));
+        logger.LogInformation(
+            "Downloading Python from {PythonLibraryZipUrl} to {PythonLibraryZipPath}", 
+            PythonDownloadUrl, PythonLibraryZipPath);
         
-        // We also need 7z if it's not already unpacked
-        if (!File.Exists(SevenZipPath))
-        {
-            await ExtractEmbeddedResource("StabilityMatrix.Assets.7za.exe", AssetsDir);
-            await ExtractEmbeddedResource("StabilityMatrix.Assets.7za - LICENSE.txt", AssetsDir);
-        }
-        
-        // Delete existing python dir
-        if (Directory.Exists(PythonDir))
-        {
-            Directory.Delete(PythonDir, true);
-        }
-        // Unzip python
-        await ArchiveHelper.Extract7Z(PythonDownloadPath, PythonDir);
-        
+        // Cleanup to remove zip if download fails
         try
         {
-            // Extract embedded venv
-            await ExtractAllEmbeddedResources("StabilityMatrix.Assets.venv", PythonDir);
-            // Add venv to python's library zip
-            await ArchiveHelper.AddToArchive7Z(PythonLibraryZipPath, VenvTempDir);
+            // Download python zip
+            await downloadService.DownloadToFileAsync(PythonDownloadUrl, PythonDownloadPath, progress: progress);
+        
+            // Verify python hash
+            var downloadHash = await FileHash.GetBlake3Async(PythonDownloadPath, progress);
+            if (downloadHash != PythonDownloadHashBlake3)
+            {
+                var fileExists = File.Exists(PythonDownloadPath);
+                var fileSize = new FileInfo(PythonDownloadPath).Length;
+                var msg = $"Python download hash mismatch: {downloadHash} != {PythonDownloadHashBlake3} " +
+                          $"(file exists: {fileExists}, size: {fileSize})";
+                throw new Exception(msg);
+            }
+            
+            progress?.Report(new ProgressReport(progress: 1f, message: "Python download complete"));
+        
+            progress?.Report(new ProgressReport(-1, "Installing Python...", isIndeterminate: true));
+            
+            // We also need 7z if it's not already unpacked
+            if (!File.Exists(SevenZipPath))
+            {
+                await ExtractEmbeddedResource("StabilityMatrix.Assets.7za.exe", AssetsDir);
+                await ExtractEmbeddedResource("StabilityMatrix.Assets.7za - LICENSE.txt", AssetsDir);
+            }
+        
+            // Delete existing python dir
+            if (Directory.Exists(PythonDir))
+            {
+                Directory.Delete(PythonDir, true);
+            }
+            // Unzip python
+            await ArchiveHelper.Extract7Z(PythonDownloadPath, PythonDir);
+        
+            try
+            {
+                // Extract embedded venv
+                await ExtractAllEmbeddedResources("StabilityMatrix.Assets.venv", PythonDir);
+                // Add venv to python's library zip
+                await ArchiveHelper.AddToArchive7Z(PythonLibraryZipPath, VenvTempDir);
+            }
+            finally
+            {
+                // Remove venv
+                if (Directory.Exists(VenvTempDir))
+                {
+                    Directory.Delete(VenvTempDir, true);
+                }
+            }
+        
+            // Extract get-pip.pyc
+            await ExtractEmbeddedResource("StabilityMatrix.Assets.get-pip.pyc", PythonDir);
+        
+            // We need to uncomment the #import site line in python310._pth for pip to work
+            var pythonPthPath = Path.Combine(PythonDir, "python310._pth");
+            var pythonPthContent = await File.ReadAllTextAsync(pythonPthPath);
+            pythonPthContent = pythonPthContent.Replace("#import site", "import site");
+            await File.WriteAllTextAsync(pythonPthPath, pythonPthContent);
+        
+            progress?.Report(new ProgressReport(1f, "Python install complete"));
         }
         finally
         {
-            // Remove venv
-            if (Directory.Exists(VenvTempDir))
+            // Always delete zip after download
+            if (File.Exists(PythonDownloadPath))
             {
-                Directory.Delete(VenvTempDir, true);
+                File.Delete(PythonDownloadPath);
             }
         }
-        
-        // Extract get-pip.pyc
-        await ExtractEmbeddedResource("StabilityMatrix.Assets.get-pip.pyc", PythonDir);
-        
-        // We need to uncomment the #import site line in python310._pth for pip to work
-        var pythonPthPath = Path.Combine(PythonDir, "python310._pth");
-        var pythonPthContent = await File.ReadAllTextAsync(pythonPthPath);
-        pythonPthContent = pythonPthContent.Replace("#import site", "import site");
-        await File.WriteAllTextAsync(pythonPthPath, pythonPthContent);
-        
-        progress?.Report(new ProgressReport(1f, "Python install complete"));
     }
 
     public async Task InstallGitIfNecessary(IProgress<ProgressReport>? progress = null)

@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using NLog;
+using Refit;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Settings;
 using StabilityMatrix.Python;
@@ -353,6 +354,12 @@ public class SettingsManager : ISettingsManager
         var json = JsonSerializer.Serialize(globalSettings);
         File.WriteAllText(GlobalSettingsPath, json);
     }
+
+    public void SetPlacement(string placementStr)
+    {
+        Settings.Placement = placementStr;
+        SaveSettings();
+    }
     
     /// <summary>
     /// Loads settings from the settings file
@@ -374,10 +381,12 @@ public class SettingsManager : ISettingsManager
             }
 
             var settingsContent = File.ReadAllText(SettingsPath);
-            Settings = JsonSerializer.Deserialize<Settings>(settingsContent, new JsonSerializerOptions
-            {
-                Converters = { new JsonStringEnumConverter() }
-            })!;
+            var modifiedDefaultSerializerOptions =
+                SystemTextJsonContentSerializer.GetDefaultJsonSerializerOptions();
+            modifiedDefaultSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            Settings =
+                JsonSerializer.Deserialize<Settings>(settingsContent,
+                    modifiedDefaultSerializerOptions)!;
         }
         finally
         {

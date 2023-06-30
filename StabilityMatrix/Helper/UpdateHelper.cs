@@ -57,33 +57,40 @@ public class UpdateHelper : IUpdateHelper
 
     private async Task CheckForUpdate()
     {
-        var httpClient = httpClientFactory.CreateClient("UpdateClient");
-        var response = await httpClient.GetAsync("https://cdn.lykos.ai/update.json");
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            logger.LogError("Error while checking for update");
-            return;
+            var httpClient = httpClientFactory.CreateClient("UpdateClient");
+            var response = await httpClient.GetAsync("https://cdn.lykos.ai/update.json");
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogError("Error while checking for update");
+                return;
+            }
+
+            var updateInfo =
+                await JsonSerializer.DeserializeAsync<UpdateInfo>(
+                    await response.Content.ReadAsStreamAsync());
+
+            if (updateInfo == null)
+            {
+                logger.LogError("UpdateInfo is null");
+                return;
+            }
+
+            var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
+
+            if (updateInfo.Version <= currentVersion)
+            {
+                logger.LogInformation("No update available");
+                return;
+            }
+
+            logger.LogInformation("Update available");
+            EventManager.Instance.OnUpdateAvailable(updateInfo);
         }
-
-        var updateInfo =
-            await JsonSerializer.DeserializeAsync<UpdateInfo>(
-                await response.Content.ReadAsStreamAsync());
-
-        if (updateInfo == null)
+        catch (Exception e)
         {
-            logger.LogError("UpdateInfo is null");
-            return;
+            logger.LogError(e, "Couldn't check for update");
         }
-
-        var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
-         
-        if (updateInfo.Version <= currentVersion)
-        {
-            logger.LogInformation("No update available");
-            return;
-        }
-
-        logger.LogInformation("Update available");
-        EventManager.Instance.OnUpdateAvailable(updateInfo);
     }
 }

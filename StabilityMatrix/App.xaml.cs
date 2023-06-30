@@ -339,9 +339,6 @@ namespace StabilityMatrix
 
             var window = serviceProvider.GetRequiredService<MainWindow>();
             window.Show();
-
-            var updateHelper = serviceProvider.GetRequiredService<IUpdateHelper>();
-            updateHelper.StartCheckingForUpdates();
         }
 
         private void App_OnExit(object sender, ExitEventArgs e)

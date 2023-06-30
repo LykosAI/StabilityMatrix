@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using System.Windows.Shell;
+using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Options;
@@ -25,6 +27,7 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IDialogFactory dialogFactory;
     private readonly INotificationBarService notificationBarService;
     private readonly UpdateWindowViewModel updateWindowViewModel;
+    private readonly IUpdateHelper updateHelper;
     private readonly DebugOptions debugOptions;
 
     private UpdateInfo? updateInfo;
@@ -34,12 +37,14 @@ public partial class MainWindowViewModel : ObservableObject
         IDialogFactory dialogFactory, 
         INotificationBarService notificationBarService,
         UpdateWindowViewModel updateWindowViewModel,
+        IUpdateHelper updateHelper,
         IOptions<DebugOptions> debugOptions)
     {
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
         this.notificationBarService = notificationBarService;
         this.updateWindowViewModel = updateWindowViewModel;
+        this.updateHelper = updateHelper;
         this.debugOptions = debugOptions.Value;
 
         // Listen to dev mode event
@@ -70,6 +75,8 @@ public partial class MainWindowViewModel : ObservableObject
             IsUpdateAvailable = true;
             updateInfo = args;
         };
+
+        updateHelper.StartCheckingForUpdates().SafeFireAndForget();
         
         // show path selection window if no paths are set
         await DoSettingsCheck();

@@ -27,7 +27,7 @@ public class Settings
         SharedFolderType.Lora | 
         SharedFolderType.LyCORIS;
 
-    public WindowSettings? WindowSettings { get; set; }
+    public string? Placement { get; set; }
 
     public InstalledPackage? GetActiveInstalledPackage()
     {

@@ -67,4 +67,5 @@ public interface ISettingsManager
     /// </summary>
     void SetPortableMode();
     void SaveSettings();
+    void SetPlacement(string placementStr);
 }

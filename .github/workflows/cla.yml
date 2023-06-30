@@ -34,5 +34,5 @@ jobs:
           allowlist: ionite34,mohnjiles,bot*
           # the followings are the optional inputs - If the optional inputs are not given, then default values will be taken
           remote-organization-name: LykosAI
-          remote-repository-name: cla-bot
+          remote-repository-name: clabot-config
           custom-allsigned-prcomment: '**CLA Assistant bot** All Contributors have signed the CLA.'

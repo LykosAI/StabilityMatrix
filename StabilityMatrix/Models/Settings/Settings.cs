@@ -29,6 +29,8 @@ public class Settings
 
     public string? Placement { get; set; }
 
+    public ModelSearchOptions? ModelSearchOptions { get; set; }
+
     public InstalledPackage? GetActiveInstalledPackage()
     {
         return InstalledPackages.FirstOrDefault(x => x.Id == ActiveInstalledPackage);

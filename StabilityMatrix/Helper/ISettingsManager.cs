@@ -68,4 +68,5 @@ public interface ISettingsManager
     void SetPortableMode();
     void SaveSettings();
     void SetPlacement(string placementStr);
+    void SetSearchOptions(ModelSearchOptions options);
 }

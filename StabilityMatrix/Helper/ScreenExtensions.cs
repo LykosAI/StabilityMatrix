@@ -2,14 +2,13 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using System.Windows;
 
 namespace StabilityMatrix.Helper;
 
 public static class ScreenExtensions
 {
     public const string User32 = "user32.dll";
-    public const string shcore = "Shcore.dll";
+    public const string Shcore = "Shcore.dll";
 
     public static void GetDpi(this System.Windows.Forms.Screen screen, DpiType dpiType,
         out uint dpiX, out uint dpiY)
@@ -32,19 +31,19 @@ public static class ScreenExtensions
     private static extern IntPtr MonitorFromPoint([In] System.Drawing.Point pt, [In] uint dwFlags);
 
 
-    [DllImport(shcore)]
+    [DllImport(Shcore)]
     private static extern IntPtr GetDpiForMonitor([In] IntPtr hmonitor, [In] DpiType dpiType,
         [Out] out uint dpiX, [Out] out uint dpiY);
 
     [DllImport(User32, CharSet = CharSet.Auto)]
     [ResourceExposure(ResourceScope.None)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool GetWindowPlacement(IntPtr hWnd, ref WINDOWPLACEMENT lpwndpl);
+    private static extern bool GetWindowPlacement(IntPtr hWnd, ref WindowPlacement lpwndpl);
 
     [DllImport(User32, CharSet = CharSet.Auto, SetLastError = true)]
     [ResourceExposure(ResourceScope.None)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool SetWindowPlacement(IntPtr hWnd, [In] ref WINDOWPLACEMENT lpwndpl);
+    private static extern bool SetWindowPlacement(IntPtr hWnd, [In] ref WindowPlacement lpwndpl);
 
     public enum DpiType
     {
@@ -53,27 +52,27 @@ public static class ScreenExtensions
         Raw = 2,
     }
 
-    public static WINDOWPLACEMENT GetPlacement(IntPtr hWnd)
+    public static WindowPlacement GetPlacement(IntPtr hWnd)
     {
-        WINDOWPLACEMENT placement = new WINDOWPLACEMENT();
+        var placement = new WindowPlacement();
         placement.length = Marshal.SizeOf(placement);
         GetWindowPlacement(hWnd, ref placement);
         return placement;
     }
 
-    public static bool SetPlacement(IntPtr hWnd, WINDOWPLACEMENT aPlacement)
+    public static bool SetPlacement(IntPtr hWnd, WindowPlacement aPlacement)
     {
-        bool erg = SetWindowPlacement(hWnd, ref aPlacement);
+        var erg = SetWindowPlacement(hWnd, ref aPlacement);
         return erg;
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct POINTSTRUCT
+    public struct Pointstruct
     {
         public int x;
         public int y;
 
-        public POINTSTRUCT(int x, int y)
+        public Pointstruct(int x, int y)
         {
             this.x = x;
             this.y = y;
@@ -81,14 +80,14 @@ public static class ScreenExtensions
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct RECT
+    public struct Rect
     {
         public int left;
         public int top;
         public int right;
         public int bottom;
 
-        public RECT(int left, int top, int right, int bottom)
+        public Rect(int left, int top, int right, int bottom)
         {
             this.left = left;
             this.top = top;
@@ -96,83 +95,80 @@ public static class ScreenExtensions
             this.bottom = bottom;
         }
 
-        public RECT(Rect r)
+        public Rect(System.Windows.Rect r)
         {
-            this.left = (int) r.Left;
-            this.top = (int) r.Top;
-            this.right = (int) r.Right;
-            this.bottom = (int) r.Bottom;
+            left = (int) r.Left;
+            top = (int) r.Top;
+            right = (int) r.Right;
+            bottom = (int) r.Bottom;
         }
 
-        public static RECT FromXYWH(int x, int y, int width, int height)
+        public static Rect FromXywh(int x, int y, int width, int height)
         {
-            return new RECT(x, y, x + width, y + height);
+            return new Rect(x, y, x + width, y + height);
         }
 
-        public System.Windows.Size Size
-        {
-            get { return new System.Windows.Size(this.right - this.left, this.bottom - this.top); }
-        }
+        public System.Windows.Size Size => new(right - left, bottom - top);
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct WINDOWPLACEMENT
+    public struct WindowPlacement
     {
         public int length;
         public uint flags;
         public uint showCmd;
-        public POINTSTRUCT ptMinPosition;
-        public POINTSTRUCT ptMaxPosition;
-        public RECT rcNormalPosition;
+        public Pointstruct ptMinPosition;
+        public Pointstruct ptMaxPosition;
+        public Rect rcNormalPosition;
 
         public override string ToString()
         {
-            byte[] StructBytes = RawSerialize(this);
-            return System.Convert.ToBase64String(StructBytes);
+            var structBytes = RawSerialize(this);
+            return Convert.ToBase64String(structBytes);
         }
 
         public void ReadFromBase64String(string aB64)
         {
-            byte[] b64 = System.Convert.FromBase64String(aB64);
-            var NewWP = ReadStruct<WINDOWPLACEMENT>(b64, 0);
-            length = NewWP.length;
-            flags = NewWP.flags;
-            showCmd = NewWP.showCmd;
-            ptMinPosition.x = NewWP.ptMinPosition.x;
-            ptMinPosition.y = NewWP.ptMinPosition.y;
-            ptMaxPosition.x = NewWP.ptMaxPosition.x;
-            ptMaxPosition.y = NewWP.ptMaxPosition.y;
-            rcNormalPosition.left = NewWP.rcNormalPosition.left;
-            rcNormalPosition.top = NewWP.rcNormalPosition.top;
-            rcNormalPosition.right = NewWP.rcNormalPosition.right;
-            rcNormalPosition.bottom = NewWP.rcNormalPosition.bottom;
+            var b64 = Convert.FromBase64String(aB64);
+            var newWp = ReadStruct<WindowPlacement>(b64, 0);
+            length = newWp.length;
+            flags = newWp.flags;
+            showCmd = newWp.showCmd;
+            ptMinPosition.x = newWp.ptMinPosition.x;
+            ptMinPosition.y = newWp.ptMinPosition.y;
+            ptMaxPosition.x = newWp.ptMaxPosition.x;
+            ptMaxPosition.y = newWp.ptMaxPosition.y;
+            rcNormalPosition.left = newWp.rcNormalPosition.left;
+            rcNormalPosition.top = newWp.rcNormalPosition.top;
+            rcNormalPosition.right = newWp.rcNormalPosition.right;
+            rcNormalPosition.bottom = newWp.rcNormalPosition.bottom;
         }
 
-        static public T ReadStruct<T>(byte[] aSrcBuffer, int aOffset)
+        public static T ReadStruct<T>(byte[] aSrcBuffer, int aOffset)
         {
-            byte[] buffer = new byte[Marshal.SizeOf(typeof(T))];
+            var buffer = new byte[Marshal.SizeOf(typeof(T))];
             Buffer.BlockCopy(aSrcBuffer, aOffset, buffer, 0, Marshal.SizeOf(typeof(T)));
-            GCHandle handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            T temp = (T) Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+            var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            var temp = (T) Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
             handle.Free();
             return temp;
         }
 
-        static public T ReadStruct<T>(Stream fs)
+        public static T ReadStruct<T>(Stream fs)
         {
-            byte[] buffer = new byte[Marshal.SizeOf(typeof(T))];
+            var buffer = new byte[Marshal.SizeOf(typeof(T))];
             fs.Read(buffer, 0, Marshal.SizeOf(typeof(T)));
-            GCHandle handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            T temp = (T) Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+            var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            var temp = (T) Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
             handle.Free();
             return temp;
         }
 
         public static byte[] RawSerialize(object anything)
         {
-            int rawsize = Marshal.SizeOf(anything);
-            byte[] rawdata = new byte[rawsize];
-            GCHandle handle = GCHandle.Alloc(rawdata, GCHandleType.Pinned);
+            var rawsize = Marshal.SizeOf(anything);
+            var rawdata = new byte[rawsize];
+            var handle = GCHandle.Alloc(rawdata, GCHandleType.Pinned);
             Marshal.StructureToPtr(anything, handle.AddrOfPinnedObject(), false);
             handle.Free();
             return rawdata;

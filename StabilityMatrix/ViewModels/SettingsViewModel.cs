@@ -269,20 +269,21 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task LoginAsync()
+    private async Task WebViewDemo()
     {
-        var uri = new Uri("https://www.patreon.com/login");
+        var enterUri = await dialogFactory.ShowTextEntryDialog("Enter a URI", 
+            new[] {
+                ("Enter URI", "https://lykos.ai")
+        });
+        if (enterUri == null) return;
         
+        var uri = new Uri(enterUri.First());
         var dialog = dialogFactory.CreateWebLoginDialog();
         var loginViewModel = dialog.ViewModel;
         loginViewModel.CurrentUri = uri;
-        
-        // Pre-navigate before showing dialog
-        // var task = loginViewModel.WaitForNavigation(uri);
-        // var result = await snackbarService.TryAsync(task, "Failed to load login page");
 
         var dialogResult = await dialog.ShowAsync();
-        // TODO: Handle dialog result
+        logger.LogInformation("LoginDialog result: {Result}", dialogResult);
     }
 
     [RelayCommand]

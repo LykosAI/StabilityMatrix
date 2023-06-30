@@ -101,16 +101,9 @@ public class VladAutomatic : BaseGitPackage
         progress?.Report(new ProgressReport(0.1f, message: "Downloading package...", isIndeterminate: true, type: ProgressType.Download));
         
         Directory.CreateDirectory(InstallLocation);
-        
-        var gitCloneProcess =
-            ProcessRunner.StartProcess(Path.Combine(Helper.PrerequisiteHelper.GitBinPath, "git.exe"),
-                "clone https://github.com/vladmandic/automatic.git .", InstallLocation);
-        await gitCloneProcess.WaitForExitAsync();
 
-        var gitCheckoutProcess =
-            ProcessRunner.StartProcess(Path.Combine(Helper.PrerequisiteHelper.GitBinPath, "git.exe"),
-                $"checkout {version}", InstallLocation);
-        await gitCheckoutProcess.WaitForExitAsync();
+        await PrerequisiteHelper.RunGit("clone", "https://github.com/vladmandic/automatic.git", InstallLocation);
+        await PrerequisiteHelper.RunGit("checkout", version, InstallLocation);
         
         return version;
     }

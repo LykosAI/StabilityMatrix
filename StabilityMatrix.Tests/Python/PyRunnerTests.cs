@@ -11,6 +11,8 @@ public class PyRunnerTests
     [ClassInitialize]
     public static async Task TestInitialize(TestContext testContext)
     {
+        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        PyRunner.HomeDir = Path.Combine(appData, "StabilityMatrix");
         await PyRunner.Initialize();
     }
     

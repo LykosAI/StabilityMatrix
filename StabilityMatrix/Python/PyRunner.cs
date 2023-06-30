@@ -14,9 +14,9 @@ public record struct PyVersionInfo(int Major, int Minor, int Micro, string Relea
 public class PyRunner : IPyRunner
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-    private static readonly string AppDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-    private static readonly string HomeDir = Path.Combine(AppDataDir, "StabilityMatrix");
+    
+    // Set by ISettingsManager.TryFindLibrary()
+    public static string HomeDir { get; set; } = string.Empty;
     
     public static string PythonDir => Path.Combine(HomeDir, "Assets", "Python310");
     public static string PythonDllPath => Path.Combine(PythonDir, "python310.dll");

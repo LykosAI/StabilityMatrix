@@ -88,7 +88,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         var latestModelFile = latestVersion.Files[0];
         var fileExpectedSha256 = latestModelFile.Hashes.SHA256;
         
-        var downloadFolder = Path.Combine(settingsManager.Settings.ModelsDirectory,
+        var downloadFolder = Path.Combine(settingsManager.ModelsDirectory,
             model.Type.ConvertTo<SharedFolderType>().GetStringValue());
         // Folders might be missing if user didn't install any packages yet
         Directory.CreateDirectory(downloadFolder);

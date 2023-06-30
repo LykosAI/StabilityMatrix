@@ -27,7 +27,7 @@ public partial class CheckpointManagerViewModel : ObservableObject
     
     public async Task OnLoaded()
     {
-        var modelsDirectory = settingsManager.Settings.ModelsDirectory;
+        var modelsDirectory = settingsManager.ModelsDirectory;
         // Get all folders within the shared folder root
         if (string.IsNullOrWhiteSpace(modelsDirectory))
         {

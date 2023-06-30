@@ -34,6 +34,7 @@ public class InstalledPackage
     /// <summary>
     /// Full path to the package, using LibraryPath and GlobalConfig.LibraryDir.
     /// </summary>
+    [JsonIgnore]
     public string? FullPath => LibraryPath != null ? System.IO.Path.Combine(GlobalConfig.LibraryDir, LibraryPath) : null;
     
     public string? LaunchCommand { get; set; }
@@ -86,6 +87,24 @@ public class InstalledPackage
         }
 
         return false;
+    }
+
+    /// <summary>
+    ///  Check if the old Path can be migrated to the new LibraryPath.
+    /// </summary>
+    /// <param name="libraryDirectory"></param>
+    /// <returns></returns>
+    public bool CanPureMigratePath(string? libraryDirectory = null)
+    {
+#pragma warning disable CS0618
+        var oldPath = Path;
+#pragma warning restore CS0618
+        if (oldPath == null) return false;
+        
+        // Check if the path is a sub-path of the library
+        var library = libraryDirectory ?? GlobalConfig.LibraryDir;
+        var relativePath = GetSubPath(library, oldPath);
+        return relativePath != null;
     }
 
     /// <summary>

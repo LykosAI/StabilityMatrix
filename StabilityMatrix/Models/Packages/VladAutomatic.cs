@@ -64,12 +64,6 @@ public class VladAutomatic : BaseGitPackage
         },
         new()
         {
-            Name = "Xformers",
-            InitialValue = HardwareHelper.HasNvidiaGpu() ? "--xformers" : null,
-            Options = new() { "--xformers" }
-        },
-        new()
-        {
             Name = "API",
             Options = new() { "--api" }
         },
@@ -111,6 +105,7 @@ public class VladAutomatic : BaseGitPackage
     public override async Task RunPackage(string installedPackagePath, string arguments)
     {
         await SetupVenv(installedPackagePath);
+        PrerequisiteHelper.UpdatePathExtensions();
 
         void HandleConsoleOutput(string? s)
         {

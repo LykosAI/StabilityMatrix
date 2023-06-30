@@ -18,6 +18,7 @@ public partial class RefreshBadgeViewModel : ObservableObject
     
     public string WorkingToolTipText = "Loading...";
     public string SuccessToolTipText = "Success";
+    public string InactiveToolTipText = "";
     public string FailToolTipText = "Failed";
     
     public SymbolIcon InactiveIcon = new(SymbolRegular.Circle12);
@@ -25,6 +26,7 @@ public partial class RefreshBadgeViewModel : ObservableObject
     public SymbolIcon FailIcon = new(SymbolRegular.ErrorCircle12);
     
     public SolidColorBrush SuccessColorBrush = AppBrushes.SuccessGreen;
+    public SolidColorBrush InactiveColorBrush = AppBrushes.WarningYellow;
     public SolidColorBrush FailColorBrush = AppBrushes.FailedRed;
     
     public Func<Task<bool>>? RefreshFunc { get; set; }
@@ -50,6 +52,7 @@ public partial class RefreshBadgeViewModel : ObservableObject
     public SolidColorBrush ColorBrush => State switch
     {
         ProgressState.Success => SuccessColorBrush,
+        ProgressState.Inactive => InactiveColorBrush,
         ProgressState.Failed => FailColorBrush,
         _ => Brushes.Gray,
     };
@@ -58,6 +61,7 @@ public partial class RefreshBadgeViewModel : ObservableObject
     {
         ProgressState.Working => WorkingToolTipText,
         ProgressState.Success => SuccessToolTipText,
+        ProgressState.Inactive => InactiveToolTipText,
         ProgressState.Failed => FailToolTipText,
         _ => ""
     };

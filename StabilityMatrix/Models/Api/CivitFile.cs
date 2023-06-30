@@ -5,7 +5,7 @@ namespace StabilityMatrix.Models.Api;
 
 public class CivitFile
 {
-    [JsonPropertyName("sizeKb")]
+    [JsonPropertyName("sizeKB")]
     public double SizeKb { get; set; }
     
     [JsonPropertyName("pickleScanResult")]

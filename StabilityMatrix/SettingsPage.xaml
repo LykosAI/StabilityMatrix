@@ -188,6 +188,10 @@
                                 Command="{Binding ModelFileSearchCommand}"
                                 Content="Model File Search"
                                 Margin="8" />
+                            <Button
+                                Command="{Binding WebViewDemoCommand}"
+                                Content="Open WebView"
+                                Margin="8" />
                         </StackPanel>
                     </StackPanel>
                 </ui:Card>

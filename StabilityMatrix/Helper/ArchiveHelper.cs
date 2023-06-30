@@ -58,7 +58,7 @@ public static class ArchiveHelper
         {
             "x", archivePath, $"-o{ProcessRunner.Quote(extractDirectory)}", "-y"
         });
-        await process.WaitForExitAsync();
+        await ProcessRunner.WaitForExitConditionAsync(process);
         var output = await process.StandardOutput.ReadToEndAsync();
         var matches = Regex7ZOutput.Matches(output);
         var size = ulong.Parse(matches[0].Value);

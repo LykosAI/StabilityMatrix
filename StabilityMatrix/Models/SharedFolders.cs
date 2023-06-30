@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using NCode.ReparsePoints;
 using NLog;
 using StabilityMatrix.Extensions;
@@ -21,11 +20,8 @@ public class SharedFolders : ISharedFolders
     public void SetupLinksForPackage(BasePackage basePackage, string installPath)
     {
         var sharedFolders = basePackage.SharedFolders;
-        if (sharedFolders == null)
-        {
-            return;
-        }
-        
+        if (sharedFolders == null) return;
+
         var provider = ReparsePointFactory.Provider;
         foreach (var (folderType, relativePath) in sharedFolders)
         {
@@ -59,6 +55,36 @@ public class SharedFolders : ISharedFolders
                 Directory.Delete(destination, true);
             }
             Logger.Info($"Creating junction link from {source} to {destination}");
+            provider.CreateLink(destination, source, LinkType.Junction);
+        }
+    }
+    
+    /// <summary>
+    /// Deletes junction links and remakes them. Unlike SetupLinksForPackage, 
+    /// this will not copy files from the destination to the source.
+    /// </summary>
+    public void UpdateLinksForPackage(BasePackage basePackage, string installPath)
+    {
+        var sharedFolders = basePackage.SharedFolders;
+        if (sharedFolders == null) return;
+        
+        var provider = ReparsePointFactory.Provider;
+        foreach (var (folderType, relativePath) in sharedFolders)
+        {
+            var source = Path.Combine(settingsManager.ModelsDirectory, folderType.GetStringValue());
+            var destination = Path.GetFullPath(Path.Combine(installPath, relativePath));
+            // Create source folder if it doesn't exist
+            if (!Directory.Exists(source))
+            {
+                Logger.Info($"Creating junction source {source}");
+                Directory.CreateDirectory(source);
+            }
+            // Delete the destination folder if it exists
+            if (Directory.Exists(destination))
+            {
+                Directory.Delete(destination, false);
+            }
+            Logger.Info($"Updating junction link from {source} to {destination}");
             provider.CreateLink(destination, source, LinkType.Junction);
         }
     }

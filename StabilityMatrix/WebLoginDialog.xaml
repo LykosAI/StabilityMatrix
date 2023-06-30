@@ -1,0 +1,65 @@
+﻿<ui:ContentDialog
+    CloseButtonText="Close"
+    DialogMaxHeight="750"
+    DialogMaxWidth="600"
+    Loaded="WebLoginDialog_OnLoaded"
+    Title="Login"
+    d:DataContext="{d:DesignInstance Type=viewModels:WebLoginViewModel,
+                                     IsDesignTimeCreatable=True}"
+    d:DesignHeight="650"
+    d:DesignWidth="600"
+    mc:Ignorable="d"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    x:Class="StabilityMatrix.WebLoginDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:converters="clr-namespace:StabilityMatrix.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:StabilityMatrix"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
+    xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ui:ContentDialog.Resources>
+        <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
+        <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:WebLoginDialog}">
+            <!--  Disable scrollbars on the dialog  -->
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
+        </Style>
+
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <converters:ValueConverterGroup x:Key="InvertIsStringNullOrWhitespaceConverter">
+            <converters:IsStringNullOrWhitespaceConverter />
+            <converters:BoolNegationConverter />
+        </converters:ValueConverterGroup>
+    </ui:ContentDialog.Resources>
+
+    <Grid Margin="0,0,0,12">
+        <Border
+            BorderBrush="Transparent"
+            BorderThickness="8"
+            CornerRadius="4"
+            Padding="8">
+
+            <DockPanel
+                Background="{DynamicResource ApplicationBackgroundBrush}"
+                MaxHeight="600"
+                MinHeight="500"
+                MinWidth="400">
+                <!--  Content  -->
+                <wv2:WebView2
+                    DefaultBackgroundColor="Transparent"
+                    MinHeight="500"
+                    Name="LoginWebView"
+                    NavigationCompleted="LoginWebView_OnNavigationCompleted"
+                    Source="{Binding CurrentUri, Mode=TwoWay}"
+                    SourceChanged="LoginWebView_OnSourceChanged" />
+            </DockPanel>
+
+        </Border>
+    </Grid>
+
+</ui:ContentDialog>

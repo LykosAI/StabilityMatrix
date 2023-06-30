@@ -36,11 +36,10 @@ public abstract class BaseGitPackage : BasePackage
     public override string GithubUrl => $"https://github.com/{Author}/{Name}";
 
     public override string DownloadLocation =>
-        $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages\\{Name}.zip";
+        $"{SettingsManager.LibraryDir}\\Packages\\{Name}.zip";
 
-    public override string InstallLocation { get; set; } =
-        $"{Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)}\\StabilityMatrix\\Packages";
-    
+    public override string InstallLocation { get; set; }
+
     protected string GetDownloadUrl(string tagName, bool isCommitHash = false)
     {
         return isCommitHash
@@ -181,7 +180,12 @@ public abstract class BaseGitPackage : BasePackage
             else
             {
                 var allCommits = await GetAllCommits(package.InstalledBranch);
-                var latestCommitHash = allCommits.First().Sha;
+                if (allCommits == null || !allCommits.Any())
+                {
+                    Logger.Warn("No commits found for {Package}", package.PackageName);
+                    return false;
+                }
+                var latestCommitHash = allCommits[0].Sha;
                 return latestCommitHash != currentVersion;
             }
             

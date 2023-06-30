@@ -1,4 +1,5 @@
 ﻿using System;
+using StabilityMatrix.Models.FileInterfaces;
 
 namespace StabilityMatrix.Models;
 
@@ -23,4 +24,16 @@ public static class GlobalConfig
         }
         set => libraryDir = value;
     }
+    
+    /// <summary>
+    /// Full path to the %APPDATA% directory.
+    /// Usually C:\Users\{username}\AppData\Roaming
+    /// </summary>
+    public static DirectoryPath AppDataDir { get; } = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+    
+    /// <summary>
+    /// Full path to the fixed home directory.
+    /// Currently %APPDATA%\StabilityMatrix
+    ///</summary>
+    public static FilePath HomeDir { get; } = AppDataDir + @"StabilityMatrix\";
 }

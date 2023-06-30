@@ -19,8 +19,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Page.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
-        
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+
         <!--  Manually copied style since can't inherit: https://github.com/lepoco/wpfui/blob/main/src/Wpf.Ui/Styles/Controls/ComboBox.xaml  -->
         <ControlTemplate TargetType="{x:Type ComboBoxItem}" x:Key="SelectPackageDropDownStyle">
             <Grid>
@@ -58,8 +58,8 @@
                                 VerticalAlignment="Top"
                                 d:DataContext="{d:DesignInstance Type=models:InstalledPackage,
                                                                  IsDesignTimeCreatable=True}">
-                                <TextBlock Margin="0,5,0,5" Text="{Binding DisplayName}" />
-                                <TextBlock Margin="0,0,0,5" Text="{Binding Path}" />
+                                <TextBlock Margin="0,5,0,5" Text="{Binding DisplayName, Mode=OneWay}" />
+                                <TextBlock Margin="0,0,0,5" Text="{Binding FullPath, Mode=OneWay}" />
                             </StackPanel>
                         </Grid>
                     </Grid>
@@ -184,7 +184,7 @@
                             <TextBlock
                                 Margin="0,5,0,5"
                                 Name="NameTextBlock"
-                                Text="{Binding DisplayName}" />
+                                Text="{Binding DisplayName, Mode=OneWay}" />
                         </StackPanel>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
@@ -206,13 +206,15 @@
                 TextWrapping="Wrap"
                 VerticalAlignment="Stretch" />
         </ScrollViewer>
-        <ui:Button Grid.Row="2" Grid.ColumnSpan="2"
-                Margin="24,0,24,8"
-                Command="{Binding LaunchWebUiCommand}"
-                Appearance="Success"                
-                FontSize="12"
-                HorizontalAlignment="Stretch"
-                Visibility="{Binding ShowWebUiButton, Converter={StaticResource BoolToVisConverter}}"
-                Content="Open Web UI"/>
+        <ui:Button
+            Appearance="Success"
+            Command="{Binding LaunchWebUiCommand}"
+            Content="Open Web UI"
+            FontSize="12"
+            Grid.ColumnSpan="2"
+            Grid.Row="2"
+            HorizontalAlignment="Stretch"
+            Margin="24,0,24,8"
+            Visibility="{Binding ShowWebUiButton, Converter={StaticResource BoolToVisConverter}}" />
     </Grid>
 </Page>

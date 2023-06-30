@@ -6,7 +6,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
@@ -37,6 +36,7 @@ public partial class SettingsViewModel : ObservableObject
 {
     private readonly ILogger<SettingsViewModel> logger;
     private readonly ISettingsManager settingsManager;
+    private readonly IDialogFactory dialogFactory;
     private readonly IPackageFactory packageFactory;
     private readonly IPyRunner pyRunner;
     private readonly ISnackbarService snackbarService;
@@ -91,7 +91,8 @@ public partial class SettingsViewModel : ObservableObject
 
     public SettingsViewModel(
         ISettingsManager settingsManager, 
-        IContentDialogService contentDialogService, 
+        IContentDialogService contentDialogService,
+        IDialogFactory dialogFactory,
         IA3WebApiManager a3WebApiManager, 
         IPyRunner pyRunner, 
         ISnackbarService snackbarService, 
@@ -104,6 +105,7 @@ public partial class SettingsViewModel : ObservableObject
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         this.contentDialogService = contentDialogService;
+        this.dialogFactory = dialogFactory;
         this.snackbarService = snackbarService;
         this.a3WebApiManager = a3WebApiManager;
         this.pyRunner = pyRunner;
@@ -123,15 +125,8 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] 
     private WindowBackdropType windowBackdropType;
 
-    public string AppVersion => $"Version {GetAppVersion()}";
-    
-    private string GetAppVersion()
-    {
-        var assembly = Assembly.GetExecutingAssembly();
-        var version = assembly.GetName().Version;
-        return version == null ? "(Unknown)" : $"{version.Major}.{version.Minor}.{version.Build}";
-    }
-    
+    public string AppVersion => $"Version {Utilities.GetAppVersion()}";
+
     partial void OnSelectedThemeChanged(string value)
     {
         settingsManager.SetTheme(value);
@@ -271,6 +266,24 @@ public partial class SettingsViewModel : ObservableObject
                              $"Version: {version!.Name}\n" + generalText; 
             await dialog.ShowAsync();
         }
+    }
+
+    [RelayCommand]
+    private async Task WebViewDemo()
+    {
+        var enterUri = await dialogFactory.ShowTextEntryDialog("Enter a URI", 
+            new[] {
+                ("Enter URI", "https://lykos.ai")
+        });
+        if (enterUri == null) return;
+        
+        var uri = new Uri(enterUri.First());
+        var dialog = dialogFactory.CreateWebLoginDialog();
+        var loginViewModel = dialog.ViewModel;
+        loginViewModel.CurrentUri = uri;
+
+        var dialogResult = await dialog.ShowAsync();
+        logger.LogInformation("LoginDialog result: {Result}", dialogResult);
     }
 
     [RelayCommand]

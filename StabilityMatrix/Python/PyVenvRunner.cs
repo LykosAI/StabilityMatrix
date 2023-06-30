@@ -5,7 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using NLog;
+using Salaros.Configuration;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Models.FileInterfaces;
 
 namespace StabilityMatrix.Python;
 
@@ -24,17 +26,17 @@ public class PyVenvRunner : IDisposable
     /// <summary>
     /// The path to the venv root directory.
     /// </summary>
-    public string RootPath { get; private set; }
+    public DirectoryPath RootPath { get; }
 
     /// <summary>
     /// The path to the python executable.
     /// </summary>
-    public string PythonPath => RootPath + @"\Scripts\python.exe";
+    public FilePath PythonPath => RootPath + @"Scripts\python.exe";
 
     /// <summary>
     /// The path to the pip executable.
     /// </summary>
-    public string PipPath => RootPath + @"\Scripts\pip.exe";
+    public FilePath PipPath => RootPath + @"Scripts\pip.exe";
 
     /// <summary>
     /// List of substrings to suppress from the output.
@@ -43,13 +45,13 @@ public class PyVenvRunner : IDisposable
     /// </summary>
     public List<string> SuppressOutput { get; } = new() { "fatal: not a git repository" };
     
-    public PyVenvRunner(string path)
+    public PyVenvRunner(DirectoryPath path)
     {
         RootPath = path;
     }
 
-    // Whether the activate script exists
-    public bool Exists() => File.Exists(PythonPath);
+    /// <returns>True if the venv has a Scripts\python.exe file</returns>
+    public bool Exists() => PythonPath.Exists;
 
     /// <summary>
     /// Creates a venv at the configured path.
@@ -62,13 +64,11 @@ public class PyVenvRunner : IDisposable
         }
 
         // Create RootPath if it doesn't exist
-        if (!Directory.Exists(RootPath))
-        {
-            Directory.CreateDirectory(RootPath);
-        }
+        RootPath.Create();
 
         // Create venv
-        var venvProc = ProcessRunner.StartProcess(PyRunner.PythonExePath, $"-m virtualenv \"{RootPath}\"");
+        var args = new string[] { "-m", "virtualenv", "--always-copy", RootPath };
+        var venvProc = ProcessRunner.StartProcess(PyRunner.PythonExePath, args);
         await venvProc.WaitForExitAsync();
 
         // Check return code
@@ -96,13 +96,46 @@ public class PyVenvRunner : IDisposable
     }
 
     /// <summary>
+    /// Set current python path to pyvenv.cfg
+    /// This should be called before using the venv, in case user moves the venv directory.
+    /// </summary>
+    private void SetPyvenvCfg(string pythonDirectory)
+    {
+        // Skip if we are not created yet
+        if (!Exists()) return;
+
+        // Path to pyvenv.cfg
+        var cfgPath = Path.Combine(RootPath, "pyvenv.cfg");
+        if (!File.Exists(cfgPath))
+        {
+            throw new FileNotFoundException("pyvenv.cfg not found", cfgPath);
+        }
+        
+        Logger.Info("Updating pyvenv.cfg with embedded Python directory {PyDir}", pythonDirectory);
+        
+        // Insert a top section
+        var topSection = "[top]" + Environment.NewLine;
+        var cfg = new ConfigParser(topSection + File.ReadAllText(cfgPath));
+        
+        // Need to set all path keys - home, base-prefix, base-exec-prefix, base-executable
+        cfg.SetValue("top", "home", pythonDirectory);
+        cfg.SetValue("top", "base-prefix", pythonDirectory);
+        cfg.SetValue("top", "base-exec-prefix", pythonDirectory);
+        cfg.SetValue("top", "base-executable", Path.Combine(pythonDirectory, "python.exe"));
+        
+        // Convert to string for writing, strip the top section
+        var cfgString = cfg.ToString().Replace(topSection, "");
+        File.WriteAllText(cfgPath, cfgString);
+    }
+    
+    /// <summary>
     /// Install torch with pip, automatically chooses between Cuda and CPU.
     /// </summary>
     public async Task InstallTorch(Action<string?>? outputDataReceived = null)
     {
         await PipInstall(GetTorchInstallCommand(), outputDataReceived: outputDataReceived);
     }
-    
+
     /// <summary>
     /// Run a pip install command. Waits for the process to exit.
     /// workingDirectory defaults to RootPath.
@@ -113,20 +146,26 @@ public class PyVenvRunner : IDisposable
         {
             throw new FileNotFoundException("pip not found", PipPath);
         }
+        SetPyvenvCfg(PyRunner.PythonDir);
         Process = ProcessRunner.StartProcess(PythonPath, $"-m pip install {args}", workingDirectory ?? RootPath, outputDataReceived);
         await ProcessRunner.WaitForExitConditionAsync(Process);
     }
 
-    public void RunDetached(string arguments, Action<string?>? outputDataReceived, Action<int>? onExit = null,
-        bool unbuffered = true, string workingDirectory = "")
+    public void RunDetached(
+        string arguments, 
+        Action<string?>? outputDataReceived, 
+        Action<int>? onExit = null,
+        bool unbuffered = true, 
+        string workingDirectory = "")
     {
         if (!Exists())
         {
             throw new InvalidOperationException("Venv python process does not exist");
         }
-
-        Logger.Debug($"Launching RunDetached at {PythonPath} with args {arguments}");
+        SetPyvenvCfg(PyRunner.PythonDir);
         
+        Logger.Debug($"Launching RunDetached at {PythonPath} with args {arguments}");
+
         var filteredOutput = outputDataReceived == null ? null : new Action<string?>(s =>
         {
             if (s == null) return;

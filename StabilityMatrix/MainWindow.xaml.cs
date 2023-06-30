@@ -54,12 +54,18 @@ namespace StabilityMatrix
 
         private void RootNavigation_OnPaneOpened(NavigationView sender, RoutedEventArgs args)
         {
-            settingsManager.SetNavExpanded(true);
+            if (settingsManager.TryFindLibrary())
+            {
+                settingsManager.SetNavExpanded(true);
+            }
         }
 
         private void RootNavigation_OnPaneClosed(NavigationView sender, RoutedEventArgs args)
         {
-            settingsManager.SetNavExpanded(false);
+            if (settingsManager.TryFindLibrary())
+            {
+                settingsManager.SetNavExpanded(false);
+            }
         }
 
         private void MainWindow_OnClosed(object? sender, EventArgs e)

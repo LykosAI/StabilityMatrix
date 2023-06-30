@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
 using Wpf.Ui.Controls.Window;
 
-namespace StabilityMatrix.Models;
+namespace StabilityMatrix.Models.Settings;
 
 public class Settings
 {
     public int? Version { get; set; } = 1;
     public bool FirstLaunchSetupComplete { get; set; }
-    public string? Theme { get; set; }
-    public WindowBackdropType? WindowBackdropType { get; set; }
+    public string? Theme { get; set; } = "Dark";
+
+    public WindowBackdropType? WindowBackdropType { get; set; } =
+        Wpf.Ui.Controls.Window.WindowBackdropType.Mica;
     public List<InstalledPackage> InstalledPackages { get; set; } = new();
     public Guid? ActiveInstalledPackage { get; set; }
     public bool IsNavExpanded { get; set; }
@@ -27,6 +26,8 @@ public class Settings
         SharedFolderType.StableDiffusion | 
         SharedFolderType.Lora | 
         SharedFolderType.LyCORIS;
+
+    public WindowSettings? WindowSettings { get; set; }
 
     public InstalledPackage? GetActiveInstalledPackage()
     {

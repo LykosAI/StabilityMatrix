@@ -100,6 +100,14 @@
                 </ui:NavigationView.MenuItems>
                 <ui:NavigationView.FooterMenuItems>
                     <!--  Footer menus  -->
+                    <ui:NavigationViewItem Content="Update Available"
+                                           Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                           Command="{Binding DoUpdateCommand}">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:SymbolIcon Symbol="ArrowDownload24"
+                                           Foreground="LimeGreen" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
                     <ui:NavigationViewItem Command="{Binding OpenLinkPatreonCommand}" Content="Become a Patron">
                         <ui:NavigationViewItem.Icon>
                             <ui:ImageIcon

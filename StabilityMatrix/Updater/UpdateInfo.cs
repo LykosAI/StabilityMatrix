@@ -1,36 +1,27 @@
 ﻿using System;
 using System.Text.Json.Serialization;
-using StabilityMatrix.Models;
 
 namespace StabilityMatrix.Updater;
 
-public class UpdateInfo
-{
-#pragma warning disable CS8618
-    [JsonRequired]
-    [JsonPropertyName("version")]
-    public Version Version { get; set; }
+public record UpdateInfo(
+    [property: JsonPropertyName("version")]
+    Version Version,
     
-    [JsonRequired]
-    [JsonPropertyName("releaseDate")]
-    public DateTimeOffset ReleaseDate { get; set; }
+    [property: JsonPropertyName("releaseDate")]
+    DateTimeOffset ReleaseDate,
     
-    [JsonRequired]
-    [JsonPropertyName("channel")]
-    public UpdateChannel Channel { get; set; }
-
-    [JsonRequired]
-    [JsonPropertyName("url")]
-    public string DownloadUrl { get; set; }
+    [property: JsonPropertyName("channel")]
+    UpdateChannel Channel,
     
-    [JsonRequired]
-    [JsonPropertyName("changelog")]
-    public string ChangelogUrl { get; set; }
+    [property: JsonPropertyName("url")] 
+    string DownloadUrl,
     
-    [JsonPropertyName("signature")]
-    public string? Signature { get; set; }
+    [property: JsonPropertyName("changelog")]
+    string ChangelogUrl,
     
-    [JsonPropertyName("type")]
-    public UpdateType? Type { get; set; }
-#pragma warning restore CS8618
-}
+    [property: JsonPropertyName("signature")]
+    string Signature,
+    
+    [property: JsonPropertyName("type")] 
+    UpdateType Type
+);

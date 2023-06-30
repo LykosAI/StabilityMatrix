@@ -243,7 +243,7 @@ namespace StabilityMatrix
                     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 })
             };
-            
+
             // HTTP Policies
             var retryStatusCodes = new[] {
                 HttpStatusCode.RequestTimeout, // 408

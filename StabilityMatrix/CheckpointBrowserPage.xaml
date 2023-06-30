@@ -113,9 +113,15 @@
                             Appearance="Primary"
                             Command="{Binding ImportCommand}"
                             CommandParameter="{Binding CivitModel}"
-                            Content="Import"
                             HorizontalAlignment="Stretch"
-                            Margin="0,8,0,0" />
+                            Margin="0,8,0,0">
+                            <ui:Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Import - "/>
+                                    <TextBlock Text="{Binding CivitModel.FullFilesSize}"/>
+                                </StackPanel>
+                            </ui:Button.Content>
+                        </ui:Button>
                     </Grid>
                 </StackPanel>
             </ui:Card>

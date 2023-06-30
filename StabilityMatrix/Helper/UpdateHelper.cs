@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Threading;
@@ -73,41 +75,15 @@ public class UpdateHelper : IUpdateHelper
             return;
         }
 
-        if (updateInfo.Version == Utilities.GetAppVersion())
+        var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
+         
+        if (updateInfo.Version <= currentVersion)
         {
             logger.LogInformation("No update available");
             return;
         }
 
-        // check if update is newer
-        var updateVersion = updateInfo.Version.Split('.');
-        var currentVersion = Utilities.GetAppVersion().Split('.');
-        if (updateVersion.Length != 4 || currentVersion.Length != 4)
-        {
-            logger.LogError("Invalid version format");
-            return;
-        }
-
-        var updateVersionInt = new int[4];
-        var currentVersionInt = new int[4];
-        for (var i = 0; i < 4; i++)
-        {
-            if (int.TryParse(updateVersion[i], out updateVersionInt[i]) &&
-                int.TryParse(currentVersion[i], out currentVersionInt[i])) continue;
-            logger.LogError("Invalid version format");
-            return;
-        }
-
-        // check if update is newer
-        for (var i = 0; i < 4; i++)
-        {
-            if (updateVersionInt[i] <= currentVersionInt[i]) continue;
-
-            logger.LogInformation("Update available");
-            EventManager.Instance.OnUpdateAvailable(updateInfo);
-            return;
-        }
+        logger.LogInformation("Update available");
+        EventManager.Instance.OnUpdateAvailable(updateInfo);
     }
-
-    
 }

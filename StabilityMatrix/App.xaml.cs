@@ -233,12 +233,14 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<IGithubApiCache, GithubApiCache>();
 
             // Configure Refit and Polly
+            var defaultSystemTextJsonSettings =
+                SystemTextJsonContentSerializer.GetDefaultJsonSerializerOptions();
+            defaultSystemTextJsonSettings.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+
             var defaultRefitSettings = new RefitSettings
             {
-                ContentSerializer = new SystemTextJsonContentSerializer(new JsonSerializerOptions
-                {
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                })
+                ContentSerializer =
+                    new SystemTextJsonContentSerializer(defaultSystemTextJsonSettings),
             };
 
             // HTTP Policies

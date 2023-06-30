@@ -1,11 +1,12 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Text.Json.Serialization;
 
 namespace StabilityMatrix.Models;
 
 public class UpdateInfo
 {
     [JsonPropertyName("version")]
-    public string Version { get; set; }
+    public Version Version { get; set; }
     
     [JsonPropertyName("url")]
     public string DownloadUrl { get; set; }

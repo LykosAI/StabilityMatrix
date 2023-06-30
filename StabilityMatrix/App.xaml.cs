@@ -340,9 +340,6 @@ namespace StabilityMatrix
 
             var updateHelper = serviceProvider.GetRequiredService<IUpdateHelper>();
             updateHelper.StartCheckingForUpdates();
-            
-            var database = serviceProvider.GetRequiredService<ILiteDbContext>();
-            database.Initialize();
         }
 
         private void App_OnExit(object sender, ExitEventArgs e)

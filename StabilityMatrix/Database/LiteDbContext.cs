@@ -12,7 +12,6 @@ namespace StabilityMatrix.Database;
 
 public class LiteDbContext : ILiteDbContext
 {
-    private readonly ISettingsManager settingsManager;
     private LiteDatabaseAsync? database;
     public LiteDatabaseAsync Database 
     {
@@ -24,9 +23,6 @@ public class LiteDbContext : ILiteDbContext
         private set => database = value;
     }
 
-    private string ConnectionString =>
-        $"Filename={Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db")};Mode=Exclusive";
-
     // Notification events
     public event EventHandler? CivitModelsChanged;
     
@@ -37,15 +33,7 @@ public class LiteDbContext : ILiteDbContext
 
     public LiteDbContext(ISettingsManager settingsManager)
     {
-        this.settingsManager = settingsManager;
-    }
-    
-    /// <summary>
-    /// Loads the database from the specified connection string.
-    /// </summary>
-    public void Initialize()
-    {
-        Database = new LiteDatabaseAsync(ConnectionString);
+        Database = new LiteDatabaseAsync($"Filename={Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db")};Mode=Exclusive");
 
         // Register reference fields
         LiteDBExtensions.Register<CivitModel, CivitModelVersion>(m => m.ModelVersions, "CivitModelVersions");

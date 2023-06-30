@@ -14,7 +14,6 @@ public interface ILiteDbContext : IDisposable
     ILiteCollectionAsync<CivitModelVersion> CivitModelVersions { get; }
     ILiteCollectionAsync<CivitModelQueryCacheEntry> CivitModelQueryCache { get; }
 
-    void Initialize();
     
     Task<(CivitModel?, CivitModelVersion?)> FindCivitModelFromFileHashAsync(string hashBlake3);
     Task<bool> UpsertCivitModelAsync(CivitModel civitModel);

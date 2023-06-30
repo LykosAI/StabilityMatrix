@@ -102,20 +102,29 @@ public partial class SelectInstallLocationsViewModel : ObservableObject
         }
         
         // No settings.json
-        // Check if the directory is empty
-        var isEmpty = !Directory.EnumerateFileSystemEntries(DataDirectory).Any();
-        // If not, show error badge, and set directory to invalid to prevent continuing
-        if (!isEmpty)
+        
+        // Check if the directory is %APPDATA%\StabilityMatrix: hide badge and set directory valid
+        if (DataDirectory == DefaultInstallLocation)
         {
-            IsStatusBadgeVisible = true;
-            IsDirectoryValid = false;
-            DirectoryStatusText = InvalidDirectoryText;
-            return false;
+            IsStatusBadgeVisible = false;
+            IsDirectoryValid = true;
+            return true;
         }
-        // Otherwise, hide badge and set directory to valid
-        IsStatusBadgeVisible = false;
-        IsDirectoryValid = true;
-        return true;
+        
+        // Check if the directory is empty: hide badge and set directory to valid
+        var isEmpty = !Directory.EnumerateFileSystemEntries(DataDirectory).Any();
+        if (isEmpty)
+        {
+            IsStatusBadgeVisible = false;
+            IsDirectoryValid = true;
+            return true;
+        }
+
+        // Not empty and not appdata: show error badge, and set directory to invalid
+        IsStatusBadgeVisible = true;
+        IsDirectoryValid = false;
+        DirectoryStatusText = InvalidDirectoryText;
+        return false;
     }
 
     [RelayCommand]

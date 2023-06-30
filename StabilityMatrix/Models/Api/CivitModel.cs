@@ -36,4 +36,27 @@ public class CivitModel
     [BsonRef("ModelVersions")]
     [JsonPropertyName("modelVersions")]
     public List<CivitModelVersion>? ModelVersions { get; set; }
+
+    private FileSizeType? _fullFilesSize;
+    public FileSizeType FullFilesSize
+    {
+        get
+        {
+            if (_fullFilesSize == null)
+            {
+                var kbs = 0.0;
+                if (ModelVersions is not null)
+                {
+                    var latestVersion = ModelVersions[0];
+                    if (latestVersion.Files is not null)
+                    {
+                        var latestModelFile = latestVersion.Files[0];
+                        kbs = latestModelFile.SizeKb;
+                    }
+                }
+                _fullFilesSize = new FileSizeType(kbs);
+            }
+            return _fullFilesSize;
+        }
+    }
 }

@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using LiteDB.Async;
 using StabilityMatrix.Extensions;
+using StabilityMatrix.Helper;
 using StabilityMatrix.Models.Api;
 
 namespace StabilityMatrix.Database;
 
 public class LiteDbContext : ILiteDbContext
 {
+    private readonly ISettingsManager settingsManager;
     private LiteDatabaseAsync? database;
     public LiteDatabaseAsync Database 
     {
@@ -21,6 +24,9 @@ public class LiteDbContext : ILiteDbContext
         private set => database = value;
     }
 
+    private string ConnectionString =>
+        $"Filename={Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db")};Mode=Exclusive";
+
     // Notification events
     public event EventHandler? CivitModelsChanged;
     
@@ -29,12 +35,17 @@ public class LiteDbContext : ILiteDbContext
     public ILiteCollectionAsync<CivitModelVersion> CivitModelVersions => Database.GetCollection<CivitModelVersion>("CivitModelVersions");
     public ILiteCollectionAsync<CivitModelQueryCacheEntry> CivitModelQueryCache => Database.GetCollection<CivitModelQueryCacheEntry>("CivitModelQueryCache");
 
+    public LiteDbContext(ISettingsManager settingsManager)
+    {
+        this.settingsManager = settingsManager;
+    }
+    
     /// <summary>
     /// Loads the database from the specified connection string.
     /// </summary>
-    public void Initialize(string connectionString)
+    public void Initialize()
     {
-        Database = new LiteDatabaseAsync(connectionString);
+        Database = new LiteDatabaseAsync(ConnectionString);
 
         // Register reference fields
         LiteDBExtensions.Register<CivitModel, CivitModelVersion>(m => m.ModelVersions, "CivitModelVersions");

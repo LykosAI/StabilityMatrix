@@ -226,14 +226,7 @@ namespace StabilityMatrix
             });
 
             // Database
-            serviceCollection.AddSingleton<ILiteDbContext, LiteDbContext>(provider =>
-            {
-                var liteDbContext = new LiteDbContext();
-                var settingsManager = provider.GetRequiredService<ISettingsManager>();
-                var connectionString = $"Filename={Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db")};Mode=Exclusive";
-                liteDbContext.Initialize(connectionString);
-                return liteDbContext;
-            });
+            serviceCollection.AddSingleton<ILiteDbContext, LiteDbContext>();
 
             // Caches
             serviceCollection.AddMemoryCache();
@@ -347,6 +340,9 @@ namespace StabilityMatrix
 
             var updateHelper = serviceProvider.GetRequiredService<IUpdateHelper>();
             updateHelper.StartCheckingForUpdates();
+            
+            var database = serviceProvider.GetRequiredService<ILiteDbContext>();
+            database.Initialize();
         }
 
         private void App_OnExit(object sender, ExitEventArgs e)

@@ -4,14 +4,19 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using LiteDB.Async;
+using Microsoft.Extensions.Options;
 using StabilityMatrix.Extensions;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models.Api;
+using StabilityMatrix.Models.Configs;
 
 namespace StabilityMatrix.Database;
 
 public class LiteDbContext : ILiteDbContext
 {
+    private readonly ISettingsManager settingsManager;
+    private readonly DebugOptions debugOptions;
+
     private LiteDatabaseAsync? database;
     public LiteDatabaseAsync Database 
     {
@@ -31,9 +36,14 @@ public class LiteDbContext : ILiteDbContext
     public ILiteCollectionAsync<CivitModelVersion> CivitModelVersions => Database.GetCollection<CivitModelVersion>("CivitModelVersions");
     public ILiteCollectionAsync<CivitModelQueryCacheEntry> CivitModelQueryCache => Database.GetCollection<CivitModelQueryCacheEntry>("CivitModelQueryCache");
 
-    public LiteDbContext(ISettingsManager settingsManager)
+    public LiteDbContext(ISettingsManager settingsManager, IOptions<DebugOptions> debugOptions)
     {
-        Database = new LiteDatabaseAsync($"Filename={Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db")};Mode=Exclusive");
+        this.settingsManager = settingsManager;
+        this.debugOptions = debugOptions.Value;
+        
+        var connectionString = debugOptions.Value.TempDatabase ? ":temp:"
+            : $"Filename={Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db")};Mode=Exclusive";
+        Database = new LiteDatabaseAsync(connectionString);
 
         // Register reference fields
         LiteDBExtensions.Register<CivitModel, CivitModelVersion>(m => m.ModelVersions, "CivitModelVersions");

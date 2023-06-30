@@ -84,9 +84,11 @@ public partial class MainWindowViewModel : ObservableObject
             dialog.IsSecondaryButtonEnabled = false;
             dialog.IsFooterVisible = false;
 
-            EventManager.Instance.OneClickInstallFinished += (_, _) =>
+            EventManager.Instance.OneClickInstallFinished += (_, skipped) =>
             {
                 dialog.Hide();
+                if (skipped) return;
+                
                 EventManager.Instance.OnTeachingTooltipNeeded();
             };
 
@@ -112,7 +114,10 @@ public partial class MainWindowViewModel : ObservableObject
     private void DoUpdate()
     {
         updateWindowViewModel.UpdateInfo = updateInfo;
-        var updateWindow = new UpdateWindow(updateWindowViewModel);
+        var updateWindow = new UpdateWindow(updateWindowViewModel)
+        {
+            Owner = Application.Current.MainWindow
+        };
         updateWindow.ShowDialog();
     }
     

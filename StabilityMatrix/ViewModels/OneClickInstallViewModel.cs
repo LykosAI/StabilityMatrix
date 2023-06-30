@@ -66,7 +66,7 @@ public partial class OneClickInstallViewModel : ObservableObject
     [RelayCommand]
     private Task ToggleAdvancedMode()
     {
-        EventManager.Instance.OnOneClickInstallFinished();
+        EventManager.Instance.OnOneClickInstallFinished(true);
         return Task.CompletedTask;
     }
     
@@ -150,7 +150,7 @@ public partial class OneClickInstallViewModel : ObservableObject
         await Task.Delay(1000);
         
         // should close dialog
-        EventManager.Instance.OnOneClickInstallFinished();
+        EventManager.Instance.OnOneClickInstallFinished(false);
     }
 
     private async Task DownloadPackage(BasePackage selectedPackage, string version)

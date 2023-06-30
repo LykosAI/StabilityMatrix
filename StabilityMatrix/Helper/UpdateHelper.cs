@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -99,15 +100,41 @@ public class UpdateHelper : IUpdateHelper
         }
 
         // check if update is newer
-        for (var i = 0; i < 4; i++)
+        var currentMajor = currentVersionInt[0];
+        var currentMinor = currentVersionInt[1];
+        var currentBuild = currentVersionInt[2];
+        var currentRevision = currentVersionInt[3];
+        
+        var updateMajor = updateVersionInt[0];
+        var updateMinor = updateVersionInt[1];
+        var updateBuild = updateVersionInt[2];
+        var updateRevision = updateVersionInt[3];
+        
+        if (updateMajor < currentMajor)
         {
-            if (updateVersionInt[i] <= currentVersionInt[i]) continue;
-
-            logger.LogInformation("Update available");
-            EventManager.Instance.OnUpdateAvailable(updateInfo);
+            logger.LogInformation("No update available");
             return;
         }
+        
+        if (updateMajor == currentMajor && updateMinor < currentMinor)
+        {
+            logger.LogInformation("No update available");
+            return;
+        }
+        
+        if (updateMajor == currentMajor && updateMinor == currentMinor && updateBuild < currentBuild)
+        {
+            logger.LogInformation("No update available");
+            return;
+        }
+        
+        if (updateMajor == currentMajor && updateMinor == currentMinor && updateBuild == currentBuild && updateRevision <= currentRevision)
+        {
+            logger.LogInformation("No update available");
+            return;
+        }
+        
+        logger.LogInformation("Update available");
+        EventManager.Instance.OnUpdateAvailable(updateInfo);
     }
-
-    
 }

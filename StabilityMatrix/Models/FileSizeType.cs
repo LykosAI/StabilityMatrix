@@ -1,23 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Drawing;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Security.Policy;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Media.Imaging;
-using System.Windows.Threading;
-using AsyncAwaitBestPractices;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using NLog;
-using StabilityMatrix.Extensions;
-using StabilityMatrix.Helper;
+﻿using System.Globalization;
 
 namespace StabilityMatrix.Models;
 
@@ -35,9 +16,9 @@ public class FileSizeType
 
     private string ConvertToHumanReadable()
     {
-        string[] sizeUnits = { "KB", "MB", "GB", "TB" };
-        double size = SizeInKB;
-        int unitIndex = 0;
+        var sizeUnits = new string[] { "KB", "MB", "GB", "TB" };
+        var size = SizeInKB;
+        var unitIndex = 0;
 
         while (size >= 1024 && unitIndex < sizeUnits.Length - 1)
         {

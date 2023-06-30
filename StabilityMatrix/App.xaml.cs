@@ -247,9 +247,7 @@ namespace StabilityMatrix
                 });
 
             // Add Refit clients
-            // @NuarkNoir: When passing config to this method we are loosing sizeKB from response, who knows why.
-            // @NuarkNoit: Another solution, anyone?
-            serviceCollection.AddRefitClient<ICivitApi>()
+            serviceCollection.AddRefitClient<ICivitApi>(defaultRefitSettings)
                 .ConfigureHttpClient(c =>
                 {
                     c.BaseAddress = new Uri("https://civitai.com");

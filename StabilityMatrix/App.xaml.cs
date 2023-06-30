@@ -282,7 +282,7 @@ namespace StabilityMatrix
                 .ConfigureHttpClient(c =>
                 {
                     c.BaseAddress = new Uri("https://civitai.com");
-                    c.Timeout = TimeSpan.FromSeconds(8);
+                    c.Timeout = TimeSpan.FromSeconds(15);
                 })
                 .AddPolicyHandler(retryPolicy);
 

@@ -23,26 +23,25 @@ public class PrerequisiteHelper : IPrerequisiteHelper
     private const string VcRedistDownloadUrl = "https://aka.ms/vs/16/release/vc_redist.x64.exe";
     private const string PythonDownloadUrl = "https://www.python.org/ftp/python/3.10.11/python-3.10.11-embed-amd64.zip";
 
-    private static readonly string AppDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-    private static readonly string HomeDir = Path.Combine(AppDataDir, "StabilityMatrix");
+    private string HomeDir => settingsManager.LibraryDir;
     
-    private static readonly string VcRedistDownloadPath = Path.Combine(HomeDir, "vcredist.x64.exe");
+    private string VcRedistDownloadPath => Path.Combine(HomeDir, "vcredist.x64.exe");
 
-    private static readonly string AssetsDir = Path.Combine(HomeDir, "Assets");
-    private static readonly string SevenZipPath = Path.Combine(AssetsDir, "7za.exe");
+    private string AssetsDir => Path.Combine(HomeDir, "Assets");
+    private string SevenZipPath => Path.Combine(AssetsDir, "7za.exe");
     
-    private static readonly string PythonDownloadPath = Path.Combine(AssetsDir, "python-3.10.11-embed-amd64.zip");
-    private static readonly string PythonDir = Path.Combine(AssetsDir, "Python310");
-    private static readonly string PythonDllPath = Path.Combine(PythonDir, "python310.dll");
-    private static readonly string PythonLibraryZipPath = Path.Combine(PythonDir, "python310.zip");
-    private static readonly string GetPipPath = Path.Combine(PythonDir, "get-pip.pyc");
+    private string PythonDownloadPath => Path.Combine(AssetsDir, "python-3.10.11-embed-amd64.zip");
+    private string PythonDir => Path.Combine(AssetsDir, "Python310");
+    private string PythonDllPath => Path.Combine(PythonDir, "python310.dll");
+    private string PythonLibraryZipPath => Path.Combine(PythonDir, "python310.zip");
+    private string GetPipPath => Path.Combine(PythonDir, "get-pip.pyc");
     // Temporary directory to extract venv to during python install
-    private static readonly string VenvTempDir = Path.Combine(PythonDir, "venv");
+    private string VenvTempDir => Path.Combine(PythonDir, "venv");
     
-    private static readonly string PortableGitInstallDir = Path.Combine(HomeDir, "PortableGit");
-    private static readonly string PortableGitDownloadPath = Path.Combine(HomeDir, "PortableGit.7z.exe");
-    private static readonly string GitExePath = Path.Combine(PortableGitInstallDir, "bin", "git.exe");
-    public static readonly string GitBinPath = Path.Combine(PortableGitInstallDir, "bin");
+    private string PortableGitInstallDir => Path.Combine(HomeDir, "PortableGit");
+    private string PortableGitDownloadPath => Path.Combine(HomeDir, "PortableGit.7z.exe");
+    private string GitExePath => Path.Combine(PortableGitInstallDir, "bin", "git.exe");
+    public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
     
     public bool IsPythonInstalled => File.Exists(PythonDllPath);
 
@@ -53,6 +52,12 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         this.gitHubClient = gitHubClient;
         this.downloadService = downloadService;
         this.settingsManager = settingsManager;
+    }
+
+    public async Task RunGit(params string[] args)
+    {
+        var process = ProcessRunner.StartProcess(GitExePath, args);
+        await ProcessRunner.WaitForExitConditionAsync(process);
     }
     
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -206,11 +211,11 @@ public class PrerequisiteHelper : IPrerequisiteHelper
     {
         if (File.Exists(GitExePath))
         {
-            logger.LogDebug($"Git already installed at {GitExePath}");
+            logger.LogDebug("Git already installed at {GitExePath}", GitExePath);
             return;
         }
         
-        logger.LogInformation($"Git not found at {GitExePath}, downloading...");
+        logger.LogInformation("Git not found at {GitExePath}, downloading...", GitExePath);
 
         var portableGitUrl =
             "https://github.com/git-for-windows/git/releases/download/v2.41.0.windows.1/PortableGit-2.41.0-64-bit.7z.exe";

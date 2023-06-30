@@ -7,13 +7,21 @@ namespace StabilityMatrix.Helper;
 
 public interface ISettingsManager
 {
-    public string AppDataDir { get; }
-    public string AppHomeDir { get; }
-    public string DatabasePath { get; }
-    
     Settings Settings { get; }
     event EventHandler<bool>? ModelBrowserNsfwEnabledChanged;
+
+    // Library settings
+    bool IsPortableMode { get; }
+    string LibraryDir { get; }
+    bool TryFindLibrary();
     
+    // Dynamic paths from library
+    string DatabasePath { get; }
+    string ModelsDirectory { get; }
+    
+    // Migration
+    IEnumerable<InstalledPackage> GetOldInstalledPackages();
+
     void SetTheme(string theme);
     void AddInstalledPackage(InstalledPackage p);
     void RemoveInstalledPackage(InstalledPackage p);
@@ -37,7 +45,6 @@ public interface ISettingsManager
     string? GetActivePackagePort();
     void SetWebApiHost(string? host);
     void SetWebApiPort(string? port);
-    void SetModelsDirectory(string? directory);
     void SetFirstLaunchSetupComplete(bool firstLaunchSetupCompleted);
     void SetModelBrowserNsfwEnabled(bool value);
     void SetSharedFolderCategoryVisible(SharedFolderType type, bool visible);

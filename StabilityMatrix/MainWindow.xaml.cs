@@ -110,7 +110,7 @@ namespace StabilityMatrix
 
             if (string.IsNullOrWhiteSpace(settingsManager.Settings.Placement))
                 return;
-            var placement = new ScreenExtensions.WINDOWPLACEMENT();
+            var placement = new ScreenExtensions.WindowPlacement();
             placement.ReadFromBase64String(settingsManager.Settings.Placement);
 
             var primaryMonitorScaling = ScreenExtensions.GetScalingForPoint(new System.Drawing.Point(1, 1));

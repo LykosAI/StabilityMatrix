@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Threading;
@@ -74,66 +75,14 @@ public class UpdateHelper : IUpdateHelper
             return;
         }
 
-        if (updateInfo.Version == Utilities.GetAppVersion())
+        var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
+         
+        if (updateInfo.Version <= currentVersion)
         {
             logger.LogInformation("No update available");
             return;
         }
 
-        // check if update is newer
-        var updateVersion = updateInfo.Version.Split('.');
-        var currentVersion = Utilities.GetAppVersion().Split('.');
-        if (updateVersion.Length != 4 || currentVersion.Length != 4)
-        {
-            logger.LogError("Invalid version format");
-            return;
-        }
-
-        var updateVersionInt = new int[4];
-        var currentVersionInt = new int[4];
-        for (var i = 0; i < 4; i++)
-        {
-            if (int.TryParse(updateVersion[i], out updateVersionInt[i]) &&
-                int.TryParse(currentVersion[i], out currentVersionInt[i])) continue;
-            logger.LogError("Invalid version format");
-            return;
-        }
-
-        // check if update is newer
-        var currentMajor = currentVersionInt[0];
-        var currentMinor = currentVersionInt[1];
-        var currentBuild = currentVersionInt[2];
-        var currentRevision = currentVersionInt[3];
-        
-        var updateMajor = updateVersionInt[0];
-        var updateMinor = updateVersionInt[1];
-        var updateBuild = updateVersionInt[2];
-        var updateRevision = updateVersionInt[3];
-        
-        if (updateMajor < currentMajor)
-        {
-            logger.LogInformation("No update available");
-            return;
-        }
-        
-        if (updateMajor == currentMajor && updateMinor < currentMinor)
-        {
-            logger.LogInformation("No update available");
-            return;
-        }
-        
-        if (updateMajor == currentMajor && updateMinor == currentMinor && updateBuild < currentBuild)
-        {
-            logger.LogInformation("No update available");
-            return;
-        }
-        
-        if (updateMajor == currentMajor && updateMinor == currentMinor && updateBuild == currentBuild && updateRevision <= currentRevision)
-        {
-            logger.LogInformation("No update available");
-            return;
-        }
-        
         logger.LogInformation("Update available");
         EventManager.Instance.OnUpdateAvailable(updateInfo);
     }

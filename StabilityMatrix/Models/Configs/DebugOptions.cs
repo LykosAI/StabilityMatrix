@@ -11,4 +11,10 @@ public class DebugOptions
     /// Always show the one-click install page on launch
     /// </summary>
     public bool ShowOneClickInstall { get; set; }
+    
+    /// <summary>
+    /// Override the default update manifest url
+    /// (https://cdn.lykos.ai/update.json)
+    /// </summary>
+    public string? UpdateManifestUrl { get; set; }
 }

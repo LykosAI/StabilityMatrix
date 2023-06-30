@@ -35,6 +35,7 @@ using StabilityMatrix.Models.Configs;
 using StabilityMatrix.Models.Packages;
 using StabilityMatrix.Python;
 using StabilityMatrix.Services;
+using StabilityMatrix.Updater;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Services;

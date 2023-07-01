@@ -14,6 +14,7 @@ using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Configs;
 using StabilityMatrix.Services;
+using StabilityMatrix.Updater;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls.ContentDialogControl;
 using Wpf.Ui.Controls.Window;

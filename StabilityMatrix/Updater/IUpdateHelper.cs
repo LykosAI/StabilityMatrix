@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using StabilityMatrix.Models;
 
-namespace StabilityMatrix.Helper;
+namespace StabilityMatrix.Updater;
 
 public interface IUpdateHelper
 {

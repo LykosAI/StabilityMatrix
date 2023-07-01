@@ -1,23 +1,29 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.Configs;
 using StabilityMatrix.Services;
 
-namespace StabilityMatrix.Helper;
+namespace StabilityMatrix.Updater;
 
 public class UpdateHelper : IUpdateHelper
 {
     private readonly ILogger<UpdateHelper> logger;
     private readonly IHttpClientFactory httpClientFactory;
     private readonly IDownloadService downloadService;
+    private readonly DebugOptions debugOptions;
     private readonly DispatcherTimer timer = new();
+    
+    private string UpdateManifestUrl => debugOptions.UpdateManifestUrl ??
+        "https://cdn.lykos.ai/update.json";
     
     private static readonly string UpdateFolder =
         Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Update");
@@ -26,11 +32,12 @@ public class UpdateHelper : IUpdateHelper
         Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Update", "StabilityMatrix.exe");
 
     public UpdateHelper(ILogger<UpdateHelper> logger, IHttpClientFactory httpClientFactory,
-        IDownloadService downloadService)
+        IDownloadService downloadService, IOptions<DebugOptions> debugOptions)
     {
         this.logger = logger;
         this.httpClientFactory = httpClientFactory;
         this.downloadService = downloadService;
+        this.debugOptions = debugOptions.Value;
 
         timer.Interval = TimeSpan.FromMinutes(5);
         timer.Tick += async (_, _) => { await CheckForUpdate(); };
@@ -60,7 +67,7 @@ public class UpdateHelper : IUpdateHelper
         try
         {
             var httpClient = httpClientFactory.CreateClient("UpdateClient");
-            var response = await httpClient.GetAsync("https://cdn.lykos.ai/update.json");
+            var response = await httpClient.GetAsync(UpdateManifestUrl);
             if (!response.IsSuccessStatusCode)
             {
                 logger.LogError("Error while checking for update");

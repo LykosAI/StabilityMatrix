@@ -1,6 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using NLog;
+using Refit;
 using StabilityMatrix.Api;
 using StabilityMatrix.Database;
 using StabilityMatrix.Models.Api;
@@ -41,18 +43,27 @@ public class ModelFinder
     public async Task<ModelSearchResult?> RemoteFindModel(string hashBlake3)
     {
         Logger.Info("Searching Civit API for model version using hash {Hash}", hashBlake3);
-        var versionResponse = await civitApi.GetModelVersionByHash(hashBlake3);
-
-        Logger.Info("Found version {VersionId} with model id {ModelId}", 
-            versionResponse.Id, versionResponse.ModelId);
-        var model = await civitApi.GetModelById(versionResponse.ModelId);
+        try
+        {
+            var versionResponse = await civitApi.GetModelVersionByHash(hashBlake3);
+            
+            Logger.Info("Found version {VersionId} with model id {ModelId}", 
+                versionResponse.Id, versionResponse.ModelId);
+            var model = await civitApi.GetModelById(versionResponse.ModelId);
+            
+            // VersionResponse is not actually the full data of ModelVersion, so find it again
+            var version = model.ModelVersions!.First(version => version.Id == versionResponse.Id);
         
-        // VersionResponse is not actually the full data of ModelVersion, so find it again
-        var version = model.ModelVersions!.First(version => version.Id == versionResponse.Id);
+            var file = versionResponse.Files
+                .First(file => file.Hashes.BLAKE3?.ToLowerInvariant() == hashBlake3);
         
-        var file = versionResponse.Files
-            .First(file => file.Hashes.BLAKE3?.ToLowerInvariant() == hashBlake3);
-        
-        return new ModelSearchResult(model, version, file);
+            return new ModelSearchResult(model, version, file);
+        }
+        catch (ApiException e)
+        {
+            Logger.Info("Could not find remote model version using hash {Hash}: {Error}", 
+                hashBlake3, e.Message);
+            return null;
+        }
     }
 }

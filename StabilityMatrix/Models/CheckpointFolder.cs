@@ -226,6 +226,9 @@ public partial class CheckpointFolder : ObservableObject
             var totalCount = modelQueryResults.Length;
             var failCount = totalCount - successCount;
 
+            await IndexAsync();
+            
+            Progress.Value = 100;
             Progress.Text = successCount switch
             {
                 0 when failCount > 0 =>
@@ -234,16 +237,14 @@ public partial class CheckpointFolder : ObservableObject
                     $"Import complete. Found connected data for {successCount} of {totalCount} models.",
                 _ => $"Import complete. Found connected data for all {totalCount} models."
             };
-
-            Progress.Value = 100;
-            await IndexAsync();
+            
             DelayedClearProgress(TimeSpan.FromSeconds(1));
         }
         else
         {
+            await IndexAsync();
             Progress.Value = 100;
             Progress.Text = "Import complete";
-            await IndexAsync();
             DelayedClearProgress(TimeSpan.FromSeconds(1));
         }
     }

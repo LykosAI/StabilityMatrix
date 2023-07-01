@@ -96,7 +96,7 @@
             <controls:RefreshBadge DataContext="{Binding RefreshBadgeViewModel}" />
             <TextBlock
                 FontSize="14"
-                Text="{Binding RefreshBadgeViewModel.CurrentToolTip}"
+                Text="{Binding DirectoryStatusText}"
                 VerticalAlignment="Center" />
         </StackPanel>
 

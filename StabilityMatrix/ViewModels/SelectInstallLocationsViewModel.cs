@@ -78,7 +78,7 @@ public partial class SelectInstallLocationsViewModel : ObservableObject
             {
                 IsStatusBadgeVisible = true;
                 IsDirectoryValid = false;
-                RefreshBadgeViewModel.FailToolTipText = NotEnoughFreeSpaceText;
+                DirectoryStatusText = NotEnoughFreeSpaceText;
                 return false;
             }
         }
@@ -116,7 +116,7 @@ public partial class SelectInstallLocationsViewModel : ObservableObject
                 // If not, show error badge, and set directory to invalid to prevent continuing
                 IsStatusBadgeVisible = true;
                 IsDirectoryValid = false;
-                RefreshBadgeViewModel.FailToolTipText = InvalidDirectoryText;
+                DirectoryStatusText = InvalidDirectoryText;
                 return false;
             }
         }
@@ -143,7 +143,7 @@ public partial class SelectInstallLocationsViewModel : ObservableObject
         // Not empty and not appdata: show error badge, and set directory to invalid
         IsStatusBadgeVisible = true;
         IsDirectoryValid = false;
-        RefreshBadgeViewModel.FailToolTipText = InvalidDirectoryText;
+        DirectoryStatusText = InvalidDirectoryText;
         return false;
     }
 

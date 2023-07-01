@@ -1,45 +1,34 @@
 ﻿using System;
 using System.Text.Json.Serialization;
-using StabilityMatrix.Models;
 
 namespace StabilityMatrix.Updater;
 
-public class UpdateInfo
-{
-    [JsonRequired]
-    [JsonPropertyName("version")]
-    public Version Version { get; set; }
+public record UpdateInfo(
+    [property: JsonPropertyName("version")]
+    Version Version,
     
-    [JsonRequired]
-    [JsonPropertyName("releaseDate")]
-    public DateTimeOffset ReleaseDate { get; set; }
+    [property: JsonPropertyName("releaseDate")]
+    DateTimeOffset ReleaseDate,
     
-    [JsonRequired]
-    [JsonPropertyName("channel")]
-    public UpdateChannel Channel { get; set; }
-
-    [JsonRequired]
-    [JsonPropertyName("url")]
-    public string DownloadUrl { get; set; }
+    [property: JsonPropertyName("channel")]
+    UpdateChannel Channel,
     
-    [JsonRequired]
-    [JsonPropertyName("changelog")]
-    public string ChangelogUrl { get; set; }
+    [property: JsonPropertyName("type")] 
+    UpdateType Type,
     
-    [JsonPropertyName("signature")]
-    public string? Signature { get; set; }
+    [property: JsonPropertyName("url")] 
+    string DownloadUrl,
     
-    [JsonPropertyName("type")]
-    public UpdateType? Type { get; set; }
-
-    public UpdateInfo(Version version, DateTimeOffset releaseDate, UpdateChannel channel, string downloadUrl, string changelogUrl, string? signature = null, UpdateType? updateType = null)
-    {
-        Version = version;
-        ReleaseDate = releaseDate;
-        Channel = channel;
-        DownloadUrl = downloadUrl;
-        ChangelogUrl = changelogUrl;
-        Signature = signature;
-        Type = updateType;
-    }
-}
+    [property: JsonPropertyName("changelog")]
+    string ChangelogUrl,
+    
+    // Blake3 hash of the file
+    [property: JsonPropertyName("hash_blake3")]
+    string HashBlake3,
+    
+    // ED25519 signature of the semicolon seperated string:
+    // "version + releaseDate + channel + type + url + changelog + hash_blake3"
+    // verifiable using our stored public key
+    [property: JsonPropertyName("signature")]
+    string Signature
+);

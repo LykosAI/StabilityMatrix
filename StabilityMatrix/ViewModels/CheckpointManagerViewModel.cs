@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using NLog;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
+using StabilityMatrix.Services;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -16,6 +18,8 @@ public partial class CheckpointManagerViewModel : ObservableObject
     private readonly ISharedFolders sharedFolders;
     private readonly ISettingsManager settingsManager;
     private readonly IDialogFactory dialogFactory;
+    private readonly ModelFinder modelFinder;
+    private readonly IDownloadService downloadService;
 
     // Toggle button for auto hashing new drag-and-dropped files for connected upgrade
     [ObservableProperty] private bool isImportAsConnected;
@@ -30,11 +34,18 @@ public partial class CheckpointManagerViewModel : ObservableObject
     
     public ObservableCollection<CheckpointFolder> CheckpointFolders { get; set; } = new();
     
-    public CheckpointManagerViewModel(ISharedFolders sharedFolders, ISettingsManager settingsManager, IDialogFactory dialogFactory)
+    public CheckpointManagerViewModel(
+        ISharedFolders sharedFolders, 
+        ISettingsManager settingsManager, 
+        IDialogFactory dialogFactory,
+        IDownloadService downloadService,
+        ModelFinder modelFinder)
     {
         this.sharedFolders = sharedFolders;
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
+        this.downloadService = downloadService;
+        this.modelFinder = modelFinder;
     }
     
     public async Task OnLoaded()
@@ -63,7 +74,7 @@ public partial class CheckpointManagerViewModel : ObservableObject
         // Index all folders
         var tasks = folders.Select(f => Task.Run(async () =>
             {
-                var checkpointFolder = new CheckpointFolder(dialogFactory, settingsManager)
+                var checkpointFolder = new CheckpointFolder(dialogFactory, settingsManager, downloadService, modelFinder)
                 {
                     Title = Path.GetFileName(f), 
                     DirectoryPath = f
@@ -77,10 +88,5 @@ public partial class CheckpointManagerViewModel : ObservableObject
         {
             CheckpointFolders.Add(checkpointFolder);
         }
-    }
-
-    public void OnFolderCardDrop()
-    {
-        
     }
 }

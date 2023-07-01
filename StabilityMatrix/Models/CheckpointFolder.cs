@@ -163,7 +163,7 @@ public partial class CheckpointFolder : ObservableObject
         if (convertToConnected)
         {
             var modelFiles = copyPaths.Values
-                .Select(path => new FilePath(path)).ToList();
+                .Select(path => new FilePath(path));
             
             // Holds tasks for model queries after hash
             var modelQueryTasks = new List<Task<bool>>();
@@ -174,8 +174,8 @@ public partial class CheckpointFolder : ObservableObject
                 {
                     Progress.IsIndeterminate = false;
                     Progress.Value = report.Percentage;
-                    Progress.Text = modelFiles.Count > 1 ? 
-                        $"Computing metadata for {modelFile.Info.Name} ({i}/{modelFiles.Count})" : 
+                    Progress.Text = modelFilesCount > 1 ? 
+                        $"Computing metadata for {modelFile.Info.Name} ({i}/{modelFilesCount})" : 
                         $"Computing metadata for {report.Title}";
                 });
                 

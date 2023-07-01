@@ -16,6 +16,18 @@ public partial class CheckpointManagerViewModel : ObservableObject
     private readonly ISharedFolders sharedFolders;
     private readonly ISettingsManager settingsManager;
     private readonly IDialogFactory dialogFactory;
+
+    // Toggle button for auto hashing new drag-and-dropped files for connected upgrade
+    [ObservableProperty] private bool isImportAsConnected;
+    
+    partial void OnIsImportAsConnectedChanged(bool value)
+    {
+        if (value != settingsManager.Settings.IsImportAsConnected)
+        {
+            settingsManager.SetIsImportAsConnected(value);
+        }
+    }
+    
     public ObservableCollection<CheckpointFolder> CheckpointFolders { get; set; } = new();
     
     public CheckpointManagerViewModel(ISharedFolders sharedFolders, ISettingsManager settingsManager, IDialogFactory dialogFactory)
@@ -27,6 +39,9 @@ public partial class CheckpointManagerViewModel : ObservableObject
     
     public async Task OnLoaded()
     {
+        // Set UI states
+        IsImportAsConnected = settingsManager.Settings.IsImportAsConnected;
+        
         var modelsDirectory = settingsManager.ModelsDirectory;
         // Get all folders within the shared folder root
         if (string.IsNullOrWhiteSpace(modelsDirectory))

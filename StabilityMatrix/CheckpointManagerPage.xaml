@@ -416,12 +416,22 @@
     </Page.Resources>
 
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="0.1*" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <!--  Top settings bar  -->
+        <ui:ToggleSwitch
+            Content="Import as Connected"
+            Grid.Column="0"
+            Margin="24,8" />
         <StackPanel
+            Grid.Column="1"
+            Grid.Row="0"
             HorizontalAlignment="Right"
             Margin="16,0"
             Orientation="Horizontal">
@@ -449,6 +459,8 @@
         <!--  Main view with model cards  -->
         <ui:DynamicScrollViewer
             CanContentScroll="True"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
             Grid.Row="1"
             HorizontalScrollBarVisibility="Disabled"
             VerticalScrollBarVisibility="Auto">

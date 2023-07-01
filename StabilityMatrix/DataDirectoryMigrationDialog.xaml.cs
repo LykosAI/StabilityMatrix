@@ -24,4 +24,9 @@ public partial class DataDirectoryMigrationDialog : ContentDialog
     {
         ((DataDirectoryMigrationViewModel) DataContext).OnLoaded();
     }
+
+    private void NoThanks_OnClick(object sender, RoutedEventArgs e)
+    {
+        Hide(ContentDialogResult.Primary);
+    }
 }

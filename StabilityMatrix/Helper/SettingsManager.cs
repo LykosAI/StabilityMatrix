@@ -142,14 +142,50 @@ public class SettingsManager : ISettingsManager
     /// </summary>
     public IEnumerable<InstalledPackage> GetOldInstalledPackages()
     {
-        var installed = Settings.InstalledPackages;
+        var oldSettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "StabilityMatrix", "settings.json");
+
+        if (!File.Exists(oldSettingsPath))
+            yield break;
+        
+        var oldSettingsJson = File.ReadAllText(oldSettingsPath);
+        var oldSettings = JsonSerializer.Deserialize<Settings>(oldSettingsJson, new JsonSerializerOptions
+        {
+            Converters = { new JsonStringEnumConverter() }
+        });
+        
         // Absolute paths are old formats requiring migration
 #pragma warning disable CS0618
-        foreach (var package in installed.Where(package => package.Path != null))
+        var oldPackages = oldSettings?.InstalledPackages.Where(package => package.Path != null);
 #pragma warning restore CS0618
+
+        if (oldPackages == null)
+            yield break;
+        
+        foreach (var package in oldPackages)
         {
             yield return package;
         }
+    }
+
+    public Guid GetOldActivePackageId()
+    {
+        var oldSettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "StabilityMatrix", "settings.json");
+
+        if (!File.Exists(oldSettingsPath))
+            return default;
+        
+        var oldSettingsJson = File.ReadAllText(oldSettingsPath);
+        var oldSettings = JsonSerializer.Deserialize<Settings>(oldSettingsJson, new JsonSerializerOptions
+        {
+            Converters = { new JsonStringEnumConverter() }
+        });
+
+        if (oldSettings == null)
+            return default;
+        
+        return oldSettings.ActiveInstalledPackage ?? default;
     }
 
     public void SetTheme(string theme)
@@ -173,6 +209,12 @@ public class SettingsManager : ISettingsManager
     public void SetActiveInstalledPackage(InstalledPackage? p)
     {
         Settings.ActiveInstalledPackage = p?.Id;
+        SaveSettings();
+    }
+    
+    public void SetActiveInstalledPackage(Guid guid)
+    {
+        Settings.ActiveInstalledPackage = guid;
         SaveSettings();
     }
     

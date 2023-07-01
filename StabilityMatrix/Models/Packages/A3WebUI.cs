@@ -87,12 +87,6 @@ public class A3WebUI : BaseGitPackage
         },
         new()
         {
-            Name = "Use CPU only",
-            InitialValue = !HardwareHelper.HasNvidiaGpu(),
-            Options = new() {"--cpu"}
-        },
-        new()
-        {
             Name = "Skip Torch CUDA Check",
             InitialValue = !HardwareHelper.HasNvidiaGpu(),
             Options = new() {"--skip-torch-cuda-test"}

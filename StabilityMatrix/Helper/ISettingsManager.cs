@@ -69,4 +69,6 @@ public interface ISettingsManager
     void SaveSettings();
     void SetPlacement(string placementStr);
     void SetSearchOptions(ModelSearchOptions options);
+    Guid GetOldActivePackageId();
+    void SetActiveInstalledPackage(Guid guid);
 }

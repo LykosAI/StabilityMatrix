@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using StabilityMatrix.Helper;
 
 namespace StabilityMatrix.Models;
 
@@ -140,7 +142,7 @@ public class InstalledPackage
         }
         
         // Move the package directory
-        await Task.Run(() => Directory.Move(oldPath, newPackagePath));
+        await Task.Run(() => Utilities.CopyDirectory(oldPath, newPackagePath, true));
 
         // Update the paths
 #pragma warning disable CS0618

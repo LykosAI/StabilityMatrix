@@ -429,7 +429,8 @@
             Content="Import as Connected"
             Grid.Column="0"
             IsChecked="{Binding IsImportAsConnected}"
-            Margin="24,8" />
+            Margin="24,8"
+            ToolTip="Search for connected metadata on new local imports" />
         <StackPanel
             Grid.Column="1"
             Grid.Row="0"

@@ -428,6 +428,7 @@
         <ui:ToggleSwitch
             Content="Import as Connected"
             Grid.Column="0"
+            IsChecked="{Binding IsImportAsConnected}"
             Margin="24,8" />
         <StackPanel
             Grid.Column="1"

@@ -162,6 +162,7 @@ public partial class CheckpointFolder : ObservableObject
         // Hash files and convert them to connected model if found
         if (convertToConnected)
         {
+            var modelFilesCount = copyPaths.Count;
             var modelFiles = copyPaths.Values
                 .Select(path => new FilePath(path));
             

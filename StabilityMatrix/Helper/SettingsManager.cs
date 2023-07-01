@@ -382,6 +382,7 @@ public class SettingsManager : ISettingsManager
         {
             Directory.CreateDirectory(Path.GetDirectoryName(GlobalSettingsPath)!);
             File.Create(GlobalSettingsPath).Close();
+            File.WriteAllText(GlobalSettingsPath, "{}");
             return false;
         }
 
@@ -442,11 +443,16 @@ public class SettingsManager : ISettingsManager
         }
     }
 
-    public void SaveSettings()
+    private void SaveSettings()
     {
         FileLock.TryEnterWriteLock(100000);
         try
         {
+            if (!File.Exists(SettingsPath))
+            {
+                File.Create(SettingsPath).Close();
+            }
+            
             var json = JsonSerializer.Serialize(Settings, new JsonSerializerOptions
             {
                 WriteIndented = true,

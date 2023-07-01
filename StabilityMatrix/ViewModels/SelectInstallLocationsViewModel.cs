@@ -11,17 +11,20 @@ using NLog;
 using Ookii.Dialogs.Wpf;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.FileInterfaces;
 using StabilityMatrix.Models.Settings;
 
 namespace StabilityMatrix.ViewModels;
 
 public partial class SelectInstallLocationsViewModel : ObservableObject
 {
+    private readonly ISettingsManager settingsManager;
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     
     private const string ValidExistingDirectoryText = "Valid existing data directory found";
     private const string InvalidDirectoryText =
         "Directory must be empty or have a valid settings.json file";
+    private const string NotEnoughFreeSpaceText = "Not enough free space on the selected drive";
     
     [ObservableProperty] private string dataDirectory;
     [ObservableProperty] private bool isPortableMode;
@@ -40,10 +43,10 @@ public partial class SelectInstallLocationsViewModel : ObservableObject
     public string DefaultInstallLocation => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix");
     
-    public SelectInstallLocationsViewModel()
+    public SelectInstallLocationsViewModel(ISettingsManager settingsManager)
     {
+        this.settingsManager = settingsManager;
         DataDirectory = DefaultInstallLocation;
-        
         RefreshBadgeViewModel.RefreshFunc = ValidateDataDirectory;
     }
 
@@ -53,7 +56,6 @@ public partial class SelectInstallLocationsViewModel : ObservableObject
     }
     
     // Revalidate on data directory change
-    // ReSharper disable once UnusedParameterInPartialMethod
     partial void OnDataDirectoryChanged(string value)
     {
         RefreshBadgeViewModel.RefreshCommand.ExecuteAsync(null).SafeFireAndForget();
@@ -63,6 +65,24 @@ public partial class SelectInstallLocationsViewModel : ObservableObject
     private async Task<bool> ValidateDataDirectory()
     {
         await using var delay = new MinimumDelay(100, 200);
+
+        if (settingsManager.GetOldInstalledPackages().Any())
+        {
+            var oldSettingsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "StabilityMatrix");
+            var oldDir = new DirectoryPath(oldSettingsDir);
+            var size = await oldDir.GetSizeAsync(includeSymbolicLinks: false);
+            
+            // If there's not enough space in the new DataDirectory, show warning
+            if (size > new DriveInfo(DataDirectory).AvailableFreeSpace)
+            {
+                IsStatusBadgeVisible = true;
+                IsDirectoryValid = false;
+                DirectoryStatusText = NotEnoughFreeSpaceText;
+                return false;
+            }
+        }
+        
         
         // Doesn't exist, this is fine as a new install, hide badge
         if (!Directory.Exists(DataDirectory))

@@ -345,7 +345,12 @@ namespace StabilityMatrix
         private void App_OnExit(object sender, ExitEventArgs e)
         {
             serviceProvider?.GetRequiredService<LaunchViewModel>().OnShutdown();
-            serviceProvider?.GetRequiredService<ILiteDbContext>().Dispose();
+            var settingsManager = serviceProvider?.GetRequiredService<ISettingsManager>();
+
+            if (settingsManager?.TryFindLibrary() ?? false)
+            {
+                serviceProvider?.GetRequiredService<ILiteDbContext>().Dispose();
+            }
         }
 
         [DoesNotReturn]

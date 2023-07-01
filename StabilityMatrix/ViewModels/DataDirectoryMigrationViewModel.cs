@@ -1,10 +1,13 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Models;
+using StabilityMatrix.Models.Packages;
 using StabilityMatrix.Python;
 
 namespace StabilityMatrix.ViewModels;
@@ -14,6 +17,9 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly ISettingsManager settingsManager;
     private readonly IPrerequisiteHelper prerequisiteHelper;
+    private readonly IPyRunner pyRunner;
+    private readonly ISharedFolders sharedFolders;
+    private readonly IPackageFactory packageFactory;
 
     [ObservableProperty] 
     [NotifyPropertyChangedFor(nameof(AutoMigrateText))]
@@ -42,11 +48,16 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
     {
         MigrateProgressText = value > 0 ? $"Migrating {value} of {AutoMigrateCount + NeedsMoveMigrateCount} Packages" : string.Empty;
     }
-    
-    public DataDirectoryMigrationViewModel(ISettingsManager settingsManager, IPrerequisiteHelper prerequisiteHelper)
+
+    public DataDirectoryMigrationViewModel(ISettingsManager settingsManager,
+        IPrerequisiteHelper prerequisiteHelper, IPyRunner pyRunner, ISharedFolders sharedFolders,
+        IPackageFactory packageFactory)
     {
         this.settingsManager = settingsManager;
         this.prerequisiteHelper = prerequisiteHelper;
+        this.pyRunner = pyRunner;
+        this.sharedFolders = sharedFolders;
+        this.packageFactory = packageFactory;
     }
 
     public void OnLoaded()
@@ -73,6 +84,16 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
             MigrateProgressText = "Preparing Environment";
             await prerequisiteHelper.InstallPythonIfNecessary();
         }
+        
+        if (!PyRunner.PipInstalled)
+        {
+            await pyRunner.SetupPip();
+        }
+            
+        if (!PyRunner.VenvInstalled)
+        {
+            await pyRunner.InstallPackage("virtualenv");
+        }
 
         var libraryPath = settingsManager.LibraryDir;
         var oldPackages = settingsManager.GetOldInstalledPackages().ToArray();
@@ -84,15 +105,32 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
             Logger.Info($"Migrating package {MigrateProgressCount} of {oldPackages.Length} at path {package.Path}");
 #pragma warning restore CS0618
             await package.MigratePath();
-            
-            // Save after each step in case interrupted
-            settingsManager.SaveSettings();
-            
+
+            settingsManager.AddInstalledPackage(package);
+
+            // setup model links again
+            var basePackage = packageFactory.FindPackageByName(package.PackageName);
+            if (basePackage != default)
+            {
+                sharedFolders.SetupLinksForPackage(basePackage, package.FullPath!);
+            }
+
             // Also recreate the venv
             var venvPath = Path.Combine(libraryPath, package.FullPath!);
             var venv = new PyVenvRunner(venvPath);
             await venv.Setup(existsOk: true);
         }
 
+        if (settingsManager.GetOldActivePackageId() != default)
+        {
+            settingsManager.SetActiveInstalledPackage(settingsManager.GetOldActivePackageId());
+        }
+        
+        // Copy models directory
+        MigrateProgressText = "Copying models...";
+        var oldModelsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "StabilityMatrix", "Models");
+        var newModelsDir = Path.Combine(libraryPath, "Models");
+        Utilities.CopyDirectory(oldModelsDir, newModelsDir, true);
     }
 }

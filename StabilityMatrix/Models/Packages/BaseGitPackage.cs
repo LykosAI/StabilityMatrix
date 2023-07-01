@@ -120,6 +120,7 @@ public abstract class BaseGitPackage : BasePackage
     {
         await UnzipPackage(progress);
         progress?.Report(new ProgressReport(1f, $"{DisplayName} installed successfully"));
+        File.Delete(DownloadLocation);
     }
 
     protected Task UnzipPackage(IProgress<ProgressReport>? progress = null)

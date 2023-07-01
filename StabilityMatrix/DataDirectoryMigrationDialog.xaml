@@ -44,7 +44,8 @@
             <TextBlock
                 FontSize="16"
                 Margin="8,8,8,8"
-                Text="It looks like package information for this Data Directory was created in an older version of Stability Matrix before v1.1.0, and needs to be upgraded."
+                TextAlignment="Center"
+                Text="It looks like you have data from an older version of Stability Matrix before v1.1.0, would you like to migrate it?"
                 TextWrapping="Wrap" />
             <ui:InfoBar
                 IsClosable="False"
@@ -79,15 +80,24 @@
                 VerticalAlignment="Center" />
         </StackPanel>
 
-        <ui:Button
-            Appearance="Success"
-            Click="ContinueButton_OnClick"
-            Content="Continue"
-            FontSize="16"
-            Grid.Row="2"
-            HorizontalAlignment="Center"
-            Margin="8"
-            Padding="16,8" />
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
+            <ui:Button
+                Appearance="Info"
+                Click="NoThanks_OnClick"
+                Content="No Thanks"
+                FontSize="16"
+                HorizontalAlignment="Center"
+                Margin="8"
+                Padding="16,8" />
+            <ui:Button
+                Appearance="Success"
+                Click="ContinueButton_OnClick"
+                Content="Continue"
+                FontSize="16"
+                HorizontalAlignment="Center"
+                Margin="8"
+                Padding="16,8" />
+        </StackPanel>
     </Grid>
 
 </ui:ContentDialog>

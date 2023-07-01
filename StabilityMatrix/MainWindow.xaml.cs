@@ -127,7 +127,11 @@ namespace StabilityMatrix
         {
             var interopHelper = new WindowInteropHelper(this);
             var placement = ScreenExtensions.GetPlacement(interopHelper.Handle);
-            settingsManager.SetPlacement(placement.ToString());
+
+            if (settingsManager.TryFindLibrary())
+            {
+                settingsManager.SetPlacement(placement.ToString());
+            }
         }
     }
 }

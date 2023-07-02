@@ -8,7 +8,10 @@ using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using StabilityMatrix.Extensions;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Models.FileInterfaces;
+using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;
 
 namespace StabilityMatrix.Models;
@@ -17,6 +20,8 @@ public partial class CheckpointFolder : ObservableObject
 {
     private readonly IDialogFactory dialogFactory;
     private readonly ISettingsManager settingsManager;
+    private readonly IDownloadService downloadService;
+    private readonly ModelFinder modelFinder;
     // ReSharper disable once FieldCanBeMadeReadOnly.Local
     private bool useCategoryVisibility;
     
@@ -61,10 +66,17 @@ public partial class CheckpointFolder : ObservableObject
     public RelayCommand OnPreviewDragEnterCommand => new(() => IsCurrentDragTarget = true);
     public RelayCommand OnPreviewDragLeaveCommand => new(() => IsCurrentDragTarget = false);
 
-    public CheckpointFolder(IDialogFactory dialogFactory, ISettingsManager settingsManager, bool useCategoryVisibility = true)
+    public CheckpointFolder(
+        IDialogFactory dialogFactory, 
+        ISettingsManager settingsManager,
+        IDownloadService downloadService,
+        ModelFinder modelFinder,
+        bool useCategoryVisibility = true)
     {
         this.dialogFactory = dialogFactory;
         this.settingsManager = settingsManager;
+        this.downloadService = downloadService;
+        this.modelFinder = modelFinder;
         this.useCategoryVisibility = useCategoryVisibility;
         CheckpointFiles.CollectionChanged += OnCheckpointFilesChanged;
     }
@@ -125,13 +137,13 @@ public partial class CheckpointFolder : ObservableObject
             return;
         }
 
-        await ImportFilesAsync(files);
+        await ImportFilesAsync(files, settingsManager.Settings.IsImportAsConnected);
     }
     
     /// <summary>
     /// Imports files to the folder. Reports progress to instance properties.
     /// </summary>
-    public async Task ImportFilesAsync(IEnumerable<string> files)
+    public async Task ImportFilesAsync(IEnumerable<string> files, bool convertToConnected = false)
     {
         Progress.IsIndeterminate = true;
         Progress.IsProgressVisible = true;
@@ -146,10 +158,96 @@ public partial class CheckpointFolder : ObservableObject
         });
 
         await FileTransfers.CopyFiles(copyPaths, progress);
-        Progress.Value = 100;
-        Progress.Text = "Import complete";
-        await IndexAsync();
-        DelayedClearProgress(TimeSpan.FromSeconds(1));
+        
+        // Hash files and convert them to connected model if found
+        if (convertToConnected)
+        {
+            var modelFilesCount = copyPaths.Count;
+            var modelFiles = copyPaths.Values
+                .Select(path => new FilePath(path));
+            
+            // Holds tasks for model queries after hash
+            var modelQueryTasks = new List<Task<bool>>();
+
+            foreach (var (i, modelFile) in modelFiles.Enumerate())
+            {
+                var hashProgress = new Progress<ProgressReport>(report =>
+                {
+                    Progress.IsIndeterminate = false;
+                    Progress.Value = report.Percentage;
+                    Progress.Text = modelFilesCount > 1 ? 
+                        $"Computing metadata for {modelFile.Info.Name} ({i}/{modelFilesCount})" : 
+                        $"Computing metadata for {report.Title}";
+                });
+                
+                var hashBlake3 = await FileHash.GetBlake3Async(modelFile, hashProgress);
+                
+                // Start a task to query the model in background
+                var queryTask = Task.Run(async () =>
+                {
+                    var result = await modelFinder.LocalFindModel(hashBlake3);
+                    result ??= await modelFinder.RemoteFindModel(hashBlake3);
+
+                    if (result is null) return false; // Not found
+
+                    var (model, version, file) = result.Value;
+                    
+                    // Save connected model info json
+                    var modelFileName = Path.GetFileNameWithoutExtension(modelFile.Info.Name);
+                    var modelInfo = new ConnectedModelInfo(
+                        model, version, file, DateTimeOffset.UtcNow);
+                    await modelInfo.SaveJsonToDirectory(DirectoryPath, modelFileName);
+
+                    // If available, save thumbnail
+                    var image = version.Images?.FirstOrDefault();
+                    if (image != null)
+                    {
+                        var imageExt = Path.GetExtension(image.Url).TrimStart('.');
+                        if (imageExt is "jpg" or "jpeg" or "png")
+                        {
+                            var imageDownloadPath = Path.GetFullPath(
+                                Path.Combine(DirectoryPath, $"{modelFileName}.preview.{imageExt}"));
+                            await downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
+                        }
+                    }
+
+                    return true;
+                });
+                modelQueryTasks.Add(queryTask);
+            }
+            
+            // Set progress to indeterminate
+            Progress.IsIndeterminate = true;
+            Progress.Text = "Checking connected model information";
+            
+            // Wait for all model queries to finish
+            var modelQueryResults = await Task.WhenAll(modelQueryTasks);
+            
+            var successCount = modelQueryResults.Count(r => r);
+            var totalCount = modelQueryResults.Length;
+            var failCount = totalCount - successCount;
+
+            await IndexAsync();
+            
+            Progress.Value = 100;
+            Progress.Text = successCount switch
+            {
+                0 when failCount > 0 =>
+                    "Import complete. No connected data found.",
+                > 0 when failCount > 0 =>
+                    $"Import complete. Found connected data for {successCount} of {totalCount} models.",
+                _ => $"Import complete. Found connected data for all {totalCount} models."
+            };
+            
+            DelayedClearProgress(TimeSpan.FromSeconds(1));
+        }
+        else
+        {
+            await IndexAsync();
+            Progress.Value = 100;
+            Progress.Text = "Import complete";
+            DelayedClearProgress(TimeSpan.FromSeconds(1));
+        }
     }
 
     /// <summary>
@@ -165,18 +263,29 @@ public partial class CheckpointFolder : ObservableObject
             Progress.Text = string.Empty;
         });
     }
+    
+    /// <summary>
+    /// Gets checkpoint files from folder index
+    /// </summary>
+    private async Task<List<CheckpointFile>> GetCheckpointFilesAsync(IProgress<ProgressReport>? progress = default)
+    {
+        if (!Directory.Exists(DirectoryPath))
+        {
+            return new List<CheckpointFile>();
+        }
+        return await (progress switch
+        {
+            null => Task.Run(() => CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath).ToList()),
+            _ => Task.Run(() => CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath, progress).ToList())
+        });
+    }
 
     /// <summary>
-    /// Indexes the folder for checkpoint files.
+    /// Indexes the folder for checkpoint files and refreshes the CheckPointFiles collection.
     /// </summary>
     public async Task IndexAsync(IProgress<ProgressReport>? progress = default)
     {
-        var checkpointFiles = await (progress switch
-        {
-            null => Task.Run(() => CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath)),
-            _ => Task.Run(() => CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath, progress))
-        });
-
+        var checkpointFiles = await GetCheckpointFilesAsync();
         CheckpointFiles.Clear();
         foreach (var checkpointFile in checkpointFiles)
         {

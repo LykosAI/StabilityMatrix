@@ -70,4 +70,5 @@ public interface ISettingsManager
     void SetSearchOptions(ModelSearchOptions options);
     Guid GetOldActivePackageId();
     void SetActiveInstalledPackage(Guid guid);
+    void SetIsImportAsConnected(bool value);
 }

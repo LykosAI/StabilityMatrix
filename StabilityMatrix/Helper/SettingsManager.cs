@@ -223,6 +223,11 @@ public class SettingsManager : ISettingsManager
         Settings.IsNavExpanded = navExpanded;
         SaveSettings();
     }
+
+    public void SetIsImportAsConnected(bool value)
+    {
+        Settings.IsImportAsConnected = value;
+    }
     
     public void AddPathExtension(string pathExtension)
     {

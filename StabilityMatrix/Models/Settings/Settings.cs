@@ -15,13 +15,16 @@ public class Settings
         Wpf.Ui.Controls.Window.WindowBackdropType.Mica;
     public List<InstalledPackage> InstalledPackages { get; set; } = new();
     public Guid? ActiveInstalledPackage { get; set; }
-    public bool IsNavExpanded { get; set; }
     public bool HasSeenWelcomeNotification { get; set; }
     public List<string>? PathExtensions { get; set; }
     public string? WebApiHost { get; set; }
     public string? WebApiPort { get; set; }
+    
+    // UI states
     public bool ModelBrowserNsfwEnabled { get; set; }
-
+    public bool IsNavExpanded { get; set; }
+    public bool IsImportAsConnected { get; set; }
+    
     public SharedFolderType? SharedFolderVisibleCategories { get; set; } =
         SharedFolderType.StableDiffusion | 
         SharedFolderType.Lora | 

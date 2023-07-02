@@ -127,7 +127,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         await modelInfo.SaveJsonToDirectory(downloadFolder, modelFileName);
         
         // If available, save a model image
-        if (latestVersion.Images.Any())
+        if (latestVersion.Images != null && latestVersion.Images.Any())
         {
             var image = latestVersion.Images[0];
             var imageExtension = Path.GetExtension(image.Url).TrimStart('.');

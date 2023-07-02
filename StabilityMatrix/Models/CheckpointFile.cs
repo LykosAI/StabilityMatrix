@@ -159,8 +159,7 @@ public partial class CheckpointFile : ObservableObject
         // Get all files with supported extensions
         var allExtensions = SupportedCheckpointExtensions
             .Concat(SupportedImageExtensions)
-            .Concat(SupportedMetadataExtensions)
-            .ToImmutableHashSet();
+            .Concat(SupportedMetadataExtensions);
 
         var files = allExtensions.AsParallel()
             .SelectMany(pattern => Directory.EnumerateFiles(directory, $"*{pattern}", searchOption)).ToDictionary<string, string>(Path.GetFileName);

@@ -225,6 +225,7 @@ namespace StabilityMatrix
                 client.Credentials = new Credentials(githubApiKey);
                 return client;
             });
+            serviceCollection.AddSingleton<ModelFinder>();
 
             // Database
             serviceCollection.AddSingleton<ILiteDbContext, LiteDbContext>();

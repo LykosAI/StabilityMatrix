@@ -197,7 +197,7 @@
                            IsReadOnly="True"
                            AutoScroll="True"
                            FontFamily="Consolas"
-                           ItemHeight="24"
+                           ItemHeight="20"
                            Foreground="White"
                            BorderThickness="0"
                            VerticalScrollBarVisibility="Auto"

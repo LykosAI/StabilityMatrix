@@ -343,32 +343,24 @@ public partial class LaunchViewModel : ObservableObject
 
             if (output.Contains("Total progress") && !output.Contains(" 0%"))
             {
-                var index = ConsoleHistory.Reverse().ToList()
-                    .FindIndex(x => x.Contains("Total progress"));
-                if (index != -1)
-                {
-                    ConsoleHistory.RemoveAt(ConsoleHistory.Count - 1 - index);
-                }
+                ConsoleHistory[^2] = output.TrimEnd('\n');
             }
             else if ((output.Contains("it/s") || output.Contains("s/it")) &&
                      !output.Contains("Total progress") && !output.Contains(" 0%"))
             {
-                var index = ConsoleHistory.Reverse().ToList().FindIndex(x => x.Contains("s/it") &&
-                    !x.Contains("Total progress"));
-                if (index != -1)
+                ConsoleHistory[^1] = output.TrimEnd('\n');
+            }
+            else
+            {
+                if (!string.IsNullOrWhiteSpace(output.TrimEnd('\n')))
                 {
-                    ConsoleHistory.RemoveAt(ConsoleHistory.Count - 1 - index);
-                }
-
-                index = ConsoleHistory.Reverse().ToList().FindIndex(x => x.Contains("it/s") &&
-                    !x.Contains("Total progress"));
-                if (index != -1)
-                {
-                    ConsoleHistory.RemoveAt(ConsoleHistory.Count - 1 - index);
+                    ConsoleHistory.Add(output.TrimEnd('\n'));
                 }
             }
-
-            ConsoleHistory.Add(output);
+            
+            ConsoleHistory =
+                new ObservableCollection<string>(
+                    ConsoleHistory.Where(str => !string.IsNullOrWhiteSpace(str)));
             ScrollNeeded?.Invoke(this, EventArgs.Empty);
         });
     }

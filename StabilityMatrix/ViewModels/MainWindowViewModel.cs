@@ -137,30 +137,7 @@ public partial class MainWindowViewModel : ObservableObject
         // Check if library path is set
         if (!settingsManager.TryFindLibrary())
         {
-            // See if this is an existing user for message variation
-            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var settingsPath = Path.Combine(appDataPath, "StabilityMatrix", "settings.json");
-            var isExistingUser = File.Exists(settingsPath);
-            
-            // need to show dialog to choose library location
-            var dialog = dialogFactory.CreateInstallLocationsDialog();
-            var result = await dialog.ShowAsync();
-            if (result != ContentDialogResult.Primary)
-            {
-                Application.Current.Shutdown();
-            }
-
-            // 1. For portable mode, call settings.SetPortableMode()
-            var viewModel = (dialog.DataContext as SelectInstallLocationsViewModel)!;
-            if (viewModel.IsPortableMode)
-            {
-                settingsManager.SetPortableMode();
-            }
-            // 2. For custom path, call settings.SetLibraryPath(path)
-            else
-            {
-                settingsManager.SetLibraryPath(viewModel.DataDirectory);
-            }
+            await ShowPathSelectionDialog();            
         }
         
         // Try to find library again, should be found now
@@ -174,10 +151,48 @@ public partial class MainWindowViewModel : ObservableObject
         {
             var dialog = dialogFactory.CreateDataDirectoryMigrationDialog();
             var result = await dialog.ShowAsync();
-            if (result != ContentDialogResult.Primary)
+            if (result == ContentDialogResult.None)
             {
                 Application.Current.Shutdown();
             }
+            else if (result == ContentDialogResult.Secondary)
+            {
+                var portableMarkerFile = Path.Combine("Data", ".sm-portable");
+                if (File.Exists(portableMarkerFile))
+                {
+                    File.Delete(portableMarkerFile);
+                }
+                await ShowPathSelectionDialog();
+                await DoSettingsCheck();
+            }
+        }
+    }
+    
+    private async Task ShowPathSelectionDialog()
+    {
+        // See if this is an existing user for message variation
+        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var settingsPath = Path.Combine(appDataPath, "StabilityMatrix", "settings.json");
+        var isExistingUser = File.Exists(settingsPath);
+            
+        // need to show dialog to choose library location
+        var dialog = dialogFactory.CreateInstallLocationsDialog();
+        var result = await dialog.ShowAsync();
+        if (result != ContentDialogResult.Primary)
+        {
+            Application.Current.Shutdown();
+        }
+
+        // 1. For portable mode, call settings.SetPortableMode()
+        var viewModel = (dialog.DataContext as SelectInstallLocationsViewModel)!;
+        if (viewModel.IsPortableMode)
+        {
+            settingsManager.SetPortableMode();
+        }
+        // 2. For custom path, call settings.SetLibraryPath(path)
+        else
+        {
+            settingsManager.SetLibraryPath(viewModel.DataDirectory);
         }
     }
 

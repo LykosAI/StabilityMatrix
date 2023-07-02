@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.FileInterfaces;
 using StabilityMatrix.Python;
 
 namespace StabilityMatrix.ViewModels;
@@ -36,12 +37,19 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
     
     [ObservableProperty] private bool isMigrating;
     [ObservableProperty] private bool canShowNoThanksButton;
+    
+    [ObservableProperty] 
+    [NotifyPropertyChangedFor(nameof(NeedsMoveMigrateText))]
+    [NotifyPropertyChangedFor(nameof(MigrateProgressText))]
+    private bool hasFreeSpaceError;
 
     public string AutoMigrateText => AutoMigrateCount == 0 ? string.Empty :
         $"{AutoMigrateCount} Packages will be automatically migrated to the new format";
-    
-    public string NeedsMoveMigrateText => NeedsMoveMigrateCount == 0 ? string.Empty :
-        $"{NeedsMoveMigrateCount} Packages are not relative to the Data Directory and will be moved, this may take a few minutes";
+
+    public string NeedsMoveMigrateText => NeedsMoveMigrateCount == 0 || HasFreeSpaceError
+        ? string.Empty
+        : $"{NeedsMoveMigrateCount} Package{(NeedsMoveMigrateCount > 1 ? "s" : "")} {(NeedsMoveMigrateCount > 1 ? "are" : "is")} " +
+          "not relative to the Data Directory and will be moved, this may take a few minutes";
 
     [ObservableProperty]
     private string migrateProgressText = "";
@@ -62,10 +70,11 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
         this.packageFactory = packageFactory;
     }
 
-    public void OnLoaded()
+    public async Task OnLoaded()
     {
         AutoMigrateCount = 0;
         NeedsMoveMigrateCount = 0;
+        HasFreeSpaceError = false;
         
         // Get all old packages
         var oldPackages = settingsManager.GetOldInstalledPackages().ToArray();
@@ -78,6 +87,19 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "StabilityMatrix");
         CanShowNoThanksButton = settingsManager.LibraryDir != oldLibraryDir;
+        
+
+        if (settingsManager.LibraryDir != oldLibraryDir)
+        {
+            var oldDir = new DirectoryPath(oldLibraryDir);
+            var size = await oldDir.GetSizeAsync(includeSymbolicLinks: false);
+
+            // If there's not enough space in the new DataDirectory, show warning
+            if (size > new DriveInfo(settingsManager.LibraryDir).AvailableFreeSpace)
+            {
+                HasFreeSpaceError = true;
+            }
+        }
     }
     
     public void CleanupOldInstall()

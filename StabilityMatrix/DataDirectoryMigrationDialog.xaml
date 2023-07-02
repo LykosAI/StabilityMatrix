@@ -7,6 +7,7 @@
     d:DesignHeight="512"
     d:DesignWidth="640"
     mc:Ignorable="d"
+    UseLayoutRounding="True"
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     x:Class="StabilityMatrix.DataDirectoryMigrationDialog"
@@ -28,6 +29,10 @@
             <converters:IsStringNullOrWhitespaceConverter />
             <converters:BoolNegationConverter />
         </converters:ValueConverterGroup>
+        <converters:ValueConverterGroup x:Key="InvertAndVisibilitate">
+            <converters:BoolNegationConverter />
+            <BooleanToVisibilityConverter />
+        </converters:ValueConverterGroup>
     </ui:ContentDialog.Resources>
 
     <Grid
@@ -39,6 +44,7 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <StackPanel>
@@ -48,6 +54,12 @@
                 TextAlignment="Center"
                 Text="It looks like you have data from an older version of Stability Matrix before v1.1.0, would you like to migrate it?"
                 TextWrapping="Wrap" />
+            <ui:InfoBar
+                IsClosable="False"
+                IsOpen="{Binding HasFreeSpaceError}"
+                Margin="8"
+                Severity="Warning"
+                Title="The drive you selected doesn't have enough space for migration. If you don't want to migrate, simply click 'No Thanks'. Otherwise, please choose a different directory before proceeding with the migration." />
             <ui:InfoBar
                 IsClosable="False"
                 IsOpen="{Binding AutoMigrateText, Converter={StaticResource InvertIsStringNullOrWhitespaceConverter}}"
@@ -80,18 +92,28 @@
                 Text="{Binding MigrateProgressText, FallbackValue=Migrating 1 of 2 Packages}"
                 VerticalAlignment="Center" />
         </StackPanel>
-
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
+        
+        <StackPanel Grid.Row="2" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center">
+            
             <ui:Button
-                Appearance="Info"
+                Appearance="Secondary"
                 Click="NoThanks_OnClick"
                 Content="No Thanks"
                 FontSize="16"
                 HorizontalAlignment="Center"
                 Margin="8"
                 Visibility="{Binding CanShowNoThanksButton, Converter={StaticResource BooleanToVisibilityConverter}}"
-                IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"
-                Padding="16,8" />
+                IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"/>
+            <ui:Button Appearance="Info"
+                       Click="Back_OnClick"
+                       Content="Select Directory"
+                       FontSize="16"
+                       HorizontalAlignment="Center"
+                       Margin="8"
+                       Visibility="{Binding HasFreeSpaceError, Converter={StaticResource BooleanToVisibilityConverter}}"
+                       IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"/>
             <ui:Button
                 Appearance="Success"
                 Click="ContinueButton_OnClick"
@@ -99,8 +121,8 @@
                 FontSize="16"
                 HorizontalAlignment="Center"
                 Margin="8"
-                IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"
-                Padding="16,8" />
+                Visibility="{Binding HasFreeSpaceError, Converter={StaticResource InvertAndVisibilitate}}"
+                IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"/>
         </StackPanel>
     </Grid>
 

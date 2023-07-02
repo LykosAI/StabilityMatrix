@@ -67,24 +67,6 @@ public partial class SelectInstallLocationsViewModel : ObservableObject
     {
         await using var delay = new MinimumDelay(100, 200);
 
-        if (settingsManager.GetOldInstalledPackages().Any())
-        {
-            var oldSettingsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "StabilityMatrix");
-            var oldDir = new DirectoryPath(oldSettingsDir);
-            var size = await oldDir.GetSizeAsync(includeSymbolicLinks: false);
-            
-            // If there's not enough space in the new DataDirectory, show warning
-            if (size > new DriveInfo(DataDirectory).AvailableFreeSpace)
-            {
-                IsStatusBadgeVisible = true;
-                IsDirectoryValid = false;
-                DirectoryStatusText = NotEnoughFreeSpaceText;
-                return false;
-            }
-        }
-        
-        
         // Doesn't exist, this is fine as a new install, hide badge
         if (!Directory.Exists(DataDirectory))
         {

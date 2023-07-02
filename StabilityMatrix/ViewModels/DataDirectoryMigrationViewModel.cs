@@ -7,7 +7,6 @@ using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
-using StabilityMatrix.Models.Packages;
 using StabilityMatrix.Python;
 
 namespace StabilityMatrix.ViewModels;
@@ -96,23 +95,30 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
         }
 
         var libraryPath = settingsManager.LibraryDir;
+        var oldLibraryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix");
         var oldPackages = settingsManager.GetOldInstalledPackages().ToArray();
 
         foreach (var package in oldPackages)
         {
-            MigrateProgressCount++;
+            settingsManager.RemoveInstalledPackage(package);
+
 #pragma warning disable CS0618
             Logger.Info($"Migrating package {MigrateProgressCount} of {oldPackages.Length} at path {package.Path}");
 #pragma warning restore CS0618
+            
             await package.MigratePath();
-
+            MigrateProgressCount++;
             settingsManager.AddInstalledPackage(package);
+            settingsManager.SetActiveInstalledPackage(package);
 
-            // setup model links again
-            var basePackage = packageFactory.FindPackageByName(package.PackageName);
-            if (basePackage != default)
+            if (oldLibraryPath != libraryPath)
             {
-                sharedFolders.SetupLinksForPackage(basePackage, package.FullPath!);
+                // setup model links again
+                var basePackage = packageFactory.FindPackageByName(package.PackageName);
+                if (basePackage != default)
+                {
+                    sharedFolders.SetupLinksForPackage(basePackage, package.FullPath!);
+                }
             }
 
             // Also recreate the venv
@@ -121,16 +127,17 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
             await venv.Setup(existsOk: true);
         }
 
-        if (settingsManager.GetOldActivePackageId() != default)
+        // Copy models directory
+        if (oldLibraryPath != libraryPath)
         {
-            settingsManager.SetActiveInstalledPackage(settingsManager.GetOldActivePackageId());
+            MigrateProgressText = "Copying models...";
+            var oldModelsDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "StabilityMatrix", "Models");
+            var newModelsDir = Path.Combine(libraryPath, "Models");
+            Utilities.CopyDirectory(oldModelsDir, newModelsDir, true);
         }
         
-        // Copy models directory
-        MigrateProgressText = "Copying models...";
-        var oldModelsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "StabilityMatrix", "Models");
-        var newModelsDir = Path.Combine(libraryPath, "Models");
-        Utilities.CopyDirectory(oldModelsDir, newModelsDir, true);
+        EventManager.Instance.OnInstalledPackagesChanged();
     }
 }

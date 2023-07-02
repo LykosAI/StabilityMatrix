@@ -120,6 +120,18 @@ public class InstalledPackage
         var oldPath = Path;
 #pragma warning restore CS0618
         if (oldPath == null) return;
+
+        var libDir = libraryDirectory ?? GlobalConfig.LibraryDir;
+        // if old package Path is same as new library, return
+        if (oldPath.Replace(DisplayName, "") == libDir)
+        {
+            // Update the paths
+#pragma warning disable CS0618
+            Path = null;
+#pragma warning restore CS0618
+            LibraryPath = System.IO.Path.Combine("Packages", DisplayName);
+            return;
+        }
         
         // Try using pure migration first
         if (TryPureMigratePath(libraryDirectory)) return;
@@ -149,5 +161,22 @@ public class InstalledPackage
         Path = null;
 #pragma warning restore CS0618
         LibraryPath = System.IO.Path.Combine("Packages", packageFolderName);
+    }
+
+    protected bool Equals(InstalledPackage other)
+    {
+        return Id.Equals(other.Id);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj)) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        return obj.GetType() == this.GetType() && Equals((InstalledPackage) obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return Id.GetHashCode();
     }
 }

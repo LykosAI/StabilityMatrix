@@ -37,7 +37,8 @@ public static class Utilities
         foreach (var file in dir.GetFiles())
         {
             var targetFilePath = Path.Combine(destinationDir, file.Name);
-            file.CopyTo(targetFilePath);
+            if (file.FullName == targetFilePath) continue;
+            file.CopyTo(targetFilePath, true);
         }
 
         if (!recursive) return;

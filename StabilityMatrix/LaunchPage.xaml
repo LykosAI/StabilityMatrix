@@ -16,7 +16,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:StabilityMatrix.Models"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:terminal="clr-namespace:Simple.Wpf.Terminal;assembly=Simple.Wpf.Terminal">
 
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
@@ -190,22 +191,18 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>
         </Grid>
-        <ScrollViewer
-            Grid.Row="1"
-            Margin="0,8,0,0"
-            x:Name="OutputScrollViewer">
-            <TextBlock
-                Background="{DynamicResource ControlFillColorDisabledBrush}"
-                FontFamily="Consolas"
-                HorizontalAlignment="Stretch"
-                Margin="24,0,10,10"
-                Name="OutputBlock"
-                ScrollViewer.HorizontalScrollBarVisibility="Hidden"
-                ScrollViewer.VerticalScrollBarVisibility="Auto"
-                Text="{Binding ConsoleOutput, Mode=OneWay}"
-                TextWrapping="Wrap"
-                VerticalAlignment="Stretch" />
-        </ScrollViewer>
+        <terminal:Terminal Grid.Row="1"
+                           Margin="24,8,26,10"
+                           Background="{DynamicResource ControlFillColorDisabledBrush}"
+                           IsReadOnly="True"
+                           AutoScroll="True"
+                           FontFamily="Consolas"
+                           ItemHeight="22"
+                           Foreground="White"
+                           BorderThickness="0"
+                           VerticalScrollBarVisibility="Auto"
+                           ItemsSource="{Binding ConsoleHistory, Mode=OneWay}"/>
+        
         <ui:Button
             Appearance="Success"
             Command="{Binding LaunchWebUiCommand}"

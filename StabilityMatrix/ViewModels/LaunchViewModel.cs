@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -36,11 +37,11 @@ public partial class LaunchViewModel : ObservableObject
     private bool clearingPackages = false;
 
     [ObservableProperty] private string consoleInput = "";
-    [ObservableProperty] private string consoleOutput = "";
     [ObservableProperty] private Visibility launchButtonVisibility;
     [ObservableProperty] private Visibility stopButtonVisibility;
     [ObservableProperty] private bool isLaunchTeachingTipsOpen = false;
     [ObservableProperty] private bool showWebUiButton;
+    [ObservableProperty] private ObservableCollection<string>? consoleHistory;
 
     private string webUiUrl = string.Empty;
     private InstalledPackage? selectedPackage;
@@ -64,8 +65,6 @@ public partial class LaunchViewModel : ObservableObject
 
     [ObservableProperty] private ObservableCollection<InstalledPackage> installedPackages = new();
 
-    public event EventHandler? ScrollNeeded;
-
     public LaunchViewModel(ISettingsManager settingsManager,
         IPackageFactory packageFactory,
         IContentDialogService contentDialogService,
@@ -86,7 +85,7 @@ public partial class LaunchViewModel : ObservableObject
         this.snackbarService = snackbarService;
         this.sharedFolders = sharedFolders;
         SetProcessRunning(false);
-        
+
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
         EventManager.Instance.TeachingTooltipNeeded += OnTeachingTooltipNeeded;
 
@@ -103,7 +102,8 @@ public partial class LaunchViewModel : ObservableObject
         OnLoaded();
     }
 
-    private void ToastNotificationManagerCompatOnOnActivated(ToastNotificationActivatedEventArgsCompat e)
+    private void ToastNotificationManagerCompatOnOnActivated(
+        ToastNotificationActivatedEventArgsCompat e)
     {
         if (!e.Argument.StartsWith("http"))
             return;
@@ -112,6 +112,7 @@ public partial class LaunchViewModel : ObservableObject
         {
             webUiUrl = e.Argument;
         }
+
         LaunchWebUi();
     }
 
@@ -123,24 +124,27 @@ public partial class LaunchViewModel : ObservableObject
         {
             // No selected package: error snackbar
             snackbarService.ShowSnackbarAsync(
-                "You must install and select a package before launching", 
+                "You must install and select a package before launching",
                 "No package selected").SafeFireAndForget();
             return;
         }
-        
+
         var activeInstallName = activeInstall.PackageName;
-        var basePackage = string.IsNullOrWhiteSpace(activeInstallName) 
-            ? null : packageFactory.FindPackageByName(activeInstallName);
-        
+        var basePackage = string.IsNullOrWhiteSpace(activeInstallName)
+            ? null
+            : packageFactory.FindPackageByName(activeInstallName);
+
         if (basePackage == null)
         {
-            logger.LogWarning("During launch, package name '{PackageName}' did not match a definition", activeInstallName);
+            logger.LogWarning(
+                "During launch, package name '{PackageName}' did not match a definition",
+                activeInstallName);
             snackbarService.ShowSnackbarAsync(
-                "Install package name did not match a definition. Please reinstall and let us know about this issue.", 
+                "Install package name did not match a definition. Please reinstall and let us know about this issue.",
                 "Package name invalid").SafeFireAndForget();
             return;
         }
-        
+
         // If this is the first launch (LaunchArgs is null),
         // load and save a launch options dialog in background
         // so that dynamic initial values are saved.
@@ -154,8 +158,8 @@ public partial class LaunchViewModel : ObservableObject
         }
 
         // Clear console
-        ConsoleOutput = "";
-        
+        ConsoleHistory?.Clear();
+
         await pyRunner.Initialize();
 
         // Get path from package
@@ -164,14 +168,14 @@ public partial class LaunchViewModel : ObservableObject
         basePackage.ConsoleOutput += OnConsoleOutput;
         basePackage.Exited += OnExit;
         basePackage.StartupComplete += RunningPackageOnStartupComplete;
-        
+
         // Update shared folder links (in case library paths changed)
         sharedFolders.UpdateLinksForPackage(basePackage, packagePath);
-        
+
         // Load user launch args from settings and convert to string
         var userArgs = settingsManager.GetLaunchArgs(activeInstall.Id);
         var userArgsString = string.Join(" ", userArgs.Select(opt => opt.ToArgString()));
-        
+
         // Join with extras, if any
         userArgsString = string.Join(" ", userArgsString, basePackage.ExtraLaunchArguments);
         await basePackage.RunPackage(packagePath, userArgsString);
@@ -196,7 +200,7 @@ public partial class LaunchViewModel : ObservableObject
             logger.LogWarning("Package {Name} not found", name);
             return;
         }
-        
+
         var definitions = package.LaunchOptions;
         // Check if package supports IArgParsable
         // Use dynamic parsed args over static
@@ -214,7 +218,7 @@ public partial class LaunchViewModel : ObservableObject
         dialog.PrimaryButtonText = "Save";
         dialog.CloseButtonText = "Cancel";
         var result = await dialog.ShowAsync();
-        
+
         if (result == ContentDialogResult.Primary)
         {
             // Save config
@@ -246,7 +250,6 @@ public partial class LaunchViewModel : ObservableObject
         {
             logger.LogWarning("Failed to show Windows notification: {Message}", e.Message);
         }
-
     }
 
     public void OnLoaded()
@@ -260,6 +263,7 @@ public partial class LaunchViewModel : ObservableObject
                 logger.LogTrace($"No packages for {nameof(LaunchViewModel)}");
                 return;
             }
+
             var activePackageId = settingsManager.Settings.ActiveInstalledPackage;
             if (activePackageId != null)
             {
@@ -287,7 +291,8 @@ public partial class LaunchViewModel : ObservableObject
         runningPackage?.Shutdown();
         runningPackage = null;
         SetProcessRunning(false);
-        ConsoleOutput += $"{Environment.NewLine}Stopped process at {DateTimeOffset.Now}{Environment.NewLine}";
+        ConsoleHistory?.Add(
+            $"Stopped process at {DateTimeOffset.Now}");
         ShowWebUiButton = false;
         return Task.CompletedTask;
     }
@@ -328,11 +333,31 @@ public partial class LaunchViewModel : ObservableObject
 
     private void OnConsoleOutput(object? sender, string output)
     {
-        if (output == null) return;
-        Dispatcher.CurrentDispatcher.Invoke(() =>
+        if (string.IsNullOrWhiteSpace(output)) return;
+        Application.Current.Dispatcher.Invoke(() =>
         {
-            ConsoleOutput += output + "\n";
-            ScrollNeeded?.Invoke(this, EventArgs.Empty);
+            ConsoleHistory ??= new ObservableCollection<string>();
+
+            if (output.Contains("Total progress") && !output.Contains(" 0%"))
+            {
+                ConsoleHistory[^2] = output.TrimEnd('\n');
+            }
+            else if ((output.Contains("it/s") || output.Contains("s/it")) &&
+                     !output.Contains("Total progress") && !output.Contains(" 0%"))
+            {
+                ConsoleHistory[^1] = output.TrimEnd('\n');
+            }
+            else
+            {
+                if (!string.IsNullOrWhiteSpace(output.TrimEnd('\n')))
+                {
+                    ConsoleHistory.Add(output.TrimEnd('\n'));
+                }
+            }
+            
+            ConsoleHistory =
+                new ObservableCollection<string>(
+                    ConsoleHistory.Where(str => !string.IsNullOrWhiteSpace(str)));
         });
     }
 
@@ -342,11 +367,10 @@ public partial class LaunchViewModel : ObservableObject
         basePackage.ConsoleOutput -= OnConsoleOutput;
         basePackage.Exited -= OnExit;
         basePackage.StartupComplete -= RunningPackageOnStartupComplete;
-        
+
         Dispatcher.CurrentDispatcher.Invoke(() =>
         {
-            ConsoleOutput += $"Venv process exited with code {exitCode}";
-            ScrollNeeded?.Invoke(this, EventArgs.Empty);
+            ConsoleHistory?.Add($"Venv process exited with code {exitCode}");
             SetProcessRunning(false);
             ShowWebUiButton = false;
         });

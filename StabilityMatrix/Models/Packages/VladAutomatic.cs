@@ -96,8 +96,6 @@ public class VladAutomatic : BaseGitPackage
         
         Directory.CreateDirectory(InstallLocation);
 
-        // await PrerequisiteHelper.RunGit("config", "--global", "user.name \"StabilityMatrix\"");
-        // await PrerequisiteHelper.RunGit("config", "--global", "user.email \"contact@lykos.ai\"");
         await PrerequisiteHelper.RunGit(null, "clone", "https://github.com/vladmandic/automatic",
             InstallLocation);
         await PrerequisiteHelper.RunGit(workingDirectory: InstallLocation, "checkout", version);

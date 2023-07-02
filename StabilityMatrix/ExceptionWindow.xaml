@@ -6,30 +6,33 @@
     Title="Unexpected Application Error"
     Width="800"
     WindowStartupLocation="CenterOwner"
+    mc:Ignorable="d"
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-    mc:Ignorable="d"
     x:Class="StabilityMatrix.ExceptionWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
-    xmlns:local="clr-namespace:StabilityMatrix"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:StabilityMatrix.Converters">
 
     <Window.DataContext>
         <viewModels:ExceptionWindowViewModel />
     </Window.DataContext>
 
     <Window.Resources>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
         <Style TargetType="TextBlock" x:Key="Label">
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="Margin" Value="0,8,0,4" />
+            <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
         <Style TargetType="TextBlock" x:Key="Content">
             <Setter Property="Margin" Value="0,4,0,8" />
+            <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
     </Window.Resources>
 
@@ -62,37 +65,32 @@
                 VerticalAlignment="Top" />
 
             <!--  Exception details  -->
-            <Border Grid.Row="1" VerticalAlignment="Stretch">
-                <Expander
-                    Header="Exception Details"
-                    IsExpanded="True"
-                    Margin="16,8,16,8"
-                    VerticalAlignment="Top">
-
-                    <ScrollViewer
-                        CanContentScroll="True"
-                        HorizontalScrollBarVisibility="Auto"
-                        VerticalScrollBarVisibility="Auto">
-                        <StackPanel>
-                            <!--  Exception Message  -->
-                            <TextBlock Style="{StaticResource Label}" Text="Exception message" />
-                            <TextBlock
-                                Grid.Column="1"
-                                Text="{Binding Exception.Message, Mode=OneWay, TargetNullValue=-}"
-                                TextWrapping="Wrap" />
-                            <!--  Exception Type  -->
-                            <TextBlock Style="{StaticResource Label}" Text="Exception type" />
-                            <TextBlock Style="{StaticResource Content}" Text="{Binding ExceptionType, Mode=OneWay, TargetNullValue=-}" />
-                            <!--  Callstack  -->
-                            <TextBlock Style="{StaticResource Label}" Text="Callstack" />
-                            <TextBlock Style="{StaticResource Content}" Text="{Binding Exception.StackTrace, Mode=OneWay, TargetNullValue=-}" />
-                            <!--  Inner exception  -->
-                            <TextBlock Style="{StaticResource Label}" Text="Inner exception" />
-                            <TextBlock Style="{StaticResource Content}" Text="{Binding Exception.InnerException, Mode=OneWay, TargetNullValue=-}" />
-                        </StackPanel>
-                    </ScrollViewer>
-                </Expander>
-            </Border>
+            <Expander Grid.Row="1"
+                      VerticalAlignment="Top"
+                      Header="{Binding ExceptionType, Mode=OneWay, TargetNullValue=-, FallbackValue=Unknown Exception}"
+                      IsExpanded="True"
+                      Padding="12,12,12,12"
+                      Margin="16,0,16,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="250">
+                    <StackPanel>
+                        <!--  Exception Message  -->
+                        <TextBlock Style="{StaticResource Label}" Text="Details" />
+                        <TextBlock Style="{StaticResource Content}"
+                                   Text="{Binding Exception.Message, Mode=OneWay, TargetNullValue=-}" />
+                        <!--  Callstack  -->
+                        <TextBlock Style="{StaticResource Label}" Text="Callstack" />
+                        <TextBlock Style="{StaticResource Content}"
+                                   Text="{Binding Exception.StackTrace, Mode=OneWay, TargetNullValue=-}" />
+                        <!--  Inner exception  -->
+                        <TextBlock Style="{StaticResource Label}" 
+                                   Visibility="{Binding Exception.InnerException, Converter={StaticResource NullToVisibilityConverter}}"
+                                   Text="Inner exception" />
+                        <TextBlock Style="{StaticResource Content}"
+                                      Visibility="{Binding Exception.InnerException, Converter={StaticResource NullToVisibilityConverter}}"
+                                   Text="{Binding Exception.InnerException, Mode=OneWay, TargetNullValue=-}" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Expander>
             <!--  Close Button  -->
             <Button
                 Content="Exit Application"
@@ -102,7 +100,8 @@
                 Padding="8">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="Click">
-                        <i:CallMethodAction MethodName="Close" TargetObject="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" />
+                        <i:CallMethodAction MethodName="Close"
+                                            TargetObject="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Window}}" />
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
             </Button>

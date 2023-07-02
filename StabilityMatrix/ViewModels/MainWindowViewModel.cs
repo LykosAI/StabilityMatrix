@@ -214,6 +214,8 @@ public partial class MainWindowViewModel : ObservableObject
     
     private void ResizeWindow()
     {
+        if (Application.Current.MainWindow == null) return;
+        
         var interopHelper = new WindowInteropHelper(Application.Current.MainWindow);
 
         if (string.IsNullOrWhiteSpace(settingsManager.Settings.Placement))

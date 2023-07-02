@@ -74,6 +74,30 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
         NeedsMoveMigrateCount = oldPackages.Length - AutoMigrateCount;
     }
     
+    public void CleanupOldInstall()
+    {
+        var oldLibraryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix");
+        if (settingsManager.LibraryDir == oldLibraryPath) return;
+        
+        // rename old settings.json to settings.json.old
+        var oldSettingsPath = Path.Combine(oldLibraryPath, "settings.json");
+        File.Move(oldSettingsPath, oldSettingsPath + ".old", true);
+            
+        // delete old PortableGit dir
+        var oldPortableGitDir = Path.Combine(oldLibraryPath, "PortableGit");
+        if (Directory.Exists(oldPortableGitDir))
+        {
+            Directory.Delete(oldPortableGitDir, true);
+        }
+            
+        // delete old Assets dir
+        var oldAssetsDir = Path.Combine(oldLibraryPath, "Assets");
+        if (Directory.Exists(oldAssetsDir))
+        {
+            Directory.Delete(oldAssetsDir, true);
+        }
+    }
+    
     [RelayCommand]
     private async Task MigrateAsync()
     {
@@ -138,10 +162,8 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
             var oldModelsDir = Path.Combine(oldLibraryPath, "Models");
             var newModelsDir = Path.Combine(libraryPath, "Models");
             Utilities.CopyDirectory(oldModelsDir, newModelsDir, true);
-            
-            // rename old settings.json to settings.json.old
-            var oldSettingsPath = Path.Combine(oldLibraryPath, "settings.json");
-            File.Move(oldSettingsPath, oldSettingsPath + ".old", true);
+
+            CleanupOldInstall();
         }
 
         IsMigrating = false;

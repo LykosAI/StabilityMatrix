@@ -9,31 +9,30 @@ namespace StabilityMatrix;
 
 public partial class DataDirectoryMigrationDialog : ContentDialog
 {
+    private readonly DataDirectoryMigrationViewModel viewModel;
+
     public DataDirectoryMigrationDialog(IContentDialogService dialogService, DataDirectoryMigrationViewModel viewModel) : base(
         dialogService.GetContentPresenter())
     {
+        this.viewModel = viewModel;
         InitializeComponent();
         DataContext = viewModel;
     }
 
     private async void ContinueButton_OnClick(object sender, RoutedEventArgs e)
     {
-        await ((DataDirectoryMigrationViewModel) DataContext).MigrateCommand.ExecuteAsync(null);
+        await viewModel.MigrateCommand.ExecuteAsync(null);
         Hide(ContentDialogResult.Primary);
     }
 
     private void DataDirectoryMigrationDialog_OnLoaded(object sender, RoutedEventArgs e)
     {
-        ((DataDirectoryMigrationViewModel) DataContext).OnLoaded();
+        viewModel.OnLoaded();
     }
 
     private void NoThanks_OnClick(object sender, RoutedEventArgs e)
     {
-        var oldSettingsPath =
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "StabilityMatrix", "settings.json");
-        File.Move(oldSettingsPath, oldSettingsPath + ".old", true);
-        
+        viewModel.CleanupOldInstall();
         Hide(ContentDialogResult.Primary);
     }
 }

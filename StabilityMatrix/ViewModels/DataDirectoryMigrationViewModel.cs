@@ -33,6 +33,8 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
     [ObservableProperty] 
     [NotifyPropertyChangedFor(nameof(MigrateProgressText))]
     private int migrateProgressCount;
+    
+    [ObservableProperty] private bool isMigrating;
 
     public string AutoMigrateText => AutoMigrateCount == 0 ? string.Empty :
         $"{AutoMigrateCount} Packages will be automatically migrated to the new format";
@@ -77,6 +79,8 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
     {
         await using var delay = new MinimumDelay(200, 300);
 
+        IsMigrating = true;
+        
         // Since we are going to recreate venvs, need python to be installed
         if (!prerequisiteHelper.IsPythonInstalled)
         {
@@ -136,8 +140,11 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
                 "StabilityMatrix", "Models");
             var newModelsDir = Path.Combine(libraryPath, "Models");
             Utilities.CopyDirectory(oldModelsDir, newModelsDir, true);
+
+            settingsManager.SetHasMigrated(true);
         }
-        
+
+        IsMigrating = false;
         EventManager.Instance.OnInstalledPackagesChanged();
     }
 }

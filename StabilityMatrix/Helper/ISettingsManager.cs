@@ -71,4 +71,5 @@ public interface ISettingsManager
     Guid GetOldActivePackageId();
     void SetActiveInstalledPackage(Guid guid);
     void SetIsImportAsConnected(bool value);
+    void SetHasMigrated(bool hasMigrated);
 }

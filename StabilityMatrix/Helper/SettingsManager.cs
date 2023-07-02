@@ -414,6 +414,12 @@ public class SettingsManager : ISettingsManager
         Settings.ModelSearchOptions = options;
         SaveSettings();
     }
+
+    public void SetHasMigrated(bool hasMigrated)
+    {
+        Settings.HasMigrated = hasMigrated;
+        SaveSettings();
+    }
     
     /// <summary>
     /// Loads settings from the settings file

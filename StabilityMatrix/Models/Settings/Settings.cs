@@ -24,6 +24,7 @@ public class Settings
     public bool ModelBrowserNsfwEnabled { get; set; }
     public bool IsNavExpanded { get; set; }
     public bool IsImportAsConnected { get; set; }
+    public bool HasMigrated { get; set; }
     
     public SharedFolderType? SharedFolderVisibleCategories { get; set; } =
         SharedFolderType.StableDiffusion | 

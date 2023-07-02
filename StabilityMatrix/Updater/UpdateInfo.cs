@@ -23,7 +23,7 @@ public record UpdateInfo(
     string ChangelogUrl,
     
     // Blake3 hash of the file
-    [property: JsonPropertyName("hash_blake3")]
+    [property: JsonPropertyName("hashBlake3")]
     string HashBlake3,
     
     // ED25519 signature of the semicolon seperated string:

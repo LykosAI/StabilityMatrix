@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 using LiteDB;
 
@@ -37,26 +38,22 @@ public class CivitModel
     [JsonPropertyName("modelVersions")]
     public List<CivitModelVersion>? ModelVersions { get; set; }
 
-    private FileSizeType? _fullFilesSize;
+    private FileSizeType? fullFilesSize;
     public FileSizeType FullFilesSize
     {
         get
         {
-            if (_fullFilesSize == null)
+            if (fullFilesSize != null) return fullFilesSize;
+            var kbs = 0.0;
+            
+            var latestVersion = ModelVersions?.FirstOrDefault();
+            if (latestVersion?.Files != null && latestVersion.Files.Any())
             {
-                var kbs = 0.0;
-                if (ModelVersions is not null)
-                {
-                    var latestVersion = ModelVersions[0];
-                    if (latestVersion.Files is not null)
-                    {
-                        var latestModelFile = latestVersion.Files[0];
-                        kbs = latestModelFile.SizeKb;
-                    }
-                }
-                _fullFilesSize = new FileSizeType(kbs);
+                var latestModelFile = latestVersion.Files.First();
+                kbs = latestModelFile.SizeKb;
             }
-            return _fullFilesSize;
+            fullFilesSize = new FileSizeType(kbs);
+            return fullFilesSize;
         }
     }
 }

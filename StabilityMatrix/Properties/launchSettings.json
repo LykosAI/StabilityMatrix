@@ -11,6 +11,13 @@
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"
       }
+    },
+    "StabilityMatrix (Unpackaged) with Exception Window": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development",
+        "DEBUG_EXCEPTION_WINDOW": "true"
+      }
     }
   }
 }

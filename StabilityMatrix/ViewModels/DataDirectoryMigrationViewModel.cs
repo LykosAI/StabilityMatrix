@@ -35,6 +35,7 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
     private int migrateProgressCount;
     
     [ObservableProperty] private bool isMigrating;
+    [ObservableProperty] private bool canShowNoThanksButton;
 
     public string AutoMigrateText => AutoMigrateCount == 0 ? string.Empty :
         $"{AutoMigrateCount} Packages will be automatically migrated to the new format";
@@ -72,6 +73,11 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
         AutoMigrateCount = oldPackages.Count(p => p.CanPureMigratePath());
         // Any remaining packages need to be moved
         NeedsMoveMigrateCount = oldPackages.Length - AutoMigrateCount;
+
+        var oldLibraryDir =
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "StabilityMatrix");
+        CanShowNoThanksButton = settingsManager.LibraryDir != oldLibraryDir;
     }
     
     public void CleanupOldInstall()

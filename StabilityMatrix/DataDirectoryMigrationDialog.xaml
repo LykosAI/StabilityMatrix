@@ -89,6 +89,7 @@
                 FontSize="16"
                 HorizontalAlignment="Center"
                 Margin="8"
+                Visibility="{Binding CanShowNoThanksButton, Converter={StaticResource BooleanToVisibilityConverter}}"
                 IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"
                 Padding="16,8" />
             <ui:Button

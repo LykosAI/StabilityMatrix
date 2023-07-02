@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System;
+using System.IO;
+using System.Windows;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.ContentDialogControl;
@@ -27,6 +29,11 @@ public partial class DataDirectoryMigrationDialog : ContentDialog
 
     private void NoThanks_OnClick(object sender, RoutedEventArgs e)
     {
+        var oldSettingsPath =
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "StabilityMatrix", "settings.json");
+        File.Move(oldSettingsPath, oldSettingsPath + ".old", true);
+        
         Hide(ContentDialogResult.Primary);
     }
 }

@@ -157,6 +157,11 @@ public partial class MainWindowViewModel : ObservableObject
             }
             else if (result == ContentDialogResult.Secondary)
             {
+                var portableMarkerFile = Path.Combine("Data", ".sm-portable");
+                if (File.Exists(portableMarkerFile))
+                {
+                    File.Delete(portableMarkerFile);
+                }
                 await ShowPathSelectionDialog();
                 await DoSettingsCheck();
             }

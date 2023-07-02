@@ -42,7 +42,7 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
     public string AutoMigrateText => AutoMigrateCount == 0 ? string.Empty :
         $"{AutoMigrateCount} Packages will be automatically migrated to the new format";
     
-    public string NeedsMoveMigrateText => NeedsMoveMigrateCount == 0 ? string.Empty :
+    public string NeedsMoveMigrateText => NeedsMoveMigrateCount == 0 && !HasFreeSpaceError ? string.Empty :
         $"{NeedsMoveMigrateCount} Packages are not relative to the Data Directory and will be moved, this may take a few minutes";
 
     [ObservableProperty]
@@ -68,6 +68,7 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
     {
         AutoMigrateCount = 0;
         NeedsMoveMigrateCount = 0;
+        HasFreeSpaceError = false;
         
         // Get all old packages
         var oldPackages = settingsManager.GetOldInstalledPackages().ToArray();

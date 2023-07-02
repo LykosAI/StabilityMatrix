@@ -38,7 +38,7 @@
     <Grid
         Margin="16"
         MaxWidth="700"
-        MinHeight="375"
+        MinHeight="300"
         VerticalAlignment="Stretch">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
@@ -68,7 +68,7 @@
                 Title="{Binding AutoMigrateText, FallbackValue=5 Packages will be automatically migrated to the new format}" />
             <ui:InfoBar
                 IsClosable="False"
-                IsOpen="{Binding HasFreeSpaceError, Converter={StaticResource BoolNegationConverter}}"
+                IsOpen="{Binding NeedsMoveMigrateText, Converter={StaticResource InvertIsStringNullOrWhitespaceConverter}}"
                 Margin="8"
                 Severity="Informational"
                 Title="{Binding NeedsMoveMigrateText, FallbackValue=2 Packages are not relative to the Data Directory and will be moved this may take a few minutes}" />

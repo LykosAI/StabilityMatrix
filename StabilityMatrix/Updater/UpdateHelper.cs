@@ -72,7 +72,8 @@ public class UpdateHelper : IUpdateHelper
     private string GetUpdateInfoSignedData(UpdateInfo updateInfo)
     {
         var channel = updateInfo.Channel.GetStringValue().ToLowerInvariant();
-        return $"{updateInfo.Version};{updateInfo.ReleaseDate:O};{channel};" +
+        var date = updateInfo.ReleaseDate.ToString("yyyy-MM-ddTHH:mm:ss.ffffffzzz");
+        return $"{updateInfo.Version};{date};{channel};" +
                $"{(int) updateInfo.Type};{updateInfo.DownloadUrl};{updateInfo.ChangelogUrl};" +
                $"{updateInfo.HashBlake3}";
     }

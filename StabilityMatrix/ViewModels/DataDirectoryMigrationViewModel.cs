@@ -167,8 +167,9 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
             MigrateProgressText = "Copying models...";
             var oldModelsDir = Path.Combine(oldLibraryPath, "Models");
             var newModelsDir = Path.Combine(libraryPath, "Models");
-            Utilities.CopyDirectory(oldModelsDir, newModelsDir, true);
+            await Task.Run(() => Utilities.CopyDirectory(oldModelsDir, newModelsDir, true));
 
+            MigrateProgressText = "Cleaning up...";
             CleanupOldInstall();
         }
 

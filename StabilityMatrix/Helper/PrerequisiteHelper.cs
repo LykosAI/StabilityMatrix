@@ -56,9 +56,9 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         this.settingsManager = settingsManager;
     }
 
-    public async Task RunGit(params string[] args)
+    public async Task RunGit(string? workingDirectory = null, params string[] args)
     {
-        var process = ProcessRunner.StartProcess(GitExePath, args);
+        var process = ProcessRunner.StartProcess(GitExePath, args, workingDirectory: workingDirectory);
         await ProcessRunner.WaitForExitConditionAsync(process);
     }
     

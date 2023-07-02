@@ -96,8 +96,9 @@ public class VladAutomatic : BaseGitPackage
         
         Directory.CreateDirectory(InstallLocation);
 
-        await PrerequisiteHelper.RunGit("clone", "https://github.com/vladmandic/automatic.git", InstallLocation);
-        await PrerequisiteHelper.RunGit("checkout", version, InstallLocation);
+        await PrerequisiteHelper.RunGit(null, "clone", "https://github.com/vladmandic/automatic",
+            InstallLocation);
+        await PrerequisiteHelper.RunGit(workingDirectory: InstallLocation, "checkout", version);
         
         return version;
     }

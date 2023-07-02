@@ -342,7 +342,7 @@ public partial class LaunchViewModel : ObservableObject
             {
                 ConsoleHistory[^2] = output.TrimEnd('\n');
             }
-            else if ((output.Contains("it/s") || output.Contains("s/it")) &&
+            else if ((output.Contains("it/s") || output.Contains("s/it") || output.Contains("B/s")) &&
                      !output.Contains("Total progress") && !output.Contains(" 0%"))
             {
                 ConsoleHistory[^1] = output.TrimEnd('\n');

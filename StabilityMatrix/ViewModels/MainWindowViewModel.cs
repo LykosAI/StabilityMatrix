@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Interop;
 using System.Windows.Threading;
 using System.Windows.Shell;
 using AsyncAwaitBestPractices;
@@ -84,6 +85,8 @@ public partial class MainWindowViewModel : ObservableObject
         
         // Insert path extensions
         settingsManager.InsertPathExtensions();
+        
+        ResizeWindow();
 
         if (debugOptions.ShowOneClickInstall || !settingsManager.Settings.InstalledPackages.Any())
         {
@@ -207,6 +210,27 @@ public partial class MainWindowViewModel : ObservableObject
                 });
             });
         }
+    }
+    
+    private void ResizeWindow()
+    {
+        if (Application.Current.MainWindow == null) return;
+        
+        var interopHelper = new WindowInteropHelper(Application.Current.MainWindow);
+
+        if (string.IsNullOrWhiteSpace(settingsManager.Settings.Placement))
+            return;
+        var placement = new ScreenExtensions.WindowPlacement();
+        placement.ReadFromBase64String(settingsManager.Settings.Placement);
+
+        var primaryMonitorScaling = ScreenExtensions.GetScalingForPoint(new System.Drawing.Point(1, 1));
+        var currentMonitorScaling = ScreenExtensions.GetScalingForPoint(new System.Drawing.Point(placement.rcNormalPosition.left, placement.rcNormalPosition.top));
+        var rescaleFactor = currentMonitorScaling / primaryMonitorScaling;
+        double width = placement.rcNormalPosition.right - placement.rcNormalPosition.left;
+        double height = placement.rcNormalPosition.bottom - placement.rcNormalPosition.top;
+        placement.rcNormalPosition.right = placement.rcNormalPosition.left + (int)(width / rescaleFactor + 0.5);
+        placement.rcNormalPosition.bottom = placement.rcNormalPosition.top + (int)(height / rescaleFactor + 0.5);
+        ScreenExtensions.SetPlacement(interopHelper.Handle, placement);
     }
 
     private void SetTheme()

@@ -33,6 +33,8 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
     [ObservableProperty] 
     [NotifyPropertyChangedFor(nameof(MigrateProgressText))]
     private int migrateProgressCount;
+    
+    [ObservableProperty] private bool isMigrating;
 
     public string AutoMigrateText => AutoMigrateCount == 0 ? string.Empty :
         $"{AutoMigrateCount} Packages will be automatically migrated to the new format";
@@ -72,11 +74,37 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
         NeedsMoveMigrateCount = oldPackages.Length - AutoMigrateCount;
     }
     
+    public void CleanupOldInstall()
+    {
+        var oldLibraryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix");
+        if (settingsManager.LibraryDir == oldLibraryPath) return;
+        
+        // rename old settings.json to settings.json.old
+        var oldSettingsPath = Path.Combine(oldLibraryPath, "settings.json");
+        File.Move(oldSettingsPath, oldSettingsPath + ".old", true);
+            
+        // delete old PortableGit dir
+        var oldPortableGitDir = Path.Combine(oldLibraryPath, "PortableGit");
+        if (Directory.Exists(oldPortableGitDir))
+        {
+            Directory.Delete(oldPortableGitDir, true);
+        }
+            
+        // delete old Assets dir
+        var oldAssetsDir = Path.Combine(oldLibraryPath, "Assets");
+        if (Directory.Exists(oldAssetsDir))
+        {
+            Directory.Delete(oldAssetsDir, true);
+        }
+    }
+    
     [RelayCommand]
     private async Task MigrateAsync()
     {
         await using var delay = new MinimumDelay(200, 300);
 
+        IsMigrating = true;
+        
         // Since we are going to recreate venvs, need python to be installed
         if (!prerequisiteHelper.IsPythonInstalled)
         {
@@ -131,13 +159,14 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
         if (oldLibraryPath != libraryPath)
         {
             MigrateProgressText = "Copying models...";
-            var oldModelsDir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "StabilityMatrix", "Models");
+            var oldModelsDir = Path.Combine(oldLibraryPath, "Models");
             var newModelsDir = Path.Combine(libraryPath, "Models");
             Utilities.CopyDirectory(oldModelsDir, newModelsDir, true);
+
+            CleanupOldInstall();
         }
-        
+
+        IsMigrating = false;
         EventManager.Instance.OnInstalledPackagesChanged();
     }
 }

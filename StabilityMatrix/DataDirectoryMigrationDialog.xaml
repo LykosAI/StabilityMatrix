@@ -23,6 +23,7 @@
         <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
         <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:DataDirectoryMigrationDialog}" />
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <converters:BoolNegationConverter x:Key="BoolNegationConverter"/> 
         <converters:ValueConverterGroup x:Key="InvertIsStringNullOrWhitespaceConverter">
             <converters:IsStringNullOrWhitespaceConverter />
             <converters:BoolNegationConverter />
@@ -88,6 +89,7 @@
                 FontSize="16"
                 HorizontalAlignment="Center"
                 Margin="8"
+                IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"
                 Padding="16,8" />
             <ui:Button
                 Appearance="Success"
@@ -96,6 +98,7 @@
                 FontSize="16"
                 HorizontalAlignment="Center"
                 Margin="8"
+                IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"
                 Padding="16,8" />
         </StackPanel>
     </Grid>

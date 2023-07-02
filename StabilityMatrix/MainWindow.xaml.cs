@@ -58,7 +58,6 @@ namespace StabilityMatrix
             RootNavigation.Navigate(typeof(LaunchPage));
             RootNavigation.IsPaneOpen = settingsManager.Settings.IsNavExpanded;
             await mainWindowViewModel.OnLoaded();
-            ResizeWindow();
             ObserveSizeChanged();
         }
 
@@ -102,25 +101,6 @@ namespace StabilityMatrix
                     var placement = ScreenExtensions.GetPlacement(interopHelper.Handle);
                     settingsManager.SetPlacement(placement.ToString());
                 });
-        }
-
-        private void ResizeWindow()
-        {
-            var interopHelper = new WindowInteropHelper(this);
-
-            if (string.IsNullOrWhiteSpace(settingsManager.Settings.Placement))
-                return;
-            var placement = new ScreenExtensions.WindowPlacement();
-            placement.ReadFromBase64String(settingsManager.Settings.Placement);
-
-            var primaryMonitorScaling = ScreenExtensions.GetScalingForPoint(new System.Drawing.Point(1, 1));
-            var currentMonitorScaling = ScreenExtensions.GetScalingForPoint(new System.Drawing.Point(placement.rcNormalPosition.left, placement.rcNormalPosition.top));
-            var rescaleFactor = currentMonitorScaling / primaryMonitorScaling;
-            double width = placement.rcNormalPosition.right - placement.rcNormalPosition.left;
-            double height = placement.rcNormalPosition.bottom - placement.rcNormalPosition.top;
-            placement.rcNormalPosition.right = placement.rcNormalPosition.left + (int)(width / rescaleFactor + 0.5);
-            placement.rcNormalPosition.bottom = placement.rcNormalPosition.top + (int)(height / rescaleFactor + 0.5);
-            ScreenExtensions.SetPlacement(interopHelper.Handle, placement);
         }
 
         private void MainWindow_OnClosing(object? sender, CancelEventArgs e)

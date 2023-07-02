@@ -415,12 +415,6 @@ public class SettingsManager : ISettingsManager
         SaveSettings();
     }
 
-    public void SetHasMigrated(bool hasMigrated)
-    {
-        Settings.HasMigrated = hasMigrated;
-        SaveSettings();
-    }
-    
     /// <summary>
     /// Loads settings from the settings file
     /// If the settings file does not exist, it will be created with default values

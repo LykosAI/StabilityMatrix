@@ -167,7 +167,7 @@ public partial class MainWindowViewModel : ObservableObject
         }
         
         // Check if there are old packages, if so show migration dialog
-        if (settingsManager.GetOldInstalledPackages().Any() && !settingsManager.Settings.HasMigrated)
+        if (settingsManager.GetOldInstalledPackages().Any())
         {
             var dialog = dialogFactory.CreateDataDirectoryMigrationDialog();
             var result = await dialog.ShowAsync();

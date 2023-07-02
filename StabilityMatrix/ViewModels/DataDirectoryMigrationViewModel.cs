@@ -135,13 +135,13 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
         if (oldLibraryPath != libraryPath)
         {
             MigrateProgressText = "Copying models...";
-            var oldModelsDir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "StabilityMatrix", "Models");
+            var oldModelsDir = Path.Combine(oldLibraryPath, "Models");
             var newModelsDir = Path.Combine(libraryPath, "Models");
             Utilities.CopyDirectory(oldModelsDir, newModelsDir, true);
-
-            settingsManager.SetHasMigrated(true);
+            
+            // rename old settings.json to settings.json.old
+            var oldSettingsPath = Path.Combine(oldLibraryPath, "settings.json");
+            File.Move(oldSettingsPath, oldSettingsPath + ".old", true);
         }
 
         IsMigrating = false;

@@ -322,7 +322,10 @@
                             </DrawingBrush>
                         </Border.BorderBrush>
                     </Border>
-                    <VirtualizingStackPanel Orientation="Vertical" VerticalAlignment="Center">
+                    <VirtualizingStackPanel
+                        Margin="0,8"
+                        Orientation="Vertical"
+                        VerticalAlignment="Center">
                         <TextBlock
                             Effect="{StaticResource TextDropShadowEffect}"
                             FontSize="24"

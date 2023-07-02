@@ -42,7 +42,7 @@ public class LiteDbContext : ILiteDbContext
         this.debugOptions = debugOptions.Value;
         
         var connectionString = debugOptions.Value.TempDatabase ? ":temp:"
-            : $"Filename={Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db")};Mode=Exclusive";
+            : $"Filename={Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db")};Mode=Shared";
         Database = new LiteDatabaseAsync(connectionString);
 
         // Register reference fields

@@ -37,7 +37,6 @@ public partial class LaunchViewModel : ObservableObject
     private bool clearingPackages = false;
 
     [ObservableProperty] private string consoleInput = "";
-    [ObservableProperty] private string consoleOutput = "";
     [ObservableProperty] private Visibility launchButtonVisibility;
     [ObservableProperty] private Visibility stopButtonVisibility;
     [ObservableProperty] private bool isLaunchTeachingTipsOpen = false;
@@ -65,8 +64,6 @@ public partial class LaunchViewModel : ObservableObject
     }
 
     [ObservableProperty] private ObservableCollection<InstalledPackage> installedPackages = new();
-
-    public event EventHandler? ScrollNeeded;
 
     public LaunchViewModel(ISettingsManager settingsManager,
         IPackageFactory packageFactory,
@@ -161,7 +158,7 @@ public partial class LaunchViewModel : ObservableObject
         }
 
         // Clear console
-        ConsoleOutput = "";
+        ConsoleHistory?.Clear();
 
         await pyRunner.Initialize();
 
@@ -294,8 +291,8 @@ public partial class LaunchViewModel : ObservableObject
         runningPackage?.Shutdown();
         runningPackage = null;
         SetProcessRunning(false);
-        ConsoleOutput +=
-            $"{Environment.NewLine}Stopped process at {DateTimeOffset.Now}{Environment.NewLine}";
+        ConsoleHistory?.Add(
+            $"{Environment.NewLine}Stopped process at {DateTimeOffset.Now}{Environment.NewLine}");
         ShowWebUiButton = false;
         return Task.CompletedTask;
     }
@@ -361,7 +358,6 @@ public partial class LaunchViewModel : ObservableObject
             ConsoleHistory =
                 new ObservableCollection<string>(
                     ConsoleHistory.Where(str => !string.IsNullOrWhiteSpace(str)));
-            ScrollNeeded?.Invoke(this, EventArgs.Empty);
         });
     }
 
@@ -374,8 +370,7 @@ public partial class LaunchViewModel : ObservableObject
 
         Dispatcher.CurrentDispatcher.Invoke(() =>
         {
-            ConsoleOutput += $"Venv process exited with code {exitCode}";
-            ScrollNeeded?.Invoke(this, EventArgs.Empty);
+            ConsoleHistory?.Add($"Venv process exited with code {exitCode}");
             SetProcessRunning(false);
             ShowWebUiButton = false;
         });

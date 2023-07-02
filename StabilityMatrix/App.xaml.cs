@@ -94,6 +94,9 @@ namespace StabilityMatrix
                     o.AutoSessionTracking = true;
                     // 1.0 to capture 100% of transactions for performance monitoring.
                     o.TracesSampleRate = 1.0;
+#if DEBUG
+                    o.Environment = "Development";
+#endif
                 });
             }
 

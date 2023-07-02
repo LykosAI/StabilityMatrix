@@ -74,7 +74,7 @@ public static class ProcessRunner
         }
 
         process.Start();
-        //ProcessTracker.AddProcess(process);
+        ProcessTracker.AddProcess(process);
 
         if (outputDataReceived != null)
         {

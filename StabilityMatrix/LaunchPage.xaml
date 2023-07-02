@@ -16,7 +16,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:StabilityMatrix.Models"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:terminal="clr-namespace:Simple.Wpf.Terminal;assembly=Simple.Wpf.Terminal">
 
     <Page.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
@@ -190,22 +191,37 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>
         </Grid>
-        <ScrollViewer
-            Grid.Row="1"
-            Margin="0,8,0,0"
-            x:Name="OutputScrollViewer">
-            <TextBlock
-                Background="{DynamicResource ControlFillColorDisabledBrush}"
-                FontFamily="Consolas"
-                HorizontalAlignment="Stretch"
-                Margin="24,0,10,10"
-                Name="OutputBlock"
-                ScrollViewer.HorizontalScrollBarVisibility="Hidden"
-                ScrollViewer.VerticalScrollBarVisibility="Auto"
-                Text="{Binding ConsoleOutput, Mode=OneWay}"
-                TextWrapping="Wrap"
-                VerticalAlignment="Stretch" />
-        </ScrollViewer>
+        <terminal:Terminal Grid.Row="1"
+                           Margin="24,8,26,10"
+                           Background="{DynamicResource ControlFillColorDisabledBrush}"
+                           IsReadOnly="True"
+                           AutoScroll="True"
+                           FontFamily="Consolas"
+                           ItemHeight="24"
+                           Foreground="White"
+                           BorderThickness="0"
+                           VerticalScrollBarVisibility="Auto"
+                           ItemsSource="{Binding ConsoleHistory, Mode=OneWay}"/>
+
+        <!-- <ScrollViewer -->
+        <!--     Grid.Row="1" -->
+        <!--     Margin="0,8,0,0" -->
+        <!--     x:Name="OutputScrollViewer"> -->
+        <!--      -->
+        <!--     ~1~ <TextBlock @1@ -->
+        <!--     ~1~     Background="{DynamicResource ControlFillColorDisabledBrush}" @1@ -->
+        <!--     ~1~     FontFamily="Consolas" @1@ -->
+        <!--     ~1~     HorizontalAlignment="Stretch" @1@ -->
+        <!--     ~1~     Margin="24,0,10,10" @1@ -->
+        <!--     ~1~     LineHeight="24" @1@ -->
+        <!--     ~1~     LineStackingStrategy="BlockLineHeight" @1@ -->
+        <!--     ~1~     Name="OutputBlock" @1@ -->
+        <!--     ~1~     ScrollViewer.HorizontalScrollBarVisibility="Hidden" @1@ -->
+        <!--     ~1~     ScrollViewer.VerticalScrollBarVisibility="Auto" @1@ -->
+        <!--     ~1~     Text="{Binding ConsoleOutput, Mode=OneWay}" @1@ -->
+        <!--     ~1~     TextWrapping="Wrap" @1@ -->
+        <!--     ~1~     VerticalAlignment="Stretch" /> @1@ -->
+        <!-- </ScrollViewer> -->
         <ui:Button
             Appearance="Success"
             Command="{Binding LaunchWebUiCommand}"

@@ -25,9 +25,9 @@ public sealed partial class LaunchPage : Page
 
     private void ViewModelOnScrollNeeded(object? sender, EventArgs e)
     {
-        Dispatcher.Invoke(() =>
-        {
-            OutputScrollViewer.ScrollToBottom();
-        });
+        // Dispatcher.Invoke(() =>
+        // {
+        //     OutputScrollViewer.ScrollToBottom();
+        // });
     }
 }

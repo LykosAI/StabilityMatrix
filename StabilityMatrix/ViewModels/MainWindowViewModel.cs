@@ -140,26 +140,23 @@ public partial class MainWindowViewModel : ObservableObject
             var isExistingUser = File.Exists(settingsPath);
             
             // need to show dialog to choose library location
-            if (!settingsManager.TryFindLibrary())
+            var dialog = dialogFactory.CreateInstallLocationsDialog();
+            var result = await dialog.ShowAsync();
+            if (result != ContentDialogResult.Primary)
             {
-                var dialog = dialogFactory.CreateInstallLocationsDialog();
-                var result = await dialog.ShowAsync();
-                if (result != ContentDialogResult.Primary)
-                {
-                    Application.Current.Shutdown();
-                }
+                Application.Current.Shutdown();
+            }
 
-                // 1. For portable mode, call settings.SetPortableMode()
-                var viewModel = (dialog.DataContext as SelectInstallLocationsViewModel)!;
-                if (viewModel.IsPortableMode)
-                {
-                    settingsManager.SetPortableMode();
-                }
-                // 2. For custom path, call settings.SetLibraryPath(path)
-                else
-                {
-                    settingsManager.SetLibraryPath(viewModel.DataDirectory);
-                }
+            // 1. For portable mode, call settings.SetPortableMode()
+            var viewModel = (dialog.DataContext as SelectInstallLocationsViewModel)!;
+            if (viewModel.IsPortableMode)
+            {
+                settingsManager.SetPortableMode();
+            }
+            // 2. For custom path, call settings.SetLibraryPath(path)
+            else
+            {
+                settingsManager.SetLibraryPath(viewModel.DataDirectory);
             }
         }
         

@@ -23,21 +23,33 @@
     <ui:ContentDialog.Resources>
         <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
         <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:SelectInstallLocationsDialog}" />
+        
         <converters:BoolNegationConverter x:Key="BoolNegationConverter" />
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <converters:ValueConverterGroup x:Key="InvertAndVisibilitate">
+            <converters:BoolNegationConverter />
+            <BooleanToVisibilityConverter />
+        </converters:ValueConverterGroup>
     </ui:ContentDialog.Resources>
 
     <Grid
         Margin="16,0,16,16"
-        MaxWidth="700"
-        MinHeight="400">
+        MinHeight="450"
+        MaxWidth="700">
         <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="1*" />
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <ui:InfoBar
+                IsClosable="False"
+                IsOpen="True"
+                Margin="0,0,0,16"
+                Visibility="{Binding HasOldData, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=Visible}"
+                Title="Welcome back! In this update, you can optionally choose a custom location to store all data. If you choose a new location, or opt to use Portable Mode, you'll be able to migrate your existing data on the next page."/>
+            
             <Label
                 Content="Data Directory"
                 FontSize="13"
@@ -68,8 +80,10 @@
                     </ui:Button.Icon>
                 </ui:Button>
             </Grid>
-            <Label
-                Content="This is where the model checkpoints, LORAs, web UIs, settings, etc. will be installed."
+            <TextBlock
+                Text="This is where the model checkpoints, LORAs, web UIs, settings, etc. will be installed. If you were satisfied with the previous versions, you don't need to change anything here."
+                TextWrapping="Wrap"
+                Foreground="LightGray"
                 FontSize="12"
                 Margin="0,8,0,0" />
 
@@ -81,9 +95,11 @@
             <ui:InfoBar
                 IsClosable="False"
                 IsOpen="True"
+                FontSize="13"
                 Margin="0,8,0,0"
-                Padding="8,16"
+                Padding="8"
                 Title="In Portable Mode, all data and settings will be stored in the same directory as the application. You will be able to move the application with its 'Data' folder to a different location or computer." />
+            
         </StackPanel>
 
         <!--  Indicator of existing or new data directory  -->
@@ -108,7 +124,6 @@
             Grid.Row="2"
             HorizontalAlignment="Center"
             IsEnabled="{Binding IsDirectoryValid}"
-            Margin="8"
             Padding="16,8" />
     </Grid>
 

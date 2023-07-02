@@ -42,6 +42,8 @@ public partial class SelectInstallLocationsViewModel : ObservableObject
     
     public string DefaultInstallLocation => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix");
+
+    public bool HasOldData => settingsManager.GetOldInstalledPackages().Any();
     
     public SelectInstallLocationsViewModel(ISettingsManager settingsManager)
     {
@@ -61,7 +63,6 @@ public partial class SelectInstallLocationsViewModel : ObservableObject
         RefreshBadgeViewModel.RefreshCommand.ExecuteAsync(null).SafeFireAndForget();
     }
     
-    // Validates current data directory
     private async Task<bool> ValidateDataDirectory()
     {
         await using var delay = new MinimumDelay(100, 200);

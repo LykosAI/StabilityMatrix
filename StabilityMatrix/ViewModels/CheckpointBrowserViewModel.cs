@@ -121,8 +121,9 @@ public partial class CheckpointBrowserViewModel : ObservableObject
                     names);
             }
 
-            // Filter out unknown model types
-            models = models.Where(m => m.Type.ConvertTo<SharedFolderType>() > 0).ToList();
+            // Filter out unknown model types and archived/taken-down models
+            models = models.Where(m => m.Type.ConvertTo<SharedFolderType>() > 0)
+                .Where(m => m.Mode == null).ToList();
 
             // Database update calls will invoke `OnModelsUpdated`
             // Add to database
@@ -207,7 +208,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
             Nsfw = "true", // Handled by local view filter
             Sort = SortMode,
             Period = SelectedPeriod,
-            Page = CurrentPageNumber,
+            Page = CurrentPageNumber
         };
 
         if (SearchQuery.StartsWith("#"))

@@ -37,13 +37,19 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
     
     [ObservableProperty] private bool isMigrating;
     [ObservableProperty] private bool canShowNoThanksButton;
-    [ObservableProperty] private bool hasFreeSpaceError;
+    
+    [ObservableProperty] 
+    [NotifyPropertyChangedFor(nameof(NeedsMoveMigrateText))]
+    [NotifyPropertyChangedFor(nameof(MigrateProgressText))]
+    private bool hasFreeSpaceError;
 
     public string AutoMigrateText => AutoMigrateCount == 0 ? string.Empty :
         $"{AutoMigrateCount} Packages will be automatically migrated to the new format";
-    
-    public string NeedsMoveMigrateText => NeedsMoveMigrateCount == 0 && !HasFreeSpaceError ? string.Empty :
-        $"{NeedsMoveMigrateCount} Packages are not relative to the Data Directory and will be moved, this may take a few minutes";
+
+    public string NeedsMoveMigrateText => NeedsMoveMigrateCount == 0 || HasFreeSpaceError
+        ? string.Empty
+        : $"{NeedsMoveMigrateCount} Package{(NeedsMoveMigrateCount > 1 ? "s" : "")} {(NeedsMoveMigrateCount > 1 ? "are" : "is")} " +
+          "not relative to the Data Directory and will be moved, this may take a few minutes";
 
     [ObservableProperty]
     private string migrateProgressText = "";

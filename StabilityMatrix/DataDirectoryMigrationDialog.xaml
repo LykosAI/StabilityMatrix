@@ -7,6 +7,7 @@
     d:DesignHeight="512"
     d:DesignWidth="640"
     mc:Ignorable="d"
+    UseLayoutRounding="True"
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     x:Class="StabilityMatrix.DataDirectoryMigrationDialog"
@@ -37,7 +38,7 @@
     <Grid
         Margin="16"
         MaxWidth="700"
-        MinHeight="400"
+        MinHeight="375"
         VerticalAlignment="Stretch">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
@@ -97,34 +98,31 @@
                     HorizontalAlignment="Center">
             
             <ui:Button
-                Appearance="Danger"
+                Appearance="Secondary"
                 Click="NoThanks_OnClick"
                 Content="No Thanks"
                 FontSize="16"
                 HorizontalAlignment="Center"
                 Margin="8"
                 Visibility="{Binding CanShowNoThanksButton, Converter={StaticResource BooleanToVisibilityConverter}}"
-                IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"
-                Padding="16,8" />
+                IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"/>
             <ui:Button Appearance="Info"
                        Click="Back_OnClick"
                        Content="Select Directory"
                        FontSize="16"
                        HorizontalAlignment="Center"
-                       Margin="8,-1,8,0"
+                       Margin="8"
                        Visibility="{Binding HasFreeSpaceError, Converter={StaticResource BooleanToVisibilityConverter}}"
-                       IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"
-                       Padding="16,8" />
+                       IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"/>
             <ui:Button
                 Appearance="Success"
                 Click="ContinueButton_OnClick"
                 Content="Continue"
                 FontSize="16"
                 HorizontalAlignment="Center"
-                Margin="8,-1,8,0"
+                Margin="8"
                 Visibility="{Binding HasFreeSpaceError, Converter={StaticResource InvertAndVisibilitate}}"
-                IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"
-                Padding="16,8" />
+                IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"/>
         </StackPanel>
     </Grid>
 

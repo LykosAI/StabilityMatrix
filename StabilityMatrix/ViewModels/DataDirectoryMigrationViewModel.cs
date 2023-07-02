@@ -88,7 +88,7 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
             var size = await oldDir.GetSizeAsync(includeSymbolicLinks: false);
 
             // If there's not enough space in the new DataDirectory, show warning
-            if (size > new DriveInfo(settingsManager.LibraryDir).AvailableFreeSpace)
+            if (size < new DriveInfo(settingsManager.LibraryDir).AvailableFreeSpace)
             {
                 HasFreeSpaceError = true;
             }

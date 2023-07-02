@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using StabilityMatrix.Extensions;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Configs;
@@ -62,6 +63,21 @@ public class UpdateHelper : IUpdateHelper
             httpClientName: "UpdateClient");
     }
 
+
+    /// <summary>
+    /// Data for use in signature verification.
+    /// Semicolon separated string of fields:
+    /// "version, releaseDate, channel, type, url, changelog, hashBlake3"
+    /// </summary>
+    private string GetUpdateInfoSignedData(UpdateInfo updateInfo)
+    {
+        var channel = updateInfo.Channel.GetStringValue().ToLowerInvariant();
+        var date = updateInfo.ReleaseDate.ToString("yyyy-MM-ddTHH:mm:ss.ffffffzzz");
+        return $"{updateInfo.Version};{date};{channel};" +
+               $"{(int) updateInfo.Type};{updateInfo.DownloadUrl};{updateInfo.ChangelogUrl};" +
+               $"{updateInfo.HashBlake3}";
+    }
+
     private async Task CheckForUpdate()
     {
         try
@@ -83,6 +99,19 @@ public class UpdateHelper : IUpdateHelper
                 logger.LogError("UpdateInfo is null");
                 return;
             }
+            logger.LogInformation("UpdateInfo signature: {Signature}", updateInfo.Signature);
+            
+            var updateInfoSignData = GetUpdateInfoSignedData(updateInfo);
+            logger.LogInformation("UpdateInfo signed data: {SignData}", updateInfoSignData);
+            
+            // Verify signature
+            var checker = new SignatureChecker();
+            if (!checker.Verify(updateInfoSignData, updateInfo.Signature))
+            {
+                logger.LogError("UpdateInfo signature is invalid: {Info}", updateInfo);
+                return;
+            }
+            logger.LogInformation("UpdateInfo signature verified");
 
             var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
 

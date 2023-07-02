@@ -97,7 +97,7 @@
                 IsOpen="True"
                 FontSize="13"
                 Margin="0,8,0,0"
-                Padding="8"
+                Padding="16"
                 Title="In Portable Mode, all data and settings will be stored in the same directory as the application. You will be able to move the application with its 'Data' folder to a different location or computer." />
             
         </StackPanel>

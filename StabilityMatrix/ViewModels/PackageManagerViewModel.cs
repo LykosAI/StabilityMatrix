@@ -309,6 +309,10 @@ public partial class PackageManagerViewModel : ObservableObject
     private async Task ShowInstallWindow()
     {
         var installWindow = dialogFactory.CreateInstallerWindow();
+        if (Application.Current.MainWindow != null)
+        {
+            installWindow.Owner = Application.Current.MainWindow;
+        }
         installWindow.ShowDialog();
         await OnLoaded();
     }

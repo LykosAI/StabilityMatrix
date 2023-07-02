@@ -292,7 +292,7 @@ public partial class LaunchViewModel : ObservableObject
         runningPackage = null;
         SetProcessRunning(false);
         ConsoleHistory?.Add(
-            $"{Environment.NewLine}Stopped process at {DateTimeOffset.Now}{Environment.NewLine}");
+            $"Stopped process at {DateTimeOffset.Now}");
         ShowWebUiButton = false;
         return Task.CompletedTask;
     }

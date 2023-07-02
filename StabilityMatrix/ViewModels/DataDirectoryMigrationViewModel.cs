@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.FileInterfaces;
 using StabilityMatrix.Python;
 
 namespace StabilityMatrix.ViewModels;
@@ -36,6 +37,7 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
     
     [ObservableProperty] private bool isMigrating;
     [ObservableProperty] private bool canShowNoThanksButton;
+    [ObservableProperty] private bool hasFreeSpaceError;
 
     public string AutoMigrateText => AutoMigrateCount == 0 ? string.Empty :
         $"{AutoMigrateCount} Packages will be automatically migrated to the new format";
@@ -62,7 +64,7 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
         this.packageFactory = packageFactory;
     }
 
-    public void OnLoaded()
+    public async Task OnLoaded()
     {
         AutoMigrateCount = 0;
         NeedsMoveMigrateCount = 0;
@@ -78,6 +80,19 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "StabilityMatrix");
         CanShowNoThanksButton = settingsManager.LibraryDir != oldLibraryDir;
+        
+
+        if (settingsManager.LibraryDir != oldLibraryDir)
+        {
+            var oldDir = new DirectoryPath(oldLibraryDir);
+            var size = await oldDir.GetSizeAsync(includeSymbolicLinks: false);
+
+            // If there's not enough space in the new DataDirectory, show warning
+            if (size > new DriveInfo(settingsManager.LibraryDir).AvailableFreeSpace)
+            {
+                HasFreeSpaceError = true;
+            }
+        }
     }
     
     public void CleanupOldInstall()

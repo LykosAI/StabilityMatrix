@@ -28,15 +28,20 @@
             <converters:IsStringNullOrWhitespaceConverter />
             <converters:BoolNegationConverter />
         </converters:ValueConverterGroup>
+        <converters:ValueConverterGroup x:Key="InvertAndVisibilitate">
+            <converters:BoolNegationConverter />
+            <BooleanToVisibilityConverter />
+        </converters:ValueConverterGroup>
     </ui:ContentDialog.Resources>
 
     <Grid
         Margin="16"
         MaxWidth="700"
-        MinHeight="300"
+        MinHeight="400"
         VerticalAlignment="Stretch">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -50,13 +55,19 @@
                 TextWrapping="Wrap" />
             <ui:InfoBar
                 IsClosable="False"
+                IsOpen="{Binding HasFreeSpaceError}"
+                Margin="8"
+                Severity="Warning"
+                Title="The drive you selected doesn't have enough space for migration. If you don't want to migrate, simply click 'No Thanks'. Otherwise, please choose a different directory before proceeding with the migration." />
+            <ui:InfoBar
+                IsClosable="False"
                 IsOpen="{Binding AutoMigrateText, Converter={StaticResource InvertIsStringNullOrWhitespaceConverter}}"
                 Margin="8"
                 Severity="Success"
                 Title="{Binding AutoMigrateText, FallbackValue=5 Packages will be automatically migrated to the new format}" />
             <ui:InfoBar
                 IsClosable="False"
-                IsOpen="{Binding NeedsMoveMigrateText, Converter={StaticResource InvertIsStringNullOrWhitespaceConverter}}"
+                IsOpen="{Binding HasFreeSpaceError, Converter={StaticResource BoolNegationConverter}}"
                 Margin="8"
                 Severity="Informational"
                 Title="{Binding NeedsMoveMigrateText, FallbackValue=2 Packages are not relative to the Data Directory and will be moved this may take a few minutes}" />
@@ -80,10 +91,13 @@
                 Text="{Binding MigrateProgressText, FallbackValue=Migrating 1 of 2 Packages}"
                 VerticalAlignment="Center" />
         </StackPanel>
-
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
+        
+        <StackPanel Grid.Row="2" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center">
+            
             <ui:Button
-                Appearance="Info"
+                Appearance="Danger"
                 Click="NoThanks_OnClick"
                 Content="No Thanks"
                 FontSize="16"
@@ -92,13 +106,23 @@
                 Visibility="{Binding CanShowNoThanksButton, Converter={StaticResource BooleanToVisibilityConverter}}"
                 IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"
                 Padding="16,8" />
+            <ui:Button Appearance="Info"
+                       Click="Back_OnClick"
+                       Content="Select Directory"
+                       FontSize="16"
+                       HorizontalAlignment="Center"
+                       Margin="8,-1,8,0"
+                       Visibility="{Binding HasFreeSpaceError, Converter={StaticResource BooleanToVisibilityConverter}}"
+                       IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"
+                       Padding="16,8" />
             <ui:Button
                 Appearance="Success"
                 Click="ContinueButton_OnClick"
                 Content="Continue"
                 FontSize="16"
                 HorizontalAlignment="Center"
-                Margin="8"
+                Margin="8,-1,8,0"
+                Visibility="{Binding HasFreeSpaceError, Converter={StaticResource InvertAndVisibilitate}}"
                 IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"
                 Padding="16,8" />
         </StackPanel>

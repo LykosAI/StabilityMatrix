@@ -35,4 +35,9 @@ public partial class DataDirectoryMigrationDialog : ContentDialog
         viewModel.CleanupOldInstall();
         Hide(ContentDialogResult.Primary);
     }
+
+    private void Back_OnClick(object sender, RoutedEventArgs e)
+    {
+        Hide(ContentDialogResult.Secondary);
+    }
 }

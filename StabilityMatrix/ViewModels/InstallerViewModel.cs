@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -165,7 +166,7 @@ public partial class InstallerViewModel : ObservableObject
     {
         await ActuallyInstall();
         snackbarService.ShowSnackbarAsync($"Package {SelectedPackage.Name} installed successfully!",
-            "Success", LogLevel.Trace);
+            "Success", ControlAppearance.Success).SafeFireAndForget();
         OnPackageInstalled();
     }
 

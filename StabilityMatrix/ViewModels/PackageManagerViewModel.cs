@@ -6,12 +6,14 @@ using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using System.Linq;
 using System.Windows;
+using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using Polly;
 using StabilityMatrix.Models.Progress;
 using Wpf.Ui.Contracts;
+using Wpf.Ui.Controls;
 using Wpf.Ui.Controls.ContentDialogControl;
 using EventManager = StabilityMatrix.Helper.EventManager;
 using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
@@ -182,7 +184,7 @@ public partial class PackageManagerViewModel : ObservableObject
             if (taskResult.IsSuccessful)
             {
                 snackbarService.ShowSnackbarAsync($"Package {SelectedPackage.DisplayName} uninstalled", "Success",
-                    LogLevel.Trace);
+                    ControlAppearance.Success).SafeFireAndForget();
                 settingsManager.RemoveInstalledPackage(SelectedPackage);
             }
             await OnLoaded();

@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
 using System.Diagnostics;
+using System.Net.Http;
 using System.Windows.Data;
 using Octokit;
 using StabilityMatrix.Api;
@@ -150,14 +151,20 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         }
         catch (OperationCanceledException)
         {
-            snackbarService.ShowSnackbarAsync("Please try again in a few minutes",
-                "Request to CivitAI timed out").SafeFireAndForget();
+            snackbarService.ShowSnackbarAsync("Request to CivitAI timed out",
+                "Please try again in a few minutes").SafeFireAndForget();
             Logger.Warn($"CivitAI query timed out ({request})");
+        }
+        catch (HttpRequestException e)
+        {
+            snackbarService.ShowSnackbarAsync("CivitAI can't be reached right now",
+                "Please try again in a few minutes").SafeFireAndForget();
+            Logger.Warn(e, $"CivitAI query HttpRequestException ({request})");
         }
         catch (ApiException e)
         {
-            snackbarService.ShowSnackbarAsync("Please try again in a few minutes",
-                "CivitAI can't be reached right now").SafeFireAndForget();
+            snackbarService.ShowSnackbarAsync("CivitAI can't be reached right now",
+                "Please try again in a few minutes").SafeFireAndForget();
             Logger.Warn(e, $"CivitAI query ApiException ({request})");
         }
         catch (Exception e)

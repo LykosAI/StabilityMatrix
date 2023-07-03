@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
@@ -111,7 +112,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         var downloadResult = await snackbarService.TryAsync(downloadTask, "Could not download file");
         
         // For exceptions other than ApiException or TaskCanceledException, log error
-        if (downloadResult is {Exception: not null and not (ApiException or TaskCanceledException)})
+        if (downloadResult is {Exception: not null and not 
+                (HttpRequestException or ApiException or TaskCanceledException)})
         {
             Logger.Error(downloadResult.Exception, "Unexpected error during model download");
             return;

@@ -17,6 +17,7 @@ public class SnackbarService : ISnackbarService
 {
     private readonly Wpf.Ui.Contracts.ISnackbarService snackbarService;
     private readonly SnackbarViewModel snackbarViewModel;
+    public TimeSpan DefaultTimeout { get; } = TimeSpan.FromSeconds(5);
 
     public SnackbarService(Wpf.Ui.Contracts.ISnackbarService snackbarService, SnackbarViewModel snackbarViewModel)
     {
@@ -26,26 +27,29 @@ public class SnackbarService : ISnackbarService
     
     /// <inheritdoc />
     public async Task ShowSnackbarAsync(
-        string message, 
-        string title = "Error", 
-        ControlAppearance appearance = ControlAppearance.Danger,
+        string title, 
+        string message,
+        ControlAppearance appearance = ControlAppearance.Danger, 
         SymbolRegular icon = SymbolRegular.ErrorCircle24,
-        int timeoutMilliseconds = 5000)
+        TimeSpan? timeout = null)
     {
-        snackbarService.Timeout = timeoutMilliseconds;
+        snackbarService.Timeout = (int) (timeout ?? DefaultTimeout).TotalMilliseconds;
         await snackbarService.ShowAsync(title, message, new SymbolIcon(icon), appearance);
     }
     
     /// <inheritdoc />
     public async Task<TaskResult<T>> TryAsync<T>(
-        Task<T> task, 
-        string message, 
-        ControlAppearance appearance = ControlAppearance.Danger, 
+        Task<T> task,
+        string title = "Error",
+        string? message = null,
+        ControlAppearance appearance = ControlAppearance.Danger,
         SymbolRegular icon = SymbolRegular.ErrorCircle24,
-        int timeoutMilliseconds = 5000)
+        TimeSpan? timeout = null)
     {
         try
         {
+            task.wa
+            await task;
             return new TaskResult<T>
             {
                 Result = await task
@@ -53,7 +57,7 @@ public class SnackbarService : ISnackbarService
         }
         catch (Exception e)
         {
-            ShowSnackbarAsync(message, level: level, timeoutMilliseconds: timeoutMilliseconds).SafeFireAndForget();
+            ShowSnackbarAsync(title, message ?? e.Message, appearance, icon, timeout).SafeFireAndForget();
             return new TaskResult<T>
             {
                 Exception = e
@@ -63,11 +67,12 @@ public class SnackbarService : ISnackbarService
     
     /// <inheritdoc />
     public async Task<TaskResult<bool>> TryAsync(
-        Task task, 
-        string message, 
-        ControlAppearance appearance = ControlAppearance.Danger, 
+        Task task,
+        string title = "Error",
+        string? message = null,
+        ControlAppearance appearance = ControlAppearance.Danger,
         SymbolRegular icon = SymbolRegular.ErrorCircle24,
-        int timeoutMilliseconds = 5000)
+        TimeSpan? timeout = null)
     {
         try
         {
@@ -79,7 +84,7 @@ public class SnackbarService : ISnackbarService
         }
         catch (Exception e)
         {
-            ShowSnackbarAsync(message, level: level, timeoutMilliseconds: timeoutMilliseconds);
+            ShowSnackbarAsync(title, message ?? e.Message, appearance, icon, timeout).SafeFireAndForget();
             return new TaskResult<bool>
             {
                 Result = false,

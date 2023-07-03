@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using Polly;
+using StabilityMatrix.Models.Progress;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.ContentDialogControl;
 using EventManager = StabilityMatrix.Helper.EventManager;

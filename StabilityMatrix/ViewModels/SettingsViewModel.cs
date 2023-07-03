@@ -23,6 +23,7 @@ using StabilityMatrix.Api;
 using StabilityMatrix.Database;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.Progress;
 using StabilityMatrix.Python;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Contracts;

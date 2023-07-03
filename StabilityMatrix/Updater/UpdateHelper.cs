@@ -11,6 +11,7 @@ using StabilityMatrix.Extensions;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Configs;
+using StabilityMatrix.Models.Progress;
 using StabilityMatrix.Services;
 
 namespace StabilityMatrix.Updater;

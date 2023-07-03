@@ -13,6 +13,7 @@ using Octokit;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Packages;
+using StabilityMatrix.Models.Progress;
 using StabilityMatrix.Python;
 using StabilityMatrix.Services;
 using Wpf.Ui.Contracts;

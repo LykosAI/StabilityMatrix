@@ -9,6 +9,9 @@ namespace StabilityMatrix.Models;
 
 public class ConnectedModelInfo
 {
+    [JsonIgnore]
+    public const string FileExtension = ".cm-info.json";
+    
     public int ModelId { get; set; }
     public string ModelName { get; set; }
     public string ModelDescription { get; set; }
@@ -61,7 +64,7 @@ public class ConnectedModelInfo
     /// <param name="modelFileName">Model file name without extensions</param>
     public async Task SaveJsonToDirectory(string directoryPath, string modelFileName)
     {
-        var name = modelFileName + ".cm-info.json";
+        var name = modelFileName + FileExtension;
         var json = JsonSerializer.Serialize(this);
         await File.WriteAllTextAsync(Path.Combine(directoryPath, name), json);
     }

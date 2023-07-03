@@ -19,6 +19,11 @@ public class FileSystemPath : IEquatable<FileSystemPath>, IEquatable<string>
     protected FileSystemPath(params string[] paths) : this(Path.Combine(paths))
     {
     }
+    
+    public override string ToString()
+    {
+        return FullPath;
+    }
 
     public bool Equals(FileSystemPath? other)
     {
@@ -29,7 +34,6 @@ public class FileSystemPath : IEquatable<FileSystemPath>, IEquatable<string>
     
     public bool Equals(string? other)
     {
-        if (ReferenceEquals(null, other)) return false;
         return string.Equals(FullPath, other);
     }
 

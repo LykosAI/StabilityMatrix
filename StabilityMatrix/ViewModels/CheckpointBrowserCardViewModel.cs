@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -13,6 +14,7 @@ using StabilityMatrix.Extensions;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Api;
+using StabilityMatrix.Models.FileInterfaces;
 using StabilityMatrix.Models.Progress;
 using StabilityMatrix.Services;
 using Wpf.Ui.Controls;
@@ -76,95 +78,129 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     {
         Text = "Downloading...";
         
-        // Get latest version
-        if (!(model.ModelVersions?.Count > 0))
+        // Holds files to be deleted on errors
+        var filesForCleanup = new HashSet<FilePath>();
+        
+        // Set Text when exiting, finally block will set 100 and delay clear progress
+        try
         {
-            snackbarService.ShowSnackbarAsync(
-                "This model has no versions available for download",
-                "Model has no versions available", ControlAppearance.Caution).SafeFireAndForget();
-            return;
-        }
-        var modelVersion = model.ModelVersions[0];
-        
-        // Get latest version file
-        if (!(modelVersion.Files?.Count > 0))
-        {
-            snackbarService.ShowSnackbarAsync(
-                "This model has no files available for download",
-                "Model has no files available", ControlAppearance.Caution).SafeFireAndForget();
-            return;
-        }
-        var modelFile = modelVersion.Files[0];
-        
-        var downloadFolder = Path.Combine(settingsManager.ModelsDirectory,
-            model.Type.ConvertTo<SharedFolderType>().GetStringValue());
-        // Folders might be missing if user didn't install any packages yet
-        Directory.CreateDirectory(downloadFolder);
-        var downloadPath = Path.GetFullPath(Path.Combine(downloadFolder, modelFile.Name));
-        
-        // Do the download
-        var downloadTask = downloadService.DownloadToFileAsync(modelFile.DownloadUrl, downloadPath, 
-            new Progress<ProgressReport>(report =>
+            // Get latest version
+            if (!(model.ModelVersions?.Count > 0))
             {
-                Value = report.Percentage;
-                Text = $"Downloading... {report.Percentage}%";
-            }));
-        var downloadResult = await snackbarService.TryAsync(downloadTask, "Could not download file");
-        
-        // For exceptions other than ApiException or TaskCanceledException, log error
-        if (downloadResult is {Exception: not null and not 
-                (HttpRequestException or ApiException or TaskCanceledException)})
-        {
-            Logger.Error(downloadResult.Exception, "Unexpected error during model download");
-            return;
-        }
-        
-        // When sha256 is available, validate the downloaded file
-        var fileExpectedSha256 = modelFile.Hashes.SHA256;
-        if (!string.IsNullOrEmpty(fileExpectedSha256))
-        {
-            var hashProgress = new Progress<ProgressReport>(progress =>
-            {
-                Value = progress.Percentage;
-                Text = $"Validating... {progress.Percentage}%";
-            });
-            var sha256 = await FileHash.GetSha256Async(downloadPath, hashProgress);
-            if (sha256 != fileExpectedSha256.ToLowerInvariant())
-            {
-                Text = "Import Failed!";
-                DelayedClearProgress(TimeSpan.FromMilliseconds(800));
                 snackbarService.ShowSnackbarAsync(
-                    "This may be caused by network or server issues from CivitAI, please try again in a few minutes.",
-                    "Download failed hash validation").SafeFireAndForget();
+                    "This model has no versions available for download",
+                    "Model has no versions available", ControlAppearance.Caution).SafeFireAndForget();
+                Text = "Unable to Download";
                 return;
             }
-            snackbarService.ShowSnackbarAsync($"{model.Type} {model.Name} imported successfully!",
-                "Import complete", ControlAppearance.Info).SafeFireAndForget();
-        }
-        
-        IsIndeterminate = true;
-        
-        // Save connected model info
-        var modelFileName = Path.GetFileNameWithoutExtension(modelFile.Name);
-        var modelInfo = new ConnectedModelInfo(CivitModel, modelVersion, modelFile, DateTime.UtcNow);
-        await modelInfo.SaveJsonToDirectory(downloadFolder, modelFileName);
-        
-        // If available, save a model image
-        if (modelVersion.Images != null && modelVersion.Images.Any())
-        {
-            var image = modelVersion.Images[0];
-            var imageExtension = Path.GetExtension(image.Url).TrimStart('.');
-            if (imageExtension is "jpg" or "jpeg" or "png")
+            var modelVersion = model.ModelVersions[0];
+            
+            // Get latest version file
+            if (!(modelVersion.Files?.Count > 0))
             {
-                var imageDownloadPath = Path.GetFullPath(Path.Combine(downloadFolder, $"{modelFileName}.preview.{imageExtension}"));
-                await downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
+                snackbarService.ShowSnackbarAsync(
+                    "This model has no files available for download",
+                    "Model has no files available", ControlAppearance.Caution).SafeFireAndForget();
+                Text = "Unable to Download";
+                return;
             }
+            var modelFile = modelVersion.Files[0];
+            
+            var downloadFolder = Path.Combine(settingsManager.ModelsDirectory,
+                model.Type.ConvertTo<SharedFolderType>().GetStringValue());
+            // Folders might be missing if user didn't install any packages yet
+            Directory.CreateDirectory(downloadFolder);
+            var downloadPath = Path.GetFullPath(Path.Combine(downloadFolder, modelFile.Name));
+            filesForCleanup.Add(downloadPath);
+            
+            // Do the download
+            var downloadTask = downloadService.DownloadToFileAsync(modelFile.DownloadUrl, downloadPath, 
+                new Progress<ProgressReport>(report =>
+                {
+                    Value = report.Percentage;
+                    Text = $"Downloading... {report.Percentage}%";
+                }));
+            var downloadResult = await snackbarService.TryAsync(downloadTask, "Could not download file");
+            
+            // Failed download handling
+            if (downloadResult.Exception is not null)
+            {
+                // For exceptions other than ApiException or TaskCanceledException, log error
+                var logLevel = downloadResult.Exception switch
+                {
+                    HttpRequestException or ApiException or TaskCanceledException => LogLevel.Warn,
+                    _ => LogLevel.Error
+                };
+                Logger.Log(logLevel, downloadResult.Exception, "Error during model download");
+                
+                Text = "Download Failed";
+                return;
+            }
+            
+            // When sha256 is available, validate the downloaded file
+            var fileExpectedSha256 = modelFile.Hashes.SHA256;
+            if (!string.IsNullOrEmpty(fileExpectedSha256))
+            {
+                var hashProgress = new Progress<ProgressReport>(progress =>
+                {
+                    Value = progress.Percentage;
+                    Text = $"Validating... {progress.Percentage}%";
+                });
+                var sha256 = await FileHash.GetSha256Async(downloadPath, hashProgress);
+                if (sha256 != fileExpectedSha256.ToLowerInvariant())
+                {
+                    Text = "Import Failed!";
+                    DelayedClearProgress(TimeSpan.FromMilliseconds(800));
+                    snackbarService.ShowSnackbarAsync(
+                        "This may be caused by network or server issues from CivitAI, please try again in a few minutes.",
+                        "Download failed hash validation").SafeFireAndForget();
+                    Text = "Download Failed";
+                    return;
+                }
+                snackbarService.ShowSnackbarAsync($"{model.Type} {model.Name} imported successfully!",
+                    "Import complete", ControlAppearance.Info).SafeFireAndForget();
+            }
+            
+            IsIndeterminate = true;
+            
+            // Save connected model info
+            var modelFileName = Path.GetFileNameWithoutExtension(modelFile.Name);
+            var modelInfo = new ConnectedModelInfo(CivitModel, modelVersion, modelFile, DateTime.UtcNow);
+            var modelInfoPath = Path.GetFullPath(Path.Combine(
+                downloadFolder, modelFileName + ConnectedModelInfo.FileExtension));
+            filesForCleanup.Add(modelInfoPath);
+            await modelInfo.SaveJsonToDirectory(downloadFolder, modelFileName);
+            
+            // If available, save a model image
+            if (modelVersion.Images != null && modelVersion.Images.Any())
+            {
+                var image = modelVersion.Images[0];
+                var imageExtension = Path.GetExtension(image.Url).TrimStart('.');
+                if (imageExtension is "jpg" or "jpeg" or "png")
+                {
+                    var imageDownloadPath = Path.GetFullPath(Path.Combine(downloadFolder, $"{modelFileName}.preview.{imageExtension}"));
+                    filesForCleanup.Add(imageDownloadPath);
+                    var imageTask = downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
+                    var imageResult = await snackbarService.TryAsync(imageTask, "Could not download preview image");
+                }
+            }
+            
+            // Successful - clear cleanup list
+            filesForCleanup.Clear();
+                
+            Text = "Import complete!";
         }
-
-        IsIndeterminate = false;
-        Text = "Import complete!";
-        Value = 100;
-        DelayedClearProgress(TimeSpan.FromMilliseconds(800));
+        finally
+        {
+            foreach (var file in filesForCleanup.Where(file => file.Exists))
+            {
+                file.Delete();
+                Logger.Info($"Download cleanup: Deleted file {file}");
+            }
+            IsIndeterminate = false;
+            Value = 100;
+            DelayedClearProgress(TimeSpan.FromMilliseconds(800));
+        }
     }
     
     private void DelayedClearProgress(TimeSpan delay)

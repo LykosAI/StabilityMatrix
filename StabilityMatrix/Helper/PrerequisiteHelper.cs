@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Octokit;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.Progress;
 using StabilityMatrix.Python;
 using StabilityMatrix.Services;
 

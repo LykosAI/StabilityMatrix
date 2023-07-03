@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace StabilityMatrix.Models;
+namespace StabilityMatrix.Models.Progress;
 
 public record struct ProgressReport
 {
@@ -63,4 +63,6 @@ public record struct ProgressReport
         IsIndeterminate = true;
         Type = type;
     }
+    
+    // Implicit conversion from action
 }

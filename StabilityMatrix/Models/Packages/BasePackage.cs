@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Octokit;
+using StabilityMatrix.Models.Progress;
 
 namespace StabilityMatrix.Models.Packages;
 

@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
 using System.Diagnostics;
+using System.Net.Http;
 using System.Windows.Data;
 using Octokit;
 using StabilityMatrix.Api;
@@ -148,11 +149,29 @@ public partial class CheckpointBrowserViewModel : ObservableObject
                 Logger.Debug("Cache entry already exists, not updating model cards");
             }
         }
+        catch (OperationCanceledException)
+        {
+            snackbarService.ShowSnackbarAsync("Request to CivitAI timed out",
+                "Please try again in a few minutes").SafeFireAndForget();
+            Logger.Warn($"CivitAI query timed out ({request})");
+        }
+        catch (HttpRequestException e)
+        {
+            snackbarService.ShowSnackbarAsync("CivitAI can't be reached right now",
+                "Please try again in a few minutes").SafeFireAndForget();
+            Logger.Warn(e, $"CivitAI query HttpRequestException ({request})");
+        }
         catch (ApiException e)
         {
-            snackbarService.ShowSnackbarAsync("Please try again in a few minutes",
-                "CivitAI can't be reached right now").SafeFireAndForget();
-            Logger.Log(LogLevel.Error, e);
+            snackbarService.ShowSnackbarAsync("CivitAI can't be reached right now",
+                "Please try again in a few minutes").SafeFireAndForget();
+            Logger.Warn(e, $"CivitAI query ApiException ({request})");
+        }
+        catch (Exception e)
+        {
+            snackbarService.ShowSnackbarAsync($"Please try again in a few minutes",
+                $"Unknown exception during CivitAI query: {e.GetType().Name}").SafeFireAndForget();
+            Logger.Error(e, $"CivitAI query unknown exception ({request})");
         }
         finally
         {

@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Extensions;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models.FileInterfaces;
+using StabilityMatrix.Models.Progress;
 using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;
 

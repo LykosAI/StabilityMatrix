@@ -17,83 +17,64 @@ public class SnackbarService : ISnackbarService
 {
     private readonly Wpf.Ui.Contracts.ISnackbarService snackbarService;
     private readonly SnackbarViewModel snackbarViewModel;
+    public TimeSpan DefaultTimeout { get; } = TimeSpan.FromSeconds(5);
 
     public SnackbarService(Wpf.Ui.Contracts.ISnackbarService snackbarService, SnackbarViewModel snackbarViewModel)
     {
         this.snackbarService = snackbarService;
         this.snackbarViewModel = snackbarViewModel;
     }
-
-    /// <summary>
-    /// Shows a generic error snackbar with the given message.
-    /// </summary>
-    /// <param name="level">
-    ///     Controls the appearance of the snackbar.
-    ///     Error => Danger
-    ///     Warning => Caution
-    ///     Information => Info
-    ///     Trace => Success
-    ///     Other => Secondary
-    /// </param>
-    public async Task ShowSnackbarAsync(string message, string title = "Error", LogLevel level = LogLevel.Error, int timeoutMilliseconds = 5000)
+    
+    /// <inheritdoc />
+    public async Task ShowSnackbarAsync(
+        string title, 
+        string message,
+        ControlAppearance appearance = ControlAppearance.Danger, 
+        SymbolRegular icon = SymbolRegular.ErrorCircle24,
+        TimeSpan? timeout = null)
     {
-        snackbarViewModel.SnackbarAppearance = level switch
-        {
-            LogLevel.Error => ControlAppearance.Danger,
-            LogLevel.Warning => ControlAppearance.Caution,
-            LogLevel.Information => ControlAppearance.Info,
-            LogLevel.Trace => ControlAppearance.Success,
-            _ => ControlAppearance.Secondary
-        };
-        snackbarService.Timeout = timeoutMilliseconds;
-        var icon = new SymbolIcon(SymbolRegular.ErrorCircle24);
-        await snackbarService.ShowAsync(title, message, icon, snackbarViewModel.SnackbarAppearance);
+        snackbarService.Timeout = (int) (timeout ?? DefaultTimeout).TotalMilliseconds;
+        await snackbarService.ShowAsync(title, message, new SymbolIcon(icon), appearance);
     }
     
-    /// <summary>
-    /// Attempt to run the given task, showing a generic error snackbar if it fails.
-    /// </summary>
-    public async Task<TaskResult<T>> TryAsync<T>(Task<T> task, string message, LogLevel level = LogLevel.Error, int timeoutMilliseconds = 5000)
+    /// <inheritdoc />
+    public async Task<TaskResult<T>> TryAsync<T>(
+        Task<T> task,
+        string title = "Error",
+        string? message = null,
+        ControlAppearance appearance = ControlAppearance.Danger,
+        SymbolRegular icon = SymbolRegular.ErrorCircle24,
+        TimeSpan? timeout = null)
     {
         try
         {
-            return new TaskResult<T>
-            {
-                Result = await task
-            };
+            return new TaskResult<T>(await task);
         }
         catch (Exception e)
         {
-            ShowSnackbarAsync(message, level: level, timeoutMilliseconds: timeoutMilliseconds).SafeFireAndForget();
-            return new TaskResult<T>
-            {
-                Exception = e
-            };
+            ShowSnackbarAsync(title, message ?? e.Message, appearance, icon, timeout).SafeFireAndForget();
+            return TaskResult<T>.FromException(e);
         }
     }
     
-    /// <summary>
-    /// Attempt to run the given void task, showing a generic error snackbar if it fails.
-    /// Return a TaskResult with true if the task succeeded, false if it failed.
-    /// </summary>
-    public async Task<TaskResult<bool>> TryAsync(Task task, string message, LogLevel level = LogLevel.Error, int timeoutMilliseconds = 5000)
+    /// <inheritdoc />
+    public async Task<TaskResult<bool>> TryAsync(
+        Task task,
+        string title = "Error",
+        string? message = null,
+        ControlAppearance appearance = ControlAppearance.Danger,
+        SymbolRegular icon = SymbolRegular.ErrorCircle24,
+        TimeSpan? timeout = null)
     {
         try
         {
             await task;
-            return new TaskResult<bool>
-            {
-                Result = true
-            };
+            return new TaskResult<bool>(true);
         }
         catch (Exception e)
         {
-            ShowSnackbarAsync(message, level: level, timeoutMilliseconds: timeoutMilliseconds);
-            return new TaskResult<bool>
-            {
-                Result = false,
-                Exception = e
-            };
+            ShowSnackbarAsync(title, message ?? e.Message, appearance, icon, timeout).SafeFireAndForget();
+            return new TaskResult<bool>(false, e);
         }
     }
 }

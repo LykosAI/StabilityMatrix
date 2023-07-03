@@ -1,4 +1,5 @@
 ﻿using StabilityMatrix.Models;
+using StabilityMatrix.Models.Progress;
 using StabilityMatrix.ViewModels;
 
 namespace StabilityMatrix.DesignData;

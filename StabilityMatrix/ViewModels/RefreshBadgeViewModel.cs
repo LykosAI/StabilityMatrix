@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Controls;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.Progress;
 using Wpf.Ui.Common;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Controls.IconElements;

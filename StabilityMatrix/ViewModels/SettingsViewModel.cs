@@ -81,6 +81,16 @@ public partial class SettingsViewModel : ObservableObject
         settingsManager.SetWebApiPort(value);
         a3WebApiManager.ResetClient();
     }
+    
+    [ObservableProperty] private bool keepFolderLinksOnShutdown;
+    
+    partial void OnKeepFolderLinksOnShutdownChanged(bool value)
+    {
+        if (value != settingsManager.Settings.KeepFolderLinksOnShutdown)
+        {
+            settingsManager.SetKeepFolderLinksOnShutdown(value);
+        }
+    }
 
     public RefreshBadgeViewModel Text2ImageRefreshBadge { get; } = new()
     {
@@ -113,6 +123,7 @@ public partial class SettingsViewModel : ObservableObject
         this.prerequisiteHelper = prerequisiteHelper;
         SelectedTheme = settingsManager.Settings.Theme ?? "Dark";
         WindowBackdropType = settingsManager.Settings.WindowBackdropType ?? WindowBackdropType.Mica;
+        KeepFolderLinksOnShutdown = settingsManager.Settings.KeepFolderLinksOnShutdown;
     }
 
     [ObservableProperty]

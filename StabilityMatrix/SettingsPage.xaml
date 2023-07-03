@@ -132,6 +132,21 @@
                             FontSize="16"
                             FontWeight="Bold"
                             Margin="0,8"
+                            Text="Checkpoint Manager Options" />
+                        <CheckBox 
+                            IsChecked="{Binding}"
+                            Margin="8" 
+                            ToolTip="Normally removed on shutdown to allow the data folder to be moved without potential file explorer issues."
+                            Content="Keep shared checkpoints directory symbolic links on shutdown"/>
+                    </StackPanel>
+                </ui:Card>
+                
+                <ui:Card Margin="8">
+                    <StackPanel HorizontalAlignment="Left" Orientation="Vertical">
+                        <TextBlock
+                            FontSize="16"
+                            FontWeight="Bold"
+                            Margin="0,8"
                             Text="Embedded Python" />
                         <StackPanel Orientation="Horizontal">
                             <ui:Button

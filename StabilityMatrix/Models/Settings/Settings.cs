@@ -24,7 +24,6 @@ public class Settings
     public bool ModelBrowserNsfwEnabled { get; set; }
     public bool IsNavExpanded { get; set; }
     public bool IsImportAsConnected { get; set; }
-    
     public SharedFolderType? SharedFolderVisibleCategories { get; set; } =
         SharedFolderType.StableDiffusion | 
         SharedFolderType.Lora | 
@@ -33,6 +32,8 @@ public class Settings
     public string? Placement { get; set; }
 
     public ModelSearchOptions? ModelSearchOptions { get; set; }
+    
+    public bool KeepFolderLinksOnShutdown { get; set; }
 
     public InstalledPackage? GetActiveInstalledPackage()
     {

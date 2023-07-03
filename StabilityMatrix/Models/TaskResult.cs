@@ -6,7 +6,7 @@ namespace StabilityMatrix.Models;
 public readonly record struct TaskResult<T>
 {
     public readonly T? Result;
-    public readonly Exception? Exception = null;
+    public readonly Exception? Exception;
 
     [MemberNotNullWhen(true, nameof(Result))]
     public bool IsSuccessful => Exception is null && Result != null;
@@ -17,7 +17,7 @@ public readonly record struct TaskResult<T>
         Exception = exception;
     }
     
-    public TaskResult(T? result)
+    public TaskResult(T result)
     {
         Result = result;
     }

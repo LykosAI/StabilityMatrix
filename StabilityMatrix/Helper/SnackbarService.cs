@@ -48,20 +48,12 @@ public class SnackbarService : ISnackbarService
     {
         try
         {
-            task.wa
-            await task;
-            return new TaskResult<T>
-            {
-                Result = await task
-            };
+            return new TaskResult<T>(await task);
         }
         catch (Exception e)
         {
             ShowSnackbarAsync(title, message ?? e.Message, appearance, icon, timeout).SafeFireAndForget();
-            return new TaskResult<T>
-            {
-                Exception = e
-            };
+            return TaskResult<T>.FromException(e);
         }
     }
     
@@ -77,19 +69,12 @@ public class SnackbarService : ISnackbarService
         try
         {
             await task;
-            return new TaskResult<bool>
-            {
-                Result = true
-            };
+            return new TaskResult<bool>(true);
         }
         catch (Exception e)
         {
             ShowSnackbarAsync(title, message ?? e.Message, appearance, icon, timeout).SafeFireAndForget();
-            return new TaskResult<bool>
-            {
-                Result = false,
-                Exception = e
-            };
+            return new TaskResult<bool>(false, e);
         }
     }
 }

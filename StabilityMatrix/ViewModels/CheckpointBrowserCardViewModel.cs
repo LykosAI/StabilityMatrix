@@ -85,7 +85,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         try
         {
             // Get latest version
-            if (!(model.ModelVersions?.Count > 0))
+            var modelVersion = model.ModelVersions?.FirstOrDefault();
+            if (modelVersion is null)
             {
                 snackbarService.ShowSnackbarAsync(
                     "This model has no versions available for download",
@@ -93,10 +94,10 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                 Text = "Unable to Download";
                 return;
             }
-            var modelVersion = model.ModelVersions[0];
             
             // Get latest version file
-            if (!(modelVersion.Files?.Count > 0))
+            var modelFile = modelVersion.Files?.FirstOrDefault();
+            if (modelFile is null)
             {
                 snackbarService.ShowSnackbarAsync(
                     "This model has no files available for download",
@@ -104,7 +105,6 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                 Text = "Unable to Download";
                 return;
             }
-            var modelFile = modelVersion.Files[0];
             
             var downloadFolder = Path.Combine(settingsManager.ModelsDirectory,
                 model.Type.ConvertTo<SharedFolderType>().GetStringValue());

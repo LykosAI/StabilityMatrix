@@ -6,6 +6,6 @@ namespace StabilityMatrix.Services;
 
 public interface IDownloadService
 {
-    Task DownloadToFileAsync(string downloadUrl, string downloadLocation,
+    Task DownloadToFileAsync(string downloadUrl, string downloadPath,
         IProgress<ProgressReport>? progress = null, string? httpClientName = null);
 }

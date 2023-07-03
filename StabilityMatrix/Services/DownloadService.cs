@@ -21,7 +21,7 @@ public class DownloadService : IDownloadService
         this.httpClientFactory = httpClientFactory;
     }
 
-    public async Task DownloadToFileAsync(string downloadUrl, string downloadLocation,
+    public async Task DownloadToFileAsync(string downloadUrl, string downloadPath,
         IProgress<ProgressReport>? progress = null, string? httpClientName = null)
     {
         using var client = string.IsNullOrWhiteSpace(httpClientName)
@@ -30,7 +30,7 @@ public class DownloadService : IDownloadService
         
         client.Timeout = TimeSpan.FromMinutes(10);
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("StabilityMatrix", "1.0"));
-        await using var file = new FileStream(downloadLocation, FileMode.Create, FileAccess.Write, FileShare.None);
+        await using var file = new FileStream(downloadPath, FileMode.Create, FileAccess.Write, FileShare.None);
         
         long contentLength = 0;
 

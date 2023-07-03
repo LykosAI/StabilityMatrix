@@ -227,6 +227,13 @@ public class SettingsManager : ISettingsManager
     public void SetIsImportAsConnected(bool value)
     {
         Settings.IsImportAsConnected = value;
+        SaveSettings();
+    }
+
+    public void SetKeepFolderLinksOnShutdown(bool value)
+    {
+        Settings.KeepFolderLinksOnShutdown = value;
+        SaveSettings();
     }
     
     public void AddPathExtension(string pathExtension)

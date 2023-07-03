@@ -351,10 +351,18 @@ namespace StabilityMatrix
             serviceProvider?.GetRequiredService<LaunchViewModel>().OnShutdown();
             var settingsManager = serviceProvider?.GetRequiredService<ISettingsManager>();
 
-            if (settingsManager?.TryFindLibrary() ?? false)
+            // Skip remaining steps if no library is set
+            if (!(settingsManager?.TryFindLibrary() ?? false)) return;
+            
+            // Unless KeepFolderLinksOnShutdown is set, delete all package junctions
+            if (!settingsManager.Settings.KeepFolderLinksOnShutdown)
             {
-                serviceProvider?.GetRequiredService<ILiteDbContext>().Dispose();
+                var sharedFolders = serviceProvider?.GetRequiredService<ISharedFolders>();
+                sharedFolders?.RemoveLinksForAllPackages();
             }
+            
+            // Dispose of database
+            serviceProvider?.GetRequiredService<ILiteDbContext>().Dispose();
         }
 
         [DoesNotReturn]

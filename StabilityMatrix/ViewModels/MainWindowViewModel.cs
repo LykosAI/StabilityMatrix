@@ -218,7 +218,7 @@ public partial class MainWindowViewModel : ObservableObject
             Task.Run(async () =>
             {
                 await Task.Delay(5000);
-                Dispatcher.CurrentDispatcher.Invoke(() =>
+                Application.Current.Dispatcher.Invoke(() =>
                 {
                     ProgressState = TaskbarItemProgressState.None;
                     ProgressValue = 0;

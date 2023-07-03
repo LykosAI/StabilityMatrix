@@ -54,10 +54,9 @@ public static class ArchiveHelper
     
     public static async Task<ArchiveInfo> Extract7Z(string archivePath, string extractDirectory)
     {
-        var process = ProcessRunner.StartProcess(SevenZipPath, new[]
-        {
-            "x", archivePath, $"-o{ProcessRunner.Quote(extractDirectory)}", "-y"
-        });
+        var args =
+            $"x {ProcessRunner.Quote(archivePath)} -o{ProcessRunner.Quote(extractDirectory)} -y";
+        var process = ProcessRunner.StartProcess(SevenZipPath, args);
         await ProcessRunner.WaitForExitConditionAsync(process);
         var output = await process.StandardOutput.ReadToEndAsync();
         var matches = Regex7ZOutput.Matches(output);
@@ -85,10 +84,9 @@ public static class ArchiveHelper
         progress.Report(new ProgressReport(-1, isIndeterminate: true, type: ProgressType.Extract));
         
         // Need -bsp1 for progress reports
-        var process = ProcessRunner.StartProcess(SevenZipPath, new[]
-        {
-            "x", archivePath, $"-o{ProcessRunner.Quote(extractDirectory)}", "-y", "-bsp1"
-        }, outputDataReceived: onOutput);
+        var args =
+            $"x {ProcessRunner.Quote(archivePath)} -o{ProcessRunner.Quote(extractDirectory)} -y -bsp1";
+        var process = ProcessRunner.StartProcess(SevenZipPath, args, outputDataReceived: onOutput);
         
         await process.WaitForExitAsync();
         

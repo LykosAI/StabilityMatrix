@@ -10,21 +10,19 @@ public readonly record struct TaskResult<T>
 
     [MemberNotNullWhen(true, nameof(Result))]
     public bool IsSuccessful => Exception is null && Result != null;
-
-    // ReSharper disable once MemberCanBePrivate.Global
-    private TaskResult(Exception exception)
+    
+    public TaskResult(T? result, Exception? exception)
     {
-        Result = default;
+        Result = result;
         Exception = exception;
     }
-
-    // ReSharper disable once MemberCanBePrivate.Global
-    public TaskResult(T? Result)
+    
+    public TaskResult(T? result)
     {
-        this.Result = Result;
+        Result = result;
     }
 
-    public TaskResult<T> FromException(Exception exception) => new(exception: exception);
+    public static TaskResult<T> FromException(Exception exception) => new(default, exception);
 
     public void Deconstruct(out T? result, out Exception? exception)
     {

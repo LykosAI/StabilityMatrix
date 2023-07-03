@@ -148,11 +148,23 @@ public partial class CheckpointBrowserViewModel : ObservableObject
                 Logger.Debug("Cache entry already exists, not updating model cards");
             }
         }
+        catch (OperationCanceledException)
+        {
+            snackbarService.ShowSnackbarAsync("Please try again in a few minutes",
+                "Request to CivitAI timed out").SafeFireAndForget();
+            Logger.Warn($"CivitAI query timed out ({request})");
+        }
         catch (ApiException e)
         {
             snackbarService.ShowSnackbarAsync("Please try again in a few minutes",
                 "CivitAI can't be reached right now").SafeFireAndForget();
-            Logger.Log(LogLevel.Error, e);
+            Logger.Warn(e, $"CivitAI query ApiException ({request})");
+        }
+        catch (Exception e)
+        {
+            snackbarService.ShowSnackbarAsync($"Please try again in a few minutes",
+                $"Unknown exception during CivitAI query: {e.GetType().Name}").SafeFireAndForget();
+            Logger.Error(e, $"CivitAI query unknown exception ({request})");
         }
         finally
         {

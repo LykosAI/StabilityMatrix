@@ -13,6 +13,7 @@ public class DownloadService : IDownloadService
 {
     private readonly ILogger<DownloadService> logger;
     private readonly IHttpClientFactory httpClientFactory;
+    private const int BufferSize = ushort.MaxValue;
 
     public DownloadService(ILogger<DownloadService> logger, IHttpClientFactory httpClientFactory)
     {
@@ -20,7 +21,7 @@ public class DownloadService : IDownloadService
         this.httpClientFactory = httpClientFactory;
     }
 
-    public async Task DownloadToFileAsync(string downloadUrl, string downloadLocation, int bufferSize = ushort.MaxValue,
+    public async Task DownloadToFileAsync(string downloadUrl, string downloadLocation,
         IProgress<ProgressReport>? progress = null, string? httpClientName = null)
     {
         using var client = string.IsNullOrWhiteSpace(httpClientName)
@@ -51,7 +52,7 @@ public class DownloadService : IDownloadService
 
         await using var stream = await response.Content.ReadAsStreamAsync();
         var totalBytesRead = 0L;
-        var buffer = new byte[bufferSize];
+        var buffer = new byte[BufferSize];
         while (true)
         {
             var bytesRead = await stream.ReadAsync(buffer);

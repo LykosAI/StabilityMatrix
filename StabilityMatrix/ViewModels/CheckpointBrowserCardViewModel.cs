@@ -181,7 +181,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                     var imageDownloadPath = Path.GetFullPath(Path.Combine(downloadFolder, $"{modelFileName}.preview.{imageExtension}"));
                     filesForCleanup.Add(imageDownloadPath);
                     var imageTask = downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
-                    var imageResult = await snackbarService.TryAsync(imageTask, "Could not download preview image");
+                    await snackbarService.TryAsync(imageTask, "Could not download preview image");
                 }
             }
             

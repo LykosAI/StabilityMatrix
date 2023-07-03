@@ -23,37 +23,26 @@ public class SnackbarService : ISnackbarService
         this.snackbarService = snackbarService;
         this.snackbarViewModel = snackbarViewModel;
     }
-
-    /// <summary>
-    /// Shows a generic error snackbar with the given message.
-    /// </summary>
-    /// <param name="level">
-    ///     Controls the appearance of the snackbar.
-    ///     Error => Danger
-    ///     Warning => Caution
-    ///     Information => Info
-    ///     Trace => Success
-    ///     Other => Secondary
-    /// </param>
-    public async Task ShowSnackbarAsync(string message, string title = "Error", LogLevel level = LogLevel.Error, int timeoutMilliseconds = 5000)
+    
+    /// <inheritdoc />
+    public async Task ShowSnackbarAsync(
+        string message, 
+        string title = "Error", 
+        ControlAppearance appearance = ControlAppearance.Danger,
+        SymbolRegular icon = SymbolRegular.ErrorCircle24,
+        int timeoutMilliseconds = 5000)
     {
-        snackbarViewModel.SnackbarAppearance = level switch
-        {
-            LogLevel.Error => ControlAppearance.Danger,
-            LogLevel.Warning => ControlAppearance.Caution,
-            LogLevel.Information => ControlAppearance.Info,
-            LogLevel.Trace => ControlAppearance.Success,
-            _ => ControlAppearance.Secondary
-        };
         snackbarService.Timeout = timeoutMilliseconds;
-        var icon = new SymbolIcon(SymbolRegular.ErrorCircle24);
-        await snackbarService.ShowAsync(title, message, icon, snackbarViewModel.SnackbarAppearance);
+        await snackbarService.ShowAsync(title, message, new SymbolIcon(icon), appearance);
     }
     
-    /// <summary>
-    /// Attempt to run the given task, showing a generic error snackbar if it fails.
-    /// </summary>
-    public async Task<TaskResult<T>> TryAsync<T>(Task<T> task, string message, LogLevel level = LogLevel.Error, int timeoutMilliseconds = 5000)
+    /// <inheritdoc />
+    public async Task<TaskResult<T>> TryAsync<T>(
+        Task<T> task, 
+        string message, 
+        ControlAppearance appearance = ControlAppearance.Danger, 
+        SymbolRegular icon = SymbolRegular.ErrorCircle24,
+        int timeoutMilliseconds = 5000)
     {
         try
         {
@@ -72,11 +61,13 @@ public class SnackbarService : ISnackbarService
         }
     }
     
-    /// <summary>
-    /// Attempt to run the given void task, showing a generic error snackbar if it fails.
-    /// Return a TaskResult with true if the task succeeded, false if it failed.
-    /// </summary>
-    public async Task<TaskResult<bool>> TryAsync(Task task, string message, LogLevel level = LogLevel.Error, int timeoutMilliseconds = 5000)
+    /// <inheritdoc />
+    public async Task<TaskResult<bool>> TryAsync(
+        Task task, 
+        string message, 
+        ControlAppearance appearance = ControlAppearance.Danger, 
+        SymbolRegular icon = SymbolRegular.ErrorCircle24,
+        int timeoutMilliseconds = 5000)
     {
         try
         {

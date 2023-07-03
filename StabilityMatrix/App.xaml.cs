@@ -35,11 +35,11 @@ using StabilityMatrix.Models.Configs;
 using StabilityMatrix.Models.Packages;
 using StabilityMatrix.Python;
 using StabilityMatrix.Services;
+using StabilityMatrix.Updater;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Services;
 using Application = System.Windows.Application;
-using ConfigurationExtensions = NLog.ConfigurationExtensions;
 using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 using SnackbarService = StabilityMatrix.Helper.SnackbarService;
@@ -53,14 +53,14 @@ namespace StabilityMatrix
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private ServiceProvider? serviceProvider;
-        
+
         // ReSharper disable once MemberCanBePrivate.Global
         public static bool IsSentryEnabled => !Debugger.IsAttached || Environment
             .GetEnvironmentVariable("DEBUG_SENTRY")?.ToLowerInvariant() == "true";
         // ReSharper disable once MemberCanBePrivate.Global
         public static bool IsExceptionWindowEnabled => !Debugger.IsAttached || Environment
             .GetEnvironmentVariable("DEBUG_EXCEPTION_WINDOW")?.ToLowerInvariant() == "true";
-        
+
         public static IConfiguration Config { get; set; } = null!;
 
         private readonly LoggingConfiguration logConfig;
@@ -94,6 +94,9 @@ namespace StabilityMatrix
                     o.AutoSessionTracking = true;
                     // 1.0 to capture 100% of transactions for performance monitoring.
                     o.TracesSampleRate = 1.0;
+#if DEBUG
+                    o.Environment = "Development";
+#endif
                 });
             }
 
@@ -106,7 +109,7 @@ namespace StabilityMatrix
         private static LoggingConfiguration ConfigureLogging()
         {
             var logConfig = new LoggingConfiguration();
-            
+
             var fileTarget = new FileTarget("logfile")
             {
                 ArchiveOldFileOnStartup = true,
@@ -118,7 +121,7 @@ namespace StabilityMatrix
             var debugTarget = new DebuggerTarget("debugger") { Layout = "${message}" };
             logConfig.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, fileTarget);
             logConfig.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, debugTarget);
-            
+
             NLog.LogManager.Configuration = logConfig;
             // Add Sentry to NLog if enabled
             if (IsSentryEnabled)
@@ -138,35 +141,33 @@ namespace StabilityMatrix
             return logConfig;
         }
 
-        // Find library and initialize settings
-        private static SettingsManager CreateSettingsManager()
-        {
-            var settings = new SettingsManager();
-            var found = settings.TryFindLibrary();
-            // Not found, we need to show dialog to choose library location
-            if (!found)
-            {
-                // See if this is an existing user for message variation
-                var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                var settingsPath = Path.Combine(appDataPath, "StabilityMatrix", "settings.json");
-                var isExistingUser = File.Exists(settingsPath);
-                
-                // TODO: Show dialog
-                
-                // 1. For portable mode, call settings.SetPortableMode()
-                // 2. For custom path, call settings.SetLibraryPath(path)
-                
-                // TryFindLibrary should succeed now unless weird issue
-                if (!settings.TryFindLibrary())
-                {
-                    throw new Exception("Could not set library path.");
-                }
-            }
-            return settings;
-        }
+
 
         private void App_OnStartup(object sender, StartupEventArgs e)
         {
+            if (AppDomain.CurrentDomain.BaseDirectory.EndsWith("Update\\"))
+            {
+                File.Copy(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "StabilityMatrix.exe"),
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "StabilityMatrix.exe"), true);
+                Process.Start(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..",
+                    "StabilityMatrix.exe"));
+                Current.Shutdown();
+                return;
+            }
+
+            var updateDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Update");
+            if (Directory.Exists(updateDir))
+            {
+                try
+                {
+                    Directory.Delete(updateDir, true);
+                }
+                catch (Exception exception)
+                {
+                    Logger.Error(exception, "Failed to delete update file");
+                }
+            }
+
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddSingleton<IPageService, PageService>();
             serviceCollection.AddSingleton<IContentDialogService, ContentDialogService>();
@@ -177,7 +178,7 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<IPyRunner, PyRunner>();
             serviceCollection.AddSingleton<ISharedFolders, SharedFolders>();
             serviceCollection.AddTransient<IDialogFactory, DialogFactory>();
-            
+
             serviceCollection.AddTransient<MainWindow>();
             serviceCollection.AddTransient<SettingsPage>();
             serviceCollection.AddTransient<LaunchPage>();
@@ -195,17 +196,20 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<LaunchViewModel>();
             serviceCollection.AddSingleton<PackageManagerViewModel>();
             serviceCollection.AddSingleton<TextToImageViewModel>();
+            serviceCollection.AddTransient<UpdateWindowViewModel>();
             serviceCollection.AddTransient<InstallerViewModel>();
+            serviceCollection.AddTransient<SelectInstallLocationsViewModel>();
+            serviceCollection.AddTransient<DataDirectoryMigrationViewModel>();
+            serviceCollection.AddTransient<WebLoginViewModel>();
             serviceCollection.AddTransient<OneClickInstallViewModel>();
             serviceCollection.AddTransient<CheckpointManagerViewModel>();
             serviceCollection.AddSingleton<CheckpointBrowserViewModel>();
             serviceCollection.AddSingleton<FirstLaunchSetupViewModel>();
 
             serviceCollection.Configure<DebugOptions>(Config.GetSection(nameof(DebugOptions)));
-            
-            var settingsManager = CreateSettingsManager();
-            serviceCollection.AddSingleton<ISettingsManager>(settingsManager);
 
+            serviceCollection.AddSingleton<IUpdateHelper, UpdateHelper>();
+            serviceCollection.AddSingleton<ISettingsManager, SettingsManager>();
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, VladAutomatic>();
             serviceCollection.AddSingleton<BasePackage, ComfyUI>();
@@ -220,28 +224,28 @@ namespace StabilityMatrix
                 var githubApiKey = Config["GithubApiKey"];
                 if (string.IsNullOrWhiteSpace(githubApiKey))
                     return client;
-                
+
                 client.Credentials = new Credentials(githubApiKey);
                 return client;
             });
+            serviceCollection.AddSingleton<ModelFinder>();
+
+            // Database
+            serviceCollection.AddSingleton<ILiteDbContext, LiteDbContext>();
+
+            // Caches
             serviceCollection.AddMemoryCache();
             serviceCollection.AddSingleton<IGithubApiCache, GithubApiCache>();
 
-            // Setup LiteDb
-            var connectionString = Config["TempDatabase"] switch
-            {
-                "True" => ":temp:",
-                _ => settingsManager.DatabasePath
-            };
-            serviceCollection.AddSingleton<ILiteDbContext>(new LiteDbContext(connectionString));
-
             // Configure Refit and Polly
+            var defaultSystemTextJsonSettings =
+                SystemTextJsonContentSerializer.GetDefaultJsonSerializerOptions();
+            defaultSystemTextJsonSettings.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+
             var defaultRefitSettings = new RefitSettings
             {
-                ContentSerializer = new SystemTextJsonContentSerializer(new JsonSerializerOptions
-                {
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                })
+                ContentSerializer =
+                    new SystemTextJsonContentSerializer(defaultSystemTextJsonSettings),
             };
 
             // HTTP Policies
@@ -259,6 +263,7 @@ namespace StabilityMatrix
                 .Or<TimeoutRejectedException>()
                 .OrResult(r => retryStatusCodes.Contains(r.StatusCode))
                 .WaitAndRetryAsync(delay);
+            
             // Shorter timeout for local requests
             var localTimeout = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(3));
             var localDelay = Backoff
@@ -272,38 +277,45 @@ namespace StabilityMatrix
                     Debug.WriteLine("Retrying local request...");
                     return Task.CompletedTask;
                 });
+            
+            // named client for update
+            serviceCollection.AddHttpClient("UpdateClient")
+                .AddPolicyHandler(retryPolicy);
 
             // Add Refit clients
             serviceCollection.AddRefitClient<ICivitApi>(defaultRefitSettings)
                 .ConfigureHttpClient(c =>
                 {
                     c.BaseAddress = new Uri("https://civitai.com");
-                    c.Timeout = TimeSpan.FromSeconds(8);
+                    c.Timeout = TimeSpan.FromSeconds(15);
                 })
                 .AddPolicyHandler(retryPolicy);
 
             // Add Refit client managers
             serviceCollection.AddHttpClient("A3Client")
                 .AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));
+            
             serviceCollection.AddSingleton<IA3WebApiManager>(services =>
                 new A3WebApiManager(services.GetRequiredService<ISettingsManager>(),
                     services.GetRequiredService<IHttpClientFactory>())
                 {
                     RefitSettings = defaultRefitSettings,
                 });
-            
+
             // Add logging
-            serviceCollection.AddLogging(log =>
+            serviceCollection.AddLogging(builder =>
             {
-                log.ClearProviders();
-                log.AddFilter("Microsoft.Extensions.Http", LogLevel.Warning);
-                log.SetMinimumLevel(LogLevel.Trace);
-                log.AddNLog(logConfig);
+                builder.ClearProviders();
+                builder.AddFilter("Microsoft.Extensions.Http", LogLevel.Warning)
+                       .AddFilter("Microsoft", LogLevel.Warning)
+                       .AddFilter("System", LogLevel.Warning);
+                builder.SetMinimumLevel(LogLevel.Debug);
+                builder.AddNLog(logConfig);
             });
-            
+
             // Remove HTTPClientFactory logging
             serviceCollection.RemoveAll<IHttpMessageHandlerBuilderFilter>();
-            
+
             // Default error handling for 'SafeFireAndForget'
             SafeFireAndForgetExtensions.Initialize();
             SafeFireAndForgetExtensions.SetDefaultExceptionHandling(ex =>
@@ -311,18 +323,17 @@ namespace StabilityMatrix
                 Logger?.Warn(ex, "Background Task failed: {ExceptionMessage}", ex.Message);
             });
 
-            // Insert path extensions
-            settingsManager.InsertPathExtensions();
-            
             serviceProvider = serviceCollection.BuildServiceProvider();
 
+            var settingsManager = serviceProvider.GetRequiredService<ISettingsManager>();
+
             // First time setup if needed
-            if (!settingsManager.Settings.FirstLaunchSetupComplete)
+            if (!settingsManager.IsEulaAccepted())
             {
                 var setupWindow = serviceProvider.GetRequiredService<FirstLaunchSetupWindow>();
                 if (setupWindow.ShowDialog() ?? false)
                 {
-                    settingsManager.SetFirstLaunchSetupComplete(true);
+                    settingsManager.SetEulaAccepted();
                 }
                 else
                 {
@@ -330,7 +341,7 @@ namespace StabilityMatrix
                     return;
                 }
             }
-            
+
             var window = serviceProvider.GetRequiredService<MainWindow>();
             window.Show();
         }
@@ -338,9 +349,22 @@ namespace StabilityMatrix
         private void App_OnExit(object sender, ExitEventArgs e)
         {
             serviceProvider?.GetRequiredService<LaunchViewModel>().OnShutdown();
+            var settingsManager = serviceProvider?.GetRequiredService<ISettingsManager>();
+
+            // Skip remaining steps if no library is set
+            if (!(settingsManager?.TryFindLibrary() ?? false)) return;
+            
+            // Unless KeepFolderLinksOnShutdown is set, delete all package junctions
+            if (!settingsManager.Settings.KeepFolderLinksOnShutdown)
+            {
+                var sharedFolders = serviceProvider?.GetRequiredService<ISharedFolders>();
+                sharedFolders?.RemoveLinksForAllPackages();
+            }
+            
+            // Dispose of database
             serviceProvider?.GetRequiredService<ILiteDbContext>().Dispose();
         }
-        
+
         [DoesNotReturn]
         private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
@@ -348,10 +372,10 @@ namespace StabilityMatrix
             {
                 SentrySdk.CaptureException(e.Exception);
             }
-            
+
             var logger = serviceProvider?.GetRequiredService<ILogger<App>>();
             logger?.LogCritical(e.Exception, "Unhandled Exception: {ExceptionMessage}", e.Exception.Message);
-            
+
             if (IsExceptionWindowEnabled)
             {
                 var vm = new ExceptionWindowViewModel

@@ -1,0 +1,129 @@
+﻿<ui:ContentDialog
+    CloseButtonText="Close"
+    Loaded="DataDirectoryMigrationDialog_OnLoaded"
+    Title="Package Information Update"
+    d:DataContext="{d:DesignInstance Type=viewModels:DataDirectoryMigrationViewModel,
+                                     IsDesignTimeCreatable=True}"
+    d:DesignHeight="512"
+    d:DesignWidth="640"
+    mc:Ignorable="d"
+    UseLayoutRounding="True"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    x:Class="StabilityMatrix.DataDirectoryMigrationDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:converters="clr-namespace:StabilityMatrix.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:StabilityMatrix"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ui:ContentDialog.Resources>
+        <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
+        <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:DataDirectoryMigrationDialog}" />
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <converters:BoolNegationConverter x:Key="BoolNegationConverter"/> 
+        <converters:ValueConverterGroup x:Key="InvertIsStringNullOrWhitespaceConverter">
+            <converters:IsStringNullOrWhitespaceConverter />
+            <converters:BoolNegationConverter />
+        </converters:ValueConverterGroup>
+        <converters:ValueConverterGroup x:Key="InvertAndVisibilitate">
+            <converters:BoolNegationConverter />
+            <BooleanToVisibilityConverter />
+        </converters:ValueConverterGroup>
+    </ui:ContentDialog.Resources>
+
+    <Grid
+        Margin="16"
+        MaxWidth="700"
+        MinHeight="300"
+        VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock
+                FontSize="16"
+                Margin="8,8,8,8"
+                TextAlignment="Center"
+                Text="It looks like you have data from an older version of Stability Matrix before v1.1.0, would you like to migrate it?"
+                TextWrapping="Wrap" />
+            <ui:InfoBar
+                IsClosable="False"
+                IsOpen="{Binding HasFreeSpaceError}"
+                Margin="8"
+                Severity="Warning"
+                Title="The drive you selected doesn't have enough space for migration. If you don't want to migrate, simply click 'No Thanks'. Otherwise, please choose a different directory before proceeding with the migration." />
+            <ui:InfoBar
+                IsClosable="False"
+                IsOpen="{Binding AutoMigrateText, Converter={StaticResource InvertIsStringNullOrWhitespaceConverter}}"
+                Margin="8"
+                Severity="Success"
+                Title="{Binding AutoMigrateText, FallbackValue=5 Packages will be automatically migrated to the new format}" />
+            <ui:InfoBar
+                IsClosable="False"
+                IsOpen="{Binding NeedsMoveMigrateText, Converter={StaticResource InvertIsStringNullOrWhitespaceConverter}}"
+                Margin="8"
+                Severity="Informational"
+                Title="{Binding NeedsMoveMigrateText, FallbackValue=2 Packages are not relative to the Data Directory and will be moved this may take a few minutes}" />
+        </StackPanel>
+
+        <!--  Progress for moving  -->
+        <StackPanel
+            Grid.Row="1"
+            HorizontalAlignment="Center"
+            Margin="8"
+            Orientation="Horizontal"
+            Visibility="{Binding MigrateCommand.IsRunning, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <ui:ProgressRing
+                Height="32"
+                IsEnabled="{Binding MigrateCommand.IsRunning, Converter={StaticResource BooleanToVisibilityConverter}}"
+                IsIndeterminate="True"
+                Width="32" />
+            <TextBlock
+                FontSize="16"
+                Margin="8"
+                Text="{Binding MigrateProgressText, FallbackValue=Migrating 1 of 2 Packages}"
+                VerticalAlignment="Center" />
+        </StackPanel>
+        
+        <StackPanel Grid.Row="2" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center">
+            
+            <ui:Button
+                Appearance="Secondary"
+                Click="NoThanks_OnClick"
+                Content="No Thanks"
+                FontSize="16"
+                HorizontalAlignment="Center"
+                Margin="8"
+                Visibility="{Binding CanShowNoThanksButton, Converter={StaticResource BooleanToVisibilityConverter}}"
+                IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"/>
+            <ui:Button Appearance="Info"
+                       Click="Back_OnClick"
+                       Content="Select Directory"
+                       FontSize="16"
+                       HorizontalAlignment="Center"
+                       Margin="8"
+                       Visibility="{Binding HasFreeSpaceError, Converter={StaticResource BooleanToVisibilityConverter}}"
+                       IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"/>
+            <ui:Button
+                Appearance="Success"
+                Click="ContinueButton_OnClick"
+                Content="Continue"
+                FontSize="16"
+                HorizontalAlignment="Center"
+                Margin="8"
+                Visibility="{Binding HasFreeSpaceError, Converter={StaticResource InvertAndVisibilitate}}"
+                IsEnabled="{Binding IsMigrating, Converter={StaticResource BoolNegationConverter}}"/>
+        </StackPanel>
+    </Grid>
+
+</ui:ContentDialog>

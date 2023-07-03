@@ -1,19 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
-using LiteDB;
 using LiteDB.Async;
+using Microsoft.Extensions.Options;
 using StabilityMatrix.Extensions;
+using StabilityMatrix.Helper;
 using StabilityMatrix.Models.Api;
+using StabilityMatrix.Models.Configs;
 
 namespace StabilityMatrix.Database;
 
 public class LiteDbContext : ILiteDbContext
 {
-    public LiteDatabaseAsync Database { get; }
+    private readonly ISettingsManager settingsManager;
+    private readonly DebugOptions debugOptions;
+
+    private LiteDatabaseAsync? database;
+    public LiteDatabaseAsync Database 
+    {
+        get
+        {
+            if (database is null) throw new InvalidOperationException("Database not set before access");
+            return database;
+        }
+        private set => database = value;
+    }
 
     // Notification events
     public event EventHandler? CivitModelsChanged;
@@ -23,8 +36,13 @@ public class LiteDbContext : ILiteDbContext
     public ILiteCollectionAsync<CivitModelVersion> CivitModelVersions => Database.GetCollection<CivitModelVersion>("CivitModelVersions");
     public ILiteCollectionAsync<CivitModelQueryCacheEntry> CivitModelQueryCache => Database.GetCollection<CivitModelQueryCacheEntry>("CivitModelQueryCache");
 
-    public LiteDbContext(string connectionString)
+    public LiteDbContext(ISettingsManager settingsManager, IOptions<DebugOptions> debugOptions)
     {
+        this.settingsManager = settingsManager;
+        this.debugOptions = debugOptions.Value;
+        
+        var connectionString = debugOptions.Value.TempDatabase ? ":temp:"
+            : $"Filename={Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db")};Mode=Shared";
         Database = new LiteDatabaseAsync(connectionString);
 
         // Register reference fields
@@ -94,7 +112,7 @@ public class LiteDbContext : ILiteDbContext
 
     public void Dispose()
     {
-        Database.Dispose();
+        database?.Dispose();
         GC.SuppressFinalize(this);
     }
 }

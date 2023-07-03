@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.Settings;
 using Wpf.Ui.Controls.Window;
 
 namespace StabilityMatrix.Helper;
@@ -8,8 +9,11 @@ namespace StabilityMatrix.Helper;
 public interface ISettingsManager
 {
     Settings Settings { get; }
+    
+    // Events
     event EventHandler<bool>? ModelBrowserNsfwEnabledChanged;
-
+    event EventHandler<string>? LibraryDirChanged; 
+    
     // Library settings
     bool IsPortableMode { get; }
     string LibraryDir { get; }
@@ -49,4 +53,23 @@ public interface ISettingsManager
     void SetModelBrowserNsfwEnabled(bool value);
     void SetSharedFolderCategoryVisible(SharedFolderType type, bool visible);
     bool IsSharedFolderCategoryVisible(SharedFolderType type);
+    bool IsEulaAccepted();
+    void SetEulaAccepted();
+
+    /// <summary>
+    /// Save a new library path to %APPDATA%/StabilityMatrix/library.json
+    /// </summary>
+    void SetLibraryPath(string path);
+
+    /// <summary>
+    /// Enable and create settings files for portable mode
+    /// Creates the ./Data directory and the `.sm-portable` marker file
+    /// </summary>
+    void SetPortableMode();
+    void SetPlacement(string placementStr);
+    void SetSearchOptions(ModelSearchOptions options);
+    Guid GetOldActivePackageId();
+    void SetActiveInstalledPackage(Guid guid);
+    void SetIsImportAsConnected(bool value);
+    void SetKeepFolderLinksOnShutdown(bool value);
 }

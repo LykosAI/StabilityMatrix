@@ -101,6 +101,7 @@ public class ComfyUI : BaseGitPackage
     public override async Task RunPackage(string installedPackagePath, string arguments)
     {
         await SetupVenv(installedPackagePath);
+        PrerequisiteHelper.UpdatePathExtensions();
 
         void HandleConsoleOutput(string? s)
         {

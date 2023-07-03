@@ -12,20 +12,19 @@ public class SharedFolders : ISharedFolders
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly ISettingsManager settingsManager;
+    private readonly IPackageFactory packageFactory;
 
-    public SharedFolders(ISettingsManager settingsManager)
+    public SharedFolders(ISettingsManager settingsManager, IPackageFactory packageFactory)
     {
         this.settingsManager = settingsManager;
+        this.packageFactory = packageFactory;
     }
 
     public void SetupLinksForPackage(BasePackage basePackage, string installPath)
     {
         var sharedFolders = basePackage.SharedFolders;
-        if (sharedFolders == null)
-        {
-            return;
-        }
-        
+        if (sharedFolders == null) return;
+
         var provider = ReparsePointFactory.Provider;
         foreach (var (folderType, relativePath) in sharedFolders)
         {
@@ -62,6 +61,36 @@ public class SharedFolders : ISharedFolders
             provider.CreateLink(destination, source, LinkType.Junction);
         }
     }
+    
+    /// <summary>
+    /// Deletes junction links and remakes them. Unlike SetupLinksForPackage, 
+    /// this will not copy files from the destination to the source.
+    /// </summary>
+    public void UpdateLinksForPackage(BasePackage basePackage, string installPath)
+    {
+        var sharedFolders = basePackage.SharedFolders;
+        if (sharedFolders == null) return;
+        
+        var provider = ReparsePointFactory.Provider;
+        foreach (var (folderType, relativePath) in sharedFolders)
+        {
+            var source = Path.Combine(settingsManager.ModelsDirectory, folderType.GetStringValue());
+            var destination = Path.GetFullPath(Path.Combine(installPath, relativePath));
+            // Create source folder if it doesn't exist
+            if (!Directory.Exists(source))
+            {
+                Logger.Info($"Creating junction source {source}");
+                Directory.CreateDirectory(source);
+            }
+            // Delete the destination folder if it exists
+            if (Directory.Exists(destination))
+            {
+                Directory.Delete(destination, false);
+            }
+            Logger.Info($"Updating junction link from {source} to {destination}");
+            provider.CreateLink(destination, source, LinkType.Junction);
+        }
+    }
 
     public void RemoveLinksForPackage(BasePackage package, string installPath)
     {
@@ -79,6 +108,29 @@ public class SharedFolders : ISharedFolders
             {
                 Logger.Info($"Deleting junction target {destination}");
                 Directory.Delete(destination, false);
+            }
+        }
+    }
+
+    public void RemoveLinksForAllPackages()
+    {
+        var libraryDir = settingsManager.LibraryDir;
+        var packages = settingsManager.Settings.InstalledPackages;
+        foreach (var package in packages)
+        {
+            if (package.PackageName == null) continue;
+            var basePackage = packageFactory.FindPackageByName(package.PackageName);
+            if (basePackage == null) continue;
+            if (package.LibraryPath == null) continue;
+
+            try
+            {
+                RemoveLinksForPackage(basePackage, Path.Combine(libraryDir, package.LibraryPath));
+            }
+            catch (Exception e)
+            {
+                Logger.Warn("Failed to remove junction links for package {Package} " +
+                            "({DisplayName}): {Message}", package.PackageName, package.DisplayName, e.Message);
             }
         }
     }

@@ -16,11 +16,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:StabilityMatrix.Models"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:terminal="clr-namespace:Simple.Wpf.Terminal;assembly=Simple.Wpf.Terminal">
 
     <Page.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
-        
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+
         <!--  Manually copied style since can't inherit: https://github.com/lepoco/wpfui/blob/main/src/Wpf.Ui/Styles/Controls/ComboBox.xaml  -->
         <ControlTemplate TargetType="{x:Type ComboBoxItem}" x:Key="SelectPackageDropDownStyle">
             <Grid>
@@ -58,8 +59,8 @@
                                 VerticalAlignment="Top"
                                 d:DataContext="{d:DesignInstance Type=models:InstalledPackage,
                                                                  IsDesignTimeCreatable=True}">
-                                <TextBlock Margin="0,5,0,5" Text="{Binding DisplayName}" />
-                                <TextBlock Margin="0,0,0,5" Text="{Binding Path}" />
+                                <TextBlock Margin="0,5,0,5" Text="{Binding DisplayName, Mode=OneWay}" />
+                                <TextBlock Margin="0,0,0,5" Text="{Binding FullPath, Mode=OneWay}" />
                             </StackPanel>
                         </Grid>
                     </Grid>
@@ -184,35 +185,33 @@
                             <TextBlock
                                 Margin="0,5,0,5"
                                 Name="NameTextBlock"
-                                Text="{Binding DisplayName}" />
+                                Text="{Binding DisplayName, Mode=OneWay}" />
                         </StackPanel>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
         </Grid>
-        <ScrollViewer
-            Grid.Row="1"
-            Margin="0,8,0,0"
-            x:Name="OutputScrollViewer">
-            <TextBlock
-                Background="{DynamicResource ControlFillColorDisabledBrush}"
-                FontFamily="Consolas"
-                HorizontalAlignment="Stretch"
-                Margin="24,0,10,10"
-                Name="OutputBlock"
-                ScrollViewer.HorizontalScrollBarVisibility="Hidden"
-                ScrollViewer.VerticalScrollBarVisibility="Auto"
-                Text="{Binding ConsoleOutput, Mode=OneWay}"
-                TextWrapping="Wrap"
-                VerticalAlignment="Stretch" />
-        </ScrollViewer>
-        <ui:Button Grid.Row="2" Grid.ColumnSpan="2"
-                Margin="24,0,24,8"
-                Command="{Binding LaunchWebUiCommand}"
-                Appearance="Success"                
-                FontSize="12"
-                HorizontalAlignment="Stretch"
-                Visibility="{Binding ShowWebUiButton, Converter={StaticResource BoolToVisConverter}}"
-                Content="Open Web UI"/>
+        <terminal:Terminal Grid.Row="1"
+                           Margin="24,8,26,10"
+                           Background="{DynamicResource ControlFillColorDisabledBrush}"
+                           IsReadOnly="True"
+                           AutoScroll="True"
+                           FontFamily="Consolas"
+                           ItemHeight="22"
+                           Foreground="White"
+                           BorderThickness="0"
+                           VerticalScrollBarVisibility="Auto"
+                           ItemsSource="{Binding ConsoleHistory, Mode=OneWay}"/>
+        
+        <ui:Button
+            Appearance="Success"
+            Command="{Binding LaunchWebUiCommand}"
+            Content="Open Web UI"
+            FontSize="12"
+            Grid.ColumnSpan="2"
+            Grid.Row="2"
+            HorizontalAlignment="Stretch"
+            Margin="24,0,24,8"
+            Visibility="{Binding ShowWebUiButton, Converter={StaticResource BoolToVisConverter}}" />
     </Grid>
 </Page>

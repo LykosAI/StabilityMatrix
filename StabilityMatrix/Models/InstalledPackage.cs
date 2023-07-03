@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using StabilityMatrix.Helper;
 
 namespace StabilityMatrix.Models;
 
@@ -34,6 +36,7 @@ public class InstalledPackage
     /// <summary>
     /// Full path to the package, using LibraryPath and GlobalConfig.LibraryDir.
     /// </summary>
+    [JsonIgnore]
     public string? FullPath => LibraryPath != null ? System.IO.Path.Combine(GlobalConfig.LibraryDir, LibraryPath) : null;
     
     public string? LaunchCommand { get; set; }
@@ -89,6 +92,24 @@ public class InstalledPackage
     }
 
     /// <summary>
+    ///  Check if the old Path can be migrated to the new LibraryPath.
+    /// </summary>
+    /// <param name="libraryDirectory"></param>
+    /// <returns></returns>
+    public bool CanPureMigratePath(string? libraryDirectory = null)
+    {
+#pragma warning disable CS0618
+        var oldPath = Path;
+#pragma warning restore CS0618
+        if (oldPath == null) return false;
+        
+        // Check if the path is a sub-path of the library
+        var library = libraryDirectory ?? GlobalConfig.LibraryDir;
+        var relativePath = GetSubPath(library, oldPath);
+        return relativePath != null;
+    }
+
+    /// <summary>
     /// Migrate the old Path to the new LibraryPath.
     /// If libraryDirectory is null, GlobalConfig.LibraryDir is used.
     /// Will move the package directory to Library/Packages if not relative.
@@ -99,6 +120,18 @@ public class InstalledPackage
         var oldPath = Path;
 #pragma warning restore CS0618
         if (oldPath == null) return;
+
+        var libDir = libraryDirectory ?? GlobalConfig.LibraryDir;
+        // if old package Path is same as new library, return
+        if (oldPath.Replace(DisplayName, "") == libDir)
+        {
+            // Update the paths
+#pragma warning disable CS0618
+            Path = null;
+#pragma warning restore CS0618
+            LibraryPath = System.IO.Path.Combine("Packages", DisplayName);
+            return;
+        }
         
         // Try using pure migration first
         if (TryPureMigratePath(libraryDirectory)) return;
@@ -121,12 +154,29 @@ public class InstalledPackage
         }
         
         // Move the package directory
-        await Task.Run(() => Directory.Move(oldPath, newPackagePath));
+        await Task.Run(() => Utilities.CopyDirectory(oldPath, newPackagePath, true));
 
         // Update the paths
 #pragma warning disable CS0618
         Path = null;
 #pragma warning restore CS0618
         LibraryPath = System.IO.Path.Combine("Packages", packageFolderName);
+    }
+
+    protected bool Equals(InstalledPackage other)
+    {
+        return Id.Equals(other.Id);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj)) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        return obj.GetType() == this.GetType() && Equals((InstalledPackage) obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return Id.GetHashCode();
     }
 }

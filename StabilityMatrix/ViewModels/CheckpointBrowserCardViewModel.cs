@@ -64,11 +64,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     [RelayCommand]
     private void OpenModel()
     {
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = $"https://civitai.com/models/{CivitModel.Id}",
-            UseShellExecute = true
-        });
+        ProcessRunner.OpenUrl($"https://civitai.com/models/{CivitModel.Id}");
     }
 
     [RelayCommand]
@@ -131,7 +127,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         await modelInfo.SaveJsonToDirectory(downloadFolder, modelFileName);
         
         // If available, save a model image
-        if (latestVersion.Images.Any())
+        if (latestVersion.Images != null && latestVersion.Images.Any())
         {
             var image = latestVersion.Images[0];
             var imageExtension = Path.GetExtension(image.Url).TrimStart('.');

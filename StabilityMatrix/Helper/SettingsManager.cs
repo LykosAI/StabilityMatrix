@@ -6,7 +6,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using NLog;
+using Refit;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.Settings;
 using StabilityMatrix.Python;
 using Wpf.Ui.Controls.Window;
 
@@ -17,12 +19,32 @@ public class SettingsManager : ISettingsManager
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly ReaderWriterLockSlim FileLock = new();
 
+    private static readonly string GlobalSettingsPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix",
+        "global.json");
+    
     private readonly string? originalEnvPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
     
     // Library properties
-    public bool IsPortableMode { get; set; }
-    public string LibraryDir { get; set; } = string.Empty;
-    
+    public bool IsPortableMode { get; private set; }
+    private string? libraryDir;
+    public string LibraryDir
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(libraryDir))
+            {
+                throw new InvalidOperationException("LibraryDir is not set");
+            }
+            return libraryDir;
+        }
+        private set
+        {
+            libraryDir = value;
+            LibraryDirChanged?.Invoke(this, value);
+        }
+    }
+
     // Dynamic paths from library
     public string DatabasePath => Path.Combine(LibraryDir, "StabilityMatrix.db");
     private string SettingsPath => Path.Combine(LibraryDir, "settings.json");
@@ -30,7 +52,9 @@ public class SettingsManager : ISettingsManager
 
     public Settings Settings { get; private set; } = new();
 
+    // Events
     public event EventHandler<bool>? ModelBrowserNsfwEnabledChanged;
+    public event EventHandler<string>? LibraryDirChanged; 
 
     /// <summary>
     /// Attempts to locate and set the library path
@@ -40,34 +64,36 @@ public class SettingsManager : ISettingsManager
     {
         // 1. Check portable mode
         var appDir = AppContext.BaseDirectory;
-        IsPortableMode = File.Exists(Path.Combine(appDir, ".sm-portable"));
+        IsPortableMode = File.Exists(Path.Combine(appDir, "Data", ".sm-portable"));
         if (IsPortableMode)
         {
             LibraryDir = Path.Combine(appDir, "Data");
             SetStaticLibraryPaths();
+            LoadSettings();
             return true;
         }
         
         // 2. Check %APPDATA%/StabilityMatrix/library.json
         var appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var libraryJsonPath = Path.Combine(appDataDir, "StabilityMatrix", "library.json");
-        if (File.Exists(libraryJsonPath))
+        if (!File.Exists(libraryJsonPath)) 
+            return false;
+        
+        try
         {
-            try
+            var libraryJson = File.ReadAllText(libraryJsonPath);
+            var library = JsonSerializer.Deserialize<LibrarySettings>(libraryJson);
+            if (!string.IsNullOrWhiteSpace(library?.LibraryPath))
             {
-                var libraryJson = File.ReadAllText(libraryJsonPath);
-                var library = JsonSerializer.Deserialize<LibrarySettings>(libraryJson);
-                if (!string.IsNullOrWhiteSpace(library?.LibraryPath))
-                {
-                    LibraryDir = library.LibraryPath;
-                    SetStaticLibraryPaths();
-                    return true;
-                }
+                LibraryDir = library.LibraryPath;
+                SetStaticLibraryPaths();
+                LoadSettings();
+                return true;
             }
-            catch (Exception e)
-            {
-                Logger.Warn("Failed to read library.json in AppData: {Message}", e.Message);
-            }
+        }
+        catch (Exception e)
+        {
+            Logger.Warn("Failed to read library.json in AppData: {Message}", e.Message);
         }
         return false;
     }
@@ -116,12 +142,50 @@ public class SettingsManager : ISettingsManager
     /// </summary>
     public IEnumerable<InstalledPackage> GetOldInstalledPackages()
     {
-        var installed = Settings.InstalledPackages;
+        var oldSettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "StabilityMatrix", "settings.json");
+
+        if (!File.Exists(oldSettingsPath))
+            yield break;
+        
+        var oldSettingsJson = File.ReadAllText(oldSettingsPath);
+        var oldSettings = JsonSerializer.Deserialize<Settings>(oldSettingsJson, new JsonSerializerOptions
+        {
+            Converters = { new JsonStringEnumConverter() }
+        });
+        
         // Absolute paths are old formats requiring migration
-        foreach (var package in installed.Where(package => Path.IsPathRooted(package.Path)))
+#pragma warning disable CS0618
+        var oldPackages = oldSettings?.InstalledPackages.Where(package => package.Path != null);
+#pragma warning restore CS0618
+
+        if (oldPackages == null)
+            yield break;
+        
+        foreach (var package in oldPackages)
         {
             yield return package;
         }
+    }
+
+    public Guid GetOldActivePackageId()
+    {
+        var oldSettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "StabilityMatrix", "settings.json");
+
+        if (!File.Exists(oldSettingsPath))
+            return default;
+        
+        var oldSettingsJson = File.ReadAllText(oldSettingsPath);
+        var oldSettings = JsonSerializer.Deserialize<Settings>(oldSettingsJson, new JsonSerializerOptions
+        {
+            Converters = { new JsonStringEnumConverter() }
+        });
+
+        if (oldSettings == null)
+            return default;
+        
+        return oldSettings.ActiveInstalledPackage ?? default;
     }
 
     public void SetTheme(string theme)
@@ -148,9 +212,27 @@ public class SettingsManager : ISettingsManager
         SaveSettings();
     }
     
+    public void SetActiveInstalledPackage(Guid guid)
+    {
+        Settings.ActiveInstalledPackage = guid;
+        SaveSettings();
+    }
+    
     public void SetNavExpanded(bool navExpanded)
     {
         Settings.IsNavExpanded = navExpanded;
+        SaveSettings();
+    }
+
+    public void SetIsImportAsConnected(bool value)
+    {
+        Settings.IsImportAsConnected = value;
+        SaveSettings();
+    }
+
+    public void SetKeepFolderLinksOnShutdown(bool value)
+    {
+        Settings.KeepFolderLinksOnShutdown = value;
         SaveSettings();
     }
     
@@ -305,7 +387,41 @@ public class SettingsManager : ISettingsManager
         if (type == 0) return false;
         return Settings.SharedFolderVisibleCategories?.HasFlag(type) ?? false;
     }
+
+    public bool IsEulaAccepted()
+    {
+        if (!File.Exists(GlobalSettingsPath))
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(GlobalSettingsPath)!);
+            File.Create(GlobalSettingsPath).Close();
+            File.WriteAllText(GlobalSettingsPath, "{}");
+            return false;
+        }
+
+        var json = File.ReadAllText(GlobalSettingsPath);
+        var globalSettings = JsonSerializer.Deserialize<GlobalSettings>(json);
+        return globalSettings?.EulaAccepted ?? false;
+    }
+
+    public void SetEulaAccepted()
+    {
+        var globalSettings = new GlobalSettings {EulaAccepted = true};
+        var json = JsonSerializer.Serialize(globalSettings);
+        File.WriteAllText(GlobalSettingsPath, json);
+    }
+
+    public void SetPlacement(string placementStr)
+    {
+        Settings.Placement = placementStr;
+        SaveSettings();
+    }
     
+    public void SetSearchOptions(ModelSearchOptions options)
+    {
+        Settings.ModelSearchOptions = options;
+        SaveSettings();
+    }
+
     /// <summary>
     /// Loads settings from the settings file
     /// If the settings file does not exist, it will be created with default values
@@ -326,10 +442,12 @@ public class SettingsManager : ISettingsManager
             }
 
             var settingsContent = File.ReadAllText(SettingsPath);
-            Settings = JsonSerializer.Deserialize<Settings>(settingsContent, new JsonSerializerOptions
-            {
-                Converters = { new JsonStringEnumConverter() }
-            })!;
+            var modifiedDefaultSerializerOptions =
+                SystemTextJsonContentSerializer.GetDefaultJsonSerializerOptions();
+            modifiedDefaultSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            Settings =
+                JsonSerializer.Deserialize<Settings>(settingsContent,
+                    modifiedDefaultSerializerOptions)!;
         }
         finally
         {
@@ -339,9 +457,14 @@ public class SettingsManager : ISettingsManager
 
     private void SaveSettings()
     {
-        FileLock.TryEnterWriteLock(1000);
+        FileLock.TryEnterWriteLock(100000);
         try
         {
+            if (!File.Exists(SettingsPath))
+            {
+                File.Create(SettingsPath).Close();
+            }
+            
             var json = JsonSerializer.Serialize(Settings, new JsonSerializerOptions
             {
                 WriteIndented = true,

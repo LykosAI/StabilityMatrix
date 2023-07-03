@@ -322,7 +322,10 @@
                             </DrawingBrush>
                         </Border.BorderBrush>
                     </Border>
-                    <VirtualizingStackPanel Orientation="Vertical" VerticalAlignment="Center">
+                    <VirtualizingStackPanel
+                        Margin="0,8"
+                        Orientation="Vertical"
+                        VerticalAlignment="Center">
                         <TextBlock
                             Effect="{StaticResource TextDropShadowEffect}"
                             FontSize="24"
@@ -416,12 +419,24 @@
     </Page.Resources>
 
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="0.1*" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <!--  Top settings bar  -->
+        <ui:ToggleSwitch
+            Content="Import as Connected"
+            Grid.Column="0"
+            IsChecked="{Binding IsImportAsConnected}"
+            Margin="24,8"
+            ToolTip="Search for connected metadata on new local imports" />
         <StackPanel
+            Grid.Column="1"
+            Grid.Row="0"
             HorizontalAlignment="Right"
             Margin="16,0"
             Orientation="Horizontal">
@@ -449,6 +464,8 @@
         <!--  Main view with model cards  -->
         <ui:DynamicScrollViewer
             CanContentScroll="True"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
             Grid.Row="1"
             HorizontalScrollBarVisibility="Disabled"
             VerticalScrollBarVisibility="Auto">

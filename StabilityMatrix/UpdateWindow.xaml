@@ -1,0 +1,122 @@
+﻿<ui:FluentWindow
+    ExtendsContentIntoTitleBar="True"
+    Height="700"
+    Icon="pack://application:,,,/Assets/Icon.ico"
+    Loaded="UpdateWindow_OnLoaded"
+    Title="Stability Matrix - Update"
+    Width="700"
+    WindowBackdropType="{Binding WindowBackdropType}"
+    WindowStartupLocation="CenterOwner"
+    d:DataContext="{d:DesignInstance Type=viewModels:UpdateWindowViewModel,
+                                     IsDesignTimeCreatable=True}"
+    d:DesignHeight="700"
+    d:DesignWidth="700"
+    mc:Ignorable="d"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    x:Class="StabilityMatrix.UpdateWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:converters="clr-namespace:StabilityMatrix.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:xaml="clr-namespace:MdXaml;assembly=MdXaml">
+
+    <ui:FluentWindow.Resources>
+        <converters:ValueConverterGroup x:Key="InvertAndVisibilitate">
+            <converters:BoolNegationConverter />
+            <BooleanToVisibilityConverter />
+        </converters:ValueConverterGroup>
+
+        <converters:BoolNegationConverter x:Key="BoolNegationConverter" />
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+        <converters:UriToBitmapConverter x:Key="UriToBitmapConverter" />
+
+        <xaml:Markdown
+            AssetPathRoot="{x:Static system:Environment.CurrentDirectory}"
+            DocumentStyle="{StaticResource DocumentStyle}"
+            Heading1Style="{StaticResource H1Style}"
+            Heading2Style="{StaticResource H2Style}"
+            Heading3Style="{StaticResource H3Style}"
+            Heading4Style="{StaticResource H4Style}"
+            ImageStyle="{StaticResource ImageStyle}"
+            LinkStyle="{StaticResource LinkStyle}"
+            SeparatorStyle="{StaticResource SeparatorStyle}"
+            x:Key="Markdown" />
+        <xaml:TextToFlowDocumentConverter Markdown="{StaticResource Markdown}" x:Key="TextToFlowDocumentConverter" />
+    </ui:FluentWindow.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        
+        <ui:TitleBar Background="{ui:ThemeResource ApplicationBackgroundBrush}">
+            <ui:TitleBar.Header>
+                <TextBlock Margin="16,8" Text="Stability Matrix - Update Available" />
+            </ui:TitleBar.Header>
+        </ui:TitleBar>
+        
+        <TextBlock Grid.Row="1" 
+                   Text="A new version of Stability Matrix is available!"
+                   HorizontalAlignment="Center"
+                   FontWeight="Thin"
+                   Margin="0,16,0,0"
+                   FontSize="28"/>
+        
+        <TextBlock Grid.Row="2" 
+                   HorizontalAlignment="Center"
+                   FontSize="18"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"
+                   Text="{Binding UpdateText, FallbackValue=Update available and stuff}"
+                   Margin="16,32,16,0"/>
+        
+        <TextBlock Grid.Row="3" 
+                   Text="Release Notes" 
+                   FontSize="16"
+                   Visibility="{Binding ShowProgressBar, Converter={StaticResource InvertAndVisibilitate}}"
+                   Margin="32,16,32,0"/>
+        
+        <ProgressBar Grid.Row="4" 
+                     Height="200"
+                     Value="{Binding ProgressValue}"
+                     Visibility="{Binding ShowProgressBar, Converter={StaticResource BoolToVisConverter}}"
+                     Margin="32"/>
+        
+        <Grid Grid.Row="4"
+              Visibility="{Binding ShowProgressBar, Converter={StaticResource InvertAndVisibilitate}}">
+            <Border Margin="32, 16"
+                    CornerRadius="16"
+                    Background="#66000000"/>
+            
+            <FlowDocumentScrollViewer
+                Margin="32,16"
+                Document="{Binding ReleaseNotes, Converter={StaticResource TextToFlowDocumentConverter}}"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch" />
+        </Grid>
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,16">
+            <ui:Button Content="Remind Me Later"
+                       Margin="0,0,8,0"
+                       FontSize="18"
+                       Click="RemindMeLaterButton_OnClick"
+                       Appearance="Info"/>
+            
+            <ui:Button Content="Install Now"
+                       Margin="8,0,0,0"
+                       FontSize="18"
+                       Command="{Binding InstallUpdateCommand}"
+                       Appearance="Success"/>
+        </StackPanel>
+        
+    </Grid>
+</ui:FluentWindow>

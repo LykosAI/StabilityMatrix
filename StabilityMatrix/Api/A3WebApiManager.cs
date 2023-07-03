@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net.Http;
-using Polly.Retry;
 using Refit;
 using StabilityMatrix.Helper;
 

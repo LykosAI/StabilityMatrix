@@ -1,0 +1,130 @@
+﻿<ui:ContentDialog
+    CloseButtonText="Close"
+    Loaded="SelectInstallLocationsDialog_OnLoaded"
+    Title="Select Data Directory"
+    d:DataContext="{d:DesignInstance Type=viewModels:SelectInstallLocationsViewModel,
+                                     IsDesignTimeCreatable=True}"
+    d:DesignHeight="512"
+    d:DesignWidth="640"
+    mc:Ignorable="d"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    x:Class="StabilityMatrix.SelectInstallLocationsDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:controls="clr-namespace:StabilityMatrix.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:StabilityMatrix"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ui:ContentDialog.Resources>
+        <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
+        <Style BasedOn="{StaticResource {x:Type ui:ContentDialog}}" TargetType="{x:Type local:SelectInstallLocationsDialog}" />
+        
+        <converters:BoolNegationConverter x:Key="BoolNegationConverter" />
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <converters:ValueConverterGroup x:Key="InvertAndVisibilitate">
+            <converters:BoolNegationConverter />
+            <BooleanToVisibilityConverter />
+        </converters:ValueConverterGroup>
+    </ui:ContentDialog.Resources>
+
+    <Grid
+        Margin="16,0,16,16"
+        MinHeight="450"
+        MaxWidth="700">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="1*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <ui:InfoBar
+                IsClosable="False"
+                IsOpen="True"
+                Margin="0,0,0,16"
+                Visibility="{Binding HasOldData, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=Visible}"
+                Title="Welcome back! In this update, you can optionally choose a custom location to store all data. If you choose a new location, or opt to use Portable Mode, you'll be able to migrate your existing data on the next page."/>
+            
+            <Label
+                Content="Data Directory"
+                FontSize="13"
+                Margin="0,16,0,0" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <ui:TextBox
+                    Height="36"
+                    IsEnabled="{Binding IsPortableMode, Converter={StaticResource BoolNegationConverter}}"
+                    Margin="0,0,8,0"
+                    PlaceholderEnabled="True"
+                    PlaceholderText="{Binding DefaultInstallLocation}"
+                    Text="{Binding DataDirectory, UpdateSourceTrigger=PropertyChanged}"
+                    VerticalAlignment="Stretch" />
+
+                <ui:Button
+                    Command="{Binding ShowFolderBrowserDialogCommand}"
+                    Grid.Column="1"
+                    Height="36"
+                    HorizontalAlignment="Stretch"
+                    IsEnabled="{Binding IsPortableMode, Converter={StaticResource BoolNegationConverter}}">
+                    <ui:Button.Icon>
+                        <ui:SymbolIcon Symbol="FolderOpen24" />
+                    </ui:Button.Icon>
+                </ui:Button>
+            </Grid>
+            <TextBlock
+                Text="This is where the model checkpoints, LORAs, web UIs, settings, etc. will be installed. If you were satisfied with the previous versions, you don't need to change anything here."
+                TextWrapping="Wrap"
+                Foreground="LightGray"
+                FontSize="12"
+                Margin="0,8,0,0" />
+
+            <CheckBox
+                Content="Portable Mode"
+                IsChecked="{Binding IsPortableMode, Mode=TwoWay}"
+                Margin="0,16,0,0" />
+
+            <ui:InfoBar
+                IsClosable="False"
+                IsOpen="True"
+                FontSize="13"
+                Margin="0,8,0,0"
+                Padding="16"
+                Title="In Portable Mode, all data and settings will be stored in the same directory as the application. You will be able to move the application with its 'Data' folder to a different location or computer." />
+            
+        </StackPanel>
+
+        <!--  Indicator of existing or new data directory  -->
+        <StackPanel
+            Grid.Row="1"
+            HorizontalAlignment="Center"
+            Margin="8,0,8,8"
+            Orientation="Horizontal"
+            Visibility="{Binding IsStatusBadgeVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <controls:RefreshBadge DataContext="{Binding RefreshBadgeViewModel}" />
+            <TextBlock
+                FontSize="14"
+                Text="{Binding DirectoryStatusText}"
+                VerticalAlignment="Center" />
+        </StackPanel>
+
+        <ui:Button
+            Appearance="Success"
+            Click="ContinueButton_OnClick"
+            Content="Continue"
+            FontSize="16"
+            Grid.Row="2"
+            HorizontalAlignment="Center"
+            IsEnabled="{Binding IsDirectoryValid}"
+            Padding="16,8" />
+    </Grid>
+
+</ui:ContentDialog>

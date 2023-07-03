@@ -64,12 +64,6 @@ public class VladAutomatic : BaseGitPackage
         },
         new()
         {
-            Name = "Xformers",
-            InitialValue = HardwareHelper.HasNvidiaGpu() ? "--xformers" : null,
-            Options = new() { "--xformers" }
-        },
-        new()
-        {
             Name = "API",
             Options = new() { "--api" }
         },
@@ -102,8 +96,9 @@ public class VladAutomatic : BaseGitPackage
         
         Directory.CreateDirectory(InstallLocation);
 
-        await PrerequisiteHelper.RunGit("clone", "https://github.com/vladmandic/automatic.git", InstallLocation);
-        await PrerequisiteHelper.RunGit("checkout", version, InstallLocation);
+        await PrerequisiteHelper.RunGit(null, "clone", "https://github.com/vladmandic/automatic",
+            InstallLocation);
+        await PrerequisiteHelper.RunGit(workingDirectory: InstallLocation, "checkout", version);
         
         return version;
     }
@@ -111,6 +106,7 @@ public class VladAutomatic : BaseGitPackage
     public override async Task RunPackage(string installedPackagePath, string arguments)
     {
         await SetupVenv(installedPackagePath);
+        PrerequisiteHelper.UpdatePathExtensions();
 
         void HandleConsoleOutput(string? s)
         {

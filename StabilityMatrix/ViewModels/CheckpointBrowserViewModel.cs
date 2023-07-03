@@ -10,7 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using NLog;
 using System.Diagnostics;
 using System.Windows.Data;
-using Refit;
+using Octokit;
 using StabilityMatrix.Api;
 using StabilityMatrix.Database;
 using StabilityMatrix.Extensions;
@@ -18,6 +18,7 @@ using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Api;
 using StabilityMatrix.Services;
+using ApiException = Refit.ApiException;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -70,10 +71,12 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         this.settingsManager = settingsManager;
         this.liteDbContext = liteDbContext;
 
+        var searchOptions = settingsManager.Settings.ModelSearchOptions;
+
         ShowNsfw = settingsManager.Settings.ModelBrowserNsfwEnabled;
-        SelectedPeriod = CivitPeriod.Month;
-        SortMode = CivitSortMode.HighestRated;
-        SelectedModelType = CivitModelType.Checkpoint;
+        SelectedPeriod = searchOptions?.SelectedPeriod ?? CivitPeriod.Month;
+        SortMode = searchOptions?.SortMode ?? CivitSortMode.HighestRated;
+        SelectedModelType = searchOptions?.SelectedModelType ?? CivitModelType.Checkpoint;
         HasSearched = false;
         CurrentPageNumber = 1;
         CanGoToPreviousPage = false;
@@ -118,8 +121,9 @@ public partial class CheckpointBrowserViewModel : ObservableObject
                     names);
             }
 
-            // Filter out unknown model types
-            models = models.Where(m => m.Type.ConvertTo<SharedFolderType>() > 0).ToList();
+            // Filter out unknown model types and archived/taken-down models
+            models = models.Where(m => m.Type.ConvertTo<SharedFolderType>() > 0)
+                .Where(m => m.Mode == null).ToList();
 
             // Database update calls will invoke `OnModelsUpdated`
             // Add to database
@@ -204,7 +208,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
             Nsfw = "true", // Handled by local view filter
             Sort = SortMode,
             Period = SelectedPeriod,
-            Page = CurrentPageNumber,
+            Page = CurrentPageNumber
         };
 
         if (SearchQuery.StartsWith("#"))
@@ -304,16 +308,22 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     partial void OnSelectedPeriodChanged(CivitPeriod oldValue, CivitPeriod newValue)
     {
         TrySearchAgain().SafeFireAndForget();
+        settingsManager.SetSearchOptions(new ModelSearchOptions(newValue, SortMode,
+            SelectedModelType));
     }
 
     partial void OnSortModeChanged(CivitSortMode oldValue, CivitSortMode newValue)
     {
         TrySearchAgain().SafeFireAndForget();
+        settingsManager.SetSearchOptions(new ModelSearchOptions(SelectedPeriod, newValue,
+            SelectedModelType));
     }
     
     partial void OnSelectedModelTypeChanged(CivitModelType oldValue, CivitModelType newValue)
     {
         TrySearchAgain().SafeFireAndForget();
+        settingsManager.SetSearchOptions(new ModelSearchOptions(SelectedPeriod, SortMode,
+            newValue));
     }
 
     private async Task TrySearchAgain(bool shouldUpdatePageNumber = true)

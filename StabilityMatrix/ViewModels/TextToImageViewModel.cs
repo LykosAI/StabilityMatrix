@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
-using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -103,7 +102,7 @@ public partial class TextToImageViewModel : ObservableObject
             logger.LogWarning("Skipped model folder index - {SdModelsDir} does not exist", sdModelsDir);
             return;
         }
-        DiffusionCheckpointFolder = new CheckpointFolder(null!, null!) // TODO: refactor to not use view models
+        DiffusionCheckpointFolder = new CheckpointFolder(null!, null!, null!, null!) // TODO: refactor to not use view models
         {
             Title = Path.GetFileName(sdModelsDir),
             DirectoryPath = sdModelsDir

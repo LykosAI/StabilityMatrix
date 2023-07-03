@@ -1,10 +1,5 @@
 ﻿using System.ComponentModel;
-using Microsoft.Extensions.Logging;
-using StabilityMatrix.Helper;
-using StabilityMatrix.Python;
 using StabilityMatrix.ViewModels;
-using Wpf.Ui.Contracts;
-using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
 
 namespace StabilityMatrix.DesignData;
 
@@ -14,7 +9,7 @@ public class MockLaunchViewModel : LaunchViewModel
     public MockLaunchViewModel() : base(
         null!, null!, null!, 
         null!, null!, null!,
-        null!, null!)
+        null!, null!, null!)
     {
         InstalledPackages = new()
         {
@@ -25,7 +20,7 @@ public class MockLaunchViewModel : LaunchViewModel
                 PackageVersion = "1.0.0",
                 DisplayVersion = "1.0.0",
                 InstalledBranch = "main",
-                Path = @"C:\Users\AppData\StabilityMatrix\mock-package",
+                LibraryPath = @"Packages\mock-package",
             }
         };
         SelectedPackage = InstalledPackages[0];

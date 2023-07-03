@@ -1,20 +1,24 @@
 <ui:FluentWindow
+    Closing="MainWindow_OnClosing"
     Closed="MainWindow_OnClosed"
     ExtendsContentIntoTitleBar="True"
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-    Height="700"
     Icon="pack://application:,,,/Assets/Icon.ico"
     Loaded="MainWindow_OnLoaded"
     Title="Stability Matrix"
     UseLayoutRounding="True"
-    Width="1100"
     WindowBackdropType="Mica"
     WindowStartupLocation="CenterScreen"
     d:DataContext="{d:DesignInstance Type=viewModels:MainWindowViewModel,
                                      IsDesignTimeCreatable=True}"
     d:DesignHeight="750"
     d:DesignWidth="1100"
+    MinHeight="400"
+    MinWidth="600"
+    Height="700"
+    Width="1100"
     mc:Ignorable="d"
+    ResizeMode="CanResize"
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     x:Class="StabilityMatrix.MainWindow"
@@ -100,6 +104,14 @@
                 </ui:NavigationView.MenuItems>
                 <ui:NavigationView.FooterMenuItems>
                     <!--  Footer menus  -->
+                    <ui:NavigationViewItem Content="Update Available"
+                                           Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                           Command="{Binding DoUpdateCommand}">
+                        <ui:NavigationViewItem.Icon>
+                            <ui:SymbolIcon Symbol="ArrowDownload24"
+                                           Foreground="LimeGreen" />
+                        </ui:NavigationViewItem.Icon>
+                    </ui:NavigationViewItem>
                     <ui:NavigationViewItem Command="{Binding OpenLinkPatreonCommand}" Content="Become a Patron">
                         <ui:NavigationViewItem.Icon>
                             <ui:ImageIcon

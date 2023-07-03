@@ -157,7 +157,7 @@ public partial class PackageManagerViewModel : ObservableObject
     [RelayCommand]
     private async Task Uninstall()
     {
-        if (SelectedPackage?.Path == null)
+        if (SelectedPackage?.LibraryPath == null)
         {
             logger.LogError("No package selected to uninstall");
             return;
@@ -174,7 +174,8 @@ public partial class PackageManagerViewModel : ObservableObject
         {
             IsUninstalling = true;
             InstallButtonEnabled = false;
-            var deleteTask = DeleteDirectoryAsync(SelectedPackage.Path);
+            var deleteTask = DeleteDirectoryAsync(Path.Combine(settingsManager.LibraryDir,
+                SelectedPackage.LibraryPath));
             var taskResult = await snackbarService.TryAsync(deleteTask,
                 "Some files could not be deleted. Please close any open files in the package directory and try again.");
             if (taskResult.IsSuccessful)
@@ -308,6 +309,10 @@ public partial class PackageManagerViewModel : ObservableObject
     private async Task ShowInstallWindow()
     {
         var installWindow = dialogFactory.CreateInstallerWindow();
+        if (Application.Current.MainWindow != null)
+        {
+            installWindow.Owner = Application.Current.MainWindow;
+        }
         installWindow.ShowDialog();
         await OnLoaded();
     }

@@ -1,6 +1,4 @@
-﻿using System.Net.Http;
-using Polly.Retry;
-using Refit;
+﻿using Refit;
 
 namespace StabilityMatrix.Api;
 

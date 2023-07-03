@@ -66,7 +66,7 @@ public partial class OneClickInstallViewModel : ObservableObject
     [RelayCommand]
     private Task ToggleAdvancedMode()
     {
-        EventManager.Instance.OnOneClickInstallFinished();
+        EventManager.Instance.OnOneClickInstallFinished(true);
         return Task.CompletedTask;
     }
     
@@ -116,7 +116,7 @@ public partial class OneClickInstallViewModel : ObservableObject
         // get latest version & download & install
         SubHeaderText = "Getting latest version...";
         var latestVersion = await a1111.GetLatestVersion();
-        a1111.InstallLocation += "\\stable-diffusion-webui";
+        a1111.InstallLocation = $"{settingsManager.LibraryDir}\\Packages\\stable-diffusion-webui";
         a1111.ConsoleOutput += (_, output) => SubSubHeaderText = output;
         
         await DownloadPackage(a1111, latestVersion);
@@ -128,7 +128,7 @@ public partial class OneClickInstallViewModel : ObservableObject
         var package = new InstalledPackage
         {
             DisplayName = a1111.DisplayName,
-            Path = a1111.InstallLocation,
+            LibraryPath = "Packages\\stable-diffusion-webui",
             Id = Guid.NewGuid(),
             PackageName = a1111.Name,
             PackageVersion = latestVersion,
@@ -150,7 +150,7 @@ public partial class OneClickInstallViewModel : ObservableObject
         await Task.Delay(1000);
         
         // should close dialog
-        EventManager.Instance.OnOneClickInstallFinished();
+        EventManager.Instance.OnOneClickInstallFinished(false);
     }
 
     private async Task DownloadPackage(BasePackage selectedPackage, string version)

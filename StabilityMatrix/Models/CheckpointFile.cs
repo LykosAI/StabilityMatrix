@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -161,8 +159,7 @@ public partial class CheckpointFile : ObservableObject
         // Get all files with supported extensions
         var allExtensions = SupportedCheckpointExtensions
             .Concat(SupportedImageExtensions)
-            .Concat(SupportedMetadataExtensions)
-            .ToImmutableHashSet();
+            .Concat(SupportedMetadataExtensions);
 
         var files = allExtensions.AsParallel()
             .SelectMany(pattern => Directory.EnumerateFiles(directory, $"*{pattern}", searchOption)).ToDictionary<string, string>(Path.GetFileName);

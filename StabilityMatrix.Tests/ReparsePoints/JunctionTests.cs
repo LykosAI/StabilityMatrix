@@ -23,25 +23,7 @@ public class JunctionTest
     public void Cleanup()
     {
         if (string.IsNullOrEmpty(tempFolder)) return;
-        DeleteDirectory(tempFolder);
-    }
-
-    // Deletes directory while handling junction folders
-    private static void DeleteDirectory(string directory)
-    {
-        // Enumerate to delete any directory links
-        foreach (var item in Directory.EnumerateDirectories(directory))
-        {
-            var info = new DirectoryInfo(item);
-            if (info.Exists && info.Attributes.HasFlag(FileAttributes.ReparsePoint))
-            {
-                info.Delete();
-            }
-            else
-            {
-                DeleteDirectory(item);
-            }
-        }
+        TempFiles.DeleteDirectory(tempFolder);
     }
 
     [TestMethod]

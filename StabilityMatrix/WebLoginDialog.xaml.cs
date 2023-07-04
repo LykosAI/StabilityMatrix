@@ -1,6 +1,5 @@
 ﻿using System.Windows;
 using Microsoft.Web.WebView2.Core;
-using NLog;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.ContentDialogControl;

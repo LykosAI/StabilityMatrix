@@ -5,7 +5,6 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Polly.Contrib.WaitAndRetry;
-using StabilityMatrix.Models;
 using StabilityMatrix.Models.Progress;
 
 namespace StabilityMatrix.Services;

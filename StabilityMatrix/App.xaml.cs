@@ -5,8 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using AsyncAwaitBestPractices;
@@ -148,11 +148,28 @@ namespace StabilityMatrix
         {
             if (AppDomain.CurrentDomain.BaseDirectory.EndsWith("Update\\"))
             {
-                File.Copy(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "StabilityMatrix.exe"),
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "StabilityMatrix.exe"), true);
-                Process.Start(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..",
-                    "StabilityMatrix.exe"));
-                Current.Shutdown();
+                var delays = Backoff.DecorrelatedJitterBackoffV2(
+                    TimeSpan.FromMilliseconds(150), retryCount: 3);
+                foreach (var dlay in delays) 
+                {
+                    try
+                    {
+                        File.Copy(
+                            Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+                                "StabilityMatrix.exe"),
+                            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..",
+                                "StabilityMatrix.exe"), true);
+                        
+                        Process.Start(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..",
+                            "StabilityMatrix.exe"));
+                        
+                        Current.Shutdown();
+                    }
+                    catch (Exception)
+                    {
+                        Thread.Sleep(dlay);
+                    }
+                }
                 return;
             }
 

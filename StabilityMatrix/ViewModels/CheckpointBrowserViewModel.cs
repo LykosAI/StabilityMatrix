@@ -11,7 +11,6 @@ using NLog;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Windows.Data;
-using Octokit;
 using StabilityMatrix.Api;
 using StabilityMatrix.Database;
 using StabilityMatrix.Extensions;

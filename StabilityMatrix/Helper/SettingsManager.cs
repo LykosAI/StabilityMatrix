@@ -115,10 +115,13 @@ public class SettingsManager : ISettingsManager
         var homeDir = Path.Combine(appDataDir, "StabilityMatrix");
         Directory.CreateDirectory(homeDir);
         var libraryJsonPath = Path.Combine(homeDir, "library.json");
-        
+
         var library = new LibrarySettings { LibraryPath = path };
         var libraryJson = JsonSerializer.Serialize(library, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(libraryJsonPath, libraryJson);
+        
+        // actually create the LibraryPath directory
+        Directory.CreateDirectory(path);
     } 
     
     /// <summary>

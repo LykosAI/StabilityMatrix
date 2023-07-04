@@ -23,9 +23,11 @@ using StabilityMatrix.Api;
 using StabilityMatrix.Database;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.Progress;
 using StabilityMatrix.Python;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Contracts;
+using Wpf.Ui.Controls;
 using Wpf.Ui.Controls.Window;
 using EventManager = StabilityMatrix.Helper.EventManager;
 using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
@@ -417,7 +419,7 @@ public partial class SettingsViewModel : ObservableObject
                 IsDebugModeEnabled = true;
                 const string msg = "Warning: Improper use may corrupt application state or cause loss of data.";
                 var dialog = snackbarService.ShowSnackbarAsync(msg, "Debug options enabled",
-                    LogLevel.Information);
+                    ControlAppearance.Info);
                 await dialog;
                 break;
             }

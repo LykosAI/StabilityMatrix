@@ -136,7 +136,7 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
         // Since we are going to recreate venvs, need python to be installed
         if (!prerequisiteHelper.IsPythonInstalled)
         {
-            MigrateProgressText = "Preparing Environment";
+            MigrateProgressText = "Preparing Environment...";
             await prerequisiteHelper.InstallPythonIfNecessary();
         }
         
@@ -154,6 +154,7 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
         var oldLibraryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix");
         var oldPackages = settingsManager.GetOldInstalledPackages().ToArray();
 
+        MigrateProgressText = "Migrating Packages...";
         foreach (var package in oldPackages)
         {
             settingsManager.RemoveInstalledPackage(package);
@@ -192,7 +193,7 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
             await Task.Run(() => Utilities.CopyDirectory(oldModelsDir, newModelsDir, true));
 
             MigrateProgressText = "Cleaning up...";
-            CleanupOldInstall();
+            await Task.Run(CleanupOldInstall);
         }
 
         IsMigrating = false;

@@ -368,7 +368,7 @@ public partial class LaunchViewModel : ObservableObject
         basePackage.Exited -= OnExit;
         basePackage.StartupComplete -= RunningPackageOnStartupComplete;
 
-        Dispatcher.CurrentDispatcher.Invoke(() =>
+        Application.Current.Dispatcher.Invoke(() =>
         {
             ConsoleHistory?.Add($"Venv process exited with code {exitCode}");
             SetProcessRunning(false);

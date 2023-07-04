@@ -130,6 +130,7 @@ namespace StabilityMatrix
                 {
                     o.InitializeSdk = false;
                     o.Layout = "${message}";
+                    o.IncludeEventDataOnBreadcrumbs = true;
                     o.BreadcrumbLayout = "${logger}: ${message}";
                     // Debug and higher are stored as breadcrumbs (default is Info)
                     o.MinimumBreadcrumbLevel = NLog.LogLevel.Debug;

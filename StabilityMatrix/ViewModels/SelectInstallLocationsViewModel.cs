@@ -12,6 +12,7 @@ using Ookii.Dialogs.Wpf;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.FileInterfaces;
+using StabilityMatrix.Models.Progress;
 using StabilityMatrix.Models.Settings;
 
 namespace StabilityMatrix.ViewModels;

@@ -14,6 +14,7 @@ using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Extensions;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Models.Progress;
 
 namespace StabilityMatrix.Models;
 

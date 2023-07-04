@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
+using AsyncAwaitBestPractices;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.ContentDialogControl;
@@ -27,12 +29,20 @@ public partial class DataDirectoryMigrationDialog : ContentDialog
 
     private void DataDirectoryMigrationDialog_OnLoaded(object sender, RoutedEventArgs e)
     {
-        viewModel.OnLoaded();
+        viewModel.OnLoaded().SafeFireAndForget();
     }
 
-    private void NoThanks_OnClick(object sender, RoutedEventArgs e)
+    private async void NoThanks_OnClick(object sender, RoutedEventArgs e)
     {
-        viewModel.CleanupOldInstall();
+        try
+        {
+            await Task.Run(viewModel.CleanupOldInstall);
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
+
         Hide(ContentDialogResult.Primary);
     }
 

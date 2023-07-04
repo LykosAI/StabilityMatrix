@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Polly.Contrib.WaitAndRetry;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.Progress;
 
 namespace StabilityMatrix.Services;
 
@@ -13,6 +14,7 @@ public class DownloadService : IDownloadService
 {
     private readonly ILogger<DownloadService> logger;
     private readonly IHttpClientFactory httpClientFactory;
+    private const int BufferSize = ushort.MaxValue;
 
     public DownloadService(ILogger<DownloadService> logger, IHttpClientFactory httpClientFactory)
     {
@@ -20,7 +22,7 @@ public class DownloadService : IDownloadService
         this.httpClientFactory = httpClientFactory;
     }
 
-    public async Task DownloadToFileAsync(string downloadUrl, string downloadLocation, int bufferSize = ushort.MaxValue,
+    public async Task DownloadToFileAsync(string downloadUrl, string downloadPath,
         IProgress<ProgressReport>? progress = null, string? httpClientName = null)
     {
         using var client = string.IsNullOrWhiteSpace(httpClientName)
@@ -29,7 +31,7 @@ public class DownloadService : IDownloadService
         
         client.Timeout = TimeSpan.FromMinutes(10);
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("StabilityMatrix", "1.0"));
-        await using var file = new FileStream(downloadLocation, FileMode.Create, FileAccess.Write, FileShare.None);
+        await using var file = new FileStream(downloadPath, FileMode.Create, FileAccess.Write, FileShare.None);
         
         long contentLength = 0;
 
@@ -51,7 +53,7 @@ public class DownloadService : IDownloadService
 
         await using var stream = await response.Content.ReadAsStreamAsync();
         var totalBytesRead = 0L;
-        var buffer = new byte[bufferSize];
+        var buffer = new byte[BufferSize];
         while (true)
         {
             var bytesRead = await stream.ReadAsync(buffer);

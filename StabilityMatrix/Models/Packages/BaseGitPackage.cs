@@ -9,6 +9,7 @@ using NLog;
 using Octokit;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
+using StabilityMatrix.Models.Progress;
 using StabilityMatrix.Python;
 using StabilityMatrix.Services;
 

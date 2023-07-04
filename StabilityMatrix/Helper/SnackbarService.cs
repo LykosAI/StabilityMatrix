@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 using System;
 using AsyncAwaitBestPractices;
-using Microsoft.Extensions.Logging;
 using StabilityMatrix.Models;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Common;

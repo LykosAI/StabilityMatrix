@@ -6,7 +6,6 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Helper;
-using StabilityMatrix.Models;
 using StabilityMatrix.Models.Progress;
 using StabilityMatrix.Updater;
 using Wpf.Ui.Controls.Window;

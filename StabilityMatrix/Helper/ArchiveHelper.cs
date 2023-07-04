@@ -9,7 +9,6 @@ using System.Windows.Threading;
 using NLog;
 using SharpCompress.Common;
 using SharpCompress.Readers;
-using StabilityMatrix.Models;
 using StabilityMatrix.Models.Progress;
 
 namespace StabilityMatrix.Helper;

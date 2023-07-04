@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,7 +11,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Options;
 using StabilityMatrix.Helper;
-using StabilityMatrix.Models;
 using StabilityMatrix.Models.Configs;
 using StabilityMatrix.Services;
 using StabilityMatrix.Updater;

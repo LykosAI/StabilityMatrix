@@ -1,10 +1,10 @@
 ﻿using System;
 using System.IO;
-using NCode.ReparsePoints;
 using NLog;
 using StabilityMatrix.Extensions;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models.Packages;
+using StabilityMatrix.ReparsePoints;
 
 namespace StabilityMatrix.Models;
 
@@ -24,8 +24,7 @@ public class SharedFolders : ISharedFolders
     {
         var sharedFolders = basePackage.SharedFolders;
         if (sharedFolders == null) return;
-
-        var provider = ReparsePointFactory.Provider;
+        
         foreach (var (folderType, relativePath) in sharedFolders)
         {
             var source = Path.Combine(settingsManager.ModelsDirectory, folderType.GetStringValue());
@@ -58,7 +57,7 @@ public class SharedFolders : ISharedFolders
                 Directory.Delete(destination, true);
             }
             Logger.Info($"Creating junction link from {source} to {destination}");
-            provider.CreateLink(destination, source, LinkType.Junction);
+            Junction.Create(destination, source, true);
         }
     }
     
@@ -71,7 +70,6 @@ public class SharedFolders : ISharedFolders
         var sharedFolders = basePackage.SharedFolders;
         if (sharedFolders == null) return;
         
-        var provider = ReparsePointFactory.Provider;
         foreach (var (folderType, relativePath) in sharedFolders)
         {
             var source = Path.Combine(settingsManager.ModelsDirectory, folderType.GetStringValue());
@@ -88,11 +86,11 @@ public class SharedFolders : ISharedFolders
                 Directory.Delete(destination, false);
             }
             Logger.Info($"Updating junction link from {source} to {destination}");
-            provider.CreateLink(destination, source, LinkType.Junction);
+            Junction.Create(destination, source, true);
         }
     }
 
-    public void RemoveLinksForPackage(BasePackage package, string installPath)
+    private static void RemoveLinksForPackage(BasePackage package, string installPath)
     {
         var sharedFolders = package.SharedFolders;
         if (sharedFolders == null)
@@ -104,11 +102,10 @@ public class SharedFolders : ISharedFolders
         {
             var destination = Path.GetFullPath(Path.Combine(installPath, relativePath));
             // Delete the destination folder if it exists
-            if (Directory.Exists(destination))
-            {
-                Logger.Info($"Deleting junction target {destination}");
-                Directory.Delete(destination, false);
-            }
+            if (!Directory.Exists(destination)) continue;
+            
+            Logger.Info($"Deleting junction target {destination}");
+            Directory.Delete(destination, false);
         }
     }
 

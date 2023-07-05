@@ -18,6 +18,13 @@ public class PyVenvRunner : IDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    public const string TorchPipInstallArgsCuda =
+        "torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118"; 
+    public const string TorchPipInstallArgsCpu =
+        "torch torchvision torchaudio";
+    public const string TorchPipInstallArgsDirectML = 
+        "torch-directml";
+    
     /// <summary>
     /// The process running the python executable.
     /// </summary>

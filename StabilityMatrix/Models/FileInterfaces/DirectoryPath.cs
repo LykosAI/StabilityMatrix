@@ -83,6 +83,9 @@ public class DirectoryPath : FileSystemPath, IPathObject
     // DirectoryPath + FilePath = FilePath
     public static FilePath operator +(DirectoryPath path, FilePath other) => new(Path.Combine(path, other.FullPath));
     
+    // DirectoryPath + FileInfo = FilePath
+    public static FilePath operator +(DirectoryPath path, FileInfo other) => new(Path.Combine(path, other.FullName));
+    
     // DirectoryPath + string = string
     public static string operator +(DirectoryPath path, string other) => Path.Combine(path, other);
     

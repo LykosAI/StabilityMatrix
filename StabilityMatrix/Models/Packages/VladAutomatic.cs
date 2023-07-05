@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using NLog;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
 using StabilityMatrix.Models.Progress;
@@ -135,5 +136,25 @@ public class VladAutomatic : BaseGitPackage
         var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
 
         VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit, workingDirectory: installedPackagePath);
+    }
+
+    public override async Task<string> Update(InstalledPackage installedPackage, IProgress<ProgressReport>? progress = null)
+    {
+        progress?.Report(new ProgressReport(0.1f, message: "Downloading package update...", isIndeterminate: true, type: ProgressType.Download));
+
+        var version = await GithubApi.GetAllCommits(Author, Name, installedPackage.InstalledBranch);
+        var latest = version is {Count: > 0} ? version[0] : null;
+
+        if (latest == null)
+        {
+            Logger.Warn("No latest version found for vlad");
+            return string.Empty;
+        }
+        
+        await PrerequisiteHelper.RunGit(workingDirectory: installedPackage.FullPath, "pull", "origin", installedPackage.InstalledBranch);
+        
+        progress?.Report(new ProgressReport(1f, message: "Update Complete", isIndeterminate: true, type: ProgressType.Generic));
+        
+        return latest.Sha;
     }
 }

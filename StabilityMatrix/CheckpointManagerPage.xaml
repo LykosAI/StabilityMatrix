@@ -76,6 +76,10 @@
                             <MenuItem Command="{Binding RenameCommand}" Header="Rename" />
                             <!--  ReSharper disable once Xaml.RedundantResource  -->
                             <MenuItem Command="{Binding DeleteCommand}" Header="Delete" />
+                            <!--  ReSharper disable once Xaml.RedundantResource  -->
+                            <MenuItem Header="Open on CivitAI" 
+                                      Command="{Binding OpenOnCivitAiCommand}"
+                                      Visibility="{Binding IsConnectedModel, Converter={StaticResource BoolToVisibilityConverter}}"/>
                         </ContextMenu>
                     </ui:Card.ContextMenu>
                     <Grid>

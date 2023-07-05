@@ -33,14 +33,24 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     public override Visibility ProgressVisibility => Value > 0 ? Visibility.Visible : Visibility.Collapsed;
     public override Visibility TextVisibility => Value > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-    public CheckpointBrowserCardViewModel(CivitModel civitModel, IDownloadService downloadService, ISnackbarService snackbarService, ISettingsManager settingsManager)
+    public CheckpointBrowserCardViewModel(
+        CivitModel civitModel, 
+        IDownloadService downloadService, 
+        ISnackbarService snackbarService, 
+        ISettingsManager settingsManager,
+        BitmapImage? fixedImage = null)
     {
         this.downloadService = downloadService;
         this.snackbarService = snackbarService;
         this.settingsManager = settingsManager;
         CivitModel = civitModel;
+
+        if (fixedImage != null)
+        {
+            CardImage = fixedImage;
+            return;
+        }
         CardImage = GetImage();
-        
         this.settingsManager.ModelBrowserNsfwEnabledChanged += OnNsfwModeChanged;
     }
     

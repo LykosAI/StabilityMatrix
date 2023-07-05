@@ -38,9 +38,9 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     [ObservableProperty] private string? searchQuery;
     [ObservableProperty] private bool showNsfw;
     [ObservableProperty] private bool showMainLoadingSpinner;
-    [ObservableProperty] private CivitPeriod selectedPeriod;
-    [ObservableProperty] private CivitSortMode sortMode;
-    [ObservableProperty] private CivitModelType selectedModelType;
+    [ObservableProperty] private CivitPeriod selectedPeriod = CivitPeriod.Month;
+    [ObservableProperty] private CivitSortMode sortMode = CivitSortMode.HighestRated;
+    [ObservableProperty] private CivitModelType selectedModelType = CivitModelType.Checkpoint;
     [ObservableProperty] private int currentPageNumber;
     [ObservableProperty] private int totalPages;
     [ObservableProperty] private bool hasSearched;
@@ -70,17 +70,19 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         this.snackbarService = snackbarService;
         this.settingsManager = settingsManager;
         this.liteDbContext = liteDbContext;
+        
+        CurrentPageNumber = 1;
+        CanGoToNextPage = true;
+    }
 
+    public void OnLoaded()
+    {
         var searchOptions = settingsManager.Settings.ModelSearchOptions;
-
-        ShowNsfw = settingsManager.Settings.ModelBrowserNsfwEnabled;
+        
         SelectedPeriod = searchOptions?.SelectedPeriod ?? CivitPeriod.Month;
         SortMode = searchOptions?.SortMode ?? CivitSortMode.HighestRated;
         SelectedModelType = searchOptions?.SelectedModelType ?? CivitModelType.Checkpoint;
-        HasSearched = false;
-        CurrentPageNumber = 1;
-        CanGoToPreviousPage = false;
-        CanGoToNextPage = true;
+        ShowNsfw = settingsManager.Settings.ModelBrowserNsfwEnabled;
     }
 
     /// <summary>

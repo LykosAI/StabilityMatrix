@@ -1,20 +1,19 @@
 ﻿<Page
     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    Loaded="CheckpointBrowserPage_OnLoaded"
     d:DataContext="{d:DesignInstance designData:MockCheckpointBrowserViewModel,
                                      IsDesignTimeCreatable=True}"
-    d:DesignHeight="600"
-    d:DesignWidth="650"
+    d:DesignHeight="650"
+    d:DesignWidth="750"
     mc:Ignorable="d"
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
     x:Class="StabilityMatrix.CheckpointBrowserPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:api="clr-namespace:StabilityMatrix.Models.Api"
     xmlns:converters="clr-namespace:StabilityMatrix.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:designData="clr-namespace:StabilityMatrix.DesignData"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:models="clr-namespace:StabilityMatrix.Models"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
@@ -24,8 +23,7 @@
             <converters:BoolNegationConverter />
             <BooleanToVisibilityConverter />
         </converters:ValueConverterGroup>
-
-        <converters:UriToBitmapConverter x:Key="UriToBitmapConverter" />
+        
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
         <DataTemplate DataType="{x:Type viewModels:CheckpointBrowserCardViewModel}" x:Key="CivitModelTemplate">
@@ -45,7 +43,7 @@
                         FontSize="11"
                         Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                         Margin="0,2,0,0"
-                        Text="{Binding CivitModel.ModelVersions[0].Name}"
+                        Text="{Binding CivitModel.ModelVersions[0].Name, FallbackValue=''}"
                         VerticalAlignment="Center" />
                     <Grid>
                         <Image

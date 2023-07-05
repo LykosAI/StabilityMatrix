@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using NCode.ReparsePoints;
 using NLog;
 using StabilityMatrix.Extensions;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Models.FileInterfaces;
 using StabilityMatrix.Models.Packages;
+using StabilityMatrix.ReparsePoints;
 
 namespace StabilityMatrix.Models;
 
@@ -20,62 +22,65 @@ public class SharedFolders : ISharedFolders
         this.packageFactory = packageFactory;
     }
 
-    public void SetupLinksForPackage(BasePackage basePackage, string installPath)
+    internal static void SetupLinks(Dictionary<SharedFolderType, string> definitions, 
+        DirectoryPath modelsDirectory, DirectoryPath installDirectory)
     {
-        var sharedFolders = basePackage.SharedFolders;
-        if (sharedFolders == null) return;
-
-        var provider = ReparsePointFactory.Provider;
-        foreach (var (folderType, relativePath) in sharedFolders)
+        foreach (var (folderType, relativePath) in definitions)
         {
-            var source = Path.Combine(settingsManager.ModelsDirectory, folderType.GetStringValue());
-            var destination = Path.GetFullPath(Path.Combine(installPath, relativePath));
+            var sourceDir = new DirectoryPath(modelsDirectory, folderType.GetStringValue());
+            var destinationDir = new DirectoryPath(installDirectory, relativePath);
             // Create source folder if it doesn't exist
-            if (!Directory.Exists(source))
+            if (!sourceDir.Exists)
             {
-                Logger.Info($"Creating junction source {source}");
-                Directory.CreateDirectory(source);
+                Logger.Info($"Creating junction source {sourceDir}");
+                sourceDir.Create();
             }
             // Delete the destination folder if it exists
-            if (Directory.Exists(destination))
+            if (destinationDir.Exists)
             {
                 // Copy all files from destination to source
-                Logger.Info($"Copying files from {destination} to {source}");
-                foreach (var file in Directory.GetFiles(destination))
+                Logger.Info($"Copying files from {destinationDir} to {sourceDir}");
+                foreach (var file in destinationDir.Info.EnumerateFiles())
                 {
-                    var fileName = Path.GetFileName(file);
-                    var sourceFile = Path.Combine(source, fileName);
-                    var destinationFile = Path.Combine(destination, fileName);
+                    var sourceFile = sourceDir + file;
+                    var destinationFile = destinationDir + file;
                     // Skip name collisions
                     if (File.Exists(sourceFile))
                     {
-                        Logger.Warn($"Skipping file {fileName} because it already exists in {source}");
+                        Logger.Warn($"Skipping file {file.FullName} because it already exists in {sourceDir}");
                         continue;
                     }
-                    File.Move(destinationFile, sourceFile);
+                    destinationFile.Info.MoveTo(sourceFile);
                 }
-                Logger.Info($"Deleting junction target {destination}");
-                Directory.Delete(destination, true);
+                Logger.Info($"Deleting junction target {destinationDir}");
+                destinationDir.Delete(true);
             }
-            Logger.Info($"Creating junction link from {source} to {destination}");
-            provider.CreateLink(destination, source, LinkType.Junction);
+            Logger.Info($"Creating junction link from {sourceDir} to {destinationDir}");
+            Junction.Create(destinationDir, sourceDir, true);
         }
+    }
+
+    public void SetupLinksForPackage(BasePackage basePackage, DirectoryPath installDirectory)
+    {
+        var modelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
+        var sharedFolders = basePackage.SharedFolders;
+        if (sharedFolders == null) return;
+        SetupLinks(sharedFolders, modelsDirectory, installDirectory);
     }
     
     /// <summary>
     /// Deletes junction links and remakes them. Unlike SetupLinksForPackage, 
     /// this will not copy files from the destination to the source.
     /// </summary>
-    public void UpdateLinksForPackage(BasePackage basePackage, string installPath)
+    public void UpdateLinksForPackage(BasePackage basePackage, DirectoryPath installDirectory)
     {
         var sharedFolders = basePackage.SharedFolders;
         if (sharedFolders == null) return;
         
-        var provider = ReparsePointFactory.Provider;
         foreach (var (folderType, relativePath) in sharedFolders)
         {
             var source = Path.Combine(settingsManager.ModelsDirectory, folderType.GetStringValue());
-            var destination = Path.GetFullPath(Path.Combine(installPath, relativePath));
+            var destination = Path.GetFullPath(Path.Combine(installDirectory, relativePath));
             // Create source folder if it doesn't exist
             if (!Directory.Exists(source))
             {
@@ -88,11 +93,11 @@ public class SharedFolders : ISharedFolders
                 Directory.Delete(destination, false);
             }
             Logger.Info($"Updating junction link from {source} to {destination}");
-            provider.CreateLink(destination, source, LinkType.Junction);
+            Junction.Create(destination, source, true);
         }
     }
 
-    public void RemoveLinksForPackage(BasePackage package, string installPath)
+    private static void RemoveLinksForPackage(BasePackage package, DirectoryPath installPath)
     {
         var sharedFolders = package.SharedFolders;
         if (sharedFolders == null)
@@ -104,11 +109,10 @@ public class SharedFolders : ISharedFolders
         {
             var destination = Path.GetFullPath(Path.Combine(installPath, relativePath));
             // Delete the destination folder if it exists
-            if (Directory.Exists(destination))
-            {
-                Logger.Info($"Deleting junction target {destination}");
-                Directory.Delete(destination, false);
-            }
+            if (!Directory.Exists(destination)) continue;
+            
+            Logger.Info($"Deleting junction target {destination}");
+            Directory.Delete(destination, false);
         }
     }
 

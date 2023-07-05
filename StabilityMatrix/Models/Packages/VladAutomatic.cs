@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
 using StabilityMatrix.Models.Progress;
+using StabilityMatrix.Python;
 using StabilityMatrix.Services;
 
 namespace StabilityMatrix.Models.Packages;
@@ -50,8 +52,23 @@ public class VladAutomatic : BaseGitPackage
         [SharedFolderType.LyCORIS] = "models/LyCORIS",
     };
 
+    [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
     public override List<LaunchOptionDefinition> LaunchOptions => new()
     {
+        new()
+        {
+            Name = "Host",
+            Type = LaunchOptionType.String,
+            DefaultValue = "localhost",
+            Options = new() {"--server-name"}
+        },
+        new()
+        {
+            Name = "Port",
+            Type = LaunchOptionType.String,
+            DefaultValue = "7860",
+            Options = new() {"--port"}
+        },
         new()
         {
             Name = "VRAM",
@@ -65,8 +82,40 @@ public class VladAutomatic : BaseGitPackage
         },
         new()
         {
+            Name = "Force use of Intel OneAPI XPU backend",
+            Options = new() { "--use-ipex" }
+        },
+        new()
+        {
+            Name = "Use DirectML if no compatible GPU is detected",
+            InitialValue = !HardwareHelper.HasNvidiaGpu() && HardwareHelper.HasAmdGpu(),
+            Options = new() { "--use-directml" }
+        },
+        new()
+        {
+            Name = "Force use of Nvidia CUDA backend",
+            Options = new() { "--use-cuda" }
+        },
+        new()
+        {
+            Name = "Force use of AMD ROCm backend",
+            Options = new() { "--use-rocm" }
+        },
+        new()
+        {
+            Name = "CUDA Device ID",
+            Type = LaunchOptionType.String,
+            Options = new() { "--device-id" }
+        },
+        new()
+        {
             Name = "API",
             Options = new() { "--api" }
+        },
+        new()
+        {
+            Name = "Debug Logging",
+            Options = new() { "--debug" }
         },
         LaunchOptionDefinition.Extras
     };

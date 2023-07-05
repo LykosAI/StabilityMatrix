@@ -136,8 +136,40 @@ public class VladAutomatic : BaseGitPackage
     
     public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
     {
-        await PrerequisiteHelper.SetupPythonDependencies(InstallLocation, "requirements.txt", progress,
-            OnConsoleOutput);
+        progress?.Report(new ProgressReport(-1, isIndeterminate: true));
+        // Setup venv
+        var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
+        if (!venvRunner.Exists())
+        {
+            await venvRunner.Setup();
+        }
+
+        // Install torch / xformers based on gpu info
+        var gpus = HardwareHelper.IterGpuInfo().ToList();
+        if (gpus.Any(g => g.IsNvidia))
+        {
+            Logger.Info("Starting torch install (CUDA)...");
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, 
+                InstallLocation, OnConsoleOutput);
+            Logger.Info("Installing xformers...");
+            await venvRunner.PipInstall("xformers", InstallLocation, OnConsoleOutput);
+        }
+        else if (gpus.Any(g => g.IsAmd))
+        {
+            Logger.Info("Starting torch install (DirectML)...");
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML);
+        }
+        else
+        {
+            Logger.Info("Starting torch install (CPU)...");
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu);
+        }
+
+        // Install requirements file
+        Logger.Info("Installing requirements.txt");
+        await venvRunner.PipInstall($"-r requirements.txt", InstallLocation, OnConsoleOutput);
+        
+        progress?.Report(new ProgressReport(1, isIndeterminate: false));
     }
 
     public override async Task<string?> DownloadPackage(string version, bool isCommitHash, IProgress<ProgressReport>? progress = null)

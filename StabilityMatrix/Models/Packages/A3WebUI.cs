@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -47,6 +48,7 @@ public class A3WebUI : BaseGitPackage
         [SharedFolderType.ControlNet] = "models/ControlNet"
     };
 
+    [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
     public override List<LaunchOptionDefinition> LaunchOptions => new()
     {
         new()

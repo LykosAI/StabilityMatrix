@@ -70,7 +70,15 @@ public static class HardwareHelper
     /// </summary>
     public static bool HasNvidiaGpu()
     {
-        return IterGpuInfo().Any(gpu => gpu.Name?.ToLowerInvariant().Contains("nvidia") ?? false);
+        return IterGpuInfo().Any(gpu => gpu.IsNvidia);
+    }
+    
+    /// <summary>
+    /// Return true if the system has at least one AMD GPU.
+    /// </summary>
+    public static bool HasAmdGpu()
+    {
+        return IterGpuInfo().Any(gpu => gpu.IsAmd);
     }
 }
 
@@ -112,4 +120,7 @@ public record GpuInfo
         < 8 * Size.GiB => Level.Medium,
         _ => Level.High
     };
+    
+    public bool IsNvidia => Name?.ToLowerInvariant().Contains("nvidia") ?? false;
+    public bool IsAmd => Name?.ToLowerInvariant().Contains("amd") ?? false;
 }

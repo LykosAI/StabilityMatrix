@@ -129,6 +129,12 @@ public partial class CheckpointFile : ObservableObject
             throw;
         }
     }
+
+    [RelayCommand]
+    private void OpenOnCivitAi()
+    {
+        ProcessRunner.OpenUrl($"https://civitai.com/models/{ConnectedModel.ModelId}");
+    }
     
     // Loads image from path
     private async Task LoadPreviewImage()

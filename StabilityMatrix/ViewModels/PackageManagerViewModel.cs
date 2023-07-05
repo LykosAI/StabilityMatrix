@@ -281,7 +281,7 @@ public partial class PackageManagerViewModel : ObservableObject
         }
 
         ProgressText = $"Updating {SelectedPackage.DisplayName} to latest version...";
-        package.InstallLocation = SelectedPackage.Path!;
+        package.InstallLocation = SelectedPackage.FullPath!;
         var progress = new Progress<ProgressReport>(progress =>
         {
             var percent = Convert.ToInt32(progress.Percentage);

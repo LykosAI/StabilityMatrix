@@ -274,10 +274,27 @@ public partial class CheckpointFolder : ObservableObject
         {
             return new List<CheckpointFile>();
         }
+
+        if (FolderType is SharedFolderType.TextualInversion)
+        {
+            return await (progress switch
+            {
+                null => Task.Run(() =>
+                    CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath,
+                        SearchOption.AllDirectories).ToList()),
+                
+                _ => Task.Run(() => CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath,
+                    progress, SearchOption.AllDirectories).ToList())
+            });
+        }
+
         return await (progress switch
         {
-            null => Task.Run(() => CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath).ToList()),
-            _ => Task.Run(() => CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath, progress).ToList())
+            null => Task.Run(() =>
+                CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath).ToList()),
+            
+            _ => Task.Run(() =>
+                CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath, progress).ToList())
         });
     }
 

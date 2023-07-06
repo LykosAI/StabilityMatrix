@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
+using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using NLog;
 using Refit;
 using StabilityMatrix.Models;
@@ -44,6 +49,7 @@ public class SettingsManager : ISettingsManager
             LibraryDirChanged?.Invoke(this, value);
         }
     }
+    public bool IsLibraryDirSet => !string.IsNullOrWhiteSpace(libraryDir);
 
     // Dynamic paths from library
     public string DatabasePath => Path.Combine(LibraryDir, "StabilityMatrix.db");
@@ -51,11 +57,102 @@ public class SettingsManager : ISettingsManager
     public string ModelsDirectory => Path.Combine(LibraryDir, "Models");
 
     public Settings Settings { get; private set; } = new();
-
-    // Events
-    public event EventHandler<bool>? ModelBrowserNsfwEnabledChanged;
+    
     public event EventHandler<string>? LibraryDirChanged; 
+    public event EventHandler<PropertyChangedEventArgs>? SettingsPropertyChanged;
 
+    /// <inheritdoc />
+    public SettingsTransaction BeginTransaction()
+    {
+        return new SettingsTransaction(this, SaveSettingsAsync);
+    }
+    
+    /// <inheritdoc />
+    public void Transaction(Action<Settings> func)
+    {
+        using var transaction = BeginTransaction();
+        func(transaction.Settings);
+        transaction.Dispose();
+    }
+    
+    /// <inheritdoc />
+    public void Transaction<TValue>(Expression<Func<Settings, TValue>> expression, TValue value)
+    {
+        if (expression.Body is not MemberExpression memberExpression)
+        {
+            throw new ArgumentException(
+                $"Expression must be a member expression, not {expression.Body.NodeType}");
+        }
+
+        var propertyInfo = memberExpression.Member as PropertyInfo;
+        if (propertyInfo == null)
+        {
+            throw new ArgumentException(
+                $"Expression member must be a property, not {memberExpression.Member.MemberType}");
+        }
+        
+        var name = propertyInfo.Name;
+        
+        // Set value
+        using var transaction = BeginTransaction();
+        propertyInfo.SetValue(transaction.Settings, value);
+        
+        // Invoke property changed event
+        SettingsPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    }
+
+    /// <inheritdoc />
+    public void RelayPropertyFor<T, TValue>(
+        T source, 
+        Expression<Func<T, TValue>> sourceProperty,
+        Expression<Func<Settings, TValue>> settingsProperty) where T : INotifyPropertyChanged
+    {
+        var sourceGetter = sourceProperty.Compile();
+        var (propertyName, assigner) = Expressions.GetAssigner(sourceProperty);
+        var sourceSetter = assigner.Compile();
+        
+        var settingsGetter = settingsProperty.Compile();
+        var (_, settingsAssigner) = Expressions.GetAssigner(settingsProperty);
+        var settingsSetter = settingsAssigner.Compile();
+        
+        // Update source when settings change
+        SettingsPropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName != propertyName) return;
+            
+            sourceSetter(source, settingsGetter(Settings));
+        };
+        
+        // Set and Save settings when source changes
+        source.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName != propertyName) return;
+            
+            settingsSetter(Settings, sourceGetter(source));
+            SaveSettingsAsync().SafeFireAndForget();
+            
+            // Invoke property changed event
+            SettingsPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        };
+    }
+    
+    /// <inheritdoc />
+    public void RegisterPropertyChangedHandler<T>(
+        Expression<Func<Settings, T>> settingsProperty,
+        Action<T> onPropertyChanged)
+    {
+        var settingsGetter = settingsProperty.Compile();
+        var (propertyName, _) = Expressions.GetAssigner(settingsProperty);
+        
+        // Invoke handler when settings change
+        SettingsPropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName != propertyName) return;
+            
+            onPropertyChanged(settingsGetter(Settings));
+        };
+    }
+    
     /// <summary>
     /// Attempts to locate and set the library path
     /// Return true if found, false otherwise
@@ -190,54 +287,6 @@ public class SettingsManager : ISettingsManager
         
         return oldSettings.ActiveInstalledPackage ?? default;
     }
-
-    public void SetTheme(string theme)
-    {
-        Settings.Theme = theme;
-        SaveSettings();
-    }
-
-    public void AddInstalledPackage(InstalledPackage p)
-    {
-        Settings.InstalledPackages.Add(p);
-        SaveSettings();
-    }
-
-    public void RemoveInstalledPackage(InstalledPackage p)
-    {
-        Settings.InstalledPackages.Remove(p);
-        SetActiveInstalledPackage(Settings.InstalledPackages.Any() ? Settings.InstalledPackages.First() : null);
-    }
-
-    public void SetActiveInstalledPackage(InstalledPackage? p)
-    {
-        Settings.ActiveInstalledPackage = p?.Id;
-        SaveSettings();
-    }
-    
-    public void SetActiveInstalledPackage(Guid guid)
-    {
-        Settings.ActiveInstalledPackage = guid;
-        SaveSettings();
-    }
-    
-    public void SetNavExpanded(bool navExpanded)
-    {
-        Settings.IsNavExpanded = navExpanded;
-        SaveSettings();
-    }
-
-    public void SetIsImportAsConnected(bool value)
-    {
-        Settings.IsImportAsConnected = value;
-        SaveSettings();
-    }
-
-    public void SetKeepFolderLinksOnShutdown(bool value)
-    {
-        Settings.KeepFolderLinksOnShutdown = value;
-        SaveSettings();
-    }
     
     public void AddPathExtension(string pathExtension)
     {
@@ -250,7 +299,7 @@ public class SettingsManager : ISettingsManager
     {
         return string.Join(";", Settings.PathExtensions ?? new List<string>());
     }
-
+    
     /// <summary>
     /// Insert path extensions to the front of the PATH environment variable
     /// </summary>
@@ -308,18 +357,6 @@ public class SettingsManager : ISettingsManager
         packageData.LaunchArgs = toSave;
         SaveSettings();
     }
-
-    public void SetWindowBackdropType(WindowBackdropType backdropType)
-    {
-        Settings.WindowBackdropType = backdropType;
-        SaveSettings();
-    }
-    
-    public void SetHasSeenWelcomeNotification(bool hasSeenWelcomeNotification)
-    {
-        Settings.HasSeenWelcomeNotification = hasSeenWelcomeNotification;
-        SaveSettings();
-    }
     
     public string? GetActivePackageHost()
     {
@@ -343,31 +380,6 @@ public class SettingsManager : ISettingsManager
             return portOption.OptionValue as string;
         }
         return portOption?.DefaultValue as string;
-    }
-    
-    public void SetWebApiHost(string? host)
-    {
-        Settings.WebApiHost = host;
-        SaveSettings();
-    }
-    
-    public void SetWebApiPort(string? port)
-    {
-        Settings.WebApiPort = port;
-        SaveSettings();
-    }
-
-    public void SetFirstLaunchSetupComplete(bool value)
-    {
-        Settings.FirstLaunchSetupComplete = value;
-        SaveSettings();
-    }
-    
-    public void SetModelBrowserNsfwEnabled(bool value)
-    {
-        Settings.ModelBrowserNsfwEnabled = value;
-        ModelBrowserNsfwEnabledChanged?.Invoke(this, value);
-        SaveSettings();
     }
 
     public void SetSharedFolderCategoryVisible(SharedFolderType type, bool visible)
@@ -411,18 +423,6 @@ public class SettingsManager : ISettingsManager
         var globalSettings = new GlobalSettings {EulaAccepted = true};
         var json = JsonSerializer.Serialize(globalSettings);
         File.WriteAllText(GlobalSettingsPath, json);
-    }
-
-    public void SetPlacement(string placementStr)
-    {
-        Settings.Placement = placementStr;
-        SaveSettings();
-    }
-    
-    public void SetSearchOptions(ModelSearchOptions options)
-    {
-        Settings.ModelSearchOptions = options;
-        SaveSettings();
     }
 
     /// <summary>
@@ -479,5 +479,10 @@ public class SettingsManager : ISettingsManager
         {
             FileLock.ExitWriteLock();
         }
+    }
+
+    private Task SaveSettingsAsync()
+    {
+        return Task.Run(SaveSettings);
     }
 }

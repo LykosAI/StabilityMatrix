@@ -25,9 +25,10 @@ public partial class CheckpointManagerViewModel : ObservableObject
     
     partial void OnIsImportAsConnectedChanged(bool value)
     {
-        if (value != settingsManager.Settings.IsImportAsConnected)
+        if (settingsManager.IsLibraryDirSet && 
+            value != settingsManager.Settings.IsImportAsConnected)
         {
-            settingsManager.SetIsImportAsConnected(value);
+            settingsManager.Transaction(s => s.IsImportAsConnected = value);
         }
     }
     

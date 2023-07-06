@@ -27,7 +27,7 @@ public class NotificationBarService : SnackbarService, INotificationBarService
             "Welcome to StabilityMatrix!",
             "You can join our Discord server for support and feedback.", linkIcon, ControlAppearance.Info);
         snackbar.SafeFireAndForget();
-
-        settingsManager.SetHasSeenWelcomeNotification(true);
+        
+        settingsManager.Transaction(s => s.HasSeenWelcomeNotification = true);
     }
 }

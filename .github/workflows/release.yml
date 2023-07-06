@@ -32,7 +32,16 @@ jobs:
         run: dotnet restore -p:PublishReadyToRun=true
 
       - name: Build
-        run: dotnet publish ./StabilityMatrix/StabilityMatrix.csproj -o out -c Release -r win-x64 -p:Version=$env:RELEASE_VERSION -p:FileVersion=$env:RELEASE_VERSION -p:AssemblyVersion=$env:RELEASE_VERSION -p:PublishReadyToRun=true -p:PublishSingleFile=true --self-contained true
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: >
+          dotnet publish ./StabilityMatrix/StabilityMatrix.csproj
+          -o out -c Release -r win-x64
+          -p:Version=$env:RELEASE_VERSION -p:FileVersion=$env:RELEASE_VERSION -p:AssemblyVersion=$env:RELEASE_VERSION
+          -p:PublishReadyToRun=true -p:PublishSingleFile=true
+          -p:SentryOrg=${{ secrets.SENTRY_ORG }} -p:SentryProject=${{ secrets.SENTRY_PROJECT }}
+          -p:SentryUploadSymbols=true -p:SentryUploadSources=true
+          --self-contained true
 
       - name: Remove old artifacts
         uses: c-hive/gha-remove-artifacts@v1
@@ -46,3 +55,16 @@ jobs:
         with:
           name: StabilityMatrix
           path: ./out/StabilityMatrix.exe
+          
+      - name: Create Sentry release
+        if: ${{ env.MAKE_SENTRY_RELEASE == 'true' }}
+        uses: getsentry/action-release@v1
+        env:
+          MAKE_SENTRY_RELEASE: ${{ secrets.SENTRY_PROJECT != '' }} 
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        with:
+          environment: production
+          ignore_missing: true
+          version: StabilityMatrix@${{ env.GIT_TAG_NAME }}

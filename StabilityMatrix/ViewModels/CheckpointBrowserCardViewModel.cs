@@ -51,7 +51,11 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             return;
         }
         CardImage = GetImage();
-        this.settingsManager.ModelBrowserNsfwEnabledChanged += OnNsfwModeChanged;
+        
+        // Update image when nsfw setting changes
+        settingsManager.RegisterPropertyChangedHandler(
+            s => s.ModelBrowserNsfwEnabled,
+            _ => CardImage = GetImage());
     }
     
     // Choose and load image based on nsfw setting

@@ -35,7 +35,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     [ObservableProperty] private ObservableCollection<CheckpointBrowserCardViewModel>? modelCards;
     [ObservableProperty] private ICollectionView? modelCardsView;
 
-    [ObservableProperty] private string? searchQuery;
+    [ObservableProperty] private string searchQuery = string.Empty;
     [ObservableProperty] private bool showNsfw;
     [ObservableProperty] private bool showMainLoadingSpinner;
     [ObservableProperty] private CivitPeriod selectedPeriod = CivitPeriod.Month;
@@ -82,7 +82,11 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         SelectedPeriod = searchOptions?.SelectedPeriod ?? CivitPeriod.Month;
         SortMode = searchOptions?.SortMode ?? CivitSortMode.HighestRated;
         SelectedModelType = searchOptions?.SelectedModelType ?? CivitModelType.Checkpoint;
+        
         ShowNsfw = settingsManager.Settings.ModelBrowserNsfwEnabled;
+        
+        settingsManager.RelayPropertyFor(this, model => model.ShowNsfw,
+            settings => settings.ModelBrowserNsfwEnabled);
     }
 
     /// <summary>
@@ -211,7 +215,6 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     [RelayCommand]
     private async Task SearchModels()
     {
-        if (string.IsNullOrWhiteSpace(SearchQuery)) return;
         var timer = Stopwatch.StartNew();
         
         if (SearchQuery != previousSearchQuery)
@@ -316,7 +319,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     
     partial void OnShowNsfwChanged(bool value)
     {
-        settingsManager.SetModelBrowserNsfwEnabled(value);
+        settingsManager.Transaction(s => s.ModelBrowserNsfwEnabled = value);
         ModelCardsView?.Refresh();
         
         if (!HasSearched) 
@@ -328,22 +331,22 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     partial void OnSelectedPeriodChanged(CivitPeriod oldValue, CivitPeriod newValue)
     {
         TrySearchAgain().SafeFireAndForget();
-        settingsManager.SetSearchOptions(new ModelSearchOptions(newValue, SortMode,
-            SelectedModelType));
+        settingsManager.Transaction(s => s.ModelSearchOptions = new ModelSearchOptions(
+                newValue, SortMode, SelectedModelType));
     }
 
     partial void OnSortModeChanged(CivitSortMode oldValue, CivitSortMode newValue)
     {
         TrySearchAgain().SafeFireAndForget();
-        settingsManager.SetSearchOptions(new ModelSearchOptions(SelectedPeriod, newValue,
-            SelectedModelType));
+        settingsManager.Transaction(s => s.ModelSearchOptions = new ModelSearchOptions(
+                SelectedPeriod, newValue, SelectedModelType));
     }
     
     partial void OnSelectedModelTypeChanged(CivitModelType oldValue, CivitModelType newValue)
     {
         TrySearchAgain().SafeFireAndForget();
-        settingsManager.SetSearchOptions(new ModelSearchOptions(SelectedPeriod, SortMode,
-            newValue));
+        settingsManager.Transaction(s => s.ModelSearchOptions = new ModelSearchOptions(
+            SelectedPeriod, SortMode, newValue));
     }
 
     private async Task TrySearchAgain(bool shouldUpdatePageNumber = true)

@@ -29,6 +29,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
     private readonly IDownloadService downloadService;
     private readonly ISnackbarService snackbarService;
     private readonly ISettingsManager settingsManager;
+    private readonly IDialogFactory dialogFactory;
     private readonly ILiteDbContext liteDbContext;
     private const int MaxModelsPerPage = 14;
 
@@ -63,12 +64,14 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         IDownloadService downloadService, 
         ISnackbarService snackbarService, 
         ISettingsManager settingsManager,
+        IDialogFactory dialogFactory,
         ILiteDbContext liteDbContext)
     {
         this.civitApi = civitApi;
         this.downloadService = downloadService;
         this.snackbarService = snackbarService;
         this.settingsManager = settingsManager;
+        this.dialogFactory = dialogFactory;
         this.liteDbContext = liteDbContext;
         
         CurrentPageNumber = 1;
@@ -198,7 +201,7 @@ public partial class CheckpointBrowserViewModel : ObservableObject
         {
             var updateCards = models
                 .Select(model => new CheckpointBrowserCardViewModel(model, 
-                    downloadService, snackbarService, settingsManager));
+                    downloadService, snackbarService, settingsManager, dialogFactory));
             ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(updateCards);
         }
         TotalPages = metadata?.TotalPages ?? 1;

@@ -27,6 +27,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     private readonly IDownloadService downloadService;
     private readonly ISnackbarService snackbarService;
     private readonly ISettingsManager settingsManager;
+    private readonly IDialogFactory dialogFactory;
     public CivitModel CivitModel { get; init; }
     public BitmapImage CardImage { get; set; }
 
@@ -38,11 +39,13 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         IDownloadService downloadService, 
         ISnackbarService snackbarService, 
         ISettingsManager settingsManager,
+        IDialogFactory dialogFactory,
         BitmapImage? fixedImage = null)
     {
         this.downloadService = downloadService;
         this.snackbarService = snackbarService;
         this.settingsManager = settingsManager;
+        this.dialogFactory = dialogFactory;
         CivitModel = civitModel;
 
         if (fixedImage != null)
@@ -91,6 +94,9 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     private async Task Import(CivitModel model)
     {
         Text = "Downloading...";
+
+        var dialog = dialogFactory.CreateSelectModelVersionDialog(model);
+        await dialog.ShowAsync();
         
         // Holds files to be deleted on errors
         var filesForCleanup = new HashSet<FilePath>();

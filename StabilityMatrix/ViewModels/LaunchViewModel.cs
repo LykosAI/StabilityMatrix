@@ -33,7 +33,8 @@ public partial class LaunchViewModel : ObservableObject
     private readonly ISharedFolders sharedFolders;
 
     private BasePackage? runningPackage;
-    private bool clearingPackages = false;
+    private bool clearingPackages;
+    private string webUiUrl = string.Empty;
 
     [ObservableProperty] private string consoleInput = "";
     [ObservableProperty] private Visibility launchButtonVisibility;
@@ -41,29 +42,10 @@ public partial class LaunchViewModel : ObservableObject
     [ObservableProperty] private bool isLaunchTeachingTipsOpen = false;
     [ObservableProperty] private bool showWebUiButton;
     [ObservableProperty] private ObservableCollection<string>? consoleHistory;
-
-    private string webUiUrl = string.Empty;
-    private InstalledPackage? selectedPackage;
-
-    public InstalledPackage? SelectedPackage
-    {
-        get => selectedPackage;
-        set
-        {
-            if (value == selectedPackage) return;
-            selectedPackage = value;
-
-            if (!clearingPackages)
-            {
-                settingsManager.SetActiveInstalledPackage(value);
-            }
-
-            OnPropertyChanged();
-        }
-    }
-
+    
+    [ObservableProperty] private InstalledPackage? selectedPackage;
     [ObservableProperty] private ObservableCollection<InstalledPackage> installedPackages = new();
-
+    
     public LaunchViewModel(ISettingsManager settingsManager,
         IPackageFactory packageFactory,
         IContentDialogService contentDialogService,
@@ -89,6 +71,12 @@ public partial class LaunchViewModel : ObservableObject
         EventManager.Instance.TeachingTooltipNeeded += OnTeachingTooltipNeeded;
 
         ToastNotificationManagerCompat.OnActivated += ToastNotificationManagerCompatOnOnActivated;
+    }
+    
+    partial void OnSelectedPackageChanged(InstalledPackage? value)
+    {
+        if (clearingPackages) return;
+        settingsManager.Transaction(s => s.ActiveInstalledPackage = value?.Id);
     }
 
     private void OnTeachingTooltipNeeded(object? sender, EventArgs e)

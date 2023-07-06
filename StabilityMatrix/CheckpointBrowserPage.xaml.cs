@@ -33,4 +33,9 @@ public partial class CheckpointBrowserPage : Page
     {
         e.Handled = true;
     }
+
+    private void CheckpointBrowserPage_OnLoaded(object sender, RoutedEventArgs e)
+    {
+        (DataContext as CheckpointBrowserViewModel)?.OnLoaded();
+    }
 }

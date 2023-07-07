@@ -1,6 +1,6 @@
 ﻿using NLog;
 using Python.Runtime;
-using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python.Interop;
 
 namespace StabilityMatrix.Core.Python;

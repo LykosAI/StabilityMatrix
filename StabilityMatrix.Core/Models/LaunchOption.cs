@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Converters.Json;
-using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Core.Models;
 

@@ -25,4 +25,9 @@
         <PackageReference Include="FluentAvaloniaUI" Version="2.0.0-rc1" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     </ItemGroup>
+
+
+    <ItemGroup>
+      <AvaloniaResource Include="Assets\Icon.ico" />
+    </ItemGroup>
 </Project>

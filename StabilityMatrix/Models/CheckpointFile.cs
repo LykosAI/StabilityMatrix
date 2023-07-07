@@ -160,7 +160,7 @@ public partial class CheckpointFile : ObservableObject
     /// - {filename}.preview.{image-extensions} (preview image)
     /// - {filename}.cm-info.json (connected model info)
     /// </summary>
-    public static IEnumerable<CheckpointFile> FromDirectoryIndex(IDialogFactory dialogFactory, string directory, SearchOption searchOption = SearchOption.AllDirectories)
+    public static IEnumerable<CheckpointFile> FromDirectoryIndex(IDialogFactory dialogFactory, string directory, SearchOption searchOption = SearchOption.TopDirectoryOnly)
     {
         // Get all files with supported extensions
         var allExtensions = SupportedCheckpointExtensions
@@ -210,7 +210,7 @@ public partial class CheckpointFile : ObservableObject
     /// Index with progress reporting.
     /// </summary>
     public static IEnumerable<CheckpointFile> FromDirectoryIndex(IDialogFactory dialogFactory, string directory, IProgress<ProgressReport> progress,
-        SearchOption searchOption = SearchOption.AllDirectories)
+        SearchOption searchOption = SearchOption.TopDirectoryOnly)
     {
         var current = 0ul;
         foreach (var checkpointFile in FromDirectoryIndex(dialogFactory, directory, searchOption))

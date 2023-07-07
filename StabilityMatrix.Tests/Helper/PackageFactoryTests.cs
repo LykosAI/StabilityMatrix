@@ -1,5 +1,4 @@
 ﻿using StabilityMatrix.Helper;
-using StabilityMatrix.Models;
 using StabilityMatrix.Models.Packages;
 
 namespace StabilityMatrix.Tests.Helper;

@@ -44,7 +44,7 @@ public class InstalledPackage
     /// Get the path as a relative sub-path of the relative path.
     /// If not a sub-path, return null.
     /// </summary>
-    internal static string? GetSubPath(string relativeTo, string path)
+    public static string? GetSubPath(string relativeTo, string path)
     {
         var relativePath = System.IO.Path.GetRelativePath(relativeTo, path);
         // GetRelativePath returns the path if it's not relative

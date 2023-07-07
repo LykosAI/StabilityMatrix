@@ -26,6 +26,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
       <ProjectReference Include="..\StabilityMatrix\StabilityMatrix.csproj" />
     </ItemGroup>
 

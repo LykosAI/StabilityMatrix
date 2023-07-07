@@ -14,19 +14,25 @@ namespace StabilityMatrix.ViewModels;
 
 public partial class SelectModelVersionDialogViewModel : ObservableObject
 {
+    private readonly ISettingsManager settingsManager;
     [ObservableProperty] private CivitModel civitModel;
     [ObservableProperty] private BitmapImage previewImage;
     [ObservableProperty] private ObservableCollection<CivitModelVersion> versions;
     [ObservableProperty] private CivitModelVersion selectedVersion;
     [ObservableProperty] private CivitFile selectedFile;
+    [ObservableProperty] private bool isImportEnabled;
 
-    public SelectModelVersionDialogViewModel(CivitModel civitModel)
+    public SelectModelVersionDialogViewModel(CivitModel civitModel, ISettingsManager settingsManager)
     {
+        this.settingsManager = settingsManager;
         CivitModel = civitModel;
         Versions = new ObservableCollection<CivitModelVersion>(CivitModel.ModelVersions);
         SelectedVersion = Versions.First();
+
+        var nsfwEnabled = settingsManager.Settings.ModelBrowserNsfwEnabled;
+        var firstImageUrl = Versions.FirstOrDefault()?.Images
+            ?.FirstOrDefault(img => nsfwEnabled || img.Nsfw == "None")?.Url;
         
-        var firstImageUrl = Versions.FirstOrDefault()?.Images?.FirstOrDefault()?.Url;
         PreviewImage = firstImageUrl != null
             ? new BitmapImage(new Uri(firstImageUrl))
             : new BitmapImage(
@@ -35,12 +41,20 @@ public partial class SelectModelVersionDialogViewModel : ObservableObject
 
     partial void OnSelectedVersionChanged(CivitModelVersion value)
     {
-        var firstImageUrl = value.Images?.FirstOrDefault()?.Url;
+        var nsfwEnabled = settingsManager.Settings.ModelBrowserNsfwEnabled;
+        var firstImageUrl = value.Images?.FirstOrDefault(img => nsfwEnabled || img.Nsfw == "None")
+            ?.Url;
+        
         PreviewImage = firstImageUrl != null
             ? new BitmapImage(new Uri(firstImageUrl))
             : new BitmapImage(
                 new Uri("pack://application:,,,/StabilityMatrix;component/Assets/noimage.png"));
     }
 
+    partial void OnSelectedFileChanged(CivitFile value)
+    {
+        IsImportEnabled = value != null;
+    }
+    
     
 }

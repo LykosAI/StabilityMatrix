@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -145,6 +146,12 @@ public partial class CheckpointFolder : ObservableObject
         }
 
         await ImportFilesAsync(files, settingsManager.Settings.IsImportAsConnected);
+    }
+
+    [RelayCommand]
+    private void ShowInExplorer(string path)
+    {
+        Process.Start("explorer.exe", path);
     }
     
     /// <summary>

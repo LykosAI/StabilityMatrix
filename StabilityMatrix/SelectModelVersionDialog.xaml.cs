@@ -38,12 +38,11 @@ public partial class SelectModelVersionDialog : ContentDialog
 
     private void Cancel_Click(object sender, RoutedEventArgs e)
     {
-        Hide();
+        Hide(ContentDialogResult.Secondary);
     }
 
-    private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+    private void Import_OnClick(object sender, RoutedEventArgs e)
     {
-        viewModel.SelectedVersion = (CivitModelVersion) e.NewValue;
+        Hide(ContentDialogResult.Primary);
     }
-
 }

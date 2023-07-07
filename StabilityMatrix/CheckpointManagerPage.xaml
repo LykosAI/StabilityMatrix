@@ -2,8 +2,8 @@
     Loaded="CheckpointManagerPage_OnLoaded"
     d:DataContext="{d:DesignInstance Type=designData:MockCheckpointManagerViewModel,
                                      IsDesignTimeCreatable=True}"
-    d:DesignHeight="1000"
-    d:DesignWidth="650"
+    d:DesignHeight="650"
+    d:DesignWidth="1000"
     mc:Ignorable="d"
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
@@ -271,8 +271,16 @@
                 Header="{Binding Title}"
                 IsExpanded="True"
                 Margin="8"
-                Padding="8,8,8,16"
+                Padding="8,8,8,8"
                 Visibility="{Binding IsCategoryEnabled, Converter={StaticResource BoolToVisibilityConverter}, FallbackValue=Visible}">
+                <Expander.ContextMenu>
+                    <ContextMenu>
+                        <!-- ReSharper disable once Xaml.RedundantResource -->
+                        <MenuItem Header="Show in Explorer" 
+                                  Command="{Binding ShowInExplorerCommand}"
+                                  CommandParameter="{Binding DirectoryPath}"/>
+                    </ContextMenu>
+                </Expander.ContextMenu>
                 <StackPanel Orientation="Vertical">
                     <!-- Subfolders -->
                     <StackPanel Orientation="Vertical">
@@ -436,7 +444,7 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -456,6 +464,18 @@
             HorizontalAlignment="Right"
             Margin="16,0"
             Orientation="Horizontal">
+            <ui:Button 
+                VerticalAlignment="Stretch"
+                Command="{Binding OpenModelsFolderCommand}"
+                Height="46"
+                Margin="8,0">
+                <ui:Button.Icon>
+                    <ui:SymbolIcon Symbol="FolderOpen24"/>
+                </ui:Button.Icon>
+                <ui:Button.Content>
+                    <TextBlock Text="Open Models Folder"/>
+                </ui:Button.Content>
+            </ui:Button>
             <ComboBox
                 HorizontalAlignment="Right"
                 ItemsSource="{Binding CheckpointFolders}"

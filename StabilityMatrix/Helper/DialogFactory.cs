@@ -177,7 +177,7 @@ public class DialogFactory : IDialogFactory
     public SelectModelVersionDialog CreateSelectModelVersionDialog(CivitModel model)
     {
         return new SelectModelVersionDialog(contentDialogService,
-            new SelectModelVersionDialogViewModel(model))
+            new SelectModelVersionDialogViewModel(model, settingsManager))
         {
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,

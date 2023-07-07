@@ -1,5 +1,5 @@
-﻿using StabilityMatrix.Helper;
-using StabilityMatrix.Models.Packages;
+﻿using StabilityMatrix.Core.Helper.Factory;
+using StabilityMatrix.Core.Models.Packages;
 
 namespace StabilityMatrix.Tests.Helper;
 
@@ -15,7 +15,7 @@ public class PackageFactoryTests
         fakeBasePackages = new List<BasePackage>
         {
             // TODO: inject mocks
-            new DankDiffusion(null, null, null, null)
+            // new DankDiffusion(null, null, null, null)
         };
         packageFactory = new PackageFactory(fakeBasePackages);
     }

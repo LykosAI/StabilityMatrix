@@ -1,0 +1,126 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+             xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="viewModels:PackageManagerViewModel"
+             x:Class="StabilityMatrix.Avalonia.Views.PackageManagerPage">
+    <Design.DataContext>
+        <viewModels:PackageManagerViewModel />
+    </Design.DataContext>
+    
+     <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel
+            Grid.Row="0"
+            Orientation="Vertical"
+            IsVisible="{Binding ProgressBarVisibility, FallbackValue=True}">
+
+            <ProgressBar
+                IsIndeterminate="{Binding IsIndeterminate, FallbackValue=False}"
+                Maximum="100"
+                Value="{Binding ProgressValue, FallbackValue=10}"
+                Width="500" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                Padding="8"
+                Text="{Binding ProgressText, FallbackValue=Installing...}" />
+        </StackPanel>
+
+        <StackPanel
+            Grid.Row="1"
+            HorizontalAlignment="Left"
+            Margin="16"
+            Orientation="Horizontal">
+            <StackPanel Orientation="Vertical">
+                <Button
+                    Command="{Binding ShowInstallWindowCommand}"
+                    Height="40"
+                    HorizontalAlignment="Stretch"
+                    IsEnabled="{Binding InstallButtonEnabled, FallbackValue=True}"
+                    Margin="0,0,0,16"
+                    VerticalContentAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <controls:SymbolIcon Symbol="Add" />
+                        <Label
+                            Content="Add Package"
+                            Margin="8,0,0,0"
+                            VerticalContentAlignment="Center" />
+                    </StackPanel>
+                </Button>
+
+                <ListBox
+                    ItemsSource="{Binding Packages}"
+                    SelectedItem="{Binding SelectedPackage, Mode=TwoWay}"
+                    IsVisible="{Binding InstallButtonVisibility, FallbackValue=True}">
+
+                    <ListBox.Template>
+                        <ControlTemplate>
+                            <Border
+                                BorderBrush="#FFCCCCCC"
+                                BorderThickness="1"
+                                CornerRadius="5">
+                                <ItemsPresenter />
+                            </Border>
+                        </ControlTemplate>
+                    </ListBox.Template>
+
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type models:InstalledPackage}">
+                            <StackPanel Margin="8" VerticalAlignment="Top">
+                                <TextBlock Margin="0,5,0,5" Text="{Binding DisplayName}" />
+                                <TextBlock Margin="0,0,0,5" Text="{Binding DisplayVersion}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+
+            <StackPanel Margin="32,0,0,0" Orientation="Vertical">
+                <TextBlock
+                    FontSize="24"
+                    FontWeight="Bold"
+                    Text="{Binding SelectedPackage.DisplayName, FallbackValue=Stable Diffusion Web UI}" />
+                <TextBlock FontSize="12" Margin="0,5,0,5">
+                    <Run Text="{Binding SelectedPackage.PackageName, FallbackValue=stable-diffusion-webui}" />
+                    <Run Text="{Binding SelectedPackage.DisplayVersion, FallbackValue=v1.3.37}" />
+                </TextBlock>
+                <TextBlock
+                    FontSize="12"
+                    Margin="0,5,0,5" 
+                    Text="{Binding SelectedPackage.FullPath, FallbackValue=Packages\stable-diffusion}" />
+                    <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
+                    <Button
+                        Command="{Binding InstallCommand}"
+                        Content="{Binding InstallButtonText, FallbackValue=Install}"
+                        Height="50"
+                        IsEnabled="{Binding InstallButtonEnabled, FallbackValue=True}"
+                        VerticalAlignment="Top"
+                        IsVisible="{Binding InstallButtonVisibility, FallbackValue=True}"
+                        Width="100" />
+                    <Button
+                        Command="{Binding UninstallCommand}"
+                        Content="Uninstall"
+                        Height="50"
+                        Margin="16,0,0,0"
+                        VerticalAlignment="Top"
+                        IsVisible="{Binding InstallButtonVisibility, FallbackValue=True}"
+                        Width="100" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" IsVisible="{Binding IsUninstalling}">
+                    <!-- <ui:ProgressRing Height="24" Width="24" Margin="8, 16, 8, 8" -->
+                    <!--                  VerticalAlignment="Center" -->
+                    <!--                  IsIndeterminate="True" HorizontalAlignment="Left"/> -->
+                    <TextBlock Text="Uninstalling..." VerticalAlignment="Center" Margin="0,8,0,0"/>
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -2,6 +2,7 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia;
 
@@ -11,17 +12,19 @@ public class ViewLocator : IDataTemplate
     {
         if (data is null) throw new ArgumentNullException(nameof(data));
         
-        var name = data.GetType().FullName!.Replace("ViewModel", "View");
+        var name = data.GetType().FullName!;
         var type = Type.GetType(name);
+        var attr = (ViewAttribute) Attribute.GetCustomAttribute(type, typeof(ViewAttribute));
+
+        if (attr is null)
+            return new TextBlock
+                {Text = "Not Found: " + name + ". Did you forget to add the [View] attribute?"};
         
         // Get from DI
-        if (type is not null)
+        var view = App.Services.GetService(attr.GetViewType());
+        if (view is not null)
         {
-            var view = App.Services.GetService(type);
-            if (view is not null)
-            {
-                return (Control) view;
-            }
+            return (Control) view;
         }
 
         return new TextBlock {Text = "Not Found: " + name};

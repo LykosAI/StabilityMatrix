@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.Json.Serialization;
+using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Models.Api;
 

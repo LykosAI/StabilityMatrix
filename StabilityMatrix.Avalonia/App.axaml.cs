@@ -56,8 +56,10 @@ public partial class App : Application
         
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<LaunchPageViewModel>();
+        services.AddSingleton<PackageManagerViewModel>();
         
         services.AddTransient<LaunchPageView>();
+        services.AddTransient<PackageManagerPage>();
         
         return services;
     }

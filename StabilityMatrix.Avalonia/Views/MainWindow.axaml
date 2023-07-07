@@ -1,25 +1,26 @@
 <windowing:AppWindow xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:StabilityMatrix.Avalonia.ViewModels"
-        xmlns:views="using:StabilityMatrix.Avalonia.Views"
-        xmlns:ui="using:FluentAvalonia.UI.Controls"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:windowing="clr-namespace:FluentAvalonia.UI.Windowing;assembly=FluentAvalonia"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:CompileBindings="True"
-        x:Class="StabilityMatrix.Avalonia.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/Icon.ico"
-        Title="StabilityMatrix.Avalonia">
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:vm="using:StabilityMatrix.Avalonia.ViewModels"
+                     xmlns:views="using:StabilityMatrix.Avalonia.Views"
+                     xmlns:ui="using:FluentAvalonia.UI.Controls"
+                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                     xmlns:windowing="clr-namespace:FluentAvalonia.UI.Windowing;assembly=FluentAvalonia"
+                     mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                     x:CompileBindings="True"
+                     x:Class="StabilityMatrix.Avalonia.Views.MainWindow"
+                     x:DataType="vm:MainWindowViewModel"
+                     Icon="/Assets/Icon.ico"
+                     Title="StabilityMatrix.Avalonia">
 
     <Design.DataContext>
-        <vm:MainWindowViewModel/>
+        <vm:MainWindowViewModel />
     </Design.DataContext>
-    
+
     <Grid RowDefinitions="Auto,Auto,*">
         <Grid Name="TitleBarHost"
-              ColumnDefinitions="Auto,Auto,*,Auto" 
+              ColumnDefinitions="Auto,Auto,*,Auto"
+              Height="32"
               Background="Transparent">
             <Image Margin="12 4"
                    IsHitTestVisible="False"
@@ -35,19 +36,20 @@
                 </Image.IsVisible>
             </Image>
 
-            <TextBlock Text="{Binding Title, 
+            <TextBlock
+                Text="{Binding Title, 
                 RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
-                       FontSize="12"
-                       IsHitTestVisible="False"
-                       VerticalAlignment="Center"
-                       Grid.Column="1">
+                FontSize="12"
+                IsHitTestVisible="False"
+                VerticalAlignment="Center"
+                Grid.Column="1">
                 <TextBlock.IsVisible>
                     <OnPlatform Default="False">
                         <On Options="Windows" Content="True" />
                     </OnPlatform>
                 </TextBlock.IsVisible>
             </TextBlock>
-            <Border Grid.Column="2" Padding="6"/>
+            <Border Grid.Column="2" Padding="6" />
         </Grid>
         <ui:NavigationView
             Grid.Row="1"
@@ -56,23 +58,19 @@
             PaneDisplayMode="Left"
             Content="{Binding CurrentPage}"
             MenuItemsSource="{Binding Pages, Mode=OneWay}"
+            SelectedItem="{Binding SelectedCategory}"
             IsSettingsVisible="True"
             IsBackEnabled="True">
-            
+
             <ui:NavigationView.MenuItemTemplate>
-                <DataTemplate>            
-                    <ui:NavigationViewItem 
+                <DataTemplate DataType="{x:Type vm:PageViewModelBase}">
+                    <ui:NavigationViewItem
                         Tag="LaunchPageView"
-                        IsSelected="True"
-                        Content="Launch"/>
+                        Margin="4,0,0,0"
+                        Content="{Binding Title}"
+                        IconSource="{Binding Icon}"/>
                 </DataTemplate>
             </ui:NavigationView.MenuItemTemplate>
-            
-            <ui:NavigationView.ContentTemplate>
-                <DataTemplate DataType="{x:Type vm:PageViewModelBase}">
-                    <ContentControl Content="{Binding}" />
-                </DataTemplate>
-            </ui:NavigationView.ContentTemplate>
             <ui:NavigationView.DataTemplates>
                 <!-- Define your DataTemplates here, could also use ContentTemplate if only 1 template is needed -->
             </ui:NavigationView.DataTemplates>

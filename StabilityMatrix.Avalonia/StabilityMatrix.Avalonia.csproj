@@ -10,17 +10,17 @@
 
     <ItemGroup>
         <Folder Include="Controls\" />
-        <Folder Include="Models\"/>
-        <AvaloniaResource Include="Assets\**"/>
+        <Folder Include="Models\" />
+        <AvaloniaResource Include="Assets\**" />
     </ItemGroup>
 
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="11.0.0"/>
-        <PackageReference Include="Avalonia.Desktop" Version="11.0.0"/>
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.0"/>
+        <PackageReference Include="Avalonia" Version="11.0.0" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.0.0" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.0" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.0"/>
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.0" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
         <PackageReference Include="FluentAvaloniaUI" Version="2.0.0-rc1" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
@@ -29,5 +29,10 @@
 
     <ItemGroup>
       <AvaloniaResource Include="Assets\Icon.ico" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
     </ItemGroup>
 </Project>

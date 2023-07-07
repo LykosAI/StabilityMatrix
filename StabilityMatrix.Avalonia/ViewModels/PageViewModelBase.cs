@@ -1,4 +1,6 @@
-﻿namespace StabilityMatrix.Avalonia.ViewModels;
+﻿using FluentAvalonia.UI.Controls;
+
+namespace StabilityMatrix.Avalonia.ViewModels;
 
 /// <summary>
 /// An abstract class for enabling page navigation.
@@ -14,4 +16,7 @@ public abstract class PageViewModelBase : ViewModelBase
     /// Gets if the user can navigate to the previous page
     /// </summary>
     public abstract bool CanNavigatePrevious { get; protected set; }
+    
+    public abstract string Title { get; }
+    public abstract Symbol Icon { get; }
 }

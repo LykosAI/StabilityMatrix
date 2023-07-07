@@ -80,36 +80,6 @@ public partial class CheckpointFolder : ObservableObject
         this.modelFinder = modelFinder;
         this.useCategoryVisibility = useCategoryVisibility;
         
-        // Get folder type from title
-        var result = Enum.TryParse(Title, out SharedFolderType type);
-        FolderType = result ? type : new SharedFolderType();
-
-        CheckpointFiles.CollectionChanged += OnCheckpointFilesChanged;
-    }
-
-    // Constructor for subfolders
-    private CheckpointFolder(
-        IDialogFactory dialogFactory, 
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        ModelFinder modelFinder,
-        string directoryPath,
-        SharedFolderType folderType,
-        bool useCategoryVisibility = true)
-    {
-        this.dialogFactory = dialogFactory;
-        this.settingsManager = settingsManager;
-        this.downloadService = downloadService;
-        this.modelFinder = modelFinder;
-        this.useCategoryVisibility = useCategoryVisibility;
-        
-        // Set path and title as provided
-        DirectoryPath = directoryPath;
-        title = Path.GetFileName(directoryPath) ?? "";
-        
-        // Set folder type
-        FolderType = folderType;
-
         CheckpointFiles.CollectionChanged += OnCheckpointFilesChanged;
     }
     
@@ -120,6 +90,11 @@ public partial class CheckpointFolder : ObservableObject
     partial void OnTitleChanged(string value)
     {
         if (!useCategoryVisibility) return;
+        
+        // Update folder type
+        var result = Enum.TryParse(Title, out SharedFolderType type);
+        FolderType = result ? type : new SharedFolderType();
+        
         IsCategoryEnabled = settingsManager.IsSharedFolderCategoryVisible(FolderType);
     }
     
@@ -327,9 +302,12 @@ public partial class CheckpointFolder : ObservableObject
             // Inherit our folder type
             var subFolder = new CheckpointFolder(dialogFactory, settingsManager,
                 downloadService, modelFinder,
-                directoryPath: folder,
-                folderType: FolderType,
-                useCategoryVisibility: useCategoryVisibility);
+                useCategoryVisibility: false)
+            {
+                Title = Path.GetFileName(folder),
+                DirectoryPath = folder,
+                FolderType = FolderType
+            };
             
             await subFolder.IndexAsync(progress);
             SubFolders.Add(subFolder);

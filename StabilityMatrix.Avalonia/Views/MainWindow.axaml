@@ -1,29 +1,63 @@
-<Window xmlns="https://github.com/avaloniaui"
+<windowing:AppWindow xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:StabilityMatrix.Avalonia.ViewModels"
         xmlns:views="using:StabilityMatrix.Avalonia.Views"
         xmlns:ui="using:FluentAvalonia.UI.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:windowing="clr-namespace:FluentAvalonia.UI.Windowing;assembly=FluentAvalonia"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:CompileBindings="True"
         x:Class="StabilityMatrix.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/Icon.ico"
         Title="StabilityMatrix.Avalonia">
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
     </Design.DataContext>
     
-    <Grid RowDefinitions="Auto,*">
-        <ui:NavigationView AlwaysShowHeader="False"
-                           PaneDisplayMode="Left"
-                           Grid.RowSpan="2"
-                           Content="{Binding CurrentPage}"
-                           MenuItemsSource="{Binding Pages, Mode=OneWay}"
-                           IsSettingsVisible="True"
-                           IsBackEnabled="True">
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Grid Name="TitleBarHost"
+              ColumnDefinitions="Auto,Auto,*,Auto" 
+              Background="Transparent">
+            <Image Margin="12 4"
+                   IsHitTestVisible="False"
+                   Source="/Assets/Icon.ico"
+                   Width="18" Height="18"
+                   DockPanel.Dock="Left"
+                   Name="WindowIcon"
+                   RenderOptions.BitmapInterpolationMode="HighQuality">
+                <Image.IsVisible>
+                    <OnPlatform Default="False">
+                        <On Options="Windows" Content="True" />
+                    </OnPlatform>
+                </Image.IsVisible>
+            </Image>
+
+            <TextBlock Text="{Binding Title, 
+                RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                       FontSize="12"
+                       IsHitTestVisible="False"
+                       VerticalAlignment="Center"
+                       Grid.Column="1">
+                <TextBlock.IsVisible>
+                    <OnPlatform Default="False">
+                        <On Options="Windows" Content="True" />
+                    </OnPlatform>
+                </TextBlock.IsVisible>
+            </TextBlock>
+            <Border Grid.Column="2" Padding="6"/>
+        </Grid>
+        <ui:NavigationView
+            Grid.Row="1"
+            Grid.RowSpan="2"
+            AlwaysShowHeader="False"
+            PaneDisplayMode="Left"
+            Content="{Binding CurrentPage}"
+            MenuItemsSource="{Binding Pages, Mode=OneWay}"
+            IsSettingsVisible="True"
+            IsBackEnabled="True">
             
             <ui:NavigationView.MenuItemTemplate>
                 <DataTemplate>            
@@ -44,4 +78,4 @@
             </ui:NavigationView.DataTemplates>
         </ui:NavigationView>
     </Grid>
-</Window>
+</windowing:AppWindow>

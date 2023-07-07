@@ -74,13 +74,13 @@ public partial class SettingsViewModel : ObservableObject
     
     partial void OnWebApiHostChanged(string? value)
     {
-        settingsManager.SetWebApiHost(value);
+        settingsManager.Transaction(s => s.WebApiHost = value);
         a3WebApiManager.ResetClient();
     }
     
     partial void OnWebApiPortChanged(string? value)
     {
-        settingsManager.SetWebApiPort(value);
+        settingsManager.Transaction(s => s.WebApiPort = value);
         a3WebApiManager.ResetClient();
     }
     
@@ -90,7 +90,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         if (value != settingsManager.Settings.KeepFolderLinksOnShutdown)
         {
-            settingsManager.SetKeepFolderLinksOnShutdown(value);
+            settingsManager.Transaction(s => s.KeepFolderLinksOnShutdown = value);
         }
     }
 
@@ -142,13 +142,14 @@ public partial class SettingsViewModel : ObservableObject
 
     partial void OnSelectedThemeChanged(string value)
     {
-        settingsManager.SetTheme(value);
+        using var st = settingsManager.BeginTransaction();
+        st.Settings.Theme = value;
         ApplyTheme(value);
     }
 
     partial void OnWindowBackdropTypeChanged(WindowBackdropType oldValue, WindowBackdropType newValue)
     {
-        settingsManager.SetWindowBackdropType(newValue);
+        settingsManager.Transaction(s => s.WindowBackdropType = newValue);
         if (Application.Current.MainWindow != null)
         {
             WindowBackdrop.ApplyBackdrop(Application.Current.MainWindow, newValue);
@@ -221,13 +222,15 @@ public partial class SettingsViewModel : ObservableObject
         {
             Id = Guid.NewGuid(),
             DisplayName = Path.GetFileName(path),
+#pragma warning disable CS0618 // Type or member is obsolete
             Path = path,
+#pragma warning restore CS0618 // Type or member is obsolete
             PackageName = "dank-diffusion",
             PackageVersion = "v1.0.0",
         };
 
         // Add package to settings
-        settingsManager.AddInstalledPackage(package);
+        settingsManager.Transaction(s => s.InstalledPackages.Add(package));
     });
 
     // Debug card commands

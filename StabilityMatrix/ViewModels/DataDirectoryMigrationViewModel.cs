@@ -155,9 +155,12 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
         var oldPackages = settingsManager.GetOldInstalledPackages().ToArray();
 
         MigrateProgressText = "Migrating Packages...";
+        
+        await using var st = settingsManager.BeginTransaction();
+        
         foreach (var package in oldPackages)
         {
-            settingsManager.RemoveInstalledPackage(package);
+            st.Settings.RemoveInstalledPackageAndUpdateActive(package);
 
 #pragma warning disable CS0618
             Logger.Info($"Migrating package {MigrateProgressCount} of {oldPackages.Length} at path {package.Path}");
@@ -165,16 +168,19 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
             
             await package.MigratePath();
             MigrateProgressCount++;
-            settingsManager.AddInstalledPackage(package);
-            settingsManager.SetActiveInstalledPackage(package);
+            st.Settings.InstalledPackages.Add(package);
+            st.Settings.ActiveInstalledPackage = package.Id;
 
             if (oldLibraryPath != libraryPath)
             {
                 // setup model links again
-                var basePackage = packageFactory.FindPackageByName(package.PackageName);
-                if (basePackage != default)
+                if (!string.IsNullOrWhiteSpace(package.PackageName))
                 {
-                    sharedFolders.SetupLinksForPackage(basePackage, package.FullPath!);
+                    var basePackage = packageFactory.FindPackageByName(package.PackageName);
+                    if (basePackage != default)
+                    {
+                        sharedFolders.SetupLinksForPackage(basePackage, package.FullPath!);
+                    }
                 }
             }
 

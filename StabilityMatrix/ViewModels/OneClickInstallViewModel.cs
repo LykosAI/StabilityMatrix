@@ -137,8 +137,9 @@ public partial class OneClickInstallViewModel : ObservableObject
             LaunchCommand = a1111.LaunchCommand,
             LastUpdateCheck = DateTimeOffset.Now
         };
-        settingsManager.AddInstalledPackage(package);
-        settingsManager.SetActiveInstalledPackage(package);
+        await using var st = settingsManager.BeginTransaction();
+        st.Settings.InstalledPackages.Add(package);
+        st.Settings.ActiveInstalledPackage = package.Id;
         EventManager.Instance.OnInstalledPackagesChanged();
         
         HeaderText = "Installation complete!";

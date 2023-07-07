@@ -339,9 +339,10 @@ public partial class InstallerViewModel : ObservableObject
             LaunchCommand = SelectedPackage.LaunchCommand,
             LastUpdateCheck = DateTimeOffset.Now
         };
-        settingsManager.AddInstalledPackage(package);
-        settingsManager.SetActiveInstalledPackage(package);
-
+        await using var st = settingsManager.BeginTransaction();
+        st.Settings.InstalledPackages.Add(package);
+        st.Settings.ActiveInstalledPackage = package.Id;
+        
         ProgressValue = 0;
     }
 

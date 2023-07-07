@@ -2,8 +2,8 @@
     Loaded="CheckpointManagerPage_OnLoaded"
     d:DataContext="{d:DesignInstance Type=designData:MockCheckpointManagerViewModel,
                                      IsDesignTimeCreatable=True}"
-    d:DesignHeight="1000"
-    d:DesignWidth="650"
+    d:DesignHeight="650"
+    d:DesignWidth="1000"
     mc:Ignorable="d"
     ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
     ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
@@ -14,6 +14,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:designData="clr-namespace:StabilityMatrix.DesignData"
     xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:ci="clr-namespace:StabilityMatrix.Interactions"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:StabilityMatrix.Models"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
@@ -270,93 +271,112 @@
                 Header="{Binding Title}"
                 IsExpanded="True"
                 Margin="8"
-                Padding="8,8,8,16"
+                Padding="8,8,8,8"
                 Visibility="{Binding IsCategoryEnabled, Converter={StaticResource BoolToVisibilityConverter}, FallbackValue=Visible}">
-                <i:Interaction.Triggers>
-                    <i:EventTrigger EventName="PreviewDragEnter">
-                        <i:InvokeCommandAction Command="{Binding OnPreviewDragEnterCommand}" />
-                    </i:EventTrigger>
-                    <i:EventTrigger EventName="PreviewDragLeave">
-                        <i:InvokeCommandAction Command="{Binding OnPreviewDragLeaveCommand}" />
-                    </i:EventTrigger>
-                    <i:EventTrigger EventName="PreviewDrop">
-                        <i:InvokeCommandAction Command="{Binding PreviewDropCommand}" PassEventArgsToCommand="True" />
-                    </i:EventTrigger>
-                </i:Interaction.Triggers>
-                <Grid>
-                    <ui:VirtualizingItemsControl
-                        ItemTemplate="{StaticResource CheckpointFileDataTemplate}"
-                        ItemsSource="{Binding CheckpointFiles}"
-                        Padding="5"
-                        PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel" />
-                    <Border
-                        CornerRadius="8"
-                        Grid.RowSpan="4"
-                        IsEnabled="False"
-                        Name="OnDragBlurBorder"
-                        Visibility="{Binding IsDragBlurEnabled, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <Border.Background>
-                            <SolidColorBrush Color="#EE202020" />
-                        </Border.Background>
-                    </Border>
-                    <Border
-                        BorderThickness="1,1,1,1"
-                        CornerRadius="8"
-                        Grid.RowSpan="4"
-                        IsEnabled="False"
-                        Name="OnDragDashBorder"
-                        Visibility="{Binding IsCurrentDragTarget, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <Border.BorderBrush>
-                            <DrawingBrush
-                                TileMode="Tile"
-                                Viewport="0,0,8,8"
-                                ViewportUnits="Absolute">
-                                <DrawingBrush.Drawing>
-                                    <DrawingGroup>
-                                        <GeometryDrawing Brush="White">
-                                            <GeometryDrawing.Geometry>
-                                                <GeometryGroup>
-                                                    <RectangleGeometry Rect="0,0,50,50" />
-                                                    <RectangleGeometry Rect="50,50,50,50" />
-                                                </GeometryGroup>
-                                            </GeometryDrawing.Geometry>
-                                        </GeometryDrawing>
-                                    </DrawingGroup>
-                                </DrawingBrush.Drawing>
-                            </DrawingBrush>
-                        </Border.BorderBrush>
-                    </Border>
-                    <VirtualizingStackPanel
-                        Margin="0,8"
-                        Orientation="Vertical"
-                        VerticalAlignment="Center">
-                        <TextBlock
-                            Effect="{StaticResource TextDropShadowEffect}"
-                            FontSize="24"
-                            HorizontalAlignment="Center"
-                            Name="OnDragText"
-                            Text="Drop a file here to import"
-                            VerticalAlignment="Center"
-                            Visibility="{Binding IsCurrentDragTarget, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=Visible}" />
-                        <TextBlock
-                            Effect="{StaticResource TextDropShadowEffect}"
-                            FontSize="18"
-                            HorizontalAlignment="Center"
-                            Name="ImportProgressText"
-                            Text="{Binding Progress.Text, FallbackValue=Importing checkpoint.safetensors}"
-                            VerticalAlignment="Center"
-                            Visibility="{Binding Progress.TextVisibility}" />
-                        <ProgressBar
-                            Effect="{StaticResource TextDropShadowEffect}"
+                <Expander.ContextMenu>
+                    <ContextMenu>
+                        <!-- ReSharper disable once Xaml.RedundantResource -->
+                        <MenuItem Header="Show in Explorer" 
+                                  Command="{Binding ShowInExplorerCommand}"
+                                  CommandParameter="{Binding DirectoryPath}"/>
+                    </ContextMenu>
+                </Expander.ContextMenu>
+                <StackPanel Orientation="Vertical">
+                    <!-- Subfolders -->
+                    <StackPanel Orientation="Vertical">
+                        <ItemsControl
                             HorizontalAlignment="Stretch"
-                            IsIndeterminate="{Binding Progress.IsIndeterminate, FallbackValue=False}"
-                            Margin="64,8"
-                            Name="ImportProgressBar"
-                            VerticalAlignment="Center"
-                            Visibility="{Binding Progress.ProgressVisibility, FallbackValue=Visible}"
-                            controls:ProgressBarSmoother.SmoothValue="{Binding Progress.Value, FallbackValue=20}" />
-                    </VirtualizingStackPanel>
-                </Grid>
+                            ItemTemplate="{DynamicResource CheckpointFolderGridDataTemplate}"
+                            ItemsSource="{Binding SubFolders, Mode=OneWay}"
+                            Margin="8,0,8,8" />
+                    </StackPanel>
+                    <!-- Files -->
+                    <Grid>
+                        <i:Interaction.Triggers>
+                            <ci:EventTriggerWithoutPropagation EventName="PreviewDragEnter">
+                                <i:InvokeCommandAction Command="{Binding OnPreviewDragEnterCommand}" />
+                            </ci:EventTriggerWithoutPropagation>
+                            <ci:EventTriggerWithoutPropagation EventName="PreviewDragLeave">
+                                <i:InvokeCommandAction Command="{Binding OnPreviewDragLeaveCommand}" />
+                            </ci:EventTriggerWithoutPropagation>
+                            <ci:EventTriggerWithoutPropagation EventName="PreviewDrop">
+                                <i:InvokeCommandAction Command="{Binding PreviewDropCommand}" PassEventArgsToCommand="True" />
+                            </ci:EventTriggerWithoutPropagation>
+                        </i:Interaction.Triggers>
+                        <ui:VirtualizingItemsControl
+                            ItemTemplate="{StaticResource CheckpointFileDataTemplate}"
+                            ItemsSource="{Binding CheckpointFiles}"
+                            Padding="5"
+                            PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel" />
+                        <Border
+                            CornerRadius="8"
+                            Grid.RowSpan="4"
+                            IsEnabled="False"
+                            Name="OnDragBlurBorder"
+                            Visibility="{Binding IsDragBlurEnabled, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <Border.Background>
+                                <SolidColorBrush Color="#EE202020" />
+                            </Border.Background>
+                        </Border>
+                        <Border
+                            BorderThickness="1,1,1,1"
+                            CornerRadius="8"
+                            Grid.RowSpan="4"
+                            IsEnabled="False"
+                            Name="OnDragDashBorder"
+                            Visibility="{Binding IsCurrentDragTarget, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <Border.BorderBrush>
+                                <DrawingBrush
+                                    TileMode="Tile"
+                                    Viewport="0,0,8,8"
+                                    ViewportUnits="Absolute">
+                                    <DrawingBrush.Drawing>
+                                        <DrawingGroup>
+                                            <GeometryDrawing Brush="White">
+                                                <GeometryDrawing.Geometry>
+                                                    <GeometryGroup>
+                                                        <RectangleGeometry Rect="0,0,50,50" />
+                                                        <RectangleGeometry Rect="50,50,50,50" />
+                                                    </GeometryGroup>
+                                                </GeometryDrawing.Geometry>
+                                            </GeometryDrawing>
+                                        </DrawingGroup>
+                                    </DrawingBrush.Drawing>
+                                </DrawingBrush>
+                            </Border.BorderBrush>
+                        </Border>
+                        <VirtualizingStackPanel
+                            Margin="0,8"
+                            Orientation="Vertical"
+                            VerticalAlignment="Center">
+                            <TextBlock
+                                Effect="{StaticResource TextDropShadowEffect}"
+                                FontSize="24"
+                                HorizontalAlignment="Center"
+                                Name="OnDragText"
+                                Text="Drop a file here to import"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding IsCurrentDragTarget, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=Visible}" />
+                            <TextBlock
+                                Effect="{StaticResource TextDropShadowEffect}"
+                                FontSize="18"
+                                HorizontalAlignment="Center"
+                                Name="ImportProgressText"
+                                Text="{Binding Progress.Text, FallbackValue=Importing checkpoint.safetensors}"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding Progress.TextVisibility}" />
+                            <ProgressBar
+                                Effect="{StaticResource TextDropShadowEffect}"
+                                HorizontalAlignment="Stretch"
+                                IsIndeterminate="{Binding Progress.IsIndeterminate, FallbackValue=False}"
+                                Margin="64,8"
+                                Name="ImportProgressBar"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding Progress.ProgressVisibility, FallbackValue=Visible}"
+                                controls:ProgressBarSmoother.SmoothValue="{Binding Progress.Value, FallbackValue=20}" />
+                        </VirtualizingStackPanel>
+                    </Grid>
+                </StackPanel>
             </Expander>
         </DataTemplate>
 
@@ -424,7 +444,7 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -444,6 +464,18 @@
             HorizontalAlignment="Right"
             Margin="16,0"
             Orientation="Horizontal">
+            <ui:Button 
+                VerticalAlignment="Stretch"
+                Command="{Binding OpenModelsFolderCommand}"
+                Height="46"
+                Margin="8,0">
+                <ui:Button.Icon>
+                    <ui:SymbolIcon Symbol="FolderOpen24"/>
+                </ui:Button.Icon>
+                <ui:Button.Content>
+                    <TextBlock Text="Open Models Folder"/>
+                </ui:Button.Content>
+            </ui:Button>
             <ComboBox
                 HorizontalAlignment="Right"
                 ItemsSource="{Binding CheckpointFolders}"

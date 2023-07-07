@@ -61,17 +61,17 @@ namespace StabilityMatrix
 
         private void RootNavigation_OnPaneOpened(NavigationView sender, RoutedEventArgs args)
         {
-            if (settingsManager.TryFindLibrary())
+            if (settingsManager.IsLibraryDirSet)
             {
-                settingsManager.SetNavExpanded(true);
+                settingsManager.Transaction(s => s.IsNavExpanded = true);
             }
         }
 
         private void RootNavigation_OnPaneClosed(NavigationView sender, RoutedEventArgs args)
         {
-            if (settingsManager.TryFindLibrary())
+            if (settingsManager.IsLibraryDirSet)
             {
-                settingsManager.SetNavExpanded(false);
+                settingsManager.Transaction(s => s.IsNavExpanded = false);
             }
         }
 
@@ -97,7 +97,7 @@ namespace StabilityMatrix
                     
                     var interopHelper = new WindowInteropHelper(this);
                     var placement = ScreenExtensions.GetPlacement(interopHelper.Handle);
-                    settingsManager.SetPlacement(placement.ToString());
+                    settingsManager.Transaction(s => s.Placement = placement.ToString());
                 });
         }
 
@@ -106,9 +106,9 @@ namespace StabilityMatrix
             var interopHelper = new WindowInteropHelper(this);
             var placement = ScreenExtensions.GetPlacement(interopHelper.Handle);
 
-            if (settingsManager.TryFindLibrary())
+            if (settingsManager.IsLibraryDirSet)
             {
-                settingsManager.SetPlacement(placement.ToString());
+                settingsManager.Transaction(s => s.Placement = placement.ToString());
             }
         }
     }

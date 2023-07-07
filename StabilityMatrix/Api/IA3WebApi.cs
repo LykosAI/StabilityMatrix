@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using Refit;
-using StabilityMatrix.Models.Api;
+using StabilityMatrix.Core.Models.Api;
 
 namespace StabilityMatrix.Api;
 

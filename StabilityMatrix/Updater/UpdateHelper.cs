@@ -10,8 +10,8 @@ using Microsoft.Extensions.Options;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Services;
 using StabilityMatrix.Helper;
-using StabilityMatrix.Services;
 
 namespace StabilityMatrix.Updater;
 

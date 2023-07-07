@@ -11,17 +11,18 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using Octokit;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
-using StabilityMatrix.Helper;
+using StabilityMatrix.Core.Services;
 using StabilityMatrix.Models;
-using StabilityMatrix.Models.Packages;
 using StabilityMatrix.Services;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Controls.ContentDialogControl;
-using Wpf.Ui.Controls.Window;
 using Application = System.Windows.Application;
 using EventManager = StabilityMatrix.Helper.EventManager;
 using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
@@ -92,7 +93,6 @@ public partial class InstallerViewModel : ObservableObject
     private bool showDuplicateWarning;
 
 
-    public WindowBackdropType WindowBackdropType => settingsManager.Settings.WindowBackdropType ?? Wpf.Ui.Controls.Window.WindowBackdropType.Mica;
     public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
 
     public string ReleaseLabelText => IsReleaseMode ? "Version" : "Branch";

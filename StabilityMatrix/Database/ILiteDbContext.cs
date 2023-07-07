@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using System;
 using LiteDB.Async;
-using StabilityMatrix.Models.Api;
+using StabilityMatrix.Core.Models.Api;
 
 namespace StabilityMatrix.Database;
 

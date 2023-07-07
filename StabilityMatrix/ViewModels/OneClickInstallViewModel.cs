@@ -4,12 +4,14 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
-using StabilityMatrix.Helper;
+using StabilityMatrix.Core.Services;
 using StabilityMatrix.Models;
-using StabilityMatrix.Models.Packages;
 using EventManager = StabilityMatrix.Helper.EventManager;
 
 namespace StabilityMatrix.ViewModels;

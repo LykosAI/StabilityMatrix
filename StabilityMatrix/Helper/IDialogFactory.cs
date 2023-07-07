@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Models;
-using StabilityMatrix.Models.Api;
+using StabilityMatrix.Core.Models.Api;
 
 namespace StabilityMatrix.Helper;
 

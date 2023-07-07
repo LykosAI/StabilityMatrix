@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using LiteDB;
-using StabilityMatrix.Models.Api;
+using StabilityMatrix.Core.Models.Api;
 
 namespace StabilityMatrix.Database;
 

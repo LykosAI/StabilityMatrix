@@ -36,7 +36,7 @@ public partial class MainWindowViewModel : ViewModelBase
             throw new InvalidOperationException("Default Constructor is only for design-time.");
         }
         Pages.Add(new LaunchPageViewModel());
-        Pages.Add(new PackageManagerViewModel());
+        Pages.Add(new PackageManagerViewModel(null!, null!));
         CurrentPage = Pages[0];
         SelectedCategory = Pages[0];
     }

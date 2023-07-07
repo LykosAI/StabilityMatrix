@@ -15,11 +15,12 @@ using StabilityMatrix.Api;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Models.Settings;
+using StabilityMatrix.Core.Services;
 using StabilityMatrix.Database;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
-using StabilityMatrix.Models.Api;
-using StabilityMatrix.Services;
 using ApiException = Refit.ApiException;
 
 namespace StabilityMatrix.ViewModels;

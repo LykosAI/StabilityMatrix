@@ -5,7 +5,7 @@
     Loaded="InstallPage_OnLoaded"
     Title="Stability Matrix - Installer"
     Width="1100"
-    WindowBackdropType="{Binding WindowBackdropType}"
+    WindowBackdropType="Mica"
     WindowStartupLocation="CenterOwner"
     d:DataContext="{d:DesignInstance Type=viewModels:InstallerViewModel,
                                      IsDesignTimeCreatable=True}"
@@ -22,12 +22,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
     xmlns:octokit="clr-namespace:Octokit;assembly=Octokit"
-    xmlns:packages="clr-namespace:StabilityMatrix.Models.Packages"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:xaml="clr-namespace:MdXaml;assembly=MdXaml">
+    xmlns:xaml="clr-namespace:MdXaml;assembly=MdXaml"
+    xmlns:packages="clr-namespace:StabilityMatrix.Core.Models.Packages;assembly=StabilityMatrix.Core">
 
     <ui:FluentWindow.Resources>
         <converters:ValueConverterGroup x:Key="InvertAndVisibilitate">

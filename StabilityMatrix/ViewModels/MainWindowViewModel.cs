@@ -12,6 +12,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Options;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Configs;
+using StabilityMatrix.Core.Services;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Services;
 using StabilityMatrix.Updater;
@@ -253,18 +254,17 @@ public partial class MainWindowViewModel : ObservableObject
         {
             if (Application.Current.MainWindow != null)
             {
-                WindowBackdrop.ApplyBackdrop(Application.Current.MainWindow,
-                    settingsManager.Settings.WindowBackdropType ?? WindowBackdropType.Mica);
+                WindowBackdrop.ApplyBackdrop(Application.Current.MainWindow, WindowBackdropType.Mica);
             }
 
             var theme = settingsManager.Settings.Theme;
             switch (theme)
             {
                 case "Dark":
-                    Theme.Apply(ThemeType.Dark, settingsManager.Settings.WindowBackdropType ?? WindowBackdropType.Mica);
+                    Theme.Apply(ThemeType.Dark);
                     break;
                 case "Light":
-                    Theme.Apply(ThemeType.Light, settingsManager.Settings.WindowBackdropType ?? WindowBackdropType.Mica);
+                    Theme.Apply(ThemeType.Light);
                     break;
             }
         });

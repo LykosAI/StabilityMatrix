@@ -7,6 +7,7 @@
              xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="viewModels:PackageManagerViewModel"
+             Loaded="Control_OnLoaded"
              x:Class="StabilityMatrix.Avalonia.Views.PackageManagerPage">
     <Design.DataContext>
         <viewModels:PackageManagerViewModel />

@@ -14,12 +14,12 @@ using Refit;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Services;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
-using StabilityMatrix.Models.Api;
-using StabilityMatrix.Services;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Controls.ContentDialogControl;
 

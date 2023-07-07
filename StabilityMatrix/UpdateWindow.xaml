@@ -5,7 +5,7 @@
     Loaded="UpdateWindow_OnLoaded"
     Title="Stability Matrix - Update"
     Width="700"
-    WindowBackdropType="{Binding WindowBackdropType}"
+    WindowBackdropType="Mica"
     WindowStartupLocation="CenterOwner"
     d:DataContext="{d:DesignInstance Type=viewModels:UpdateWindowViewModel,
                                      IsDesignTimeCreatable=True}"

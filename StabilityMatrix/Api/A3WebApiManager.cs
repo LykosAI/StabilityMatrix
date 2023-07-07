@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net.Http;
 using Refit;
-using StabilityMatrix.Helper;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Api;
 

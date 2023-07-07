@@ -7,9 +7,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Progress;
-using StabilityMatrix.Helper;
+using StabilityMatrix.Core.Services;
 using StabilityMatrix.Updater;
-using Wpf.Ui.Controls.Window;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -34,8 +33,6 @@ public partial class UpdateWindowViewModel : ObservableObject
     
 
     public UpdateInfo? UpdateInfo { get; set; }
-    public WindowBackdropType WindowBackdropType => settingsManager.Settings.WindowBackdropType ??
-                                                    WindowBackdropType.Mica;
 
     public async Task OnLoaded()
     {

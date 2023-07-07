@@ -3,8 +3,8 @@ using System.Threading.Tasks;
 using NLog;
 using Refit;
 using StabilityMatrix.Api;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Database;
-using StabilityMatrix.Models.Api;
 
 namespace StabilityMatrix.Helper;
 

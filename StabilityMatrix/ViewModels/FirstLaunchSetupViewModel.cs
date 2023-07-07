@@ -5,7 +5,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Controls;
 using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Helper;
 
 namespace StabilityMatrix.ViewModels;
 

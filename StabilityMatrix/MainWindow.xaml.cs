@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Interop;
+using StabilityMatrix.Core.Services;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;

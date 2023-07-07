@@ -1,11 +1,15 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -16,12 +20,21 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 [View(typeof(PackageManagerPage))]
 public partial class PackageManagerViewModel : PageViewModelBase
 {
-    public PackageManagerViewModel()
+    private readonly ISettingsManager settingsManager;
+    private readonly IPackageFactory packageFactory;
+
+    private const int MinutesToWaitForUpdateCheck = 60;
+
+    public PackageManagerViewModel(ISettingsManager settingsManager, IPackageFactory packageFactory)
     {
+        this.settingsManager = settingsManager;
+        this.packageFactory = packageFactory;
+        
+        Packages = new ObservableCollection<InstalledPackage>(settingsManager.Settings.InstalledPackages);
     }
 
-    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
+    [ObservableProperty]
     private int progressValue;
     
     [ObservableProperty]
@@ -56,6 +69,46 @@ public partial class PackageManagerViewModel : PageViewModelBase
     public override bool CanNavigatePrevious { get; protected set; }
     public override string Title => "Packages";
     public override Symbol Icon => Symbol.XboxConsoleFilled;
+
+    public async Task OnLoaded()
+    {
+        Packages.Clear();
+        var installedPackages = settingsManager.Settings.InstalledPackages;
+        if (installedPackages.Count == 0)
+        {
+            SelectedPackage = new InstalledPackage
+            {
+                DisplayName = "Click \"Add Package\" to install a package"
+            };
+            InstallButtonVisibility = false;
+            
+            return;
+        }
+        
+        
+        foreach (var packageToUpdate in installedPackages)
+        {
+            var basePackage = packageFactory.FindPackageByName(packageToUpdate.PackageName);
+            if (basePackage == null) continue;
+            
+            var canCheckUpdate = packageToUpdate.LastUpdateCheck == null ||
+                                 packageToUpdate.LastUpdateCheck.Value.AddMinutes(MinutesToWaitForUpdateCheck) <
+                                 DateTimeOffset.Now;
+            if (canCheckUpdate)
+            {
+                var hasUpdate = await basePackage.CheckForUpdates(packageToUpdate.DisplayName);
+                packageToUpdate.UpdateAvailable = hasUpdate;
+                packageToUpdate.LastUpdateCheck = DateTimeOffset.Now;
+                settingsManager.SetLastUpdateCheck(packageToUpdate);
+            }
+
+            Packages.Add(packageToUpdate);
+        }
+
+        SelectedPackage =
+            installedPackages.FirstOrDefault(x => x.Id == settingsManager.Settings.ActiveInstalledPackage) ??
+            Packages[0];
+    }
 
     [RelayCommand]
     private async Task Install()

@@ -11,9 +11,10 @@ using Microsoft.Extensions.Logging;
 using StabilityMatrix.Api;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Services;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
-using StabilityMatrix.Models.Api;
 using StabilityMatrix.Services;
 
 namespace StabilityMatrix.ViewModels;

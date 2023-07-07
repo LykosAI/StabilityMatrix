@@ -14,8 +14,8 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Services;
 using StabilityMatrix.Helper;
-using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;
 
 namespace StabilityMatrix.Models;

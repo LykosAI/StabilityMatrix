@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Extensions;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models.FileInterfaces;
-using StabilityMatrix.Models.Progress;
 using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;
 

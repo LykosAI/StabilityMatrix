@@ -4,7 +4,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Blake3;
-using StabilityMatrix.Models.Progress;
+using StabilityMatrix.Core.Models.Progress;
 
 namespace StabilityMatrix.Helper;
 

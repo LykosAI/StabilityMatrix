@@ -1,4 +1,4 @@
-﻿namespace StabilityMatrix.Models.Progress;
+﻿namespace StabilityMatrix.Core.Models.Progress;
 
 public enum ProgressState
 {

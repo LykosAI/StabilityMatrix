@@ -10,12 +10,12 @@ using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
 using Refit;
+using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Extensions;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Api;
 using StabilityMatrix.Models.FileInterfaces;
-using StabilityMatrix.Models.Progress;
 using StabilityMatrix.Services;
 using Wpf.Ui.Controls;
 

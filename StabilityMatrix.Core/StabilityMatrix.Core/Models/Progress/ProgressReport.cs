@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace StabilityMatrix.Models.Progress;
+﻿namespace StabilityMatrix.Core.Models.Progress;
 
 public record struct ProgressReport
 {

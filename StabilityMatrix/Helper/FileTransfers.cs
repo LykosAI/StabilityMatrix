@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using StabilityMatrix.Models.Progress;
+using StabilityMatrix.Core.Models.Progress;
 
 namespace StabilityMatrix.Helper;
 

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using StabilityMatrix.Models.Progress;
+using StabilityMatrix.Core.Models.Progress;
 
 namespace StabilityMatrix.Helper;
 

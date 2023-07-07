@@ -7,9 +7,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using NLog;
 using Octokit;
+using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Helper.Cache;
-using StabilityMatrix.Models.Progress;
 using StabilityMatrix.Python;
 using StabilityMatrix.Services;
 

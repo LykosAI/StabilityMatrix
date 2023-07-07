@@ -105,5 +105,9 @@
   <ItemGroup>
     <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\Progress\" />
+  </ItemGroup>
   
 </Project>

@@ -1,0 +1,129 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+             xmlns:views="using:StabilityMatrix.Avalonia.Views"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             x:CompileBindings="True"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="StabilityMatrix.Avalonia.Views.LaunchPageView">
+    <Design.DataContext>
+        <vm:LaunchPageViewModel />
+    </Design.DataContext>
+    
+    <Grid RowDefinitions="Auto,*,Auto">
+        <Grid ColumnDefinitions="Auto,*">
+            <Grid ColumnDefinitions="0.8*,0.2*">
+                <!--<ui:Flyout
+                    Background="{DynamicResource SystemAccentColorPrimaryBrush}"
+                    FontSize="18"
+                    Grid.Column="0"
+                    Grid.Row="0"
+                    IsOpen="{Binding IsLaunchTeachingTipsOpen, Mode=TwoWay}"
+                    Margin="24,8,0,0"
+                    Placement="Bottom">
+                    <StackPanel Orientation="Horizontal">
+                        <Grid HorizontalAlignment="Left">
+                            <ui:SymbolIcon Symbol="ArrowCurveUpLeft20" />
+                        </Grid>
+                        <TextBlock
+                            HorizontalAlignment="Left"
+                            Text="Click Launch to get started!"
+                            TextWrapping="WrapWithOverflow"
+                            Width="280" />
+                    </StackPanel>
+                </ui:Flyout>-->
+                
+                <!-- Command="{Binding LaunchCommand}" -->
+                <!--Visibility="{Binding LaunchButtonVisibility, FallbackValue=Visible}"-->
+                <Button
+                    Content="Launch"
+                    Grid.Column="0"
+                    Grid.Row="0"
+                    HorizontalAlignment="Left"
+                    Margin="24,8,0,0"
+                    VerticalAlignment="Stretch"
+                    Width="72"/>
+                <!--Command="{Binding StopCommand}"-->
+                <!--Visibility="{Binding StopButtonVisibility, FallbackValue=Hidden}"-->
+                <Button
+                    IsVisible="False"
+                    Content="Stop"
+                    Grid.Column="0"
+                    Grid.Row="0"
+                    HorizontalAlignment="Left"
+                    Margin="24,8,0,0"
+                    VerticalAlignment="Stretch"
+                    Width="72"/>
+                <!--Command="{Binding ConfigCommand}"-->
+                <Button
+                    FontSize="16"
+                    Grid.Column="1"
+                    Grid.Row="0"
+                    HorizontalAlignment="Left"
+                    Margin="8,8,0,0"
+                    VerticalAlignment="Stretch"
+                    Width="48">
+                    <ui:SymbolIcon Symbol="Settings" FontSize="16"/>
+                    <!--<ui:Button.Icon>
+                        <ui:SymbolIcon Symbol="Settings32" />
+                    </ui:Button.Icon>-->
+                </Button>
+            </Grid>
+            <!--ItemsSource="{Binding InstalledPackages}"-->
+            <!--SelectedValue="{Binding SelectedPackage}"-->
+            <ComboBox
+                Grid.Column="1"
+                Grid.Row="0"
+                HorizontalAlignment="Stretch"
+                Margin="8,8,24,0"
+                VerticalAlignment="Top"
+                x:Name="SelectPackageComboBox">
+                <!--<ComboBox.ItemContainerStyle>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Template" Value="{StaticResource SelectPackageDropDownStyle}" />
+                    </Style>
+                </ComboBox.ItemContainerStyle>-->
+
+                <!--<ComboBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type models:InstalledPackage}">
+                        <StackPanel Margin="10,0,0,0" VerticalAlignment="Top">
+                            <TextBlock
+                                Margin="0,5,0,5"
+                                Name="NameTextBlock"
+                                Text="{Binding DisplayName, Mode=OneWay}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>-->
+            </ComboBox>
+        </Grid>
+        <SelectableTextBlock
+            Margin="24,16"
+            Text="Console output here."
+            Grid.Row="1">
+        </SelectableTextBlock>
+        <!--<terminal:Terminal Grid.Row="1"
+                           Margin="24,8,26,10"
+                           Background="{DynamicResource ControlFillColorDisabledBrush}"
+                           IsReadOnly="True"
+                           AutoScroll="True"
+                           FontFamily="Consolas"
+                           ItemHeight="22"
+                           Foreground="White"
+                           BorderThickness="0"
+                           VerticalScrollBarVisibility="Auto"
+                           ItemsSource="{Binding ConsoleHistory, Mode=OneWay}"/>-->
+        
+        <!--Command="{Binding LaunchWebUiCommand}"-->
+        <!--Visibility="{Binding ShowWebUiButton, Converter={StaticResource BoolToVisConverter}}"-->
+        <Button
+            Content="Open Web UI"
+            FontSize="12"
+            Grid.ColumnSpan="2"
+            Grid.Row="2"
+            HorizontalAlignment="Stretch"
+            Margin="24,0,24,8"/>
+    </Grid>
+    
+</UserControl>

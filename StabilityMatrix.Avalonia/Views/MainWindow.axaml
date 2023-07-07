@@ -1,0 +1,47 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:StabilityMatrix.Avalonia.ViewModels"
+        xmlns:views="using:StabilityMatrix.Avalonia.Views"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:CompileBindings="True"
+        x:Class="StabilityMatrix.Avalonia.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="StabilityMatrix.Avalonia">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+    
+    <Grid RowDefinitions="Auto,*">
+        <ui:NavigationView AlwaysShowHeader="False"
+                           PaneDisplayMode="Left"
+                           Grid.RowSpan="2"
+                           Content="{Binding CurrentPage}"
+                           MenuItemsSource="{Binding Pages, Mode=OneWay}"
+                           IsSettingsVisible="True"
+                           IsBackEnabled="True">
+            
+            <ui:NavigationView.MenuItemTemplate>
+                <DataTemplate>            
+                    <ui:NavigationViewItem 
+                        Tag="LaunchPageView"
+                        IsSelected="True"
+                        Content="Launch"/>
+                </DataTemplate>
+            </ui:NavigationView.MenuItemTemplate>
+            
+            <ui:NavigationView.ContentTemplate>
+                <DataTemplate DataType="{x:Type vm:PageViewModelBase}">
+                    <ContentControl Content="{Binding}" />
+                </DataTemplate>
+            </ui:NavigationView.ContentTemplate>
+            <ui:NavigationView.DataTemplates>
+                <!-- Define your DataTemplates here, could also use ContentTemplate if only 1 template is needed -->
+            </ui:NavigationView.DataTemplates>
+        </ui:NavigationView>
+    </Grid>
+</Window>

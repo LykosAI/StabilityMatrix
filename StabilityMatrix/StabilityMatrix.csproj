@@ -101,5 +101,9 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
+  </ItemGroup>
   
 </Project>

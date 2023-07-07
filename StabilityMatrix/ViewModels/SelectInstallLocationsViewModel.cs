@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
 using Ookii.Dialogs.Wpf;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models.Settings;

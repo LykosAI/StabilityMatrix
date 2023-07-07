@@ -1,5 +1,5 @@
 ﻿using System.Text.Json.Serialization;
-using StabilityMatrix.Converters.Json;
+using StabilityMatrix.Core.Converters.Json;
 
 namespace StabilityMatrix.Updater;
 

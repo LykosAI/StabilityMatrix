@@ -1,5 +1,5 @@
 ﻿using Python.Runtime;
-using StabilityMatrix.Python;
+using StabilityMatrix.Core.Python;
 
 namespace StabilityMatrix.Tests.Python;
 

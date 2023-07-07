@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using NLog;
-using StabilityMatrix.Extensions;
+using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.ReparsePoints;
 using StabilityMatrix.Helper;
-using StabilityMatrix.Models.FileInterfaces;
 using StabilityMatrix.Models.Packages;
-using StabilityMatrix.ReparsePoints;
 
 namespace StabilityMatrix.Models;
 

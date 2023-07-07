@@ -11,11 +11,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using Octokit;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Packages;
-using StabilityMatrix.Python;
 using StabilityMatrix.Services;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls;
@@ -24,7 +25,7 @@ using Wpf.Ui.Controls.Window;
 using Application = System.Windows.Application;
 using EventManager = StabilityMatrix.Helper.EventManager;
 using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
-using PackageVersion = StabilityMatrix.Models.PackageVersion;
+using PackageVersion = StabilityMatrix.Core.Models.PackageVersion;
 
 namespace StabilityMatrix.ViewModels;
 

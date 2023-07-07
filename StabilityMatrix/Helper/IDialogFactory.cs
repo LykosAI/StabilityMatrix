@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Models;
 
 namespace StabilityMatrix.Helper;

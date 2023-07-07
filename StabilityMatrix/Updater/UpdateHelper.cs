@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 using System.Windows.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.Progress;
-using StabilityMatrix.Extensions;
 using StabilityMatrix.Helper;
-using StabilityMatrix.Models.Configs;
 using StabilityMatrix.Services;
 
 namespace StabilityMatrix.Updater;

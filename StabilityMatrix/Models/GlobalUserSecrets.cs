@@ -8,7 +8,8 @@ using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using StabilityMatrix.Models.FileInterfaces;
+using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Models;
 

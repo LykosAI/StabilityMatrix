@@ -1,4 +1,4 @@
-﻿using StabilityMatrix.Models.FileInterfaces;
+﻿using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Models.Packages;
 
 namespace StabilityMatrix.Models;

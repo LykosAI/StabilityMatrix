@@ -6,7 +6,8 @@ using System.Diagnostics;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using NLog;
-using StabilityMatrix.Helper.Cache;
+using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Models;
 
 namespace StabilityMatrix.ViewModels;

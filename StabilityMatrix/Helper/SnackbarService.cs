@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using System;
 using AsyncAwaitBestPractices;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Models;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Common;

@@ -5,10 +5,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using LiteDB.Async;
 using Microsoft.Extensions.Options;
-using StabilityMatrix.Extensions;
+using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models.Api;
-using StabilityMatrix.Models.Configs;
 
 namespace StabilityMatrix.Database;
 

@@ -12,9 +12,11 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using NLog;
 using Refit;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Settings;
-using StabilityMatrix.Python;
 using Wpf.Ui.Controls.Window;
 
 namespace StabilityMatrix.Helper;

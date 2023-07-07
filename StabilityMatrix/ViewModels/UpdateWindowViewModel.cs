@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Updater;

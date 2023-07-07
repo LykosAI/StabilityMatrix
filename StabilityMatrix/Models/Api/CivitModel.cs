@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text.Json.Serialization;
 using LiteDB;
+using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Models.Api;
 

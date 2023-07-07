@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Models;
 using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;

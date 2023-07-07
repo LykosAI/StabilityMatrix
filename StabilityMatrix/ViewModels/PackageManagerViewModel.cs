@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using Polly;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Progress;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls;

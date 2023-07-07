@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Helper;
-using StabilityMatrix.Helper.Cache;
 using StabilityMatrix.Services;
 
 namespace StabilityMatrix.Models.Packages;

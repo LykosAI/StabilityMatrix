@@ -11,8 +11,9 @@ using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
+using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Progress;
-using StabilityMatrix.Extensions;
 using StabilityMatrix.Helper;
 
 namespace StabilityMatrix.Models;

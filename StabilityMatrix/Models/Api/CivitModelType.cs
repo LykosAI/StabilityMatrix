@@ -1,7 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
-using StabilityMatrix.Converters.Json;
-using StabilityMatrix.Extensions;
+using StabilityMatrix.Core.Converters.Json;
+using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Models.Api;
 

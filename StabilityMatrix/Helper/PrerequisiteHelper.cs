@@ -8,8 +8,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Octokit;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Progress;
-using StabilityMatrix.Python;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Services;
 
 namespace StabilityMatrix.Helper;

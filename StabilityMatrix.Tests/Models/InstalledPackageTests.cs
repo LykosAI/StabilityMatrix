@@ -1,4 +1,5 @@
-﻿using StabilityMatrix.Models;
+﻿using StabilityMatrix.Core.Models;
+using StabilityMatrix.Models;
 
 namespace StabilityMatrix.Tests.Models;
 

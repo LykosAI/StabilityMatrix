@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq.Expressions;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Models;
 using StabilityMatrix.Models.Settings;
 using Wpf.Ui.Controls.Window;

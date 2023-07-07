@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Models;
+using StabilityMatrix.Models.Api;
 using StabilityMatrix.Services;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
@@ -171,6 +172,17 @@ public class DialogFactory : IDialogFactory
         return new WebLoginDialog(contentDialogService, webLoginViewModel)
         {
             CloseButtonText = "Cancel",
+        };
+    }
+    
+    public SelectModelVersionDialog CreateSelectModelVersionDialog(CivitModel model)
+    {
+        return new SelectModelVersionDialog(contentDialogService,
+            new SelectModelVersionDialogViewModel(model, settingsManager))
+        {
+            IsPrimaryButtonEnabled = false,
+            IsSecondaryButtonEnabled = false,
+            IsFooterVisible = false
         };
     }
 }

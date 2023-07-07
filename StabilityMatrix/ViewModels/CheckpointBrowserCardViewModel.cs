@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using AsyncAwaitBestPractices;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
 using Refit;
@@ -20,6 +21,7 @@ using StabilityMatrix.Models;
 using StabilityMatrix.Models.Api;
 using StabilityMatrix.Services;
 using Wpf.Ui.Controls;
+using Wpf.Ui.Controls.ContentDialogControl;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -29,22 +31,27 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     private readonly IDownloadService downloadService;
     private readonly ISnackbarService snackbarService;
     private readonly ISettingsManager settingsManager;
+    private readonly IDialogFactory dialogFactory;
     public CivitModel CivitModel { get; init; }
     public BitmapImage CardImage { get; set; }
 
     public override Visibility ProgressVisibility => Value > 0 ? Visibility.Visible : Visibility.Collapsed;
     public override Visibility TextVisibility => Value > 0 ? Visibility.Visible : Visibility.Collapsed;
 
+    [ObservableProperty] private bool isImporting;
+
     public CheckpointBrowserCardViewModel(
         CivitModel civitModel, 
         IDownloadService downloadService, 
         ISnackbarService snackbarService, 
         ISettingsManager settingsManager,
+        IDialogFactory dialogFactory,
         BitmapImage? fixedImage = null)
     {
         this.downloadService = downloadService;
         this.snackbarService = snackbarService;
         this.settingsManager = settingsManager;
+        this.dialogFactory = dialogFactory;
         CivitModel = civitModel;
 
         if (fixedImage != null)
@@ -92,8 +99,33 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     [RelayCommand]
     private async Task Import(CivitModel model)
     {
-        Text = "Downloading...";
+        await DoImport(model);
+    }
+
+    [RelayCommand]
+    private async Task ShowVersionDialog(CivitModel model)
+    {
+        var dialog = dialogFactory.CreateSelectModelVersionDialog(model);
+        var result = await dialog.ShowAsync();
+
+        if (result != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        var viewModel = dialog.DataContext as SelectModelVersionDialogViewModel;
+        var selectedVersion = viewModel?.SelectedVersion;
+        var selectedFile = viewModel?.SelectedFile;
         
+        await Task.Delay(100);
+        await DoImport(model, selectedVersion, selectedFile);
+    }
+
+    private async Task DoImport(CivitModel model, CivitModelVersion? selectedVersion = null, CivitFile? selectedFile = null)
+    {
+        IsImporting = true;
+        Text = "Downloading...";
+
         // Holds files to be deleted on errors
         var filesForCleanup = new HashSet<FilePath>();
         
@@ -101,7 +133,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         try
         {
             // Get latest version
-            var modelVersion = model.ModelVersions?.FirstOrDefault();
+            var modelVersion = selectedVersion ?? model.ModelVersions?.FirstOrDefault();
             if (modelVersion is null)
             {
                 snackbarService.ShowSnackbarAsync(
@@ -112,7 +144,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             }
             
             // Get latest version file
-            var modelFile = modelVersion.Files?.FirstOrDefault();
+            var modelFile = selectedFile ?? modelVersion.Files?.FirstOrDefault();
             if (modelFile is null)
             {
                 snackbarService.ShowSnackbarAsync(
@@ -133,9 +165,13 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             var downloadTask = downloadService.DownloadToFileAsync(modelFile.DownloadUrl, downloadPath, 
                 new Progress<ProgressReport>(report =>
                 {
-                    Value = report.Percentage;
-                    Text = $"Downloading... {report.Percentage}%";
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        Value = report.Percentage;
+                        Text = $"Downloading... {report.Percentage}%";
+                    });
                 }));
+            
             var downloadResult = await snackbarService.TryAsync(downloadTask, "Could not download file");
             
             // Failed download handling
@@ -225,6 +261,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         {
             Text = string.Empty;
             Value = 0;
+            IsImporting = false;
         });
     }
 }

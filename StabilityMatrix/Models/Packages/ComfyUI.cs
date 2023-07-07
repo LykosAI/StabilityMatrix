@@ -60,7 +60,13 @@ public class ComfyUI : BaseGitPackage
                 Level.Medium => "--normalvram",
                 _ => null
             },
-            Options = new() { "--highvram", "--normalvram", "--lowvram", "--novram", "--cpu" }
+            Options = new() { "--highvram", "--normalvram", "--lowvram", "--novram" }
+        },
+        new()
+        {
+            Name = "Use CPU only",
+            InitialValue = !HardwareHelper.HasNvidiaGpu(),
+            Options = new() {"--cpu"}
         },
         new()
         {
@@ -72,12 +78,6 @@ public class ComfyUI : BaseGitPackage
         {
             Name = "Auto-Launch",
             Options = new() { "--auto-launch" }
-        },
-        new()
-        {
-            Name = "Use CPU only",
-            InitialValue = !HardwareHelper.HasNvidiaGpu(),
-            Options = new() {"--cpu"}
         },
         LaunchOptionDefinition.Extras
     };

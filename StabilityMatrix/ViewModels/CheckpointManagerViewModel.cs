@@ -1,9 +1,11 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
@@ -88,5 +90,11 @@ public partial class CheckpointManagerViewModel : ObservableObject
         {
             CheckpointFolders.Add(checkpointFolder);
         }
+    }
+
+    [RelayCommand]
+    private void OpenModelsFolder()
+    {
+        Process.Start("explorer.exe", settingsManager.ModelsDirectory);
     }
 }

@@ -12,11 +12,11 @@ namespace StabilityMatrix.DesignData;
 [DesignOnly(true)]
 public class MockCheckpointBrowserViewModel : CheckpointBrowserViewModel
 {
-    public MockCheckpointBrowserViewModel() : base(null!, null!, null!, null!, null!)
+    public MockCheckpointBrowserViewModel() : base(null!, null!, null!, null!, null!, null!)
     {
         ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>
         {
-            new(null!, null!, null!, null!,
+            new(null!, null!, null!, null!, null!,
                 fixedImage: new BitmapImage(new Uri("https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/01bb1e4b-f88b-441a-b2bf-c1ec0bd91727/width=450/00015-1007989405.jpeg")))
             {
                 CivitModel = new CivitModel
@@ -40,7 +40,7 @@ public class MockCheckpointBrowserViewModel : CheckpointBrowserViewModel
                     }
                 },
             },
-            new(null!, null!, null!, null!,
+            new(null!, null!, null!, null!, null!,
                 fixedImage: new BitmapImage(new Uri("https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/fcb56b61-2cd6-40f4-a75d-e9448c0822d6/width=1152/29933-2136606019-masterpiece.jpeg")))
             {
                 CivitModel = new CivitModel

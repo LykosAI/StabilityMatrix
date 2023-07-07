@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -39,9 +40,8 @@ public partial class CheckpointFolder : ObservableObject
     [NotifyPropertyChangedFor(nameof(TitleWithFilesCount))]
     private string title = string.Empty;
 
-    private SharedFolderType FolderType => Enum.TryParse(Title, out SharedFolderType type)
-        ? type
-        : new SharedFolderType();
+    [ObservableProperty]
+    private SharedFolderType folderType;
 
     /// <summary>
     /// True if the category is enabled for the manager page.
@@ -62,6 +62,7 @@ public partial class CheckpointFolder : ObservableObject
     
     public ProgressViewModel Progress { get; } = new();
 
+    public ObservableCollection<CheckpointFolder> SubFolders { get; init; } = new();
     public ObservableCollection<CheckpointFile> CheckpointFiles { get; init; } = new();
     
     public RelayCommand OnPreviewDragEnterCommand => new(() => IsCurrentDragTarget = true);
@@ -79,6 +80,7 @@ public partial class CheckpointFolder : ObservableObject
         this.downloadService = downloadService;
         this.modelFinder = modelFinder;
         this.useCategoryVisibility = useCategoryVisibility;
+        
         CheckpointFiles.CollectionChanged += OnCheckpointFilesChanged;
     }
     
@@ -89,6 +91,11 @@ public partial class CheckpointFolder : ObservableObject
     partial void OnTitleChanged(string value)
     {
         if (!useCategoryVisibility) return;
+        
+        // Update folder type
+        var result = Enum.TryParse(Title, out SharedFolderType type);
+        FolderType = result ? type : new SharedFolderType();
+        
         IsCategoryEnabled = settingsManager.IsSharedFolderCategoryVisible(FolderType);
     }
     
@@ -139,6 +146,12 @@ public partial class CheckpointFolder : ObservableObject
         }
 
         await ImportFilesAsync(files, settingsManager.Settings.IsImportAsConnected);
+    }
+
+    [RelayCommand]
+    private void ShowInExplorer(string path)
+    {
+        Process.Start("explorer.exe", path);
     }
     
     /// <summary>
@@ -274,10 +287,14 @@ public partial class CheckpointFolder : ObservableObject
         {
             return new List<CheckpointFile>();
         }
+
         return await (progress switch
         {
-            null => Task.Run(() => CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath).ToList()),
-            _ => Task.Run(() => CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath, progress).ToList())
+            null => Task.Run(() =>
+                CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath).ToList()),
+            
+            _ => Task.Run(() =>
+                CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath, progress).ToList())
         });
     }
 
@@ -286,6 +303,23 @@ public partial class CheckpointFolder : ObservableObject
     /// </summary>
     public async Task IndexAsync(IProgress<ProgressReport>? progress = default)
     {
+        SubFolders.Clear();
+        foreach (var folder in Directory.GetDirectories(DirectoryPath))
+        {
+            // Inherit our folder type
+            var subFolder = new CheckpointFolder(dialogFactory, settingsManager,
+                downloadService, modelFinder,
+                useCategoryVisibility: false)
+            {
+                Title = Path.GetFileName(folder),
+                DirectoryPath = folder,
+                FolderType = FolderType
+            };
+            
+            await subFolder.IndexAsync(progress);
+            SubFolders.Add(subFolder);
+        }
+        
         var checkpointFiles = await GetCheckpointFilesAsync();
         CheckpointFiles.Clear();
         foreach (var checkpointFile in checkpointFiles)

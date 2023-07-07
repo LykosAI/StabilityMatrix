@@ -39,4 +39,31 @@ public class Settings
     {
         return InstalledPackages.FirstOrDefault(x => x.Id == ActiveInstalledPackage);
     }
+
+    public void RemoveInstalledPackageAndUpdateActive(InstalledPackage package)
+    {
+        RemoveInstalledPackageAndUpdateActive(package.Id);
+    }
+    
+    public void RemoveInstalledPackageAndUpdateActive(Guid id)
+    {
+        InstalledPackages.RemoveAll(x => x.Id == id);
+        UpdateActiveInstalledPackage();
+    }
+    
+    // Update ActiveInstalledPackage if not valid
+    // uses first package or null if no packages
+    private void UpdateActiveInstalledPackage()
+    {
+        // Empty packages - set to null
+        if (InstalledPackages.Count == 0)
+        {
+            ActiveInstalledPackage = null;
+        }
+        // Active package is not in package - set to first package
+        else if (InstalledPackages.All(x => x.Id != ActiveInstalledPackage))
+        {
+            ActiveInstalledPackage = InstalledPackages[0].Id;
+        }
+    }
 }

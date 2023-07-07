@@ -129,6 +129,12 @@ public partial class CheckpointFile : ObservableObject
             throw;
         }
     }
+
+    [RelayCommand]
+    private void OpenOnCivitAi()
+    {
+        ProcessRunner.OpenUrl($"https://civitai.com/models/{ConnectedModel.ModelId}");
+    }
     
     // Loads image from path
     private async Task LoadPreviewImage()
@@ -175,11 +181,11 @@ public partial class CheckpointFile : ObservableObject
             // Check for connected model info
             var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
             var cmInfoPath = $"{fileNameWithoutExtension}.cm-info.json";
-            if (files.ContainsKey(cmInfoPath))
+            if (files.TryGetValue(cmInfoPath, out var jsonPath))
             {
                 try
                 {
-                    var jsonData = File.ReadAllText(Path.Combine(directory, cmInfoPath));
+                    var jsonData = File.ReadAllText(jsonPath);
                     checkpointFile.ConnectedModel = ConnectedModelInfo.FromJson(jsonData);
                 }
                 catch (IOException e)
@@ -192,7 +198,7 @@ public partial class CheckpointFile : ObservableObject
             var previewImage = SupportedImageExtensions.Select(ext => $"{fileNameWithoutExtension}.preview{ext}").FirstOrDefault(files.ContainsKey);
             if (previewImage != null)
             {
-                checkpointFile.PreviewImagePath = Path.Combine(directory, previewImage);
+                checkpointFile.PreviewImagePath = files[previewImage];
                 checkpointFile.LoadPreviewImage().SafeFireAndForget();
             }
 

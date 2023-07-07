@@ -185,7 +185,11 @@ public partial class PackageManagerViewModel : ObservableObject
             {
                 snackbarService.ShowSnackbarAsync($"Package {SelectedPackage.DisplayName} uninstalled", "Success",
                     ControlAppearance.Success).SafeFireAndForget();
-                settingsManager.RemoveInstalledPackage(SelectedPackage);
+
+                settingsManager.Transaction(settings =>
+                {
+                    settings.RemoveInstalledPackageAndUpdateActive(SelectedPackage);
+                });
             }
             await OnLoaded();
             IsUninstalling = false;
@@ -281,7 +285,7 @@ public partial class PackageManagerViewModel : ObservableObject
         }
 
         ProgressText = $"Updating {SelectedPackage.DisplayName} to latest version...";
-        package.InstallLocation = SelectedPackage.Path!;
+        package.InstallLocation = SelectedPackage.FullPath!;
         var progress = new Progress<ProgressReport>(progress =>
         {
             var percent = Convert.ToInt32(progress.Percentage);

@@ -1,9 +1,11 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
@@ -25,9 +27,10 @@ public partial class CheckpointManagerViewModel : ObservableObject
     
     partial void OnIsImportAsConnectedChanged(bool value)
     {
-        if (value != settingsManager.Settings.IsImportAsConnected)
+        if (settingsManager.IsLibraryDirSet && 
+            value != settingsManager.Settings.IsImportAsConnected)
         {
-            settingsManager.SetIsImportAsConnected(value);
+            settingsManager.Transaction(s => s.IsImportAsConnected = value);
         }
     }
     
@@ -87,5 +90,11 @@ public partial class CheckpointManagerViewModel : ObservableObject
         {
             CheckpointFolders.Add(checkpointFolder);
         }
+    }
+
+    [RelayCommand]
+    private void OpenModelsFolder()
+    {
+        Process.Start("explorer.exe", settingsManager.ModelsDirectory);
     }
 }

@@ -6,6 +6,7 @@
              xmlns:views="using:StabilityMatrix.Avalonia.Views"
              xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
              x:CompileBindings="True"
              x:DataType="vm:LaunchPageViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -44,6 +45,7 @@
                     Content="Launch"
                     Grid.Column="0"
                     Grid.Row="0"
+                    Classes="success"
                     HorizontalAlignment="Left"
                     Margin="24,8,0,0"
                     VerticalAlignment="Stretch"
@@ -55,6 +57,7 @@
                     Content="Stop"
                     Grid.Column="0"
                     Grid.Row="0"
+                    Classes="danger"
                     HorizontalAlignment="Left"
                     Margin="24,8,0,0"
                     VerticalAlignment="Stretch"
@@ -83,13 +86,7 @@
                 Margin="8,8,24,0"
                 VerticalAlignment="Top"
                 x:Name="SelectPackageComboBox">
-                <!--<ComboBox.ItemContainerStyle>
-                    <Style TargetType="ComboBoxItem">
-                        <Setter Property="Template" Value="{StaticResource SelectPackageDropDownStyle}" />
-                    </Style>
-                </ComboBox.ItemContainerStyle>-->
-
-                <!--<ComboBox.ItemTemplate>
+                <ComboBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:InstalledPackage}">
                         <StackPanel Margin="10,0,0,0" VerticalAlignment="Top">
                             <TextBlock
@@ -98,7 +95,7 @@
                                 Text="{Binding DisplayName, Mode=OneWay}" />
                         </StackPanel>
                     </DataTemplate>
-                </ComboBox.ItemTemplate>-->
+                </ComboBox.ItemTemplate>
             </ComboBox>
         </Grid>
         <!--<SelectableTextBlock

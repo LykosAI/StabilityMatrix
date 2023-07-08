@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection.Metadata;
@@ -12,6 +13,7 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
@@ -24,6 +26,15 @@ public partial class LaunchPageViewModel : PageViewModelBase
 
     [ObservableProperty]
     private TextDocument consoleDocument = new();
+    
+    [ObservableProperty] private string consoleInput = "";
+    [ObservableProperty] private bool launchButtonVisibility;
+    [ObservableProperty] private bool stopButtonVisibility;
+    [ObservableProperty] private bool isLaunchTeachingTipsOpen = false;
+    [ObservableProperty] private bool showWebUiButton;
+    
+    [ObservableProperty] private InstalledPackage? selectedPackage;
+    [ObservableProperty] private ObservableCollection<InstalledPackage> installedPackages = new();
 
     public LaunchPageViewModel()
     {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
@@ -29,13 +31,58 @@ public partial class PackageManagerViewModel : PageViewModelBase
     {
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
-        
+
+        ProgressText = string.Empty;
+        InstallButtonText = "Install";
+        InstallButtonEnabled = true;
+        ProgressValue = 0;
+        IsIndeterminate = false;
         Packages = new ObservableCollection<InstalledPackage>(settingsManager.Settings.InstalledPackages);
+
+        if (Packages.Any())
+        {
+            SelectedPackage = Packages[0];
+            InstallButtonVisibility = true;
+        }
+        else
+        {
+            SelectedPackage = new InstalledPackage
+            {
+                DisplayName = "Click \"Add Package\" to install a package"
+            };
+        }
     }
 
-    public PackageManagerViewModel() : this(new SettingsManager(), null!)
+    public PackageManagerViewModel()
     {
-        
+        settingsManager = new SettingsManager
+        {
+            Settings =
+            {
+                InstalledPackages = new List<InstalledPackage>
+                {
+                    new()
+                    {
+                        DisplayName = "Dank Diffusion",
+                        PackageName = "dank-diffusion",
+                        LastUpdateCheck = DateTimeOffset.Now
+                    }
+                }
+            }
+        };
+        packageFactory = new PackageFactory(new List<BasePackage>()
+        {
+            new DankDiffusion(null, null, null, null)
+        });
+        Packages =
+            new ObservableCollection<InstalledPackage>(settingsManager.Settings.InstalledPackages);
+        SelectedPackage = Packages[0];
+        ProgressText = string.Empty;
+        InstallButtonText = "Install";
+        InstallButtonEnabled = true;
+        ProgressValue = 0;
+        IsIndeterminate = false;
+        InstallButtonVisibility = true;
     }
 
     [NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
@@ -113,6 +160,15 @@ public partial class PackageManagerViewModel : PageViewModelBase
         SelectedPackage =
             installedPackages.FirstOrDefault(x => x.Id == settingsManager.Settings.ActiveInstalledPackage) ??
             Packages[0];
+    }
+    
+    partial void OnSelectedPackageChanged(InstalledPackage? value)
+    {
+        if (value == null) return;
+        
+        UpdateAvailable = value.UpdateAvailable;
+        InstallButtonText = value.UpdateAvailable ? "Update" : "Launch";
+        InstallButtonVisibility = true;
     }
 
     [RelayCommand]

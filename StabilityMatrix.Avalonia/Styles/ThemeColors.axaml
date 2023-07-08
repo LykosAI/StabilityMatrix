@@ -1,0 +1,28 @@
+﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Add Resources Here -->
+    <Color x:Key="ThemePrimaryColor">#333333</Color>
+    <Color x:Key="ThemeDarkDarkRedColor">#952923</Color>
+    <Color x:Key="ThemeDarkRedColor">#C2362E</Color>
+    <Color x:Key="ThemeRedColor">#F44336</Color>
+    <Color x:Key="ThemePinkColor">#E91E63</Color>
+    <Color x:Key="ThemePurpleColor">#9C27B0</Color>
+    <Color x:Key="ThemeDeepPurpleColor">#673AB7</Color>
+    <Color x:Key="ThemeIndigoColor">#3F51B5</Color>
+    <Color x:Key="ThemeBlueColor">#2196F3</Color>
+    <Color x:Key="ThemeLightBlueColor">#03A9F4</Color>
+    <Color x:Key="ThemeCyanColor">#00BCD4</Color>
+    <Color x:Key="ThemeTealColor">#009688</Color>
+    <Color x:Key="ThemeDarkDarkGreenColor">#2C582C</Color>
+    <Color x:Key="ThemeDarkGreenColor">#3A783C</Color>
+    <Color x:Key="ThemeGreenColor">#4CAF50</Color>
+    <Color x:Key="ThemeLightGreenColor">#8BC34A</Color>
+    <Color x:Key="ThemeLimeColor">#CDDC39</Color>
+    <Color x:Key="ThemeYellowColor">#FFEB3B</Color>
+    <Color x:Key="ThemeAmberColor">#FFC107</Color>
+    <Color x:Key="ThemeOrangeColor">#FF9800</Color>
+    <Color x:Key="ThemeDeepOrangeColor">#FF5722</Color>
+    <Color x:Key="ThemeBrownColor">#795548</Color>
+    <Color x:Key="ThemeGreyColor">#9E9E9E</Color>
+    <Color x:Key="ThemeBlueGreyColor">#607D8B</Color>
+</ResourceDictionary>

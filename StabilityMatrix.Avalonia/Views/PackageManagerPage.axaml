@@ -46,6 +46,7 @@
                     Height="40"
                     HorizontalAlignment="Stretch"
                     Margin="0,0,0,16"
+                    Classes="success"
                     VerticalContentAlignment="Center">
                     <StackPanel Orientation="Horizontal">
                         <controls:SymbolIcon Symbol="Add" />
@@ -103,6 +104,7 @@
                         IsEnabled="{Binding InstallButtonEnabled, FallbackValue=True}"
                         VerticalAlignment="Top"
                         IsVisible="{Binding InstallButtonVisibility, FallbackValue=True}"
+                        Classes="success"
                         Width="100" />
                     <Button
                         Command="{Binding UninstallCommand}"
@@ -110,6 +112,7 @@
                         Height="50"
                         Margin="16,0,0,0"
                         VerticalAlignment="Top"
+                        Classes="danger"
                         IsVisible="{Binding InstallButtonVisibility, FallbackValue=True}"
                         Width="100" />
                 </StackPanel>

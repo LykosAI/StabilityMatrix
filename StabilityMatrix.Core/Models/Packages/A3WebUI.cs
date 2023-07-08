@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
@@ -134,18 +135,18 @@ public class A3WebUI : BaseGitPackage
         await SetupVenv(installedPackagePath);
         PrerequisiteHelper.UpdatePathExtensions();
 
-        void HandleConsoleOutput(string? s)
+        void HandleConsoleOutput(ProcessOutput s)
         {
             if (s == null) return;
-            if (s.Contains("model loaded", StringComparison.OrdinalIgnoreCase))
+            if (s.Text.Contains("model loaded", StringComparison.OrdinalIgnoreCase))
             {
                 OnStartupComplete(WebUrl);
             }
 
-            if (s.Contains("Running on", StringComparison.OrdinalIgnoreCase))
+            if (s.Text.Contains("Running on", StringComparison.OrdinalIgnoreCase))
             {
                 var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
-                var match = regex.Match(s);
+                var match = regex.Match(s.Text);
                 if (match.Success)
                 {
                     WebUrl = match.Value;
@@ -153,13 +154,16 @@ public class A3WebUI : BaseGitPackage
             }
 
             Debug.WriteLine($"process stdout: {s}");
-            OnConsoleOutput($"{s}\n");
+            OnConsoleOutput(s);
         }
 
         void HandleExit(int i)
         {
             Debug.WriteLine($"Venv process exited with code {i}");
-            OnConsoleOutput($"Venv process exited with code {i}");
+            OnConsoleOutput(new ProcessOutput
+            {
+                Text = $"Venv process exited with code {i}"
+            });
             OnExit(i);
         }
 

@@ -4,6 +4,7 @@ using NLog;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
@@ -99,14 +100,12 @@ public class ComfyUI : BaseGitPackage
         await SetupVenv(installedPackagePath);
         PrerequisiteHelper.UpdatePathExtensions();
 
-        void HandleConsoleOutput(string? s)
+        void HandleConsoleOutput(ProcessOutput s)
         {
-            if (s == null) return;
-
-            if (s.Contains("To see the GUI go to", StringComparison.OrdinalIgnoreCase))
+            if (s.Text.Contains("To see the GUI go to", StringComparison.OrdinalIgnoreCase))
             {
                 var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
-                var match = regex.Match(s);
+                var match = regex.Match(s.Text);
                 if (match.Success)
                 {
                     WebUrl = match.Value;
@@ -115,7 +114,7 @@ public class ComfyUI : BaseGitPackage
             }
 
             Debug.WriteLine($"process stdout: {s}");
-            OnConsoleOutput($"{s}\n");
+            OnConsoleOutput(s);
         }
 
         void HandleExit(int i)

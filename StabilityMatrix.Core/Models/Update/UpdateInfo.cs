@@ -1,7 +1,6 @@
-﻿using System;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
-namespace StabilityMatrix.Updater;
+namespace StabilityMatrix.Core.Models.Update;
 
 public record UpdateInfo(
     [property: JsonPropertyName("version")]

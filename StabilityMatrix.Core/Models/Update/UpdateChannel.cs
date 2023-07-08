@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Converters.Json;
 
-namespace StabilityMatrix.Updater;
+namespace StabilityMatrix.Core.Models.Update;
 
 [JsonConverter(typeof(DefaultUnknownEnumConverter<UpdateChannel>))]
 public enum UpdateChannel

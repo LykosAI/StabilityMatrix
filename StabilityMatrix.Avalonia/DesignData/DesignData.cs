@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
+using NLog;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Packages;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.DesignData;
@@ -36,8 +39,8 @@ public static class DesignData
             new ComfyUI(null!, settingsManager, null!, null!)
         };
         var packageFactory = new PackageFactory(packages);
-        
-        LaunchPageViewModel = new LaunchPageViewModel(settingsManager);
+
+        LaunchPageViewModel = new LaunchPageViewModel(null!, settingsManager, packageFactory, new PyRunner());
         PackageManagerViewModel = new PackageManagerViewModel(settingsManager, packageFactory);
         SettingsViewModel = new SettingsViewModel();
 

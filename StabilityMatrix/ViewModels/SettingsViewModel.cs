@@ -32,7 +32,7 @@ using Wpf.Ui.Appearance;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Controls.Window;
-using EventManager = StabilityMatrix.Helper.EventManager;
+using EventManager = StabilityMatrix.Core.Helper.EventManager;
 using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
 
 namespace StabilityMatrix.ViewModels;

@@ -16,6 +16,7 @@ using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Models;
@@ -24,7 +25,7 @@ using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Controls.ContentDialogControl;
 using Application = System.Windows.Application;
-using EventManager = StabilityMatrix.Helper.EventManager;
+using EventManager = StabilityMatrix.Core.Helper.EventManager;
 using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
 using PackageVersion = StabilityMatrix.Core.Models.PackageVersion;
 
@@ -381,9 +382,9 @@ public partial class InstallerViewModel : ObservableObject
         await SelectedPackage.InstallPackage(progress);
     }
 
-    private void SelectedPackageOnConsoleOutput(object? sender, string e)
+    private void SelectedPackageOnConsoleOutput(object? sender, ProcessOutput e)
     {
-        SecondaryProgressText = e;
+        SecondaryProgressText = e.Text;
     }
 
     private async Task InstallGitIfNecessary()

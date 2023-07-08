@@ -12,7 +12,7 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Models;
-using EventManager = StabilityMatrix.Helper.EventManager;
+using EventManager = StabilityMatrix.Core.Helper.EventManager;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -121,7 +121,7 @@ public partial class OneClickInstallViewModel : ObservableObject
         SubHeaderText = "Getting latest version...";
         var latestVersion = await a1111.GetLatestVersion();
         a1111.InstallLocation = $"{settingsManager.LibraryDir}\\Packages\\stable-diffusion-webui";
-        a1111.ConsoleOutput += (_, output) => SubSubHeaderText = output;
+        a1111.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
         
         await DownloadPackage(a1111, latestVersion);
         await InstallPackage(a1111);
@@ -176,7 +176,7 @@ public partial class OneClickInstallViewModel : ObservableObject
 
     private async Task InstallPackage(BasePackage selectedPackage)
     {
-        selectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output;
+        selectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
         SubHeaderText = "Downloading and installing package requirements...";
         
         var progress = new Progress<ProgressReport>(progress =>

@@ -1,7 +1,6 @@
-﻿using System;
-using StabilityMatrix.Updater;
+﻿using StabilityMatrix.Core.Models.Update;
 
-namespace StabilityMatrix.Helper;
+namespace StabilityMatrix.Core.Helper;
 
 public class EventManager
 {

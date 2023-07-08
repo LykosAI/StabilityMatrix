@@ -29,6 +29,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models.Packages;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using Application = Avalonia.Application;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
@@ -80,18 +81,6 @@ public partial class App : Application
         var services = new ServiceCollection();
 
         services.AddMemoryCache();
-        
-        services.AddSingleton<MainWindowViewModel>(provider => new MainWindowViewModel
-        {
-            Pages = new List<PageViewModelBase>
-            {
-                provider.GetRequiredService<LaunchPageViewModel>(),
-                provider.GetRequiredService<PackageManagerViewModel>(),
-                provider.GetRequiredService<SettingsViewModel>(),
-            }
-        });
-        
-        services.AddSingleton<LaunchPageViewModel>();
         services.AddSingleton<PackageManagerViewModel>();
         services.AddSingleton<SettingsViewModel>();
         
@@ -104,6 +93,24 @@ public partial class App : Application
         services.AddSingleton<BasePackage, A3WebUI>();
         services.AddSingleton<BasePackage, VladAutomatic>();
         services.AddSingleton<BasePackage, ComfyUI>();
+        services.AddSingleton<IPyRunner, PyRunner>();
+        
+        services.AddSingleton<LaunchPageViewModel>(s =>
+            new LaunchPageViewModel(s.GetRequiredService<ILogger<LaunchPageViewModel>>(),
+                s.GetRequiredService<ISettingsManager>(), s.GetRequiredService<IPackageFactory>(),
+                s.GetRequiredService<IPyRunner>()));
+        services.AddSingleton<PackageManagerViewModel>(s =>
+            new PackageManagerViewModel(s.GetRequiredService<ISettingsManager>(),
+                s.GetRequiredService<IPackageFactory>()));
+		services.AddSingleton<MainWindowViewModel>(provider => new MainWindowViewModel
+        	{
+            	Pages = new List<PageViewModelBase>
+            	{
+	                provider.GetRequiredService<LaunchPageViewModel>(),
+                	provider.GetRequiredService<PackageManagerViewModel>(),
+                	provider.GetRequiredService<SettingsViewModel>(),
+	            }
+        	});
         
         services.AddTransient<LaunchPageView>();
         services.AddTransient<PackageManagerPage>();

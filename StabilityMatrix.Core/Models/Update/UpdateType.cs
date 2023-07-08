@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace StabilityMatrix.Updater;
+﻿namespace StabilityMatrix.Core.Models.Update;
 
 [Flags]
 public enum UpdateType

@@ -12,6 +12,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Options;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Configs;
+using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Helper;
@@ -20,7 +21,7 @@ using StabilityMatrix.Updater;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls.ContentDialogControl;
 using Wpf.Ui.Controls.Window;
-using EventManager = StabilityMatrix.Helper.EventManager;
+using EventManager = StabilityMatrix.Core.Helper.EventManager;
 
 namespace StabilityMatrix.ViewModels;
 

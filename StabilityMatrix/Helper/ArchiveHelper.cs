@@ -69,12 +69,12 @@ public static class ArchiveHelper
     public static async Task<ArchiveInfo> Extract7Z(string archivePath, string extractDirectory, IProgress<ProgressReport> progress)
     {
         var outputStore = new StringBuilder();
-        var onOutput = new Action<string?>(s =>
+        var onOutput = new Action<ProcessOutput>(s =>
         {
             // Parse progress
             Logger.Trace($"7z: {s}");
-            outputStore.AppendLine(s);
-            var match = Regex7ZProgressFull.Match(s ?? "");
+            outputStore.AppendLine(s.Text);
+            var match = Regex7ZProgressFull.Match(s.Text ?? "");
             if (match.Success)
             {
                 var percent = int.Parse(match.Groups[1].Value);

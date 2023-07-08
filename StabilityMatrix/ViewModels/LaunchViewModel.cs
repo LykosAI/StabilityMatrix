@@ -19,7 +19,7 @@ using StabilityMatrix.Helper;
 using StabilityMatrix.Models;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.ContentDialogControl;
-using EventManager = StabilityMatrix.Helper.EventManager;
+using EventManager = StabilityMatrix.Core.Helper.EventManager;
 using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
 
 namespace StabilityMatrix.ViewModels;
@@ -322,27 +322,27 @@ public partial class LaunchViewModel : ObservableObject
         }
     }
 
-    private void OnConsoleOutput(object? sender, string output)
+    private void OnConsoleOutput(object? sender, ProcessOutput output)
     {
-        if (string.IsNullOrWhiteSpace(output)) return;
+        if (string.IsNullOrWhiteSpace(output.Text)) return;
         Application.Current.Dispatcher.Invoke(() =>
         {
             ConsoleHistory ??= new ObservableCollection<string>();
 
-            if (output.Contains("Total progress") && !output.Contains(" 0%"))
+            if (output.Text.Contains("Total progress") && !output.Text.Contains(" 0%"))
             {
-                ConsoleHistory[^2] = output.TrimEnd('\n');
+                ConsoleHistory[^2] = output.Text.TrimEnd('\n');
             }
-            else if ((output.Contains("it/s") || output.Contains("s/it") || output.Contains("B/s")) &&
-                     !output.Contains("Total progress") && !output.Contains(" 0%"))
+            else if ((output.Text.Contains("it/s") || output.Text.Contains("s/it") || output.Text.Contains("B/s")) &&
+                     !output.Text.Contains("Total progress") && !output.Text.Contains(" 0%"))
             {
-                ConsoleHistory[^1] = output.TrimEnd('\n');
+                ConsoleHistory[^1] = output.Text.TrimEnd('\n');
             }
             else
             {
-                if (!string.IsNullOrWhiteSpace(output.TrimEnd('\n')))
+                if (!string.IsNullOrWhiteSpace(output.Text.TrimEnd('\n')))
                 {
-                    ConsoleHistory.Add(output.TrimEnd('\n'));
+                    ConsoleHistory.Add(output.Text.TrimEnd('\n'));
                 }
             }
             

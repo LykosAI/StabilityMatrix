@@ -95,7 +95,7 @@
                 <TextBlock
                     FontSize="12"
                     Margin="0,5,0,5" 
-                    Text="{Binding SelectedPackage.FullPath, FallbackValue=Packages\stable-diffusion}" />
+                    Text="{Binding SelectedPackage.FullPath, FallbackValue=Packages\\stable-diffusion}" />
                     <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
                     <Button
                         Command="{Binding InstallCommand}"

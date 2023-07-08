@@ -134,7 +134,7 @@ public class PyVenvRunner : IDisposable
     /// <summary>
     /// Install torch with pip, automatically chooses between Cuda and CPU.
     /// </summary>
-    public async Task InstallTorch(Action<string?>? outputDataReceived = null)
+    public async Task InstallTorch(Action<ProcessOutput>? outputDataReceived = null)
     {
         await PipInstall(GetTorchInstallCommand(), outputDataReceived: outputDataReceived);
     }
@@ -143,7 +143,7 @@ public class PyVenvRunner : IDisposable
     /// Run a pip install command. Waits for the process to exit.
     /// workingDirectory defaults to RootPath.
     /// </summary>
-    public async Task PipInstall(string args, string? workingDirectory = null, Action<string?>? outputDataReceived = null)
+    public async Task PipInstall(string args, string? workingDirectory = null, Action<ProcessOutput>? outputDataReceived = null)
     {
         if (!File.Exists(PipPath))
         {
@@ -156,7 +156,7 @@ public class PyVenvRunner : IDisposable
 
     public void RunDetached(
         string arguments, 
-        Action<string?>? outputDataReceived, 
+        Action<ProcessOutput>? outputDataReceived,
         Action<int>? onExit = null,
         bool unbuffered = true, 
         string workingDirectory = "")
@@ -169,10 +169,9 @@ public class PyVenvRunner : IDisposable
         
         Logger.Debug($"Launching RunDetached at {PythonPath} with args {arguments}");
 
-        var filteredOutput = outputDataReceived == null ? null : new Action<string?>(s =>
+        var filteredOutput = outputDataReceived == null ? null : new Action<ProcessOutput>(s =>
         {
-            if (s == null) return;
-            if (SuppressOutput.Any(s.Contains))
+            if (SuppressOutput.Any(s.Text.Contains))
             {
                 Logger.Info("Filtered output: {S}", s);
                 return;

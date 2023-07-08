@@ -2,9 +2,11 @@
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using AvaloniaEdit;
 using AvaloniaEdit.TextMate;
+using StabilityMatrix.Avalonia.ViewModels;
 using TextMateSharp.Grammars;
 
 namespace StabilityMatrix.Avalonia.Views;

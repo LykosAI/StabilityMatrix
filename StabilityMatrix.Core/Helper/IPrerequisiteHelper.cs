@@ -1,4 +1,5 @@
 ﻿using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Core.Helper;
 
@@ -20,7 +21,7 @@ public interface IPrerequisiteHelper
     Task RunGit(string? workingDirectory = null, params string[] args);
 
     Task SetupPythonDependencies(string installLocation, string requirementsFileName,
-        IProgress<ProgressReport>? progress = null, Action<string?>? onConsoleOutput = null);
+        IProgress<ProgressReport>? progress = null, Action<ProcessOutput>? onConsoleOutput = null);
 
     void UpdatePathExtensions();
 }

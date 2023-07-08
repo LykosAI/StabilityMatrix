@@ -304,7 +304,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
     }
 
     public async Task SetupPythonDependencies(string installLocation, string requirementsFileName,
-        IProgress<ProgressReport>? progress = null, Action<string?>? onConsoleOutput = null)
+        IProgress<ProgressReport>? progress = null, Action<ProcessOutput>? onConsoleOutput = null)
     {
         // Setup dependencies
         progress?.Report(new ProgressReport(-1, isIndeterminate: true));
@@ -315,7 +315,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
             await venvRunner.Setup();
         }
 
-        void HandleConsoleOutput(string? s)
+        void HandleConsoleOutput(ProcessOutput s)
         {
             Debug.WriteLine($"venv stdout: {s}");
             onConsoleOutput?.Invoke(s);

@@ -1,5 +1,6 @@
 ﻿using Octokit;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -43,11 +44,11 @@ public abstract class BasePackage
     public abstract string DownloadLocation { get; }
     public abstract string InstallLocation { get; set; }
 
-    public event EventHandler<string>? ConsoleOutput;
+    public event EventHandler<ProcessOutput>? ConsoleOutput;
     public event EventHandler<int>? Exited;
     public event EventHandler<string>? StartupComplete;
 
-    public void OnConsoleOutput(string? output) => ConsoleOutput?.Invoke(this, output);
+    public void OnConsoleOutput(ProcessOutput output) => ConsoleOutput?.Invoke(this, output);
     public void OnExit(int exitCode) => Exited?.Invoke(this, exitCode);
     public void OnStartupComplete(string url) => StartupComplete?.Invoke(this, url);
 }

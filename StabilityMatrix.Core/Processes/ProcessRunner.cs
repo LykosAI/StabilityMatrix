@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using NLog;
 using StabilityMatrix.Core.Exceptions;
@@ -38,44 +39,43 @@ public static class ProcessRunner
         string fileName,
         string arguments,
         string? workingDirectory = null,
-        Action<string?>? outputDataReceived = null,
+        Action<ProcessOutput>? outputDataReceived = null,
         Dictionary<string, string>? environmentVariables = null)
     {
         Logger.Debug($"Starting process '{fileName}' with arguments '{arguments}'");
-        var process = new System.Diagnostics.Process();
-        process.StartInfo.FileName = fileName;
-        process.StartInfo.Arguments = arguments;
-        process.StartInfo.UseShellExecute = false;
-        process.StartInfo.RedirectStandardOutput = true;
-        process.StartInfo.RedirectStandardError = true;
-        process.StartInfo.CreateNoWindow = true;
+        var processStartInfo = new ProcessStartInfo();
+        processStartInfo.FileName = fileName;
+        processStartInfo.Arguments = arguments;
+        processStartInfo.UseShellExecute = false;
+        processStartInfo.RedirectStandardOutput = true;
+        processStartInfo.RedirectStandardError = true;
+        processStartInfo.CreateNoWindow = true;
 
         if (environmentVariables != null)
         {
             foreach (var (key, value) in environmentVariables)
             {
-                process.StartInfo.EnvironmentVariables[key] = value;
+                processStartInfo.EnvironmentVariables[key] = value;
             }
         }
 
         if (workingDirectory != null)
         {
-            process.StartInfo.WorkingDirectory = workingDirectory;
+            processStartInfo.WorkingDirectory = workingDirectory;
         }
 
-        if (outputDataReceived != null)
-        {
-            process.OutputDataReceived += (_, args) => outputDataReceived(args.Data);
-            process.ErrorDataReceived += (_, args) => outputDataReceived(args.Data);
-        }
+        var process = new AnsiProcess(processStartInfo);
 
         process.Start();
-        ProcessTracker.AddProcess(process);
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            ProcessTracker.AddProcess(process);
+        }
 
         if (outputDataReceived != null)
         {
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
+            process.BeginAnsiRead(outputDataReceived);
         }
 
         return process;
@@ -85,7 +85,7 @@ public static class ProcessRunner
         string fileName,
         IEnumerable<string> arguments,
         string? workingDirectory = null,
-        Action<string?>? outputDataReceived = null,
+        Action<ProcessOutput>? outputDataReceived = null,
         Dictionary<string, string>? environmentVariables = null)
     {
         // Quote arguments containing spaces

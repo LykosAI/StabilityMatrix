@@ -8,8 +8,10 @@ using System.Windows.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Helper;
 

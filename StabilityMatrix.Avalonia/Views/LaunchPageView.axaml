@@ -49,10 +49,7 @@
                     Margin="24,8,0,0"
                     VerticalAlignment="Stretch"
                     Width="72"/>
-                <!--Command="{Binding StopCommand}"-->
-                <!--Visibility="{Binding StopButtonVisibility, FallbackValue=Hidden}"-->
                 <Button
-                    IsVisible="False"
                     Content="Stop"
                     Grid.Column="0"
                     Grid.Row="0"
@@ -60,6 +57,8 @@
                     HorizontalAlignment="Left"
                     Margin="24,8,0,0"
                     VerticalAlignment="Stretch"
+                    Command="{Binding StopCommand}"
+                    IsVisible="{Binding StopButtonVisibility, FallbackValue=True}"
                     Width="72"/>
                 <!--Command="{Binding ConfigCommand}"-->
                 <Button
@@ -76,15 +75,22 @@
                     </ui:Button.Icon>-->
                 </Button>
             </Grid>
-            <!--ItemsSource="{Binding InstalledPackages}"-->
-            <!--SelectedValue="{Binding SelectedPackage}"-->
+
             <ComboBox
                 Grid.Column="1"
                 Grid.Row="0"
                 HorizontalAlignment="Stretch"
                 Margin="8,8,24,0"
                 VerticalAlignment="Top"
+                ItemsSource="{Binding InstalledPackages}"
+                SelectedValue="{Binding SelectedPackage}"
                 x:Name="SelectPackageComboBox">
+                <ComboBox.Styles>
+                    <Style Selector="ComboBox /template/ ContentControl#ContentPresenter > StackPanel > TextBlock:nth-child(2)">
+                        <Setter Property="IsVisible" Value="False" />
+                    </Style>
+                </ComboBox.Styles>
+                
                 <ComboBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:InstalledPackage}">
                         <StackPanel Margin="10,0,0,0" VerticalAlignment="Top">
@@ -92,6 +98,7 @@
                                 Margin="0,5,0,5"
                                 Name="NameTextBlock"
                                 Text="{Binding DisplayName, Mode=OneWay}" />
+                            <TextBlock Text="{Binding FullPath, Mode=OneWay}"/>
                         </StackPanel>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
@@ -107,7 +114,8 @@
             Document="{Binding ConsoleDocument}"
             IsReadOnly="True"
             Grid.Row="1"
-            Margin="24,8,26,10"
+            WordWrap="True"
+            Margin="16,8,16,10"
             ShowLineNumbers="True"
             LineNumbersForeground="DarkSlateGray"
             VerticalScrollBarVisibility="Auto"
@@ -129,6 +137,7 @@
         <Button
             Content="Open Web UI"
             FontSize="12"
+            Classes="success"
             Grid.ColumnSpan="2"
             Grid.Row="2"
             HorizontalAlignment="Stretch"

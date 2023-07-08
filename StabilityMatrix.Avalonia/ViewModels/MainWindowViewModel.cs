@@ -3,6 +3,7 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Models.Settings;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -13,13 +14,16 @@ public partial class MainWindowViewModel : ViewModelBase
     
     [ObservableProperty]
     private PageViewModelBase? currentPage;
-
+    
     [ObservableProperty] 
     private object? selectedCategory;
     
     [ObservableProperty]
     private List<PageViewModelBase> pages = new();
 
+    [ObservableProperty]
+    private List<PageViewModelBase> footerPages = new();
+    
     public override void OnLoaded()
     {
         CurrentPage = Pages.FirstOrDefault();

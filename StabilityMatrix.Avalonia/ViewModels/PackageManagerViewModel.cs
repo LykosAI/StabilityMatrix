@@ -53,11 +53,11 @@ public partial class PackageManagerViewModel : PageViewModelBase
         }
     }
     
-    [ObservableProperty, NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
-    private int progressValue;
-    
     [ObservableProperty]
     private InstalledPackage selectedPackage;
+    
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
+    private int progressValue;
     
     [ObservableProperty]
     private string progressText;
@@ -77,8 +77,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
     [ObservableProperty] 
     private bool isUninstalling;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SelectedPackage))]
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(SelectedPackage))]
     private bool updateAvailable;
     
     public bool ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate;

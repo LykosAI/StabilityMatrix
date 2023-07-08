@@ -13,13 +13,8 @@
              d:DataContext="{x:Static mocks:DesignData.LaunchPageViewModel}"
              x:Class="StabilityMatrix.Avalonia.Views.PackageManagerPage">
     
-     <Grid Margin="16">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <StackPanel
+     <Grid Margin="16" RowDefinitions="Auto,*">
+         <StackPanel
             Grid.Row="0"
             Orientation="Vertical"
             IsVisible="{Binding ProgressBarVisibility, FallbackValue=True}">

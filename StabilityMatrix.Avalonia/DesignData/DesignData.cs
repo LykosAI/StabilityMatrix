@@ -5,6 +5,7 @@ using System.Linq;
 using AvaloniaEdit.Utils;
 using Microsoft.Extensions.Logging;
 using NLog;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
@@ -42,7 +43,8 @@ public static class DesignData
             new ComfyUI(null!, settingsManager, null!, null!)
         };
         var packageFactory = new PackageFactory(packages);
-
+        var notificationService = new MockNotificationService();
+        
         LaunchPageViewModel = new LaunchPageViewModel(
             null!, settingsManager, packageFactory, new PyRunner());
         
@@ -50,7 +52,7 @@ public static class DesignData
         LaunchPageViewModel.SelectedPackage = settingsManager.Settings.InstalledPackages[0];
         
         PackageManagerViewModel = new PackageManagerViewModel(settingsManager, packageFactory);
-        SettingsViewModel = new SettingsViewModel();
+        SettingsViewModel = new SettingsViewModel(notificationService);
 
         MainWindowViewModel = new MainWindowViewModel
         {
@@ -58,6 +60,9 @@ public static class DesignData
             {
                 LaunchPageViewModel,
                 PackageManagerViewModel,
+            },
+            FooterPages = new List<PageViewModelBase>
+            {
                 SettingsViewModel
             }
         };

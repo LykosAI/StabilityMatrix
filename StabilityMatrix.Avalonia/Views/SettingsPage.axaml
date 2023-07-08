@@ -20,6 +20,7 @@
                         <ui:SettingsExpander.Footer>
                             <ComboBox
                                 ItemsSource="{Binding AvailableThemes}"
+                                SelectedItem="{Binding SelectedTheme}"
                                 Margin="8"
                                 Width="500" />
                         </ui:SettingsExpander.Footer>
@@ -29,40 +30,58 @@
                     
                     <!-- TODO: Keep folder links on shutdown  -->
 
-                    <ui:SettingsExpander
-                        IconSource="Folder"
-                        Header="Keep shared checkpoints directory symbolic links on shutdown"
-                        Description="Normally removed on shutdown to allow the data folder to be moved without potential file explorer issues."
-                        Margin="8">
-                        <ui:SettingsExpander.Footer>
-                            <CheckBox Margin="8" />
-                        </ui:SettingsExpander.Footer>
-                    </ui:SettingsExpander>
+                    <Grid RowDefinitions="auto,*">
+                        <TextBlock 
+                            FontWeight="Medium"
+                            Text="Checkpoint Manager" 
+                            Margin="8,16,0,0" />
+                        <StackPanel Grid.Row="1">
+                            <ui:SettingsExpander
+                                IconSource="Folder"
+                                Header="Keep shared checkpoints directory symbolic links on shutdown"
+                                Description="Normally removed on shutdown to allow the data folder to be moved without potential file explorer issues."
+                                Margin="8">
+                                <ui:SettingsExpander.Footer>
+                                    <CheckBox Margin="8" />
+                                </ui:SettingsExpander.Footer>
+                            </ui:SettingsExpander>
+                        </StackPanel>
+                    </Grid>
                     
-                    <ui:SettingsExpander
-                        IconSource="CommentAdd"
-                        Header="Notification Test"
-                        Margin="8">
-                        <ui:SettingsExpander.Footer>
-                            <Button
+                    <Grid RowDefinitions="auto,*">
+                        <TextBlock 
+                            FontWeight="Medium"
+                            Text="Debug Options" 
+                            Margin="8,16,0,0" />
+                        <StackPanel Grid.Row="1">
+                            <ui:SettingsExpander
+                                IconSource="CommentAdd"
+                                Header="Notification Test"
                                 Command="{Binding DebugNotificationCommand}"
-                                Content="New Notification"/>
-                        </ui:SettingsExpander.Footer>
-                    </ui:SettingsExpander>
+                                Margin="8">
+                                <ui:SettingsExpander.Footer>
+                                    <Button
+                                        Command="{Binding DebugNotificationCommand}"
+                                        Content="New Notification"/>
+                                </ui:SettingsExpander.Footer>
+                            </ui:SettingsExpander>
+                        </StackPanel>
+                    </Grid>
                     
                     <!-- TODO: Python card -->
                     
                     <!-- TODO: Debug card -->
                     
                     <!-- TODO: Directories card -->
-
-                    <ui:SettingsExpander
-                        IsEnabled="False"
-                        IsExpanded="True"
-                        Margin="8">
-                        <StackPanel HorizontalAlignment="Left" Orientation="Vertical">
+                    
+                    <Grid RowDefinitions="auto,*">
+                        <StackPanel 
+                            Margin="8,0,0,0"
+                            Grid.Row="1" 
+                            HorizontalAlignment="Left" 
+                            Orientation="Vertical">
                             <TextBlock
-                                FontSize="16"
+                                FontSize="15"
                                 FontWeight="Bold"
                                 Margin="0,8"
                                 Text="About" />
@@ -84,8 +103,7 @@
                                     Margin="8,0,8,8"
                                     Padding="2,0,2,0" />
                             </Grid>
-
-
+                            
                             <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
                                 <Button
                                     Content="License and Open Source Notices"
@@ -93,7 +111,11 @@
                                     Margin="8" />
                             </StackPanel>
                         </StackPanel>
-                    </ui:SettingsExpander>
+                    </Grid>
+                    
+                    <!-- Extra space at the bottom -->
+                    <Panel Margin="0,0,0,16" />
+                    
                 </StackPanel>
             </Grid>
         </ScrollViewer>

@@ -53,21 +53,19 @@
         <ui:NavigationView
             Grid.Row="1"
             Grid.RowSpan="2"
-            AlwaysShowHeader="False"
             PaneDisplayMode="Left"
             IsPaneOpen="False"
             OpenPaneLength="200"
+            IsSettingsVisible="False"
             Content="{Binding CurrentPage}"
             MenuItemsSource="{Binding Pages, Mode=OneWay}"
-            SelectedItem="{Binding SelectedCategory}"
-            IsSettingsVisible="True"
-            IsBackEnabled="True">
+            FooterMenuItemsSource="{Binding FooterPages, Mode=OneWay}"
+            SelectedItem="{Binding SelectedCategory}">
 
             <ui:NavigationView.MenuItemTemplate>
                 <DataTemplate DataType="{x:Type vm:PageViewModelBase}">
                     <ui:NavigationViewItem
-                        Tag="LaunchPageView"
-                        Margin="4,0,0,0"
+                        Margin="0,0,0,0"
                         Content="{Binding Title}"
                         IconSource="{Binding Icon}"/>
                 </DataTemplate>

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -23,6 +22,7 @@ using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
 using Polly.Timeout;
 using Refit;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Helper;
@@ -57,13 +57,14 @@ public partial class App : Application
         ConfigureServiceProvider();
         
         var mainViewModel = Services.GetRequiredService<MainWindowViewModel>();
+        var notificationService = Services.GetRequiredService<INotificationService>();
         
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = mainViewModel
-            };
+            var mainWindow = Services.GetRequiredService<MainWindow>();
+            mainWindow.DataContext = mainViewModel;
+            mainWindow.NotificationService = notificationService;
+            desktop.MainWindow = mainWindow;
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -89,6 +90,7 @@ public partial class App : Application
         services.AddSingleton<IDownloadService, DownloadService>();
         services.AddSingleton<IGithubApiCache, GithubApiCache>();
         services.AddSingleton<IPrerequisiteHelper, PrerequisiteHelper>();
+        services.AddSingleton<INotificationService, NotificationService>();
         
         services.AddSingleton<BasePackage, A3WebUI>();
         services.AddSingleton<BasePackage, VladAutomatic>();
@@ -108,13 +110,17 @@ public partial class App : Application
             	{
 	                provider.GetRequiredService<LaunchPageViewModel>(),
                 	provider.GetRequiredService<PackageManagerViewModel>(),
-                	provider.GetRequiredService<SettingsViewModel>(),
-	            }
+	            },
+                FooterPages = new List<PageViewModelBase>
+                {
+                    provider.GetRequiredService<SettingsViewModel>()
+                }
         	});
         
         services.AddTransient<LaunchPageView>();
         services.AddTransient<PackageManagerPage>();
         services.AddTransient<SettingsPage>();
+        services.AddSingleton<MainWindow>();
         
         services.AddTransient<IGitHubClient, GitHubClient>(_ =>
         {
@@ -215,7 +221,7 @@ public partial class App : Application
         logConfig.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, fileTarget);
         logConfig.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, debugTarget);
 
-        NLog.LogManager.Configuration = logConfig;
+        LogManager.Configuration = logConfig;
         // Add Sentry to NLog if enabled
         if (true)
         {

@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using Avalonia.Controls;
+﻿using System.Collections.Generic;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
@@ -18,27 +17,13 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] 
     private object? selectedCategory;
     
-    public List<PageViewModelBase> Pages { get; } = new();
+    [ObservableProperty]
+    private List<PageViewModelBase> pages = new();
 
-    public MainWindowViewModel(LaunchPageViewModel launchPageViewModel,
-        PackageManagerViewModel packageManagerViewModel)
+    public override void OnLoaded()
     {
-        Pages.Add(launchPageViewModel);
-        Pages.Add(packageManagerViewModel);
-        CurrentPage = Pages[0];
-        SelectedCategory = Pages[0];
-    }
-
-    public MainWindowViewModel()
-    {
-        if (!Design.IsDesignMode)
-        {
-            throw new InvalidOperationException("Default Constructor is only for design-time.");
-        }
-        Pages.Add(new LaunchPageViewModel());
-        Pages.Add(new PackageManagerViewModel(null!, null!));
-        CurrentPage = Pages[0];
-        SelectedCategory = Pages[0];
+        CurrentPage = Pages.FirstOrDefault();
+        SelectedCategory = Pages.FirstOrDefault();
     }
 
     partial void OnSelectedCategoryChanged(object? value)

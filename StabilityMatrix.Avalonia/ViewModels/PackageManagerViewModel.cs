@@ -52,41 +52,8 @@ public partial class PackageManagerViewModel : PageViewModelBase
             };
         }
     }
-
-    public PackageManagerViewModel()
-    {
-        settingsManager = new SettingsManager
-        {
-            Settings =
-            {
-                InstalledPackages = new List<InstalledPackage>
-                {
-                    new()
-                    {
-                        DisplayName = "Dank Diffusion",
-                        PackageName = "dank-diffusion",
-                        LastUpdateCheck = DateTimeOffset.Now
-                    }
-                }
-            }
-        };
-        packageFactory = new PackageFactory(new List<BasePackage>()
-        {
-            new DankDiffusion(null, null, null, null)
-        });
-        Packages =
-            new ObservableCollection<InstalledPackage>(settingsManager.Settings.InstalledPackages);
-        SelectedPackage = Packages[0];
-        ProgressText = string.Empty;
-        InstallButtonText = "Install";
-        InstallButtonEnabled = true;
-        ProgressValue = 0;
-        IsIndeterminate = false;
-        InstallButtonVisibility = true;
-    }
-
-    [NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
-    [ObservableProperty]
+    
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
     private int progressValue;
     
     [ObservableProperty]
@@ -122,7 +89,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
     public override string Title => "Packages";
     public override Symbol Icon => Symbol.XboxConsoleFilled;
 
-    public async Task OnLoaded()
+    public override async Task OnLoadedAsync()
     {
         Packages.Clear();
         var installedPackages = settingsManager.Settings.InstalledPackages;

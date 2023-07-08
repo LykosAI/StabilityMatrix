@@ -1,19 +1,18 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
-             xmlns:views="using:StabilityMatrix.Avalonia.Views"
              xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
              xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+             d:DataContext="{x:Static mocks:DesignData.LaunchPageViewModel}"
              x:CompileBindings="True"
              x:DataType="vm:LaunchPageViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="StabilityMatrix.Avalonia.Views.LaunchPageView">
-    <Design.DataContext>
-        <vm:LaunchPageViewModel />
-    </Design.DataContext>
     
     <Grid RowDefinitions="Auto,*,Auto">
         <Grid ColumnDefinitions="Auto,*">
@@ -136,4 +135,4 @@
             Margin="24,0,24,8"/>
     </Grid>
     
-</UserControl>
+</controls:UserControlBase>

@@ -1,12 +1,10 @@
-using System.Runtime.InteropServices;
 using Avalonia;
-using Avalonia.Controls;
 using FluentAvalonia.UI.Windowing;
-using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Avalonia.Controls;
 
 namespace StabilityMatrix.Avalonia.Views;
 
-public partial class MainWindow : AppWindow
+public partial class MainWindow : AppWindowBase
 {
     public MainWindow()
     {

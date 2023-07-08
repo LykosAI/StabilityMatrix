@@ -15,12 +15,15 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(LaunchPageView))]
 public partial class LaunchPageViewModel : PageViewModelBase
 {
+    private readonly ISettingsManager settingsManager;
+    
     public override string Title => "Launch";
     public override Symbol Icon => Symbol.PlayFilled;
 
@@ -30,26 +33,22 @@ public partial class LaunchPageViewModel : PageViewModelBase
     [ObservableProperty] private string consoleInput = "";
     [ObservableProperty] private bool launchButtonVisibility;
     [ObservableProperty] private bool stopButtonVisibility;
-    [ObservableProperty] private bool isLaunchTeachingTipsOpen = false;
+    [ObservableProperty] private bool isLaunchTeachingTipsOpen;
     [ObservableProperty] private bool showWebUiButton;
     
     [ObservableProperty] private InstalledPackage? selectedPackage;
     [ObservableProperty] private ObservableCollection<InstalledPackage> installedPackages = new();
 
-    public LaunchPageViewModel()
+    public LaunchPageViewModel(ISettingsManager settingsManager)
     {
-        if (Design.IsDesignMode)
-        {
-            ConsoleDocument.Text = """
-                                   Total VRAM 24576 MB, total RAM 64662 MB
-                                   xformers version: 0.0.20
-                                   Set vram state to: NORMAL_VRAM
-                                   Device: cuda:0 NVIDIA GeForce RTX 3090
-                                   Using xformers cross attention
-                                   Starting server
-                                   To see the GUI go to: http://127.0.0.1:8188
-                                   """;
-        }
+        this.settingsManager = settingsManager;
+    }
+    
+    // On load
+    public void OnLoaded()
+    {
+        // Load packages
+        
     }
 
     [RelayCommand]

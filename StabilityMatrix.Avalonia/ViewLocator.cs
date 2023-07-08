@@ -14,17 +14,21 @@ public class ViewLocator : IDataTemplate
         
         var name = data.GetType().FullName!;
         var type = Type.GetType(name);
-        var attr = (ViewAttribute) Attribute.GetCustomAttribute(type, typeof(ViewAttribute));
-
-        if (attr is null)
-            return new TextBlock
-                {Text = "Not Found: " + name + ". Did you forget to add the [View] attribute?"};
         
-        // Get from DI
-        var view = App.Services.GetService(attr.GetViewType());
-        if (view is not null)
+        if (type is null) throw new InvalidOperationException("Type is null");
+        
+        if (Attribute.GetCustomAttribute(type, typeof(ViewAttribute)) is ViewAttribute viewAttr)
         {
-            return (Control) view;
+            var viewType = viewAttr.GetViewType();
+            // In design mode, just create a new instance of the view
+            if (Design.IsDesignMode)
+            {
+                return (Control) Activator.CreateInstance(viewType)!;
+            }
+            if (App.Services.GetService(viewType) is Control view)
+            {
+                return view;
+            }
         }
 
         return new TextBlock {Text = "Not Found: " + name};

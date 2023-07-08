@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -80,9 +81,20 @@ public partial class App : Application
 
         services.AddMemoryCache();
         
-        services.AddSingleton<MainWindowViewModel>();
+        services.AddSingleton<MainWindowViewModel>(provider => new MainWindowViewModel
+        {
+            Pages = new List<PageViewModelBase>
+            {
+                provider.GetRequiredService<LaunchPageViewModel>(),
+                provider.GetRequiredService<PackageManagerViewModel>(),
+                provider.GetRequiredService<SettingsViewModel>(),
+            }
+        });
+        
         services.AddSingleton<LaunchPageViewModel>();
         services.AddSingleton<PackageManagerViewModel>();
+        services.AddSingleton<SettingsViewModel>();
+        
         services.AddSingleton<ISettingsManager, SettingsManager>();
         services.AddSingleton<IPackageFactory, PackageFactory>();
         services.AddSingleton<IDownloadService, DownloadService>();

@@ -1,23 +1,20 @@
-<windowing:AppWindow xmlns="https://github.com/avaloniaui"
+<controls:AppWindowBase xmlns="https://github.com/avaloniaui"
                      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                      xmlns:vm="using:StabilityMatrix.Avalonia.ViewModels"
-                     xmlns:views="using:StabilityMatrix.Avalonia.Views"
                      xmlns:ui="using:FluentAvalonia.UI.Controls"
                      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                     xmlns:windowing="clr-namespace:FluentAvalonia.UI.Windowing;assembly=FluentAvalonia"
+                     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
                      mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-                     x:CompileBindings="True"
-                     x:Class="StabilityMatrix.Avalonia.Views.MainWindow"
+                     d:DataContext="{x:Static mocks:DesignData.MainWindowViewModel}"
                      x:DataType="vm:MainWindowViewModel"
+                     x:CompileBindings="True"
                      Icon="/Assets/Icon.ico"
                      Width="900"
                      Height="650"
-                     Title="Stability Matrix Avalonia">
-
-    <Design.DataContext>
-        <vm:MainWindowViewModel />
-    </Design.DataContext>
+                     Title="Stability Matrix Avalonia"
+                     x:Class="StabilityMatrix.Avalonia.Views.MainWindow">
 
     <Grid RowDefinitions="Auto,Auto,*">
         <Grid Name="TitleBarHost"
@@ -80,4 +77,4 @@
             </ui:NavigationView.DataTemplates>
         </ui:NavigationView>
     </Grid>
-</windowing:AppWindow>
+</controls:AppWindowBase>

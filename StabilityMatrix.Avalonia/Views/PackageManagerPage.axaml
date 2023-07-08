@@ -45,7 +45,6 @@
                     Command="{Binding ShowInstallWindowCommand}"
                     Height="40"
                     HorizontalAlignment="Stretch"
-                    IsEnabled="{Binding InstallButtonEnabled, FallbackValue=True}"
                     Margin="0,0,0,16"
                     VerticalContentAlignment="Center">
                     <StackPanel Orientation="Horizontal">
@@ -59,10 +58,9 @@
 
                 <ListBox
                     ItemsSource="{Binding Packages}"
-                    SelectedItem="{Binding SelectedPackage, Mode=TwoWay}"
-                    IsVisible="{Binding InstallButtonVisibility, FallbackValue=True}">
+                    SelectedItem="{Binding SelectedPackage, Mode=TwoWay}">
 
-                    <ListBox.Template>
+                <ListBox.Template>
                         <ControlTemplate>
                             <Border
                                 BorderBrush="#FFCCCCCC"

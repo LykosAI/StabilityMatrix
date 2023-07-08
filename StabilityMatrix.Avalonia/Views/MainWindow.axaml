@@ -11,7 +11,9 @@
                      x:Class="StabilityMatrix.Avalonia.Views.MainWindow"
                      x:DataType="vm:MainWindowViewModel"
                      Icon="/Assets/Icon.ico"
-                     Title="StabilityMatrix.Avalonia">
+                     Width="900"
+                     Height="650"
+                     Title="Stability Matrix Avalonia">
 
     <Design.DataContext>
         <vm:MainWindowViewModel />
@@ -56,6 +58,8 @@
             Grid.RowSpan="2"
             AlwaysShowHeader="False"
             PaneDisplayMode="Left"
+            IsPaneOpen="False"
+            OpenPaneLength="200"
             Content="{Binding CurrentPage}"
             MenuItemsSource="{Binding Pages, Mode=OneWay}"
             SelectedItem="{Binding SelectedCategory}"

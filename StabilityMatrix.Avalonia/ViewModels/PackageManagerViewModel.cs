@@ -33,6 +33,11 @@ public partial class PackageManagerViewModel : PageViewModelBase
         Packages = new ObservableCollection<InstalledPackage>(settingsManager.Settings.InstalledPackages);
     }
 
+    public PackageManagerViewModel() : this(new SettingsManager(), null!)
+    {
+        
+    }
+
     [NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
     [ObservableProperty]
     private int progressValue;

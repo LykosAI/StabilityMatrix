@@ -46,8 +46,8 @@ public partial class LaunchPageViewModel : PageViewModelBase
     {
         var info = new ProcessStartInfo
         {
-            FileName = "py",
-            WorkingDirectory = "py",
+            FileName = "python",
+            //WorkingDirectory = "py",
             Arguments = "-uc \"import tqdm, time; print('start'); [time.sleep(0.1) for _ in tqdm.tqdm(range(25))]; print('end')\""
         };
 
@@ -61,7 +61,7 @@ public partial class LaunchPageViewModel : PageViewModelBase
     private void OnProcessOutputReceived(ProcessOutput output)
     {
         var raw = output.RawText;
-        // Replace /n and /r with literals
+        // Replace \n and \r with literals
         raw = raw.Replace("\n", "\\n").Replace("\r", "\\r");
         Debug.WriteLine($"output raw: '{raw}', output: '{output.Text}', clear lines: {output.ClearLines}");
         Debug.Flush();

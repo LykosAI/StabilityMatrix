@@ -21,7 +21,7 @@ public class SharedFolders : ISharedFolders
         this.packageFactory = packageFactory;
     }
 
-    internal static void SetupLinks(Dictionary<SharedFolderType, string> definitions, 
+    public static void SetupLinks(Dictionary<SharedFolderType, string> definitions, 
         DirectoryPath modelsDirectory, DirectoryPath installDirectory)
     {
         foreach (var (folderType, relativePath) in definitions)

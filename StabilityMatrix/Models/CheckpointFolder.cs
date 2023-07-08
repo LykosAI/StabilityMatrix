@@ -6,8 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Avalonia.Input;
-using Avalonia.Threading;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Core.Extensions;
@@ -16,11 +15,14 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Helper;
+using StabilityMatrix.ViewModels;
 
-namespace StabilityMatrix.Avalonia.ViewModels;
+namespace StabilityMatrix.Models;
 
 public partial class CheckpointFolder : ObservableObject
 {
+    private readonly IDialogFactory dialogFactory;
     private readonly ISettingsManager settingsManager;
     private readonly IDownloadService downloadService;
     private readonly ModelFinder modelFinder;
@@ -69,11 +71,13 @@ public partial class CheckpointFolder : ObservableObject
     public RelayCommand OnPreviewDragLeaveCommand => new(() => IsCurrentDragTarget = false);
 
     public CheckpointFolder(
+        IDialogFactory dialogFactory, 
         ISettingsManager settingsManager,
         IDownloadService downloadService,
         ModelFinder modelFinder,
         bool useCategoryVisibility = true)
     {
+        this.dialogFactory = dialogFactory;
         this.settingsManager = settingsManager;
         this.downloadService = downloadService;
         this.modelFinder = modelFinder;
@@ -128,7 +132,7 @@ public partial class CheckpointFolder : ObservableObject
     /// <param name="file"></param>
     private void OnCheckpointFileDelete(object? sender, CheckpointFile file)
     {
-        Dispatcher.UIThread.Invoke(() => CheckpointFiles.Remove(file));
+        Application.Current.Dispatcher.Invoke(() => CheckpointFiles.Remove(file));
     }
 
     [RelayCommand]
@@ -137,7 +141,7 @@ public partial class CheckpointFolder : ObservableObject
         IsImportInProgress = true;
         IsCurrentDragTarget = false;
 
-        if (e.Data.Get(DataFormats.Files) is not string[] files || files.Length < 1)
+        if (e.Data.GetData(DataFormats.FileDrop) is not string[] files || files.Length < 1)
         {
             IsImportInProgress = false;
             return;
@@ -289,10 +293,10 @@ public partial class CheckpointFolder : ObservableObject
         return await (progress switch
         {
             null => Task.Run(() =>
-                CheckpointFile.FromDirectoryIndex(DirectoryPath).ToList()),
+                CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath).ToList()),
             
             _ => Task.Run(() =>
-                CheckpointFile.FromDirectoryIndex(DirectoryPath, progress).ToList())
+                CheckpointFile.FromDirectoryIndex(dialogFactory, DirectoryPath, progress).ToList())
         });
     }
 
@@ -305,7 +309,7 @@ public partial class CheckpointFolder : ObservableObject
         foreach (var folder in Directory.GetDirectories(DirectoryPath))
         {
             // Inherit our folder type
-            var subFolder = new CheckpointFolder(settingsManager,
+            var subFolder = new CheckpointFolder(dialogFactory, settingsManager,
                 downloadService, modelFinder,
                 useCategoryVisibility: false)
             {

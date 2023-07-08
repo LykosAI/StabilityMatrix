@@ -14,6 +14,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Helper;
+using StabilityMatrix.Models;
 using StabilityMatrix.Services;
 
 namespace StabilityMatrix.ViewModels;

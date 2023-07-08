@@ -46,4 +46,9 @@
     <ItemGroup>
       <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
     </ItemGroup>
+
+
+    <ItemGroup>
+      <AvaloniaResource Include="Assets\Icon.png" />
+    </ItemGroup>
 </Project>

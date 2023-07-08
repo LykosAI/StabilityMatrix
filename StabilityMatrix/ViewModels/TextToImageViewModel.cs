@@ -8,13 +8,12 @@ using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
-using StabilityMatrix.Api;
+using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Helper;
-using StabilityMatrix.Models;
 using StabilityMatrix.Services;
 
 namespace StabilityMatrix.ViewModels;

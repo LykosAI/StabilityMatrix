@@ -1,8 +1,6 @@
-﻿using System;
-using AsyncAwaitBestPractices;
+﻿using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using StabilityMatrix.Avalonia.ViewModels;
 
 namespace StabilityMatrix.Avalonia.Controls;

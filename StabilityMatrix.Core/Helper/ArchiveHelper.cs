@@ -1,18 +1,15 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Threading;
 using NLog;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using Timer = System.Timers.Timer;
 
-namespace StabilityMatrix.Helper;
+namespace StabilityMatrix.Core.Helper;
 
 public record struct ArchiveInfo(ulong Size, ulong CompressedSize);
 
@@ -23,7 +20,10 @@ public static class ArchiveHelper
 
     // HomeDir is set by ISettingsManager.TryFindLibrary()
     public static string HomeDir { get; set; } = string.Empty;
-    public static string SevenZipPath => Path.Combine(HomeDir, "Assets", "7za.exe");
+
+    public static string SevenZipPath => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+        ? Path.Combine(HomeDir, "Assets", "7za.exe")
+        : throw new NotImplementedException("need to implement 7z path for non-windows");
     
     private static readonly Regex Regex7ZOutput = new(@"(?<=Size:\s*)\d+|(?<=Compressed:\s*)\d+");
     private static readonly Regex Regex7ZProgressDigits = new(@"(?<=\s*)\d+(?=%)");
@@ -125,15 +125,15 @@ public static class ArchiveHelper
         // Create an DispatchTimer that monitors the progress of the extraction
         var progressMonitor = progress switch {
             null => null,
-            _ => new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(36) }
+            _ => new Timer(TimeSpan.FromMilliseconds(36))
         };
+        
         if (progressMonitor != null)
         {
-            progressMonitor.Tick += (sender, args) =>
+            progressMonitor.Elapsed += (_, _) =>
             {
-                // Ignore 0 counts
                 if (count == 0) return;
-                Application.Current.Dispatcher.Invoke(() => progress!.Report(new ProgressReport(count, total, message: "Extracting")));
+                progress!.Report(new ProgressReport(count, total, message: "Extracting"));
             };
         }
 

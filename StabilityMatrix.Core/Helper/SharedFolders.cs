@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using NLog;
+﻿using NLog;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
@@ -10,7 +7,7 @@ using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.ReparsePoints;
 using StabilityMatrix.Core.Services;
 
-namespace StabilityMatrix.Models;
+namespace StabilityMatrix.Core.Helper;
 
 public class SharedFolders : ISharedFolders
 {

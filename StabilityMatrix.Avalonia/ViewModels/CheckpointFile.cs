@@ -5,24 +5,24 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Media.Imaging;
 using AsyncAwaitBestPractices;
+using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
-using StabilityMatrix.Helper;
 
-namespace StabilityMatrix.Models;
+namespace StabilityMatrix.Avalonia.ViewModels;
 
 public partial class CheckpointFile : ObservableObject
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    private readonly IDialogFactory dialogFactory;
     
     // Event for when this file is deleted
     public event EventHandler<CheckpointFile>? Deleted;
@@ -41,7 +41,7 @@ public partial class CheckpointFile : ObservableObject
     private string title = string.Empty;
     
     public string? PreviewImagePath { get; set; }
-    public BitmapImage? PreviewImage { get; set; }
+    public Bitmap? PreviewImage { get; set; }
     public bool IsPreviewImageLoaded => PreviewImage != null;
 
     [ObservableProperty]
@@ -50,18 +50,13 @@ public partial class CheckpointFile : ObservableObject
 
     [ObservableProperty] private bool isLoading;
     
-    public string FileName => Path.GetFileName(FilePath);
+    public string FileName => Path.GetFileName((string?) FilePath);
 
     public ObservableCollection<string> Badges { get; set; } = new();
 
     private static readonly string[] SupportedCheckpointExtensions = { ".safetensors", ".pt", ".ckpt", ".pth", "bin" };
     private static readonly string[] SupportedImageExtensions = { ".png", ".jpg", ".jpeg" };
     private static readonly string[] SupportedMetadataExtensions = { ".json" };
-    
-    public CheckpointFile(IDialogFactory dialogFactory)
-    {
-        this.dialogFactory = dialogFactory;
-    }
 
     partial void OnConnectedModelChanged(ConnectedModelInfo? value)
     {
@@ -111,25 +106,27 @@ public partial class CheckpointFile : ObservableObject
     [RelayCommand]
     private async Task RenameAsync()
     {
-        var responses = await dialogFactory.ShowTextEntryDialog("Rename Model", new []
-        {
-            ("File Name", FileName)
-        });
-        var name = responses?.FirstOrDefault();
-        if (name == null) return;
+        // TODO: Fix with new dialogs
         
-        // Rename file in OS
-        try
-        {
-            var newFilePath = Path.Combine(Path.GetDirectoryName(FilePath) ?? "", name);
-            File.Move(FilePath, newFilePath);
-            FilePath = newFilePath;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
+        // var responses = await dialogFactory.ShowTextEntryDialog("Rename Model", new []
+        // {
+        //     ("File Name", FileName)
+        // });
+        // var name = responses?.FirstOrDefault();
+        // if (name == null) return;
+        //
+        // // Rename file in OS
+        // try
+        // {
+        //     var newFilePath = Path.Combine(Path.GetDirectoryName((string?) FilePath) ?? "", name);
+        //     File.Move(FilePath, newFilePath);
+        //     FilePath = newFilePath;
+        // }
+        // catch (Exception e)
+        // {
+        //     Console.WriteLine(e);
+        //     throw;
+        // }
     }
 
     [RelayCommand]
@@ -143,14 +140,10 @@ public partial class CheckpointFile : ObservableObject
     {
         if (PreviewImagePath == null) return;
         var bytes = await File.ReadAllBytesAsync(PreviewImagePath);
-        await Application.Current.Dispatcher.InvokeAsync(() =>
+        await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            var bitmap = new BitmapImage();
             using var ms = new MemoryStream(bytes);
-            bitmap.BeginInit();
-            bitmap.StreamSource = ms;
-            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.EndInit();
+            var bitmap = new Bitmap(ms);
             PreviewImage = bitmap;
         });
     }
@@ -162,7 +155,7 @@ public partial class CheckpointFile : ObservableObject
     /// - {filename}.preview.{image-extensions} (preview image)
     /// - {filename}.cm-info.json (connected model info)
     /// </summary>
-    public static IEnumerable<CheckpointFile> FromDirectoryIndex(IDialogFactory dialogFactory, string directory, SearchOption searchOption = SearchOption.TopDirectoryOnly)
+    public static IEnumerable<CheckpointFile> FromDirectoryIndex(string directory, SearchOption searchOption = SearchOption.TopDirectoryOnly)
     {
         // Get all files with supported extensions
         var allExtensions = SupportedCheckpointExtensions
@@ -174,7 +167,7 @@ public partial class CheckpointFile : ObservableObject
 
         foreach (var file in files.Keys.Where(k => SupportedCheckpointExtensions.Contains(Path.GetExtension(k))))
         {
-            var checkpointFile = new CheckpointFile(dialogFactory)
+            var checkpointFile = new CheckpointFile()
             {
                 Title = Path.GetFileNameWithoutExtension(file),
                 FilePath = Path.Combine(directory, file),
@@ -211,11 +204,11 @@ public partial class CheckpointFile : ObservableObject
     /// <summary>
     /// Index with progress reporting.
     /// </summary>
-    public static IEnumerable<CheckpointFile> FromDirectoryIndex(IDialogFactory dialogFactory, string directory, IProgress<ProgressReport> progress,
+    public static IEnumerable<CheckpointFile> FromDirectoryIndex(string directory, IProgress<ProgressReport> progress,
         SearchOption searchOption = SearchOption.TopDirectoryOnly)
     {
         var current = 0ul;
-        foreach (var checkpointFile in FromDirectoryIndex(dialogFactory, directory, searchOption))
+        foreach (var checkpointFile in FromDirectoryIndex(directory, searchOption))
         {
             current++;
             progress.Report(new ProgressReport(current, "Indexing", checkpointFile.FileName));

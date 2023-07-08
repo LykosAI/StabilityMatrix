@@ -16,7 +16,6 @@
     xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:ci="clr-namespace:StabilityMatrix.Interactions"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:models="clr-namespace:StabilityMatrix.Models"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"

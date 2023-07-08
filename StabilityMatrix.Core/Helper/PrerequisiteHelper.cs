@@ -209,8 +209,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
             }
             // Unzip python
             
-            // TODO: Update when ArchiveHelper is implemented
-            // await ArchiveHelper.Extract7Z(PythonDownloadPath, PythonDir);
+            await ArchiveHelper.Extract7Z(PythonDownloadPath, PythonDir);
         
             try
             {
@@ -218,8 +217,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
                 await ExtractAllEmbeddedResources("StabilityMatrix.Assets.venv", PythonDir);
                 // Add venv to python's library zip
                 
-                // TODO: Update when ArchiveHelper is implemented
-                //await ArchiveHelper.AddToArchive7Z(PythonLibraryZipPath, VenvTempDir);
+                await ArchiveHelper.AddToArchive7Z(PythonLibraryZipPath, VenvTempDir);
             }
             finally
             {
@@ -348,16 +346,14 @@ public class PrerequisiteHelper : IPrerequisiteHelper
 
     private async Task UnzipGit(IProgress<ProgressReport>? progress = null)
     {
-        
-        // TODO: Update when ArchiveHelper is implemented
-        // if (progress == null)
-        // {
-        //     await ArchiveHelper.Extract7Z(PortableGitDownloadPath, PortableGitInstallDir);
-        // }
-        // else
-        // {
-        //     await ArchiveHelper.Extract7Z(PortableGitDownloadPath, PortableGitInstallDir, progress);
-        // }
+        if (progress == null)
+        {
+            await ArchiveHelper.Extract7Z(PortableGitDownloadPath, PortableGitInstallDir);
+        }
+        else
+        {
+            await ArchiveHelper.Extract7Z(PortableGitDownloadPath, PortableGitInstallDir, progress);
+        }
 
         logger.LogInformation("Extracted Git");
 

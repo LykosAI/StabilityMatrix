@@ -3,7 +3,6 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Models.Settings;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 

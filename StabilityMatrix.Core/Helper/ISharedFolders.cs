@@ -1,7 +1,7 @@
 ﻿using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
 
-namespace StabilityMatrix.Models;
+namespace StabilityMatrix.Core.Helper;
 
 public interface ISharedFolders
 {

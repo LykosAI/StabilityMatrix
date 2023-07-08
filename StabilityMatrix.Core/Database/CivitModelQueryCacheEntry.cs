@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using LiteDB;
+﻿using LiteDB;
 using StabilityMatrix.Core.Models.Api;
 
-namespace StabilityMatrix.Database;
+namespace StabilityMatrix.Core.Database;
 
 /// <summary>
 /// Cache entry for the result of a Civit model query response

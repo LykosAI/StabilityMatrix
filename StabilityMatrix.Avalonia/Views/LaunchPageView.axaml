@@ -104,11 +104,7 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>
         </Grid>
-        <!--<SelectableTextBlock
-            Margin="24,16"
-            Text="Console output here."
-            Grid.Row="1">
-        </SelectableTextBlock>-->
+
         <avaloniaEdit:TextEditor
             x:Name="Console"
             Document="{Binding ConsoleDocument}"
@@ -120,18 +116,16 @@
             LineNumbersForeground="DarkSlateGray"
             VerticalScrollBarVisibility="Auto"
             FontFamily="Cascadia Code,Consolas,Menlo,Monospace" />
-        <!--<terminal:Terminal Grid.Row="1"
-                           Margin="24,8,26,10"
-                           Background="{DynamicResource ControlFillColorDisabledBrush}"
-                           IsReadOnly="True"
-                           AutoScroll="True"
-                           FontFamily="Consolas"
-                           ItemHeight="22"
-                           Foreground="White"
-                           BorderThickness="0"
-                           VerticalScrollBarVisibility="Auto"
-                           ItemsSource="{Binding ConsoleHistory, Mode=OneWay}"/>-->
         
+            <Expander IsExpanded="True" Grid.Row="1" Header="Header Stuff" Margin="16">
+                <Expander.Styles>
+                    <Style Selector="Expander /template/ ToggleButton#PART_toggle">
+                        <Setter Property="IsVisible" Value="False"/>
+                    </Style>
+                </Expander.Styles>
+                <TextBlock Text="Hello World"></TextBlock>
+            </Expander>
+
         <!--Command="{Binding LaunchWebUiCommand}"-->
         <!--Visibility="{Binding ShowWebUiButton, Converter={StaticResource BoolToVisConverter}}"-->
         <Button

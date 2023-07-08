@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using AvaloniaEdit.Utils;
-using Microsoft.Extensions.Logging;
-using NLog;
-using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;

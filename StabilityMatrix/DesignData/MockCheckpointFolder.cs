@@ -1,6 +1,4 @@
-﻿using StabilityMatrix.Models;
-
-namespace StabilityMatrix.DesignData;
+﻿namespace StabilityMatrix.DesignData;
 
 public class MockCheckpointFolder : CheckpointFolder
 {

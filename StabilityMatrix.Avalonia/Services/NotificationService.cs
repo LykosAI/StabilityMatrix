@@ -1,10 +1,6 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
-using FluentAvalonia.UI.Controls;
-using StabilityMatrix.Avalonia.ViewModels;
 
 namespace StabilityMatrix.Avalonia.Services;
 

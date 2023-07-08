@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.DirectoryServices;
-using System.Linq;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Cryptography;
-using System.Security.Principal;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using StabilityMatrix.Core.Models;
+using DeviceId;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
-namespace StabilityMatrix.Models;
+namespace StabilityMatrix.Core.Models;
 
 internal record struct KeyInfo(byte[] Key, byte[] Salt, int Iterations);
 
@@ -30,17 +25,29 @@ public class GlobalUserSecrets
 
     public Dictionary<string, string> PatreonCookies { get; set; } = new();
 
-    private static SecurityIdentifier? GetComputerSid()
+    private static string? GetComputerSid()
     {
-        var id = new DirectoryEntry($"WinNT://{Environment.MachineName},Computer")
-            .Children.Cast<DirectoryEntry>().First().InvokeGet("objectSID");
-        return id is not byte[] bytes ? null :
-            new SecurityIdentifier(bytes, 0).AccountDomainSid;
+        var deviceId = new DeviceIdBuilder()
+            .AddMachineName()
+            .AddOsVersion()
+            .OnWindows(windows => windows
+                .AddProcessorId()
+                .AddMotherboardSerialNumber()
+                .AddSystemDriveSerialNumber())
+            .OnLinux(linux => linux
+                .AddMotherboardSerialNumber()
+                .AddSystemDriveSerialNumber())
+            .OnMac(mac => mac
+                .AddSystemDriveSerialNumber()
+                .AddPlatformSerialNumber())
+            .ToString();
+
+        return deviceId;
     }
 
     private static SecureString GetComputerKeyPhrase()
     {
-        var keySource = GetComputerSid()?.ToString();
+        var keySource = GetComputerSid();
         // If no sid, use username as fallback
         keySource ??= Environment.UserName;
 

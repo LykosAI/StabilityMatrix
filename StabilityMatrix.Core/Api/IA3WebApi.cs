@@ -1,9 +1,7 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using Refit;
+﻿using Refit;
 using StabilityMatrix.Core.Models.Api;
 
-namespace StabilityMatrix.Api;
+namespace StabilityMatrix.Core.Api;
 
 [Headers("User-Agent: StabilityMatrix")]
 public interface IA3WebApi

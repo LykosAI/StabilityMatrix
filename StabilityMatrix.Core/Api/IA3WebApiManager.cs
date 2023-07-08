@@ -1,6 +1,6 @@
 ﻿using Refit;
 
-namespace StabilityMatrix.Api;
+namespace StabilityMatrix.Core.Api;
 
 public interface IA3WebApiManager
 {

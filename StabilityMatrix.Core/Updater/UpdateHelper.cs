@@ -1,10 +1,5 @@
-﻿using System;
-using System.IO;
-using System.Net.Http;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.Json;
-using System.Threading.Tasks;
-using System.Windows.Threading;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using StabilityMatrix.Core.Extensions;
@@ -13,9 +8,8 @@ using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Services;
-using StabilityMatrix.Helper;
 
-namespace StabilityMatrix.Updater;
+namespace StabilityMatrix.Core.Updater;
 
 public class UpdateHelper : IUpdateHelper
 {
@@ -23,7 +17,7 @@ public class UpdateHelper : IUpdateHelper
     private readonly IHttpClientFactory httpClientFactory;
     private readonly IDownloadService downloadService;
     private readonly DebugOptions debugOptions;
-    private readonly DispatcherTimer timer = new();
+    private readonly System.Timers.Timer timer = new(TimeSpan.FromMinutes(5));
     
     private string UpdateManifestUrl => debugOptions.UpdateManifestUrl ??
         "https://cdn.lykos.ai/update.json";
@@ -41,14 +35,13 @@ public class UpdateHelper : IUpdateHelper
         this.httpClientFactory = httpClientFactory;
         this.downloadService = downloadService;
         this.debugOptions = debugOptions.Value;
-
-        timer.Interval = TimeSpan.FromMinutes(5);
-        timer.Tick += async (_, _) => { await CheckForUpdate(); };
+        
+        timer.Elapsed += async (_, _) => { await CheckForUpdate(); };
     }
 
     public async Task StartCheckingForUpdates()
     {
-        timer.IsEnabled = true;
+        timer.Enabled = true;
         timer.Start();
         await CheckForUpdate();
     }

@@ -1,9 +1,7 @@
-﻿using System;
-using System.Threading.Tasks;
-using StabilityMatrix.Core.Models.Progress;
+﻿using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Update;
 
-namespace StabilityMatrix.Updater;
+namespace StabilityMatrix.Core.Updater;
 
 public interface IUpdateHelper
 {

@@ -193,11 +193,8 @@ public class SettingsManager : ISettingsManager
     private void SetStaticLibraryPaths()
     {
         GlobalConfig.LibraryDir = LibraryDir;
-        
-        // TODO: update this when ArchiveHelper is implemented
-        //ArchiveHelper.HomeDir = LibraryDir;
-        
-         PyRunner.HomeDir = LibraryDir;
+        ArchiveHelper.HomeDir = LibraryDir;
+        PyRunner.HomeDir = LibraryDir;
     }
 
     /// <summary>

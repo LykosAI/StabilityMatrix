@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -32,6 +30,8 @@ public partial class SettingsViewModel : PageViewModelBase
     public SettingsViewModel(INotificationService notificationService)
     {
         this.notificationService = notificationService;
+
+        SelectedTheme = AvailableThemes[1];
     }
     
     [RelayCommand]

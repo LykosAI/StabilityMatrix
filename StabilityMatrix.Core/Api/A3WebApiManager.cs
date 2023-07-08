@@ -1,9 +1,7 @@
-﻿using System;
-using System.Net.Http;
-using Refit;
+﻿using Refit;
 using StabilityMatrix.Core.Services;
 
-namespace StabilityMatrix.Api;
+namespace StabilityMatrix.Core.Api;
 
 public class A3WebApiManager : IA3WebApiManager
 {

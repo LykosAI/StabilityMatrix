@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Core.Extensions;
@@ -15,10 +14,8 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
-using StabilityMatrix.Helper;
-using StabilityMatrix.ViewModels;
 
-namespace StabilityMatrix.Models;
+namespace StabilityMatrix.Avalonia.ViewModels;
 
 public partial class CheckpointFolder : ObservableObject
 {
@@ -38,7 +35,7 @@ public partial class CheckpointFolder : ObservableObject
     /// Custom title for UI.
     /// </summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(FolderType))]
+    [NotifyPropertyChangedFor(nameof(Models.CheckpointFolder.FolderType))]
     [NotifyPropertyChangedFor(nameof(TitleWithFilesCount))]
     private string title = string.Empty;
 

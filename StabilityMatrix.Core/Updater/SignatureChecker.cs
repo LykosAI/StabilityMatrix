@@ -1,8 +1,7 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using NSec.Cryptography;
 
-namespace StabilityMatrix.Updater;
+namespace StabilityMatrix.Core.Updater;
 
 public class SignatureChecker
 {

@@ -22,7 +22,7 @@
                                 ItemsSource="{Binding AvailableThemes}"
                                 SelectedItem="{Binding SelectedTheme}"
                                 Margin="8"
-                                Width="500" />
+                                MinWidth="100"/>
                         </ui:SettingsExpander.Footer>
                     </ui:SettingsExpander>
 

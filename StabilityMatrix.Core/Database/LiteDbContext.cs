@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using LiteDB.Async;
+﻿using LiteDB.Async;
 using Microsoft.Extensions.Options;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Services;
 
-namespace StabilityMatrix.Database;
+namespace StabilityMatrix.Core.Database;
 
 public class LiteDbContext : ILiteDbContext
 {

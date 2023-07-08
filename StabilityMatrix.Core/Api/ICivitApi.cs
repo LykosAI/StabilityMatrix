@@ -1,8 +1,7 @@
-﻿using System.Threading.Tasks;
-using Refit;
+﻿using Refit;
 using StabilityMatrix.Core.Models.Api;
 
-namespace StabilityMatrix.Api;
+namespace StabilityMatrix.Core.Api;
 
 public interface ICivitApi
 {

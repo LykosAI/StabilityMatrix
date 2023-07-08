@@ -11,16 +11,15 @@ using NLog;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Windows.Data;
-using StabilityMatrix.Api;
+using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
-using StabilityMatrix.Database;
 using StabilityMatrix.Helper;
-using StabilityMatrix.Models;
 using ApiException = Refit.ApiException;
 
 namespace StabilityMatrix.ViewModels;

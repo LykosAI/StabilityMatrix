@@ -9,7 +9,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Services;
-using StabilityMatrix.Updater;
+using StabilityMatrix.Core.Updater;
 
 namespace StabilityMatrix.ViewModels;
 

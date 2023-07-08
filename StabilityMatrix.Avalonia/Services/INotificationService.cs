@@ -1,6 +1,5 @@
 ﻿using Avalonia;
 using Avalonia.Controls.Notifications;
-using StabilityMatrix.Avalonia.ViewModels;
 
 namespace StabilityMatrix.Avalonia.Services;
 

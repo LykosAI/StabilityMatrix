@@ -11,7 +11,6 @@ using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
-using StabilityMatrix.Models;
 using EventManager = StabilityMatrix.Core.Helper.EventManager;
 
 namespace StabilityMatrix.ViewModels;

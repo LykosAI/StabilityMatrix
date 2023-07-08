@@ -1,12 +1,10 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using NLog;
+﻿using NLog;
 using Refit;
-using StabilityMatrix.Api;
+using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Models.Api;
-using StabilityMatrix.Database;
 
-namespace StabilityMatrix.Helper;
+namespace StabilityMatrix.Core.Helper;
 
 // return Model, ModelVersion, ModelFile
 public record struct ModelSearchResult(CivitModel Model, CivitModelVersion ModelVersion, CivitFile ModelFile);

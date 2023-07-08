@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using AvaloniaEdit.Utils;
 using Microsoft.Extensions.Logging;
 using NLog;
 using StabilityMatrix.Avalonia.ViewModels;
@@ -26,7 +29,7 @@ public static class DesignData
                         DisplayName = "My Installed Package",
                         PackageName = "stable-diffusion-webui",
                         PackageVersion = "v1.0.0",
-                        LibraryPath = "Packages/sd-webui",
+                        LibraryPath = "Packages\\example-webui",
                         LastUpdateCheck = DateTimeOffset.Now
                     }
                 },
@@ -40,7 +43,12 @@ public static class DesignData
         };
         var packageFactory = new PackageFactory(packages);
 
-        LaunchPageViewModel = new LaunchPageViewModel(null!, settingsManager, packageFactory, new PyRunner());
+        LaunchPageViewModel = new LaunchPageViewModel(
+            null!, settingsManager, packageFactory, new PyRunner());
+        
+        LaunchPageViewModel.InstalledPackages.AddRange(settingsManager.Settings.InstalledPackages);
+        LaunchPageViewModel.SelectedPackage = settingsManager.Settings.InstalledPackages[0];
+        
         PackageManagerViewModel = new PackageManagerViewModel(settingsManager, packageFactory);
         SettingsViewModel = new SettingsViewModel();
 

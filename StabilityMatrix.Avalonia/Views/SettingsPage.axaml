@@ -1,0 +1,103 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="vm:SettingsViewModel"
+             x:CompileBindings="True"
+             d:DataContext="{x:Static mocks:DesignData.SettingsViewModel}"
+             x:Class="StabilityMatrix.Avalonia.Views.SettingsPage">
+    
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <StackPanel Spacing="4">
+                    <ui:SettingsExpander Header="Theme" Margin="8">
+                        <ui:SettingsExpander.Footer>
+                            <ComboBox
+                                ItemsSource="{Binding AvailableThemes}"
+                                Margin="8"
+                                Width="500" />
+                        </ui:SettingsExpander.Footer>
+                    </ui:SettingsExpander>
+
+                    <!--  TODO: Text2Image host port settings  -->
+                    
+                    <!-- TODO: Keep folder links on shutdown  -->
+
+                    <ui:SettingsExpander
+                        IconSource="Folder"
+                        Header="Keep shared checkpoints directory symbolic links on shutdown"
+                        Description="Normally removed on shutdown to allow the data folder to be moved without potential file explorer issues."
+                        Margin="8">
+                        <ui:SettingsExpander.Footer>
+                            <CheckBox Margin="8" />
+                        </ui:SettingsExpander.Footer>
+                    </ui:SettingsExpander>
+                    
+                    <ui:SettingsExpander
+                        IconSource="CommentAdd"
+                        Header="Notification Test"
+                        Margin="8">
+                        <ui:SettingsExpander.Footer>
+                            <Button
+                                Command="{Binding DebugNotificationCommand}"
+                                Content="New Notification"/>
+                        </ui:SettingsExpander.Footer>
+                    </ui:SettingsExpander>
+                    
+                    <!-- TODO: Python card -->
+                    
+                    <!-- TODO: Debug card -->
+                    
+                    <!-- TODO: Directories card -->
+
+                    <ui:SettingsExpander
+                        IsEnabled="False"
+                        IsExpanded="True"
+                        Margin="8">
+                        <StackPanel HorizontalAlignment="Left" Orientation="Vertical">
+                            <TextBlock
+                                FontSize="16"
+                                FontWeight="Bold"
+                                Margin="0,8"
+                                Text="About" />
+                            <Image
+                                Height="112"
+                                HorizontalAlignment="Left"
+                                Margin="8"
+                                Source="/Assets/Icon.png"
+                                Width="112" />
+                            <TextBlock
+                                FontWeight="Medium"
+                                Margin="8"
+                                Text="Stability Matrix" />
+                            <Grid>
+                                <Button
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Content="Version 0.0.0"
+                                    Margin="8,0,8,8"
+                                    Padding="2,0,2,0" />
+                            </Grid>
+
+
+                            <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+                                <Button
+                                    Content="License and Open Source Notices"
+                                    HorizontalAlignment="Left"
+                                    Margin="8" />
+                            </StackPanel>
+                        </StackPanel>
+                    </ui:SettingsExpander>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+    
+    
+</controls:UserControlBase>

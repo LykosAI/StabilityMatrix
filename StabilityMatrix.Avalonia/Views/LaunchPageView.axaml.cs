@@ -1,22 +1,18 @@
 ﻿using System;
-using System.Linq;
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using AvaloniaEdit;
 using AvaloniaEdit.TextMate;
-using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Avalonia.Controls;
 using TextMateSharp.Grammars;
 
 namespace StabilityMatrix.Avalonia.Views;
 
-public partial class LaunchPageView : UserControl
+public partial class LaunchPageView : UserControlBase
 {
     public LaunchPageView()
     {
         InitializeComponent();
-
         var editor = this.FindControl<TextEditor>("Console");
         var options = new RegistryOptions(ThemeName.HighContrastLight);
         
@@ -28,7 +24,7 @@ public partial class LaunchPageView : UserControl
         textMate.SetGrammar(scope);
         textMate.SetTheme(options.LoadTheme(ThemeName.DarkPlus));
     }
-
+    
     private void InitializeComponent()
     {
         AvaloniaXamlLoader.Load(this);

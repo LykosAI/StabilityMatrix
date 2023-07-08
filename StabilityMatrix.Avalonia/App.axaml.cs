@@ -114,6 +114,8 @@ public partial class App : Application
         
         services.AddTransient<LaunchPageView>();
         services.AddTransient<PackageManagerPage>();
+        services.AddTransient<SettingsPage>();
+        
         services.AddTransient<IGitHubClient, GitHubClient>(_ =>
         {
             var client = new GitHubClient(new ProductHeaderValue("StabilityMatrix"));

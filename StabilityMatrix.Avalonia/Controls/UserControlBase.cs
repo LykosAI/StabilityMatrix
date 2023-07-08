@@ -1,22 +1,26 @@
-﻿using Avalonia.Controls;
+﻿using System;
+using AsyncAwaitBestPractices;
+using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Markup.Xaml;
 using StabilityMatrix.Avalonia.ViewModels;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
 public class UserControlBase : UserControl
 {
-    protected UserControlBase()
+    static UserControlBase()
     {
-        AddHandler(LoadedEvent, OnLoaded);
+        LoadedEvent.AddClassHandler<UserControlBase>(
+            (cls, args) => cls.OnLoadedEvent(args));
     }
-    
-    public virtual async void OnLoaded(object? sender, RoutedEventArgs e)
+
+    protected virtual void OnLoadedEvent(RoutedEventArgs? e)
     {
         if (DataContext is not ViewModelBase viewModel) return;
         
         // ReSharper disable once MethodHasAsyncOverload
         viewModel.OnLoaded();
-        await viewModel.OnLoadedAsync();
+        viewModel.OnLoadedAsync().SafeFireAndForget();
     }
 }

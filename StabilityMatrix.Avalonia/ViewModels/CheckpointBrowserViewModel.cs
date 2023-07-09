@@ -55,6 +55,8 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     [ObservableProperty] private bool noResultsFound;
     [ObservableProperty] private string noResultsText;
     
+    private List<CheckpointBrowserCardViewModel> allModelCards = new();
+    
     public IEnumerable<CivitPeriod> AllCivitPeriods => Enum.GetValues(typeof(CivitPeriod)).Cast<CivitPeriod>();
     public IEnumerable<CivitSortMode> AllSortModes => Enum.GetValues(typeof(CivitSortMode)).Cast<CivitSortMode>();
 
@@ -202,9 +204,12 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         else
         {
             var updateCards = models
-                .Select(model => new CheckpointBrowserCardViewModel(model, 
-                    downloadService, settingsManager));
-            ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(updateCards);
+                .Select(model => new CheckpointBrowserCardViewModel(model,
+                    downloadService, settingsManager)).ToList();
+            allModelCards = updateCards;
+            ModelCards =
+                new ObservableCollection<CheckpointBrowserCardViewModel>(
+                    updateCards.Where(FilterModelCardsPredicate));
         }
         TotalPages = metadata?.TotalPages ?? 1;
         CanGoToPreviousPage = CurrentPageNumber > 1;
@@ -310,22 +315,27 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     // On changes to ModelCards, update the view source
     partial void OnModelCardsChanged(ObservableCollection<CheckpointBrowserCardViewModel>? value)
     {
-        if (value is null)
-        {
-            ModelCardsView = null;
-        }
-        // Create new view
-        var view = new DataGridCollectionView(value)
-        {
-            Filter = FilterModelCardsPredicate,
-        };
-        ModelCardsView = view;
+        // if (value is null)
+        // {
+        //     ModelCardsView = null;
+        // }
+        // // Create new view
+        // var view = new DataGridCollectionView(value)
+        // {
+        //     Filter = FilterModelCardsPredicate,
+        // };
+        // ModelCardsView = view;
     }
     
     partial void OnShowNsfwChanged(bool value)
     {
         settingsManager.Transaction(s => s.ModelBrowserNsfwEnabled = value);
-        ModelCardsView?.Refresh();
+        // ModelCardsView?.Refresh();
+        var updateCards = allModelCards
+            .Select(model => new CheckpointBrowserCardViewModel(model.CivitModel, 
+                downloadService, settingsManager))
+            .Where(FilterModelCardsPredicate);
+        ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(updateCards);
 
         if (!HasSearched) 
             return;
@@ -370,9 +380,9 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
 
     private void UpdateResultsText()
     {
-        NoResultsFound = (ModelCards?.Count ?? 0) <= 0;
-        NoResultsText = ModelCards?.Count > 0
-            ? $"{ModelCards.Count} results hidden by filters"
+        NoResultsFound = ModelCards?.Count <= 0;
+        NoResultsText = allModelCards?.Count > 0
+            ? $"{allModelCards.Count} results hidden by filters"
             : "No results found";
     }
 

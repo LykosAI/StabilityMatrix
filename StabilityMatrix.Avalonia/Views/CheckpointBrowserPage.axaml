@@ -6,7 +6,7 @@
              xmlns:controls1="clr-namespace:StabilityMatrix.Avalonia.Controls"
              xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
              xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:DataType="viewModels:CheckpointBrowserViewModel"
              d:DataContext="{x:Static designData:DesignData.CheckpointBrowserViewModel}"
              x:CompileBindings="True"
@@ -17,7 +17,7 @@
             <controls1:Card
                 Margin="8"
                 MaxHeight="450"
-                CornerRadius="20"
+                CornerRadius="8"
                 Name="ModelCard"
                 Width="330">
 
@@ -34,17 +34,17 @@
                         Text="{Binding CivitModel.ModelVersions[0].Name, FallbackValue=''}"
                         VerticalAlignment="Center" />
                     <Grid>
-                        <Image
+                        <controls1:BetterImage
                             Margin="0,8,0,8"
                             MaxHeight="300"
                             Source="{Binding CardImage}"
-                            Stretch="UniformToFill" />
+                            Stretch="UniformToFill"/>
                         
-                        <!-- Appearance="Info" -->
                         <Button
                             Command="{Binding OpenModelCommand}"
                             CommandParameter="{Binding CivitModel}"
                             HorizontalAlignment="Right"
+                            Classes="info"
                             Margin="0,16,8,0"
                             VerticalAlignment="Top">
                             <Button.Content>
@@ -74,7 +74,7 @@
                             HorizontalAlignment="Stretch"
                             Margin="0,8,0,8"
                             VerticalAlignment="Stretch"
-                            IsVisible="{Binding IsImporting, FallbackValue=True}" />
+                            IsVisible="{Binding IsImporting}" />
                         <StackPanel
                             HorizontalAlignment="Stretch"
                             Orientation="Vertical"
@@ -83,12 +83,16 @@
                             <controls1:ProgressRing
                                 HorizontalAlignment="Center"
                                 IsIndeterminate="False"
+                                Width="120"
+                                Height="120"
+                                StartAngle="90"
+                                EndAngle="450"
                                 Value="{Binding Value}"
                                 VerticalAlignment="Center" />
                             <TextBlock
                                 HorizontalAlignment="Center"
                                 Margin="0,8,0,0"
-                                Text="{Binding Text, FallbackValue=Importing...}"
+                                Text="{Binding Text, TargetNullValue=Importing...}"
                                 VerticalAlignment="Center" />
                         </StackPanel>
                     </Grid>
@@ -154,18 +158,18 @@
                     Margin="8,0,8,0"
                     VerticalAlignment="Stretch"
                     Width="80">
-                    <StackPanel Orientation="Horizontal">
+                    <Grid>
                         <controls1:ProgressRing
-                            Height="20"
+                            MinHeight="16"
                             IsIndeterminate="True"
                             VerticalAlignment="Center"
                             IsVisible="{Binding SearchModelsCommand.IsRunning}"
-                            Width="20" />
+                            MinWidth="16" />
                         <TextBlock
                             Text="Search"
                             VerticalAlignment="Center"
                             IsVisible="{Binding !SearchModelsCommand.IsRunning}" />
-                    </StackPanel>
+                    </Grid>
                 </Button>
             </Grid>
             <DockPanel>
@@ -195,21 +199,21 @@
 
                 <CheckBox
                     Content="Show NSFW Content"
-                    FontSize="12"
                     HorizontalAlignment="Right"
                     IsChecked="{Binding ShowNsfw, Mode=TwoWay}"
                     Margin="8,8,8,0" />
             </DockPanel>
 
         </StackPanel>
-            <ScrollViewer Grid.Row="1">
-                <ItemsRepeater ItemTemplate="{StaticResource CivitModelTemplate}"
-                               ItemsSource="{Binding ModelCards}">
-                    <ItemsRepeater.Layout>
-                        <UniformGridLayout Orientation="Horizontal" />
-                    </ItemsRepeater.Layout>
-                </ItemsRepeater>
-            </ScrollViewer>
+        
+        <ScrollViewer Grid.Row="1">
+            <ItemsRepeater ItemTemplate="{StaticResource CivitModelTemplate}"
+                           ItemsSource="{Binding ModelCards}">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout Orientation="Horizontal" />
+                </ItemsRepeater.Layout>
+            </ItemsRepeater>
+        </ScrollViewer>
 
         <TextBlock
             Grid.Row="2"
@@ -252,9 +256,10 @@
             IsVisible="{Binding NoResultsFound}" />
         
         <controls1:ProgressRing
-            Grid.Row="0"
-            Grid.RowSpan="3"
+            Grid.Row="1"
             IsIndeterminate="True"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
             IsVisible="{Binding ShowMainLoadingSpinner, FallbackValue=False}" />
     </Grid>
 </UserControl>

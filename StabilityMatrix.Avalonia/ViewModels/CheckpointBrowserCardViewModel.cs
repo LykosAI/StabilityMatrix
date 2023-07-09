@@ -5,8 +5,10 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -51,8 +53,6 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             return;
         }
 
-        if (Design.IsDesignMode) return;
-        
         UpdateImage().SafeFireAndForget();
         
         // Update image when nsfw setting changes
@@ -79,10 +79,12 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             return;
         }
         
+        var assetStream = AssetLoader.Open(new Uri("avares://StabilityMatrix.Avalonia/Assets/noimage.png"));
+
         // Otherwise Default image
         Dispatcher.UIThread.Invoke(() =>
         {
-            CardImage = new Bitmap("Assets/noimage.png");
+            CardImage = new Bitmap(assetStream);
         });
     }
 
@@ -173,6 +175,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                         Text = $"Downloading... {report.Percentage}%";
                     });
                 }));
+
+            await downloadTask;
             
             // var downloadResult = await snackbarService.TryAsync(downloadTask, "Could not download file");
             

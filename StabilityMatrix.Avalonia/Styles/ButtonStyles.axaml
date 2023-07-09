@@ -6,7 +6,8 @@
             <StackPanel>
                 <Button Classes="success" Content="Success Button" Margin="8" HorizontalAlignment="Center" />
                 <Button Classes="danger" Content="Danger Button" Margin="8" HorizontalAlignment="Center" />
-                <Button Classes="success" Content="Disabled Button" Margin="8" IsEnabled="False" />
+                <Button Classes="info" Content="Info Button" Margin="8" HorizontalAlignment="Center" />
+                <Button Content="Disabled Button" Margin="8" IsEnabled="False" />
             </StackPanel>
         </Border>
     </Design.PreviewWith>
@@ -76,6 +77,47 @@
             <Style Selector="^ /template/ ui|FABorder#Root">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkDarkRedColor}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkDarkRedColor}" />
+            </Style>
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPressed}" />
+            </Style>
+        </Style>
+
+        <Style Selector="^:disabled">
+            <Style Selector="^ /template/ ui|FABorder#Root">
+                <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
+            </Style>
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundDisabled}" />
+            </Style>
+        </Style>
+    </Style>
+    
+    <!-- Info -->
+    <Style Selector="Button.info">
+        <Style Selector="^ /template/ ui|FABorder#Root">
+            <Setter Property="Background" Value="{DynamicResource ThemeLightBlueColor}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeLightBlueColor}" />
+        </Style>
+        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
+        </Style>
+
+        <Style Selector="^:pointerover">
+            <Style Selector="^ /template/ ui|FABorder#Root">
+                <Setter Property="Background" Value="{DynamicResource ThemeBlueColor}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ThemeBlueColor}" />
+            </Style>
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPointerOver}" />
+            </Style>
+        </Style>
+
+        <Style Selector="^:pressed">
+            <Style Selector="^ /template/ ui|FABorder#Root">
+                <Setter Property="Background" Value="{DynamicResource ThemeDarkBlueColor}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkBlueColor}" />
             </Style>
             <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPressed}" />

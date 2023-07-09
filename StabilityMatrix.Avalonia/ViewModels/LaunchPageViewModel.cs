@@ -174,11 +174,14 @@ public partial class LaunchPageViewModel : PageViewModelBase
     // Callback for processes
     private void OnProcessOutputReceived(object? sender, ProcessOutput output)
     {
+#if DEBUG
         var raw = output.RawText;
         // Replace \n and \r with literals
         raw = raw.Replace("\n", "\\n").Replace("\r", "\\r");
-        Debug.WriteLine($"output raw: '{raw}', output: '{output.Text}', clear lines: {output.ClearLines}");
+        Debug.WriteLine($"output: '{raw}', clear lines: {output.ClearLines}");
         Debug.Flush();
+#endif
+
         Dispatcher.UIThread.Post(() =>
         {
             using var update = ConsoleDocument.RunUpdate();

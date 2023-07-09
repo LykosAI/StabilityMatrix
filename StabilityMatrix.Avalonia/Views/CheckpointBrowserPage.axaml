@@ -17,7 +17,7 @@
             <controls1:Card
                 Margin="8"
                 MaxHeight="450"
-                IsExpanded="True"
+                CornerRadius="20"
                 Name="ModelCard"
                 Width="330">
 
@@ -56,8 +56,8 @@
                             Background="#AA1467B5"
                             Height="20"
                             HorizontalAlignment="Left"
+                            Padding="4"
                             Margin="4,16,0,0"
-                            Padding="3"
                             VerticalAlignment="Top">
 
                             <TextBlock

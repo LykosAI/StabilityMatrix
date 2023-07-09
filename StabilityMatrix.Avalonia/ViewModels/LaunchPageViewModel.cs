@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Avalonia.Controls;
 using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -23,7 +21,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(LaunchPageView))]
-public partial class LaunchPageViewModel : PageViewModelBase
+public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
 {
     private readonly ILogger<LaunchPageViewModel> logger;
     private readonly ISettingsManager settingsManager;
@@ -37,14 +35,15 @@ public partial class LaunchPageViewModel : PageViewModelBase
     
     [ObservableProperty] private bool launchButtonVisibility;
     [ObservableProperty] private bool stopButtonVisibility;
-    [ObservableProperty] private bool isLaunchTeachingTipsOpen = false;
+    [ObservableProperty] private bool isLaunchTeachingTipsOpen;
     [ObservableProperty] private bool showWebUiButton;
     
     [ObservableProperty] private InstalledPackage? selectedPackage;
     [ObservableProperty] private ObservableCollection<InstalledPackage> installedPackages = new();
 
-    private BasePackage? runningPackage;
-    private bool clearingPackages;
+    [ObservableProperty] private BasePackage? runningPackage;
+    
+    // private bool clearingPackages;
     private string webUiUrl = string.Empty;
 
     public LaunchPageViewModel(ILogger<LaunchPageViewModel> logger, ISettingsManager settingsManager, IPackageFactory packageFactory,
@@ -74,15 +73,6 @@ public partial class LaunchPageViewModel : PageViewModelBase
                 SelectedPackage = InstalledPackages.FirstOrDefault(
                     x => x.Id == activePackageId) ?? InstalledPackages[0];
             }
-            InstalledPackages = new ObservableCollection<InstalledPackage>
-            {
-                new()
-                {
-                    DisplayName = "Dank Diffusion",
-                    LibraryPath = "Packages\\dank-diffusion"
-                }
-            };
-            SelectedPackage = InstalledPackages[0];
         }
     }
 
@@ -137,7 +127,7 @@ public partial class LaunchPageViewModel : PageViewModelBase
         var packagePath = $"{settingsManager.LibraryDir}\\{activeInstall.LibraryPath!}";
 
         basePackage.ConsoleOutput += OnProcessOutputReceived;
-        // basePackage.Exited += OnExit;
+        basePackage.Exited += OnProcessExited;
         // basePackage.StartupComplete += RunningPackageOnStartupComplete;
 
         // Update shared folder links (in case library paths changed)
@@ -150,37 +140,43 @@ public partial class LaunchPageViewModel : PageViewModelBase
         // Join with extras, if any
         userArgsString = string.Join(" ", userArgsString, basePackage.ExtraLaunchArguments);
         await basePackage.RunPackage(packagePath, userArgsString);
-        runningPackage = basePackage;
-        SetProcessRunning(true);
+        RunningPackage = basePackage;
     }
     
-    [RelayCommand]
-    private void Stop()
+    public async Task Stop()
     {
-        if (runningPackage != null)
-        {
-            runningPackage.ConsoleOutput -= OnProcessOutputReceived;
-            // runningPackage.StartupComplete -= RunningPackageOnStartupComplete;
-            // runningPackage.Exited -= OnExit;
-        }
-
-        runningPackage?.Shutdown();
-        runningPackage = null;
-        SetProcessRunning(false);
-        ConsoleDocument.Text += $"{Environment.NewLine}Stopped process at {DateTimeOffset.Now}";
+        if (RunningPackage is null) return;
+        await RunningPackage.Shutdown();
+        
+        // runningPackage.StartupComplete -= RunningPackageOnStartupComplete;
+        RunningPackage = null;
+        ConsoleDocument.Text += $"{Environment.NewLine}Stopped process at {DateTimeOffset.Now}{Environment.NewLine}";
         ShowWebUiButton = false;
+    }
+    
+    private void OnProcessExited(object? sender, int exitCode)
+    {
+        if (sender is BasePackage package)
+        {
+            package.ConsoleOutput -= OnProcessOutputReceived;
+            package.Exited -= OnProcessExited;
+        }
+        RunningPackage = null;
+        ShowWebUiButton = false;
+        Dispatcher.UIThread.Post(() =>
+        {
+            ConsoleDocument.Text += $"{Environment.NewLine}Process finished with exit code {exitCode}{Environment.NewLine}";
+        });
     }
 
     // Callback for processes
     private void OnProcessOutputReceived(object? sender, ProcessOutput output)
     {
-#if DEBUG
         var raw = output.RawText;
         // Replace \n and \r with literals
         raw = raw.Replace("\n", "\\n").Replace("\r", "\\r");
         Debug.WriteLine($"output: '{raw}', clear lines: {output.ClearLines}");
         Debug.Flush();
-#endif
 
         Dispatcher.UIThread.Post(() =>
         {
@@ -208,24 +204,18 @@ public partial class LaunchPageViewModel : PageViewModelBase
             InstalledPackages.Clear();
             return;
         }
-
-        clearingPackages = true;
+        
         InstalledPackages.Clear();
 
         foreach (var package in packages)
         {
             InstalledPackages.Add(package);
         }
-
-        clearingPackages = false;
     }
     
-    private void SetProcessRunning(bool running)
+    public void Dispose()
     {
-        LaunchButtonVisibility = running;
-        StopButtonVisibility = running;
+        RunningPackage?.Shutdown();
+        GC.SuppressFinalize(this);
     }
-
-    public override bool CanNavigateNext { get; protected set; }
-    public override bool CanNavigatePrevious { get; protected set; }
 }

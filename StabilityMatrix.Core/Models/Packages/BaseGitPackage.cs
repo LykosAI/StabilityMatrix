@@ -220,7 +220,6 @@ public abstract class BaseGitPackage : BasePackage
     public override Task Shutdown()
     {
         VenvRunner?.Dispose();
-        VenvRunner?.Process?.WaitForExitAsync();
-        return Task.CompletedTask;
+        return VenvRunner?.Process?.WaitForExitAsync() ?? Task.CompletedTask;
     }
 }

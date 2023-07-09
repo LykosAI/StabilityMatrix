@@ -60,7 +60,7 @@
                     HorizontalAlignment="Left"
                     VerticalAlignment="Stretch"
                     Classes="danger"
-                    Command="{Binding StopCommand}"
+                    Command="{Binding Stop}"
                     Content="Stop"
                     IsVisible="{Binding RunningPackage, Converter={x:Static ObjectConverters.IsNotNull}}" />
                 <!--  Command="{Binding ConfigCommand}"  -->

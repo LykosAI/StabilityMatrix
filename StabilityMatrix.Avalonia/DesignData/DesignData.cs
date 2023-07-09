@@ -53,10 +53,22 @@ public static class DesignData
         LaunchPageViewModel.SelectedPackage = settingsManager.Settings.InstalledPackages[0];
         
         PackageManagerViewModel = new PackageManagerViewModel(settingsManager, packageFactory);
-        CheckpointsPageViewModel = new CheckpointsPageViewModel(
-            sharedFolders, settingsManager, downloadService, modelFinder);
         SettingsViewModel = new SettingsViewModel(notificationService);
-
+        
+        // Checkpoints page
+        CheckpointsPageViewModel = new CheckpointsPageViewModel(
+            sharedFolders, settingsManager, downloadService, modelFinder)
+        {
+            CheckpointFolders = new ObservableCollection<CheckpointFolder>
+            {
+                new(settingsManager, downloadService, modelFinder)
+                {
+                    Title = "Lora",
+                    DirectoryPath = "Packages/lora",
+                }
+            }
+        };
+        
         CheckpointBrowserViewModel =
             new CheckpointBrowserViewModel(null!, downloadService, settingsManager, null!)
             {
@@ -69,7 +81,8 @@ public static class DesignData
                     }, downloadService, settingsManager)
                 }
             };
-
+        
+        // Main window
         MainWindowViewModel = new MainWindowViewModel
         {
             Pages = new List<PageViewModelBase>

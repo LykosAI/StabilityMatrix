@@ -22,6 +22,7 @@ using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
 using Polly.Timeout;
 using Refit;
+using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.Views;
@@ -89,8 +90,10 @@ public partial class App : Application
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<CheckpointBrowserViewModel>();
         services.AddSingleton<CheckpointBrowserCardViewModel>();
-
+        services.AddSingleton<CheckpointsPageViewModel>();
         services.AddSingleton<ISettingsManager, SettingsManager>();
+        services.AddSingleton<ISharedFolders, SharedFolders>();
+        services.AddSingleton<ModelFinder>();
         services.AddSingleton<IPackageFactory, PackageFactory>();
         services.AddSingleton<IDownloadService, DownloadService>();
         services.AddSingleton<IGithubApiCache, GithubApiCache>();
@@ -115,21 +118,30 @@ public partial class App : Application
             	{
 	                provider.GetRequiredService<LaunchPageViewModel>(),
                 	provider.GetRequiredService<PackageManagerViewModel>(),
-                    provider.GetRequiredService<CheckpointBrowserViewModel>()
+                    provider.GetRequiredService<CheckpointsPageViewModel>(),
+                    provider.GetRequiredService<CheckpointBrowserViewModel>(),
 	            },
                 FooterPages = new List<PageViewModelBase>
                 {
                     provider.GetRequiredService<SettingsViewModel>()
                 }
         	});
-        
+
+        services.AddTransient<CheckpointsPage>();
         services.AddTransient<LaunchPageView>();
         services.AddTransient<PackageManagerPage>();
         services.AddTransient<SettingsPage>();
         services.AddTransient<CheckpointBrowserPage>();
         services.AddSingleton<MainWindow>();
         
-        services.AddSingleton<ILiteDbContext, LiteDbContext>();
+        if (Design.IsDesignMode)
+        {
+            services.AddSingleton<ILiteDbContext, MockLiteDbContext>();
+        }
+        else
+        {
+            services.AddSingleton<ILiteDbContext, LiteDbContext>();
+        }
         
         services.AddTransient<IGitHubClient, GitHubClient>(_ =>
         {

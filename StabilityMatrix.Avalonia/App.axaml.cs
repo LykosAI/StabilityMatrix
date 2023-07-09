@@ -44,7 +44,6 @@ public partial class App : Application
 {
     public static IServiceProvider Services { get; set; } = null!;
     
-    
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -69,6 +68,7 @@ public partial class App : Application
             mainWindow.DataContext = mainViewModel;
             mainWindow.NotificationService = notificationService;
             desktop.MainWindow = mainWindow;
+            desktop.Exit += OnExit;
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -224,6 +224,29 @@ public partial class App : Application
         });
         
         return services;
+    }
+    
+    private void OnExit(object? sender, ControlledApplicationLifetimeExitEventArgs args)
+    {
+        // Services.GetRequiredService<LaunchViewModel>().OnShutdown();
+        var settingsManager = Services.GetRequiredService<ISettingsManager>();
+        
+        // Unless KeepFolderLinksOnShutdown is set, delete all package junctions
+        if (settingsManager is
+            {
+                IsLibraryDirSet: true, 
+                Settings.KeepFolderLinksOnShutdown: false
+            })
+        {
+            var sharedFolders = Services.GetRequiredService<ISharedFolders>();
+            sharedFolders.RemoveLinksForAllPackages();
+        }
+        
+        // Dispose all services
+        foreach (var disposable in Services.GetServices<IDisposable>())
+        {
+            disposable.Dispose();
+        }
     }
     
     private static LoggingConfiguration ConfigureLogging()

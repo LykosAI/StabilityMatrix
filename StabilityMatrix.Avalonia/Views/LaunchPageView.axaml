@@ -1,19 +1,22 @@
-﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
-             xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
-             xmlns:ui="using:FluentAvalonia.UI.Controls"
-             xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-             xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
-             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-             d:DataContext="{x:Static mocks:DesignData.LaunchPageViewModel}"
-             x:CompileBindings="True"
-             x:DataType="vm:LaunchPageViewModel"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="StabilityMatrix.Avalonia.Views.LaunchPageView">
-    
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.LaunchPageView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    d:DataContext="{x:Static mocks:DesignData.LaunchPageViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="700"
+    x:CompileBindings="True"
+    x:DataType="vm:LaunchPageViewModel"
+    mc:Ignorable="d">
+
     <Grid RowDefinitions="Auto,*,Auto">
         <Grid ColumnDefinitions="Auto,*">
             <Grid ColumnDefinitions="0.8*,0.2*">
@@ -36,69 +39,66 @@
                             Width="280" />
                     </StackPanel>
                 </ui:Flyout>-->
-                
-                <!-- Command="{Binding LaunchCommand}" -->
-                <!--Visibility="{Binding LaunchButtonVisibility, FallbackValue=Visible}"-->
+
+                <!--  Command="{Binding LaunchCommand}"  -->
+                <!--  Visibility="{Binding LaunchButtonVisibility, FallbackValue=Visible}"  -->
                 <Button
-                    Command="{Binding LaunchCommand}"
-                    Content="Launch"
-                    Grid.Column="0"
                     Grid.Row="0"
+                    Grid.Column="0"
+                    Width="72"
+                    Margin="24,8,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Stretch"
                     Classes="success"
-                    HorizontalAlignment="Left"
-                    Margin="24,8,0,0"
-                    VerticalAlignment="Stretch"
-                    Width="72"/>
+                    Command="{Binding LaunchCommand}"
+                    Content="Launch" />
                 <Button
-                    Content="Stop"
+                    Grid.Row="0"
                     Grid.Column="0"
-                    Grid.Row="0"
-                    Classes="danger"
-                    HorizontalAlignment="Left"
+                    Width="72"
                     Margin="24,8,0,0"
-                    VerticalAlignment="Stretch"
-                    Command="{Binding StopCommand}"
-                    IsVisible="{Binding StopButtonVisibility, FallbackValue=True}"
-                    Width="72"/>
-                <!--Command="{Binding ConfigCommand}"-->
-                <Button
-                    FontSize="16"
-                    Grid.Column="1"
-                    Grid.Row="0"
                     HorizontalAlignment="Left"
-                    Margin="8,8,0,0"
                     VerticalAlignment="Stretch"
-                    Width="48">
-                    <ui:SymbolIcon Symbol="Settings" FontSize="16"/>
-                    <!--<ui:Button.Icon>
-                        <ui:SymbolIcon Symbol="Settings32" />
-                    </ui:Button.Icon>-->
+                    Classes="danger"
+                    Command="{Binding StopCommand}"
+                    Content="Stop"
+                    IsVisible="{Binding RunningPackage, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                <!--  Command="{Binding ConfigCommand}"  -->
+                <Button
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Width="48"
+                    Margin="8,8,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Stretch"
+                    FontSize="16">
+                    <ui:SymbolIcon FontSize="16" Symbol="Settings" />
                 </Button>
             </Grid>
 
             <ComboBox
-                Grid.Column="1"
+                x:Name="SelectPackageComboBox"
                 Grid.Row="0"
-                HorizontalAlignment="Stretch"
+                Grid.Column="1"
                 Margin="8,8,24,0"
+                HorizontalAlignment="Stretch"
                 VerticalAlignment="Top"
                 ItemsSource="{Binding InstalledPackages}"
-                SelectedValue="{Binding SelectedPackage}"
-                x:Name="SelectPackageComboBox">
+                SelectedValue="{Binding SelectedPackage}">
                 <ComboBox.Styles>
-                    <Style Selector="ComboBox /template/ ContentControl#ContentPresenter > StackPanel > TextBlock:nth-child(2)">
+                    <Style Selector="ComboBox /template/ ContentControl#ContentPresenter &gt; StackPanel &gt; TextBlock:nth-child(2)">
                         <Setter Property="IsVisible" Value="False" />
                     </Style>
                 </ComboBox.Styles>
-                
+
                 <ComboBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:InstalledPackage}">
                         <StackPanel Margin="10,0,0,0" VerticalAlignment="Top">
                             <TextBlock
-                                Margin="0,5,0,5"
                                 Name="NameTextBlock"
+                                Margin="0,5,0,5"
                                 Text="{Binding DisplayName, Mode=OneWay}" />
-                            <TextBlock Text="{Binding FullPath, Mode=OneWay}"/>
+                            <TextBlock Text="{Binding FullPath, Mode=OneWay}" />
                         </StackPanel>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
@@ -107,26 +107,26 @@
 
         <avaloniaEdit:TextEditor
             x:Name="Console"
-            Document="{Binding ConsoleDocument}"
-            IsReadOnly="True"
             Grid.Row="1"
-            WordWrap="True"
             Margin="16,8,16,10"
-            ShowLineNumbers="True"
+            Document="{Binding ConsoleDocument}"
+            FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+            IsReadOnly="True"
             LineNumbersForeground="DarkSlateGray"
+            ShowLineNumbers="True"
             VerticalScrollBarVisibility="Auto"
-            FontFamily="Cascadia Code,Consolas,Menlo,Monospace" />
-        
-        <!--Command="{Binding LaunchWebUiCommand}"-->
-        <!--Visibility="{Binding ShowWebUiButton, Converter={StaticResource BoolToVisConverter}}"-->
+            WordWrap="True" />
+
+        <!--  Command="{Binding LaunchWebUiCommand}"  -->
+        <!--  Visibility="{Binding ShowWebUiButton, Converter={StaticResource BoolToVisConverter}}"  -->
         <Button
-            Content="Open Web UI"
-            FontSize="12"
-            Classes="success"
-            Grid.ColumnSpan="2"
             Grid.Row="2"
+            Grid.ColumnSpan="2"
+            Margin="24,0,24,8"
             HorizontalAlignment="Stretch"
-            Margin="24,0,24,8"/>
+            Classes="success"
+            Content="Open Web UI"
+            FontSize="12" />
     </Grid>
-    
+
 </controls:UserControlBase>

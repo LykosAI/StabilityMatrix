@@ -1,4 +1,5 @@
-﻿using LiteDB.Async;
+﻿using System.Diagnostics;
+using LiteDB.Async;
 using Microsoft.Extensions.Options;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api;
@@ -13,14 +14,18 @@ public class LiteDbContext : ILiteDbContext
     private readonly DebugOptions debugOptions;
 
     private LiteDatabaseAsync? database;
-    public LiteDatabaseAsync Database 
+    public LiteDatabaseAsync Database
     {
         get
         {
             if (database is null) throw new InvalidOperationException("Database not set before access");
             return database;
         }
-        private set => database = value;
+        private set
+        {
+            database?.Dispose();
+            database = value;
+        }
     }
 
     // Notification events
@@ -107,6 +112,7 @@ public class LiteDbContext : ILiteDbContext
 
     public void Dispose()
     {
+        database?.UnderlyingDatabase.Dispose();
         database?.Dispose();
         GC.SuppressFinalize(this);
     }

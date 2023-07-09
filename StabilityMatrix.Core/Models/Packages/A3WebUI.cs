@@ -156,18 +156,8 @@ public class A3WebUI : BaseGitPackage
             OnConsoleOutput(s);
         }
 
-        void HandleExit(int i)
-        {
-            Debug.WriteLine($"Venv process exited with code {i}");
-            OnConsoleOutput(new ProcessOutput
-            {
-                Text = $"Venv process exited with code {i}"
-            });
-            OnExit(i);
-        }
-
         var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
 
-        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit, workingDirectory: installedPackagePath);
+        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit, workingDirectory: installedPackagePath);
     }
 }

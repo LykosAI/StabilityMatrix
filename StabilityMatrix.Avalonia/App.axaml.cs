@@ -69,6 +69,7 @@ public partial class App : Application
             mainWindow.NotificationService = notificationService;
             desktop.MainWindow = mainWindow;
             desktop.Exit += OnExit;
+            Debug.WriteLine($"Shutdown mode: {desktop.ShutdownMode}");
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -105,10 +106,9 @@ public partial class App : Application
         services.AddSingleton<BasePackage, ComfyUI>();
         services.AddSingleton<IPyRunner, PyRunner>();
         
-        services.AddSingleton<LaunchPageViewModel>(s =>
-            new LaunchPageViewModel(s.GetRequiredService<ILogger<LaunchPageViewModel>>(),
-                s.GetRequiredService<ISettingsManager>(), s.GetRequiredService<IPackageFactory>(),
-                s.GetRequiredService<IPyRunner>()));
+        services.AddSingleton<LaunchPageViewModel>();
+        services.AddSingleton<IDisposable>(p => p.GetRequiredService<LaunchPageViewModel>());
+        
         services.AddSingleton<PackageManagerViewModel>(s =>
             new PackageManagerViewModel(s.GetRequiredService<ISettingsManager>(),
                 s.GetRequiredService<IPackageFactory>()));
@@ -141,6 +141,7 @@ public partial class App : Application
         else
         {
             services.AddSingleton<ILiteDbContext, LiteDbContext>();
+            services.AddSingleton<IDisposable>(p => p.GetRequiredService<ILiteDbContext>());
         }
         
         services.AddTransient<IGitHubClient, GitHubClient>(_ =>
@@ -228,6 +229,7 @@ public partial class App : Application
     
     private void OnExit(object? sender, ControlledApplicationLifetimeExitEventArgs args)
     {
+        Debug.WriteLine("Start OnExit");
         // Services.GetRequiredService<LaunchViewModel>().OnShutdown();
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
         
@@ -241,12 +243,15 @@ public partial class App : Application
             var sharedFolders = Services.GetRequiredService<ISharedFolders>();
             sharedFolders.RemoveLinksForAllPackages();
         }
-        
+
+        Debug.WriteLine("Start OnExit: Disposing services");
         // Dispose all services
         foreach (var disposable in Services.GetServices<IDisposable>())
         {
+            Debug.WriteLine($"Disposing {disposable.GetType().Name}");
             disposable.Dispose();
         }
+        Debug.WriteLine("End OnExit");
     }
     
     private static LoggingConfiguration ConfigureLogging()
@@ -273,6 +278,7 @@ public partial class App : Application
             {
                 o.InitializeSdk = false;
                 o.Layout = "${message}";
+                o.ShutdownTimeoutSeconds = 5;
                 o.IncludeEventDataOnBreadcrumbs = true;
                 o.BreadcrumbLayout = "${logger}: ${message}";
                 // Debug and higher are stored as breadcrumbs (default is Info)

@@ -78,6 +78,7 @@ public abstract class BaseGitPackage : BasePackage
     /// <param name="installedPackagePath"></param>
     /// <param name="venvName"></param>
     /// <returns></returns>
+    [MemberNotNull(nameof(VenvRunner))]
     protected async Task<PyVenvRunner> SetupVenv(string installedPackagePath, string venvName = "venv")
     {
         var venvPath = Path.Combine(installedPackagePath, "venv");

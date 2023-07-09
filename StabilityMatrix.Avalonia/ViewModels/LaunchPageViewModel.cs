@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -56,6 +57,38 @@ public partial class LaunchPageViewModel : PageViewModelBase
 
     public override void OnLoaded()
     {
+        LoadPackages();
+        lock (InstalledPackages)
+        {
+            // Skip if no packages
+            if (!InstalledPackages.Any())
+            {
+                //logger.LogTrace($"No packages for {nameof(LaunchViewModel)}");
+                return;
+            }
+
+            var activePackageId = settingsManager.Settings.ActiveInstalledPackage;
+            if (activePackageId != null)
+            {
+                SelectedPackage = InstalledPackages.FirstOrDefault(
+                    x => x.Id == activePackageId) ?? InstalledPackages[0];
+            }
+            InstalledPackages = new ObservableCollection<InstalledPackage>
+            {
+                new()
+                {
+                    DisplayName = "Dank Diffusion",
+                    LibraryPath = "Packages\\dank-diffusion"
+                }
+            };
+            SelectedPackage = InstalledPackages[0];
+        }
+    }
+
+    public void OnLoaded()
+    {
+        if (Design.IsDesignMode) return;
+        
         LoadPackages();
         lock (InstalledPackages)
         {

@@ -55,15 +55,26 @@
                             Margin="8,16,0,0" />
                         <StackPanel Grid.Row="1">
                             <ui:SettingsExpander
-                                IconSource="CommentAdd"
-                                Header="Notification Test"
-                                Command="{Binding DebugNotificationCommand}"
+                                IconSource="Code"
+                                Header="Debug Options"
                                 Margin="8">
-                                <ui:SettingsExpander.Footer>
-                                    <Button
-                                        Command="{Binding DebugNotificationCommand}"
-                                        Content="New Notification"/>
-                                </ui:SettingsExpander.Footer>
+                                
+                                <ui:SettingsExpanderItem Content="Notification" IconSource="CommentAdd">
+                                    <ui:SettingsExpanderItem.Footer>
+                                        <Button
+                                            Command="{Binding DebugNotificationCommand}"
+                                            Content="New Notification"/>
+                                    </ui:SettingsExpanderItem.Footer>
+                                </ui:SettingsExpanderItem>
+                                
+                                <ui:SettingsExpanderItem Content="Content Dialog" IconSource="CommentAdd">
+                                    <ui:SettingsExpanderItem.Footer>
+                                        <Button
+                                            Command="{Binding DebugContentDialogCommand}"
+                                            Content="Show Dialog"/>
+                                    </ui:SettingsExpanderItem.Footer>
+                                </ui:SettingsExpanderItem>
+                                
                             </ui:SettingsExpander>
                         </StackPanel>
                     </Grid>

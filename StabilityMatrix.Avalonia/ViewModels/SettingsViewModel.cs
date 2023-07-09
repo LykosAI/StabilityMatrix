@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -41,6 +42,21 @@ public partial class SettingsViewModel : PageViewModelBase
             title: "Test Notification",
             message: "Here is some message",
             type: NotificationType.Information));
+    }
+
+    [RelayCommand]
+    private async Task DebugContentDialog()
+    {
+        var dialog = new ContentDialog
+        {
+            Title = "Test title",
+            PrimaryButtonText = "OK",
+            CloseButtonText = "Close"
+        };
+
+        var result = await dialog.ShowAsync();
+        notificationService.Show(new Notification("Content dialog closed",
+            $"Result: {result}"));
     }
     
     public override bool CanNavigateNext { get; protected set; }

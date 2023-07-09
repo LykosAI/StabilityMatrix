@@ -117,14 +117,9 @@
             VerticalScrollBarVisibility="Auto"
             FontFamily="Cascadia Code,Consolas,Menlo,Monospace" />
         
-            <Expander IsExpanded="True" Grid.Row="1" Header="Header Stuff" Margin="16">
-                <Expander.Styles>
-                    <Style Selector="Expander /template/ ToggleButton#PART_toggle">
-                        <Setter Property="IsVisible" Value="False"/>
-                    </Style>
-                </Expander.Styles>
-                <TextBlock Text="Hello World"></TextBlock>
-            </Expander>
+        <controls:Card IsExpanded="True" Grid.Row="1" Header="Header Stuff" Margin="16">
+            <TextBlock Text="Hello World"></TextBlock>
+        </controls:Card>
 
         <!--Command="{Binding LaunchWebUiCommand}"-->
         <!--Visibility="{Binding ShowWebUiButton, Converter={StaticResource BoolToVisConverter}}"-->

@@ -20,7 +20,7 @@ using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
-public partial class CheckpointFile : ObservableObject
+public partial class CheckpointFile : ViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     

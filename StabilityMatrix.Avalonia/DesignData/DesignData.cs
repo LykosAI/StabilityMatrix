@@ -65,6 +65,32 @@ public static class DesignData
                 {
                     Title = "Lora",
                     DirectoryPath = "Packages/lora",
+                    CheckpointFiles = new ObservableCollection<CheckpointFile>
+                    {
+                        new()
+                        {
+                            FilePath = "~/Models/Lora/electricity-light.safetensors",
+                            Title = "Auroral Background",
+                            ConnectedModel = new ConnectedModelInfo
+                            {
+                                VersionName = "Lightning Auroral",
+                                BaseModel = "SD 1.5",
+                                ModelName = "Auroral Background",
+                                ModelType = CivitModelType.LORA,
+                                FileMetadata = new CivitFileMetadata
+                                {
+                                    Format = CivitModelFormat.SafeTensor,
+                                    Fp = CivitModelFpType.fp16,
+                                    Size = CivitModelSize.pruned,
+                                }
+                            }
+                        },
+                        new()
+                        {
+                            FilePath = "~/Models/Lora/model.safetensors",
+                            Title = "Some model"
+                        }
+                    }
                 }
             }
         };

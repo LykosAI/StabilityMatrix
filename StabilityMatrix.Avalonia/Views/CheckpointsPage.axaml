@@ -72,7 +72,7 @@
                                     Orientation="Vertical">
                                     <!--  Tooltip for title and version  -->
                                     <ToolTip.Tip>
-                                        <VirtualizingStackPanel>
+                                        <StackPanel>
                                             <!--  Title  -->
                                             <TextBlock
                                                 FontSize="14"
@@ -97,7 +97,7 @@
                                                 Source="{Binding PreviewImage}"
                                                 Stretch="Uniform"
                                                 IsVisible="{Binding IsConnectedModel}" />
-                                        </VirtualizingStackPanel>
+                                        </StackPanel>
                                     </ToolTip.Tip>
                                     <TextBlock
                                         Foreground="{DynamicResource TextFillColorPrimaryBrush}"
@@ -130,7 +130,6 @@
                                         VerticalAlignment="Top"
                                         IsVisible="{Binding IsConnectedModel, Mode=OneWay}">
                                         <ui:SymbolIcon
-                                            FontSize="12"
                                             Foreground="LightGreen"
                                             Symbol="CloudSyncComplete"
                                             ToolTip.Tip="Connected Model" />
@@ -148,7 +147,6 @@
                                         VerticalAlignment="Top"
                                         IsVisible="{Binding !IsConnectedModel, Mode=OneWay}">
                                         <ui:SymbolIcon
-                                            FontSize="12"
                                             Foreground="DimGray"
                                             Symbol="CloudOffline"
                                             ToolTip.Tip="Local Model" />
@@ -229,7 +227,11 @@
                         <!--PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel"-->
                         <ItemsRepeater
                             ItemTemplate="{StaticResource CheckpointFileDataTemplate}"
-                            ItemsSource="{Binding CheckpointFiles}"/>
+                            ItemsSource="{Binding CheckpointFiles}">
+                            <ItemsRepeater.Layout>
+                                <UniformGridLayout Orientation="Horizontal"/>
+                            </ItemsRepeater.Layout>
+                        </ItemsRepeater>
                         <Border
                             CornerRadius="8"
                             Grid.RowSpan="4"
@@ -308,7 +310,7 @@
         </DataTemplate>
         
         <!--  Template for dropdown box  -->
-        <ControlTemplate TargetType="{x:Type ComboBoxItem}" x:Key="CategoryDropDownStyle">
+        <ControlTemplate x:Key="CategoryDropDownTemplate">
             <Grid>
                 <Border
                     CornerRadius="{TemplateBinding Border.CornerRadius}"
@@ -336,22 +338,24 @@
                             <StackPanel
                                 Grid.Column="0"
                                 Margin="10,0,0,0"
-                                VerticalAlignment="Top"
-                                x:DataType="vm:CheckpointFolder">
-                                <CheckBox Content="{Binding TitleWithFilesCount}" IsChecked="{Binding IsCategoryEnabled, Mode=TwoWay}" />
+                                VerticalAlignment="Top">
+                                <!--<CheckBox 
+                                    Content="{Binding TitleWithFilesCount}" 
+                                    IsChecked="{Binding IsCategoryEnabled, Mode=TwoWay}" />-->
                             </StackPanel>
                         </Grid>
                     </Grid>
                 </Border>
-            </Grid>
+            </Grid>  
         </ControlTemplate>
         
     </controls:UserControlBase.Resources>
     
-    <Grid ColumnDefinitions="Auto,*" RowDefinitions="0.1*,*">
+    <Grid ColumnDefinitions="Auto,*" RowDefinitions="0.2*,*">
         <!--  Top settings bar  -->
         <ToggleSwitch
-            Content="Import as Connected"
+            OffContent="Import as Connected"
+            OnContent="Import as Connected"
             Grid.Column="0"
             IsChecked="{Binding IsImportAsConnected}"
             Margin="24,8"
@@ -367,19 +371,30 @@
                 Command="{Binding OpenModelsFolderCommand}"
                 Height="46"
                 Margin="8,0">
-                <TextBlock Text="Open Models Folder"/>
+                <TextBlock Text="Models Folder"/>
             </Button>
-            <ComboBox
+            <DropDownButton
+                Margin="8"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right">
+                <Button.Flyout>
+                    <MenuFlyout 
+                        Placement="Bottom" 
+                        ItemsSource="{Binding CheckpointFolders}"/>
+                </Button.Flyout>
+            </DropDownButton>
+            <!--<ComboBox
+                VerticalAlignment="Center"
                 HorizontalAlignment="Right"
                 ItemsSource="{Binding CheckpointFolders}"
                 MinWidth="180"
                 SelectedIndex="0">
                 
-                <!--<ComboBox.ItemContainerStyle>
+                <ComboBox.ItemContainerStyle>
                     <Style TargetType="ComboBoxItem">
                         <Setter Property="Template" Value="{StaticResource CategoryDropDownStyle}" />
                     </Style>
-                </ComboBox.ItemContainerStyle>-->
+                </ComboBox.ItemContainerStyle>
 
                 <ComboBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type vm:CheckpointFolder}">
@@ -388,7 +403,7 @@
                         </StackPanel>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
-            </ComboBox>
+            </ComboBox>-->
         </StackPanel>
 
         <!--  Main view with model cards  -->

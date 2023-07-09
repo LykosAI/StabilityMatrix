@@ -29,7 +29,7 @@
                     <!--  TODO: Text2Image host port settings  -->
                     
                     <!-- TODO: Keep folder links on shutdown  -->
-
+                    
                     <Grid RowDefinitions="auto,*">
                         <TextBlock 
                             FontWeight="Medium"

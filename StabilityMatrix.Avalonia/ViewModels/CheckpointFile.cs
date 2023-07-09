@@ -139,12 +139,9 @@ public partial class CheckpointFile : ViewModelBase
     private async Task LoadPreviewImage()
     {
         if (PreviewImagePath == null) return;
-        var bytes = await File.ReadAllBytesAsync(PreviewImagePath);
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            using var ms = new MemoryStream(bytes);
-            var bitmap = new Bitmap(ms);
-            PreviewImage = bitmap;
+            PreviewImage = new Bitmap(File.OpenRead(PreviewImagePath));
         });
     }
 

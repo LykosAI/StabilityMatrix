@@ -423,7 +423,7 @@ public class SettingsManager : ISettingsManager
     /// Loads settings from the settings file
     /// If the settings file does not exist, it will be created with default values
     /// </summary>
-    private void LoadSettings()
+    protected virtual void LoadSettings()
     {
         FileLock.EnterReadLock();
         try
@@ -451,7 +451,7 @@ public class SettingsManager : ISettingsManager
         }
     }
 
-    private void SaveSettings()
+    protected virtual void SaveSettings()
     {
         FileLock.TryEnterWriteLock(100000);
         try

@@ -17,7 +17,7 @@ public static class DesignData
 {
     static DesignData()
     {
-        var settingsManager = new SettingsManager
+        var settingsManager = new MockSettingsManager
         {
             Settings =
             {

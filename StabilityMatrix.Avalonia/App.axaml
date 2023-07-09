@@ -22,5 +22,6 @@
         <styling:FluentAvaloniaTheme />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
         <StyleInclude Source="Styles/ButtonStyles.axaml"/>
+        <StyleInclude Source="Styles/ProgressRing.axaml"/>
     </Application.Styles>
 </Application>

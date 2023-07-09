@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using AvaloniaEdit.Utils;
 using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Packages;
@@ -39,6 +40,9 @@ public static class DesignData
         };
         var packageFactory = new PackageFactory(packages);
         var notificationService = new MockNotificationService();
+        var sharedFolders = new SharedFolders(settingsManager, packageFactory);
+        var downloadService = new MockDownloadService();
+        var modelFinder = new ModelFinder(null!, null!);
         
         LaunchPageViewModel = new LaunchPageViewModel(
             null!, settingsManager, packageFactory, new PyRunner());
@@ -47,6 +51,8 @@ public static class DesignData
         LaunchPageViewModel.SelectedPackage = settingsManager.Settings.InstalledPackages[0];
         
         PackageManagerViewModel = new PackageManagerViewModel(settingsManager, packageFactory);
+        CheckpointsPageViewModel = new CheckpointsPageViewModel(
+            sharedFolders, settingsManager, downloadService, modelFinder);
         SettingsViewModel = new SettingsViewModel(notificationService);
 
         MainWindowViewModel = new MainWindowViewModel
@@ -66,5 +72,6 @@ public static class DesignData
     public static MainWindowViewModel MainWindowViewModel { get; }
     public static LaunchPageViewModel LaunchPageViewModel { get; }
     public static PackageManagerViewModel PackageManagerViewModel { get; }
+    public static CheckpointsPageViewModel CheckpointsPageViewModel { get; }
     public static SettingsViewModel SettingsViewModel { get; }
 }

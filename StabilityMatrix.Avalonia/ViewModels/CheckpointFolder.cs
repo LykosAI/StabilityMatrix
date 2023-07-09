@@ -19,7 +19,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
-public partial class CheckpointFolder : ObservableObject
+public partial class CheckpointFolder : ViewModelBase
 {
     private readonly ISettingsManager settingsManager;
     private readonly IDownloadService downloadService;

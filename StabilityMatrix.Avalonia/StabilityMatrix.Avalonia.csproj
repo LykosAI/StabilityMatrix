@@ -9,7 +9,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Folder Include="Controls\" />
         <AvaloniaResource Include="Assets\**" />
         <Folder Include="Models\" />
     </ItemGroup>
@@ -50,5 +49,10 @@
 
     <ItemGroup>
       <AvaloniaResource Include="Assets\Icon.png" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <Resource Include="Assets\noimage.png" />
     </ItemGroup>
 </Project>

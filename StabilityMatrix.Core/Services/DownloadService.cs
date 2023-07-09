@@ -25,7 +25,7 @@ public class DownloadService : IDownloadService
             : httpClientFactory.CreateClient(httpClientName);
         
         client.Timeout = TimeSpan.FromMinutes(10);
-        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("StabilityMatrix", "1.0"));
+        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("StabilityMatrix", "2.0"));
         await using var file = new FileStream(downloadPath, FileMode.Create, FileAccess.Write, FileShare.None);
         
         long contentLength = 0;
@@ -71,5 +71,21 @@ public class DownloadService : IDownloadService
         await file.FlushAsync();
         
         progress?.Report(new ProgressReport(1f, message: "Download complete!"));
+    }
+
+    public async Task<Stream> GetImageStreamFromUrl(string url)
+    {
+        using var client = httpClientFactory.CreateClient();
+        client.Timeout = TimeSpan.FromSeconds(10);
+        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("StabilityMatrix", "2.0"));
+        try
+        {
+            var response = await client.GetAsync(url);
+            return await response.Content.ReadAsStreamAsync();
+        }
+        catch (Exception e)
+        {
+            return default;
+        }
     }
 }

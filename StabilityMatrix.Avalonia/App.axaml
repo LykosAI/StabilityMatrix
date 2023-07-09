@@ -3,6 +3,7 @@
              x:Class="StabilityMatrix.Avalonia.App"
              xmlns:local="using:StabilityMatrix.Avalonia"
              xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
+             
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
@@ -21,6 +22,8 @@
     <Application.Styles>
         <styling:FluentAvaloniaTheme />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
+        <StyleInclude Source="Styles/ProgressRing.axaml"/>
         <StyleInclude Source="Styles/ButtonStyles.axaml"/>
+        <StyleInclude Source="Styles/Card.axaml"/>
     </Application.Styles>
 </Application>

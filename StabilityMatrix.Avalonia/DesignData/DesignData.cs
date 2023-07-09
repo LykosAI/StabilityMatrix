@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using AvaloniaEdit.Utils;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
@@ -55,12 +57,26 @@ public static class DesignData
             sharedFolders, settingsManager, downloadService, modelFinder);
         SettingsViewModel = new SettingsViewModel(notificationService);
 
+        CheckpointBrowserViewModel =
+            new CheckpointBrowserViewModel(null!, downloadService, settingsManager, null!)
+            {
+                ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>
+                {
+                    new(new CivitModel
+                    {
+                        Name = "BB95 Furry Mix",
+                        Description = "A furry mix of BB95",
+                    }, downloadService, settingsManager)
+                }
+            };
+
         MainWindowViewModel = new MainWindowViewModel
         {
             Pages = new List<PageViewModelBase>
             {
                 LaunchPageViewModel,
                 PackageManagerViewModel,
+                CheckpointBrowserViewModel
             },
             FooterPages = new List<PageViewModelBase>
             {
@@ -74,4 +90,5 @@ public static class DesignData
     public static PackageManagerViewModel PackageManagerViewModel { get; }
     public static CheckpointsPageViewModel CheckpointsPageViewModel { get; }
     public static SettingsViewModel SettingsViewModel { get; }
+    public static CheckpointBrowserViewModel CheckpointBrowserViewModel { get; }
 }

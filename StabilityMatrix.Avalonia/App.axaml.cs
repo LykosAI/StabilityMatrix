@@ -25,9 +25,12 @@ using Refit;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.Views;
+using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
+using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
@@ -84,7 +87,9 @@ public partial class App : Application
         services.AddMemoryCache();
         services.AddSingleton<PackageManagerViewModel>();
         services.AddSingleton<SettingsViewModel>();
-        
+        services.AddSingleton<CheckpointBrowserViewModel>();
+        services.AddSingleton<CheckpointBrowserCardViewModel>();
+
         services.AddSingleton<ISettingsManager, SettingsManager>();
         services.AddSingleton<IPackageFactory, PackageFactory>();
         services.AddSingleton<IDownloadService, DownloadService>();
@@ -110,6 +115,7 @@ public partial class App : Application
             	{
 	                provider.GetRequiredService<LaunchPageViewModel>(),
                 	provider.GetRequiredService<PackageManagerViewModel>(),
+                    provider.GetRequiredService<CheckpointBrowserViewModel>()
 	            },
                 FooterPages = new List<PageViewModelBase>
                 {
@@ -120,7 +126,10 @@ public partial class App : Application
         services.AddTransient<LaunchPageView>();
         services.AddTransient<PackageManagerPage>();
         services.AddTransient<SettingsPage>();
+        services.AddTransient<CheckpointBrowserPage>();
         services.AddSingleton<MainWindow>();
+        
+        services.AddSingleton<ILiteDbContext, LiteDbContext>();
         
         services.AddTransient<IGitHubClient, GitHubClient>(_ =>
         {
@@ -179,13 +188,13 @@ public partial class App : Application
                 .AddPolicyHandler(retryPolicy);
 
             // Add Refit clients
-            // services.AddRefitClient<ICivitApi>(defaultRefitSettings)
-            //     .ConfigureHttpClient(c =>
-            //     {
-            //         c.BaseAddress = new Uri("https://civitai.com");
-            //         c.Timeout = TimeSpan.FromSeconds(15);
-            //     })
-            //     .AddPolicyHandler(retryPolicy);
+            services.AddRefitClient<ICivitApi>(defaultRefitSettings)
+                .ConfigureHttpClient(c =>
+                {
+                    c.BaseAddress = new Uri("https://civitai.com");
+                    c.Timeout = TimeSpan.FromSeconds(15);
+                })
+                .AddPolicyHandler(retryPolicy);
 
             // Add Refit client managers
             services.AddHttpClient("A3Client")
@@ -201,7 +210,7 @@ public partial class App : Application
             builder.SetMinimumLevel(LogLevel.Debug);
             builder.AddNLog(ConfigureLogging());
         });
-
+        
         return services;
     }
     

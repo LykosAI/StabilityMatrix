@@ -11,8 +11,8 @@
                      x:DataType="vm:MainWindowViewModel"
                      x:CompileBindings="True"
                      Icon="/Assets/Icon.ico"
-                     Width="900"
-                     Height="650"
+                     Width="1100"
+                     Height="750"
                      Title="Stability Matrix Avalonia"
                      x:Class="StabilityMatrix.Avalonia.Views.MainWindow">
 

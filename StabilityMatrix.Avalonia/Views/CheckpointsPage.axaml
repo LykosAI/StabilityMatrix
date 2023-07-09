@@ -8,7 +8,6 @@
              xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
              d:DataContext="{x:Static mocks:DesignData.CheckpointsPageViewModel}"
              x:CompileBindings="True"
-             x:DataType="vm:"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="StabilityMatrix.Avalonia.Views.CheckpointsPage">
     Welcome to Avalonia!

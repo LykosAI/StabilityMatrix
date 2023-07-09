@@ -117,10 +117,6 @@
             VerticalScrollBarVisibility="Auto"
             FontFamily="Cascadia Code,Consolas,Menlo,Monospace" />
         
-        <controls:Card IsExpanded="True" Grid.Row="1" Header="Header Stuff" Margin="16">
-            <TextBlock Text="Hello World"></TextBlock>
-        </controls:Card>
-
         <!--Command="{Binding LaunchWebUiCommand}"-->
         <!--Visibility="{Binding ShowWebUiButton, Converter={StaticResource BoolToVisConverter}}"-->
         <Button

@@ -1,0 +1,22 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <controls:Card
+                Margin="8"
+                MaxHeight="450"
+                IsExpanded="True"
+                Header="Header Text"
+                Name="ModelCard"
+                Width="330">
+                <TextBlock Text="Hello World"/>
+            </controls:Card>
+        </Border>
+    </Design.PreviewWith>
+    
+    <Style Selector="Expander /template/ ToggleButton#PART_toggle">
+        <Setter Property="IsVisible" Value="False"></Setter>
+    </Style>
+    
+</Styles>

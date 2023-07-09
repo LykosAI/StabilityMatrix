@@ -36,7 +36,7 @@ public class LiteDbContext : ILiteDbContext
         this.settingsManager = settingsManager;
         this.debugOptions = debugOptions.Value;
         
-        var connectionString = debugOptions.Value.TempDatabase ? ":temp:"
+        var connectionString = !debugOptions.Value.TempDatabase ? ":temp:"
             : $"Filename={Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db")};Mode=Shared";
         Database = new LiteDatabaseAsync(connectionString);
 

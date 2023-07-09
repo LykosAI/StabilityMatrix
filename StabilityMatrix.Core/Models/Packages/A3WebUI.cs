@@ -137,7 +137,6 @@ public class A3WebUI : BaseGitPackage
 
         void HandleConsoleOutput(ProcessOutput s)
         {
-            if (s == null) return;
             if (s.Text.Contains("model loaded", StringComparison.OrdinalIgnoreCase))
             {
                 OnStartupComplete(WebUrl);

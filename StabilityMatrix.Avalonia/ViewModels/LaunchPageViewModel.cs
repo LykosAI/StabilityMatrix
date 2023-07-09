@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -82,29 +83,6 @@ public partial class LaunchPageViewModel : PageViewModelBase
                 }
             };
             SelectedPackage = InstalledPackages[0];
-        }
-    }
-
-    public void OnLoaded()
-    {
-        if (Design.IsDesignMode) return;
-        
-        LoadPackages();
-        lock (InstalledPackages)
-        {
-            // Skip if no packages
-            if (!InstalledPackages.Any())
-            {
-                //logger.LogTrace($"No packages for {nameof(LaunchViewModel)}");
-                return;
-            }
-
-            var activePackageId = settingsManager.Settings.ActiveInstalledPackage;
-            if (activePackageId != null)
-            {
-                SelectedPackage = InstalledPackages.FirstOrDefault(
-                    x => x.Id == activePackageId) ?? InstalledPackages[0];
-            }
         }
     }
 

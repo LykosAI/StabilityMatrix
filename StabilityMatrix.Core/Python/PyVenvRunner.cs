@@ -127,7 +127,7 @@ public class PyVenvRunner : IDisposable
         cfg.SetValue("top", "base-executable", Path.Combine(pythonDirectory, "python.exe"));
         
         // Convert to string for writing, strip the top section
-        var cfgString = cfg.ToString().Replace(topSection, "");
+        var cfgString = cfg.ToString()!.Replace(topSection, "");
         File.WriteAllText(cfgPath, cfgString);
     }
     
@@ -176,7 +176,7 @@ public class PyVenvRunner : IDisposable
                 Logger.Info("Filtered output: {S}", s);
                 return;
             }
-            outputDataReceived?.Invoke(s);
+            outputDataReceived.Invoke(s);
         });
 
         if (unbuffered)

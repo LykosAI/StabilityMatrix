@@ -18,6 +18,7 @@ public class EventManager
     public event EventHandler? TeachingTooltipNeeded;
     public event EventHandler<bool>? DevModeSettingChanged;
     public event EventHandler<UpdateInfo>? UpdateAvailable;
+    public event EventHandler<Guid> PackageLaunchRequested;
     public void OnGlobalProgressChanged(int progress) => GlobalProgressChanged?.Invoke(this, progress);
     public void RequestPageChange(Type pageType) => PageChangeRequested?.Invoke(this, pageType);
     public void OnInstalledPackagesChanged() => InstalledPackagesChanged?.Invoke(this, EventArgs.Empty);
@@ -25,4 +26,6 @@ public class EventManager
     public void OnTeachingTooltipNeeded() => TeachingTooltipNeeded?.Invoke(this, EventArgs.Empty);
     public void OnDevModeSettingChanged(bool value) => DevModeSettingChanged?.Invoke(this, value);
     public void OnUpdateAvailable(UpdateInfo args) => UpdateAvailable?.Invoke(this, args);
+    public void OnPackageLaunchRequested(Guid packageId) =>
+        PackageLaunchRequested?.Invoke(this, packageId);
 }

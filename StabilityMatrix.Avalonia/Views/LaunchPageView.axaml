@@ -62,7 +62,7 @@
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Top"
                 ItemsSource="{Binding InstalledPackages}"
-                SelectedValue="{Binding SelectedPackage}">
+                SelectedItem="{Binding SelectedPackage}">
                 <ComboBox.Styles>
                     <Style Selector="ComboBox /template/ ContentControl#ContentPresenter &gt; StackPanel &gt; TextBlock:nth-child(2)">
                         <Setter Property="IsVisible" Value="False" />

@@ -57,7 +57,6 @@
             IsPaneOpen="False"
             OpenPaneLength="200"
             IsSettingsVisible="False"
-            Name="NavView"
             Content="{Binding CurrentPage}"
             MenuItemsSource="{Binding Pages, Mode=OneWay}"
             FooterMenuItemsSource="{Binding FooterPages, Mode=OneWay}"

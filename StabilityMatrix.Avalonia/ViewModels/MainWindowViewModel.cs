@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -27,6 +29,13 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         CurrentPage = Pages.FirstOrDefault();
         SelectedCategory = Pages.FirstOrDefault();
+        EventManager.Instance.PageChangeRequested += OnPageChangeRequested;
+    }
+
+    private void OnPageChangeRequested(object? sender, Type e)
+    {
+        CurrentPage = Pages.FirstOrDefault(p => p.GetType() == e);
+        SelectedCategory = Pages.FirstOrDefault(p => p.GetType() == e);
     }
 
     partial void OnSelectedCategoryChanged(object? value)

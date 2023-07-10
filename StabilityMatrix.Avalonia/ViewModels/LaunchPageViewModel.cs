@@ -17,6 +17,7 @@ using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Packages;
@@ -67,6 +68,17 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         this.packageFactory = packageFactory;
         this.pyRunner = pyRunner;
         this.notificationService = notificationService;
+
+        EventManager.Instance.PackageLaunchRequested +=
+            async (s, e) => await OnPackageLaunchRequested(s, e);
+    }
+
+    private async Task OnPackageLaunchRequested(object? sender, Guid e)
+    {
+        SelectedPackage = InstalledPackages.FirstOrDefault(x => x.Id == e);
+        if (SelectedPackage is null) return;
+        
+        await LaunchAsync();
     }
 
     public override void OnLoaded()

@@ -152,7 +152,11 @@ public partial class PackageManagerViewModel : PageViewModelBase
     [RelayCommand]
     private async Task Install()
     {
-        
+        if (InstallButtonText == "Launch")
+        {
+            EventManager.Instance.RequestPageChange(typeof(LaunchPageViewModel));
+            EventManager.Instance.OnPackageLaunchRequested(SelectedPackage.Id);
+        }
     }
 
     [RelayCommand]

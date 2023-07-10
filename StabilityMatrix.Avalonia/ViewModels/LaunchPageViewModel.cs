@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
+using System.Threading.Tasks.Dataflow;
 using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -36,6 +39,12 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
 
     [ObservableProperty]
     private TextDocument consoleDocument = new();
+    
+    // Queue for console updates
+    private readonly BufferBlock<ProcessOutput> consoleUpdateBuffer = new();
+    // Task that updates the console (runs on UI thread)
+    private Task? consoleUpdateTask;
+    private CancellationTokenSource? consoleUpdateCts;
     
     [ObservableProperty] private bool launchButtonVisibility;
     [ObservableProperty] private bool stopButtonVisibility;
@@ -136,6 +145,12 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         basePackage.ConsoleOutput += OnProcessOutputReceived;
         basePackage.Exited += OnProcessExited;
         basePackage.StartupComplete += RunningPackageOnStartupComplete;
+        
+        // Start task to update console from queue
+        consoleUpdateCts = new CancellationTokenSource();
+        // Run in UI thread
+        consoleUpdateTask = Dispatcher.UIThread.InvokeAsync(async () 
+                => await BeginUpdateConsole(consoleUpdateCts.Token), DispatcherPriority.Render);
 
         // Update shared folder links (in case library paths changed)
         //sharedFolders.UpdateLinksForPackage(basePackage, packagePath);
@@ -149,15 +164,49 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         await basePackage.RunPackage(packagePath, userArgsString);
         RunningPackage = basePackage;
     }
-
+    
+    private async Task BeginUpdateConsole(CancellationToken ct)
+    {
+        try
+        {
+            while (true)
+            {
+                ct.ThrowIfCancellationRequested();
+                var output = await consoleUpdateBuffer.ReceiveAsync(ct);
+                using var update = ConsoleDocument.RunUpdate();
+                // Handle remove
+                if (output.ClearLines > 0)
+                {
+                    for (var i = 0; i < output.ClearLines; i++)
+                    {
+                        var lastLineIndex = ConsoleDocument.LineCount - 1;
+                        var line = ConsoleDocument.Lines[lastLineIndex];
+                        ConsoleDocument.Remove(line.Offset, line.Length);
+                    }
+                }
+                // Add new line
+                ConsoleDocument.Insert(ConsoleDocument.TextLength, output.Text);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+    
     public async Task Stop()
     {
         if (RunningPackage is null) return;
         await RunningPackage.Shutdown();
         
         RunningPackage = null;
-        ConsoleDocument.Text += $"{Environment.NewLine}Stopped process at {DateTimeOffset.Now}{Environment.NewLine}";
         ShowWebUiButton = false;
+        
+        // Can't use buffer here since is null after shutdown
+        Dispatcher.UIThread.Post(() =>
+        {
+            var msg = $"{Environment.NewLine}Stopped process at {DateTimeOffset.Now}{Environment.NewLine}";
+            ConsoleDocument.Insert(ConsoleDocument.TextLength, msg );
+        });
     }
 
     public void OpenWebUi()
@@ -178,37 +227,31 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         }
         RunningPackage = null;
         ShowWebUiButton = false;
-        Dispatcher.UIThread.Post(() =>
+        var msg =
+            $"{Environment.NewLine}Process finished with exit code {exitCode}{Environment.NewLine}";
+        
+        // Add to buffer
+        consoleUpdateBuffer.Post(new ProcessOutput { RawText = msg, Text = msg });
+        
+        // Task that waits until buffer is empty, then stops the console update task
+        Task.Run(async () =>
         {
-            ConsoleDocument.Text += $"{Environment.NewLine}Process finished with exit code {exitCode}{Environment.NewLine}";
+            Debug.WriteLine($"Waiting for console update buffer to empty ({consoleUpdateBuffer.Count})");
+            while (consoleUpdateBuffer.Count > 0)
+            {
+                await Task.Delay(100);
+            }
+            Debug.WriteLine("Console update buffer empty, stopping console update task");
+            consoleUpdateCts?.Cancel();
+            consoleUpdateCts = null;
+            consoleUpdateTask = null;
         });
     }
 
     // Callback for processes
     private void OnProcessOutputReceived(object? sender, ProcessOutput output)
     {
-        var raw = output.RawText;
-        // Replace \n and \r with literals
-        raw = raw.Replace("\n", "\\n").Replace("\r", "\\r");
-        Debug.WriteLine($"output: '{raw}', clear lines: {output.ClearLines}");
-        Debug.Flush();
-
-        Dispatcher.UIThread.Post(() =>
-        {
-            using var update = ConsoleDocument.RunUpdate();
-            // Handle remove
-            if (output.ClearLines > 0)
-            {
-                for (var i = 0; i < output.ClearLines; i++)
-                {
-                    var lastLineIndex = ConsoleDocument.LineCount - 1;
-                    var line = ConsoleDocument.Lines[lastLineIndex];
-                    ConsoleDocument.Remove(line.Offset, line.Length);
-                }
-            }
-            // Add new line
-            ConsoleDocument.Insert(ConsoleDocument.TextLength, output.Text);
-        });
+        consoleUpdateBuffer.Post(output);
     }
     
     private void RunningPackageOnStartupComplete(object? sender, string e)
@@ -236,7 +279,13 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     
     public void Dispose()
     {
-        Stop().SafeFireAndForget();
+        // Dispose updates
+        consoleUpdateBuffer.Complete();
+        consoleUpdateCts?.Cancel();
+        consoleUpdateCts = null;
+        consoleUpdateTask = null;
+        
+        RunningPackage?.Shutdown();
         GC.SuppressFinalize(this);
     }
 }

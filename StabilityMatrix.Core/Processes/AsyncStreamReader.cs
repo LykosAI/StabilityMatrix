@@ -178,8 +178,6 @@ internal sealed class AsyncStreamReader : IDisposable
                     // var line = _sb.ToString(lineStart, currentIndex - lineStart);
                     // Include the '\n' as part of line.
                     var line = _sb.ToString(lineStart, currentIndex - lineStart + 1);
-                    Debug.WriteLine($"DataLine: {line}");
-                    Debug.Flush();
                     lineStart = currentIndex + 1;
                     
                     lock (_messageQueue)
@@ -200,8 +198,6 @@ internal sealed class AsyncStreamReader : IDisposable
                         // var line = _sb.ToString(lineStart, currentIndex - lineStart);
                         // Include the '\r\n' as part of line.
                         var line = _sb.ToString(lineStart, currentIndex - lineStart + 2);
-                        Debug.WriteLine($"DataLine: {line}");
-                        Debug.Flush();
                         // Advance 2 chars for \r\n
                         lineStart = currentIndex + 2;
                         currentIndex++;

@@ -137,6 +137,8 @@ public class A3WebUI : BaseGitPackage
 
         void HandleConsoleOutput(ProcessOutput s)
         {
+            OnConsoleOutput(s);
+            
             if (s.Text.Contains("model loaded", StringComparison.OrdinalIgnoreCase))
             {
                 OnStartupComplete(WebUrl);
@@ -151,9 +153,6 @@ public class A3WebUI : BaseGitPackage
                     WebUrl = match.Value;
                 }
             }
-
-            Debug.WriteLine($"process stdout: {s}");
-            OnConsoleOutput(s);
         }
 
         var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";

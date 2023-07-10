@@ -102,6 +102,8 @@ public class ComfyUI : BaseGitPackage
 
         void HandleConsoleOutput(ProcessOutput s)
         {
+            OnConsoleOutput(s);
+            
             if (s.Text.Contains("To see the GUI go to", StringComparison.OrdinalIgnoreCase))
             {
                 var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
@@ -112,9 +114,6 @@ public class ComfyUI : BaseGitPackage
                 }
                 OnStartupComplete(WebUrl);
             }
-
-            Debug.WriteLine($"process stdout: {s}");
-            OnConsoleOutput(s);
         }
 
         void HandleExit(int i)

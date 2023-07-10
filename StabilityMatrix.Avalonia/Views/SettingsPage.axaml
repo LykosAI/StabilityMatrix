@@ -56,8 +56,13 @@
                         <StackPanel Grid.Row="1">
                             <ui:SettingsExpander
                                 IconSource="Code"
+                                Command="{Binding LoadDebugInfo}"
                                 Header="Debug Options"
                                 Margin="8">
+                                
+                                <ui:SettingsExpanderItem Content="Paths" IconSource="Folder" 
+                                                         Description="{Binding DebugPaths}">
+                                </ui:SettingsExpanderItem>
                                 
                                 <ui:SettingsExpanderItem Content="Notification" IconSource="CommentAdd">
                                     <ui:SettingsExpanderItem.Footer>
@@ -67,7 +72,7 @@
                                     </ui:SettingsExpanderItem.Footer>
                                 </ui:SettingsExpanderItem>
                                 
-                                <ui:SettingsExpanderItem Content="Content Dialog" IconSource="CommentAdd">
+                                <ui:SettingsExpanderItem Content="Content Dialog" IconSource="NewWindow">
                                     <ui:SettingsExpanderItem.Footer>
                                         <Button
                                             Command="{Binding DebugContentDialogCommand}"

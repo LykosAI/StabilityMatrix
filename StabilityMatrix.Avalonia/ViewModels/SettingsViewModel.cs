@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -18,16 +20,6 @@ public partial class SettingsViewModel : PageViewModelBase
     public override string Title => "Settings";
     public override Symbol Icon => Symbol.Setting;
     
-    [ObservableProperty]
-    private string? selectedTheme;
-    
-    public ObservableCollection<string> AvailableThemes { get; } = new()
-    {
-        "Light",
-        "Dark",
-        "System",
-    };
-
     public SettingsViewModel(INotificationService notificationService)
     {
         this.notificationService = notificationService;
@@ -35,6 +27,35 @@ public partial class SettingsViewModel : PageViewModelBase
         SelectedTheme = AvailableThemes[1];
     }
     
+    // Theme panel
+    [ObservableProperty]
+    private string? selectedTheme;
+    public ObservableCollection<string> AvailableThemes { get; } = new()
+    {
+        "Light",
+        "Dark",
+        "System",
+    };
+    
+    // Debug info
+    [ObservableProperty]
+    private string? debugPaths;
+
+    public void LoadDebugInfo()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        DebugPaths = $"""
+                      Current Working Directory [Environment.CurrentDirectory]
+                        "{Environment.CurrentDirectory}"
+                      App Directory [Assembly.GetExecutingAssembly().Location]
+                        "{assembly.Location}"
+                      AppData Directory [SpecialFolder.ApplicationData]
+                        "{appData}"
+                      """;
+    }
+    
+    // Debug buttons
     [RelayCommand]
     private void DebugNotification()
     {
@@ -58,6 +79,8 @@ public partial class SettingsViewModel : PageViewModelBase
         notificationService.Show(new Notification("Content dialog closed",
             $"Result: {result}"));
     }
+    
+    
     
     public override bool CanNavigateNext { get; protected set; }
     public override bool CanNavigatePrevious { get; protected set; }

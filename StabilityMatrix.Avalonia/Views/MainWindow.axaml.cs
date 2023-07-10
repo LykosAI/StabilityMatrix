@@ -22,7 +22,7 @@ public partial class MainWindow : AppWindowBase
         TitleBar.TitleBarHitTestType = TitleBarHitTestType.Complex;
     }
 
-    public override async void OnLoaded(object? sender, RoutedEventArgs e)
+    public override void OnLoaded(object? sender, RoutedEventArgs e)
     {
         base.OnLoaded(sender, e);
         NotificationService?.Initialize(this);

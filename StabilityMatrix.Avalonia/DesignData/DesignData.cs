@@ -49,12 +49,12 @@ public static class DesignData
         var modelFinder = new ModelFinder(null!, null!);
         
         LaunchPageViewModel = new LaunchPageViewModel(
-            null!, settingsManager, packageFactory, new PyRunner());
+            null!, settingsManager, packageFactory, new PyRunner(), notificationService);
         
         LaunchPageViewModel.InstalledPackages.AddRange(settingsManager.Settings.InstalledPackages);
         LaunchPageViewModel.SelectedPackage = settingsManager.Settings.InstalledPackages[0];
         
-        PackageManagerViewModel = new PackageManagerViewModel(settingsManager, packageFactory);
+        PackageManagerViewModel = new PackageManagerViewModel(null!, settingsManager, packageFactory, notificationService);
         SettingsViewModel = new SettingsViewModel(notificationService);
 
         SelectModelVersionViewModel = new SelectModelVersionViewModel(new CivitModel
@@ -110,17 +110,19 @@ public static class DesignData
                 }
             }
         };
-        
+
         CheckpointBrowserViewModel =
-            new CheckpointBrowserViewModel(null!, downloadService, settingsManager, null!, null!)
+            new CheckpointBrowserViewModel(null!, downloadService, settingsManager, null!, null!,
+                notificationService)
             {
                 ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>
                 {
                     new(new CivitModel
-                    {
-                        Name = "BB95 Furry Mix",
-                        Description = "A furry mix of BB95",
-                    }, downloadService, settingsManager, new DialogFactory(settingsManager, downloadService))
+                        {
+                            Name = "BB95 Furry Mix",
+                            Description = "A furry mix of BB95",
+                        }, downloadService, settingsManager,
+                        new DialogFactory(settingsManager, downloadService), notificationService)
                 }
             };
         

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Collections;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -37,6 +38,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly IDialogFactory dialogFactory;
     private readonly ILiteDbContext liteDbContext;
+    private readonly INotificationService notificationService;
     private const int MaxModelsPerPage = 14;
 
     [ObservableProperty] private ObservableCollection<CheckpointBrowserCardViewModel>? modelCards;
@@ -72,14 +74,16 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         IDownloadService downloadService, 
         ISettingsManager settingsManager,
         IDialogFactory dialogFactory,
-        ILiteDbContext liteDbContext)
+        ILiteDbContext liteDbContext,
+        INotificationService notificationService)
     {
         this.civitApi = civitApi;
         this.downloadService = downloadService;
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
         this.liteDbContext = liteDbContext;
-        
+        this.notificationService = notificationService;
+
         CurrentPageNumber = 1;
         CanGoToNextPage = true;
     }
@@ -167,26 +171,26 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         }
         catch (OperationCanceledException)
         {
-            // snackbarService.ShowSnackbarAsync("Request to CivitAI timed out",
-            //     "Please try again in a few minutes").SafeFireAndForget();
+            notificationService.Show(new Notification("Request to CivitAI timed out",
+                "Please try again in a few minutes"));
             Logger.Warn($"CivitAI query timed out ({request})");
         }
         catch (HttpRequestException e)
         {
-            // snackbarService.ShowSnackbarAsync("CivitAI can't be reached right now",
-            //     "Please try again in a few minutes").SafeFireAndForget();
+            notificationService.Show(new Notification("CivitAI can't be reached right now",
+                "Please try again in a few minutes"));
             Logger.Warn(e, $"CivitAI query HttpRequestException ({request})");
         }
         catch (ApiException e)
         {
-            // snackbarService.ShowSnackbarAsync("CivitAI can't be reached right now",
-            //     "Please try again in a few minutes").SafeFireAndForget();
+            notificationService.Show(new Notification("CivitAI can't be reached right now",
+                "Please try again in a few minutes"));
             Logger.Warn(e, $"CivitAI query ApiException ({request})");
         }
         catch (Exception e)
         {
-            // snackbarService.ShowSnackbarAsync($"Please try again in a few minutes",
-            //     $"Unknown exception during CivitAI query: {e.GetType().Name}").SafeFireAndForget();
+            notificationService.Show(new Notification("CivitAI can't be reached right now",
+                $"Unknown exception during CivitAI query: {e.GetType().Name}"));
             Logger.Error(e, $"CivitAI query unknown exception ({request})");
         }
         finally
@@ -209,7 +213,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         {
             var updateCards = models
                 .Select(model => new CheckpointBrowserCardViewModel(model,
-                    downloadService, settingsManager, dialogFactory)).ToList();
+                    downloadService, settingsManager, dialogFactory, notificationService)).ToList();
             allModelCards = updateCards;
             ModelCards =
                 new ObservableCollection<CheckpointBrowserCardViewModel>(
@@ -337,7 +341,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         // ModelCardsView?.Refresh();
         var updateCards = allModelCards
             .Select(model => new CheckpointBrowserCardViewModel(model.CivitModel, 
-                downloadService, settingsManager, dialogFactory))
+                downloadService, settingsManager, dialogFactory, notificationService))
             .Where(FilterModelCardsPredicate);
         ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(updateCards);
 

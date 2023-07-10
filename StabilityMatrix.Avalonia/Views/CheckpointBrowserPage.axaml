@@ -11,7 +11,11 @@
              d:DataContext="{x:Static designData:DesignData.CheckpointBrowserViewModel}"
              x:CompileBindings="True"
              x:Class="StabilityMatrix.Avalonia.Views.CheckpointBrowserPage">
-    
+    <UserControl.Styles>
+        <Style Selector="controls|ContentDialog > Border > Panel > controls|FABorder > Border > Grid > Border">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+    </UserControl.Styles>
     <UserControl.Resources>
         <DataTemplate DataType="{x:Type viewModels:CheckpointBrowserCardViewModel}" x:Key="CivitModelTemplate">
             <controls1:Card

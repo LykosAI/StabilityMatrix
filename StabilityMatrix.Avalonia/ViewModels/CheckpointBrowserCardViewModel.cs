@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
@@ -15,6 +16,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
+using Octokit;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Extensions;
@@ -25,6 +27,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
+using Notification = Avalonia.Controls.Notifications.Notification;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -35,6 +38,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
     private readonly IDialogFactory dialogFactory;
+    private readonly INotificationService notificationService;
     public CivitModel CivitModel { get; init; }
     public Bitmap? CardImage { get; set; }
     public override bool IsTextVisible => Value > 0;
@@ -42,15 +46,17 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     [ObservableProperty] private bool isImporting;
 
     public CheckpointBrowserCardViewModel(
-        CivitModel civitModel, 
-        IDownloadService downloadService, 
+        CivitModel civitModel,
+        IDownloadService downloadService,
         ISettingsManager settingsManager,
         IDialogFactory dialogFactory,
+        INotificationService notificationService,
         Bitmap? fixedImage = null)
     {
         this.downloadService = downloadService;
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
+        this.notificationService = notificationService;
         CivitModel = civitModel;
 
         if (fixedImage != null)
@@ -60,13 +66,13 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         }
 
         UpdateImage().SafeFireAndForget();
-        
+
         // Update image when nsfw setting changes
         settingsManager.RegisterPropertyChangedHandler(
             s => s.ModelBrowserNsfwEnabled,
             _ => UpdateImage().SafeFireAndForget());
     }
-    
+
     // Choose and load image based on nsfw setting
     private async Task UpdateImage()
     {
@@ -78,20 +84,15 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         if (image != null)
         {
             var imageStream = await downloadService.GetImageStreamFromUrl(image.Url);
-            Dispatcher.UIThread.Invoke(() =>
-            {
-                CardImage = new Bitmap(imageStream);
-            });
+            Dispatcher.UIThread.Invoke(() => { CardImage = new Bitmap(imageStream); });
             return;
         }
-        
-        var assetStream = AssetLoader.Open(new Uri("avares://StabilityMatrix.Avalonia/Assets/noimage.png"));
+
+        var assetStream =
+            AssetLoader.Open(new Uri("avares://StabilityMatrix.Avalonia/Assets/noimage.png"));
 
         // Otherwise Default image
-        Dispatcher.UIThread.Invoke(() =>
-        {
-            CardImage = new Bitmap(assetStream);
-        });
+        Dispatcher.UIThread.Invoke(() => { CardImage = new Bitmap(assetStream); });
     }
 
     // On any mode changes, update the image
@@ -131,22 +132,23 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         {
             return;
         }
-        
+
         var selectedVersion = viewModel?.SelectedVersion;
         var selectedFile = viewModel?.SelectedFile;
-        
+
         await Task.Delay(100);
         await DoImport(model, selectedVersion, selectedFile);
     }
 
-    private async Task DoImport(CivitModel model, CivitModelVersion? selectedVersion = null, CivitFile? selectedFile = null)
+    private async Task DoImport(CivitModel model, CivitModelVersion? selectedVersion = null,
+        CivitFile? selectedFile = null)
     {
         IsImporting = true;
         Text = "Downloading...";
 
         // Holds files to be deleted on errors
         var filesForCleanup = new HashSet<FilePath>();
-        
+
         // Set Text when exiting, finally block will set 100 and delay clear progress
         try
         {
@@ -154,9 +156,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             var modelVersion = selectedVersion ?? model.ModelVersions?.FirstOrDefault();
             if (modelVersion is null)
             {
-                // snackbarService.ShowSnackbarAsync(
-                //     "This model has no versions available for download",
-                //     "Model has no versions available", ControlAppearance.Caution).SafeFireAndForget();
+                notificationService.Show(new Notification("Model has no versions available",
+                    "This model has no versions available for download", NotificationType.Warning));
                 Text = "Unable to Download";
                 return;
             }
@@ -166,9 +167,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                             modelVersion.Files?.FirstOrDefault(x => x.Type == CivitFileType.Model);
             if (modelFile is null)
             {
-                // snackbarService.ShowSnackbarAsync(
-                //     "This model has no files available for download",
-                //     "Model has no files available", ControlAppearance.Caution).SafeFireAndForget();
+                notificationService.Show(new Notification("Model has no files available",
+                    "This model has no files available for download", NotificationType.Warning));
                 Text = "Unable to Download";
                 return;
             }
@@ -192,24 +192,23 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                     });
                 }));
 
-            await downloadTask;
-
-            // var downloadResult = await snackbarService.TryAsync(downloadTask, "Could not download file");
+            var downloadResult =
+                await notificationService.TryAsync(downloadTask, "Could not download file");
 
             // Failed download handling
-            // if (downloadResult.Exception is not null)
-            // {
-            //     // For exceptions other than ApiException or TaskCanceledException, log error
-            //     var logLevel = downloadResult.Exception switch
-            //     {
-            //         HttpRequestException or ApiException or TaskCanceledException => LogLevel.Warn,
-            //         _ => LogLevel.Error
-            //     };
-            //     Logger.Log(logLevel, downloadResult.Exception, "Error during model download");
-            //     
-            //     Text = "Download Failed";
-            //     return;
-            //}
+            if (downloadResult.Exception is not null)
+            {
+                // For exceptions other than ApiException or TaskCanceledException, log error
+                var logLevel = downloadResult.Exception switch
+                {
+                    HttpRequestException or ApiException or TaskCanceledException => LogLevel.Warn,
+                    _ => LogLevel.Error
+                };
+                Logger.Log(logLevel, downloadResult.Exception, "Error during model download");
+
+                Text = "Download Failed";
+                return;
+            }
 
             // When sha256 is available, validate the downloaded file
             var fileExpectedSha256 = modelFile.Hashes.SHA256;
@@ -225,14 +224,15 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                 {
                     Text = "Import Failed!";
                     DelayedClearProgress(TimeSpan.FromMilliseconds(800));
-                    // snackbarService.ShowSnackbarAsync(
-                    //     "This may be caused by network or server issues from CivitAI, please try again in a few minutes.",
-                    //     "Download failed hash validation").SafeFireAndForget();
+                    notificationService.Show(new Notification("Download failed hash validation",
+                        "This may be caused by network or server issues from CivitAI, please try again in a few minutes.",
+                        NotificationType.Error));
                     Text = "Download Failed";
                     return;
                 }
-                // snackbarService.ShowSnackbarAsync($"{model.Type} {model.Name} imported successfully!",
-                //     "Import complete", ControlAppearance.Info).SafeFireAndForget();
+
+                notificationService.Show(new Notification("Import complete",
+                    $"{model.Type} {model.Name} imported successfully!", NotificationType.Success));
             }
 
             IsIndeterminate = true;
@@ -258,7 +258,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                     filesForCleanup.Add(imageDownloadPath);
                     var imageTask =
                         downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
-                    // await snackbarService.TryAsync(imageTask, "Could not download preview image");
+                    await notificationService.TryAsync(imageTask, "Could not download preview image");
                 }
             }
 
@@ -278,12 +278,13 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                 file.Delete();
                 Logger.Info($"Download cleanup: Deleted file {file}");
             }
+
             IsIndeterminate = false;
             Value = 100;
             DelayedClearProgress(TimeSpan.FromMilliseconds(800));
         }
     }
-    
+
     private void DelayedClearProgress(TimeSpan delay)
     {
         Task.Delay(delay).ContinueWith(_ =>

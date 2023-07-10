@@ -18,35 +18,14 @@
     mc:Ignorable="d">
 
     <Grid RowDefinitions="Auto,*,Auto">
-        <Grid ColumnDefinitions="Auto,*">
+        <Grid ColumnDefinitions="Auto,*"
+              Margin="0,8,0, 8">
             <Grid ColumnDefinitions="0.8*,0.2*">
-                <!--<ui:Flyout
-                    Background="{DynamicResource SystemAccentColorPrimaryBrush}"
-                    FontSize="18"
-                    Grid.Column="0"
-                    Grid.Row="0"
-                    IsOpen="{Binding IsLaunchTeachingTipsOpen, Mode=TwoWay}"
-                    Margin="24,8,0,0"
-                    Placement="Bottom">
-                    <StackPanel Orientation="Horizontal">
-                        <Grid HorizontalAlignment="Left">
-                            <ui:SymbolIcon Symbol="ArrowCurveUpLeft20" />
-                        </Grid>
-                        <TextBlock
-                            HorizontalAlignment="Left"
-                            Text="Click Launch to get started!"
-                            TextWrapping="WrapWithOverflow"
-                            Width="280" />
-                    </StackPanel>
-                </ui:Flyout>-->
-
-                <!--  Command="{Binding LaunchCommand}"  -->
-                <!--  Visibility="{Binding LaunchButtonVisibility, FallbackValue=Visible}"  -->
                 <Button
                     Grid.Row="0"
                     Grid.Column="0"
                     Width="72"
-                    Margin="24,8,0,0"
+                    Margin="16,8,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Stretch"
                     Classes="success"
@@ -56,14 +35,13 @@
                     Grid.Row="0"
                     Grid.Column="0"
                     Width="72"
-                    Margin="24,8,0,0"
+                    Margin="16,8,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Stretch"
                     Classes="danger"
                     Command="{Binding Stop}"
                     Content="Stop"
                     IsVisible="{Binding RunningPackage, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                <!--  Command="{Binding ConfigCommand}"  -->
                 <Button
                     Grid.Row="0"
                     Grid.Column="1"
@@ -80,7 +58,7 @@
                 x:Name="SelectPackageComboBox"
                 Grid.Row="0"
                 Grid.Column="1"
-                Margin="8,8,24,0"
+                Margin="8,8,16,0"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Top"
                 ItemsSource="{Binding InstalledPackages}"
@@ -108,7 +86,7 @@
         <avaloniaEdit:TextEditor
             x:Name="Console"
             Grid.Row="1"
-            Margin="16,8,16,10"
+            Margin="8,8,16,10"
             Document="{Binding ConsoleDocument}"
             FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
             IsReadOnly="True"
@@ -126,6 +104,8 @@
             HorizontalAlignment="Stretch"
             Classes="success"
             Content="Open Web UI"
+            Command="{Binding OpenWebUi}"
+            IsVisible="{Binding ShowWebUiButton}"
             FontSize="12" />
     </Grid>
 

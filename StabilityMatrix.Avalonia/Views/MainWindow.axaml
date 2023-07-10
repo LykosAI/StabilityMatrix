@@ -6,8 +6,6 @@
                      xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                      xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                     xmlns:avalonia="clr-namespace:StabilityMatrix.Avalonia"
-                     xmlns:controls1="clr-namespace:FAControlsGallery.Controls"
                      mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                      d:DataContext="{x:Static mocks:DesignData.MainWindowViewModel}"
                      x:DataType="vm:MainWindowViewModel"
@@ -17,11 +15,6 @@
                      Height="750"
                      Title="Stability Matrix Avalonia"
                      x:Class="StabilityMatrix.Avalonia.Views.MainWindow">
-    <controls:AppWindowBase.Styles>
-        <Style Selector="ui|ContentDialog > Border > Panel > ui|FABorder > Border > Grid > Border">
-            <Setter Property="IsVisible" Value="False"/>
-        </Style>
-    </controls:AppWindowBase.Styles>
 
     <Grid RowDefinitions="Auto,Auto,*">
         <Grid Name="TitleBarHost"
@@ -64,6 +57,7 @@
             IsPaneOpen="False"
             OpenPaneLength="200"
             IsSettingsVisible="False"
+            Name="NavView"
             Content="{Binding CurrentPage}"
             MenuItemsSource="{Binding Pages, Mode=OneWay}"
             FooterMenuItemsSource="{Binding FooterPages, Mode=OneWay}"
@@ -77,9 +71,6 @@
                         IconSource="{Binding Icon}"/>
                 </DataTemplate>
             </ui:NavigationView.MenuItemTemplate>
-            <ui:NavigationView.DataTemplates>
-                <!-- Define your DataTemplates here, could also use ContentTemplate if only 1 template is needed -->
-            </ui:NavigationView.DataTemplates>
         </ui:NavigationView>
     </Grid>
 </controls:AppWindowBase>

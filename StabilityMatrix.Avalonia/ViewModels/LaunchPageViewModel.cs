@@ -4,12 +4,14 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
+using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper.Factory;
@@ -28,6 +30,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     private readonly ISettingsManager settingsManager;
     private readonly IPackageFactory packageFactory;
     private readonly IPyRunner pyRunner;
+    private readonly INotificationService notificationService;
     public override string Title => "Launch";
     public override Symbol Icon => Symbol.PlayFilled;
 
@@ -48,12 +51,13 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     private string webUiUrl = string.Empty;
 
     public LaunchPageViewModel(ILogger<LaunchPageViewModel> logger, ISettingsManager settingsManager, IPackageFactory packageFactory,
-        IPyRunner pyRunner)
+        IPyRunner pyRunner, INotificationService notificationService)
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         this.pyRunner = pyRunner;
+        this.notificationService = notificationService;
     }
 
     public override void OnLoaded()
@@ -84,10 +88,11 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
 
         if (activeInstall == null)
         {
-            // No selected package: error snackbar
-            // snackbarService.ShowSnackbarAsync(
-            //     "You must install and select a package before launching",
-            //     "No package selected").SafeFireAndForget();
+            // No selected package: error notification
+            notificationService.Show(new Notification(
+                message: "You must install and select a package before launching",
+                title: "No package selected",
+                type: NotificationType.Error));
             return;
         }
 
@@ -101,9 +106,10 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
             logger.LogWarning(
                 "During launch, package name '{PackageName}' did not match a definition",
                 activeInstallName);
-            // snackbarService.ShowSnackbarAsync(
-            //     "Install package name did not match a definition. Please reinstall and let us know about this issue.",
-            //     "Package name invalid").SafeFireAndForget();
+            
+            notificationService.Show(new Notification("Package name invalid",
+                "Install package name did not match a definition. Please reinstall and let us know about this issue.",
+                NotificationType.Error));
             return;
         }
 
@@ -129,7 +135,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
 
         basePackage.ConsoleOutput += OnProcessOutputReceived;
         basePackage.Exited += OnProcessExited;
-        // basePackage.StartupComplete += RunningPackageOnStartupComplete;
+        basePackage.StartupComplete += RunningPackageOnStartupComplete;
 
         // Update shared folder links (in case library paths changed)
         //sharedFolders.UpdateLinksForPackage(basePackage, packagePath);
@@ -143,16 +149,23 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         await basePackage.RunPackage(packagePath, userArgsString);
         RunningPackage = basePackage;
     }
-    
+
     public async Task Stop()
     {
         if (RunningPackage is null) return;
         await RunningPackage.Shutdown();
         
-        // runningPackage.StartupComplete -= RunningPackageOnStartupComplete;
         RunningPackage = null;
         ConsoleDocument.Text += $"{Environment.NewLine}Stopped process at {DateTimeOffset.Now}{Environment.NewLine}";
         ShowWebUiButton = false;
+    }
+
+    public void OpenWebUi()
+    {
+        if (!string.IsNullOrWhiteSpace(webUiUrl))
+        {
+            ProcessRunner.OpenUrl(webUiUrl);
+        }
     }
     
     private void OnProcessExited(object? sender, int exitCode)
@@ -161,6 +174,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         {
             package.ConsoleOutput -= OnProcessOutputReceived;
             package.Exited -= OnProcessExited;
+            package.StartupComplete -= RunningPackageOnStartupComplete;
         }
         RunningPackage = null;
         ShowWebUiButton = false;
@@ -195,6 +209,12 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
             // Add new line
             ConsoleDocument.Insert(ConsoleDocument.TextLength, output.Text);
         });
+    }
+    
+    private void RunningPackageOnStartupComplete(object? sender, string e)
+    {
+        webUiUrl = e;
+        ShowWebUiButton = !string.IsNullOrWhiteSpace(webUiUrl);
     }
     
     private void LoadPackages()

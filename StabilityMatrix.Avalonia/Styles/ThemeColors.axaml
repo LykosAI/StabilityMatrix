@@ -16,7 +16,7 @@
     <Color x:Key="ThemeTealColor">#009688</Color>
     <Color x:Key="ThemeDarkDarkGreenColor">#2C582C</Color>
     <Color x:Key="ThemeDarkGreenColor">#3A783C</Color>
-    <Color x:Key="ThemeGreenColor">#4CAF50</Color>
+    <Color x:Key="ThemeGreenColor">#4BA04F</Color>
     <Color x:Key="ThemeLightGreenColor">#8BC34A</Color>
     <Color x:Key="ThemeLimeColor">#CDDC39</Color>
     <Color x:Key="ThemeYellowColor">#FFEB3B</Color>

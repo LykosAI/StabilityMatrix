@@ -40,9 +40,9 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     private readonly IDialogFactory dialogFactory;
     private readonly INotificationService notificationService;
     public CivitModel CivitModel { get; init; }
-    public Bitmap? CardImage { get; set; }
     public override bool IsTextVisible => Value > 0;
 
+    [ObservableProperty] private Bitmap? cardImage;
     [ObservableProperty] private bool isImporting;
 
     public CheckpointBrowserCardViewModel(
@@ -84,7 +84,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         if (image != null)
         {
             var imageStream = await downloadService.GetImageStreamFromUrl(image.Url);
-            Dispatcher.UIThread.Invoke(() => { CardImage = new Bitmap(imageStream); });
+            Dispatcher.UIThread.Post(() => { CardImage = new Bitmap(imageStream); });
             return;
         }
 
@@ -92,7 +92,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             AssetLoader.Open(new Uri("avares://StabilityMatrix.Avalonia/Assets/noimage.png"));
 
         // Otherwise Default image
-        Dispatcher.UIThread.Invoke(() => { CardImage = new Bitmap(assetStream); });
+        Dispatcher.UIThread.Post(() => { CardImage = new Bitmap(assetStream); });
     }
 
     // On any mode changes, update the image
@@ -185,11 +185,14 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                 downloadPath,
                 new Progress<ProgressReport>(report =>
                 {
-                    Dispatcher.UIThread.Invoke(() =>
+                    if (Math.Abs(report.Percentage - Value) > 0.1)
                     {
-                        Value = report.Percentage;
-                        Text = $"Downloading... {report.Percentage}%";
-                    });
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            Value = report.Percentage;
+                            Text = $"Downloading... {report.Percentage}%";
+                        });
+                    }
                 }));
 
             var downloadResult =

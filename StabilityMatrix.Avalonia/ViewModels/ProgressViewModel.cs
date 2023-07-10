@@ -9,7 +9,7 @@ public partial class ProgressViewModel : ObservableObject
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsTextVisible))]
-    private string text;
+    private string? text;
     
     [ObservableProperty]
     private double value;
@@ -20,5 +20,5 @@ public partial class ProgressViewModel : ObservableObject
     [ObservableProperty]
     private bool isProgressVisible;
 
-    public virtual bool IsTextVisible => string.IsNullOrWhiteSpace(Text);
+    public virtual bool IsTextVisible => !string.IsNullOrWhiteSpace(Text);
 }

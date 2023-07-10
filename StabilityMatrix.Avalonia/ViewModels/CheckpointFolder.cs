@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Input;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -64,9 +65,6 @@ public partial class CheckpointFolder : ViewModelBase
 
     public ObservableCollection<CheckpointFolder> SubFolders { get; init; } = new();
     public ObservableCollection<CheckpointFile> CheckpointFiles { get; init; } = new();
-    
-    public RelayCommand OnPreviewDragEnterCommand => new(() => IsCurrentDragTarget = true);
-    public RelayCommand OnPreviewDragLeaveCommand => new(() => IsCurrentDragTarget = false);
 
     public CheckpointFolder(
         ISettingsManager settingsManager,
@@ -131,19 +129,25 @@ public partial class CheckpointFolder : ViewModelBase
         Dispatcher.UIThread.Invoke(() => CheckpointFiles.Remove(file));
     }
 
-    [RelayCommand]
-    private async Task OnPreviewDropAsync(DragEventArgs e)
+    public async Task OnDrop(DragEventArgs e)
     {
         IsImportInProgress = true;
         IsCurrentDragTarget = false;
 
-        if (e.Data.Get(DataFormats.Files) is not string[] files || files.Length < 1)
+        try
         {
-            IsImportInProgress = false;
-            return;
+            // {System.Linq.Enumerable.WhereEnumerableIterator<Avalonia.Platform.Storage.IStorageItem>}
+            if (e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> files)
+            {
+                var paths = files.Select(f => f.Path.LocalPath).ToArray();
+                await ImportFilesAsync(paths, settingsManager.Settings.IsImportAsConnected);
+            }
         }
-
-        await ImportFilesAsync(files, settingsManager.Settings.IsImportAsConnected);
+        catch (Exception)
+        {
+            // If no exception this will be handled by DelayedClearProgress()
+            IsImportInProgress = false;
+        }
     }
 
     [RelayCommand]
@@ -157,13 +161,13 @@ public partial class CheckpointFolder : ViewModelBase
     /// </summary>
     public async Task ImportFilesAsync(IEnumerable<string> files, bool convertToConnected = false)
     {
-        Progress.IsIndeterminate = true;
-        Progress.IsProgressVisible = true;
+        Progress.Value = 0;
         var copyPaths = files.ToDictionary(k => k, v => Path.Combine(DirectoryPath, Path.GetFileName(v)));
         
         var progress = new Progress<ProgressReport>(report =>
         {
             Progress.IsIndeterminate = false;
+            Progress.IsProgressVisible = true;
             Progress.Value = report.Percentage;
             // For multiple files, add count
             Progress.Text = copyPaths.Count > 1 ? $"Importing {report.Title} ({report.Message})" : $"Importing {report.Title}";
@@ -251,14 +255,14 @@ public partial class CheckpointFolder : ViewModelBase
                 _ => $"Import complete. Found connected data for all {totalCount} models."
             };
             
-            DelayedClearProgress(TimeSpan.FromSeconds(1));
+            DelayedClearProgress(TimeSpan.FromSeconds(1.5));
         }
         else
         {
-            await IndexAsync();
-            Progress.Value = 100;
             Progress.Text = "Import complete";
-            DelayedClearProgress(TimeSpan.FromSeconds(1));
+            Progress.Value = 100;
+            await IndexAsync();
+            DelayedClearProgress(TimeSpan.FromSeconds(1.5));
         }
     }
 

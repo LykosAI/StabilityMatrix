@@ -1,6 +1,8 @@
 ﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+             xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
@@ -39,30 +41,39 @@
             </controls:Card>
         </DataTemplate>
         
+        <!-- Right click menu for a checkpoint file -->
+        <!--<ui:CommandBarFlyout x:DataType="vm:CheckpointFile" Placement="Right" x:Key="FileCommandBarFlyout">
+            Note: unlike a regular CommandBar, primary items can be set as the xml content and don't need
+                   to be wrapped in a <ui:CommandBarFlyout.PrimaryCommands> tag
+            <ui:CommandBarButton Label="Rename" IconSource="Save" ToolTip.Tip="Rename" 
+                                 Command="{Binding RenameCommand}" />
+            <ui:CommandBarButton Label="Delete" IconSource="Delete" ToolTip.Tip="Delete" 
+                                 Command="{Binding DeleteCommand}" />
+        </ui:CommandBarFlyout>-->
+        
         <DataTemplate DataType="{x:Type vm:CheckpointFile}" x:Key="CheckpointFileDataTemplate">
             <Border
+                DragDrop.AllowDrop="False"
                 Background="Transparent"
                 BorderThickness="0"
                 Margin="8">
                 <!--TODO: MouseDragElementBehavior-->
                 <controls:Card Width="260">
-                    <controls:Card.ContextMenu>
-                        <ContextMenu>
-                            <!--  ReSharper disable once Xaml.RedundantResource  -->
-                            <MenuItem Command="{Binding RenameCommand}" Header="Rename" />
-                            <!--  ReSharper disable once Xaml.RedundantResource  -->
-                            <MenuItem Command="{Binding DeleteCommand}" Header="Delete" />
-                            <!--  ReSharper disable once Xaml.RedundantResource  -->
-                            <MenuItem Header="Open on CivitAI" 
-                                      Command="{Binding OpenOnCivitAiCommand}"
-                                      IsVisible="{Binding IsConnectedModel}"/>
-                        </ContextMenu>
-                    </controls:Card.ContextMenu>
+                    <controls:Card.ContextFlyout>
+                        <ui:FAMenuFlyout>
+                            <ui:MenuFlyoutItem Command="{Binding RenameCommand}" 
+                                               Text="Rename" IconSource="Rename" />
+                            <ui:MenuFlyoutItem Command="{Binding DeleteCommand}" 
+                                               Text="Delete" IconSource="Delete" />
+                            <ui:MenuFlyoutItem Command="{Binding OpenOnCivitAiCommand}" 
+                                               Text="Open on CivitAI" IconSource="Link"
+                                               IsVisible="{Binding IsConnectedModel}"/>
+                        </ui:FAMenuFlyout>
+                    </controls:Card.ContextFlyout>
                     <Grid>
                         <!--  Main contents, hidden when IsLoading is true  -->
                         <StackPanel MinHeight="70">
-                            <!--TODO: Grid visibility-->
-                            <Grid Name="ModelInfoGrid" ColumnDefinitions="*,*,*,*,*" RowDefinitions="*,0.1*">
+                            <Grid ColumnDefinitions="*,*,*,*,*" RowDefinitions="*,0.1*" IsVisible="{Binding !IsLoading}">
                                 <StackPanel
                                     Grid.ColumnSpan="4"
                                     HorizontalAlignment="Left"
@@ -181,6 +192,20 @@
                                 </ItemsControl>
                             </Grid>
                         </StackPanel>
+                        
+                        <!--  Progress ring  -->
+                        <controls:ProgressRing
+                            Grid.Row="0"
+                            Height="32"
+                            Width="32"
+                            Foreground="{DynamicResource ThemeRedColor}"
+                            BorderThickness="4"
+                            HorizontalAlignment="Center"
+                            IsIndeterminate="True"
+                            Padding="0"
+                            VerticalAlignment="Center"
+                            IsEnabled="{Binding IsLoading}"
+                            IsVisible="{Binding IsLoading}" />
                     </Grid>
                 </controls:Card>
             </Border>
@@ -210,20 +235,10 @@
                             ItemsSource="{Binding SubFolders, Mode=OneWay}"
                             Margin="8,0,8,8" />
                     </StackPanel>
-                    <!-- Files -->
-                    <Grid>
-                        <!--<i:Interaction.Triggers>
-                            <ci:EventTriggerWithoutPropagation EventName="PreviewDragEnter">
-                                <InvokeCommandAction Command="{Binding OnPreviewDragEnterCommand}" />
-                            </ci:EventTriggerWithoutPropagation>
-                            <ci:EventTriggerWithoutPropagation EventName="PreviewDragLeave">
-                                <InvokeCommandAction Command="{Binding OnPreviewDragLeaveCommand}" />
-                            </ci:EventTriggerWithoutPropagation>
-                            <ci:EventTriggerWithoutPropagation EventName="PreviewDrop">
-                                <InvokeCommandAction Command="{Binding PreviewDropCommand}" PassEventArgsToCommand="True" />
-                            </ci:EventTriggerWithoutPropagation>
-                        </i:Interaction.Triggers>-->
-                        <!--PreviewMouseWheel="VirtualizingGridView_OnPreviewMouseWheel"-->
+                    <!-- Files Grid -->
+                    <Grid Name="FilesGrid" 
+                          Background="Transparent"
+                          DragDrop.AllowDrop="True">
                         <ItemsRepeater
                             ItemTemplate="{StaticResource CheckpointFileDataTemplate}"
                             ItemsSource="{Binding CheckpointFiles}">
@@ -231,73 +246,46 @@
                                 <UniformGridLayout Orientation="Horizontal"/>
                             </ItemsRepeater.Layout>
                         </ItemsRepeater>
+                        <!-- Blurred background for drag and drop -->
                         <Border
                             CornerRadius="8"
                             Grid.RowSpan="4"
                             IsEnabled="False"
-                            Name="OnDragBlurBorder"
-                            IsVisible="{Binding IsDragBlurEnabled, Mode=OneWay}">
+                            IsVisible="{Binding IsDragBlurEnabled}">
                             <Border.Background>
                                 <SolidColorBrush Color="#EE202020" />
                             </Border.Background>
                         </Border>
-                        <Border
-                            BorderThickness="1,1,1,1"
-                            CornerRadius="8"
-                            Grid.RowSpan="4"
-                            IsEnabled="False"
-                            Name="OnDragDashBorder"
-                            IsVisible="{Binding IsCurrentDragTarget, Mode=OneWay}">
-                            <!--<Border.BorderBrush>
-                                Viewport="0,0,8,8"
-                                    ViewportUnits="Absolute"
-                                <DrawingBrush
-                                    TileMode="Tile">
-                                    <DrawingBrush.Drawing>
-                                        <DrawingGroup>
-                                            <GeometryDrawing Brush="White">
-                                                <GeometryDrawing.Geometry>
-                                                    <GeometryGroup>
-                                                        <RectangleGeometry Rect="0,0,50,50" />
-                                                        <RectangleGeometry Rect="50,50,50,50" />
-                                                    </GeometryGroup>
-                                                </GeometryDrawing.Geometry>
-                                            </GeometryDrawing>
-                                        </DrawingGroup>
-                                    </DrawingBrush.Drawing>
-                                </DrawingBrush>
-                            </Border.BorderBrush>-->
-                        </Border>
-                        <VirtualizingStackPanel
+                        <!-- Drag prompt text -->
+                        <TextBlock
+                            Effect="{StaticResource TextDropShadowEffect}"
+                            FontSize="24"
+                            HorizontalAlignment="Center"
+                            Text="Drop a file here to import"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsCurrentDragTarget}" />
+                        <StackPanel
                             Margin="0,8"
                             Orientation="Vertical"
+                            DataContext="{Binding Progress}"
                             VerticalAlignment="Center">
-                            <TextBlock
-                                Effect="{StaticResource TextDropShadowEffect}"
-                                FontSize="24"
-                                HorizontalAlignment="Center"
-                                Name="OnDragText"
-                                Text="Drop a file here to import"
-                                VerticalAlignment="Center"
-                                IsVisible="{Binding IsCurrentDragTarget, Mode=OneWay, FallbackValue=Visible}" />
+                            <!-- Import progress -->
                             <TextBlock
                                 Effect="{StaticResource TextDropShadowEffect}"
                                 FontSize="18"
                                 HorizontalAlignment="Center"
-                                Name="ImportProgressText"
-                                Text="{Binding Progress.Text, FallbackValue=Importing checkpoint.safetensors}"
+                                Text="{Binding Text}"
                                 VerticalAlignment="Center"
-                                IsVisible="{Binding Progress.IsTextVisible}" />
+                                IsVisible="{Binding IsTextVisible}" />
                             <ProgressBar
                                 Effect="{StaticResource TextDropShadowEffect}"
                                 HorizontalAlignment="Stretch"
-                                IsIndeterminate="{Binding Progress.IsIndeterminate, FallbackValue=False}"
+                                IsIndeterminate="{Binding IsIndeterminate, FallbackValue=False}"
                                 Margin="64,8"
-                                Name="ImportProgressBar"
                                 VerticalAlignment="Center"
-                                IsVisible="{Binding Progress.IsProgressVisible, FallbackValue=True}"
-                                Value="{Binding Progress.Value, FallbackValue=20}" />
-                        </VirtualizingStackPanel>
+                                IsVisible="{Binding IsProgressVisible}"
+                                Value="{Binding Value, FallbackValue=20}" />
+                        </StackPanel>
                     </Grid>
                 </StackPanel>
             </Expander>

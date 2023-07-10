@@ -105,6 +105,12 @@ public static class DesignData
                         {
                             FilePath = "~/Models/Lora/model.safetensors",
                             Title = "Some model"
+                        },
+                        new()
+                        {
+                            FilePath = "~/Models/VAE/vae_v2.pt",
+                            Title = "Some model",
+                            IsLoading = true
                         }
                     }
                 }

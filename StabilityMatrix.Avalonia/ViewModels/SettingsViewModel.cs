@@ -2,7 +2,9 @@
 using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls.Notifications;
+using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -36,6 +38,17 @@ public partial class SettingsViewModel : PageViewModelBase
         "Dark",
         "System",
     };
+
+    partial void OnSelectedThemeChanged(string? value)
+    {
+         // Change theme
+         Application.Current!.RequestedThemeVariant = value switch
+         {
+             "Dark" => ThemeVariant.Dark,
+             "Light" => ThemeVariant.Light,
+             _ => ThemeVariant.Default
+         };
+    }
     
     // Debug info
     [ObservableProperty]
@@ -50,6 +63,8 @@ public partial class SettingsViewModel : PageViewModelBase
                         "{Environment.CurrentDirectory}"
                       App Directory [Assembly.GetExecutingAssembly().Location]
                         "{assembly.Location}"
+                      App Directory [AppContext.BaseDirectory]
+                        "{AppContext.BaseDirectory}"
                       AppData Directory [SpecialFolder.ApplicationData]
                         "{appData}"
                       """;

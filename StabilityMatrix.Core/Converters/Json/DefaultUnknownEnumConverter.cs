@@ -13,7 +13,7 @@ public class DefaultUnknownEnumConverter<T> : JsonConverter<T> where T : Enum
             throw new JsonException();
         }
 
-        var enumText = reader.GetString();
+        var enumText = reader.GetString()?.Replace(" ", "_");
         if (Enum.TryParse(typeof(T), enumText, true, out var result))
         {
             return (T) result!;
@@ -35,6 +35,7 @@ public class DefaultUnknownEnumConverter<T> : JsonConverter<T> where T : Enum
             writer.WriteNullValue();
             return;
         }
-        writer.WriteStringValue(value.GetStringValue());
+
+        writer.WriteStringValue(value.GetStringValue().Replace("_", " "));
     }
 }

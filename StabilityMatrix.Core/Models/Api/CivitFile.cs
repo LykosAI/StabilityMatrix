@@ -28,6 +28,9 @@ public class CivitFile
     [JsonPropertyName("hashes")]
     public CivitFileHashes Hashes { get; set; }
     
+    [JsonPropertyName("type")]
+    public CivitFileType Type { get; set; }
+    
     private FileSizeType? fullFilesSize;
     public FileSizeType FullFilesSize
     {

@@ -13,6 +13,7 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Data;
 using NLog;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
@@ -34,6 +35,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     private readonly ICivitApi civitApi;
     private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
+    private readonly IDialogFactory dialogFactory;
     private readonly ILiteDbContext liteDbContext;
     private const int MaxModelsPerPage = 14;
 
@@ -69,11 +71,13 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         ICivitApi civitApi, 
         IDownloadService downloadService, 
         ISettingsManager settingsManager,
+        IDialogFactory dialogFactory,
         ILiteDbContext liteDbContext)
     {
         this.civitApi = civitApi;
         this.downloadService = downloadService;
         this.settingsManager = settingsManager;
+        this.dialogFactory = dialogFactory;
         this.liteDbContext = liteDbContext;
         
         CurrentPageNumber = 1;
@@ -205,7 +209,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         {
             var updateCards = models
                 .Select(model => new CheckpointBrowserCardViewModel(model,
-                    downloadService, settingsManager)).ToList();
+                    downloadService, settingsManager, dialogFactory)).ToList();
             allModelCards = updateCards;
             ModelCards =
                 new ObservableCollection<CheckpointBrowserCardViewModel>(
@@ -333,7 +337,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         // ModelCardsView?.Refresh();
         var updateCards = allModelCards
             .Select(model => new CheckpointBrowserCardViewModel(model.CivitModel, 
-                downloadService, settingsManager))
+                downloadService, settingsManager, dialogFactory))
             .Where(FilterModelCardsPredicate);
         ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(updateCards);
 

@@ -55,4 +55,12 @@
     <ItemGroup>
       <Resource Include="Assets\noimage.png" />
     </ItemGroup>
+
+
+    <ItemGroup>
+      <Compile Update="Views\Dialogs\SelectModelVersionDialog.axaml.cs">
+        <DependentUpon>SelectModelVersionDialog.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
 </Project>

@@ -258,6 +258,8 @@
         <controls1:ProgressRing
             Grid.Row="1"
             IsIndeterminate="True"
+            Width="128"
+            Height="128"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
             IsVisible="{Binding ShowMainLoadingSpinner, FallbackValue=False}" />

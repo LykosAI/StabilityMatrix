@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using AvaloniaEdit.Utils;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
@@ -54,6 +56,20 @@ public static class DesignData
         
         PackageManagerViewModel = new PackageManagerViewModel(settingsManager, packageFactory);
         SettingsViewModel = new SettingsViewModel(notificationService);
+
+        SelectModelVersionViewModel = new SelectModelVersionViewModel(new CivitModel
+        {
+            Name = "BB95 Furry Mix",
+            Nsfw = false,
+            ModelVersions = new List<CivitModelVersion>
+            {
+                new()
+                {
+                    Name = "BB95 Furry Mix",
+                    Description = "v1.0.0",
+                }
+            }
+        }, null!, settingsManager, downloadService);
         
         // Checkpoints page
         CheckpointsPageViewModel = new CheckpointsPageViewModel(
@@ -96,7 +112,7 @@ public static class DesignData
         };
         
         CheckpointBrowserViewModel =
-            new CheckpointBrowserViewModel(null!, downloadService, settingsManager, null!)
+            new CheckpointBrowserViewModel(null!, downloadService, settingsManager, null!, null!)
             {
                 ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>
                 {
@@ -104,7 +120,7 @@ public static class DesignData
                     {
                         Name = "BB95 Furry Mix",
                         Description = "A furry mix of BB95",
-                    }, downloadService, settingsManager)
+                    }, downloadService, settingsManager, new DialogFactory(settingsManager, downloadService))
                 }
             };
         
@@ -130,4 +146,5 @@ public static class DesignData
     public static CheckpointsPageViewModel CheckpointsPageViewModel { get; }
     public static SettingsViewModel SettingsViewModel { get; }
     public static CheckpointBrowserViewModel CheckpointBrowserViewModel { get; }
+    public static SelectModelVersionViewModel SelectModelVersionViewModel { get; }
 }

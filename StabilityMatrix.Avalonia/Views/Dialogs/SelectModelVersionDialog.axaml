@@ -1,0 +1,81 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+             xmlns:api="clr-namespace:StabilityMatrix.Core.Models.Api;assembly=StabilityMatrix.Core"
+             xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+             xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+             xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="dialogs:SelectModelVersionViewModel"
+             d:DataContext="{x:Static designData:DesignData.SelectModelVersionViewModel}"
+             x:Class="StabilityMatrix.Avalonia.Views.Dialogs.SelectModelVersionDialog">
+    <Grid
+        Margin="8"
+        MinHeight="450"
+        MinWidth="700" 
+        RowDefinitions="*,Auto" 
+        ColumnDefinitions="*,Auto,*">
+
+        <controls:BetterImage Grid.Column="0" Grid.Row="0" Margin="8"
+                              VerticalAlignment="Top"
+                              MaxHeight="400"
+                              HorizontalAlignment="Left"
+                              Source="{Binding PreviewImage}" />
+
+
+        <TreeView Grid.Row="0" Grid.Column="1"
+                  Margin="8"
+                  MaxHeight="450"
+                  ItemsSource="{Binding Versions}"
+                  SelectedItem="{Binding SelectedVersion}">
+            <TreeView.ItemTemplate>
+                <DataTemplate DataType="{x:Type api:CivitModelVersion}">
+                    <TextBlock Margin="-24,4,0,4"
+                               Padding="4"
+                               MinWidth="128"
+                               Text="{Binding Name}" />
+                </DataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+
+        <TreeView Grid.Row="0" Grid.Column="2"
+                 Margin="8"
+                 ItemsSource="{Binding SelectedVersion.Files}"
+                 SelectedItem="{Binding SelectedFile}">
+            <TreeView.ItemTemplate>
+                <DataTemplate DataType="{x:Type api:CivitFile}">
+                    <StackPanel Margin="-24, 4, 4, 4" VerticalAlignment="Top">
+                        <TextBlock Margin="0,4,0,4" Text="{Binding Name}" />
+                        <TextBlock Margin="0,0,0,4" FontSize="11">
+                            <Run Text="{Binding Metadata.Size}" />
+                            <Run Text="{Binding Metadata.Fp}" />
+                            <Run Text="-" />
+                            <Run Text="{Binding FullFilesSize, Mode=OneWay}" />
+                        </TextBlock>
+                    </StackPanel>
+                </DataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+
+        <StackPanel Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="1" 
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center">
+            <Button
+                Content="Cancel"
+                HorizontalAlignment="Center"
+                Command="{Binding Cancel}"
+                Margin="8, 0"/>
+            
+            <Button
+                Margin="8, 0"
+                Content="Import"
+                Command="{Binding Import}"
+                IsEnabled="{Binding IsImportEnabled}"
+                Classes="accent"/>
+        </StackPanel>
+
+    </Grid>
+    
+</UserControl>

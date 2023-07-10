@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -14,6 +15,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
+using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -31,6 +34,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
+    private readonly IDialogFactory dialogFactory;
     public CivitModel CivitModel { get; init; }
     public Bitmap? CardImage { get; set; }
     public override bool IsTextVisible => Value > 0;
@@ -41,10 +45,12 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         CivitModel civitModel, 
         IDownloadService downloadService, 
         ISettingsManager settingsManager,
+        IDialogFactory dialogFactory,
         Bitmap? fixedImage = null)
     {
         this.downloadService = downloadService;
         this.settingsManager = settingsManager;
+        this.dialogFactory = dialogFactory;
         CivitModel = civitModel;
 
         if (fixedImage != null)
@@ -109,20 +115,28 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     [RelayCommand]
     private async Task ShowVersionDialog(CivitModel model)
     {
-        // var dialog = dialogFactory.CreateSelectModelVersionDialog(model);
-        // var result = await dialog.ShowAsync();
-        //
-        // if (result != ContentDialogResult.Primary)
-        // {
-        //     return;
-        // }
-        //
-        // var viewModel = dialog.DataContext as SelectModelVersionDialogViewModel;
-        // var selectedVersion = viewModel?.SelectedVersion;
-        // var selectedFile = viewModel?.SelectedFile;
-        //
-        // await Task.Delay(100);
-        // await DoImport(model, selectedVersion, selectedFile);
+        var dialog = new ContentDialog
+        {
+            Title = model.Name,
+            IsPrimaryButtonEnabled = false,
+            IsSecondaryButtonEnabled = false,
+        };
+
+        var viewModel = dialogFactory.CreateSelectModelVersionViewModel(model, dialog);
+        dialog.Content = new SelectModelVersionDialog {DataContext = viewModel};
+
+        var result = await dialog.ShowAsync();
+
+        if (result != ContentDialogResult.Primary)
+        {
+            return;
+        }
+        
+        var selectedVersion = viewModel?.SelectedVersion;
+        var selectedFile = viewModel?.SelectedFile;
+        
+        await Task.Delay(100);
+        await DoImport(model, selectedVersion, selectedFile);
     }
 
     private async Task DoImport(CivitModel model, CivitModelVersion? selectedVersion = null, CivitFile? selectedFile = null)
@@ -146,9 +160,10 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                 Text = "Unable to Download";
                 return;
             }
-            
+
             // Get latest version file
-            var modelFile = selectedFile ?? modelVersion.Files?.FirstOrDefault();
+            var modelFile = selectedFile ??
+                            modelVersion.Files?.FirstOrDefault(x => x.Type == CivitFileType.Model);
             if (modelFile is null)
             {
                 // snackbarService.ShowSnackbarAsync(
@@ -157,16 +172,17 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                 Text = "Unable to Download";
                 return;
             }
-            
+
             var downloadFolder = Path.Combine(settingsManager.ModelsDirectory,
                 model.Type.ConvertTo<SharedFolderType>().GetStringValue());
             // Folders might be missing if user didn't install any packages yet
             Directory.CreateDirectory(downloadFolder);
             var downloadPath = Path.GetFullPath(Path.Combine(downloadFolder, modelFile.Name));
             filesForCleanup.Add(downloadPath);
-            
+
             // Do the download
-            var downloadTask = downloadService.DownloadToFileAsync(modelFile.DownloadUrl, downloadPath, 
+            var downloadTask = downloadService.DownloadToFileAsync(modelFile.DownloadUrl,
+                downloadPath,
                 new Progress<ProgressReport>(report =>
                 {
                     Dispatcher.UIThread.Invoke(() =>
@@ -177,9 +193,9 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                 }));
 
             await downloadTask;
-            
+
             // var downloadResult = await snackbarService.TryAsync(downloadTask, "Could not download file");
-            
+
             // Failed download handling
             // if (downloadResult.Exception is not null)
             // {
@@ -194,7 +210,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             //     Text = "Download Failed";
             //     return;
             //}
-            
+
             // When sha256 is available, validate the downloaded file
             var fileExpectedSha256 = modelFile.Hashes.SHA256;
             if (!string.IsNullOrEmpty(fileExpectedSha256))
@@ -218,17 +234,18 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                 // snackbarService.ShowSnackbarAsync($"{model.Type} {model.Name} imported successfully!",
                 //     "Import complete", ControlAppearance.Info).SafeFireAndForget();
             }
-            
+
             IsIndeterminate = true;
-            
+
             // Save connected model info
             var modelFileName = Path.GetFileNameWithoutExtension(modelFile.Name);
-            var modelInfo = new ConnectedModelInfo(CivitModel, modelVersion, modelFile, DateTime.UtcNow);
+            var modelInfo =
+                new ConnectedModelInfo(CivitModel, modelVersion, modelFile, DateTime.UtcNow);
             var modelInfoPath = Path.GetFullPath(Path.Combine(
                 downloadFolder, modelFileName + ConnectedModelInfo.FileExtension));
             filesForCleanup.Add(modelInfoPath);
             await modelInfo.SaveJsonToDirectory(downloadFolder, modelFileName);
-            
+
             // If available, save a model image
             if (modelVersion.Images != null && modelVersion.Images.Any())
             {
@@ -236,17 +253,23 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                 var imageExtension = Path.GetExtension(image.Url).TrimStart('.');
                 if (imageExtension is "jpg" or "jpeg" or "png")
                 {
-                    var imageDownloadPath = Path.GetFullPath(Path.Combine(downloadFolder, $"{modelFileName}.preview.{imageExtension}"));
+                    var imageDownloadPath = Path.GetFullPath(Path.Combine(downloadFolder,
+                        $"{modelFileName}.preview.{imageExtension}"));
                     filesForCleanup.Add(imageDownloadPath);
-                    var imageTask = downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
+                    var imageTask =
+                        downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
                     // await snackbarService.TryAsync(imageTask, "Could not download preview image");
                 }
             }
-            
+
             // Successful - clear cleanup list
             filesForCleanup.Clear();
-                
+
             Text = "Import complete!";
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine(e);
         }
         finally
         {

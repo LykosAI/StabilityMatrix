@@ -17,6 +17,7 @@
                  <ResourceInclude Source="Styles/ThemeColors.axaml"/>
                  <ResourceInclude Source="Styles/Card.axaml"/>
              </ResourceDictionary.MergedDictionaries>
+             <x:Double x:Key="ContentDialogMaxWidth">700</x:Double>
          </ResourceDictionary>
      </Application.Resources>
   

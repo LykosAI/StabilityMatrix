@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -215,7 +216,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     
     public void Dispose()
     {
-        RunningPackage?.Shutdown();
+        Stop().SafeFireAndForget();
         GC.SuppressFinalize(this);
     }
 }

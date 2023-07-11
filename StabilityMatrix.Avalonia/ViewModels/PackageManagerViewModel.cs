@@ -10,7 +10,9 @@ using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using Polly;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
@@ -31,17 +33,19 @@ public partial class PackageManagerViewModel : PageViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly IPackageFactory packageFactory;
     private readonly INotificationService notificationService;
+    private readonly ServiceManager<ViewModelBase> dialogFactory;
 
     private const int MinutesToWaitForUpdateCheck = 60;
 
     public PackageManagerViewModel(ILogger<PackageManagerViewModel> logger,
         ISettingsManager settingsManager, IPackageFactory packageFactory,
-        INotificationService notificationService)
+        INotificationService notificationService, ServiceManager<ViewModelBase> dialogFactory)
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         this.notificationService = notificationService;
+        this.dialogFactory = dialogFactory;
 
         ProgressText = string.Empty;
         InstallButtonText = "Launch";
@@ -319,8 +323,19 @@ public partial class PackageManagerViewModel : PageViewModelBase
     }
 
     [RelayCommand]
-    private async Task ShowInstallWindow()
+    private async Task ShowInstallDialog()
     {
-        
+        var viewModel = dialogFactory.Get<InstallerViewModel>();
+        var dialog = new ContentDialog
+        {
+            IsPrimaryButtonEnabled = false,
+            IsSecondaryButtonEnabled = false,
+            Content = new InstallerDialog
+            {
+                DataContext = viewModel
+            }
+        };
+
+        await dialog.ShowAsync();
     }
 }

@@ -37,7 +37,7 @@
             Orientation="Horizontal">
             <StackPanel Orientation="Vertical">
                 <Button
-                    Command="{Binding ShowInstallWindowCommand}"
+                    Command="{Binding ShowInstallDialogCommand}"
                     Height="40"
                     HorizontalAlignment="Stretch"
                     Margin="0,0,0,16"

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
@@ -15,45 +16,40 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
-public partial class SelectModelVersionViewModel : ObservableObject
+public partial class SelectModelVersionViewModel : ViewModelBase
 {
-    private readonly ContentDialog dialog;
     private readonly ISettingsManager settingsManager;
     private readonly IDownloadService downloadService;
-    [ObservableProperty] private CivitModel civitModel;
-    [ObservableProperty] private Bitmap previewImage;
-    [ObservableProperty] private ObservableCollection<CivitModelVersion> versions;
-    [ObservableProperty] private CivitModelVersion selectedVersion;
-    [ObservableProperty] private CivitFile selectedFile;
+    
+    public required ContentDialog Dialog { get; init; }
+    public required IReadOnlyList<CivitModelVersion> Versions { get; set; }
+    
+    [ObservableProperty] private Bitmap? previewImage;
+    [ObservableProperty] private CivitModelVersion? selectedVersion;
+    [ObservableProperty] private CivitFile? selectedFile;
     [ObservableProperty] private bool isImportEnabled;
     
-    public SelectModelVersionViewModel(CivitModel civitModel, ContentDialog dialog, ISettingsManager settingsManager, IDownloadService downloadService)
+    public SelectModelVersionViewModel(ISettingsManager settingsManager, IDownloadService downloadService)
     {
-        this.dialog = dialog;
         this.settingsManager = settingsManager;
         this.downloadService = downloadService;
-
-        CivitModel = civitModel;
-        Versions = new ObservableCollection<CivitModelVersion>(CivitModel.ModelVersions);
-        SelectedVersion = Versions.First();
-
-        var nsfwEnabled = settingsManager.Settings.ModelBrowserNsfwEnabled;
-        var firstImageUrl = Versions.FirstOrDefault()?.Images
-            ?.FirstOrDefault(img => nsfwEnabled || img.Nsfw == "None")?.Url;
-        
-        UpdateImage(firstImageUrl).SafeFireAndForget();
     }
     
-    partial void OnSelectedVersionChanged(CivitModelVersion value)
+    public override void OnLoaded()
+    {
+        SelectedVersion = Versions[0];
+    }
+    
+    partial void OnSelectedVersionChanged(CivitModelVersion? value)
     {
         var nsfwEnabled = settingsManager.Settings.ModelBrowserNsfwEnabled;
-        var firstImageUrl = value.Images?.FirstOrDefault(img => nsfwEnabled || img.Nsfw == "None")
-            ?.Url;
+        var firstImageUrl = value?.Images?.FirstOrDefault(
+                img => nsfwEnabled || img.Nsfw == "None")?.Url;
 
         UpdateImage(firstImageUrl).SafeFireAndForget();
     }
     
-    partial void OnSelectedFileChanged(CivitFile value)
+    partial void OnSelectedFileChanged(CivitFile? value)
     {
         IsImportEnabled = value != null;
     }
@@ -69,11 +65,11 @@ public partial class SelectModelVersionViewModel : ObservableObject
 
     public void Cancel()
     {
-        dialog.Hide(ContentDialogResult.Secondary);
+        Dialog.Hide(ContentDialogResult.Secondary);
     }
 
     public void Import()
     {
-        dialog.Hide(ContentDialogResult.Primary);
+        Dialog.Hide(ContentDialogResult.Primary);
     }
 }

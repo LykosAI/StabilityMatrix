@@ -7,9 +7,11 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 /// </summary>
 public partial class ProgressViewModel : ObservableObject
 {
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsTextVisible))]
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(IsTextVisible))]
     private string? text;
+
+    [ObservableProperty]
+    private string? description;
     
     [ObservableProperty]
     private double value;

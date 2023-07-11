@@ -70,6 +70,13 @@ public static class DesignData
                 }
             }
         }, null!, settingsManager, downloadService);
+
+        InstallerViewModel = new InstallerViewModel(settingsManager, null!,
+            downloadService, notificationService, sharedFolders, null!)
+        {
+            AvailablePackages = new ObservableCollection<BasePackage>(packageFactory.GetAllAvailablePackages()),
+            SelectedPackage = packages[0]
+        };
         
         // Checkpoints page
         CheckpointsPageViewModel = new CheckpointsPageViewModel(
@@ -106,11 +113,18 @@ public static class DesignData
                             FilePath = "~/Models/Lora/model.safetensors",
                             Title = "Some model"
                         },
+                    }
+                },
+                new(settingsManager, downloadService, modelFinder)
+                {
+                    Title = "VAE",
+                    DirectoryPath = "Packages/VAE",
+                    CheckpointFiles = new ObservableCollection<CheckpointFile>
+                    {
                         new()
                         {
                             FilePath = "~/Models/VAE/vae_v2.pt",
-                            Title = "Some model",
-                            IsLoading = true
+                            Title = "VAE v2",
                         }
                     }
                 }
@@ -160,4 +174,5 @@ public static class DesignData
     public static CheckpointBrowserViewModel CheckpointBrowserViewModel { get; }
     public static SelectModelVersionViewModel SelectModelVersionViewModel { get; }
     public static OneClickInstallViewModel OneClickInstallViewModel { get; }
+    public static InstallerViewModel InstallerViewModel { get; }
 }

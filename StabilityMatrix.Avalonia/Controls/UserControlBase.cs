@@ -17,8 +17,9 @@ public class UserControlBase : UserControl
     {
         if (DataContext is not ViewModelBase viewModel) return;
         
-        // ReSharper disable once MethodHasAsyncOverload
+        if (Design.IsDesignMode) return;
+        
         viewModel.OnLoaded();
-        viewModel.OnLoadedAsync().SafeFireAndForget();
+        viewModel.OnLoadedAsync().Wait();
     }
 }

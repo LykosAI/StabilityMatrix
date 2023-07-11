@@ -24,6 +24,7 @@
         <PackageReference Include="AvaloniaEdit.TextMate" Version="11.0.0" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
         <PackageReference Include="FluentAvaloniaUI" Version="2.0.0-rc1" />
+        <PackageReference Include="Markdown.Avalonia" Version="11.0.0" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
         <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="7.0.8" />
         <PackageReference Include="NLog" Version="5.2.2" />
@@ -60,6 +61,10 @@
     <ItemGroup>
       <Compile Update="Views\Dialogs\SelectModelVersionDialog.axaml.cs">
         <DependentUpon>SelectModelVersionDialog.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\Dialogs\InstallerDialog.axaml.cs">
+        <DependentUpon>InstallerDialog.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
     </ItemGroup>

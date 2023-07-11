@@ -7,4 +7,5 @@ namespace StabilityMatrix.Avalonia.Services;
 public interface IDialogFactory
 {
     SelectModelVersionViewModel CreateSelectModelVersionViewModel(CivitModel model, ContentDialog dialog);
+    OneClickInstallViewModel CreateOneClickInstallViewModel();
 }

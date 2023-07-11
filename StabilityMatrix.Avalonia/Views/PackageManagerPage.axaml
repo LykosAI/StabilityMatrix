@@ -1,20 +1,20 @@
 ﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
-             xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-             xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-             xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
-             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:DataType="viewModels:PackageManagerViewModel"
-             x:CompileBindings="True"
-             d:DataContext="{x:Static mocks:DesignData.LaunchPageViewModel}"
-             x:Class="StabilityMatrix.Avalonia.Views.PackageManagerPage">
-    
-     <Grid Margin="16" RowDefinitions="Auto,*">
-         <StackPanel
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                          xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+                          xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                          x:DataType="viewModels:PackageManagerViewModel"
+                          x:CompileBindings="True"
+                          d:DataContext="{x:Static mocks:DesignData.LaunchPageViewModel}"
+                          x:Class="StabilityMatrix.Avalonia.Views.PackageManagerPage">
+
+    <Grid Margin="16" RowDefinitions="Auto,*">
+        <StackPanel
             Grid.Row="0"
             Orientation="Vertical"
             IsVisible="{Binding ProgressBarVisibility, FallbackValue=True}">
@@ -54,9 +54,10 @@
 
                 <ListBox
                     ItemsSource="{Binding Packages}"
-                    SelectedItem="{Binding SelectedPackage, Mode=TwoWay}">
+                    SelectedItem="{Binding SelectedPackage, Mode=TwoWay}"
+                    IsVisible="{Binding !!Packages.Count}">
 
-                <ListBox.Template>
+                    <ListBox.Template>
                         <ControlTemplate>
                             <Border
                                 BorderBrush="#FFCCCCCC"
@@ -89,9 +90,9 @@
                 </TextBlock>
                 <TextBlock
                     FontSize="12"
-                    Margin="0,5,0,5" 
+                    Margin="0,5,0,5"
                     Text="{Binding SelectedPackage.FullPath, FallbackValue=Packages\\stable-diffusion}" />
-                    <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
+                <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
                     <Button
                         Command="{Binding InstallCommand}"
                         Content="{Binding InstallButtonText, FallbackValue=Install}"
@@ -112,10 +113,12 @@
                         Width="100" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" IsVisible="{Binding IsUninstalling}">
-                    <!-- <ui:ProgressRing Height="24" Width="24" Margin="8, 16, 8, 8" -->
-                    <!--                  VerticalAlignment="Center" -->
-                    <!--                  IsIndeterminate="True" HorizontalAlignment="Left"/> -->
-                    <TextBlock Text="Uninstalling..." VerticalAlignment="Center" Margin="0,8,0,0"/>
+                    <controls:ProgressRing Height="24" Width="24"
+                                           Margin="8, 16, 8, 8"
+                                           VerticalAlignment="Center"
+                                           BorderThickness="4"
+                                           IsIndeterminate="True" HorizontalAlignment="Left" />
+                    <TextBlock Text="Uninstalling..." VerticalAlignment="Center" Margin="0,8,0,0" />
                 </StackPanel>
             </StackPanel>
         </StackPanel>

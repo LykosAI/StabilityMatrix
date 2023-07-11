@@ -128,12 +128,13 @@ public static class DesignData
                             Name = "BB95 Furry Mix",
                             Description = "A furry mix of BB95",
                         }, downloadService, settingsManager,
-                        new DialogFactory(settingsManager, downloadService), notificationService)
+                        new DialogFactory(settingsManager, downloadService, packageFactory, null!,
+                            null!, null!, sharedFolders), notificationService)
                 }
             };
         
         // Main window
-        MainWindowViewModel = new MainWindowViewModel
+        MainWindowViewModel = new MainWindowViewModel(settingsManager, null!)
         {
             Pages = new List<PageViewModelBase>
             {
@@ -146,6 +147,9 @@ public static class DesignData
                 SettingsViewModel
             }
         };
+
+        OneClickInstallViewModel = new OneClickInstallViewModel(settingsManager, packageFactory,
+            null!, null!, null!, sharedFolders);
     }
     
     public static MainWindowViewModel MainWindowViewModel { get; }
@@ -155,4 +159,5 @@ public static class DesignData
     public static SettingsViewModel SettingsViewModel { get; }
     public static CheckpointBrowserViewModel CheckpointBrowserViewModel { get; }
     public static SelectModelVersionViewModel SelectModelVersionViewModel { get; }
+    public static OneClickInstallViewModel OneClickInstallViewModel { get; }
 }

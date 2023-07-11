@@ -1,16 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using FluentAvalonia.UI.Controls;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.Views;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(MainWindow))]
 public partial class MainWindowViewModel : ViewModelBase
 {
+    private readonly ISettingsManager settingsManager;
+    private readonly IDialogFactory dialogFactory;
     public string Greeting => "Welcome to Avalonia!";
     
     [ObservableProperty]
@@ -24,12 +31,42 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private List<PageViewModelBase> footerPages = new();
+
+    public MainWindowViewModel(ISettingsManager settingsManager, IDialogFactory dialogFactory)
+    {
+        this.settingsManager = settingsManager;
+        this.dialogFactory = dialogFactory;
+    }
     
-    public override void OnLoaded()
+    public override async Task OnLoadedAsync()
     {
         CurrentPage = Pages.FirstOrDefault();
         SelectedCategory = Pages.FirstOrDefault();
         EventManager.Instance.PageChangeRequested += OnPageChangeRequested;
+        
+        if (!settingsManager.Settings.InstalledPackages.Any())
+        {
+            var viewModel = dialogFactory.CreateOneClickInstallViewModel();
+            var dialog = new ContentDialog
+            {
+                IsPrimaryButtonEnabled = false,
+                IsSecondaryButtonEnabled = false,
+                Content = new OneClickInstallDialog
+                {
+                    DataContext = viewModel
+                },
+            };
+
+            EventManager.Instance.OneClickInstallFinished += (_, skipped) =>
+            {
+                dialog.Hide();
+                if (skipped) return;
+                
+                EventManager.Instance.OnTeachingTooltipNeeded();
+            };
+
+            await dialog.ShowAsync();
+        }
     }
 
     private void OnPageChangeRequested(object? sender, Type e)

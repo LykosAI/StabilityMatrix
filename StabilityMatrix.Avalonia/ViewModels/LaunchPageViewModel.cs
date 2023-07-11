@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
 using System.Threading.Tasks.Dataflow;
 using Avalonia.Threading;
@@ -71,6 +69,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
 
         EventManager.Instance.PackageLaunchRequested +=
             async (s, e) => await OnPackageLaunchRequested(s, e);
+        EventManager.Instance.OneClickInstallFinished += OnOneClickInstallFinished;
     }
 
     private async Task OnPackageLaunchRequested(object? sender, Guid e)
@@ -264,6 +263,11 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     private void OnProcessOutputReceived(object? sender, ProcessOutput output)
     {
         consoleUpdateBuffer.Post(output);
+    }
+    
+    private void OnOneClickInstallFinished(object? sender, bool e)
+    {
+        OnLoaded();
     }
     
     private void RunningPackageOnStartupComplete(object? sender, string e)

@@ -114,20 +114,22 @@ public partial class App : Application
         services.AddSingleton<IDisposable>(p => p.GetRequiredService<LaunchPageViewModel>());
 
         services.AddSingleton<PackageManagerViewModel>();
-        services.AddSingleton<MainWindowViewModel>(provider => new MainWindowViewModel
-        {
-            Pages = new List<PageViewModelBase>
+        services.AddSingleton<MainWindowViewModel>(provider =>
+            new MainWindowViewModel(provider.GetRequiredService<ISettingsManager>(),
+                provider.GetRequiredService<IDialogFactory>())
             {
-                provider.GetRequiredService<LaunchPageViewModel>(),
-                provider.GetRequiredService<PackageManagerViewModel>(),
-                provider.GetRequiredService<CheckpointsPageViewModel>(),
-                provider.GetRequiredService<CheckpointBrowserViewModel>(),
-            },
-            FooterPages = new List<PageViewModelBase>
-            {
-                provider.GetRequiredService<SettingsViewModel>()
-            }
-        });
+                Pages = new List<PageViewModelBase>
+                {
+                    provider.GetRequiredService<LaunchPageViewModel>(),
+                    provider.GetRequiredService<PackageManagerViewModel>(),
+                    provider.GetRequiredService<CheckpointsPageViewModel>(),
+                    provider.GetRequiredService<CheckpointBrowserViewModel>(),
+                },
+                FooterPages = new List<PageViewModelBase>
+                {
+                    provider.GetRequiredService<SettingsViewModel>()
+                }
+            });
 
         services.AddTransient<CheckpointsPage>();
         services.AddTransient<LaunchPageView>();

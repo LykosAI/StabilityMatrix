@@ -24,7 +24,7 @@ using EventManager = StabilityMatrix.Core.Helper.EventManager;
 
 namespace StabilityMatrix.ViewModels;
 
-public partial class MainWindowViewModel : ObservableObject
+public partial class  MainWindowViewModel : ObservableObject
 {
     private readonly ISettingsManager settingsManager;
     private readonly IDialogFactory dialogFactory;

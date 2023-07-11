@@ -92,7 +92,7 @@
                                 StartAngle="90"
                                 EndAngle="450"
                                 Value="{Binding Value}"
-                                VerticalAlignment="Center" />
+                                VerticalAlignment="Center"/>
                             <TextBlock
                                 HorizontalAlignment="Center"
                                 Margin="0,8,0,0"
@@ -167,6 +167,7 @@
                             MinHeight="16"
                             IsIndeterminate="True"
                             VerticalAlignment="Center"
+                            BorderThickness="4"
                             IsVisible="{Binding SearchModelsCommand.IsRunning}"
                             MinWidth="16" />
                         <TextBlock

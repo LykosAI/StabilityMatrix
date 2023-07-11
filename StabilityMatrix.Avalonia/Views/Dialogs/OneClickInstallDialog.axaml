@@ -1,0 +1,104 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+             xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+             xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+             xmlns:fa="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:packages="clr-namespace:StabilityMatrix.Core.Models.Packages;assembly=StabilityMatrix.Core"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+             x:DataType="dialogs:OneClickInstallViewModel"
+             d:DataContext="{x:Static designData:DesignData.OneClickInstallViewModel}"
+             x:Class="StabilityMatrix.Avalonia.Views.Dialogs.OneClickInstallDialog">
+    <UserControl.Styles>
+        <Style Selector="fa|ContentDialog > Border > Panel > fa|FABorder > Border > Grid > Border">
+            <Setter Property="IsVisible" Value="False"/>
+        </Style>
+    </UserControl.Styles>
+    
+    <Grid MaxHeight="900" VerticalAlignment="Stretch">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="0.25*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        
+        <StackPanel Grid.Row="0" Grid.Column="0">
+            <TextBlock Text="{Binding HeaderText, FallbackValue=Installing Stable Diffusion WebUI...}"
+                       TextWrapping="Wrap"
+                       VerticalAlignment="Center" HorizontalAlignment="Center"
+                       FontSize="36" FontWeight="Light" />
+            <TextBlock Grid.Row="0"
+                       Text="{Binding SubHeaderText, FallbackValue=Installing git...}"
+                       TextWrapping="Wrap" TextAlignment="Center"
+                       VerticalAlignment="Top" HorizontalAlignment="Center"
+                       FontSize="16" FontWeight="Light" Margin="8"/>
+        </StackPanel>
+        
+        <TextBlock Grid.Row="2"
+                   Text="{Binding SubSubHeaderText, FallbackValue=Installing git...}"
+                   TextWrapping="Wrap" TextAlignment="Center"
+                   VerticalAlignment="Top" HorizontalAlignment="Center"
+                   FontSize="10" Margin="8"/>
+
+        <StackPanel Grid.Row="3" VerticalAlignment="Center">
+            <ProgressBar Maximum="100" 
+                         Value="{Binding OneClickInstallProgress}"
+                         IsVisible="{Binding IsProgressBarVisible}"
+                         IsIndeterminate="{Binding IsIndeterminate}"
+                         Margin="16" >
+                <ProgressBar.Transitions>
+                    <Transitions>
+                        <DoubleTransition Property="Value" Duration="00:00:00.150">
+                            <DoubleTransition.Easing>
+                                <SineEaseInOut/>
+                            </DoubleTransition.Easing>
+                        </DoubleTransition>
+                    </Transitions>
+                </ProgressBar.Transitions>
+            </ProgressBar>
+            <Button
+                IsVisible="{Binding ShowInstallButton}"
+                Content="Install"
+                Command="{Binding InstallCommand}"
+                FontSize="32"
+                HorizontalAlignment="Center"
+                Classes="success"
+                Margin="16"
+                Padding="16, 8, 16, 8" />
+        </StackPanel>
+
+        <Button Grid.Row="4"
+                IsVisible="{Binding ShowInstallButton}"
+                Command="{Binding ToggleAdvancedModeCommand}"
+                Content="Skip first-time setup"
+                FontSize="14"
+                HorizontalAlignment="Center"
+                Margin="16"
+                VerticalAlignment="Bottom" />
+        
+        <ListBox Grid.Column="1" Grid.Row="0" ItemsSource="{Binding AllPackages}">
+            <ListBox.Template>
+                <ControlTemplate>
+                    <ItemsPresenter/>
+                </ControlTemplate>
+            </ListBox.Template>
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type packages:BasePackage}">
+                    <StackPanel Margin="8">
+                        <TextBlock Text="{Binding Name}"/>
+                        <TextBlock Text="{Binding ByAuthor}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+    
+</UserControl>

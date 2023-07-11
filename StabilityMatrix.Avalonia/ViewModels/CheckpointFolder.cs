@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using AvaloniaEdit.Utils;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Core.Extensions;
@@ -63,6 +64,7 @@ public partial class CheckpointFolder : ViewModelBase
     
     public ProgressViewModel Progress { get; } = new();
 
+    public CheckpointFolder? ParentFolder { get; init; }
     public ObservableCollection<CheckpointFolder> SubFolders { get; init; } = new();
     public ObservableCollection<CheckpointFile> CheckpointFiles { get; init; } = new();
 
@@ -306,27 +308,25 @@ public partial class CheckpointFolder : ViewModelBase
     public async Task IndexAsync(IProgress<ProgressReport>? progress = default)
     {
         SubFolders.Clear();
+        // Get subfolders
         foreach (var folder in Directory.GetDirectories(DirectoryPath))
         {
-            // Inherit our folder type
+            // Create subfolder
             var subFolder = new CheckpointFolder(settingsManager,
                 downloadService, modelFinder,
                 useCategoryVisibility: false)
             {
                 Title = Path.GetFileName(folder),
                 DirectoryPath = folder,
-                FolderType = FolderType
+                FolderType = FolderType, // Inherit our folder type
+                ParentFolder = this,
             };
             
             await subFolder.IndexAsync(progress);
             SubFolders.Add(subFolder);
         }
         
-        var checkpointFiles = await GetCheckpointFilesAsync();
         CheckpointFiles.Clear();
-        foreach (var checkpointFile in checkpointFiles)
-        {
-            CheckpointFiles.Add(checkpointFile);
-        }
+        CheckpointFiles.AddRange(await GetCheckpointFilesAsync());
     }
 }

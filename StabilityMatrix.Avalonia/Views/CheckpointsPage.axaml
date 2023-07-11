@@ -290,7 +290,7 @@
         </DataTemplate>
         
         <!--  Template for dropdown category checkbox item  -->
-        <DataTemplate DataType="{x:Type vm:CheckpointFolder}" x:Key="CategoryItemTemplate">
+        <DataTemplate DataType="{x:Type vm:CheckpointFolder}" x:Key="CategoryItemTemplate"> 
             <CheckBox Content="{Binding Title}" IsChecked="{Binding IsCategoryEnabled, Mode=TwoWay}" />
         </DataTemplate>
         
@@ -336,7 +336,7 @@
         
     </controls:UserControlBase.Resources>
     
-    <Grid ColumnDefinitions="Auto,*" RowDefinitions="0.2*,*">
+    <Grid ColumnDefinitions="Auto,*" RowDefinitions="0.2*,*" Margin="4, 0">
         <!--  Top settings bar  -->
         <ToggleSwitch
             OffContent="Import as Connected"
@@ -348,25 +348,25 @@
         <StackPanel
             Grid.Column="1"
             Grid.Row="0"
+            Spacing="8"
             HorizontalAlignment="Right"
             Margin="16,0"
             Orientation="Horizontal">
             <Button 
-                VerticalAlignment="Stretch"
-                Command="{Binding OpenModelsFolderCommand}"
-                Height="46"
-                Margin="8,0">
+                Command="{Binding OpenModelsFolderCommand}">
                 <TextBlock Text="Models Folder"/>
             </Button>
             <DropDownButton
+                Content="Categories"
                 Margin="8"
                 VerticalAlignment="Center"
                 HorizontalAlignment="Right">
-                <Button.Flyout>
+                <DropDownButton.Flyout>
                     <MenuFlyout 
+                        ItemTemplate="{StaticResource CategoryItemTemplate}"
                         Placement="Bottom" 
                         ItemsSource="{Binding CheckpointFolders}"/>
-                </Button.Flyout>
+                </DropDownButton.Flyout>
             </DropDownButton>
             <!--<ComboBox
                 VerticalAlignment="Center"

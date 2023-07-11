@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
@@ -17,7 +18,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly ISettingsManager settingsManager;
-    private readonly IDialogFactory dialogFactory;
+    private readonly ServiceManager<ViewModelBase> dialogFactory;
     public string Greeting => "Welcome to Avalonia!";
     
     [ObservableProperty]
@@ -32,7 +33,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private List<PageViewModelBase> footerPages = new();
 
-    public MainWindowViewModel(ISettingsManager settingsManager, IDialogFactory dialogFactory)
+    public MainWindowViewModel(ISettingsManager settingsManager, ServiceManager<ViewModelBase> dialogFactory)
     {
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
@@ -46,7 +47,7 @@ public partial class MainWindowViewModel : ViewModelBase
         
         if (!settingsManager.Settings.InstalledPackages.Any())
         {
-            var viewModel = dialogFactory.CreateOneClickInstallViewModel();
+            var viewModel = dialogFactory.Get<OneClickInstallViewModel>();
             var dialog = new ContentDialog
             {
                 IsPrimaryButtonEnabled = false,

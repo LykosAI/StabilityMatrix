@@ -14,7 +14,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
-public partial class OneClickInstallViewModel : ObservableObject
+public partial class OneClickInstallViewModel : ViewModelBase
 {
     private readonly ISettingsManager settingsManager;
     private readonly IPackageFactory packageFactory;

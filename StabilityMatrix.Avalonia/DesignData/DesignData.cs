@@ -2,10 +2,14 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using AvaloniaEdit.Utils;
+using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
@@ -17,9 +21,14 @@ namespace StabilityMatrix.Avalonia.DesignData;
 
 public static class DesignData
 {
+    private static IServiceProvider Services { get; }
+
     static DesignData()
     {
-        var settingsManager = new MockSettingsManager
+        var services = new ServiceCollection();
+
+        var activePackageId = new Guid();
+        services.AddSingleton<ISettingsManager, MockSettingsManager>(_ => new MockSettingsManager
         {
             Settings =
             {
@@ -27,6 +36,7 @@ public static class DesignData
                 {
                     new()
                     {
+                        Id = activePackageId,
                         DisplayName = "My Installed Package",
                         PackageName = "stable-diffusion-webui",
                         PackageVersion = "v1.0.0",
@@ -34,121 +44,42 @@ public static class DesignData
                         LastUpdateCheck = DateTimeOffset.Now
                     }
                 },
-                ActiveInstalledPackage = new Guid()
+                ActiveInstalledPackage = activePackageId
             }
-        };
-        var packages = new List<BasePackage>
-        {
-            new A3WebUI(null!, settingsManager, null!, null!),
-            new ComfyUI(null!, settingsManager, null!, null!)
-        };
-        var packageFactory = new PackageFactory(packages);
-        var notificationService = new MockNotificationService();
-        var sharedFolders = new SharedFolders(settingsManager, packageFactory);
-        var downloadService = new MockDownloadService();
-        var modelFinder = new ModelFinder(null!, null!);
+        });
         
-        LaunchPageViewModel = new LaunchPageViewModel(
-            null!, settingsManager, packageFactory, new PyRunner(), notificationService);
+        // General services
+        services.AddLogging();
+        services.AddSingleton<IPackageFactory, PackageFactory>()
+            .AddSingleton<INotificationService, MockNotificationService>()
+            .AddSingleton<ISharedFolders, SharedFolders>()
+            .AddSingleton<IDownloadService, MockDownloadService>()
+            .AddSingleton<ModelFinder>();
         
-        LaunchPageViewModel.InstalledPackages.AddRange(settingsManager.Settings.InstalledPackages);
-        LaunchPageViewModel.SelectedPackage = settingsManager.Settings.InstalledPackages[0];
+        // Placeholder services that nobody should need during design time
+        services
+            .AddSingleton<IPyRunner>(_ => null!)
+            .AddSingleton<ILiteDbContext>(_ => null!)
+            .AddSingleton<ICivitApi>(_ => null!)
+            .AddSingleton<IGithubApiCache>(_ => null!)
+            .AddSingleton<IPrerequisiteHelper>(_ => null!);
         
-        PackageManagerViewModel = new PackageManagerViewModel(null!, settingsManager, packageFactory, notificationService);
-        SettingsViewModel = new SettingsViewModel(notificationService);
+        // Using some default service implementations from App
+        App.ConfigurePackages(services);
+        App.ConfigurePageViewModels(services);
+        App.ConfigureDialogViewModels(services);
+        App.ConfigureViews(services);
+        
+        Services = services.BuildServiceProvider();
 
-        SelectModelVersionViewModel = new SelectModelVersionViewModel(new CivitModel
-        {
-            Name = "BB95 Furry Mix",
-            Nsfw = false,
-            ModelVersions = new List<CivitModelVersion>
-            {
-                new()
-                {
-                    Name = "BB95 Furry Mix",
-                    Description = "v1.0.0",
-                }
-            }
-        }, null!, settingsManager, downloadService);
-
-        InstallerViewModel = new InstallerViewModel(settingsManager, null!,
-            downloadService, notificationService, sharedFolders, null!)
-        {
-            AvailablePackages = new ObservableCollection<BasePackage>(packageFactory.GetAllAvailablePackages()),
-            SelectedPackage = packages[0]
-        };
-        
-        // Checkpoints page
-        CheckpointsPageViewModel = new CheckpointsPageViewModel(
-            sharedFolders, settingsManager, downloadService, modelFinder)
-        {
-            CheckpointFolders = new ObservableCollection<CheckpointFolder>
-            {
-                new(settingsManager, downloadService, modelFinder)
-                {
-                    Title = "Lora",
-                    DirectoryPath = "Packages/lora",
-                    CheckpointFiles = new ObservableCollection<CheckpointFile>
-                    {
-                        new()
-                        {
-                            FilePath = "~/Models/Lora/electricity-light.safetensors",
-                            Title = "Auroral Background",
-                            ConnectedModel = new ConnectedModelInfo
-                            {
-                                VersionName = "Lightning Auroral",
-                                BaseModel = "SD 1.5",
-                                ModelName = "Auroral Background",
-                                ModelType = CivitModelType.LORA,
-                                FileMetadata = new CivitFileMetadata
-                                {
-                                    Format = CivitModelFormat.SafeTensor,
-                                    Fp = CivitModelFpType.fp16,
-                                    Size = CivitModelSize.pruned,
-                                }
-                            }
-                        },
-                        new()
-                        {
-                            FilePath = "~/Models/Lora/model.safetensors",
-                            Title = "Some model"
-                        },
-                    }
-                },
-                new(settingsManager, downloadService, modelFinder)
-                {
-                    Title = "VAE",
-                    DirectoryPath = "Packages/VAE",
-                    CheckpointFiles = new ObservableCollection<CheckpointFile>
-                    {
-                        new()
-                        {
-                            FilePath = "~/Models/VAE/vae_v2.pt",
-                            Title = "VAE v2",
-                        }
-                    }
-                }
-            }
-        };
-
-        CheckpointBrowserViewModel =
-            new CheckpointBrowserViewModel(null!, downloadService, settingsManager, null!, null!,
-                notificationService)
-            {
-                ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>
-                {
-                    new(new CivitModel
-                        {
-                            Name = "BB95 Furry Mix",
-                            Description = "A furry mix of BB95",
-                        }, downloadService, settingsManager,
-                        new DialogFactory(settingsManager, downloadService, packageFactory, null!,
-                            null!, null!, sharedFolders), notificationService)
-                }
-            };
+        var dialogFactory = Services.GetRequiredService<ServiceManager<ViewModelBase>>();
+        var settingsManager = Services.GetRequiredService<ISettingsManager>();
+        var downloadService = Services.GetRequiredService<IDownloadService>();
+        var modelFinder = Services.GetRequiredService<ModelFinder>();
+        var notificationService = Services.GetRequiredService<INotificationService>();
         
         // Main window
-        MainWindowViewModel = new MainWindowViewModel(settingsManager, null!)
+        MainWindowViewModel = new MainWindowViewModel(settingsManager, dialogFactory)
         {
             Pages = new List<PageViewModelBase>
             {
@@ -161,18 +92,90 @@ public static class DesignData
                 SettingsViewModel
             }
         };
+        
+        // Sample data
+        var sampleCivitVersions = new List<CivitModelVersion>
+        {
+            new()
+            {
+                Name = "BB95 Furry Mix",
+                Description = "v1.0.0",
+            }
+        };
+        
+        // Sample data for dialogs
+        SelectModelVersionViewModel.Versions = sampleCivitVersions;
+        SelectModelVersionViewModel.SelectedVersion = sampleCivitVersions[0];
+        
+        // Checkpoints page
+        CheckpointsPageViewModel.CheckpointFolders = new ObservableCollection<CheckpointFolder>
+        {
+            new(settingsManager, downloadService, modelFinder)
+            {
+                Title = "Lora",
+                DirectoryPath = "Packages/lora",
+                CheckpointFiles = new ObservableCollection<CheckpointFile>
+                {
+                    new()
+                    {
+                        FilePath = "~/Models/Lora/electricity-light.safetensors",
+                        Title = "Auroral Background",
+                        ConnectedModel = new ConnectedModelInfo
+                        {
+                            VersionName = "Lightning Auroral",
+                            BaseModel = "SD 1.5",
+                            ModelName = "Auroral Background",
+                            ModelType = CivitModelType.LORA,
+                            FileMetadata = new CivitFileMetadata
+                            {
+                                Format = CivitModelFormat.SafeTensor,
+                                Fp = CivitModelFpType.fp16,
+                                Size = CivitModelSize.pruned,
+                            }
+                        }
+                    },
+                    new()
+                    {
+                        FilePath = "~/Models/Lora/model.safetensors",
+                        Title = "Some model"
+                    },
+                }
+            },
+            new(settingsManager, downloadService, modelFinder)
+            {
+                Title = "VAE",
+                DirectoryPath = "Packages/VAE",
+                CheckpointFiles = new ObservableCollection<CheckpointFile>
+                {
+                    new()
+                    {
+                        FilePath = "~/Models/VAE/vae_v2.pt",
+                        Title = "VAE v2",
+                    }
+                }
+            }
+        };
 
-        OneClickInstallViewModel = new OneClickInstallViewModel(settingsManager, packageFactory,
-            null!, null!, null!, sharedFolders);
+        CheckpointBrowserViewModel.ModelCards = new 
+            ObservableCollection<CheckpointBrowserCardViewModel>
+            {
+                new(new CivitModel
+                    {
+                        Name = "BB95 Furry Mix",
+                        Description = "A furry mix of BB95",
+                    }, downloadService, settingsManager,
+                    dialogFactory, notificationService)
+            };
+        
     }
     
     public static MainWindowViewModel MainWindowViewModel { get; }
-    public static LaunchPageViewModel LaunchPageViewModel { get; }
-    public static PackageManagerViewModel PackageManagerViewModel { get; }
-    public static CheckpointsPageViewModel CheckpointsPageViewModel { get; }
-    public static SettingsViewModel SettingsViewModel { get; }
-    public static CheckpointBrowserViewModel CheckpointBrowserViewModel { get; }
-    public static SelectModelVersionViewModel SelectModelVersionViewModel { get; }
-    public static OneClickInstallViewModel OneClickInstallViewModel { get; }
-    public static InstallerViewModel InstallerViewModel { get; }
+    public static LaunchPageViewModel LaunchPageViewModel => Services.GetRequiredService<LaunchPageViewModel>();
+    public static PackageManagerViewModel PackageManagerViewModel => Services.GetRequiredService<PackageManagerViewModel>();
+    public static CheckpointsPageViewModel CheckpointsPageViewModel => Services.GetRequiredService<CheckpointsPageViewModel>();
+    public static SettingsViewModel SettingsViewModel => Services.GetRequiredService<SettingsViewModel>();
+    public static CheckpointBrowserViewModel CheckpointBrowserViewModel => Services.GetRequiredService<CheckpointBrowserViewModel>();
+    public static SelectModelVersionViewModel SelectModelVersionViewModel => Services.GetRequiredService<SelectModelVersionViewModel>();
+    public static OneClickInstallViewModel OneClickInstallViewModel => Services.GetRequiredService<OneClickInstallViewModel>();
+    public static InstallerViewModel InstallerViewModel => Services.GetRequiredService<InstallerViewModel>();
 }

@@ -41,13 +41,15 @@ public partial class SettingsViewModel : PageViewModelBase
 
     partial void OnSelectedThemeChanged(string? value)
     {
-         // Change theme
-         Application.Current!.RequestedThemeVariant = value switch
-         {
-             "Dark" => ThemeVariant.Dark,
-             "Light" => ThemeVariant.Light,
-             _ => ThemeVariant.Default
-         };
+        // In case design / tests
+        if (Application.Current is null) return;
+        // Change theme
+        Application.Current!.RequestedThemeVariant = value switch
+        {
+            "Dark" => ThemeVariant.Dark,
+            "Light" => ThemeVariant.Light,
+            _ => ThemeVariant.Default
+        };
     }
     
     // Debug info

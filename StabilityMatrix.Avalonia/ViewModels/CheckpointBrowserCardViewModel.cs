@@ -18,6 +18,7 @@ using FluentAvalonia.UI.Controls;
 using NLog;
 using Octokit;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -37,7 +38,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
-    private readonly IDialogFactory dialogFactory;
+    private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly INotificationService notificationService;
     public CivitModel CivitModel { get; init; }
     public override bool IsTextVisible => Value > 0;
@@ -49,7 +50,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         CivitModel civitModel,
         IDownloadService downloadService,
         ISettingsManager settingsManager,
-        IDialogFactory dialogFactory,
+        ServiceManager<ViewModelBase> dialogFactory,
         INotificationService notificationService,
         Bitmap? fixedImage = null)
     {
@@ -123,7 +124,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             IsSecondaryButtonEnabled = false,
         };
 
-        var viewModel = dialogFactory.CreateSelectModelVersionViewModel(model, dialog);
+        // var viewModel = dialogFactory.CreateSelectModelVersionViewModel(model, dialog);
+        var viewModel = dialogFactory.Get<SelectModelVersionViewModel>();
         dialog.Content = new SelectModelVersionDialog {DataContext = viewModel};
 
         var result = await dialog.ShowAsync();

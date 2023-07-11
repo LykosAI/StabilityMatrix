@@ -36,7 +36,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     private readonly ICivitApi civitApi;
     private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
-    private readonly IDialogFactory dialogFactory;
+    private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly ILiteDbContext liteDbContext;
     private readonly INotificationService notificationService;
     private const int MaxModelsPerPage = 14;
@@ -73,7 +73,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         ICivitApi civitApi, 
         IDownloadService downloadService, 
         ISettingsManager settingsManager,
-        IDialogFactory dialogFactory,
+        ServiceManager<ViewModelBase> dialogFactory,
         ILiteDbContext liteDbContext,
         INotificationService notificationService)
     {

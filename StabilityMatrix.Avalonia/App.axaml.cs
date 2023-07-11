@@ -26,6 +26,7 @@ using Refit;
 using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Converters.Json;
@@ -85,16 +86,69 @@ public partial class App : Application
         Services.GetRequiredService<ISettingsManager>().TryFindLibrary();
     }
 
+    internal static void ConfigurePageViewModels(IServiceCollection services)
+    {
+        services.AddSingleton<PackageManagerViewModel>()
+            .AddSingleton<SettingsViewModel>()
+            .AddSingleton<CheckpointBrowserViewModel>()
+            .AddSingleton<CheckpointBrowserCardViewModel>()
+            .AddSingleton<CheckpointsPageViewModel>()
+            .AddSingleton<LaunchPageViewModel>();
+        
+        // Register disposable view models for shutdown cleanup
+        services.AddSingleton<IDisposable>(p 
+            => p.GetRequiredService<LaunchPageViewModel>());
+    }
+
+    internal static void ConfigureDialogViewModels(IServiceCollection services)
+    {
+        // Dialog view models (transient)
+        services.AddTransient<InstallerViewModel>();
+        services.AddTransient<OneClickInstallViewModel>();
+        services.AddTransient<SelectModelVersionViewModel>();
+        
+        // Other transients (usually sub view models)
+        services.AddTransient<CheckpointFolder>();
+        services.AddTransient<CheckpointFile>();
+        
+        // Dialog factory
+        services.AddSingleton<ServiceManager<ViewModelBase>>(provider =>
+            new ServiceManager<ViewModelBase>()
+                .Register(provider.GetRequiredService<InstallerViewModel>)
+                .Register(provider.GetRequiredService<OneClickInstallViewModel>)
+                .Register(provider.GetRequiredService<SelectModelVersionViewModel>)
+                .Register(provider.GetRequiredService<CheckpointFolder>)
+                .Register(provider.GetRequiredService<CheckpointFile>));
+    }
+
+    internal static void ConfigureViews(IServiceCollection services)
+    {
+        services.AddTransient<CheckpointsPage>();
+        services.AddTransient<LaunchPageView>();
+        services.AddTransient<PackageManagerPage>();
+        services.AddTransient<SettingsPage>();
+        services.AddTransient<CheckpointBrowserPage>();
+        services.AddSingleton<MainWindow>();
+    }
+    
+    internal static void ConfigurePackages(IServiceCollection services)
+    {
+        services.AddSingleton<BasePackage, A3WebUI>();
+        services.AddSingleton<BasePackage, VladAutomatic>();
+        services.AddSingleton<BasePackage, ComfyUI>();
+    }
+
     private static IServiceCollection ConfigureServices()
     {
         var services = new ServiceCollection();
 
         services.AddMemoryCache();
-        services.AddSingleton<PackageManagerViewModel>();
-        services.AddSingleton<SettingsViewModel>();
-        services.AddSingleton<CheckpointBrowserViewModel>();
-        services.AddSingleton<CheckpointBrowserCardViewModel>();
-        services.AddSingleton<CheckpointsPageViewModel>();
+
+        ConfigurePageViewModels(services);
+        ConfigureDialogViewModels(services);
+        ConfigurePackages(services);
+        
+        // Other services
         services.AddSingleton<ISettingsManager, SettingsManager>();
         services.AddSingleton<ISharedFolders, SharedFolders>();
         services.AddSingleton<ModelFinder>();
@@ -103,20 +157,11 @@ public partial class App : Application
         services.AddSingleton<IGithubApiCache, GithubApiCache>();
         services.AddSingleton<IPrerequisiteHelper, PrerequisiteHelper>();
         services.AddSingleton<INotificationService, NotificationService>();
-        services.AddSingleton<IDialogFactory, DialogFactory>();
-
-        services.AddSingleton<BasePackage, A3WebUI>();
-        services.AddSingleton<BasePackage, VladAutomatic>();
-        services.AddSingleton<BasePackage, ComfyUI>();
         services.AddSingleton<IPyRunner, PyRunner>();
-
-        services.AddSingleton<LaunchPageViewModel>();
-        services.AddSingleton<IDisposable>(p => p.GetRequiredService<LaunchPageViewModel>());
-
-        services.AddSingleton<PackageManagerViewModel>();
+        
         services.AddSingleton<MainWindowViewModel>(provider =>
             new MainWindowViewModel(provider.GetRequiredService<ISettingsManager>(),
-                provider.GetRequiredService<IDialogFactory>())
+                provider.GetRequiredService<ServiceManager<ViewModelBase>>())
             {
                 Pages = new List<PageViewModelBase>
                 {
@@ -130,13 +175,8 @@ public partial class App : Application
                     provider.GetRequiredService<SettingsViewModel>()
                 }
             });
-
-        services.AddTransient<CheckpointsPage>();
-        services.AddTransient<LaunchPageView>();
-        services.AddTransient<PackageManagerPage>();
-        services.AddTransient<SettingsPage>();
-        services.AddTransient<CheckpointBrowserPage>();
-        services.AddSingleton<MainWindow>();
+        
+        ConfigureViews(services);
 
         if (Design.IsDesignMode)
         {

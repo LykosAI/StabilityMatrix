@@ -117,16 +117,29 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     [RelayCommand]
     private async Task ShowVersionDialog(CivitModel model)
     {
+        var versions = model.ModelVersions;
+        if (versions is null || versions.Count == 0)
+        {
+            notificationService.Show(new Notification("Model has no versions available",
+                "This model has no versions available for download", NotificationType.Warning));
+            return;
+        }
+        
         var dialog = new ContentDialog
         {
             Title = model.Name,
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
         };
-
-        // var viewModel = dialogFactory.CreateSelectModelVersionViewModel(model, dialog);
+        
         var viewModel = dialogFactory.Get<SelectModelVersionViewModel>();
-        dialog.Content = new SelectModelVersionDialog {DataContext = viewModel};
+        viewModel.Dialog = dialog;
+        viewModel.Versions = versions;
+        
+        dialog.Content = new SelectModelVersionDialog
+        {
+            DataContext = viewModel
+        };
 
         var result = await dialog.ShowAsync();
 

@@ -8,6 +8,7 @@ using NLog;
 using Refit;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Python;
 
@@ -18,9 +19,7 @@ public class SettingsManager : ISettingsManager
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly ReaderWriterLockSlim FileLock = new();
 
-    private static readonly string GlobalSettingsPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StabilityMatrix",
-        "global.json");
+    private static readonly string GlobalSettingsPath = Path.Combine(Compat.AppDataHome, "global.json");
     
     private readonly string? originalEnvPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
     
@@ -154,29 +153,27 @@ public class SettingsManager : ISettingsManager
     public bool TryFindLibrary()
     {
         // 1. Check portable mode
-        var appDir = AppContext.BaseDirectory;
+        var appDir = Compat.AppCurrentDir;
         IsPortableMode = File.Exists(Path.Combine(appDir, "Data", ".sm-portable"));
         if (IsPortableMode)
         {
-            LibraryDir = Path.Combine(appDir, "Data");
+            LibraryDir = appDir + "Data";
             SetStaticLibraryPaths();
             LoadSettings();
             return true;
         }
         
         // 2. Check %APPDATA%/StabilityMatrix/library.json
-        var appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var libraryJsonPath = Path.Combine(appDataDir, "StabilityMatrix", "library.json");
-        if (!File.Exists(libraryJsonPath)) 
-            return false;
+        FilePath libraryJsonFile = Compat.AppDataHome + "library.json";
+        if (!libraryJsonFile.Exists) return false;
         
         try
         {
-            var libraryJson = File.ReadAllText(libraryJsonPath);
-            var library = JsonSerializer.Deserialize<LibrarySettings>(libraryJson);
-            if (!string.IsNullOrWhiteSpace(library?.LibraryPath))
+            var libraryJson = libraryJsonFile.ReadAllText();
+            var librarySettings = JsonSerializer.Deserialize<LibrarySettings>(libraryJson);
+            if (!string.IsNullOrWhiteSpace(librarySettings?.LibraryPath))
             {
-                LibraryDir = library.LibraryPath;
+                LibraryDir = librarySettings.LibraryPath;
                 SetStaticLibraryPaths();
                 LoadSettings();
                 return true;

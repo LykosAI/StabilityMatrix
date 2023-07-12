@@ -48,8 +48,12 @@ public partial class CheckpointFolder : ViewModelBase
     /// <summary>
     /// True if the category is enabled for the manager page.
     /// </summary>
-    [ObservableProperty]
-    private bool isCategoryEnabled = true;
+    [ObservableProperty] private bool isCategoryEnabled = true;
+
+    /// <summary>
+    /// True if currently expanded in the UI.
+    /// </summary>
+    [ObservableProperty] private bool isExpanded = true;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsDragBlurEnabled))]
@@ -320,6 +324,7 @@ public partial class CheckpointFolder : ViewModelBase
                 DirectoryPath = folder,
                 FolderType = FolderType, // Inherit our folder type
                 ParentFolder = this,
+                IsExpanded = false, // Subfolders are collapsed by default
             };
             
             await subFolder.IndexAsync(progress);

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -40,8 +41,9 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             settingsManager.Transaction(s => s.IsImportAsConnected = value);
         }
     }
-    
-    public ObservableCollection<CheckpointFolder> CheckpointFolders { get; set; } = new();
+
+    [ObservableProperty]
+    private ObservableCollection<CheckpointFolder> checkpointFolders = new();
     
     public CheckpointsPageViewModel(
         ISharedFolders sharedFolders, 
@@ -61,42 +63,48 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         
         // Set UI states
         IsImportAsConnected = settingsManager.Settings.IsImportAsConnected;
-        
+
+        await IndexFolders();
+    }
+
+    private async Task IndexFolders()
+    {
         var modelsDirectory = settingsManager.ModelsDirectory;
         // Get all folders within the shared folder root
         if (string.IsNullOrWhiteSpace(modelsDirectory))
         {
+            CheckpointFolders.Clear();
             return;
         }
         // Skip if the shared folder root doesn't exist
         if (!Directory.Exists(modelsDirectory))
         {
             Logger.Debug($"Skipped shared folder index - {modelsDirectory} doesn't exist");
+            CheckpointFolders.Clear();
             return;
         }
         var folders = Directory.GetDirectories(modelsDirectory);
         
-        CheckpointFolders.Clear();
-
-        // Results
-        var indexedFolders = new ConcurrentBag<CheckpointFolder>();
         // Index all folders
-        var tasks = folders.Select(f => Task.Run(async () =>
+        var indexTasks = folders.Select(f => Task.Run(async () =>
         {
             var checkpointFolder = new CheckpointFolder(settingsManager, downloadService, modelFinder)
             {
                 Title = Path.GetFileName(f), 
-                DirectoryPath = f
+                DirectoryPath = f,
+                IsExpanded = true, // Top level folders expanded by default
             };
             await checkpointFolder.IndexAsync();
-            indexedFolders.Add(checkpointFolder);
+            return checkpointFolder;
         })).ToList();
-        await Task.WhenAll(tasks);
-        // Add to observable collection by alphabetical order
-        foreach (var checkpointFolder in indexedFolders.OrderBy(f => f.Title))
-        {
-            CheckpointFolders.Add(checkpointFolder);
-        }
+        
+        await Task.WhenAll(indexTasks);
+        
+        // Set new observable collection, ordered by alphabetical order
+        CheckpointFolders =
+            new ObservableCollection<CheckpointFolder>(indexTasks
+                .Select(t => t.Result)
+                .OrderBy(f => f.Title));
     }
     
     [RelayCommand]

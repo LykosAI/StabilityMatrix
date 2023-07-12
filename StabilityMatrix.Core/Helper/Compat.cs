@@ -42,6 +42,7 @@ public static class Compat
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             Platform = PlatformKind.Windows;
+            AppCurrentDir = AppContext.BaseDirectory;
         }
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
@@ -50,18 +51,15 @@ public static class Compat
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
             Platform = PlatformKind.Linux | PlatformKind.Unix;
+            // We need to get application path using `$APPIMAGE`, then get the directory name
+            var appPath = Environment.GetEnvironmentVariable("APPIMAGE") ??
+                          throw new Exception("Could not find application path");
+            AppCurrentDir = Path.GetDirectoryName(appPath) ??
+                            throw new Exception("Could not find application directory");
         }
         
         AppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         AppDataHome = AppData + AppName;
-        
-        AppCurrentDir = Platform switch 
-        {
-            PlatformKind.Windows => AppContext.BaseDirectory,
-            PlatformKind.Linux => Environment.GetEnvironmentVariable("APPIMAGE") ??
-                                  Environment.CurrentDirectory,
-            _ => throw new PlatformNotSupportedException($"{Platform}")
-        };
     }
     
     /// <summary>

@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -35,7 +37,6 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models.Api;
-using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
@@ -46,7 +47,11 @@ namespace StabilityMatrix.Avalonia;
 
 public partial class App : Application
 {
-    public static IServiceProvider Services { get; set; } = null!;
+    [NotNull]
+    public static IServiceProvider? Services { get; private set; }
+    
+    [NotNull]
+    public static Visual? VisualRoot { get; private set; }
 
     public override void Initialize()
     {
@@ -69,6 +74,7 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var mainWindow = Services.GetRequiredService<MainWindow>();
+            VisualRoot = mainWindow;
             mainWindow.DataContext = mainViewModel;
             mainWindow.NotificationService = notificationService;
             desktop.MainWindow = mainWindow;

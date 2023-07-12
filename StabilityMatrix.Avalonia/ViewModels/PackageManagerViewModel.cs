@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
+using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -104,9 +107,8 @@ public partial class PackageManagerViewModel : PageViewModelBase
     public override string Title => "Packages";
     public override Symbol Icon => Symbol.XboxConsoleFilled;
 
-    public override async Task OnLoadedAsync()
+    public override void OnLoaded()
     {
-        Packages.Clear();
         var installedPackages = settingsManager.Settings.InstalledPackages;
         if (installedPackages.Count == 0)
         {
@@ -119,7 +121,17 @@ public partial class PackageManagerViewModel : PageViewModelBase
             return;
         }
         
-        
+        SelectedPackage = installedPackages.FirstOrDefault(x => 
+            x.Id == settingsManager.Settings.ActiveInstalledPackage) ?? Packages[0];
+    }
+
+    public override Task OnLoadedAsync() => CheckUpdates();
+    
+    private async Task CheckUpdates()
+    {
+        if (Design.IsDesignMode) return;
+        var installedPackages = settingsManager.Settings.InstalledPackages;
+        Packages.Clear();
         foreach (var packageToUpdate in installedPackages)
         {
             var basePackage = packageFactory.FindPackageByName(packageToUpdate.PackageName);
@@ -138,10 +150,6 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
             Packages.Add(packageToUpdate);
         }
-
-        SelectedPackage =
-            installedPackages.FirstOrDefault(x => x.Id == settingsManager.Settings.ActiveInstalledPackage) ??
-            Packages[0];
     }
     
     partial void OnSelectedPackageChanged(InstalledPackage? value)

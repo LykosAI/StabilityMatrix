@@ -4,12 +4,14 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
+using Avalonia.Platform;
 using Avalonia.Styling;
 using FluentAvalonia.Styling;
 using FluentAvalonia.UI.Media;
 using FluentAvalonia.UI.Windowing;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Avalonia.Views;
 
@@ -36,9 +38,18 @@ public partial class MainWindow : AppWindowBase
         Application.Current!.ActualThemeVariantChanged += OnActualThemeVariantChanged;
         
         var theme = ActualThemeVariant;
+        // Enable mica for Windows 11
         if (IsWindows11 && theme != FluentAvaloniaTheme.HighContrastTheme)
         {
             TryEnableMicaEffect();
+        }
+        // Setup border for linux
+        if (Compat.IsLinux)
+        {
+            ExtendClientAreaToDecorationsHint = true;
+            ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome;
+            ExtendClientAreaTitleBarHeightHint = -1;
+            SystemDecorations = SystemDecorations.BorderOnly;
         }
     }
     

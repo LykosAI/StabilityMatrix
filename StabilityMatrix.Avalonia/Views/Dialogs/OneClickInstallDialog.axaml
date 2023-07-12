@@ -11,11 +11,6 @@
              x:DataType="dialogs:OneClickInstallViewModel"
              d:DataContext="{x:Static designData:DesignData.OneClickInstallViewModel}"
              x:Class="StabilityMatrix.Avalonia.Views.Dialogs.OneClickInstallDialog">
-    <UserControl.Styles>
-        <Style Selector="fa|ContentDialog > Border > Panel > fa|FABorder > Border > Grid > Border">
-            <Setter Property="IsVisible" Value="False"/>
-        </Style>
-    </UserControl.Styles>
     
     <Grid MaxHeight="900" VerticalAlignment="Stretch">
         <Grid.RowDefinitions>

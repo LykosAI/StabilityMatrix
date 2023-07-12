@@ -16,11 +16,6 @@
                      Title="Stability Matrix Avalonia"
                      x:Class="StabilityMatrix.Avalonia.Views.MainWindow">
     
-    <controls:AppWindowBase.Styles>
-        <Style Selector="ui|ContentDialog > Border > Panel > ui|FABorder > Border > Grid > Border">
-            <Setter Property="IsVisible" Value="False"/>
-        </Style>
-    </controls:AppWindowBase.Styles>
 
     <Grid RowDefinitions="Auto,Auto,*">
         <Grid Name="TitleBarHost"

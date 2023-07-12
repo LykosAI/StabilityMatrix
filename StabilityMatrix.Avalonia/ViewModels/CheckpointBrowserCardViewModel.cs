@@ -17,6 +17,7 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
 using Octokit;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
@@ -125,11 +126,12 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             return;
         }
         
-        var dialog = new ContentDialog
+        var dialog = new BetterContentDialog
         {
             Title = model.Name,
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
+            IsFooterVisible = false,
         };
         
         var viewModel = dialogFactory.Get<SelectModelVersionViewModel>();

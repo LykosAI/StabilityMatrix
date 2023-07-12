@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Core.Helper;
@@ -15,8 +16,14 @@ public static class Compat
     
     // OS Platform
     public static PlatformKind Platform { get; }
+    
+    [SupportedOSPlatformGuard("Windows")]
     public static bool IsWindows => Platform.HasFlag(PlatformKind.Windows);
+    
+    [SupportedOSPlatformGuard("Linux")]
     public static bool IsLinux => Platform.HasFlag(PlatformKind.Linux);
+    
+    [SupportedOSPlatformGuard("macOS")]
     public static bool IsMacOS => Platform.HasFlag(PlatformKind.MacOS);
     public static bool IsUnix => Platform.HasFlag(PlatformKind.Unix);
     

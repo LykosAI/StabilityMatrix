@@ -20,6 +20,19 @@ public class SharedFolders : ISharedFolders
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
     }
+    
+    // Platform redirect for junctions / symlinks
+    private static void CreateLinkOrJunction(string junctionDir, string targetDir, bool overwrite)
+    {
+        if (Compat.IsWindows)
+        {
+            Junction.Create(junctionDir, targetDir, overwrite);
+        }
+        else
+        {
+            Directory.CreateSymbolicLink(junctionDir, targetDir);
+        }
+    }
 
     public static void SetupLinks(Dictionary<SharedFolderType, string> definitions, 
         DirectoryPath modelsDirectory, DirectoryPath installDirectory)
@@ -55,7 +68,7 @@ public class SharedFolders : ISharedFolders
                 destinationDir.Delete(true);
             }
             Logger.Info($"Creating junction link from {sourceDir} to {destinationDir}");
-            Junction.Create(destinationDir, sourceDir, true);
+            CreateLinkOrJunction(destinationDir, sourceDir, true);
         }
     }
 
@@ -92,7 +105,7 @@ public class SharedFolders : ISharedFolders
                 Directory.Delete(destination, false);
             }
             Logger.Info($"Updating junction link from {source} to {destination}");
-            Junction.Create(destination, source, true);
+            CreateLinkOrJunction(destination, source, true);
         }
     }
 

@@ -8,6 +8,7 @@ using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -21,7 +22,7 @@ public partial class SelectModelVersionViewModel : ViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly IDownloadService downloadService;
     
-    public required ContentDialog Dialog { get; init; }
+    public required ContentDialog Dialog { get; set; }
     public required IReadOnlyList<CivitModelVersion> Versions { get; set; }
     
     [ObservableProperty] private Bitmap? previewImage;
@@ -46,7 +47,8 @@ public partial class SelectModelVersionViewModel : ViewModelBase
         var firstImageUrl = value?.Images?.FirstOrDefault(
                 img => nsfwEnabled || img.Nsfw == "None")?.Url;
 
-        UpdateImage(firstImageUrl).SafeFireAndForget();
+        Dispatcher.UIThread.InvokeAsync(async 
+            () => await UpdateImage(firstImageUrl));
     }
     
     partial void OnSelectedFileChanged(CivitFile? value)

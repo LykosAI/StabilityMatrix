@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.Versioning;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -42,14 +43,6 @@ public partial class MainWindow : AppWindowBase
         if (IsWindows11 && theme != FluentAvaloniaTheme.HighContrastTheme)
         {
             TryEnableMicaEffect();
-        }
-        // Setup border for linux
-        if (Compat.IsLinux)
-        {
-            ExtendClientAreaToDecorationsHint = true;
-            ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome;
-            ExtendClientAreaTitleBarHeightHint = -1;
-            SystemDecorations = SystemDecorations.BorderOnly;
         }
     }
     

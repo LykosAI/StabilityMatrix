@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -12,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using Polly;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
@@ -334,10 +333,11 @@ public partial class PackageManagerViewModel : PageViewModelBase
     private async Task ShowInstallDialog()
     {
         var viewModel = dialogFactory.Get<InstallerViewModel>();
-        var dialog = new ContentDialog
+        var dialog = new BetterContentDialog
         {
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
+            IsFooterVisible = false,
             Content = new InstallerDialog
             {
                 DataContext = viewModel

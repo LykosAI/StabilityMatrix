@@ -2,6 +2,7 @@
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using StabilityMatrix.Avalonia.ViewModels;
 
 namespace StabilityMatrix.Avalonia.Controls;
@@ -21,6 +22,7 @@ public class UserControlBase : UserControl
         if (Design.IsDesignMode) return;
         
         viewModel.OnLoaded();
-        viewModel.OnLoadedAsync().SafeFireAndForget();
+        // Can't block here so we'll run as async on UI thread
+        Dispatcher.UIThread.InvokeAsync(async () => await viewModel.OnLoadedAsync());
     }
 }

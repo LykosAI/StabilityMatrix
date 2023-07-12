@@ -135,6 +135,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         var viewModel = dialogFactory.Get<SelectModelVersionViewModel>();
         viewModel.Dialog = dialog;
         viewModel.Versions = versions;
+        viewModel.SelectedVersion = versions[0];
         
         dialog.Content = new SelectModelVersionDialog
         {

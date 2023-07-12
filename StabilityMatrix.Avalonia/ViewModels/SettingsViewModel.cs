@@ -11,6 +11,7 @@ using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -53,8 +54,8 @@ public partial class SettingsViewModel : PageViewModelBase
     }
     
     // Debug info
-    [ObservableProperty]
-    private string? debugPaths;
+    [ObservableProperty] private string? debugPaths;
+    [ObservableProperty] private string? debugCompatInfo;
 
     public void LoadDebugInfo()
     {
@@ -70,6 +71,14 @@ public partial class SettingsViewModel : PageViewModelBase
                       AppData Directory [SpecialFolder.ApplicationData]
                         "{appData}"
                       """;
+        
+        DebugCompatInfo = $"""
+                            Platform: {Compat.Platform}
+                            AppData: {Compat.AppData}
+                            AppDataHome: {Compat.AppDataHome}
+                            AppCurrentDir: {Compat.AppCurrentDir}
+                            ExecutableName: {Compat.GetExecutableName()}
+                            """;
     }
     
     // Debug buttons
@@ -96,9 +105,4 @@ public partial class SettingsViewModel : PageViewModelBase
         notificationService.Show(new Notification("Content dialog closed",
             $"Result: {result}"));
     }
-    
-    
-    
-    public override bool CanNavigateNext { get; protected set; }
-    public override bool CanNavigatePrevious { get; protected set; }
 }

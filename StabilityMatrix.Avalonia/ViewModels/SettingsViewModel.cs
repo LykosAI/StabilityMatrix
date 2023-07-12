@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia;
@@ -12,6 +13,7 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -19,27 +21,30 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 public partial class SettingsViewModel : PageViewModelBase
 {
     private readonly INotificationService notificationService;
+    private readonly ISettingsManager settingsManager;
     
     public override string Title => "Settings";
     public override Symbol Icon => Symbol.Setting;
     
-    public SettingsViewModel(INotificationService notificationService)
-    {
-        this.notificationService = notificationService;
-
-        SelectedTheme = AvailableThemes[1];
-    }
-    
     // Theme panel
-    [ObservableProperty]
-    private string? selectedTheme;
+    [ObservableProperty] private string? selectedTheme;
+    
     public ObservableCollection<string> AvailableThemes { get; } = new()
     {
         "Light",
         "Dark",
         "System",
     };
+    
+    public SettingsViewModel(INotificationService notificationService, 
+        ISettingsManager settingsManager)
+    {
+        this.notificationService = notificationService;
+        this.settingsManager = settingsManager;
 
+        SelectedTheme = AvailableThemes[1];
+    }
+    
     partial void OnSelectedThemeChanged(string? value)
     {
         // In case design / tests
@@ -59,6 +64,7 @@ public partial class SettingsViewModel : PageViewModelBase
 
     public void LoadDebugInfo()
     {
+
         var assembly = Assembly.GetExecutingAssembly();
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         DebugPaths = $"""
@@ -72,12 +78,22 @@ public partial class SettingsViewModel : PageViewModelBase
                         "{appData}"
                       """;
         
+        // 1. Check portable mode
+        var appDir = Compat.AppCurrentDir;
+        var expectedPortableFile = Path.Combine(appDir, "Data", ".sm-portable");
+        var isPortableMode = File.Exists(expectedPortableFile);
+        
         DebugCompatInfo = $"""
                             Platform: {Compat.Platform}
                             AppData: {Compat.AppData}
                             AppDataHome: {Compat.AppDataHome}
                             AppCurrentDir: {Compat.AppCurrentDir}
                             ExecutableName: {Compat.GetExecutableName()}
+                            -- Settings --
+                            Expected Portable Marker file: {expectedPortableFile}
+                            Portable Marker file exists: {isPortableMode}
+                            IsLibraryDirSet = {settingsManager.IsLibraryDirSet}
+                            IsPortableMode = {settingsManager.IsPortableMode}
                             """;
     }
     

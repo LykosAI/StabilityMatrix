@@ -60,10 +60,18 @@
                                 Header="Debug Options"
                                 Margin="8">
                                 
-                                <ui:SettingsExpanderItem Content="Paths" IconSource="Folder" 
-                                                         Description="{Binding DebugPaths}">
+                                <ui:SettingsExpanderItem Description="Paths" IconSource="Folder">
+                                    <SelectableTextBlock Text="{Binding DebugPaths}"
+                                                         Foreground="{DynamicResource TextControlPlaceholderForeground}"
+                                                         TextWrapping="WrapWithOverflow" />
                                 </ui:SettingsExpanderItem>
-                                
+
+                                <ui:SettingsExpanderItem Description="Compat Info" IconSource="StarFilled">
+                                    <SelectableTextBlock Text="{Binding DebugCompatInfo}"
+                                                         Foreground="{DynamicResource TextControlPlaceholderForeground}"
+                                                         TextWrapping="WrapWithOverflow" />
+                                </ui:SettingsExpanderItem>
+
                                 <ui:SettingsExpanderItem Content="Notification" IconSource="CommentAdd">
                                     <ui:SettingsExpanderItem.Footer>
                                         <Button

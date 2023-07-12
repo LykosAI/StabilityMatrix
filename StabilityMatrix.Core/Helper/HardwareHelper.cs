@@ -1,51 +1,40 @@
-﻿using Microsoft.Win32;
+﻿using System.Diagnostics;
+using System.Runtime.Versioning;
+using System.Text.RegularExpressions;
+using Microsoft.Win32;
 
 namespace StabilityMatrix.Core.Helper;
 
-public static class HardwareHelper
+public static partial class HardwareHelper
 {
-    private const string GpuRegistryKeyPath =
-        @"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}";
+    private static IReadOnlyList<GpuInfo>? cachedGpuInfos;
 
-    public static ulong GetGpuMemoryBytes()
+    private static string RunBashCommand(string command)
     {
-        var registry = Registry.LocalMachine;
-        var key = registry.OpenSubKey(
-            @"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000", false);
-        if (key == null)
+        var processInfo = new ProcessStartInfo("bash", "-c \"" + command + "\"")
         {
-            return 0;
-        }
+            UseShellExecute = false,
+            RedirectStandardOutput = true
+        };
 
-        var vram = key.GetValue("HardwareInformation.qwMemorySize");
-        var vramLong = Convert.ToUInt64(vram);
-        return vramLong;
+        var process = Process.Start(processInfo);
+
+        process.WaitForExit();
+
+        var output = process.StandardOutput.ReadToEnd();
+
+        return output;
     }
-
-    public static string GetGpuChipName()
+    
+    [SupportedOSPlatform("Windows")]
+    private static IEnumerable<GpuInfo> IterGpuInfoWindows()
     {
-        var registry = Registry.LocalMachine;
-        var key = registry.OpenSubKey(
-            @"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000", false);
-        if (key == null)
-        {
-            return "Unknown";
-        }
-
-        var gpuName = key.GetValue("HardwareInformation.ChipType");
-        return gpuName?.ToString() ?? "Unknown";
-    }
-
-    /// <summary>
-    /// Yields GpuInfo for each GPU in the system.
-    /// </summary>
-    public static IEnumerable<GpuInfo> IterGpuInfo()
-    {
-        using var baseKey = Registry.LocalMachine.OpenSubKey(GpuRegistryKeyPath);
-        if (baseKey == null)
-        {
-            yield break;
-        }
+        const string gpuRegistryKeyPath =
+            @"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}";
+        
+        using var baseKey = Registry.LocalMachine.OpenSubKey(gpuRegistryKeyPath);
+        
+        if (baseKey == null) yield break;
 
         foreach (var subKeyName in baseKey.GetSubKeyNames().Where(k => k.StartsWith("0")))
         {
@@ -59,6 +48,64 @@ public static class HardwareHelper
                 };
             }
         }
+    }
+    
+    [SupportedOSPlatform("Linux")]
+    private static IEnumerable<GpuInfo> IterGpuInfoLinux()
+    {
+        var output = RunBashCommand("lspci | grep VGA");
+        var gpuLines = output.Split("\n");
+
+        foreach (var line in gpuLines)
+        {
+            if (string.IsNullOrWhiteSpace(line)) continue;
+
+            var gpuId = line.Split(' ')[0]; // The GPU ID is the first part of the line
+            var gpuOutput = RunBashCommand($"lspci -v -s {gpuId}");
+
+            ulong memoryBytes = 0;
+            string? name = null;
+
+            // Parse output with regex
+            var match = Regex.Match(gpuOutput, @"VGA compatible controller: ([^\n]*)");
+            if (match.Success)
+            {
+                name = match.Groups[1].Value.Trim();
+            }
+
+            match = MyRegex().Match(gpuOutput);
+            if (match.Success)
+            {
+                memoryBytes = ulong.Parse(match.Groups[1].Value) * 1024 * 1024;
+            }
+
+            yield return new GpuInfo { Name = name, MemoryBytes = memoryBytes };
+        }
+    }
+    
+    /// <summary>
+    /// Yields GpuInfo for each GPU in the system.
+    /// </summary>
+    public static IEnumerable<GpuInfo> IterGpuInfo()
+    {
+        if (Compat.IsWindows)
+        {
+            return IterGpuInfoWindows();
+        }
+        else if (Compat.IsLinux)
+        {
+            // Since this requires shell commands, fetch cached value if available.
+            if (cachedGpuInfos is not null)
+            {
+                return cachedGpuInfos;
+            }
+            
+            // No cache, fetch and cache.
+            cachedGpuInfos = IterGpuInfoLinux().ToList();
+            return cachedGpuInfos;
+        }
+        // TODO: Implement for macOS
+        return Enumerable.Empty<GpuInfo>();
     }
     
     /// <summary>
@@ -76,6 +123,9 @@ public static class HardwareHelper
     {
         return IterGpuInfo().Any(gpu => gpu.IsAmd);
     }
+
+    [GeneratedRegex("prefetchable\\) \\[size=(\\d+)M\\]")]
+    private static partial Regex MyRegex();
 }
 
 public enum Level

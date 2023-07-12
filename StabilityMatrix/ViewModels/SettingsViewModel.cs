@@ -147,8 +147,7 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [ObservableProperty]
-    private string gpuInfo =
-        $"{HardwareHelper.GetGpuChipName()} ({HardwareHelper.GetGpuMemoryBytes() / 1024 / 1024 / 1024} GB)";
+    private string gpuInfo = $"{HardwareHelper.IterGpuInfo().FirstOrDefault()}";
 
     [ObservableProperty] private string? testProperty;
 

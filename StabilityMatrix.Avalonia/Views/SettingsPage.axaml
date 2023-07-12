@@ -71,6 +71,12 @@
                                                          Foreground="{DynamicResource TextControlPlaceholderForeground}"
                                                          TextWrapping="WrapWithOverflow" />
                                 </ui:SettingsExpanderItem>
+                                
+                                <ui:SettingsExpanderItem Description="GPU Info" IconSource="FullScreenMaximize">
+                                    <SelectableTextBlock Text="{Binding DebugGpuInfo}"
+                                                         Foreground="{DynamicResource TextControlPlaceholderForeground}"
+                                                         TextWrapping="WrapWithOverflow" />
+                                </ui:SettingsExpanderItem>
 
                                 <ui:SettingsExpanderItem Content="Notification" IconSource="CommentAdd">
                                     <ui:SettingsExpanderItem.Footer>

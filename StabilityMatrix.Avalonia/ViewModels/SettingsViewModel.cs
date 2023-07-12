@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia;
@@ -12,6 +13,7 @@ using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Services;
 
@@ -61,10 +63,10 @@ public partial class SettingsViewModel : PageViewModelBase
     // Debug info
     [ObservableProperty] private string? debugPaths;
     [ObservableProperty] private string? debugCompatInfo;
+    [ObservableProperty] private string? debugGpuInfo;
 
     public void LoadDebugInfo()
     {
-
         var assembly = Assembly.GetExecutingAssembly();
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         DebugPaths = $"""
@@ -95,6 +97,14 @@ public partial class SettingsViewModel : PageViewModelBase
                             IsLibraryDirSet = {settingsManager.IsLibraryDirSet}
                             IsPortableMode = {settingsManager.IsPortableMode}
                             """;
+        
+        // Get Gpu info
+        var gpuInfo = "";
+        foreach (var (i, gpu) in HardwareHelper.IterGpuInfo().Enumerate())
+        {
+            gpuInfo += $"[{i+1}] {gpu}\n";
+        }
+        DebugGpuInfo = gpuInfo;
     }
     
     // Debug buttons

@@ -14,7 +14,6 @@ using NLog;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 
@@ -30,8 +29,7 @@ public partial class CheckpointFile : ViewModelBase
     /// <summary>
     /// Absolute path to the checkpoint file.
     /// </summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(FileName))]
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(FileName))]
     private string filePath = string.Empty;
 
     /// <summary>
@@ -64,12 +62,12 @@ public partial class CheckpointFile : ViewModelBase
         Title = value?.UserTitle ?? value?.ModelName ?? string.Empty;
         // Update badges
         Badges.Clear();
-        var fpType = value.FileMetadata.Fp?.GetStringValue().ToUpperInvariant();
+        var fpType = value?.FileMetadata.Fp?.GetStringValue().ToUpperInvariant();
         if (fpType != null)
         {
             Badges.Add(fpType);
         }
-        if (!string.IsNullOrWhiteSpace(value.BaseModel))
+        if (!string.IsNullOrWhiteSpace(value?.BaseModel))
         {
             Badges.Add(value.BaseModel);
         }

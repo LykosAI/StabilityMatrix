@@ -5,12 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
-using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
-using Avalonia.Media.Imaging;
-using Avalonia.Platform;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -43,8 +38,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     private readonly INotificationService notificationService;
     public CivitModel CivitModel { get; init; }
     public override bool IsTextVisible => Value > 0;
-
-    [ObservableProperty] private Bitmap? cardImage;
+    
+    [ObservableProperty] private Uri? cardImage;
     [ObservableProperty] private bool isImporting;
 
     public CheckpointBrowserCardViewModel(
@@ -52,8 +47,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         IDownloadService downloadService,
         ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> dialogFactory,
-        INotificationService notificationService,
-        Bitmap? fixedImage = null)
+        INotificationService notificationService)
     {
         this.downloadService = downloadService;
         this.settingsManager = settingsManager;
@@ -61,46 +55,37 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         this.notificationService = notificationService;
         CivitModel = civitModel;
 
-        if (fixedImage != null)
-        {
-            CardImage = fixedImage;
-            return;
-        }
-
-        UpdateImage().SafeFireAndForget();
+        UpdateImage();
 
         // Update image when nsfw setting changes
         settingsManager.RegisterPropertyChangedHandler(
             s => s.ModelBrowserNsfwEnabled,
-            _ => UpdateImage().SafeFireAndForget());
+            _ => Dispatcher.UIThread.Post(UpdateImage));
     }
 
     // Choose and load image based on nsfw setting
-    private async Task UpdateImage()
+    private void UpdateImage()
     {
         var nsfwEnabled = settingsManager.Settings.ModelBrowserNsfwEnabled;
         var version = CivitModel.ModelVersions?.FirstOrDefault();
         var images = version?.Images;
 
+        // Try to find a valid image
         var image = images?.FirstOrDefault(image => nsfwEnabled || image.Nsfw == "None");
         if (image != null)
         {
-            var imageStream = await downloadService.GetImageStreamFromUrl(image.Url);
-            Dispatcher.UIThread.Post(() => { CardImage = new Bitmap(imageStream); });
+            // var imageStream = await downloadService.GetImageStreamFromUrl(image.Url);
+            // Dispatcher.UIThread.Post(() => { CardImage = new Bitmap(imageStream); });
+            CardImage = new Uri(image.Url);
             return;
         }
+        
+        // If no valid image found, use no image
+        CardImage = Assets.NoImage;
 
-        var assetStream =
-            AssetLoader.Open(new Uri("avares://StabilityMatrix.Avalonia/Assets/noimage.png"));
-
+        // var assetStream = AssetLoader.Open(new Uri("avares://StabilityMatrix.Avalonia/Assets/noimage.png"));
         // Otherwise Default image
-        Dispatcher.UIThread.Post(() => { CardImage = new Bitmap(assetStream); });
-    }
-
-    // On any mode changes, update the image
-    private void OnNsfwModeChanged(object? sender, bool value)
-    {
-        UpdateImage().SafeFireAndForget();
+        // Dispatcher.UIThread.Post(() => { CardImage = new Bitmap(assetStream); });
     }
 
     [RelayCommand]

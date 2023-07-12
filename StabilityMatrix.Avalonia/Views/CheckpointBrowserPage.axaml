@@ -2,10 +2,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-             xmlns:controls1="clr-namespace:StabilityMatrix.Avalonia.Controls"
+             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
              xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
              xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+             xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:DataType="viewModels:CheckpointBrowserViewModel"
              d:DataContext="{x:Static designData:DesignData.CheckpointBrowserViewModel}"
@@ -14,7 +14,7 @@
     
     <UserControl.Resources>
         <DataTemplate DataType="{x:Type viewModels:CheckpointBrowserCardViewModel}" x:Key="CivitModelTemplate">
-            <controls1:Card
+            <controls:Card
                 Margin="8"
                 MaxHeight="450"
                 CornerRadius="8"
@@ -34,9 +34,13 @@
                         Text="{Binding CivitModel.ModelVersions[0].Name, FallbackValue=''}"
                         VerticalAlignment="Center" />
                     <Grid>
-                        <controls1:BetterImage
+                        <controls:BetterAdvancedImage
                             Margin="0,8,0,8"
-                            MaxHeight="300"
+                            Height="300"
+                            StretchDirection="Both"
+                            CornerRadius="4"
+                            VerticalContentAlignment="Top"
+                            HorizontalContentAlignment="Center"
                             Source="{Binding CardImage}"
                             Stretch="UniformToFill"/>
                         
@@ -48,11 +52,11 @@
                             Margin="0,16,8,0"
                             VerticalAlignment="Top">
                             <Button.Content>
-                                <controls:SymbolIcon Symbol="Open" />
+                                <ui:SymbolIcon Symbol="Open" />
                             </Button.Content>
                         </Button>
 
-                        <controls1:Card
+                        <controls:Card
                             Background="#AA1467B5"
                             Height="20"
                             HorizontalAlignment="Left"
@@ -67,7 +71,7 @@
                                 HorizontalAlignment="Center"
                                 Text="{Binding CivitModel.Type}"
                                 VerticalAlignment="Center" />
-                        </controls1:Card>
+                        </controls:Card>
 
                         <Rectangle
                             Fill="#DD000000"
@@ -80,7 +84,7 @@
                             Orientation="Vertical"
                             VerticalAlignment="Center"
                             IsVisible="{Binding IsImporting}">
-                            <controls1:ProgressRing
+                            <controls:ProgressRing
                                 HorizontalAlignment="Center"
                                 IsIndeterminate="False"
                                 Width="120"
@@ -126,7 +130,7 @@
                                    Content="All Versions"/>
                     </Grid>
                 </StackPanel>
-            </controls1:Card>
+            </controls:Card>
         </DataTemplate>
     </UserControl.Resources>
     
@@ -138,11 +142,7 @@
         </Grid.RowDefinitions>
 
         <StackPanel Margin="8" Orientation="Vertical">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <Grid ColumnDefinitions="*,Auto">
 
                 <TextBox
                     HorizontalAlignment="Stretch"
@@ -159,7 +159,7 @@
                     VerticalAlignment="Stretch"
                     Width="80">
                     <Grid>
-                        <controls1:ProgressRing
+                        <controls:ProgressRing
                             MinHeight="16"
                             IsIndeterminate="True"
                             VerticalAlignment="Center"
@@ -239,10 +239,10 @@
                     Command="{Binding PreviousPageCommand}"
                     IsEnabled="{Binding CanGoToPreviousPage}"
                     Margin="0,0,8,0">
-                    <controls:SymbolIcon Symbol="PreviousFilled" />
+                    <ui:SymbolIcon Symbol="PreviousFilled" />
                 </Button>
                 <Button Command="{Binding NextPageCommand}" IsEnabled="{Binding CanGoToNextPage}">
-                    <controls:SymbolIcon Symbol="NextFilled" />
+                    <ui:SymbolIcon Symbol="NextFilled" />
                 </Button>
             </StackPanel>
         </StackPanel>
@@ -256,7 +256,7 @@
             Text="{Binding NoResultsText, FallbackValue=No results found}"
             IsVisible="{Binding NoResultsFound}" />
         
-        <controls1:ProgressRing
+        <controls:ProgressRing
             Grid.Row="1"
             IsIndeterminate="True"
             Width="128"

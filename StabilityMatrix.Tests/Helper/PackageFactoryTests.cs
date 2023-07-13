@@ -6,8 +6,8 @@ namespace StabilityMatrix.Tests.Helper;
 [TestClass]
 public class PackageFactoryTests
 {
-    private PackageFactory packageFactory;
-    private IEnumerable<BasePackage> fakeBasePackages;
+    private PackageFactory packageFactory = null!;
+    private IEnumerable<BasePackage> fakeBasePackages = null!;
     
     [TestInitialize]
     public void Setup()

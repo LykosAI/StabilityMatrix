@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Tests.Helper;
@@ -5,7 +6,7 @@ namespace StabilityMatrix.Tests.Helper;
 [TestClass]
 public class EventManagerTests
 {
-    private EventManager eventManager; 
+    private EventManager eventManager = null!;
         
     [TestInitialize]
     public void TestInitialize()

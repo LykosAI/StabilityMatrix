@@ -14,6 +14,7 @@ using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Packages;
+using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
@@ -178,4 +179,10 @@ public static class DesignData
     public static SelectModelVersionViewModel SelectModelVersionViewModel => Services.GetRequiredService<SelectModelVersionViewModel>();
     public static OneClickInstallViewModel OneClickInstallViewModel => Services.GetRequiredService<OneClickInstallViewModel>();
     public static InstallerViewModel InstallerViewModel => Services.GetRequiredService<InstallerViewModel>();
+    public static SelectDataDirectoryViewModel SelectDataDirectoryViewModel => Services.GetRequiredService<SelectDataDirectoryViewModel>();
+
+    public static RefreshBadgeViewModel RefreshBadgeViewModel => new()
+    {
+        State = ProgressState.Success
+    };
 }

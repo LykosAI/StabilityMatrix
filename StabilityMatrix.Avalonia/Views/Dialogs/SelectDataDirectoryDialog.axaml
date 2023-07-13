@@ -1,0 +1,100 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+                          xmlns:ui="using:FluentAvalonia.UI.Controls"
+                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
+                          d:DataContext="{x:Static mocks:DesignData.SelectDataDirectoryViewModel}"
+                          x:DataType="dialogs:SelectDataDirectoryViewModel"
+                          x:CompileBindings="True"
+                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.SelectDataDirectoryDialog">
+    
+    <Grid RowDefinitions="Auto,1*,1*"
+          Margin="16,0,16,16"
+          MinHeight="450"
+          MaxWidth="700" >
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <ui:InfoBar
+                IsClosable="False"
+                IsOpen="True"
+                Margin="0,0,0,16"
+                IsVisible="{Binding HasOldData}"
+                Title="Welcome back! In this update, you can optionally choose a custom location to store all data. If you choose a new location, or opt to use Portable Mode, you'll be able to migrate your existing data on the next page."/>
+        
+            <Label
+                Content="Data Directory"
+                FontSize="13"
+                Margin="0,16,0,0" />
+            <Grid ColumnDefinitions="*,Auto">
+
+                <TextBox
+                    Height="36"
+                    IsEnabled="{Binding !IsPortableMode}"
+                    Margin="0,0,8,0"
+                    Watermark="{Binding DefaultInstallLocation}"
+                    Text="{Binding DataDirectory}"
+                    VerticalAlignment="Stretch" />
+
+                <Button
+                    Command="{Binding ShowFolderBrowserDialogCommand}"
+                    Grid.Column="1"
+                    Height="36"
+                    HorizontalAlignment="Stretch"
+                    IsEnabled="{Binding !IsPortableMode}">
+                    <ui:SymbolIcon Symbol="OpenFolder" />
+                </Button>
+            </Grid>
+            
+            <TextBlock
+                Text="This is where the model checkpoints, LORAs, web UIs, settings, etc. will be installed. If you were satisfied with the previous versions, you don't need to change anything here."
+                TextWrapping="Wrap"
+                Foreground="LightGray"
+                FontSize="12"
+                Margin="0,8,0,0" />
+
+            <CheckBox
+                Content="Portable Mode"
+                IsChecked="{Binding IsPortableMode, Mode=TwoWay}"
+                Margin="0,16,0,0" />
+
+            <ui:InfoBar
+                IsClosable="False"
+                IsOpen="True"
+                FontSize="13"
+                Margin="0,8,0,0"
+                Padding="16"
+                Title="In Portable Mode, all data and settings will be stored in the same directory as the application. You will be able to move the application with its 'Data' folder to a different location or computer." />
+        
+        </StackPanel>
+
+        <!--  Indicator of existing or new data directory  -->
+        <StackPanel
+            Grid.Row="1"
+            HorizontalAlignment="Center"
+            Margin="8,0,8,8"
+            Orientation="Horizontal"
+            IsVisible="{Binding IsStatusBadgeVisible}">
+            <controls:RefreshBadge DataContext="{Binding ValidatorRefreshBadge}" />
+            <TextBlock
+                FontSize="14"
+                Text="{Binding DirectoryStatusText}"
+                VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!--             Appearance="Success"
+            Click="ContinueButton_OnClick" -->
+        <Button
+            Content="Continue"
+            FontSize="16"
+            Grid.Row="2"
+            HorizontalAlignment="Center"
+            IsEnabled="{Binding IsDirectoryValid}"
+            Padding="16,8" />
+    </Grid>
+    
+</controls:UserControlBase>

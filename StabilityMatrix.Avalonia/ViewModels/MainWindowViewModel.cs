@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
@@ -44,6 +47,8 @@ public partial class MainWindowViewModel : ViewModelBase
         CurrentPage = Pages.FirstOrDefault();
         SelectedCategory = Pages.FirstOrDefault();
         EventManager.Instance.PageChangeRequested += OnPageChangeRequested;
+
+        await EnsureDataDirectory();
         
         if (!settingsManager.Settings.InstalledPackages.Any())
         {
@@ -67,6 +72,59 @@ public partial class MainWindowViewModel : ViewModelBase
             };
 
             await dialog.ShowAsync();
+        }
+    }
+
+    /// <summary>
+    /// Check if the data directory exists, if not, show the select data directory dialog.
+    /// </summary>
+    private async Task EnsureDataDirectory()
+    {
+        // Show dialog if not set
+        if (!settingsManager.TryFindLibrary())
+        {
+            await ShowSelectDataDirectoryDialog();
+        }
+        
+        // Try to find library again, should be found now
+        if (!settingsManager.TryFindLibrary())
+        {
+            throw new Exception("Could not find library after setting path");
+        }
+        
+        // Check if there are old packages, if so show migration dialog
+        // TODO: Migration dialog
+    }
+    
+    private async Task ShowSelectDataDirectoryDialog()
+    {
+        var viewModel = dialogFactory.Get<SelectDataDirectoryViewModel>();
+        var dialog = new BetterContentDialog
+        {
+            IsPrimaryButtonEnabled = false,
+            IsSecondaryButtonEnabled = false,
+            IsFooterVisible = false,
+            Content = new SelectDataDirectoryDialog
+            {
+                DataContext = viewModel
+            }
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result != ContentDialogResult.Primary)
+        {
+            App.Shutdown();
+        }
+        
+        // 1. For portable mode, call settings.SetPortableMode()
+        if (viewModel.IsPortableMode)
+        {
+            settingsManager.SetPortableMode();
+        }
+        // 2. For custom path, call settings.SetLibraryPath(path)
+        else
+        {
+            settingsManager.SetLibraryPath(viewModel.DataDirectory);
         }
     }
 

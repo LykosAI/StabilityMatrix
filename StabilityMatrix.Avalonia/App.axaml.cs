@@ -12,6 +12,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -25,11 +26,13 @@ using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
 using Polly.Timeout;
 using Refit;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Database;
@@ -52,6 +55,9 @@ public partial class App : Application
     
     [NotNull]
     public static Visual? VisualRoot { get; private set; }
+    
+    [NotNull]
+    public static IStorageProvider? StorageProvider { get; private set; }
 
     public override void Initialize()
     {
@@ -63,7 +69,7 @@ public partial class App : Application
             RequestedThemeVariant = ThemeVariant.Dark;
         }
     }
-
+    
     public override void OnFrameworkInitializationCompleted()
     {
         ConfigureServiceProvider();
@@ -74,12 +80,14 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var mainWindow = Services.GetRequiredService<MainWindow>();
-            VisualRoot = mainWindow;
             mainWindow.DataContext = mainViewModel;
             mainWindow.NotificationService = notificationService;
+
+            VisualRoot = mainWindow;
+            StorageProvider = mainWindow.StorageProvider;
+            
             desktop.MainWindow = mainWindow;
             desktop.Exit += OnExit;
-            Debug.WriteLine($"Shutdown mode: {desktop.ShutdownMode}");
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -112,10 +120,14 @@ public partial class App : Application
         services.AddTransient<InstallerViewModel>();
         services.AddTransient<OneClickInstallViewModel>();
         services.AddTransient<SelectModelVersionViewModel>();
+        services.AddTransient<SelectDataDirectoryViewModel>();
         
         // Other transients (usually sub view models)
         services.AddTransient<CheckpointFolder>();
         services.AddTransient<CheckpointFile>();
+        
+        // Controls
+        services.AddTransient<RefreshBadgeViewModel>();
         
         // Dialog factory
         services.AddSingleton<ServiceManager<ViewModelBase>>(provider =>
@@ -123,17 +135,28 @@ public partial class App : Application
                 .Register(provider.GetRequiredService<InstallerViewModel>)
                 .Register(provider.GetRequiredService<OneClickInstallViewModel>)
                 .Register(provider.GetRequiredService<SelectModelVersionViewModel>)
+                .Register(provider.GetRequiredService<SelectDataDirectoryViewModel>)
                 .Register(provider.GetRequiredService<CheckpointFolder>)
-                .Register(provider.GetRequiredService<CheckpointFile>));
+                .Register(provider.GetRequiredService<CheckpointFile>)
+                .Register(provider.GetRequiredService<RefreshBadgeViewModel>));
     }
 
     internal static void ConfigureViews(IServiceCollection services)
     {
+        // Pages
         services.AddTransient<CheckpointsPage>();
         services.AddTransient<LaunchPageView>();
         services.AddTransient<PackageManagerPage>();
         services.AddTransient<SettingsPage>();
         services.AddTransient<CheckpointBrowserPage>();
+        
+        // Dialogs
+        services.AddTransient<SelectDataDirectoryDialog>();
+        
+        // Controls
+        services.AddTransient<RefreshBadge>();
+        
+        // Window
         services.AddSingleton<MainWindow>();
     }
     
@@ -285,6 +308,15 @@ public partial class App : Application
         });
 
         return services;
+    }
+
+    public static void Shutdown()
+    {
+        if (Current is null) throw new InvalidOperationException("Current Application is not defined");
+        if (Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
+        {
+            lifetime.Shutdown();
+        }
     }
 
     private void OnExit(object? sender, ControlledApplicationLifetimeExitEventArgs args)

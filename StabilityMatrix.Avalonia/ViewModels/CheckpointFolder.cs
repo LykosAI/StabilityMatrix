@@ -6,12 +6,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using AvaloniaEdit.Utils;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -160,6 +162,43 @@ public partial class CheckpointFolder : ViewModelBase
     private void ShowInExplorer(string path)
     {
         Process.Start("explorer.exe", path);
+    }
+    
+    [RelayCommand]
+    private async Task CreateSubFolder()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        
+        var textBox = new TextBox();
+        var dialog = new ContentDialog
+        {
+            Content = textBox,
+            DefaultButton = ContentDialogButton.Primary,
+            PrimaryButtonText = "OK",
+            IsPrimaryButtonEnabled = true,
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            var targetName = textBox.Text;
+            if (string.IsNullOrWhiteSpace(targetName)) return;
+            
+            var subFolderPath = Path.Combine(DirectoryPath, targetName);
+            
+            Directory.CreateDirectory(subFolderPath);
+            
+            SubFolders.Add(new CheckpointFolder(settingsManager, 
+                downloadService, modelFinder,
+                useCategoryVisibility: false)
+            {
+                Title = Path.GetFileName(subFolderPath),
+                DirectoryPath = subFolderPath,
+                FolderType = FolderType,
+                ParentFolder = this,
+                IsExpanded = false,
+            });
+        }
     }
     
     /// <summary>

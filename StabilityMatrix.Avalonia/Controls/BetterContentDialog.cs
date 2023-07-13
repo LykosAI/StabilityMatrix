@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Styling;
 using FluentAvalonia.UI.Controls;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
@@ -13,6 +15,35 @@ namespace StabilityMatrix.Avalonia.Controls;
 [SuppressMessage("ReSharper", "PropertyCanBeMadeInitOnly.Global")]
 public class BetterContentDialog : ContentDialog
 {
+    #region Reflection Shenanigans for setting content dialog result
+    [NotNull]
+    protected static readonly FieldInfo? ResultField = typeof(ContentDialog).GetField(
+        "_result",BindingFlags.Instance | BindingFlags.NonPublic);
+    
+    protected ContentDialogResult Result
+    {
+        get => (ContentDialogResult) ResultField.GetValue(this)!;
+        set => ResultField.SetValue(this, value);
+    }
+    
+    [NotNull]
+    protected static readonly MethodInfo? HideCoreMethod = typeof(ContentDialog).GetMethod(
+        "HideCore", BindingFlags.Instance | BindingFlags.NonPublic);
+
+    protected void HideCore()
+    {
+        HideCoreMethod.Invoke(this, null);
+    }
+    
+    static BetterContentDialog()
+    {
+        if (ResultField is null) throw new NullReferenceException(
+            "ResultField was not resolved");
+        if (HideCoreMethod is null) throw new NullReferenceException(
+            "HideCoreMethod was not resolved");
+    }
+    #endregion
+    
     protected override Type StyleKeyOverride { get; } = typeof(ContentDialog);
 
     public static readonly StyledProperty<bool> IsFooterVisibleProperty = AvaloniaProperty.Register<BetterContentDialog, bool>(
@@ -29,8 +60,31 @@ public class BetterContentDialog : ContentDialog
         AddHandler(LoadedEvent, OnLoaded);
     }
 
+    private void TryBindButtons()
+    {
+        if ((Content as Control)?.DataContext is not ContentDialogViewModelBase viewModel) return;
+
+        viewModel.PrimaryButtonClick += OnDialogButtonClick;
+        viewModel.SecondaryButtonClick += OnDialogButtonClick;
+        viewModel.CloseButtonClick += OnDialogButtonClick;
+    }
+
+    protected void OnDialogButtonClick(object? sender, ContentDialogResult e)
+    {
+        Result = e;
+        HideCore();
+    }
+
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+        
+        TryBindButtons();
+    }
+
     private void OnLoaded(object? sender, RoutedEventArgs? e)
     {
+        TryBindButtons();
         // Check if we need to hide the footer
         if (IsFooterVisible) return;
         

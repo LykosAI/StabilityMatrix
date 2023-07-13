@@ -1,23 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
-using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
-public partial class SelectModelVersionViewModel : ViewModelBase
+public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
 {
     private readonly ISettingsManager settingsManager;
     private readonly IDownloadService downloadService;

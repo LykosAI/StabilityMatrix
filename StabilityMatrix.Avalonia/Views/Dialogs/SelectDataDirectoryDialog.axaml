@@ -90,6 +90,8 @@
             Click="ContinueButton_OnClick" -->
         <Button
             Content="Continue"
+            IsDefault="True"
+            Command="{Binding OnPrimaryButtonClick}"
             FontSize="16"
             Grid.Row="2"
             HorizontalAlignment="Center"

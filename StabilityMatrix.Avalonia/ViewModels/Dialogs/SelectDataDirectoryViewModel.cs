@@ -5,7 +5,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
-using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -20,10 +19,10 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(SelectDataDirectoryDialog))]
-public partial class SelectDataDirectoryViewModel : ViewModelBase
+public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    private static string DefaultInstallLocation => Compat.AppDataHome;
+    public static string DefaultInstallLocation => Compat.AppDataHome;
     
     private readonly ISettingsManager settingsManager;
     

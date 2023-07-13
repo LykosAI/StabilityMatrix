@@ -11,6 +11,7 @@ public abstract class BasePackage
     public abstract string Name { get; }
     public abstract string DisplayName { get; set; }
     public abstract string Author { get; }
+    public abstract string Blurb { get; }
     public abstract string GithubUrl { get; }
     public abstract string LaunchCommand { get; }
     public abstract Uri PreviewImageUri { get; }

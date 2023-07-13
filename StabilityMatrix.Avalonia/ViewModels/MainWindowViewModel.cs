@@ -53,10 +53,11 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!settingsManager.Settings.InstalledPackages.Any())
         {
             var viewModel = dialogFactory.Get<OneClickInstallViewModel>();
-            var dialog = new ContentDialog
+            var dialog = new BetterContentDialog
             {
                 IsPrimaryButtonEnabled = false,
                 IsSecondaryButtonEnabled = false,
+                IsFooterVisible = false,
                 Content = new OneClickInstallDialog
                 {
                     DataContext = viewModel

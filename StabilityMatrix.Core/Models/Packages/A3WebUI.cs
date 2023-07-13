@@ -12,8 +12,11 @@ namespace StabilityMatrix.Core.Models.Packages;
 public class A3WebUI : BaseGitPackage
 {
     public override string Name => "stable-diffusion-webui";
-    public override string DisplayName { get; set; } = "stable-diffusion-webui";
+    public override string DisplayName { get; set; } = "Stable Diffusion WebUI";
     public override string Author => "AUTOMATIC1111";
+
+    public override string Blurb =>
+        "A browser interface based on Gradio library for Stable Diffusion";
     public override string LaunchCommand => "launch.py";
     public override Uri PreviewImageUri =>
         new("https://github.com/AUTOMATIC1111/stable-diffusion-webui/raw/master/screenshot.png");

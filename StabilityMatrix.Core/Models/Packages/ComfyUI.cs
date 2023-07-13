@@ -15,6 +15,7 @@ public class ComfyUI : BaseGitPackage
     public override string Name => "ComfyUI";
     public override string DisplayName { get; set; } = "ComfyUI";
     public override string Author => "comfyanonymous";
+    public override string Blurb => "A powerful and modular stable diffusion GUI and backend";
     public override string LaunchCommand => "main.py";
 
     public override Uri PreviewImageUri =>

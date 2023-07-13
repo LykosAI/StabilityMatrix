@@ -7,79 +7,88 @@
              xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
              xmlns:fa="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:packages="clr-namespace:StabilityMatrix.Core.Models.Packages;assembly=StabilityMatrix.Core"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="700"
              x:DataType="dialogs:OneClickInstallViewModel"
              d:DataContext="{x:Static designData:DesignData.OneClickInstallViewModel}"
              x:Class="StabilityMatrix.Avalonia.Views.Dialogs.OneClickInstallDialog">
     
-    <Grid MaxHeight="900" VerticalAlignment="Stretch">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="1*" />
-            <RowDefinition Height="0.25*" />
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
-        
-        <StackPanel Grid.Row="0" Grid.Column="0">
+    <Grid MaxHeight="900" 
+          RowDefinitions="Auto,Auto,Auto,Auto,Auto" 
+          ColumnDefinitions="*,Auto">
+
+        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
             <TextBlock Text="{Binding HeaderText, FallbackValue=Installing Stable Diffusion WebUI...}"
                        TextWrapping="Wrap"
+                       Margin="8,0,8,0"
                        VerticalAlignment="Center" HorizontalAlignment="Center"
                        FontSize="36" FontWeight="Light" />
-            <TextBlock Grid.Row="0"
-                       Text="{Binding SubHeaderText, FallbackValue=Installing git...}"
+            <TextBlock Text="{Binding SubHeaderText, FallbackValue=Installing git...}"
                        TextWrapping="Wrap" TextAlignment="Center"
                        VerticalAlignment="Top" HorizontalAlignment="Center"
                        FontSize="16" FontWeight="Light" Margin="8"/>
         </StackPanel>
         
-        <TextBlock Grid.Row="2"
+        <StackPanel Grid.Row="1" Grid.Column="0"
+                    IsVisible="{Binding ShowInstallButton}">
+            <TextBlock Text="{Binding SelectedPackage.DisplayName}"
+                       FontSize="24"
+                       Margin="16, 16, 0, 4"/>
+            <TextBlock Text="{Binding SelectedPackage.Blurb}"
+                       Margin="16, 0, 0, 8"/>
+            <controls:BetterAdvancedImage Source="{Binding SelectedPackage.PreviewImageUri}"
+                                          HorizontalAlignment="Left"
+                                          MaxHeight="300"
+                                          Margin="16, 8"/>
+        </StackPanel>
+        
+        <TextBlock Grid.Row="2" Grid.Column="0"
                    Text="{Binding SubSubHeaderText, FallbackValue=Installing git...}"
                    TextWrapping="Wrap" TextAlignment="Center"
                    VerticalAlignment="Top" HorizontalAlignment="Center"
                    FontSize="10" Margin="8"/>
 
-        <StackPanel Grid.Row="3" VerticalAlignment="Center">
-            <ProgressBar Maximum="100" 
-                         Value="{Binding OneClickInstallProgress}"
-                         IsVisible="{Binding IsProgressBarVisible}"
-                         IsIndeterminate="{Binding IsIndeterminate}"
-                         Margin="16" >
-                <ProgressBar.Transitions>
-                    <Transitions>
-                        <DoubleTransition Property="Value" Duration="00:00:00.150">
-                            <DoubleTransition.Easing>
-                                <SineEaseInOut/>
-                            </DoubleTransition.Easing>
-                        </DoubleTransition>
-                    </Transitions>
-                </ProgressBar.Transitions>
-            </ProgressBar>
-            <Button
-                IsVisible="{Binding ShowInstallButton}"
-                Content="Install"
-                Command="{Binding InstallCommand}"
-                FontSize="32"
-                HorizontalAlignment="Center"
-                Classes="success"
-                Margin="16"
-                Padding="16, 8, 16, 8" />
+        <ProgressBar Maximum="100" 
+                     Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"
+                     Value="{Binding OneClickInstallProgress}"
+                     IsVisible="{Binding IsProgressBarVisible}"
+                     IsIndeterminate="{Binding IsIndeterminate}"
+                     Margin="16" >
+            <ProgressBar.Transitions>
+                <Transitions>
+                    <DoubleTransition Property="Value" Duration="00:00:00.150">
+                        <DoubleTransition.Easing>
+                            <SineEaseInOut/>
+                        </DoubleTransition.Easing>
+                    </DoubleTransition>
+                </Transitions>
+            </ProgressBar.Transitions>
+        </ProgressBar>
+        
+        <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" 
+                    Orientation="Vertical"
+                    IsVisible="{Binding ShowInstallButton}"
+                    HorizontalAlignment="Center">
+            <Button 
+                    Content="Install"
+                    Command="{Binding InstallCommand}"
+                    FontSize="32"
+                    HorizontalAlignment="Center"
+                    Classes="success"
+                    Margin="16"
+                    Padding="16, 8, 16, 8" />
+            <Button Command="{Binding ToggleAdvancedModeCommand}"
+                    Content="Skip first-time setup"
+                    FontSize="16"
+                    HorizontalAlignment="Center"
+                    Padding="16, 8, 16, 8"/>
         </StackPanel>
 
-        <Button Grid.Row="4"
-                IsVisible="{Binding ShowInstallButton}"
-                Command="{Binding ToggleAdvancedModeCommand}"
-                Content="Skip first-time setup"
-                FontSize="14"
-                HorizontalAlignment="Center"
-                Margin="16"
-                VerticalAlignment="Bottom" />
         
-        <ListBox Grid.Column="1" Grid.Row="0" ItemsSource="{Binding AllPackages}">
+        <ListBox Grid.Column="1" Grid.Row="1"
+                 Margin="8, 16"
+                 IsVisible="{Binding ShowInstallButton}"
+                 ItemsSource="{Binding AllPackages}"
+                 SelectedItem="{Binding SelectedPackage}">
             <ListBox.Template>
                 <ControlTemplate>
                     <ItemsPresenter/>

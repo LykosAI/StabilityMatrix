@@ -15,6 +15,7 @@ public class VladAutomatic : BaseGitPackage
     public override string Name => "automatic";
     public override string DisplayName { get; set; } = "SD.Next Web UI";
     public override string Author => "vladmandic";
+    public override string Blurb => "Stable Diffusion implementation with advanced features";
     public override string LaunchCommand => "launch.py";
 
     public override Uri PreviewImageUri =>

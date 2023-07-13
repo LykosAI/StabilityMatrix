@@ -30,6 +30,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
     [ObservableProperty] private bool showInstallButton;
     [ObservableProperty] private bool isIndeterminate;
     [ObservableProperty] private ObservableCollection<BasePackage> allPackages;
+    [ObservableProperty] private BasePackage selectedPackage;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsProgressBarVisible))]
@@ -49,10 +50,11 @@ public partial class OneClickInstallViewModel : ViewModelBase
         this.sharedFolders = sharedFolders;
 
         HeaderText = "Welcome to Stability Matrix!";
-        SubHeaderText = "Select a package from the list and then click Install!";
+        SubHeaderText = "Choose your preferred interface and click Install to get started!";
         ShowInstallButton = true;
         AllPackages =
             new ObservableCollection<BasePackage>(this.packageFactory.GetAllAvailablePackages());
+        SelectedPackage = AllPackages[0];
     }
 
     [RelayCommand]
@@ -72,8 +74,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
     
     private async Task DoInstall()
     {
-        var a1111 = packageFactory.FindPackageByName(DefaultPackageName)!;
-        HeaderText = "Installing Stable Diffusion WebUI";
+        HeaderText = $"Installing {SelectedPackage.DisplayName}...";
 
         var progressHandler = new Progress<ProgressReport>(progress =>
         {
@@ -115,30 +116,31 @@ public partial class OneClickInstallViewModel : ViewModelBase
 
         // get latest version & download & install
         SubHeaderText = "Getting latest version...";
-        var latestVersion = await a1111.GetLatestVersion();
-        a1111.InstallLocation = $"{settingsManager.LibraryDir}\\Packages\\stable-diffusion-webui";
-        a1111.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
+        var latestVersion = await SelectedPackage.GetLatestVersion();
+        SelectedPackage.InstallLocation =
+            $"{settingsManager.LibraryDir}\\Packages\\{SelectedPackage.Name}";
+        SelectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
         
-        await DownloadPackage(a1111, latestVersion);
-        await InstallPackage(a1111);
+        await DownloadPackage(latestVersion);
+        await InstallPackage();
 
         SubHeaderText = "Setting up shared folder links...";
-        sharedFolders.SetupLinksForPackage(a1111, a1111.InstallLocation);
+        sharedFolders.SetupLinksForPackage(SelectedPackage, SelectedPackage.InstallLocation);
         
-        var package = new InstalledPackage
+        var installedPackage = new InstalledPackage
         {
-            DisplayName = a1111.DisplayName,
-            LibraryPath = "Packages\\stable-diffusion-webui",
+            DisplayName = SelectedPackage.DisplayName,
+            LibraryPath = $"Packages\\{SelectedPackage.Name}",
             Id = Guid.NewGuid(),
-            PackageName = a1111.Name,
+            PackageName = SelectedPackage.Name,
             PackageVersion = latestVersion,
             DisplayVersion = latestVersion,
-            LaunchCommand = a1111.LaunchCommand,
+            LaunchCommand = SelectedPackage.LaunchCommand,
             LastUpdateCheck = DateTimeOffset.Now
         };
         await using var st = settingsManager.BeginTransaction();
-        st.Settings.InstalledPackages.Add(package);
-        st.Settings.ActiveInstalledPackage = package.Id;
+        st.Settings.InstalledPackages.Add(installedPackage);
+        st.Settings.ActiveInstalledPackage = installedPackage.Id;
         EventManager.Instance.OnInstalledPackagesChanged();
         
         HeaderText = "Installation complete!";
@@ -155,7 +157,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
         EventManager.Instance.OnOneClickInstallFinished(false);
     }
 
-    private async Task DownloadPackage(BasePackage selectedPackage, string version)
+    private async Task DownloadPackage(string version)
     {
         SubHeaderText = "Downloading package...";
         
@@ -166,14 +168,14 @@ public partial class OneClickInstallViewModel : ViewModelBase
             EventManager.Instance.OnGlobalProgressChanged(OneClickInstallProgress);
         });
         
-        await selectedPackage.DownloadPackage(version, false, progress);
+        await SelectedPackage.DownloadPackage(version, false, progress);
         SubHeaderText = "Download Complete";
         OneClickInstallProgress = 100;
     }
 
-    private async Task InstallPackage(BasePackage selectedPackage)
+    private async Task InstallPackage()
     {
-        selectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
+        SelectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
         SubHeaderText = "Downloading and installing package requirements...";
         
         var progress = new Progress<ProgressReport>(progress =>
@@ -183,6 +185,6 @@ public partial class OneClickInstallViewModel : ViewModelBase
             EventManager.Instance.OnGlobalProgressChanged(OneClickInstallProgress);
         });
         
-        await selectedPackage.InstallPackage(progress);
+        await SelectedPackage.InstallPackage(progress);
     }
 }

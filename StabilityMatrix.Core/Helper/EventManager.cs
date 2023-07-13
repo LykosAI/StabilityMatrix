@@ -19,6 +19,7 @@ public class EventManager
     public event EventHandler<bool>? DevModeSettingChanged;
     public event EventHandler<UpdateInfo>? UpdateAvailable;
     public event EventHandler<Guid> PackageLaunchRequested;
+    public event EventHandler? ScrollToBottomRequested;
     public void OnGlobalProgressChanged(int progress) => GlobalProgressChanged?.Invoke(this, progress);
     public void RequestPageChange(Type pageType) => PageChangeRequested?.Invoke(this, pageType);
     public void OnInstalledPackagesChanged() => InstalledPackagesChanged?.Invoke(this, EventArgs.Empty);
@@ -28,4 +29,6 @@ public class EventManager
     public void OnUpdateAvailable(UpdateInfo args) => UpdateAvailable?.Invoke(this, args);
     public void OnPackageLaunchRequested(Guid packageId) =>
         PackageLaunchRequested?.Invoke(this, packageId);
+    public void OnScrollToBottomRequested() =>
+        ScrollToBottomRequested?.Invoke(this, EventArgs.Empty);
 }

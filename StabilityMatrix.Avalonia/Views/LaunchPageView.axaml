@@ -94,9 +94,7 @@
             ShowLineNumbers="True"
             VerticalScrollBarVisibility="Auto"
             WordWrap="True" />
-
-        <!--  Command="{Binding LaunchWebUiCommand}"  -->
-        <!--  Visibility="{Binding ShowWebUiButton, Converter={StaticResource BoolToVisConverter}}"  -->
+        
         <Button
             Grid.Row="2"
             Grid.ColumnSpan="2"

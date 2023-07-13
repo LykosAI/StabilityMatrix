@@ -263,6 +263,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     private void OnProcessOutputReceived(object? sender, ProcessOutput output)
     {
         consoleUpdateBuffer.Post(output);
+        EventManager.Instance.OnScrollToBottomRequested();
     }
     
     private void OnOneClickInstallFinished(object? sender, bool e)

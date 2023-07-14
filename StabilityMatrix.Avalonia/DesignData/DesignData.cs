@@ -200,11 +200,11 @@ public static class DesignData
         ProgressManagerViewModel.ProgressItems = new ObservableDictionary<Guid, ProgressItem>
         {
             {
-                new Guid(),
+                Guid.NewGuid(),
                 new ProgressItem(new Guid(), "Test File.exe", new ProgressReport(0.5f, "Downloading..."))
             },
             {
-                new Guid(),
+                Guid.NewGuid(),
                 new ProgressItem(new Guid(), "Test File 2.uwu", new ProgressReport(0.25f, "Extracting..."))
             }
         };

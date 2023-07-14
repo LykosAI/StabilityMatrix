@@ -62,7 +62,7 @@
             MenuItemsSource="{Binding Pages, Mode=OneWay}"
             FooterMenuItemsSource="{Binding FooterPages, Mode=OneWay}"
             SelectedItem="{Binding SelectedCategory}">
-
+            
             <ui:NavigationView.MenuItemTemplate>
                 <DataTemplate DataType="{x:Type vm:PageViewModelBase}">
                     <ui:NavigationViewItem

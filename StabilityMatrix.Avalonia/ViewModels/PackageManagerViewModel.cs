@@ -125,8 +125,12 @@ public partial class PackageManagerViewModel : PageViewModelBase
             x.Id == settingsManager.Settings.ActiveInstalledPackage) ?? Packages[0];
     }
 
-    public override Task OnLoadedAsync() => CheckUpdates();
-    
+    public override async Task OnLoadedAsync()
+    {
+        OnLoaded();
+        await CheckUpdates();
+    }
+
     private async Task CheckUpdates()
     {
         if (Design.IsDesignMode) return;

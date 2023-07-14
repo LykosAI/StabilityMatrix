@@ -184,6 +184,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             filesForCleanup.Add(downloadPath);
 
             // Do the download
+            var progressId = Guid.NewGuid();
             var downloadTask = downloadService.DownloadToFileAsync(modelFile.DownloadUrl,
                 downloadPath,
                 new Progress<ProgressReport>(report =>
@@ -195,6 +196,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                             Value = report.Percentage;
                             Text = $"Downloading... {report.Percentage}%";
                         });
+                        EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
+                            modelFile.Name, report));
                     }
                 }));
 
@@ -213,6 +216,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                 Logger.Log(logLevel, downloadResult.Exception, "Error during model download");
 
                 Text = "Download Failed";
+                EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
+                    modelFile.Name, new ProgressReport(0f), true));
                 return;
             }
 
@@ -224,6 +229,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                 {
                     Value = progress.Percentage;
                     Text = $"Validating... {progress.Percentage}%";
+                    EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
+                        modelFile.Name, progress));
                 });
                 var sha256 = await FileHash.GetSha256Async(downloadPath, hashProgress);
                 if (sha256 != fileExpectedSha256.ToLowerInvariant())
@@ -234,6 +241,9 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                         "This may be caused by network or server issues from CivitAI, please try again in a few minutes.",
                         NotificationType.Error));
                     Text = "Download Failed";
+                    
+                    EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
+                        modelFile.Name, new ProgressReport(0f), true));
                     return;
                 }
 
@@ -270,6 +280,9 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
 
             // Successful - clear cleanup list
             filesForCleanup.Clear();
+            
+            EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
+                modelFile.Name, new ProgressReport(1f, "Import complete")));
 
             Text = "Import complete!";
         }

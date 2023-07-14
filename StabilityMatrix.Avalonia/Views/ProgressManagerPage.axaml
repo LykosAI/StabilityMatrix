@@ -1,0 +1,41 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+                          xmlns:ui="using:FluentAvalonia.UI.Controls"
+                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
+                          xmlns:progress="clr-namespace:StabilityMatrix.Core.Models.Progress;assembly=StabilityMatrix.Core"
+                          d:DataContext="{x:Static mocks:DesignData.ProgressManagerViewModel}"
+                          x:DataType="vm:ProgressManagerViewModel"
+                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                          x:Class="StabilityMatrix.Avalonia.Views.ProgressManagerPage">
+    <ItemsRepeater ItemsSource="{Binding ProgressItems.Values}">
+        <ItemsRepeater.ItemTemplate>
+            <DataTemplate DataType="{x:Type progress:ProgressItem}">
+                <StackPanel Margin="16">
+                    <TextBlock Text="{Binding Name}"
+                               Margin="0, 4"/>
+                    <ProgressBar Value="{Binding Progress.Percentage}"
+                                 Margin="0, 4">
+                        <ProgressBar.Transitions>
+                            <Transitions>
+                                <DoubleTransition Property="Value" Duration="00:00:00.150">
+                                    <DoubleTransition.Easing>
+                                        <SineEaseInOut/>
+                                    </DoubleTransition.Easing>
+                                </DoubleTransition>
+                            </Transitions>
+                        </ProgressBar.Transitions>
+                    </ProgressBar>
+                    <TextBlock Margin="0, 4">
+                        <Run Text="{Binding Progress.Title}"/>
+                        <Run Text="{Binding Progress.Percentage}"/><Run Text="%"/>
+                    </TextBlock>
+                </StackPanel>
+            </DataTemplate>
+        </ItemsRepeater.ItemTemplate>
+    </ItemsRepeater>
+</controls:UserControlBase>

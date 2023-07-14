@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using AvaloniaEdit.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -90,7 +91,7 @@ public static class DesignData
                 PackageManagerViewModel,
                 CheckpointBrowserViewModel
             },
-            FooterPages = new List<PageViewModelBase>
+            FooterPages = new List<object>
             {
                 SettingsViewModel
             }
@@ -196,6 +197,17 @@ public static class DesignData
                     dialogFactory, notificationService)
             };
         
+        ProgressManagerViewModel.ProgressItems = new ObservableDictionary<Guid, ProgressItem>
+        {
+            {
+                new Guid(),
+                new ProgressItem(new Guid(), "Test File.exe", new ProgressReport(0.5f, "Downloading..."))
+            },
+            {
+                new Guid(),
+                new ProgressItem(new Guid(), "Test File 2.uwu", new ProgressReport(0.25f, "Extracting..."))
+            }
+        };
     }
     
     public static MainWindowViewModel MainWindowViewModel { get; }
@@ -210,6 +222,9 @@ public static class DesignData
 
     public static SelectDataDirectoryViewModel SelectDataDirectoryViewModel => Services.GetRequiredService<SelectDataDirectoryViewModel>();
     public static LaunchOptionsViewModel LaunchOptionsViewModel { get; }
+
+    public static ProgressManagerViewModel ProgressManagerViewModel =>
+        Services.GetRequiredService<ProgressManagerViewModel>();
 
     public static RefreshBadgeViewModel RefreshBadgeViewModel => new()
     {

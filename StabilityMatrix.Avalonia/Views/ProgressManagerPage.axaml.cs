@@ -1,12 +1,13 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using StabilityMatrix.Avalonia.Controls;
 
 namespace StabilityMatrix.Avalonia.Views;
 
-public partial class CheckpointBrowserPage : UserControlBase
+public partial class ProgressManagerPage : UserControlBase
 {
-    public CheckpointBrowserPage()
+    public ProgressManagerPage()
     {
         InitializeComponent();
     }

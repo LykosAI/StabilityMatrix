@@ -14,6 +14,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
+using FluentAvalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog;
@@ -98,6 +99,7 @@ public partial class App : Application
         var services = ConfigureServices();
         Services = services.BuildServiceProvider();
         Services.GetRequiredService<ISettingsManager>().TryFindLibrary();
+        Services.GetRequiredService<ProgressManagerViewModel>().StartEventListener();
     }
 
     internal static void ConfigurePageViewModels(IServiceCollection services)
@@ -107,7 +109,8 @@ public partial class App : Application
             .AddSingleton<CheckpointBrowserViewModel>()
             .AddSingleton<CheckpointBrowserCardViewModel>()
             .AddSingleton<CheckpointsPageViewModel>()
-            .AddSingleton<LaunchPageViewModel>();
+            .AddSingleton<LaunchPageViewModel>()
+            .AddSingleton<ProgressManagerViewModel>();
         
         // Register disposable view models for shutdown cleanup
         services.AddSingleton<IDisposable>(p 
@@ -151,6 +154,7 @@ public partial class App : Application
         services.AddTransient<PackageManagerPage>();
         services.AddTransient<SettingsPage>();
         services.AddTransient<CheckpointBrowserPage>();
+        services.AddTransient<ProgressManagerPage>();
         
         // Dialogs
         services.AddTransient<SelectDataDirectoryDialog>();
@@ -202,9 +206,10 @@ public partial class App : Application
                     provider.GetRequiredService<CheckpointsPageViewModel>(),
                     provider.GetRequiredService<CheckpointBrowserViewModel>(),
                 },
-                FooterPages = new List<PageViewModelBase>
+                FooterPages = new List<object>
                 {
-                    provider.GetRequiredService<SettingsViewModel>()
+                    provider.GetRequiredService<SettingsViewModel>(),
+                    provider.GetRequiredService<ProgressManagerViewModel>()
                 }
             });
         

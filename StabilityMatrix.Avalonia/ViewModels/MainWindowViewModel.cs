@@ -34,7 +34,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private List<PageViewModelBase> pages = new();
 
     [ObservableProperty]
-    private List<PageViewModelBase> footerPages = new();
+    private List<object> footerPages = new();
 
     public MainWindowViewModel(ISettingsManager settingsManager, ServiceManager<ViewModelBase> dialogFactory)
     {

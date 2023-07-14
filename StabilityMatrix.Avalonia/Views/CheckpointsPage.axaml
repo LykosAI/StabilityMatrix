@@ -4,6 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+             xmlns:idd="clr-namespace:Avalonia.Xaml.Interactions.DragAndDrop;assembly=Avalonia.Xaml.Interactions.DragAndDrop"
              xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
              xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
@@ -12,6 +14,15 @@
              x:DataType="vm:CheckpointsPageViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="StabilityMatrix.Avalonia.Views.CheckpointsPage">
+    
+    <controls:UserControlBase.DataTemplates>
+        <!--  Template for dropdown category checkbox item  -->
+        <DataTemplate DataType="{x:Type vm:CheckpointFolder}">
+            <ui:ToggleMenuFlyoutItem 
+                Text="{Binding TitleWithFilesCount}" 
+                IsChecked="{Binding IsCategoryEnabled, Mode=TwoWay}"/>
+        </DataTemplate>
+    </controls:UserControlBase.DataTemplates>
     
     <controls:UserControlBase.Resources>
         <!--Direction="0"
@@ -39,24 +50,16 @@
             </controls:Card>
         </DataTemplate>
         
-        <!-- Right click menu for a checkpoint file -->
-        <!--<ui:CommandBarFlyout x:DataType="vm:CheckpointFile" Placement="Right" x:Key="FileCommandBarFlyout">
-            Note: unlike a regular CommandBar, primary items can be set as the xml content and don't need
-                   to be wrapped in a <ui:CommandBarFlyout.PrimaryCommands> tag
-            <ui:CommandBarButton Label="Rename" IconSource="Save" ToolTip.Tip="Rename" 
-                                 Command="{Binding RenameCommand}" />
-            <ui:CommandBarButton Label="Delete" IconSource="Delete" ToolTip.Tip="Delete" 
-                                 Command="{Binding DeleteCommand}" />
-        </ui:CommandBarFlyout>-->
-        
+        <!-- Checkpoint File Card -->
         <DataTemplate DataType="{x:Type vm:CheckpointFile}" x:Key="CheckpointFileDataTemplate">
             <Border
                 DragDrop.AllowDrop="False"
                 Background="Transparent"
-                BorderThickness="0"
+                BorderThickness="2"
                 Margin="8">
-                <!--TODO: MouseDragElementBehavior-->
+                
                 <controls:Card Width="260">
+                    <!-- Right click menu for a checkpoint file -->
                     <controls:Card.ContextFlyout>
                         <ui:FAMenuFlyout>
                             <ui:MenuFlyoutItem Command="{Binding RenameCommand}" 
@@ -209,21 +212,37 @@
             </Border>
         </DataTemplate>
         
+        <!-- Checkpoint Folder Expander -->
         <DataTemplate DataType="{x:Type vm:CheckpointFolder}" x:Key="CheckpointFolderGridDataTemplate">
             <Expander
-                Header="{Binding Title}"
-                IsExpanded="True"
+                IsExpanded="{Binding IsExpanded}"
                 Margin="8"
                 Padding="8,8,8,8"
                 IsVisible="{Binding IsCategoryEnabled, FallbackValue=True}">
-                <Expander.ContextMenu>
-                    <ContextMenu>
-                        <!-- ReSharper disable once Xaml.RedundantResource -->
-                        <MenuItem Header="Show in Explorer" 
-                                  Command="{Binding ShowInExplorerCommand}"
-                                  CommandParameter="{Binding DirectoryPath}"/>
-                    </ContextMenu>
-                </Expander.ContextMenu>
+                
+                <!-- Right click menu for a checkpoint folder -->
+                <Expander.ContextFlyout>
+                    <ui:FAMenuFlyout>
+                        <ui:MenuFlyoutItem Text="Show in Explorer" IconSource="Open"
+                                           Command="{Binding ShowInExplorerCommand}"
+                                           CommandParameter="{Binding DirectoryPath}"/>
+                        <ui:MenuFlyoutSeparator/>
+                        <ui:MenuFlyoutSubItem Text="New" IconSource="Add">
+                            <ui:MenuFlyoutSubItem.Items>
+                                <ui:MenuFlyoutItem Text="Folder" IconSource="OpenFolder"
+                                                   Command="{Binding CreateSubFolderCommand}"/>
+                            </ui:MenuFlyoutSubItem.Items>
+                        </ui:MenuFlyoutSubItem>
+                    </ui:FAMenuFlyout>
+                </Expander.ContextFlyout>
+                
+                <!-- Editable header -->
+                <Expander.Header>
+                    <Grid>
+                        <TextBlock Text="{Binding Title}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Expander.Header>
+                
                 <StackPanel Orientation="Vertical">
                     <!-- Subfolders -->
                     <StackPanel Orientation="Vertical">
@@ -238,11 +257,13 @@
                           Background="Transparent"
                           DragDrop.AllowDrop="True">
                         <ItemsRepeater
+                            Classes="ItemsDragAndDrop"
                             ItemTemplate="{StaticResource CheckpointFileDataTemplate}"
                             ItemsSource="{Binding CheckpointFiles}">
                             <ItemsRepeater.Layout>
                                 <UniformGridLayout Orientation="Horizontal"/>
                             </ItemsRepeater.Layout>
+                            <TextBlock Text="Hi"/>
                         </ItemsRepeater>
                         <!-- Blurred background for drag and drop -->
                         <Border
@@ -287,11 +308,6 @@
                     </Grid>
                 </StackPanel>
             </Expander>
-        </DataTemplate>
-        
-        <!--  Template for dropdown category checkbox item  -->
-        <DataTemplate DataType="{x:Type vm:CheckpointFolder}" x:Key="CategoryItemTemplate"> 
-            <CheckBox Content="{Binding Title}" IsChecked="{Binding IsCategoryEnabled, Mode=TwoWay}" />
         </DataTemplate>
         
         <!--  Template for dropdown box  -->
@@ -362,9 +378,7 @@
                 VerticalAlignment="Center"
                 HorizontalAlignment="Right">
                 <DropDownButton.Flyout>
-                    <MenuFlyout 
-                        ItemTemplate="{StaticResource CategoryItemTemplate}"
-                        Placement="Bottom" 
+                    <ui:FAMenuFlyout 
                         ItemsSource="{Binding CheckpointFolders}"/>
                 </DropDownButton.Flyout>
             </DropDownButton>
@@ -408,6 +422,10 @@
                 </StackPanel>
             </Grid>
         </ScrollViewer>
+        
+        <!-- Overlay for draggable file panels -->
+        <Panel Name="OverlayPanel" 
+               Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" />
     </Grid>
     
 </controls:UserControlBase>

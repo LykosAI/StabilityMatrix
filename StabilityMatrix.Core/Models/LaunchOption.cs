@@ -6,9 +6,9 @@ namespace StabilityMatrix.Core.Models;
 
 public class LaunchOption
 {
-    public string Name { get; init; }
-    
-    public LaunchOptionType Type { get; init; }
+    public required string Name { get; init; }
+
+    public LaunchOptionType Type { get; init; } = LaunchOptionType.Bool;
     
     [JsonIgnore]
     public object? DefaultValue { get; init; }
@@ -19,29 +19,36 @@ public class LaunchOption
     [JsonConverter(typeof(LaunchOptionValueJsonConverter))]
     public object? OptionValue { get; set; }
 
+    /// <summary>
+    /// Checks if the option has no user entered value,
+    /// or that the value is the same as the default value.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
     public bool IsEmptyOrDefault()
     {
-        switch (Type)
+        return Type switch
         {
-            case LaunchOptionType.Bool:
-                return OptionValue == null;
-            case LaunchOptionType.Int:
-                return OptionValue == null || (int?) OptionValue == (int?) DefaultValue;
-            case LaunchOptionType.String:
-                return OptionValue == null || (string?) OptionValue == (string?) DefaultValue;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
+            LaunchOptionType.Bool => OptionValue == null,
+            LaunchOptionType.Int => OptionValue == null ||
+                                    (int?) OptionValue == (int?) DefaultValue,
+            LaunchOptionType.String => OptionValue == null ||
+                                       (string?) OptionValue == (string?) DefaultValue,
+            _ => throw new ArgumentOutOfRangeException()
+        };
     }
 
-    public void SetValueFromString(string? value)
+    /// <summary>
+    /// Parses a string value to the correct type for the option.
+    /// This returned object can be assigned to OptionValue.
+    /// </summary>
+    public static object? ParseValue(string? value, LaunchOptionType type)
     {
-        OptionValue = Type switch
+        return type switch
         {
             LaunchOptionType.Bool => bool.TryParse(value, out var boolValue) ? boolValue : null,
             LaunchOptionType.Int => int.TryParse(value, out var intValue) ? intValue : null,
             LaunchOptionType.String => value,
-            _ => throw new ArgumentException($"Unknown option type {Type}")
+            _ => throw new ArgumentException($"Unknown option type {type}")
         };
     }
 

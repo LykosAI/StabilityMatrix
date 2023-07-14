@@ -1,8 +1,9 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace StabilityMatrix.Core.Helper.Cache;
 
-// ReSharper disable once InconsistentNaming
+[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class LRUCache<TK,TV> where TK : notnull
 {
     private readonly int capacity;

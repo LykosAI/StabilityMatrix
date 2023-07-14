@@ -67,6 +67,7 @@ public class A3WebUI : BaseGitPackage
         new()
         {
             Name = "VRAM",
+            Type = LaunchOptionType.Bool,
             InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
             {
                 Level.Low => "--lowvram",
@@ -78,24 +79,28 @@ public class A3WebUI : BaseGitPackage
         new()
         {
             Name = "Xformers",
+            Type = LaunchOptionType.Bool,
             InitialValue = HardwareHelper.HasNvidiaGpu(),
             Options = new() { "--xformers" }
         },
         new()
         {
             Name = "API",
+            Type = LaunchOptionType.Bool,
             InitialValue = true,
             Options = new() {"--api"}
         },
         new()
         {
             Name = "Skip Torch CUDA Check",
+            Type = LaunchOptionType.Bool,
             InitialValue = !HardwareHelper.HasNvidiaGpu(),
             Options = new() {"--skip-torch-cuda-test"}
         },
         new()
         {
             Name = "Skip Python Version Check",
+            Type = LaunchOptionType.Bool,
             InitialValue = true,
             Options = new() {"--skip-python-version-check"}
         },

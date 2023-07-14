@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
@@ -6,14 +7,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using System.Threading.Tasks.Dataflow;
+using Avalonia;
+using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
@@ -33,6 +39,8 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     private readonly IPackageFactory packageFactory;
     private readonly IPyRunner pyRunner;
     private readonly INotificationService notificationService;
+    private readonly ServiceManager<ViewModelBase> dialogFactory;
+    
     public override string Title => "Launch";
     public override Symbol Icon => Symbol.PlayFilled;
 
@@ -59,13 +67,14 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     private string webUiUrl = string.Empty;
 
     public LaunchPageViewModel(ILogger<LaunchPageViewModel> logger, ISettingsManager settingsManager, IPackageFactory packageFactory,
-        IPyRunner pyRunner, INotificationService notificationService)
+        IPyRunner pyRunner, INotificationService notificationService, ServiceManager<ViewModelBase> dialogFactory)
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         this.pyRunner = pyRunner;
         this.notificationService = notificationService;
+        this.dialogFactory = dialogFactory;
 
         EventManager.Instance.PackageLaunchRequested +=
             async (s, e) => await OnPackageLaunchRequested(s, e);
@@ -174,6 +183,67 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         userArgsString = string.Join(" ", userArgsString, basePackage.ExtraLaunchArguments);
         await basePackage.RunPackage(packagePath, userArgsString);
         RunningPackage = basePackage;
+    }
+    
+    [RelayCommand]
+    private async Task Config()
+    {
+        var activeInstall = SelectedPackage;
+        var name = activeInstall?.PackageName;
+        if (name == null || activeInstall == null)
+        {
+            logger.LogWarning($"Selected package is null");
+            return;
+        }
+
+        var package = packageFactory.FindPackageByName(name);
+        if (package == null)
+        {
+            logger.LogWarning("Package {Name} not found", name);
+            return;
+        }
+
+        var definitions = package.LaunchOptions;
+        // Check if package supports IArgParsable
+        // Use dynamic parsed args over static
+        /*if (package is IArgParsable parsable)
+        {
+            var rootPath = activeInstall.FullPath!;
+            var moduleName = parsable.RelativeArgsDefinitionScriptPath;
+            var parser = new ArgParser(pyRunner, rootPath, moduleName);
+            definitions = await parser.GetArgsAsync();
+        }*/
+
+        // Open a config page
+        var userLaunchArgs = settingsManager.GetLaunchArgs(activeInstall.Id);
+        var viewModel = dialogFactory.Get<LaunchOptionsViewModel>();
+        viewModel.Cards = LaunchOptionCard.FromDefinitions(definitions, userLaunchArgs)
+            .ToImmutableArray();
+        
+        logger.LogDebug("Launching config dialog with cards: {CardsCount}", 
+            viewModel.Cards.Count);
+        
+        var dialog = new BetterContentDialog
+        {
+            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            IsPrimaryButtonEnabled = true,
+            PrimaryButtonText = "Save",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+            Padding = new Thickness(0, 16),
+            Content = new LaunchOptionsDialog
+            {
+                DataContext = viewModel,
+            }
+        };
+        var result = await dialog.ShowAsync();
+
+        if (result == ContentDialogResult.Primary)
+        {
+            // Save config
+            var args = viewModel.AsLaunchArgs();
+            settingsManager.SaveLaunchArgs(activeInstall.Id, args);
+        }
     }
     
     private async Task BeginUpdateConsole(CancellationToken ct)

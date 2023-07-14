@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using AvaloniaEdit.Utils;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,7 +54,7 @@ public static class DesignData
         services.AddLogging();
         services.AddSingleton<IPackageFactory, PackageFactory>()
             .AddSingleton<INotificationService, MockNotificationService>()
-            .AddSingleton<ISharedFolders, SharedFolders>()
+            .AddSingleton<ISharedFolders, MockSharedFolders>()
             .AddSingleton<IDownloadService, MockDownloadService>()
             .AddSingleton<ModelFinder>();
         
@@ -77,6 +78,7 @@ public static class DesignData
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
         var downloadService = Services.GetRequiredService<IDownloadService>();
         var modelFinder = Services.GetRequiredService<ModelFinder>();
+        var packageFactory = Services.GetRequiredService<IPackageFactory>();
         var notificationService = Services.GetRequiredService<INotificationService>();
         
         // Main window
@@ -107,6 +109,32 @@ public static class DesignData
         // Sample data for dialogs
         SelectModelVersionViewModel.Versions = sampleCivitVersions;
         SelectModelVersionViewModel.SelectedVersion = sampleCivitVersions[0];
+
+        LaunchOptionsViewModel = Services.GetRequiredService<LaunchOptionsViewModel>();
+        LaunchOptionsViewModel.Cards = new[]
+        {
+            LaunchOptionCard.FromDefinition(new LaunchOptionDefinition
+            {
+                Name = "Host",
+                Type = LaunchOptionType.String,
+                Description = "The host name for the Web UI",
+                DefaultValue = "localhost",
+                Options = { "--host" }
+            }),
+            LaunchOptionCard.FromDefinition(new LaunchOptionDefinition
+            {
+                Name = "API",
+                Type = LaunchOptionType.Bool,
+                Options = { "--api" }
+            })
+        };
+        LaunchOptionsViewModel.UpdateFilterCards();
+
+        InstallerViewModel = Services.GetRequiredService<InstallerViewModel>();
+        InstallerViewModel.AvailablePackages =
+            packageFactory.GetAllAvailablePackages().ToImmutableArray();
+        InstallerViewModel.SelectedPackage = InstallerViewModel.AvailablePackages[0];
+        InstallerViewModel.ReleaseNotes = "## Release Notes\nThis is a test release note.";
         
         // Checkpoints page
         CheckpointsPageViewModel.CheckpointFolders = new ObservableCollection<CheckpointFolder>
@@ -178,8 +206,10 @@ public static class DesignData
     public static CheckpointBrowserViewModel CheckpointBrowserViewModel => Services.GetRequiredService<CheckpointBrowserViewModel>();
     public static SelectModelVersionViewModel SelectModelVersionViewModel => Services.GetRequiredService<SelectModelVersionViewModel>();
     public static OneClickInstallViewModel OneClickInstallViewModel => Services.GetRequiredService<OneClickInstallViewModel>();
-    public static InstallerViewModel InstallerViewModel => Services.GetRequiredService<InstallerViewModel>();
+    public static InstallerViewModel InstallerViewModel { get; }
+
     public static SelectDataDirectoryViewModel SelectDataDirectoryViewModel => Services.GetRequiredService<SelectDataDirectoryViewModel>();
+    public static LaunchOptionsViewModel LaunchOptionsViewModel { get; }
 
     public static RefreshBadgeViewModel RefreshBadgeViewModel => new()
     {

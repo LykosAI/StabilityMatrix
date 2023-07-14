@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -333,8 +334,13 @@ public partial class PackageManagerViewModel : PageViewModelBase
     private async Task ShowInstallDialog()
     {
         var viewModel = dialogFactory.Get<InstallerViewModel>();
+        viewModel.AvailablePackages = packageFactory.GetAllAvailablePackages().ToImmutableArray();
+        viewModel.SelectedPackage = viewModel.AvailablePackages[0];
+
         var dialog = new BetterContentDialog
         {
+            MaxDialogWidth = 700,
+            DefaultButton = ContentDialogButton.Close,
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
             IsFooterVisible = false,

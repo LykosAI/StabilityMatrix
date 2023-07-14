@@ -47,6 +47,7 @@
                     Grid.Column="1"
                     Width="48"
                     Margin="8,8,0,0"
+                    Command="{Binding ConfigCommand}"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Stretch"
                     FontSize="16">

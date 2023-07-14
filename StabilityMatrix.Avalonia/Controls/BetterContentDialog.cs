@@ -6,7 +6,9 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
+using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 namespace StabilityMatrix.Avalonia.Controls;
@@ -55,6 +57,26 @@ public class BetterContentDialog : ContentDialog
         set => SetValue(IsFooterVisibleProperty, value);
     }
 
+    public static readonly StyledProperty<ScrollBarVisibility> ContentVerticalScrollBarVisibilityProperty 
+        = AvaloniaProperty.Register<BetterContentDialog, ScrollBarVisibility>(
+            "ContentScrollBarVisibility", ScrollBarVisibility.Auto);
+
+    public ScrollBarVisibility ContentVerticalScrollBarVisibility
+    {
+        get => GetValue(ContentVerticalScrollBarVisibilityProperty);
+        set => SetValue(ContentVerticalScrollBarVisibilityProperty, value);
+    }
+
+    public static readonly StyledProperty<double> MaxDialogWidthProperty = AvaloniaProperty.Register<BetterContentDialog, double>(
+        "MaxDialogWidth");
+
+    public double MaxDialogWidth
+    {
+        get => GetValue(MaxDialogWidthProperty);
+        set => SetValue(MaxDialogWidthProperty, value);
+    }
+    
+
     public BetterContentDialog()
     {
         AddHandler(LoadedEvent, OnLoaded);
@@ -85,25 +107,42 @@ public class BetterContentDialog : ContentDialog
     private void OnLoaded(object? sender, RoutedEventArgs? e)
     {
         TryBindButtons();
-        // Check if we need to hide the footer
-        if (IsFooterVisible) return;
-        
+
         // Find the named grid
         // https://github.com/amwx/FluentAvalonia/blob/master/src/FluentAvalonia/Styling/
         // ControlThemes/FAControls/ContentDialogStyles.axaml#L96
-
         var border = VisualChildren[0] as Border;
         var panel = border?.Child as Panel;
         var faBorder = panel?.Children[0] as FABorder;
+        // Set widths
+        if (MaxDialogWidth > 0)
+        {
+            faBorder!.MaxWidth = MaxDialogWidth;
+        }
+        
         var border2 = faBorder?.Child as Border;
-        var grid = border2?.Child as Grid;
-
+        // Named Grid 'DialogSpace'
+        if (border2?.Child is not Grid dialogSpaceGrid) throw new InvalidOperationException("Could not find DialogSpace grid");
+        
+        var scrollViewer = dialogSpaceGrid.Children[0] as ScrollViewer;
+        var actualBorder = dialogSpaceGrid.Children[1] as Border;
+            
         // Get the parent border, which is what we want to hide
-        if (grid?.Children[1] is not Border actualBorder)
+        if (scrollViewer is null || actualBorder is null)
         {
             throw new InvalidOperationException("Could not find parent border");
         }
-        // Hide the border
-        actualBorder.IsVisible = false;
+            
+        // Set footer and scrollbar visibility states
+        actualBorder.IsVisible = IsFooterVisible;
+        scrollViewer.VerticalScrollBarVisibility = ContentVerticalScrollBarVisibility;
+        
+        // Also call the vm's OnLoad
+        if (Content is Control {DataContext: ViewModelBase viewModel})
+        {
+            viewModel.OnLoaded();
+            Dispatcher.UIThread.InvokeAsync(
+                async () => await viewModel.OnLoadedAsync());
+        }
     }
 }

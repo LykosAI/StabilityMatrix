@@ -14,20 +14,11 @@
              xmlns:octokit="clr-namespace:Octokit;assembly=Octokit"
              xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
              x:DataType="dialogs:InstallerViewModel"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
              d:DataContext="{x:Static mocks:DesignData.InstallerViewModel}"
              x:Class="StabilityMatrix.Avalonia.Views.Dialogs.InstallerDialog">
-    
-    <controls:UserControlBase.Resources>
-    </controls:UserControlBase.Resources>
-    
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
 
+    <Grid RowDefinitions="Auto,Auto,*">
         <StackPanel
             Grid.Row="1"
             Margin="16,8,16,0"
@@ -52,9 +43,9 @@
                 TextWrapping="Wrap" />
         </StackPanel>
 
-        <Grid Grid.Row="2" HorizontalAlignment="Left" ColumnDefinitions="Auto,Auto,*">
+        <Grid Grid.Row="2" HorizontalAlignment="Left" ColumnDefinitions="auto,*,auto">
             <ListBox
-                Margin="16"
+                Margin="8,16"
                 ItemsSource="{Binding AvailablePackages}"
                 SelectedItem="{Binding SelectedPackage, Mode=TwoWay}">
 
@@ -86,8 +77,9 @@
             </ListBox>
 
             <StackPanel
+                MinWidth="400"
                 Grid.Column="1"
-                Margin="16,16,0,16"
+                Margin="8,16,0,16"
                 Orientation="Vertical">
                 <TextBlock
                     FontSize="24"
@@ -221,7 +213,7 @@
             <mdxaml:MarkdownScrollViewer
                 Grid.Column="2"
                 Margin="16"
-                Source="{Binding ReleaseNotes, Mode=OneWay}"/>
+                Markdown="{Binding ReleaseNotes, Mode=OneWay}"/>
             <ContentPresenter
                 Grid.Column="0"
                 Grid.ColumnSpan="3"

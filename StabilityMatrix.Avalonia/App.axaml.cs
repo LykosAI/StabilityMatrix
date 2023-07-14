@@ -121,6 +121,7 @@ public partial class App : Application
         services.AddTransient<OneClickInstallViewModel>();
         services.AddTransient<SelectModelVersionViewModel>();
         services.AddTransient<SelectDataDirectoryViewModel>();
+        services.AddTransient<LaunchOptionsViewModel>();
         
         // Other transients (usually sub view models)
         services.AddTransient<CheckpointFolder>();
@@ -136,6 +137,7 @@ public partial class App : Application
                 .Register(provider.GetRequiredService<OneClickInstallViewModel>)
                 .Register(provider.GetRequiredService<SelectModelVersionViewModel>)
                 .Register(provider.GetRequiredService<SelectDataDirectoryViewModel>)
+                .Register(provider.GetRequiredService<LaunchOptionsViewModel>)
                 .Register(provider.GetRequiredService<CheckpointFolder>)
                 .Register(provider.GetRequiredService<CheckpointFile>)
                 .Register(provider.GetRequiredService<RefreshBadgeViewModel>));
@@ -152,6 +154,7 @@ public partial class App : Application
         
         // Dialogs
         services.AddTransient<SelectDataDirectoryDialog>();
+        services.AddTransient<LaunchOptionsDialog>();
         
         // Controls
         services.AddTransient<RefreshBadge>();

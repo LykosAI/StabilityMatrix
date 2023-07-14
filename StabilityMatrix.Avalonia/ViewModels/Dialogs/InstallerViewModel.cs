@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,7 +32,7 @@ using PackageVersion = StabilityMatrix.Core.Models.PackageVersion;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 
-public partial class InstallerViewModel : ViewModelBase
+public partial class InstallerViewModel : ContentDialogViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     
@@ -44,7 +46,7 @@ public partial class InstallerViewModel : ViewModelBase
     [ObservableProperty] private BasePackage selectedPackage;
     [ObservableProperty] private PackageVersion? selectedVersion;
 
-    [ObservableProperty] private ObservableCollection<BasePackage>? availablePackages;
+    [ObservableProperty] private IReadOnlyList<BasePackage>? availablePackages;
     [ObservableProperty] private ObservableCollection<GitHubCommit>? availableCommits;
     [ObservableProperty] private ObservableCollection<PackageVersion>? availableVersions;
     
@@ -63,8 +65,7 @@ public partial class InstallerViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsReleaseModeAvailable))]
     private PackageVersionType availableVersionTypes = 
         PackageVersionType.GithubRelease | PackageVersionType.Commit;
-    public string ReleaseLabelText => SelectedVersionType == PackageVersionType.GithubRelease
-        ? "Version" : "Branch";
+    public string ReleaseLabelText => IsReleaseMode ? "Version" : "Branch";
     public bool IsReleaseMode
     {
         get => SelectedVersionType == PackageVersionType.GithubRelease;
@@ -99,6 +100,12 @@ public partial class InstallerViewModel : ViewModelBase
         this.prerequisiteHelper = prerequisiteHelper;
 
         // AvailablePackages and SelectedPackage need to be set in init
+    }
+
+    public override void OnLoaded()
+    {
+        if (AvailablePackages == null) return;
+        SelectedPackage = AvailablePackages[0];
     }
     
     public override async Task OnLoadedAsync()
@@ -272,7 +279,20 @@ public partial class InstallerViewModel : ViewModelBase
             ProcessRunner.OpenUrl(url);
         }
     }
+
+    // When available version types change, reset selected version type if not compatible
+    partial void OnAvailableVersionTypesChanged(PackageVersionType value)
+    {
+        if (!value.HasFlag(SelectedVersionType))
+        {
+            SelectedVersionType = value;
+        }
+    }
     
+    // When changing branch / release modes, refresh
+    // ReSharper disable once UnusedParameterInPartialMethod
+    partial void OnSelectedVersionTypeChanged(PackageVersionType value) => OnSelectedPackageChanged(SelectedPackage);
+
     partial void OnSelectedPackageChanged(BasePackage? value)
     {
         if (value == null) return;
@@ -285,40 +305,30 @@ public partial class InstallerViewModel : ViewModelBase
             ? PackageVersionType.Commit
             : PackageVersionType.GithubRelease | PackageVersionType.Commit;
         
-        // Reset selected if not compatible
-        if (!AvailableVersionTypes.HasFlag(SelectedVersionType))
-        {
-            SelectedVersionType = PackageVersionType.Commit;
-        }
-        
-        var isReleaseMode = SelectedVersionType == PackageVersionType.GithubRelease;
-
         if (Design.IsDesignMode) return;
         
-        Task.Run(async () =>
+        Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            var versions = (await value.GetAllVersions(isReleaseMode)).ToList();
+            Logger.Debug($"Release mode: {IsReleaseMode}");
+            var versions = (await value.GetAllVersions(IsReleaseMode)).ToList();
+            
             if (!versions.Any()) return;
 
-            Dispatcher.UIThread.Post(() =>
-            {
-                AvailableVersions = new ObservableCollection<PackageVersion>(versions);
-                SelectedVersion = AvailableVersions[0];
-                ReleaseNotes = versions.First().ReleaseNotesMarkdown;
-            });
+            AvailableVersions = new ObservableCollection<PackageVersion>(versions);
+            Logger.Debug($"Available versions: {string.Join(", ", AvailableVersions)}");
+            SelectedVersion = AvailableVersions[0];
+            ReleaseNotes = versions.First().ReleaseNotesMarkdown;
+            Logger.Debug($"Loaded release notes for {ReleaseNotes}");
             
-            if (!isReleaseMode)
+            if (!IsReleaseMode)
             {
-                var commits = await value.GetAllCommits(SelectedVersion!.TagName);
+                var commits = await value.GetAllCommits(SelectedVersion.TagName);
                 if (commits is null || commits.Count == 0) return;
                 
-                Dispatcher.UIThread.Post(() =>
-                {
-                    AvailableCommits = new ObservableCollection<GitHubCommit>(commits);
-                    SelectedCommit = AvailableCommits[0];
-                    SelectedVersion = AvailableVersions?.FirstOrDefault(packageVersion => 
-                        packageVersion.TagName.ToLowerInvariant() is "master" or "main");
-                });
+                AvailableCommits = new ObservableCollection<GitHubCommit>(commits);
+                SelectedCommit = AvailableCommits[0];
+                SelectedVersion = AvailableVersions?.FirstOrDefault(packageVersion => 
+                    packageVersion.TagName.ToLowerInvariant() is "master" or "main");
             }
         }).SafeFireAndForget();
     }

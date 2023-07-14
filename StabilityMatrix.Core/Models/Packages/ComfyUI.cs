@@ -44,35 +44,39 @@ public class ComfyUI : BaseGitPackage
         [SharedFolderType.Hypernetwork] = "models/hypernetworks",
     };
     
-    public override List<LaunchOptionDefinition> LaunchOptions => new()
+    public override List<LaunchOptionDefinition> LaunchOptions => new List<LaunchOptionDefinition>
     {
         new()
         {
             Name = "VRAM",
+            Type = LaunchOptionType.Bool,
             InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
             {
                 Level.Low => "--lowvram",
                 Level.Medium => "--normalvram",
                 _ => null
             },
-            Options = new() { "--highvram", "--normalvram", "--lowvram", "--novram" }
+            Options = { "--highvram", "--normalvram", "--lowvram", "--novram" }
         },
         new()
         {
             Name = "Use CPU only",
+            Type = LaunchOptionType.Bool,
             InitialValue = !HardwareHelper.HasNvidiaGpu(),
-            Options = new() {"--cpu"}
+            Options = {"--cpu"}
         },
         new()
         {
             Name = "Disable Xformers",
+            Type = LaunchOptionType.Bool,
             InitialValue = !HardwareHelper.HasNvidiaGpu(),
-            Options = new() { "--disable-xformers" }
+            Options = { "--disable-xformers" }
         },
         new()
         {
             Name = "Auto-Launch",
-            Options = new() { "--auto-launch" }
+            Type = LaunchOptionType.Bool,
+            Options = { "--auto-launch" }
         },
         LaunchOptionDefinition.Extras
     };

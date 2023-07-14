@@ -69,6 +69,7 @@ public class VladAutomatic : BaseGitPackage
         new()
         {
             Name = "VRAM",
+            Type = LaunchOptionType.Bool,
             InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
             {
                 Level.Low => "--lowvram",
@@ -80,22 +81,26 @@ public class VladAutomatic : BaseGitPackage
         new()
         {
             Name = "Force use of Intel OneAPI XPU backend",
+            Type = LaunchOptionType.Bool,
             Options = new() { "--use-ipex" }
         },
         new()
         {
             Name = "Use DirectML if no compatible GPU is detected",
+            Type = LaunchOptionType.Bool,
             InitialValue = !HardwareHelper.HasNvidiaGpu() && HardwareHelper.HasAmdGpu(),
             Options = new() { "--use-directml" }
         },
         new()
         {
             Name = "Force use of Nvidia CUDA backend",
+            Type = LaunchOptionType.Bool,
             Options = new() { "--use-cuda" }
         },
         new()
         {
             Name = "Force use of AMD ROCm backend",
+            Type = LaunchOptionType.Bool,
             Options = new() { "--use-rocm" }
         },
         new()
@@ -107,11 +112,13 @@ public class VladAutomatic : BaseGitPackage
         new()
         {
             Name = "API",
+            Type = LaunchOptionType.Bool,
             Options = new() { "--api" }
         },
         new()
         {
             Name = "Debug Logging",
+            Type = LaunchOptionType.Bool,
             Options = new() { "--debug" }
         },
         LaunchOptionDefinition.Extras

@@ -203,14 +203,14 @@ public partial class App : Application
             new MainWindowViewModel(provider.GetRequiredService<ISettingsManager>(),
                 provider.GetRequiredService<ServiceManager<ViewModelBase>>())
             {
-                Pages = new List<PageViewModelBase>
+                Pages =
                 {
                     provider.GetRequiredService<LaunchPageViewModel>(),
                     provider.GetRequiredService<PackageManagerViewModel>(),
                     provider.GetRequiredService<CheckpointsPageViewModel>(),
                     provider.GetRequiredService<CheckpointBrowserViewModel>(),
                 },
-                FooterPages = new List<object>
+                FooterPages =
                 {
                     provider.GetRequiredService<SettingsViewModel>()
                 }

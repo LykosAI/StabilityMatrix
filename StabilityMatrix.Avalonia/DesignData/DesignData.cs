@@ -85,14 +85,14 @@ public static class DesignData
         // Main window
         MainWindowViewModel = new MainWindowViewModel(settingsManager, dialogFactory)
         {
-            Pages = new List<PageViewModelBase>
+            Pages =
             {
                 LaunchPageViewModel,
                 PackageManagerViewModel,
                 CheckpointsPageViewModel,
                 CheckpointBrowserViewModel
             },
-            FooterPages = new List<PageViewModelBase>
+            FooterPages =
             {
                 SettingsViewModel
             }

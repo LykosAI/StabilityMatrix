@@ -11,16 +11,29 @@ public static class ProcessRunner
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     
+    /// <summary>
+    /// Opens the given URL in the default browser.
+    /// </summary>
+    /// <param name="url">URL as string</param>
     public static void OpenUrl(string url)
     {
         Logger.Debug($"Opening URL '{url}'");
-        System.Diagnostics.Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+    }
+    
+    /// <summary>
+    /// Opens the given URL in the default browser.
+    /// </summary>
+    /// <param name="url">URI, using AbsoluteUri component</param>
+    public static void OpenUrl(Uri url)
+    {
+        OpenUrl(url.AbsoluteUri);
     }
 
     public static async Task<string> GetProcessOutputAsync(string fileName, string arguments)
     {
         Logger.Debug($"Starting process '{fileName}' with arguments '{arguments}'");
-        using var process = new System.Diagnostics.Process();
+        using var process = new Process();
         process.StartInfo.FileName = fileName;
         process.StartInfo.Arguments = arguments;
         process.StartInfo.UseShellExecute = false;
@@ -35,7 +48,7 @@ public static class ProcessRunner
         return output;
     }
 
-    public static System.Diagnostics.Process StartProcess(
+    public static Process StartProcess(
         string fileName,
         string arguments,
         string? workingDirectory = null,
@@ -81,7 +94,7 @@ public static class ProcessRunner
         return process;
     }
 
-    public static System.Diagnostics.Process StartProcess(
+    public static Process StartProcess(
         string fileName,
         IEnumerable<string> arguments,
         string? workingDirectory = null,
@@ -112,7 +125,7 @@ public static class ProcessRunner
     /// <param name="stderr">Process stderr.</param>
     /// <exception cref="ProcessException">Thrown if exit code does not match expected value.</exception>
     // ReSharper disable once MemberCanBePrivate.Global
-    public static Task ValidateExitConditionAsync(System.Diagnostics.Process process, int expectedExitCode = 0, string? stdout = null, string? stderr = null)
+    public static Task ValidateExitConditionAsync(Process process, int expectedExitCode = 0, string? stdout = null, string? stderr = null)
     {
         var exitCode = process.ExitCode;
         if (exitCode == expectedExitCode)
@@ -133,7 +146,7 @@ public static class ProcessRunner
     /// <param name="expectedExitCode">Expected exit code.</param>
     /// <param name="cancelToken">Cancellation token.</param>
     /// <exception cref="ProcessException">Thrown if exit code does not match expected value.</exception>
-    public static async Task WaitForExitConditionAsync(System.Diagnostics.Process process, int expectedExitCode = 0, CancellationToken cancelToken = default)
+    public static async Task WaitForExitConditionAsync(Process process, int expectedExitCode = 0, CancellationToken cancelToken = default)
     {
         var stdout = new StringBuilder();
         var stderr = new StringBuilder();

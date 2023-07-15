@@ -132,6 +132,16 @@ public class BetterContentDialog : ContentDialog
         {
             throw new InvalidOperationException("Could not find parent border");
         }
+        
+        var subBorder = scrollViewer.Content as Border;
+        var subGrid = subBorder?.Child as Grid;
+        if (subGrid is null) throw new InvalidOperationException("Could not find sub grid");
+        var contentControlTitle = subGrid.Children[0] as ContentControl;
+        // Hide title if empty
+        if (Title is null)
+        {
+            contentControlTitle!.IsVisible = false;
+        }
             
         // Set footer and scrollbar visibility states
         actualBorder.IsVisible = IsFooterVisible;

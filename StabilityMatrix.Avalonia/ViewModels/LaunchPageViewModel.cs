@@ -28,7 +28,8 @@ using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
-using ThreadState = System.Diagnostics.ThreadState;
+using Symbol = FluentIcons.Common.Symbol;
+using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -43,7 +44,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     
     public override string Title => "Launch";
-    public override Symbol Icon => Symbol.PlayFilled;
+    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Rocket, IsFilled = true};
 
     [ObservableProperty]
     private TextDocument consoleDocument = new();

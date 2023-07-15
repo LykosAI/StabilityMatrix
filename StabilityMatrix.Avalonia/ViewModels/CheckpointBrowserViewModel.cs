@@ -26,6 +26,8 @@ using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 using ApiException = Refit.ApiException;
+using Symbol = FluentIcons.Common.Symbol;
+using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -395,5 +397,5 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     }
 
     public override string Title => "Model Browser";
-    public override Symbol Icon => Symbol.Find;
+    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.BrainCircuit, IsFilled = true };
 }

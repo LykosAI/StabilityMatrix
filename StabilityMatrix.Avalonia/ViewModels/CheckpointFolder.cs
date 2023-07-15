@@ -66,7 +66,11 @@ public partial class CheckpointFolder : ViewModelBase
     private bool isImportInProgress;
     
     public bool IsDragBlurEnabled => IsCurrentDragTarget || IsImportInProgress;
-    public string TitleWithFilesCount => CheckpointFiles.Any() ? $"{Title} ({CheckpointFiles.Count})" : Title;
+
+    public string TitleWithFilesCount =>
+        CheckpointFiles.Any() || SubFolders.Any(f => f.CheckpointFiles.Any())
+            ? $"{Title} ({CheckpointFiles.Count + SubFolders.Sum(folder => folder.CheckpointFiles.Count)})"
+            : Title;
     
     public ProgressViewModel Progress { get; } = new();
 

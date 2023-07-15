@@ -6,6 +6,7 @@
                         xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                         xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                        xmlns:fluentAvalonia="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                         d:DataContext="{x:Static mocks:DesignData.MainWindowViewModel}"
                         x:DataType="vm:MainWindowViewModel"
@@ -67,17 +68,27 @@
                 <DataTemplate DataType="{x:Type vm:PageViewModelBase}">
                     <ui:NavigationViewItem
                         Margin="0,0,0,0"
-                        Content="{Binding Title}"
-                        IconSource="{Binding Icon}" />
+                        IconSource="{Binding IconSource}"
+                        Content="{Binding Title}">
+                    </ui:NavigationViewItem>
                 </DataTemplate>
             </ui:NavigationView.MenuItemTemplate>
 
             <ui:NavigationView.PaneFooter>
                 <StackPanel>
+                    <ui:NavigationViewItem Name="FooterUpdateItem"
+                                           Content="Update Available"
+                                           Tapped="FooterUpdateItem_OnTapped">
+                        <ui:NavigationViewItem.IconSource>
+                            <ui:SymbolIconSource Symbol="Download" Foreground="LimeGreen"/>
+                        </ui:NavigationViewItem.IconSource> 
+                    </ui:NavigationViewItem>
+                    
                     <ui:NavigationViewItem Name="FooterDownloadItem"
-                                           IconSource="Download"
                                            Content="Downloads"
+                                           IconSource="{Binding IconSource}"
                                            DataContext="{Binding ProgressManagerViewModel}"
+                                           IsVisible="{Binding !!ProgressItems.Count}"
                                            Tapped="FooterDownloadItem_OnTapped">
                         <ui:NavigationViewItem.ContextFlyout>
                             <controls:BetterFlyout Placement="Right"
@@ -86,7 +97,8 @@
                                                    Content="{Binding }" />
                         </ui:NavigationViewItem.ContextFlyout>
                         <ui:NavigationViewItem.InfoBadge>
-                            <ui:InfoBadge Value="{Binding ProgressItems.Count}"/>
+                            <ui:InfoBadge Value="{Binding ProgressItems.Count}"
+                                          IsVisible="{Binding !!ProgressItems.Count}"/>
                         </ui:NavigationViewItem.InfoBadge>
                     </ui:NavigationViewItem>
                 </StackPanel>

@@ -102,4 +102,9 @@ public partial class MainWindow : AppWindowBase
         var flyout = item!.ContextFlyout;
         flyout!.ShowAt(item);
     }
+
+    private void FooterUpdateItem_OnTapped(object? sender, TappedEventArgs e)
+    {
+        // show update window thing
+    }
 }

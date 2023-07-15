@@ -16,6 +16,8 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Services;
+using Symbol = FluentIcons.Common.Symbol;
+using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -26,7 +28,7 @@ public partial class SettingsViewModel : PageViewModelBase
     private readonly ISettingsManager settingsManager;
     
     public override string Title => "Settings";
-    public override Symbol Icon => Symbol.Setting;
+    public override IconSource IconSource => new SymbolIconSource {Symbol = Symbol.Settings, IsFilled = true};
     
     // Theme panel
     [ObservableProperty] private string? selectedTheme;

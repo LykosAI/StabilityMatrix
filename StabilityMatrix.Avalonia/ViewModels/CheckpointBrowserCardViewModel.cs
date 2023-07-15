@@ -41,6 +41,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     
     [ObservableProperty] private Uri? cardImage;
     [ObservableProperty] private bool isImporting;
+    [ObservableProperty] private bool isInstalled;
 
     public CheckpointBrowserCardViewModel(
         CivitModel civitModel,

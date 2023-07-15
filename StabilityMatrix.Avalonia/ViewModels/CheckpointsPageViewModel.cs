@@ -15,6 +15,8 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Services;
+using Symbol = FluentIcons.Common.Symbol;
+using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -28,7 +30,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     private readonly IDownloadService downloadService;
     
     public override string Title => "Checkpoints";
-    public override Symbol Icon => Symbol.FolderLink;
+    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Notebook, IsFilled = true };
     
     // Toggle button for auto hashing new drag-and-dropped files for connected upgrade
     [ObservableProperty] private bool isImportAsConnected;

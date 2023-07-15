@@ -1,4 +1,5 @@
 ﻿using FluentAvalonia.UI.Controls;
+using Symbol = FluentIcons.Common.Symbol;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -18,5 +19,5 @@ public abstract class PageViewModelBase : ViewModelBase
     public virtual bool CanNavigatePrevious { get; protected set; }
     
     public abstract string Title { get; }
-    public abstract Symbol Icon { get; }
+    public abstract IconSource IconSource { get; }
 }

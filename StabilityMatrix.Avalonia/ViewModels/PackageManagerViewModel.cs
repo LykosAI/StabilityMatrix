@@ -22,6 +22,8 @@ using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
+using Symbol = FluentIcons.Common.Symbol;
+using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -105,10 +107,12 @@ public partial class PackageManagerViewModel : PageViewModelBase
     public override bool CanNavigateNext { get; protected set; } = true;
     public override bool CanNavigatePrevious { get; protected set; }
     public override string Title => "Packages";
-    public override Symbol Icon => Symbol.XboxConsoleFilled;
+    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Box, IsFilled = true};
 
-    public override void OnLoaded()
+    public override async Task OnLoadedAsync()
     {
+        await CheckUpdates();
+        
         var installedPackages = settingsManager.Settings.InstalledPackages;
         if (installedPackages.Count == 0)
         {
@@ -123,12 +127,6 @@ public partial class PackageManagerViewModel : PageViewModelBase
         
         SelectedPackage = installedPackages.FirstOrDefault(x => 
             x.Id == settingsManager.Settings.ActiveInstalledPackage) ?? Packages[0];
-    }
-
-    public override async Task OnLoadedAsync()
-    {
-        OnLoaded();
-        await CheckUpdates();
     }
 
     private async Task CheckUpdates()

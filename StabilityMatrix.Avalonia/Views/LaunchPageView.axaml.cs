@@ -36,7 +36,7 @@ public partial class LaunchPageView : UserControlBase
         Dispatcher.UIThread.Invoke(() =>
         {
             var editor = this.FindControl<TextEditor>("Console");
-            if (editor == null) return;
+            if (editor?.Document == null) return;
             var line = Math.Max(editor.Document.LineCount - LineOffset, 1);
             editor.ScrollToLine(line);
         });

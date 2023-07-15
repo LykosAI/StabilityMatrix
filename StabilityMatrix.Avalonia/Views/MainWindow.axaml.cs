@@ -1,12 +1,11 @@
 using System;
-using System.Runtime.Versioning;
+using System.Diagnostics.CodeAnalysis;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
-using Avalonia.Platform;
 using Avalonia.Styling;
 using FluentAvalonia.Styling;
 using FluentAvalonia.UI.Controls;
@@ -14,10 +13,11 @@ using FluentAvalonia.UI.Media;
 using FluentAvalonia.UI.Windowing;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
-using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.Views;
 
+[SuppressMessage("ReSharper", "UnusedParameter.Local")]
 public partial class MainWindow : AppWindowBase
 {
     public INotificationService? NotificationService { get; set; }
@@ -106,5 +106,15 @@ public partial class MainWindow : AppWindowBase
     private void FooterUpdateItem_OnTapped(object? sender, TappedEventArgs e)
     {
         // show update window thing
+    }
+
+    private void FooterDiscordItem_OnTapped(object? sender, TappedEventArgs e)
+    {
+        ProcessRunner.OpenUrl(Assets.DiscordServerUrl);
+    }
+
+    private void PatreonPatreonItem_OnTapped(object? sender, TappedEventArgs e)
+    {
+        ProcessRunner.OpenUrl(Assets.PatreonUrl);
     }
 }

@@ -36,6 +36,7 @@
         <PackageReference Include="Polly" Version="7.2.4" />
         <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
         <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
+        <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" Version="6.6.0" />
         <PackageReference Include="Sentry" Version="3.33.1" />
         <PackageReference Include="Sentry.NLog" Version="3.33.1" />
         <PackageReference Include="TextMateSharp.Grammars" Version="1.0.55" />

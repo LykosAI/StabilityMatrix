@@ -6,8 +6,9 @@
                         xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                         xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                        xmlns:process="clr-namespace:StabilityMatrix.Core.Processes;assembly=StabilityMatrix.Core"
                         xmlns:fluentAvalonia="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
-                        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="550"
                         d:DataContext="{x:Static mocks:DesignData.MainWindowViewModel}"
                         x:DataType="vm:MainWindowViewModel"
                         x:CompileBindings="True"
@@ -69,13 +70,13 @@
                     <ui:NavigationViewItem
                         Margin="0,0,0,0"
                         IconSource="{Binding IconSource}"
-                        Content="{Binding Title}">
-                    </ui:NavigationViewItem>
+                        Content="{Binding Title}"/>
                 </DataTemplate>
             </ui:NavigationView.MenuItemTemplate>
 
             <ui:NavigationView.PaneFooter>
                 <StackPanel>
+                    <!-- Update button -->
                     <ui:NavigationViewItem Name="FooterUpdateItem"
                                            Content="Update Available"
                                            Tapped="FooterUpdateItem_OnTapped">
@@ -84,6 +85,25 @@
                         </ui:NavigationViewItem.IconSource> 
                     </ui:NavigationViewItem>
                     
+                    <!-- Patreon -->
+                    <ui:NavigationViewItem Name="PatreonPatreonItem"
+                                           Content="Become a Patron"
+                                           Tapped="PatreonPatreonItem_OnTapped">
+                        <ui:NavigationViewItem.IconSource>
+                            <controls:FASymbolIconSource Symbol="fa-brands fa-patreon"/>
+                        </ui:NavigationViewItem.IconSource> 
+                    </ui:NavigationViewItem>
+                    
+                    <!-- Discord -->
+                    <ui:NavigationViewItem Name="FooterDiscordItem"
+                                           Content="Discord Server"
+                                           Tapped="FooterDiscordItem_OnTapped">
+                        <ui:NavigationViewItem.IconSource>
+                            <controls:FASymbolIconSource Symbol="fa-brands fa-discord"/>
+                        </ui:NavigationViewItem.IconSource> 
+                    </ui:NavigationViewItem>
+                    
+                    <!-- Download flyout -->
                     <ui:NavigationViewItem Name="FooterDownloadItem"
                                            Content="Downloads"
                                            IconSource="{Binding IconSource}"

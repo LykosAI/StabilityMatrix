@@ -35,14 +35,15 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private List<object> footerPages = new();
-    
-    public ProgressManagerViewModel ProgressManagerViewModel => 
-        dialogFactory.Get<ProgressManagerViewModel>();
+
+    public ProgressManagerViewModel ProgressManagerViewModel { get; init; }
 
     public MainWindowViewModel(ISettingsManager settingsManager, ServiceManager<ViewModelBase> dialogFactory)
     {
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
+        
+        ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
     }
     
     public override async Task OnLoadedAsync()

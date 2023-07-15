@@ -10,8 +10,6 @@
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\**" />
-        <Folder Include="Behaviors\" />
-        <Folder Include="ViewModels\Ephemeral\" />
     </ItemGroup>
 
 

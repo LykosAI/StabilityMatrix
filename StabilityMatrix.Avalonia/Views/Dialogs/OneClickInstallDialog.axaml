@@ -26,6 +26,7 @@
                        TextWrapping="Wrap" TextAlignment="Center"
                        VerticalAlignment="Top" HorizontalAlignment="Center"
                        FontSize="16" FontWeight="Light" Margin="8"/>
+            <Separator Margin="16, 4" Background="#AAAAAA"/>
         </StackPanel>
         
         <StackPanel Grid.Row="1" Grid.Column="0"

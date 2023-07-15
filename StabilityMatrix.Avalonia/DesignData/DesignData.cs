@@ -197,16 +197,10 @@ public static class DesignData
                     dialogFactory, notificationService)
             };
         
-        ProgressManagerViewModel.ProgressItems = new ObservableDictionary<Guid, ProgressItem>
+        ProgressManagerViewModel.ProgressItems = new ObservableCollection<ProgressItemViewModel>
         {
-            {
-                Guid.NewGuid(),
-                new ProgressItem(new Guid(), "Test File.exe", new ProgressReport(0.5f, "Downloading..."))
-            },
-            {
-                Guid.NewGuid(),
-                new ProgressItem(new Guid(), "Test File 2.uwu", new ProgressReport(0.25f, "Extracting..."))
-            }
+            new(new ProgressItem(Guid.NewGuid(), "Test File.exe", new ProgressReport(0.5f, "Downloading..."))),
+            new(new ProgressItem(Guid.NewGuid(), "Test File 2.uwu", new ProgressReport(0.25f, "Extracting...")))
         };
     }
     

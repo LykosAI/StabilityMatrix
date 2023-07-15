@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using Python.Runtime;
@@ -17,11 +20,11 @@ public partial class ProgressManagerViewModel : PageViewModelBase
     public override Symbol Icon => Symbol.CloudDownload;
 
     [ObservableProperty]
-    private ObservableDictionary<Guid, ProgressItem> progressItems;
+    private ObservableCollection<ProgressItemViewModel> progressItems;
     
     public ProgressManagerViewModel()
     {
-        ProgressItems = new ObservableDictionary<Guid, ProgressItem>();
+        ProgressItems = new ObservableCollection<ProgressItemViewModel>();
     }
 
     public void StartEventListener()
@@ -29,8 +32,21 @@ public partial class ProgressManagerViewModel : PageViewModelBase
         EventManager.Instance.ProgressChanged += OnProgressChanged;
     }
 
+    public void ClearDownloads()
+    {
+        if (!ProgressItems.Any(p => Math.Abs(p.Progress.Percentage - 100) < 0.01f))
+            return;
+        
+        var itemsInProgress = ProgressItems
+            .Where(p => p.Progress.Percentage < 100).ToList();
+        ProgressItems = new ObservableCollection<ProgressItemViewModel>(itemsInProgress);
+    }
+
     private void OnProgressChanged(object? sender, ProgressItem e)
     {
-        ProgressItems[e.ProgressId] = e;
+        if (ProgressItems.Any(x => x.Id == e.ProgressId))
+            return;
+
+        ProgressItems.Add(new ProgressItemViewModel(e));
     }
 }

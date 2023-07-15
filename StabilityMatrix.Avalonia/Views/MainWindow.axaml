@@ -1,21 +1,21 @@
 <controls:AppWindowBase xmlns="https://github.com/avaloniaui"
-                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                     xmlns:vm="using:StabilityMatrix.Avalonia.ViewModels"
-                     xmlns:ui="using:FluentAvalonia.UI.Controls"
-                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                     mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-                     d:DataContext="{x:Static mocks:DesignData.MainWindowViewModel}"
-                     x:DataType="vm:MainWindowViewModel"
-                     x:CompileBindings="True"
-                     Icon="/Assets/Icon.ico"
-                     Width="1100"
-                     Height="750"
-                     Title="Stability Matrix Avalonia"
-                     x:Class="StabilityMatrix.Avalonia.Views.MainWindow">
-    
+                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                        xmlns:vm="using:StabilityMatrix.Avalonia.ViewModels"
+                        xmlns:ui="using:FluentAvalonia.UI.Controls"
+                        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                        xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                        d:DataContext="{x:Static mocks:DesignData.MainWindowViewModel}"
+                        x:DataType="vm:MainWindowViewModel"
+                        x:CompileBindings="True"
+                        Icon="/Assets/Icon.ico"
+                        Width="1100"
+                        Height="750"
+                        Title="Stability Matrix Avalonia"
+                        x:Class="StabilityMatrix.Avalonia.Views.MainWindow">
+
 
     <Grid RowDefinitions="Auto,Auto,*">
         <Grid Name="TitleBarHost"
@@ -62,29 +62,36 @@
             MenuItemsSource="{Binding Pages, Mode=OneWay}"
             FooterMenuItemsSource="{Binding FooterPages, Mode=OneWay}"
             SelectedItem="{Binding SelectedCategory}">
-            
+
             <ui:NavigationView.MenuItemTemplate>
                 <DataTemplate DataType="{x:Type vm:PageViewModelBase}">
                     <ui:NavigationViewItem
                         Margin="0,0,0,0"
                         Content="{Binding Title}"
-                        IconSource="{Binding Icon}"/>
+                        IconSource="{Binding Icon}" />
                 </DataTemplate>
             </ui:NavigationView.MenuItemTemplate>
-            
+
             <ui:NavigationView.PaneFooter>
                 <StackPanel>
-                    <ui:NavigationViewItem Name="FooterDownloadItem" 
-                                           IconSource="Download" 
+                    <ui:NavigationViewItem Name="FooterDownloadItem"
+                                           IconSource="Download"
+                                           Content="Downloads"
+                                           DataContext="{Binding ProgressManagerViewModel}"
                                            Tapped="FooterDownloadItem_OnTapped">
                         <ui:NavigationViewItem.ContextFlyout>
-                            <Flyout Placement="Right"
-                                    Content="{Binding ProgressManagerViewModel}"/>
+                            <controls:BetterFlyout Placement="Right"
+                                                   HorizontalScrollBarVisibility="Hidden"
+                                                   VerticalScrollBarVisibility="Auto"
+                                                   Content="{Binding }" />
                         </ui:NavigationViewItem.ContextFlyout>
+                        <ui:NavigationViewItem.InfoBadge>
+                            <ui:InfoBadge Value="{Binding ProgressItems.Count}"/>
+                        </ui:NavigationViewItem.InfoBadge>
                     </ui:NavigationViewItem>
                 </StackPanel>
             </ui:NavigationView.PaneFooter>
-            
+
         </ui:NavigationView>
     </Grid>
 </controls:AppWindowBase>

@@ -22,7 +22,7 @@ public abstract class BaseGitPackage : BasePackage
     protected readonly ISettingsManager SettingsManager;
     protected readonly IDownloadService DownloadService;
     protected readonly IPrerequisiteHelper PrerequisiteHelper;
-    protected PyVenvRunner? VenvRunner;
+    public PyVenvRunner? VenvRunner;
     
     /// <summary>
     /// URL of the hosted web page on launch
@@ -215,7 +215,29 @@ public abstract class BaseGitPackage : BasePackage
             return latestCommit.Sha;
         }
     }
-
+    
+    // Send input to the running process.
+    public virtual void SendInput(string input)
+    {
+        var process = VenvRunner?.Process;
+        if (process == null)
+        {
+            Logger.Warn("No process running for {Name}", Name);
+            return;
+        }
+        process.StandardInput.WriteLine(input);
+    }
+    
+    public virtual async Task SendInputAsync(string input)
+    {
+        var process = VenvRunner?.Process;
+        if (process == null)
+        {
+            Logger.Warn("No process running for {Name}", Name);
+            return;
+        }
+        await process.StandardInput.WriteLineAsync(input);
+    }
 
     public override Task Shutdown()
     {

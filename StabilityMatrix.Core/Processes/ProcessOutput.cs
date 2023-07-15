@@ -3,14 +3,14 @@
 public readonly record struct ProcessOutput
 {
     /// <summary>
-    /// Raw output
-    /// </summary>
-    public string RawText { get; init; }
-    
-    /// <summary>
     /// Parsed text with escape sequences and line endings removed
     /// </summary>
-    public string Text { get; init; }
+    public required string Text { get; init; }
+
+    /// <summary>
+    /// Raw output
+    /// </summary>
+    public string? RawText { get; init; }
     
     /// <summary>
     /// True if output from stderr, false for stdout
@@ -26,6 +26,11 @@ public readonly record struct ProcessOutput
     /// Instruction to clear last n lines
     /// </summary>
     public int ClearLines { get; init; }
+    
+    /// <summary>
+    /// Apc message sent from the subprocess
+    /// </summary>
+    public ApcMessage? ApcMessage { get; init; }
 
     public static ProcessOutput FromStdOutLine(string text)
     {
@@ -39,6 +44,18 @@ public readonly record struct ProcessOutput
 
     private static ProcessOutput FromLine(string text, bool isStdErr)
     {
+        // Parse APC message
+        if (ApcParser.TryParse(text, out var message))
+        {
+            // Override and return
+            return new ProcessOutput
+            {
+                RawText = text,
+                Text = text,
+                IsStdErr = isStdErr,
+                ApcMessage = message
+            };
+        }
         // If text contains newlines, split it first
         if (text.Contains(Environment.NewLine))
         {

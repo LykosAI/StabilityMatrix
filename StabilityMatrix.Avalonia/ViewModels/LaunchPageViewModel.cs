@@ -28,6 +28,7 @@ using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using ThreadState = System.Diagnostics.ThreadState;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -65,6 +66,10 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     
     // private bool clearingPackages;
     private string webUiUrl = string.Empty;
+    
+    // Input info-bars
+    [ObservableProperty] private bool showManualInputPrompt;
+    [ObservableProperty] private bool showConfirmInputPrompt;
 
     public LaunchPageViewModel(ILogger<LaunchPageViewModel> logger, ISettingsManager settingsManager, IPackageFactory packageFactory,
         IPyRunner pyRunner, INotificationService notificationService, ServiceManager<ViewModelBase> dialogFactory)
@@ -248,12 +253,27 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     
     private async Task BeginUpdateConsole(CancellationToken ct)
     {
+        // This should be run in the UI thread
+        Dispatcher.UIThread.CheckAccess();
         try
         {
             while (true)
             {
                 ct.ThrowIfCancellationRequested();
                 var output = await consoleUpdateBuffer.ReceiveAsync(ct);
+                // Check for Apc messages
+                if (output.ApcMessage is not null)
+                {
+                    // Handle Apc message, for now just input audit events
+                    var message = output.ApcMessage.Value;
+                    if (message.Type == ApcType.Input)
+                    {
+                        ShowConfirmInputPrompt = true;
+                    }
+                    // Ignore further processing
+                    continue;
+                }
+                
                 using var update = ConsoleDocument.RunUpdate();
                 // Handle remove
                 if (output.ClearLines > 0)
@@ -271,6 +291,54 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         }
         catch (OperationCanceledException)
         {
+        }
+    }
+    
+    // Send user input to running package
+    public async Task SendInput(string input)
+    {
+        if (RunningPackage is BaseGitPackage package)
+        {
+            var venv = package.VenvRunner;
+            var process = venv?.Process;
+            if (process is not null)
+            {
+                await process.StandardInput.WriteLineAsync(input);
+            }
+            else
+            {
+                logger.LogWarning("Attempted to write input but Process is null");
+            }
+        }
+    }
+
+    [RelayCommand]
+    private async Task SendConfirmInput(bool value)
+    {
+        // This must be on the UI thread
+        Dispatcher.UIThread.CheckAccess();
+        // Also send input to our own console
+        if (value)
+        {
+            consoleUpdateBuffer.Post(new ProcessOutput { Text = "y\n" });
+            await SendInput("y\n");
+        }
+        else
+        {
+            consoleUpdateBuffer.Post(new ProcessOutput { Text = "n\n" });
+            await SendInput("n\n");
+        }
+
+        ShowConfirmInputPrompt = false;
+    }
+    
+    // Handle user input requests
+    public async Task HandleApcMessage(ApcMessage message)
+    {
+        // Handle inputs by prompting
+        if (message.Type == ApcType.Input)
+        {
+            ShowConfirmInputPrompt = true;
         }
     }
     
@@ -335,7 +403,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         consoleUpdateBuffer.Post(output);
         EventManager.Instance.OnScrollToBottomRequested();
     }
-    
+
     private void OnOneClickInstallFinished(object? sender, bool e)
     {
         OnLoaded();

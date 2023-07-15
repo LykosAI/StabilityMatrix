@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text;
 
 namespace StabilityMatrix.Core.Processes;
 
@@ -17,6 +18,11 @@ public class AnsiProcess : Process
         StartInfo.RedirectStandardOutput = true;
         StartInfo.RedirectStandardInput = true;
         StartInfo.RedirectStandardError = true;
+        
+        // Need this to parse ANSI escape sequences correctly
+        StartInfo.StandardOutputEncoding = Encoding.UTF8;
+        StartInfo.StandardErrorEncoding = Encoding.UTF8;
+        StartInfo.StandardInputEncoding = Encoding.UTF8;
     }
 
     /// <summary>

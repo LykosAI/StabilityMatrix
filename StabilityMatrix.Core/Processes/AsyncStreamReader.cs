@@ -4,6 +4,7 @@
 
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Text;
 
@@ -11,7 +12,9 @@ namespace StabilityMatrix.Core.Processes;
 
 /// <summary>
 /// Modified from System.Diagnostics.AsyncStreamReader to support progress bars,
-/// preserving '\r' instead of parsing as a line break. 
+/// preserving '\r' instead of parsing as a line break.
+/// This will also parse Apc escaped messages.
+/// <seealso cref="ApcParser"/>
 /// </summary>
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal sealed class AsyncStreamReader : IDisposable
@@ -35,7 +38,6 @@ internal sealed class AsyncStreamReader : IDisposable
 
     // Cache the last position scanned in sb when searching for lines.
     private int _currentLinePos;
-
     // Creates a new AsyncStreamReader for the given stream. The
     // character encoding is set by encoding and the buffer size,
     // in number of 16-bit characters, is set by bufferSize.
@@ -131,6 +133,32 @@ internal sealed class AsyncStreamReader : IDisposable
 
         FlushMessageQueue(rethrowInNewThread: true);
     }
+    
+    // Send remaining buffer
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void SendRemainingBuffer()
+    {
+        lock (_messageQueue)
+        {
+            if (_sb!.Length == 0) return;
+            
+            _messageQueue.Enqueue(_sb.ToString());
+            _sb.Length = 0;
+        }
+    }
+    
+    // Send remaining buffer from index
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void SendRemainingBuffer(int startIndex)
+    {
+        lock (_messageQueue)
+        {
+            if (_sb!.Length == 0) return;
+            
+            _messageQueue.Enqueue(_sb.ToString(startIndex, _sb.Length - startIndex));
+            _sb.Length = 0;
+        }
+    }
 
     // Read lines stored in StringBuilder and the buffer we just read into.
     // A line is defined as a sequence of characters followed by
@@ -148,12 +176,7 @@ internal sealed class AsyncStreamReader : IDisposable
         // For progress bars
         if (len > 0 && _sb[0] == '\r' && (len == 1 || _sb[1] != '\n'))
         {
-            lock (_messageQueue)
-            {
-                _messageQueue.Enqueue(_sb.ToString());
-                _sb.Length = 0;
-            }
-
+            SendRemainingBuffer();
             return;
         }
 
@@ -209,6 +232,36 @@ internal sealed class AsyncStreamReader : IDisposable
                     }
                     
                     // otherwise we ignore \r and treat it as normal char
+                    break;
+                }
+                // Additional handling for Apc escape messages
+                case ApcParser.ApcEscape:
+                {
+                    // Unconditionally consume until StEscape
+                    // Look for index of StEscape
+                    var searchIndex = currentIndex;
+                    while (searchIndex < len && _sb[searchIndex] != ApcParser.StEscape)
+                    {
+                        searchIndex++;
+                    }
+                    
+                    // If we found StEscape, we have a complete APC message
+                    if (searchIndex < len)
+                    {
+                        // Include the StEscape as part of line.
+                        var line = _sb.ToString(lineStart, searchIndex - lineStart + 1);
+                        lock (_messageQueue)
+                        {
+                            _messageQueue.Enqueue(line);
+                        }
+                        // Advance currentIndex and lineStart to StEscape
+                        // lineStart = searchIndex + 1;
+                        currentIndex = searchIndex;
+                        // Also send the rest of the buffer immediately
+                        SendRemainingBuffer(currentIndex + 1);
+                        return;
+                    }
+                    // Otherwise continue without any other changes
                     break;
                 }
             }

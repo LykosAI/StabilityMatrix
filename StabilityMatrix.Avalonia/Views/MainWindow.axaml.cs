@@ -2,12 +2,14 @@ using System;
 using System.Runtime.Versioning;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using Avalonia.Platform;
 using Avalonia.Styling;
 using FluentAvalonia.Styling;
+using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media;
 using FluentAvalonia.UI.Windowing;
 using StabilityMatrix.Avalonia.Controls;
@@ -92,5 +94,12 @@ public partial class MainWindow : AppWindowBase
 
             Background = new ImmutableSolidColorBrush(color, 0.9);
         }
-    } 
+    }
+
+    private void FooterDownloadItem_OnTapped(object? sender, TappedEventArgs e)
+    {
+        var item = sender as NavigationViewItem;
+        var flyout = item!.ContextFlyout;
+        flyout!.ShowAt(item);
+    }
 }

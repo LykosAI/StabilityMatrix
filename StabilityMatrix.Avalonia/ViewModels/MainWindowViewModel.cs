@@ -35,6 +35,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     private List<object> footerPages = new();
+    
+    public ProgressManagerViewModel ProgressManagerViewModel => 
+        dialogFactory.Get<ProgressManagerViewModel>();
 
     public MainWindowViewModel(ISettingsManager settingsManager, ServiceManager<ViewModelBase> dialogFactory)
     {

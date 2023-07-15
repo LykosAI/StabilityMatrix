@@ -71,6 +71,20 @@
                         IconSource="{Binding Icon}"/>
                 </DataTemplate>
             </ui:NavigationView.MenuItemTemplate>
+            
+            <ui:NavigationView.PaneFooter>
+                <StackPanel>
+                    <ui:NavigationViewItem Name="FooterDownloadItem" 
+                                           IconSource="Download" 
+                                           Tapped="FooterDownloadItem_OnTapped">
+                        <ui:NavigationViewItem.ContextFlyout>
+                            <Flyout Placement="Right"
+                                    Content="{Binding ProgressManagerViewModel}"/>
+                        </ui:NavigationViewItem.ContextFlyout>
+                    </ui:NavigationViewItem>
+                </StackPanel>
+            </ui:NavigationView.PaneFooter>
+            
         </ui:NavigationView>
     </Grid>
 </controls:AppWindowBase>

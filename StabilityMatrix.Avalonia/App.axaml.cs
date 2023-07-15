@@ -130,6 +130,9 @@ public partial class App : Application
         services.AddTransient<CheckpointFolder>();
         services.AddTransient<CheckpointFile>();
         
+        // Global progress
+        services.AddSingleton<ProgressManagerViewModel>();
+        
         // Controls
         services.AddTransient<RefreshBadgeViewModel>();
         
@@ -143,7 +146,8 @@ public partial class App : Application
                 .Register(provider.GetRequiredService<LaunchOptionsViewModel>)
                 .Register(provider.GetRequiredService<CheckpointFolder>)
                 .Register(provider.GetRequiredService<CheckpointFile>)
-                .Register(provider.GetRequiredService<RefreshBadgeViewModel>));
+                .Register(provider.GetRequiredService<RefreshBadgeViewModel>)
+                .Register(provider.GetRequiredService<ProgressManagerViewModel>));
     }
 
     internal static void ConfigureViews(IServiceCollection services)
@@ -208,8 +212,7 @@ public partial class App : Application
                 },
                 FooterPages = new List<object>
                 {
-                    provider.GetRequiredService<SettingsViewModel>(),
-                    provider.GetRequiredService<ProgressManagerViewModel>()
+                    provider.GetRequiredService<SettingsViewModel>()
                 }
             });
         

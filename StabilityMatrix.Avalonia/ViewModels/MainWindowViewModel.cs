@@ -34,7 +34,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private List<PageViewModelBase> pages = new();
 
     [ObservableProperty]
-    private List<object> footerPages = new();
+    private List<PageViewModelBase> footerPages = new();
 
     public ProgressManagerViewModel ProgressManagerViewModel { get; init; }
 

@@ -13,7 +13,7 @@
                         x:CompileBindings="True"
                         Icon="/Assets/Icon.ico"
                         Width="1100"
-                        Height="750"
+                        Height="850"
                         Title="Stability Matrix Avalonia"
                         x:Class="StabilityMatrix.Avalonia.Views.MainWindow">
 

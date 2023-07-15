@@ -89,9 +89,10 @@ public static class DesignData
             {
                 LaunchPageViewModel,
                 PackageManagerViewModel,
+                CheckpointsPageViewModel,
                 CheckpointBrowserViewModel
             },
-            FooterPages = new List<object>
+            FooterPages = new List<PageViewModelBase>
             {
                 SettingsViewModel
             }

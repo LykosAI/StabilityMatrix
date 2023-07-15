@@ -29,18 +29,44 @@ public static class ProcessRunner
     {
         OpenUrl(url.AbsoluteUri);
     }
+    
+    /// <summary>
+    /// Starts and tracks a process.
+    /// </summary>
+    private static Process StartTrackedProcess(Process process)
+    {
+        process.Start();
+        // Currently only supported on Windows
+        if (Compat.IsWindows)
+        {
+            // Supress errors here since the process may have already exited
+            try
+            {
+                ProcessTracker.AddProcess(process);
+            }
+            catch (InvalidOperationException)
+            {
+            }
+        }
+        return process;
+    }
 
     public static async Task<string> GetProcessOutputAsync(string fileName, string arguments)
     {
         Logger.Debug($"Starting process '{fileName}' with arguments '{arguments}'");
+        
+        var info = new ProcessStartInfo
+        {
+            FileName = fileName,
+            Arguments = arguments,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            CreateNoWindow = true
+        };
+        
         using var process = new Process();
-        process.StartInfo.FileName = fileName;
-        process.StartInfo.Arguments = arguments;
-        process.StartInfo.UseShellExecute = false;
-        process.StartInfo.RedirectStandardOutput = true;
-        process.StartInfo.CreateNoWindow = true;
-        process.Start();
-        ProcessTracker.AddProcess(process);
+        process.StartInfo = info;
+        StartTrackedProcess(process);
 
         var output = await process.StandardOutput.ReadToEndAsync();
         await process.WaitForExitAsync();
@@ -56,35 +82,31 @@ public static class ProcessRunner
         Dictionary<string, string>? environmentVariables = null)
     {
         Logger.Debug($"Starting process '{fileName}' with arguments '{arguments}'");
-        var processStartInfo = new ProcessStartInfo();
-        processStartInfo.FileName = fileName;
-        processStartInfo.Arguments = arguments;
-        processStartInfo.UseShellExecute = false;
-        processStartInfo.RedirectStandardOutput = true;
-        processStartInfo.RedirectStandardError = true;
-        processStartInfo.CreateNoWindow = true;
+        var info = new ProcessStartInfo
+        {
+            FileName = fileName,
+            Arguments = arguments,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
 
         if (environmentVariables != null)
         {
             foreach (var (key, value) in environmentVariables)
             {
-                processStartInfo.EnvironmentVariables[key] = value;
+                info.EnvironmentVariables[key] = value;
             }
         }
 
         if (workingDirectory != null)
         {
-            processStartInfo.WorkingDirectory = workingDirectory;
+            info.WorkingDirectory = workingDirectory;
         }
 
-        var process = new AnsiProcess(processStartInfo);
-
-        process.Start();
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            ProcessTracker.AddProcess(process);
-        }
+        var process = new AnsiProcess(info);
+        StartTrackedProcess(process);
 
         if (outputDataReceived != null)
         {

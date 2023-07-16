@@ -51,49 +51,24 @@ public partial class PackageManagerViewModel : PageViewModelBase
         this.packageFactory = packageFactory;
         this.notificationService = notificationService;
         this.dialogFactory = dialogFactory;
-
-        ProgressText = string.Empty;
-        InstallButtonText = "Launch";
-        InstallButtonEnabled = true;
-        ProgressValue = 0;
-        IsIndeterminate = false;
+        
         Packages =
             new ObservableCollection<InstalledPackage>(settingsManager.Settings.InstalledPackages);
 
-        if (Packages.Any())
-        {
-            SelectedPackage = Packages[0];
-            InstallButtonVisibility = true;
-        }
-        else
-        {
-            SelectedPackage = new InstalledPackage
-            {
-                DisplayName = "Click \"Add Package\" to install a package"
-            };
-        }
+        SelectedPackage = Packages.FirstOrDefault();
     }
 
     [ObservableProperty]
-    private InstalledPackage selectedPackage;
+    private InstalledPackage? selectedPackage;
     
     [ObservableProperty, NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
     private int progressValue;
     
     [ObservableProperty]
-    private string progressText;
+    private string progressText = string.Empty;
     
     [ObservableProperty]
     private bool isIndeterminate;
-
-    [ObservableProperty]
-    private string installButtonText;
-
-    [ObservableProperty] 
-    private bool installButtonEnabled;
-
-    [ObservableProperty] 
-    private bool installButtonVisibility;
 
     [ObservableProperty] 
     private bool isUninstalling;
@@ -111,27 +86,20 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
     public override async Task OnLoadedAsync()
     {
-        await CheckUpdates();
-        
-        var installedPackages = settingsManager.Settings.InstalledPackages;
-        if (installedPackages.Count == 0)
+        if (!Design.IsDesignMode)
         {
-            SelectedPackage = new InstalledPackage
-            {
-                DisplayName = "Click \"Add Package\" to install a package"
-            };
-            InstallButtonVisibility = false;
-            
-            return;
+            await CheckUpdates();
         }
-        
-        SelectedPackage = installedPackages.FirstOrDefault(x => 
-            x.Id == settingsManager.Settings.ActiveInstalledPackage) ?? Packages[0];
+
+        var installedPackages = settingsManager.Settings.InstalledPackages;
+
+        SelectedPackage = installedPackages.FirstOrDefault(x =>
+            x.Id == settingsManager.Settings.ActiveInstalledPackage);
+        SelectedPackage ??= installedPackages.FirstOrDefault();
     }
 
     private async Task CheckUpdates()
     {
-        if (Design.IsDesignMode) return;
         var installedPackages = settingsManager.Settings.InstalledPackages;
         Packages.Clear();
         foreach (var packageToUpdate in installedPackages)
@@ -144,7 +112,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
                                  DateTimeOffset.Now;
             if (canCheckUpdate)
             {
-                var hasUpdate = await basePackage.CheckForUpdates(packageToUpdate.DisplayName);
+                var hasUpdate = await basePackage.CheckForUpdates(packageToUpdate);
                 packageToUpdate.UpdateAvailable = hasUpdate;
                 packageToUpdate.LastUpdateCheck = DateTimeOffset.Now;
                 settingsManager.SetLastUpdateCheck(packageToUpdate);
@@ -153,29 +121,34 @@ public partial class PackageManagerViewModel : PageViewModelBase
             Packages.Add(packageToUpdate);
         }
     }
-    
-    partial void OnSelectedPackageChanged(InstalledPackage? value)
-    {
-        if (value == null) return;
-        
-        UpdateAvailable = value.UpdateAvailable;
-        InstallButtonText = value.UpdateAvailable ? "Update" : "Launch";
-        InstallButtonVisibility = true;
-    }
 
     [RelayCommand]
-    private async Task Install()
+    private void Launch()
     {
-        if (InstallButtonText == "Launch")
-        {
-            EventManager.Instance.RequestPageChange(typeof(LaunchPageViewModel));
-            EventManager.Instance.OnPackageLaunchRequested(SelectedPackage.Id);
-        }
+        if (SelectedPackage == null) return;
+        EventManager.Instance.RequestPageChange(typeof(LaunchPageViewModel));
+        EventManager.Instance.OnPackageLaunchRequested(SelectedPackage.Id);
+    }
+    
+    [RelayCommand]
+    private async Task Update()
+    {
+        await UpdateSelectedPackage();
     }
 
     [RelayCommand]
     private async Task Uninstall()
     {
+        // In design mode, just remove the package from the list
+        if (Design.IsDesignMode)
+        {
+            if (SelectedPackage != null)
+            {
+                Packages.Remove(SelectedPackage);
+            }
+            return;
+        }
+        
         if (SelectedPackage?.LibraryPath == null)
         {
             logger.LogError("No package selected to uninstall");
@@ -195,7 +168,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
         if (result == ContentDialogResult.Primary)
         {
             IsUninstalling = true;
-            InstallButtonEnabled = false;
+            // InstallButtonEnabled = false;
             var deleteTask = DeleteDirectoryAsync(Path.Combine(settingsManager.LibraryDir,
                 SelectedPackage.LibraryPath));
             var taskResult = await notificationService.TryAsync(deleteTask,
@@ -213,7 +186,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
             }
             await OnLoadedAsync();
             IsUninstalling = false;
-            InstallButtonEnabled = true;
+            // InstallButtonEnabled = true;
         }
     }
     
@@ -297,10 +270,11 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
     private async Task UpdateSelectedPackage()
     {
-        var package = packageFactory.FindPackageByName(SelectedPackage?.PackageName ?? string.Empty);
+        var package = packageFactory.FindPackageByName(SelectedPackage.PackageName);
         if (package == null)
         {
-            logger.LogError($"Could not find package {SelectedPackage.PackageName}");
+            logger.LogError("Could not find package {SelectedPackagePackageName}", 
+                SelectedPackage.PackageName);
             return;
         }
 
@@ -309,17 +283,11 @@ public partial class PackageManagerViewModel : PageViewModelBase
         var progress = new Progress<ProgressReport>(progress =>
         {
             var percent = Convert.ToInt32(progress.Percentage);
-            if (progress.IsIndeterminate || progress.Progress == -1)
-            {
-                IsIndeterminate = true;
-            }
-            else
-            {
-                IsIndeterminate = false;
-                ProgressValue = percent;
-            }
-
+            
+            ProgressValue = percent;
+            IsIndeterminate = progress.IsIndeterminate;
             ProgressText = $"Updating {SelectedPackage.DisplayName} to latest version... {percent:N0}%";
+            
             EventManager.Instance.OnGlobalProgressChanged(percent);
         });
         var updateResult = await package.Update(SelectedPackage, progress);

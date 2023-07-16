@@ -83,33 +83,43 @@
                 <TextBlock
                     FontSize="24"
                     FontWeight="Bold"
-                    Text="{Binding SelectedPackage.DisplayName, FallbackValue=Stable Diffusion Web UI}" />
+                    Text="{Binding SelectedPackage.DisplayName,
+                    FallbackValue='Click &quot;Add Package&quot; to install a package'}" />
                 <TextBlock FontSize="12" Margin="0,5,0,5">
-                    <Run Text="{Binding SelectedPackage.PackageName, FallbackValue=stable-diffusion-webui}" />
-                    <Run Text="{Binding SelectedPackage.DisplayVersion, FallbackValue=v1.3.37}" />
+                    <Run Text="{Binding SelectedPackage.PackageName, FallbackValue=''}" />
+                    <Run Text="{Binding SelectedPackage.DisplayVersion, FallbackValue=''}" />
                 </TextBlock>
                 <TextBlock
                     FontSize="12"
                     Margin="0,5,0,5"
-                    Text="{Binding SelectedPackage.FullPath, FallbackValue=Packages\\stable-diffusion}" />
-                <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
+                    Text="{Binding SelectedPackage.FullPath, FallbackValue=''}" />
+                <StackPanel Margin="0,16,0,0" Orientation="Horizontal" Spacing="16">
                     <Button
-                        Command="{Binding InstallCommand}"
-                        Content="{Binding InstallButtonText, FallbackValue=Install}"
+                        Command="{Binding LaunchCommand}"
+                        Content="Install"
                         Height="50"
-                        IsEnabled="{Binding InstallButtonEnabled, FallbackValue=True}"
                         VerticalAlignment="Top"
-                        IsVisible="{Binding InstallButtonVisibility, FallbackValue=True}"
+                        IsEnabled="{Binding !SelectedPackage.UpdateAvailable, FallbackValue=False}"
+                        IsVisible="{Binding !SelectedPackage.UpdateAvailable, FallbackValue=False}"
+                        Classes="success"
+                        Width="100" />
+                    <Button
+                        Command="{Binding UpdateCommand}"
+                        Content="Launch"
+                        Height="50"
+                        VerticalAlignment="Top"
+                        IsEnabled="{Binding SelectedPackage.UpdateAvailable, FallbackValue=False}"
+                        IsVisible="{Binding SelectedPackage.UpdateAvailable, FallbackValue=False}"
                         Classes="success"
                         Width="100" />
                     <Button
                         Command="{Binding UninstallCommand}"
                         Content="Uninstall"
                         Height="50"
-                        Margin="16,0,0,0"
                         VerticalAlignment="Top"
                         Classes="danger"
-                        IsVisible="{Binding InstallButtonVisibility, FallbackValue=True}"
+                        IsEnabled="{Binding SelectedPackage, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        IsVisible="{Binding SelectedPackage, Converter={x:Static ObjectConverters.IsNotNull}}"
                         Width="100" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" IsVisible="{Binding IsUninstalling}">

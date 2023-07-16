@@ -38,6 +38,10 @@ internal sealed class AsyncStreamReader : IDisposable
 
     // Cache the last position scanned in sb when searching for lines.
     private int _currentLinePos;
+    
+    // (new) Flag to send next buffer immediately
+    private bool _sendNextBufferImmediately;
+    
     // Creates a new AsyncStreamReader for the given stream. The
     // character encoding is set by encoding and the buffer size,
     // in number of 16-bit characters, is set by bufferSize.
@@ -93,6 +97,10 @@ internal sealed class AsyncStreamReader : IDisposable
                     break;
 
                 var charLen = _decoder.GetChars(_byteBuffer, 0, bytesRead, _charBuffer, 0);
+                
+                Debug.WriteLine($"AsyncStreamReader - Read {charLen} chars, " +
+                                $"'{new string(_charBuffer, 0, charLen)}' ");
+                
                 _sb!.Append(_charBuffer, 0, charLen);
                 MoveLinesFromStringBuilderToMessageQueue();
             }
@@ -171,6 +179,14 @@ internal sealed class AsyncStreamReader : IDisposable
         var currentIndex = _currentLinePos;
         var lineStart = 0;
         var len = _sb!.Length;
+        
+        // If flagged, send next buffer immediately
+        if (_sendNextBufferImmediately)
+        {
+            SendRemainingBuffer();
+            _sendNextBufferImmediately = false;
+            return;
+        }
         
         // If buffer starts with '\r' not followed by '\n', we sent this immediately
         // For progress bars
@@ -254,10 +270,17 @@ internal sealed class AsyncStreamReader : IDisposable
                         {
                             _messageQueue.Enqueue(line);
                         }
+                        Debug.WriteLine($"AsyncStreamReader - Sent Apc: '{line}'");
+                        // Flag to send the next buffer immediately
+                        _sendNextBufferImmediately = true;
                         // Advance currentIndex and lineStart to StEscape
                         // lineStart = searchIndex + 1;
                         currentIndex = searchIndex;
-                        // Also send the rest of the buffer immediately
+                        var remainingStart = currentIndex + 1;
+                        var remainingStr =
+                            _sb.ToString(remainingStart, _sb.Length - remainingStart);
+                        Debug.WriteLine($"AsyncStreamReader - Sending remaining buffer: '{remainingStr}'");
+                        // Send the rest of the buffer immediately
                         SendRemainingBuffer(currentIndex + 1);
                         return;
                     }

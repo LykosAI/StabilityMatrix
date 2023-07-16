@@ -129,7 +129,7 @@
                         <Grid ColumnDefinitions="*,auto">
                             <TextBox Name="ManualInputBox" Margin="0,0,8,0" />
                             <Button Grid.Column="1" Margin="0,0,8,0" Content="Send"
-                                    Command="{Binding SendInput}"
+                                    Command="{Binding SendManualInputCommand}"
                                     CommandParameter="{Binding #ManualInputBox.Text}"/>
                         </Grid>
                     </ui:InfoBar.ActionButton>

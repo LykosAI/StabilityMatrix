@@ -333,14 +333,16 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         ShowConfirmInputPrompt = false;
     }
     
-    // Handle user input requests
-    public async Task HandleApcMessage(ApcMessage message)
+    [RelayCommand]
+    private async Task SendManualInput(string input)
     {
-        // Handle inputs by prompting
-        if (message.Type == ApcType.Input)
-        {
-            ShowConfirmInputPrompt = true;
-        }
+        // This must be on the UI thread
+        Dispatcher.UIThread.CheckAccess();
+        // Add newline
+        input += Environment.NewLine;
+        // Also send input to our own console
+        consoleUpdateBuffer.Post(new ProcessOutput { Text = input });
+        await SendInput(input);
     }
     
     public async Task Stop()

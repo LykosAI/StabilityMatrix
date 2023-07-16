@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using StabilityMatrix.Avalonia.ViewModels;

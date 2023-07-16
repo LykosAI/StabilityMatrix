@@ -6,7 +6,6 @@
                           xmlns:ui="using:FluentAvalonia.UI.Controls"
                           xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                           xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
                           d:DataContext="{x:Static mocks:DesignData.SelectDataDirectoryViewModel}"
                           x:DataType="dialogs:SelectDataDirectoryViewModel"
                           x:CompileBindings="True"

@@ -9,10 +9,10 @@ namespace StabilityMatrix.Avalonia.DesignData;
 
 public class MockLiteDbContext : ILiteDbContext
 {
-    public LiteDatabaseAsync Database { get; }
-    public ILiteCollectionAsync<CivitModel> CivitModels { get; }
-    public ILiteCollectionAsync<CivitModelVersion> CivitModelVersions { get; }
-    public ILiteCollectionAsync<CivitModelQueryCacheEntry> CivitModelQueryCache { get; }
+    public LiteDatabaseAsync Database => throw new NotImplementedException();
+    public ILiteCollectionAsync<CivitModel> CivitModels => throw new NotImplementedException();
+    public ILiteCollectionAsync<CivitModelVersion> CivitModelVersions => throw new NotImplementedException();
+    public ILiteCollectionAsync<CivitModelQueryCacheEntry> CivitModelQueryCache => throw new NotImplementedException();
     public Task<(CivitModel?, CivitModelVersion?)> FindCivitModelFromFileHashAsync(string hashBlake3)
     {
         return Task.FromResult<(CivitModel?, CivitModelVersion?)>((null, null));

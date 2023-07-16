@@ -24,7 +24,7 @@ public class LaunchOptionConverter : IValueConverter
             {
                 return null;
             }
-            return double.TryParse(value?.ToString(), out var doubleValue) ? doubleValue : 0;
+            return double.TryParse(value.ToString(), out var doubleValue) ? doubleValue : 0;
         }
         
         if (targetType == typeof(int?))
@@ -33,7 +33,7 @@ public class LaunchOptionConverter : IValueConverter
             {
                 return null;
             }
-            return int.TryParse(value?.ToString(), out var intValue) ? intValue : 0;
+            return int.TryParse(value.ToString(), out var intValue) ? intValue : 0;
         }
 
         throw new ArgumentException("Unsupported type");

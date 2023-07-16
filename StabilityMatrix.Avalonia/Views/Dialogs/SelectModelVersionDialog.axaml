@@ -6,7 +6,6 @@
              xmlns:api="clr-namespace:StabilityMatrix.Core.Models.Api;assembly=StabilityMatrix.Core"
              xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
              xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-             xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="dialogs:SelectModelVersionViewModel"
              d:DataContext="{x:Static designData:DesignData.SelectModelVersionViewModel}"

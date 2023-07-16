@@ -5,7 +5,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
-using Avalonia.Styling;
 using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.ViewModels;

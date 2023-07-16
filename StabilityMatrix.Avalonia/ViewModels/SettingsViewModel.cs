@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia;
@@ -54,7 +53,7 @@ public partial class SettingsViewModel : PageViewModelBase
         // In case design / tests
         if (Application.Current is null) return;
         // Change theme
-        Application.Current!.RequestedThemeVariant = value switch
+        Application.Current.RequestedThemeVariant = value switch
         {
             "Dark" => ThemeVariant.Dark,
             "Light" => ThemeVariant.Light,

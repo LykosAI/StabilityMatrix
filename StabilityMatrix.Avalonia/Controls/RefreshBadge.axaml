@@ -11,7 +11,7 @@
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                           x:Class="StabilityMatrix.Avalonia.Controls.RefreshBadge">
     <Grid>
-        <TextBlock Text="Test"></TextBlock>
+        <TextBlock Text="Test" />
         <Button
             BorderThickness="0"
             Command="{Binding RefreshCommand}"

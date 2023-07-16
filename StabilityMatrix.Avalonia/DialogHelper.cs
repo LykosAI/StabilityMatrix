@@ -3,12 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Threading;
@@ -75,7 +70,7 @@ public static class DialogHelper
             stackPanel.Children.Add(textBox);
             
             // When IsValid property changes, update invalid count and primary button
-            field.PropertyChanged += (sender, args) =>
+            field.PropertyChanged += (_, args) =>
             {
                 if (args.PropertyName == nameof(TextBoxField.IsValid))
                 {

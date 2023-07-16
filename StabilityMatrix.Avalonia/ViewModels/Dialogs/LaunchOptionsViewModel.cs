@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
+using FuzzySharp;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper.Cache;
@@ -50,7 +51,7 @@ public partial class LaunchOptionsViewModel : ContentDialogViewModelBase
             Options = Array.Empty<LaunchOption>()
         };
             
-        var extracted = FuzzySharp.Process
+        var extracted = Process
             .ExtractTop(searchCard, Cards, c => c.Title.ToLowerInvariant());
         var results = extracted
             .Where(r => r.Score > 40)

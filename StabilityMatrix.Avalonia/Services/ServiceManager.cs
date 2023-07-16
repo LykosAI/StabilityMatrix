@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace StabilityMatrix.Avalonia.Services;
@@ -77,6 +78,7 @@ public class ServiceManager<T>
     /// <summary>
     /// Get a view model instance
     /// </summary>
+    [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
     public TService Get<TService>() where TService : T
     {
         if (instances.TryGetValue(typeof(TService), out var instance))

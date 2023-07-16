@@ -4,8 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
-             xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
-             xmlns:idd="clr-namespace:Avalonia.Xaml.Interactions.DragAndDrop;assembly=Avalonia.Xaml.Interactions.DragAndDrop"
              xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
              xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
              xmlns:system="clr-namespace:System;assembly=System.Runtime"

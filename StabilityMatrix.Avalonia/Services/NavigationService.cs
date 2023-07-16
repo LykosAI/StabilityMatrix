@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
+using FluentAvalonia.UI.Navigation;
 
 namespace StabilityMatrix.Avalonia.Services;
 
@@ -34,7 +35,7 @@ public class NavigationService
     public void NavigateFromContext(object dataContext, NavigationTransitionInfo transitionInfo = null)
     {
         _frame.NavigateFromObject(dataContext,
-            new FluentAvalonia.UI.Navigation.FrameNavigationOptions
+            new FrameNavigationOptions
             {
                 IsNavigationStackEnabled = true,
                 TransitionInfoOverride = transitionInfo ?? new SuppressNavigationTransitionInfo()

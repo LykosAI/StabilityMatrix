@@ -7,10 +7,10 @@
   <Design.PreviewWith>
     <StackPanel>
       <Border Padding="20">
-        <controls:ProgressRing StartAngle="90" EndAngle="270" Value="50" Foreground="Red" BorderThickness="5" Width="100" Height="100"></controls:ProgressRing>
+        <controls:ProgressRing StartAngle="90" EndAngle="270" Value="50" Foreground="Red" BorderThickness="5" Width="100" Height="100" />
       </Border>
       <Border Padding="20">
-        <controls:ProgressRing IsIndeterminate="True" BorderThickness="10" Width="100" Height="100"></controls:ProgressRing>
+        <controls:ProgressRing IsIndeterminate="True" BorderThickness="10" Width="100" Height="100" />
       </Border>
     </StackPanel>
   </Design.PreviewWith>

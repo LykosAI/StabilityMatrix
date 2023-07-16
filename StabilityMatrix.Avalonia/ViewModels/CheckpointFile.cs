@@ -50,7 +50,7 @@ public partial class CheckpointFile : ViewModelBase
 
     [ObservableProperty] private bool isLoading;
     
-    public string FileName => Path.GetFileName((string?) FilePath);
+    public string FileName => Path.GetFileName(FilePath);
 
     public ObservableCollection<string> Badges { get; set; } = new();
 
@@ -147,6 +147,7 @@ public partial class CheckpointFile : ViewModelBase
     [RelayCommand]
     private void OpenOnCivitAi()
     {
+        if (ConnectedModel?.ModelId == null) return;
         ProcessRunner.OpenUrl($"https://civitai.com/models/{ConnectedModel.ModelId}");
     }
     

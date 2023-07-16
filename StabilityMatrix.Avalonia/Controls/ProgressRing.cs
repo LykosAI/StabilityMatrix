@@ -20,10 +20,10 @@ public class ProgressRing : RangeBase
         AvaloniaProperty.Register<ProgressRing, bool>(nameof(PreserveAspect), true);
 
     public static readonly StyledProperty<double> ValueAngleProperty =
-        AvaloniaProperty.Register<ProgressRing, double>(nameof(ValueAngle), 0);
+        AvaloniaProperty.Register<ProgressRing, double>(nameof(ValueAngle));
 
     public static readonly StyledProperty<double> StartAngleProperty =
-        AvaloniaProperty.Register<ProgressRing, double>(nameof(StartAngle), 0);
+        AvaloniaProperty.Register<ProgressRing, double>(nameof(StartAngle));
 
     public static readonly StyledProperty<double> EndAngleProperty =
         AvaloniaProperty.Register<ProgressRing, double>(nameof(EndAngle), 360);
@@ -105,26 +105,26 @@ public class ProgressRing : RangeBase
 
     private static void OnMinimumPropertyChanged(ProgressRing sender, AvaloniaPropertyChangedEventArgs e)
     {
-        sender.Minimum = (double)e.NewValue;
+        sender.Minimum = (double) e.NewValue!;
     }
 
     private static void OnMaximumPropertyChanged(ProgressRing sender, AvaloniaPropertyChangedEventArgs e)
     {
-        sender.Maximum = (double)e.NewValue;
+        sender.Maximum = (double) e.NewValue!;
     }
 
     private static void OnValuePropertyChanged(ProgressRing sender, AvaloniaPropertyChangedEventArgs e)
     {
-        sender.ValueAngle = ((double)e.NewValue - sender.Minimum) * (sender.EndAngle - sender.StartAngle) / (sender.Maximum - sender.Minimum);
+        sender.ValueAngle = ((double) e.NewValue! - sender.Minimum) * (sender.EndAngle - sender.StartAngle) / (sender.Maximum - sender.Minimum);
     }
 
     private static void OnStartAnglePropertyChanged(ProgressRing sender, AvaloniaPropertyChangedEventArgs e)
     {
-        sender.StartAngle = (double)e.NewValue;
+        sender.StartAngle = (double) e.NewValue!;
     }
 
     private static void OnEndAnglePropertyChanged(ProgressRing sender, AvaloniaPropertyChangedEventArgs e)
     {
-        sender.EndAngle = (double)e.NewValue;
+        sender.EndAngle = (double) e.NewValue!;
     }
 }

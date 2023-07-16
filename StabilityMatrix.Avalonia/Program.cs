@@ -1,6 +1,6 @@
-﻿using Avalonia;
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using Avalonia;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
 

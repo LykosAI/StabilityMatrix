@@ -5,7 +5,6 @@
              xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
              xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
              xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-             xmlns:fa="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:packages="clr-namespace:StabilityMatrix.Core.Models.Packages;assembly=StabilityMatrix.Core"
              mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="700"
              x:DataType="dialogs:OneClickInstallViewModel"

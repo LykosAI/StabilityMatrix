@@ -1,5 +1,4 @@
 ﻿using FluentAvalonia.UI.Controls;
-using Symbol = FluentIcons.Common.Symbol;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 

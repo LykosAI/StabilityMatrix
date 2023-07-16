@@ -19,8 +19,9 @@ public class PackageFactory : IPackageFactory
         return basePackages.Values;
     }
 
-    public BasePackage? FindPackageByName(string packageName)
+    public BasePackage? FindPackageByName(string? packageName)
     {
-        return basePackages.GetValueOrDefault(packageName);
+        return packageName == null ? null : 
+            basePackages.GetValueOrDefault(packageName);
     }
 }

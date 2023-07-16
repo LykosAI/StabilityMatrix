@@ -157,12 +157,10 @@ public abstract class BaseGitPackage : BasePackage
         return Task.CompletedTask;
     }
 
-    public override async Task<bool> CheckForUpdates(string installedPackageName)
+    public override async Task<bool> CheckForUpdates(InstalledPackage package)
     {
-        var package =
-            SettingsManager.Settings.InstalledPackages.FirstOrDefault(x => x.DisplayName == installedPackageName);
-        var currentVersion = package?.PackageVersion;
-        if (package == null || string.IsNullOrWhiteSpace(currentVersion))
+        var currentVersion = package.PackageVersion;
+        if (string.IsNullOrWhiteSpace(currentVersion))
         {
             return false;
         }

@@ -12,8 +12,8 @@ using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
-using FluentAvalonia.UI.Data;
 using NLog;
+using Refit;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
@@ -25,7 +25,6 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
-using ApiException = Refit.ApiException;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 

@@ -9,6 +9,7 @@ using Avalonia.Media;
 namespace StabilityMatrix.Avalonia.Controls;
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+[SuppressMessage("ReSharper", "UnusedMember.Local")]
 public class BetterAdvancedImage : AdvancedImage
 {
     #region Reflection Shenanigans to access private parent fields

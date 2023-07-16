@@ -23,7 +23,7 @@ public abstract class BasePackage
     public abstract Task InstallPackage(IProgress<ProgressReport>? progress = null);
     public abstract Task RunPackage(string installedPackagePath, string arguments);
     public abstract Task Shutdown();
-    public abstract Task<bool> CheckForUpdates(string installedPackageName);
+    public abstract Task<bool> CheckForUpdates(InstalledPackage package);
     public abstract Task<string> Update(InstalledPackage installedPackage, IProgress<ProgressReport>? progress = null);
     public abstract Task<IOrderedEnumerable<Release>> GetReleaseTags();
 

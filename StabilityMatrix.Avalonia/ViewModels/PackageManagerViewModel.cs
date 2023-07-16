@@ -270,6 +270,8 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
     private async Task UpdateSelectedPackage()
     {
+        if (SelectedPackage == null) return;
+        
         var package = packageFactory.FindPackageByName(SelectedPackage.PackageName);
         if (package == null)
         {

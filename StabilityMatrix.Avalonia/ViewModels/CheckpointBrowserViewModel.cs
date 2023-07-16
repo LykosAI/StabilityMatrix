@@ -58,7 +58,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     [ObservableProperty] private bool canGoToPreviousPage;
     [ObservableProperty] private bool isIndeterminate;
     [ObservableProperty] private bool noResultsFound;
-    [ObservableProperty] private string noResultsText;
+    [ObservableProperty] private string noResultsText = string.Empty;
     
     private List<CheckpointBrowserCardViewModel> allModelCards = new();
     
@@ -320,57 +320,39 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         CurrentPageNumber++;
         await TrySearchAgain(false);
     }
-
-    // On changes to ModelCards, update the view source
-    partial void OnModelCardsChanged(ObservableCollection<CheckpointBrowserCardViewModel>? value)
-    {
-        // if (value is null)
-        // {
-        //     ModelCardsView = null;
-        // }
-        // // Create new view
-        // var view = new DataGridCollectionView(value)
-        // {
-        //     Filter = FilterModelCardsPredicate,
-        // };
-        // ModelCardsView = view;
-    }
     
     partial void OnShowNsfwChanged(bool value)
     {
-        settingsManager.Transaction(s => s.ModelBrowserNsfwEnabled = value);
+        settingsManager.Transaction(s => s.ModelBrowserNsfwEnabled, value);
         // ModelCardsView?.Refresh();
         var updateCards = allModelCards
-            .Select(model => new CheckpointBrowserCardViewModel(model.CivitModel, 
-                downloadService, settingsManager, dialogFactory, notificationService))
             .Where(FilterModelCardsPredicate);
         ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(updateCards);
 
-        if (!HasSearched) 
-            return;
+        if (!HasSearched) return;
         
         UpdateResultsText();
     }
 
-    partial void OnSelectedPeriodChanged(CivitPeriod oldValue, CivitPeriod newValue)
+    partial void OnSelectedPeriodChanged(CivitPeriod value)
     {
         TrySearchAgain().SafeFireAndForget();
         settingsManager.Transaction(s => s.ModelSearchOptions = new ModelSearchOptions(
-                newValue, SortMode, SelectedModelType));
+                value, SortMode, SelectedModelType));
     }
 
-    partial void OnSortModeChanged(CivitSortMode oldValue, CivitSortMode newValue)
+    partial void OnSortModeChanged(CivitSortMode value)
     {
         TrySearchAgain().SafeFireAndForget();
         settingsManager.Transaction(s => s.ModelSearchOptions = new ModelSearchOptions(
-                SelectedPeriod, newValue, SelectedModelType));
+                SelectedPeriod, value, SelectedModelType));
     }
     
-    partial void OnSelectedModelTypeChanged(CivitModelType oldValue, CivitModelType newValue)
+    partial void OnSelectedModelTypeChanged(CivitModelType value)
     {
         TrySearchAgain().SafeFireAndForget();
         settingsManager.Transaction(s => s.ModelSearchOptions = new ModelSearchOptions(
-            SelectedPeriod, SortMode, newValue));
+            SelectedPeriod, SortMode, value));
     }
 
     private async Task TrySearchAgain(bool shouldUpdatePageNumber = true)
@@ -390,7 +372,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     private void UpdateResultsText()
     {
         NoResultsFound = ModelCards?.Count <= 0;
-        NoResultsText = allModelCards?.Count > 0
+        NoResultsText = allModelCards.Count > 0
             ? $"{allModelCards.Count} results hidden by filters"
             : "No results found";
     }

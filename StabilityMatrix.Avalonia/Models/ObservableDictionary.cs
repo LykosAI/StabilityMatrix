@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 
 namespace StabilityMatrix.Avalonia.Models;
 
-public class ObservableDictionary<TKey, TValue> : ICollection<KeyValuePair<TKey, TValue>>,
-    IDictionary<TKey, TValue>,
+public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>,
     INotifyCollectionChanged, INotifyPropertyChanged where TKey : notnull
 {
-    protected readonly IDictionary<TKey, TValue> dictionary;
+    private readonly IDictionary<TKey, TValue> dictionary;
 
     public event NotifyCollectionChangedEventHandler? CollectionChanged;
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -91,7 +91,7 @@ public class ObservableDictionary<TKey, TValue> : ICollection<KeyValuePair<TKey,
 
         CollectionChanged?.Invoke(this,
             new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove,
-                new KeyValuePair<TKey, TValue>(key, value)));
+                new KeyValuePair<TKey, TValue>(key, value!)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Keys)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Values)));
@@ -99,7 +99,8 @@ public class ObservableDictionary<TKey, TValue> : ICollection<KeyValuePair<TKey,
         return success;
     }
 
-    public bool TryGetValue(TKey key, out TValue value) => dictionary.TryGetValue(key, out value);
+    public bool TryGetValue([NotNull] TKey key, [MaybeNullWhen(false)] out TValue value) 
+        => dictionary.TryGetValue(key, out value);
 
     public TValue this[TKey key]
     {

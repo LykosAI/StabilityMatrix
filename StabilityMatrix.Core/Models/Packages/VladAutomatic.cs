@@ -176,7 +176,7 @@ public class VladAutomatic : BaseGitPackage
         progress?.Report(new ProgressReport(1, isIndeterminate: false));
     }
 
-    public override async Task<string?> DownloadPackage(string version, bool isCommitHash, IProgress<ProgressReport>? progress = null)
+    public override async Task<string> DownloadPackage(string version, bool isCommitHash, IProgress<ProgressReport>? progress = null)
     {
         progress?.Report(new ProgressReport(0.1f, message: "Downloading package...", isIndeterminate: true, type: ProgressType.Download));
         

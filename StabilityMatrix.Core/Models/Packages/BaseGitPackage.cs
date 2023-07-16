@@ -97,7 +97,7 @@ public abstract class BaseGitPackage : BasePackage
         return allReleases;
     }
 
-    public override async Task<string?> DownloadPackage(string version, bool isCommitHash,
+    public override async Task<string> DownloadPackage(string version, bool isCommitHash,
         IProgress<ProgressReport>? progress = null)
     {
         var downloadUrl = GetDownloadUrl(version, isCommitHash);

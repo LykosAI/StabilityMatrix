@@ -18,7 +18,7 @@ public abstract class BasePackage
     public virtual bool ShouldIgnoreReleases => false;
     public virtual bool UpdateAvailable { get; set; }
 
-    public abstract Task<string?> DownloadPackage(string version, bool isCommitHash,
+    public abstract Task<string> DownloadPackage(string version, bool isCommitHash,
         IProgress<ProgressReport>? progress = null);
     public abstract Task InstallPackage(IProgress<ProgressReport>? progress = null);
     public abstract Task RunPackage(string installedPackagePath, string arguments);

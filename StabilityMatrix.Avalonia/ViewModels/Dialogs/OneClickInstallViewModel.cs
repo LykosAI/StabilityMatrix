@@ -26,7 +26,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
     
     [ObservableProperty] private string headerText;
     [ObservableProperty] private string subHeaderText;
-    [ObservableProperty] private string subSubHeaderText;
+    [ObservableProperty] private string subSubHeaderText = string.Empty;
     [ObservableProperty] private bool showInstallButton;
     [ObservableProperty] private bool isIndeterminate;
     [ObservableProperty] private ObservableCollection<BasePackage> allPackages;

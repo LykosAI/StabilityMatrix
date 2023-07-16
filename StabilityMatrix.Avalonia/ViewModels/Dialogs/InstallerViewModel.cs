@@ -18,8 +18,8 @@ using NLog;
 using Octokit;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -52,7 +52,6 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     [ObservableProperty] private GitHubCommit? selectedCommit;
 
     [ObservableProperty] private string? releaseNotes;
-    // [ObservableProperty] private bool isReleaseMode;
     
     // Version types (release or commit)
     [ObservableProperty]
@@ -78,14 +77,12 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     [ObservableProperty] private string? installName;
     
     internal event EventHandler? PackageInstalled;
-    
-    public ProgressViewModel InstallProgress { get; } = new()
-    {
 
-    };
+    public ProgressViewModel InstallProgress { get; } = new();
 
     public InstallerViewModel(
         ISettingsManager settingsManager,
+        IPackageFactory packageFactory,
         IPyRunner pyRunner,
         IDownloadService downloadService, INotificationService notificationService,
         ISharedFolders sharedFolders,
@@ -98,7 +95,9 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         this.sharedFolders = sharedFolders;
         this.prerequisiteHelper = prerequisiteHelper;
 
-        // AvailablePackages and SelectedPackage need to be set in init
+        // AvailablePackages and SelectedPackage
+        AvailablePackages = new ObservableCollection<BasePackage>(packageFactory.GetAllAvailablePackages());
+        SelectedPackage = AvailablePackages[0];
     }
 
     public override void OnLoaded()
@@ -148,13 +147,13 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         {
             notificationService.Show(new Notification("Package name is empty", 
                 "Please enter a name for the package", NotificationType.Error));
+            return;
         }
         
         await InstallGitIfNecessary();
-
-        var libraryDir = new DirectoryPath(settingsManager.LibraryDir, "Packages", InstallName);
-        SelectedPackage.InstallLocation = $"{settingsManager.LibraryDir}\\Packages\\{InstallName}";
-        // SelectedPackage.DisplayName = InstallName;
+        
+        SelectedPackage.InstallLocation = Path.Combine(
+            settingsManager.LibraryDir, "Packages", InstallName);
 
         if (!PyRunner.PipInstalled || !PyRunner.VenvInstalled)
         {
@@ -211,7 +210,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         return branch == null ? version : $"{branch}@{version[..7]}";
     }
     
-    private Task<string?> DownloadPackage(string version, bool isCommitHash)
+    private Task<string> DownloadPackage(string version, bool isCommitHash)
     {
         InstallProgress.Text = "Downloading package...";
         
@@ -292,10 +291,8 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     // ReSharper disable once UnusedParameterInPartialMethod
     partial void OnSelectedVersionTypeChanged(PackageVersionType value) => OnSelectedPackageChanged(SelectedPackage);
 
-    partial void OnSelectedPackageChanged(BasePackage? value)
+    partial void OnSelectedPackageChanged(BasePackage value)
     {
-        if (value == null) return;
-        
         ReleaseNotes = string.Empty;
         AvailableVersions?.Clear();
         AvailableCommits?.Clear();

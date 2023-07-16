@@ -6,11 +6,10 @@ namespace StabilityMatrix.Tests.Avalonia;
 [TestClass]
 public class DesignDataTests
 {
-    [TestInitialize]
-    public void TestInitialize()
+    [ClassInitialize]
+    public static void ClassInitialize(TestContext context)
     {
-        // invoke static ctor by property access
-        Assert.IsNotNull(StabilityMatrix.Avalonia.DesignData.DesignData.LaunchPageViewModel);
+        StabilityMatrix.Avalonia.DesignData.DesignData.Initialize();
     }
     
     // Return all properties

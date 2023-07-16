@@ -1,4 +1,5 @@
-﻿using Avalonia;
+﻿using System.Diagnostics.CodeAnalysis;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Primitives;
@@ -9,6 +10,7 @@ namespace StabilityMatrix.Avalonia.Controls;
 /// A control used to indicate the progress of an operation.
 /// </summary>
 [PseudoClasses(":preserveaspect", ":indeterminate")]
+[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class ProgressRing : RangeBase
 {
     public static readonly StyledProperty<bool> IsIndeterminateProperty =

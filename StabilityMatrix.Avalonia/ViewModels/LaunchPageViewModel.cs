@@ -97,23 +97,15 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
 
     public override void OnLoaded()
     {
-        LoadPackages();
-        lock (InstalledPackages)
-        {
-            // Skip if no packages
-            if (!InstalledPackages.Any())
-            {
-                //logger.LogTrace($"No packages for {nameof(LaunchViewModel)}");
-                return;
-            }
-
-            var activePackageId = settingsManager.Settings.ActiveInstalledPackage;
-            if (activePackageId != null)
-            {
-                SelectedPackage = InstalledPackages.FirstOrDefault(
-                    x => x.Id == activePackageId) ?? InstalledPackages[0];
-            }
-        }
+        // Ensure active package either exists or is null
+        settingsManager.Transaction(s => s.UpdateActiveInstalledPackage());
+        
+        // Load installed packages
+        InstalledPackages =
+            new ObservableCollection<InstalledPackage>(settingsManager.Settings.InstalledPackages);
+        
+        // Load active package
+        SelectedPackage = settingsManager.Settings.GetActiveInstalledPackage();
     }
 
     [RelayCommand]
@@ -416,23 +408,6 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     {
         webUiUrl = e;
         ShowWebUiButton = !string.IsNullOrWhiteSpace(webUiUrl);
-    }
-    
-    private void LoadPackages()
-    {
-        var packages = settingsManager.Settings.InstalledPackages;
-        if (!packages?.Any() ?? true)
-        {
-            InstalledPackages.Clear();
-            return;
-        }
-        
-        InstalledPackages.Clear();
-
-        foreach (var package in packages)
-        {
-            InstalledPackages.Add(package);
-        }
     }
     
     public void Dispose()

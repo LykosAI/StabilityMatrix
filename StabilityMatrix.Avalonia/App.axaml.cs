@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -14,7 +13,6 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
-using FluentAvalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog;
@@ -50,16 +48,11 @@ using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace StabilityMatrix.Avalonia;
 
-public partial class App : Application
+public sealed class App : Application
 {
-    [NotNull]
-    public static IServiceProvider? Services { get; private set; }
-    
-    [NotNull]
-    public static Visual? VisualRoot { get; private set; }
-    
-    [NotNull]
-    public static IStorageProvider? StorageProvider { get; private set; }
+    [NotNull] public static IServiceProvider? Services { get; private set; }
+    [NotNull] public static Visual? VisualRoot { get; private set; }
+    [NotNull] public static IStorageProvider? StorageProvider { get; private set; }
 
     public override void Initialize()
     {
@@ -74,8 +67,16 @@ public partial class App : Application
     
     public override void OnFrameworkInitializationCompleted()
     {
-        ConfigureServiceProvider();
-
+        if (Design.IsDesignMode)
+        {
+            DesignData.DesignData.Initialize();
+            Services = DesignData.DesignData.Services;
+        }
+        else
+        {
+            ConfigureServiceProvider();
+        }
+        
         var mainViewModel = Services.GetRequiredService<MainWindowViewModel>();
         var notificationService = Services.GetRequiredService<INotificationService>();
 
@@ -112,6 +113,23 @@ public partial class App : Application
             .AddSingleton<CheckpointsPageViewModel>()
             .AddSingleton<LaunchPageViewModel>()
             .AddSingleton<ProgressManagerViewModel>();
+        
+        services.AddSingleton<MainWindowViewModel>(provider =>
+            new MainWindowViewModel(provider.GetRequiredService<ISettingsManager>(),
+                provider.GetRequiredService<ServiceManager<ViewModelBase>>())
+            {
+                Pages =
+                {
+                    provider.GetRequiredService<LaunchPageViewModel>(),
+                    provider.GetRequiredService<PackageManagerViewModel>(),
+                    provider.GetRequiredService<CheckpointsPageViewModel>(),
+                    provider.GetRequiredService<CheckpointBrowserViewModel>(),
+                },
+                FooterPages =
+                {
+                    provider.GetRequiredService<SettingsViewModel>()
+                }
+            });
         
         // Register disposable view models for shutdown cleanup
         services.AddSingleton<IDisposable>(p 
@@ -204,23 +222,6 @@ public partial class App : Application
         services.AddSingleton<IPyRunner, PyRunner>();
         services.AddSingleton<IUpdateHelper, UpdateHelper>();
         
-        services.AddSingleton<MainWindowViewModel>(provider =>
-            new MainWindowViewModel(provider.GetRequiredService<ISettingsManager>(),
-                provider.GetRequiredService<ServiceManager<ViewModelBase>>())
-            {
-                Pages =
-                {
-                    provider.GetRequiredService<LaunchPageViewModel>(),
-                    provider.GetRequiredService<PackageManagerViewModel>(),
-                    provider.GetRequiredService<CheckpointsPageViewModel>(),
-                    provider.GetRequiredService<CheckpointBrowserViewModel>(),
-                },
-                FooterPages =
-                {
-                    provider.GetRequiredService<SettingsViewModel>()
-                }
-            });
-        
         ConfigureViews(services);
 
         if (Design.IsDesignMode)
@@ -289,7 +290,7 @@ public partial class App : Application
             .HandleTransientHttpError()
             .Or<TimeoutRejectedException>()
             .OrResult(r => retryStatusCodes.Contains(r.StatusCode))
-            .WaitAndRetryAsync(localDelay, onRetryAsync: (x, y) =>
+            .WaitAndRetryAsync(localDelay, onRetryAsync: (_, _) =>
             {
                 Debug.WriteLine("Retrying local request...");
                 return Task.CompletedTask;

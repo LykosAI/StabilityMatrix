@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
-using AvaloniaEdit.Utils;
 using Microsoft.Extensions.DependencyInjection;
-using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -16,7 +15,6 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
-using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
@@ -26,13 +24,19 @@ namespace StabilityMatrix.Avalonia.DesignData;
 
 public static class DesignData
 {
-    private static IServiceProvider Services { get; }
-
-    static DesignData()
+    [NotNull] public static IServiceProvider? Services { get; set; }
+    
+    private static bool isInitialized;
+    
+    // This needs to be static method instead of static constructor
+    // or else Avalonia analyzers won't work.
+    public static void Initialize()
     {
+        if (isInitialized) throw new InvalidOperationException("DesignData is already initialized.");
+        
         var services = new ServiceCollection();
 
-        var activePackageId = new Guid();
+        var activePackageId = Guid.NewGuid();
         services.AddSingleton<ISettingsManager, MockSettingsManager>(_ => new MockSettingsManager
         {
             Settings =
@@ -88,22 +92,6 @@ public static class DesignData
         var modelFinder = Services.GetRequiredService<ModelFinder>();
         var packageFactory = Services.GetRequiredService<IPackageFactory>();
         var notificationService = Services.GetRequiredService<INotificationService>();
-        
-        // Main window
-        MainWindowViewModel = new MainWindowViewModel(settingsManager, dialogFactory)
-        {
-            Pages =
-            {
-                LaunchPageViewModel,
-                PackageManagerViewModel,
-                CheckpointsPageViewModel,
-                CheckpointBrowserViewModel
-            },
-            FooterPages =
-            {
-                SettingsViewModel
-            }
-        };
         
         // Sample data
         var sampleCivitVersions = new List<CivitModelVersion>
@@ -215,21 +203,32 @@ public static class DesignData
         UpdateViewModel.UpdateText =
             $"Stability Matrix v2.0.1 is now available! You currently have v2.0.0. Would you like to update now?";
         UpdateViewModel.ReleaseNotes = "## v2.0.1\n- Fixed a bug\n- Added a feature\n- Removed a feature";
+        
+        isInitialized = true;
     }
     
-    public static MainWindowViewModel MainWindowViewModel { get; }
-    public static LaunchPageViewModel LaunchPageViewModel => Services.GetRequiredService<LaunchPageViewModel>();
-    public static PackageManagerViewModel PackageManagerViewModel => Services.GetRequiredService<PackageManagerViewModel>();
-    public static CheckpointsPageViewModel CheckpointsPageViewModel => Services.GetRequiredService<CheckpointsPageViewModel>();
-    public static SettingsViewModel SettingsViewModel => Services.GetRequiredService<SettingsViewModel>();
-    public static CheckpointBrowserViewModel CheckpointBrowserViewModel => Services.GetRequiredService<CheckpointBrowserViewModel>();
-    public static SelectModelVersionViewModel SelectModelVersionViewModel => Services.GetRequiredService<SelectModelVersionViewModel>();
-    public static OneClickInstallViewModel OneClickInstallViewModel => Services.GetRequiredService<OneClickInstallViewModel>();
-    public static InstallerViewModel InstallerViewModel { get; }
-
-    public static SelectDataDirectoryViewModel SelectDataDirectoryViewModel => Services.GetRequiredService<SelectDataDirectoryViewModel>();
-    public static LaunchOptionsViewModel LaunchOptionsViewModel { get; }
-
+    [NotNull] public static InstallerViewModel? InstallerViewModel { get; private set; }
+    [NotNull] public static LaunchOptionsViewModel? LaunchOptionsViewModel { get; private set; }
+    [NotNull] public static UpdateViewModel? UpdateViewModel { get; private set; }
+    
+    public static MainWindowViewModel MainWindowViewModel => 
+        Services.GetRequiredService<MainWindowViewModel>();
+    public static LaunchPageViewModel LaunchPageViewModel => 
+        Services.GetRequiredService<LaunchPageViewModel>();
+    public static PackageManagerViewModel PackageManagerViewModel => 
+        Services.GetRequiredService<PackageManagerViewModel>();
+    public static CheckpointsPageViewModel CheckpointsPageViewModel => 
+        Services.GetRequiredService<CheckpointsPageViewModel>();
+    public static SettingsViewModel SettingsViewModel => 
+        Services.GetRequiredService<SettingsViewModel>();
+    public static CheckpointBrowserViewModel CheckpointBrowserViewModel => 
+        Services.GetRequiredService<CheckpointBrowserViewModel>();
+    public static SelectModelVersionViewModel SelectModelVersionViewModel => 
+        Services.GetRequiredService<SelectModelVersionViewModel>();
+    public static OneClickInstallViewModel OneClickInstallViewModel => 
+        Services.GetRequiredService<OneClickInstallViewModel>();
+    public static SelectDataDirectoryViewModel SelectDataDirectoryViewModel => 
+        Services.GetRequiredService<SelectDataDirectoryViewModel>();
     public static ProgressManagerViewModel ProgressManagerViewModel =>
         Services.GetRequiredService<ProgressManagerViewModel>();
 
@@ -237,6 +236,4 @@ public static class DesignData
     {
         State = ProgressState.Success
     };
-
-    public static UpdateViewModel UpdateViewModel { get; }
 }

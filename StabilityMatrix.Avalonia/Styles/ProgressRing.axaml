@@ -30,10 +30,10 @@
         <Panel x:Name="FluentRingRoot">
           <Ellipse x:Name="Track"
                    Stroke="{TemplateBinding Background}"
-                   StrokeThickness="{ReflectionBinding BorderThickness.Left, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
+                   StrokeThickness="{Binding BorderThickness.Left, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
           <Arc x:Name="Fill"
                Stroke="{TemplateBinding Foreground}"
-               StrokeThickness="{ReflectionBinding BorderThickness.Left, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+               StrokeThickness="{Binding BorderThickness.Left, RelativeSource={RelativeSource Mode=TemplatedParent}}"
                StrokeLineCap="Round" />
         </Panel>
       </ControlTemplate>
@@ -41,8 +41,8 @@
   </Style>
 
   <Style Selector="controls|ProgressRing:not(:indeterminate) /template/ Arc#Fill">
-    <Setter Property="StartAngle" Value="{ReflectionBinding StartAngle, RelativeSource={RelativeSource Mode=TemplatedParent}}"/>
-    <Setter Property="SweepAngle" Value="{ReflectionBinding ValueAngle, RelativeSource={RelativeSource Mode=TemplatedParent}}"/>
+    <Setter Property="StartAngle" Value="{Binding StartAngle, RelativeSource={RelativeSource Mode=TemplatedParent}}"/>
+    <Setter Property="SweepAngle" Value="{Binding ValueAngle, RelativeSource={RelativeSource Mode=TemplatedParent}}"/>
   </Style>
 
   <Style Selector="controls|ProgressRing:preserveaspect">
@@ -52,7 +52,7 @@
 
   <Style Selector="controls|ProgressRing:preserveaspect /template/ Panel#FluentRingRoot">
     <Setter Property="Width" Value="{TemplateBinding Bounds, Converter={StaticResource FitSquarelyWithinAspectRatioConverter}}"/>
-    <Setter Property="Height" Value="{ReflectionBinding Width, RelativeSource={RelativeSource Mode=Self}}"/>
+    <Setter Property="Height" Value="{Binding Width, RelativeSource={RelativeSource Mode=Self}}"/>
   </Style>
 
   <Style Selector="controls|ProgressRing[IsEnabled=True]:indeterminate /template/ Arc#Fill">

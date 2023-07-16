@@ -19,8 +19,6 @@ public class UserControlBase : UserControl
     {
         if (DataContext is not ViewModelBase viewModel) return;
         
-        if (Design.IsDesignMode) return;
-        
         viewModel.OnLoaded();
         // Can't block here so we'll run as async on UI thread
         Dispatcher.UIThread.InvokeAsync(async () => await viewModel.OnLoadedAsync());

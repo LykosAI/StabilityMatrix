@@ -32,7 +32,7 @@ public class Settings
 
     public InstalledPackage? GetActiveInstalledPackage()
     {
-        return InstalledPackages.FirstOrDefault(x => x.Id == ActiveInstalledPackage);
+        return GetInstalledPackageById(ActiveInstalledPackage);
     }
 
     public void RemoveInstalledPackageAndUpdateActive(InstalledPackage package)
@@ -46,9 +46,21 @@ public class Settings
         UpdateActiveInstalledPackage();
     }
     
-    // Update ActiveInstalledPackage if not valid
-    // uses first package or null if no packages
-    private void UpdateActiveInstalledPackage()
+    /// <summary>
+    /// Get a package by Id
+    /// Return null if not found
+    /// </summary>
+    public InstalledPackage? GetInstalledPackageById(Guid? id)
+    {
+        return id == null ? null : 
+            InstalledPackages.FirstOrDefault(x => x.Id == id);
+    }
+    
+    /// <summary>
+    /// Update ActiveInstalledPackage if not valid
+    /// uses first package or null if no packages
+    /// </summary>
+    public void UpdateActiveInstalledPackage()
     {
         // Empty packages - set to null
         if (InstalledPackages.Count == 0)

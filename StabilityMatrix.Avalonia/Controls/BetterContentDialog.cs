@@ -37,12 +37,51 @@ public class BetterContentDialog : ContentDialog
         HideCoreMethod.Invoke(this, null);
     }
     
+    // Also get button properties to hide on command execution change
+    [NotNull]
+    protected static readonly FieldInfo? PrimaryButtonField = typeof(ContentDialog).GetField(
+        "_primaryButton", BindingFlags.Instance | BindingFlags.NonPublic);
+    
+    protected Button? PrimaryButton
+    {
+        get => (Button?) PrimaryButtonField.GetValue(this)!;
+        set => PrimaryButtonField.SetValue(this, value);
+    }
+    
+    [NotNull]
+    protected static readonly FieldInfo? SecondaryButtonField = typeof(ContentDialog).GetField(
+        "_secondaryButton", BindingFlags.Instance | BindingFlags.NonPublic);
+    
+    protected Button? SecondaryButton 
+    {
+        get => (Button?) SecondaryButtonField.GetValue(this)!;
+        set => SecondaryButtonField.SetValue(this, value);
+    }
+    
+    [NotNull]
+    protected static readonly FieldInfo? CloseButtonField = typeof(ContentDialog).GetField(
+        "_closeButton", BindingFlags.Instance | BindingFlags.NonPublic);
+    
+    protected Button? CloseButton 
+    {
+        get => (Button?) CloseButtonField.GetValue(this)!;
+        set => CloseButtonField.SetValue(this, value);
+    }
+    
     static BetterContentDialog()
     {
-        if (ResultField is null) throw new NullReferenceException(
-            "ResultField was not resolved");
-        if (HideCoreMethod is null) throw new NullReferenceException(
-            "HideCoreMethod was not resolved");
+        if (ResultField is null)
+        {
+            throw new NullReferenceException("ResultField was not resolved");
+        }
+        if (HideCoreMethod is null)
+        {
+            throw new NullReferenceException("HideCoreMethod was not resolved");
+        }
+        if (PrimaryButtonField is null || SecondaryButtonField is null || CloseButtonField is null)
+        {
+            throw new NullReferenceException("Button fields were not resolved");
+        }
     }
     #endregion
     
@@ -84,11 +123,35 @@ public class BetterContentDialog : ContentDialog
 
     private void TryBindButtons()
     {
-        if ((Content as Control)?.DataContext is not ContentDialogViewModelBase viewModel) return;
-
-        viewModel.PrimaryButtonClick += OnDialogButtonClick;
-        viewModel.SecondaryButtonClick += OnDialogButtonClick;
-        viewModel.CloseButtonClick += OnDialogButtonClick;
+        if ((Content as Control)?.DataContext is ContentDialogViewModelBase viewModel)
+        {
+            viewModel.PrimaryButtonClick += OnDialogButtonClick;
+            viewModel.SecondaryButtonClick += OnDialogButtonClick;
+            viewModel.CloseButtonClick += OnDialogButtonClick;
+        }
+        
+        // If commands provided, bind OnCanExecuteChanged to hide buttons
+        if (PrimaryButtonCommand is not null && PrimaryButton is not null)
+        {
+            PrimaryButtonCommand.CanExecuteChanged += (_, _) =>
+                PrimaryButton.IsEnabled = PrimaryButtonCommand.CanExecute(null);
+            // Also set initial state
+            PrimaryButton.IsEnabled = PrimaryButtonCommand.CanExecute(null);
+        }
+        if (SecondaryButtonCommand is not null && SecondaryButton is not null)
+        {
+            SecondaryButtonCommand.CanExecuteChanged += (_, _) =>
+                SecondaryButton.IsEnabled = SecondaryButtonCommand.CanExecute(null);
+            // Also set initial state
+            SecondaryButton.IsEnabled = SecondaryButtonCommand.CanExecute(null);
+        }
+        if (CloseButtonCommand is not null && CloseButton is not null)
+        {
+            CloseButtonCommand.CanExecuteChanged += (_, _) =>
+                CloseButton.IsEnabled = CloseButtonCommand.CanExecute(null);
+            // Also set initial state
+            CloseButton.IsEnabled = CloseButtonCommand.CanExecute(null);
+        }
     }
 
     protected void OnDialogButtonClick(object? sender, ContentDialogResult e)

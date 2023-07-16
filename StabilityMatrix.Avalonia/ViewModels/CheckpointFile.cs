@@ -6,10 +6,12 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
+using Avalonia.Data;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -104,27 +106,42 @@ public partial class CheckpointFile : ViewModelBase
     [RelayCommand]
     private async Task RenameAsync()
     {
-        // TODO: Fix with new dialogs
+        // Parent folder path
+        var parentPath = Path.GetDirectoryName(FilePath) ?? "";
+
+        var textFields = new TextBoxField[]
+        {
+            new()
+            {
+                Label = "File name",
+                Validator = text =>
+                {
+                    if (string.IsNullOrWhiteSpace(text)) throw new 
+                        DataValidationException("File name is required");
+                    
+                    if (File.Exists(Path.Combine(parentPath, text))) throw new 
+                        DataValidationException("File name already exists");
+                }
+            }
+        };
+
+        var dialog = DialogHelper.CreateTextEntryDialog("Rename Model", "", textFields);
         
-        // var responses = await dialogFactory.ShowTextEntryDialog("Rename Model", new []
-        // {
-        //     ("File Name", FileName)
-        // });
-        // var name = responses?.FirstOrDefault();
-        // if (name == null) return;
-        //
-        // // Rename file in OS
-        // try
-        // {
-        //     var newFilePath = Path.Combine(Path.GetDirectoryName((string?) FilePath) ?? "", name);
-        //     File.Move(FilePath, newFilePath);
-        //     FilePath = newFilePath;
-        // }
-        // catch (Exception e)
-        // {
-        //     Console.WriteLine(e);
-        //     throw;
-        // }
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            var name = textFields[0].Text;
+            // Rename file in OS
+            try
+            {
+                var newFilePath = Path.Combine(parentPath, name);
+                File.Move(FilePath, newFilePath);
+                FilePath = newFilePath;
+            }
+            catch (Exception e)
+            {
+                Logger.Warn(e, $"Failed to rename checkpoint file {FilePath}");
+            }
+        }
     }
 
     [RelayCommand]

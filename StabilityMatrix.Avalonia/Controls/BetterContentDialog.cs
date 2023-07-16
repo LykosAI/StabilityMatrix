@@ -138,7 +138,7 @@ public class BetterContentDialog : ContentDialog
         if (subGrid is null) throw new InvalidOperationException("Could not find sub grid");
         var contentControlTitle = subGrid.Children[0] as ContentControl;
         // Hide title if empty
-        if (Title is null)
+        if (Title is null or string {Length: 0})
         {
             contentControlTitle!.IsVisible = false;
         }

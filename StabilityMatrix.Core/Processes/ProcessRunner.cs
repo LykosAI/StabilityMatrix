@@ -1,11 +1,12 @@
 ﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Text;
 using NLog;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Core.Processes;
+
+public record struct ProcessResult(int ExitCode, string? StandardOutput, string? StandardError);
 
 public static class ProcessRunner
 {
@@ -126,6 +127,42 @@ public static class ProcessRunner
         // Quote arguments containing spaces
         var args = string.Join(" ", arguments.Select(Quote));
         return StartProcess(fileName, args, workingDirectory, outputDataReceived, environmentVariables);
+    }
+    
+    public static async Task<ProcessResult> RunBashCommand(string command, string workingDirectory = "")
+    {
+        var processInfo = new ProcessStartInfo("bash", "-c \"" + command + "\"")
+        {
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            WorkingDirectory = workingDirectory,
+        };
+
+        using var process = new Process();
+        process.StartInfo = processInfo;
+        
+        var stdout = new StringBuilder();
+        var stderr = new StringBuilder();
+        process.OutputDataReceived += (_, args) => stdout.Append(args.Data);
+        process.ErrorDataReceived += (_, args) => stderr.Append(args.Data);
+        
+        StartTrackedProcess(process);
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+        
+        await process.WaitForExitAsync();
+
+        return new ProcessResult(process.ExitCode, stdout.ToString(), stderr.ToString());
+    }
+    
+    public static Task<ProcessResult> RunBashCommand(
+        IEnumerable<string> commands,
+        string workingDirectory = "")
+    {
+        // Quote arguments containing spaces
+        var args = string.Join(" ", commands.Select(Quote));
+        return RunBashCommand(args, workingDirectory);
     }
 
     /// <summary>

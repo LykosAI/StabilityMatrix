@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls.Primitives;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Controls;
@@ -37,6 +38,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private List<PageViewModelBase> footerPages = new();
 
     public ProgressManagerViewModel ProgressManagerViewModel { get; init; }
+    public UpdateViewModel UpdateViewModel { get; init; }
 
     public MainWindowViewModel(ISettingsManager settingsManager, ServiceManager<ViewModelBase> dialogFactory)
     {
@@ -44,6 +46,7 @@ public partial class MainWindowViewModel : ViewModelBase
         this.dialogFactory = dialogFactory;
         
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
+        UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
     }
     
     public override async Task OnLoadedAsync()
@@ -131,6 +134,25 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             settingsManager.SetLibraryPath(viewModel.DataDirectory);
         }
+    }
+
+    public async Task ShowUpdateDialog()
+    {
+        var viewModel = dialogFactory.Get<UpdateViewModel>();
+        var dialog = new BetterContentDialog
+        {
+            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            DefaultButton = ContentDialogButton.Close,
+            IsPrimaryButtonEnabled = false,
+            IsSecondaryButtonEnabled = false,
+            IsFooterVisible = false,
+            Content = new UpdateDialog
+            {
+                DataContext = viewModel
+            }
+        };
+
+        await dialog.ShowAsync();
     }
 
     private void OnPageChangeRequested(object? sender, Type e)

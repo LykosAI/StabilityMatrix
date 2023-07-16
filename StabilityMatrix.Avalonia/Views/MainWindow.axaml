@@ -79,6 +79,9 @@
                     <!-- Update button -->
                     <ui:NavigationViewItem Name="FooterUpdateItem"
                                            Content="Update Available"
+                                           IsVisible="{Binding IsUpdateAvailable}"
+                                           IsEnabled="{Binding IsUpdateAvailable}"
+                                           DataContext="{Binding UpdateViewModel}"
                                            Tapped="FooterUpdateItem_OnTapped">
                         <ui:NavigationViewItem.IconSource>
                             <ui:SymbolIconSource Symbol="Download" Foreground="LimeGreen"/>

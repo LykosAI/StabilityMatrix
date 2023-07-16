@@ -44,6 +44,7 @@ using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Updater;
 using Application = Avalonia.Application;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
@@ -125,6 +126,7 @@ public partial class App : Application
         services.AddTransient<SelectModelVersionViewModel>();
         services.AddTransient<SelectDataDirectoryViewModel>();
         services.AddTransient<LaunchOptionsViewModel>();
+        services.AddSingleton<UpdateViewModel>();
         
         // Other transients (usually sub view models)
         services.AddTransient<CheckpointFolder>();
@@ -144,6 +146,7 @@ public partial class App : Application
                 .Register(provider.GetRequiredService<SelectModelVersionViewModel>)
                 .Register(provider.GetRequiredService<SelectDataDirectoryViewModel>)
                 .Register(provider.GetRequiredService<LaunchOptionsViewModel>)
+                .Register(provider.GetRequiredService<UpdateViewModel>)
                 .Register(provider.GetRequiredService<CheckpointFolder>)
                 .Register(provider.GetRequiredService<CheckpointFile>)
                 .Register(provider.GetRequiredService<RefreshBadgeViewModel>)
@@ -163,6 +166,7 @@ public partial class App : Application
         // Dialogs
         services.AddTransient<SelectDataDirectoryDialog>();
         services.AddTransient<LaunchOptionsDialog>();
+        services.AddTransient<UpdateDialog>();
         
         // Controls
         services.AddTransient<RefreshBadge>();
@@ -198,6 +202,7 @@ public partial class App : Application
         services.AddSingleton<IPrerequisiteHelper, PrerequisiteHelper>();
         services.AddSingleton<INotificationService, NotificationService>();
         services.AddSingleton<IPyRunner, PyRunner>();
+        services.AddSingleton<IUpdateHelper, UpdateHelper>();
         
         services.AddSingleton<MainWindowViewModel>(provider =>
             new MainWindowViewModel(provider.GetRequiredService<ISettingsManager>(),

@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -7,12 +8,14 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using FluentAvalonia.Styling;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media;
 using FluentAvalonia.UI.Windowing;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.Views;
@@ -106,6 +109,11 @@ public partial class MainWindow : AppWindowBase
     private void FooterUpdateItem_OnTapped(object? sender, TappedEventArgs e)
     {
         // show update window thing
+        if (DataContext is not MainWindowViewModel vm)
+        {
+            throw new NullReferenceException("DataContext is not MainWindowViewModel");
+        }
+        Dispatcher.UIThread.InvokeAsync(vm.ShowUpdateDialog).SafeFireAndForget();
     }
 
     private void FooterDiscordItem_OnTapped(object? sender, TappedEventArgs e)

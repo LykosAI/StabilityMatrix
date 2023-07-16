@@ -1,0 +1,85 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+                          xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+                          xmlns:ui="using:FluentAvalonia.UI.Controls"
+                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
+                          xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
+                          d:DataContext="{x:Static mocks:DesignData.UpdateViewModel}"
+                          x:DataType="dialogs:UpdateViewModel"
+                          mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="550"
+                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.UpdateDialog">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto">
+        
+        <!--<TitleBar Background="{ui:ThemeResource ApplicationBackgroundBrush}">
+            <TitleBar.Header>
+                <TextBlock Margin="16,8" Text="Stability Matrix - Update Available" />
+            </TitleBar.Header>
+        </TitleBar>-->
+        
+        <TextBlock Grid.Row="0" 
+                   Text="A new version of Stability Matrix is available!"
+                   HorizontalAlignment="Center"
+                   FontWeight="Thin"
+                   Margin="0,16,0,0"
+                   FontSize="28"/>
+        
+        <TextBlock Grid.Row="1" 
+                   HorizontalAlignment="Center"
+                   FontSize="18"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"
+                   Text="{Binding UpdateText}"
+                   Margin="16,32,16,0"/>
+        
+        <TextBlock Grid.Row="2" 
+                   Text="Release Notes" 
+                   FontSize="16"
+                   IsVisible="{Binding !ShowProgressBar}"
+                   Margin="32,16,32,0"/>
+        
+        <ProgressBar Grid.Row="3" 
+                     Height="200"
+                     Value="{Binding ProgressValue}"
+                     IsVisible="{Binding ShowProgressBar}"
+                     Margin="32"/>
+        
+        <Grid Grid.Row="4" 
+              Margin="8"
+              IsVisible="{Binding !ShowProgressBar}">
+            <Border Margin="32, 16"
+                    CornerRadius="8"
+                    Background="{DynamicResource ButtonBackgroundPressed}">
+                <mdxaml:MarkdownScrollViewer
+                    Margin="16"
+                    Markdown="{Binding ReleaseNotes, Mode=OneWay}"/>
+            </Border>
+        </Grid>
+        
+        <ui:InfoBar Grid.Row="5" 
+                    Margin="64,0,64,16"
+                    IsOpen="True"
+                    IsClosable="False"
+                    Title="The app will relaunch after updating" /> 
+        
+        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,16">
+            <Button Content="Remind Me Later"
+                    Classes="info"
+                    Margin="0,0,8,0"
+                    FontSize="18"
+                    Command="{Binding OnCloseButtonClick}"
+                    IsEnabled="{Binding !InstallUpdateCommand.IsRunning}" />
+            
+            <Button Content="Install Now"
+                    Classes="success"
+                       Margin="8,0,0,0"
+                       FontSize="18"
+                       Command="{Binding InstallUpdateCommand}" />
+        </StackPanel>
+        
+    </Grid>
+</controls:UserControlBase>

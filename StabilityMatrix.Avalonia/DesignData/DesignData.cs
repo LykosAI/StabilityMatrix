@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Net.Http;
 using AvaloniaEdit.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Models;
@@ -19,6 +20,7 @@ using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Updater;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
@@ -52,12 +54,17 @@ public static class DesignData
         });
         
         // General services
-        services.AddLogging();
-        services.AddSingleton<IPackageFactory, PackageFactory>()
+        services.AddLogging()
+            .AddSingleton<IPackageFactory, PackageFactory>()
+            .AddSingleton<IUpdateHelper, UpdateHelper>()
+            .AddSingleton<ModelFinder>();
+        
+        // Mock services
+        services
             .AddSingleton<INotificationService, MockNotificationService>()
             .AddSingleton<ISharedFolders, MockSharedFolders>()
             .AddSingleton<IDownloadService, MockDownloadService>()
-            .AddSingleton<ModelFinder>();
+            .AddSingleton<IHttpClientFactory, MockHttpClientFactory>();
         
         // Placeholder services that nobody should need during design time
         services
@@ -203,6 +210,11 @@ public static class DesignData
             new(new ProgressItem(Guid.NewGuid(), "Test File.exe", new ProgressReport(0.5f, "Downloading..."))),
             new(new ProgressItem(Guid.NewGuid(), "Test File 2.uwu", new ProgressReport(0.25f, "Extracting...")))
         };
+
+        UpdateViewModel = Services.GetRequiredService<UpdateViewModel>();
+        UpdateViewModel.UpdateText =
+            $"Stability Matrix v2.0.1 is now available! You currently have v2.0.0. Would you like to update now?";
+        UpdateViewModel.ReleaseNotes = "## v2.0.1\n- Fixed a bug\n- Added a feature\n- Removed a feature";
     }
     
     public static MainWindowViewModel MainWindowViewModel { get; }
@@ -225,4 +237,6 @@ public static class DesignData
     {
         State = ProgressState.Success
     };
+
+    public static UpdateViewModel UpdateViewModel { get; }
 }

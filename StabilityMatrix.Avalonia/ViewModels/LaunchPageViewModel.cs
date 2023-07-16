@@ -363,10 +363,10 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
 
     public void OpenWebUi()
     {
-        if (!string.IsNullOrWhiteSpace(webUiUrl))
-        {
-            ProcessRunner.OpenUrl(webUiUrl);
-        }
+        if (string.IsNullOrEmpty(webUiUrl)) return;
+        
+        notificationService.TryAsync(Task.Run(() => ProcessRunner.OpenUrl(webUiUrl)),
+        "Failed to open URL", $"{webUiUrl}");
     }
     
     private void OnProcessExited(object? sender, int exitCode)

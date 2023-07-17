@@ -34,19 +34,37 @@ public class PyVenvRunner : IDisposable
     public DirectoryPath RootPath { get; }
 
     /// <summary>
-    /// The path to the python executable.
+    /// Name of the python binary folder.
+    /// 'Scripts' on Windows, 'bin' on Unix.
     /// </summary>
-    public FilePath PythonPath => Compat.Switch(
-        (PlatformKind.Windows, RootPath.JoinFile("Scripts", "python.exe")),
-        (PlatformKind.Unix, RootPath.JoinFile("bin", "python3.10")));
+    public static string RelativeBinPath => Compat.Switch(
+        (PlatformKind.Windows, "Scripts"),
+        (PlatformKind.Unix, "bin"));
+    
+    /// <summary>
+    /// The relative path to the python executable.
+    /// </summary>
+    public static string RelativePythonPath => Compat.Switch(
+        (PlatformKind.Windows, Path.Combine("Scripts", "python.exe")),
+        (PlatformKind.Unix, Path.Combine("bin", "python3.10")));
 
     /// <summary>
-    /// The path to the pip executable.
+    /// The full path to the python executable.
     /// </summary>
-    public FilePath PipPath => Compat.Switch(
-        (PlatformKind.Windows, RootPath.JoinFile("Scripts", "pip.exe")),
-        (PlatformKind.Unix, RootPath.JoinFile("bin", "pip3.10")));
+    public FilePath PythonPath => RootPath.JoinFile(RelativePythonPath);
+    
+    /// <summary>
+    /// The relative path to the pip executable.
+    /// </summary>
+    public static string RelativePipPath => Compat.Switch(
+        (PlatformKind.Windows, Path.Combine("Scripts", "pip.exe")),
+        (PlatformKind.Unix, Path.Combine("bin", "pip3.10")));
 
+    /// <summary>
+    /// The full path to the pip executable.
+    /// </summary>
+    public FilePath PipPath => RootPath.JoinFile(RelativePipPath);
+    
     /// <summary>
     /// List of substrings to suppress from the output.
     /// When a line contains any of these substrings, it will not be forwarded to callbacks.
@@ -91,20 +109,6 @@ public class PyVenvRunner : IDisposable
     }
 
     /// <summary>
-    /// Return the pip install command for torch, automatically chooses between Cuda and CPU.
-    /// </summary>
-    /// <returns></returns>
-    public string GetTorchInstallCommand()
-    {
-        if (HardwareHelper.HasNvidiaGpu())
-        {
-            return "torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118";
-        }
-
-        return "torch torchvision torchaudio";
-    }
-
-    /// <summary>
     /// Set current python path to pyvenv.cfg
     /// This should be called before using the venv, in case user moves the venv directory.
     /// </summary>
@@ -129,20 +133,19 @@ public class PyVenvRunner : IDisposable
         // Need to set all path keys - home, base-prefix, base-exec-prefix, base-executable
         cfg.SetValue("top", "home", pythonDirectory);
         cfg.SetValue("top", "base-prefix", pythonDirectory);
-        cfg.SetValue("top", "base-exec-prefix", pythonDirectory);
-        cfg.SetValue("top", "base-executable", Path.Combine(pythonDirectory, "python.exe"));
+        
+        // on Windows, base-exec-prefix is the same as base-prefix, with portable mode layout
+        cfg.SetValue("top", "base-exec-prefix",
+            // on unix, we use the binary folder
+            Compat.IsWindows ? pythonDirectory : Path.Combine(pythonDirectory, RelativeBinPath));
+
+        // on Windows, base-executable is in root folder, on unix it's in binary folder
+        cfg.SetValue("top", "base-executable",
+            Path.Combine(pythonDirectory, Compat.IsWindows ? "python.exe" : RelativePythonPath));
         
         // Convert to string for writing, strip the top section
         var cfgString = cfg.ToString()!.Replace(topSection, "");
         File.WriteAllText(cfgPath, cfgString);
-    }
-    
-    /// <summary>
-    /// Install torch with pip, automatically chooses between Cuda and CPU.
-    /// </summary>
-    public async Task InstallTorch(Action<ProcessOutput>? outputDataReceived = null)
-    {
-        await PipInstall(GetTorchInstallCommand(), outputDataReceived: outputDataReceived);
     }
 
     /// <summary>
@@ -156,10 +159,11 @@ public class PyVenvRunner : IDisposable
             throw new FileNotFoundException("pip not found", PipPath);
         }
         SetPyvenvCfg(PyRunner.PythonDir);
-        Process = ProcessRunner.StartProcess(PythonPath, $"-m pip install {args}", workingDirectory ?? RootPath, outputDataReceived);
+        RunDetached($"-m pip install {args}", outputDataReceived, workingDirectory: workingDirectory ?? RootPath);
         await ProcessRunner.WaitForExitConditionAsync(Process);
     }
 
+    [MemberNotNull(nameof(Process))]
     public void RunDetached(
         string arguments, 
         Action<ProcessOutput>? outputDataReceived,

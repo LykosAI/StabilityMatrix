@@ -63,7 +63,7 @@
                                     <controls:FASymbolIconSource Symbol="fa-brands fa-python"/>
                                 </ui:SettingsExpander.IconSource>
                                 <ui:SettingsExpander.Footer>
-                                    <Button Content="Check Version"/>
+                                    <Button Content="Check Version" Command="{Binding ShowPythonVersion}"/>
                                 </ui:SettingsExpander.Footer>
                             </ui:SettingsExpander>
                         </StackPanel>

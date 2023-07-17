@@ -92,8 +92,7 @@ internal static class Assets
     /// </summary>
     public static async Task ExtractAsset(Uri assetUri, string targetDirectory, bool overwrite = true)
     {
-        var assetPath = assetUri.AbsolutePath;
-        var assetName = Path.GetFileName(assetPath);
+        var assetName = Path.GetFileName(assetUri.ToString());
         var targetPath = Path.Combine(targetDirectory, assetName);
         if (File.Exists(targetPath) && !overwrite)
         {

@@ -304,42 +304,6 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         File.Delete(VcRedistDownloadPath);
     }
 
-    public async Task SetupPythonDependencies(string installLocation, string requirementsFileName,
-        IProgress<ProgressReport>? progress = null, Action<ProcessOutput>? onConsoleOutput = null)
-    {
-        // Setup dependencies
-        progress?.Report(new ProgressReport(-1, isIndeterminate: true));
-        var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
-
-        if (!venvRunner.Exists())
-        {
-            await venvRunner.Setup();
-        }
-
-        void HandleConsoleOutput(ProcessOutput s)
-        {
-            Debug.WriteLine($"venv stdout: {s}");
-            onConsoleOutput?.Invoke(s);
-        }
-
-        // Install torch
-        logger.LogDebug("Starting torch install...");
-        await venvRunner.PipInstall(venvRunner.GetTorchInstallCommand(), installLocation, HandleConsoleOutput);
-
-        // Install xformers if nvidia
-        if (HardwareHelper.HasNvidiaGpu())
-        {
-            await venvRunner.PipInstall("xformers", installLocation, HandleConsoleOutput);
-        }
-
-        // Install requirements
-        logger.LogDebug("Starting requirements install...");
-        await venvRunner.PipInstall($"-r {requirementsFileName}", installLocation, HandleConsoleOutput);
-
-        logger.LogDebug("Finished installing requirements!");
-        progress?.Report(new ProgressReport(1, isIndeterminate: false));
-    }
-
     public void UpdatePathExtensions()
     {
         settingsManager.Settings.PathExtensions?.Clear();

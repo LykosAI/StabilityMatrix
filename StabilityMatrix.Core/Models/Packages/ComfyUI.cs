@@ -5,6 +5,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
@@ -96,14 +97,44 @@ public class ComfyUI : BaseGitPackage
     public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
     {
         await UnzipPackage(progress);
-        await PrerequisiteHelper.SetupPythonDependencies(InstallLocation, "requirements.txt", progress,
-            OnConsoleOutput);
+        
+        progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
+        // Setup venv
+        var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
+        if (!venvRunner.Exists())
+        {
+            await venvRunner.Setup();
+        }
+
+        // Install torch / xformers based on gpu info
+        var gpus = HardwareHelper.IterGpuInfo().ToList();
+        if (gpus.Any(g => g.IsNvidia))
+        {
+            progress?.Report(new ProgressReport(-1, "Installing PyTorch for CUDA", isIndeterminate: true));
+            Logger.Info("Starting torch install (CUDA)...");
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, 
+                InstallLocation, OnConsoleOutput);
+            Logger.Info("Installing xformers...");
+            await venvRunner.PipInstall("xformers", InstallLocation, OnConsoleOutput);
+        }
+        else
+        {
+            progress?.Report(new ProgressReport(-1, "Installing PyTorch for CPU", isIndeterminate: true));
+            Logger.Info("Starting torch install (CPU)...");
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu);
+        }
+
+        // Install requirements file
+        progress?.Report(new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true));
+        Logger.Info("Installing requirements.txt");
+        await venvRunner.PipInstall($"-r requirements.txt", InstallLocation, OnConsoleOutput);
+        
+        progress?.Report(new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false));
     }
     
     public override async Task RunPackage(string installedPackagePath, string arguments)
     {
         await SetupVenv(installedPackagePath);
-        PrerequisiteHelper.UpdatePathExtensions();
 
         void HandleConsoleOutput(ProcessOutput s)
         {

@@ -22,9 +22,4 @@ public interface IPrerequisiteHelper
     /// Run embedded git with the given arguments.
     /// </summary>
     Task RunGit(string? workingDirectory = null, params string[] args);
-
-    Task SetupPythonDependencies(string installLocation, string requirementsFileName,
-        IProgress<ProgressReport>? progress = null, Action<ProcessOutput>? onConsoleOutput = null);
-
-    void UpdatePathExtensions();
 }

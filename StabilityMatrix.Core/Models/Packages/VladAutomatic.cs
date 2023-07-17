@@ -192,7 +192,6 @@ public class VladAutomatic : BaseGitPackage
     public override async Task RunPackage(string installedPackagePath, string arguments)
     {
         await SetupVenv(installedPackagePath);
-        PrerequisiteHelper.UpdatePathExtensions();
 
         void HandleConsoleOutput(ProcessOutput s)
         {

@@ -145,17 +145,6 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         progress?.Report(new ProgressReport(1, "Installing Python", isIndeterminate: false));
     }
     
-    public Task SetupPythonDependencies(string installLocation, string requirementsFileName,
-        IProgress<ProgressReport>? progress = null, Action<ProcessOutput>? onConsoleOutput = null)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void UpdatePathExtensions()
-    {
-        throw new NotImplementedException();
-    }
-    
     [UnsupportedOSPlatform("Linux")]
     [UnsupportedOSPlatform("macOS")]
     public Task InstallVcRedistIfNecessary(IProgress<ProgressReport>? progress = null)

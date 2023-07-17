@@ -44,7 +44,7 @@ public static partial class ArchiveHelper
 
     public static string SevenZipPath => Path.Combine(HomeDir, "Assets", SevenZipFileName);
     
-    [GeneratedRegex(@"(?<=Size:\\s*)\\d+|(?<=Compressed:\\s*)\\d+")]
+    [GeneratedRegex(@"(?<=Size:\s*)\d+|(?<=Compressed:\s*)\d+")]
     private static partial Regex Regex7ZOutput();
     
     [GeneratedRegex(@"(?<=\s*)\d+(?=%)")]

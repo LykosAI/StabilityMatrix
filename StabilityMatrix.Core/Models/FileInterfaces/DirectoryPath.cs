@@ -1,10 +1,13 @@
-﻿namespace StabilityMatrix.Core.Models.FileInterfaces;
+﻿using System.Diagnostics.CodeAnalysis;
 
+namespace StabilityMatrix.Core.Models.FileInterfaces;
+
+[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class DirectoryPath : FileSystemPath, IPathObject
 {
-    private DirectoryInfo? _info;
+    private DirectoryInfo? info;
     // ReSharper disable once MemberCanBePrivate.Global
-    public DirectoryInfo Info => _info ??= new DirectoryInfo(FullPath);
+    public DirectoryInfo Info => info ??= new DirectoryInfo(FullPath);
 
     public bool IsSymbolicLink
     {
@@ -70,6 +73,18 @@ public class DirectoryPath : FileSystemPath, IPathObject
 
     /// <summary> Deletes the directory asynchronously. </summary>
     public Task DeleteAsync(bool recursive) => Task.Run(() => Delete(recursive));
+    
+    /// <summary>
+    /// Join with other paths to form a new directory path.
+    /// </summary>
+    public DirectoryPath JoinDir(params DirectoryPath[] paths) => 
+        new(Path.Combine(FullPath, Path.Combine(paths.Select(path => path.FullPath).ToArray())));
+    
+    /// <summary>
+    /// Join with other paths to form a new file path.
+    /// </summary>
+    public FilePath JoinFile(params FileSystemPath[] paths) => 
+        new(Path.Combine(FullPath, Path.Combine(paths.Select(path => path.FullPath).ToArray())));
 
     public override string ToString() => FullPath;
 

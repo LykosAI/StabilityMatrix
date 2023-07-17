@@ -72,7 +72,6 @@ public class PyRunner : IPyRunner
 
         Logger.Info("Setting PYTHONHOME and PATH to {HomePath}", PythonDir);
         Environment.SetEnvironmentVariable("PYTHONHOME", PythonDir, EnvironmentVariableTarget.Process);
-        PythonEngine.PythonHome = PythonDir;
         
         // Get existing PATH
         var currentEnvPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
@@ -88,6 +87,7 @@ public class PyRunner : IPyRunner
         }
         
         Runtime.PythonDLL = PythonDllPath;
+        PythonEngine.PythonHome = PythonDir;
         PythonEngine.Initialize();
         PythonEngine.BeginAllowThreads();
 

@@ -102,10 +102,12 @@ public static class DesignData
                 Description = "v1.0.0",
             }
         };
+
+        var sampleViewModel = new ModelVersionViewModel(settingsManager, sampleCivitVersions[0]);
         
         // Sample data for dialogs
-        SelectModelVersionViewModel.Versions = sampleCivitVersions;
-        SelectModelVersionViewModel.SelectedVersion = sampleCivitVersions[0];
+        SelectModelVersionViewModel.Versions = new[] {sampleViewModel};
+        SelectModelVersionViewModel.SelectedVersionViewModel = sampleViewModel;
 
         LaunchOptionsViewModel = Services.GetRequiredService<LaunchOptionsViewModel>();
         LaunchOptionsViewModel.Cards = new[]

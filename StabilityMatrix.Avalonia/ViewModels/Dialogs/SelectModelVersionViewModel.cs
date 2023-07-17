@@ -16,36 +16,37 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
 {
     private readonly ISettingsManager settingsManager;
     private readonly IDownloadService downloadService;
-    
+
     public required ContentDialog Dialog { get; set; }
-    public required IReadOnlyList<CivitModelVersion> Versions { get; set; }
-    
+    public required IReadOnlyList<ModelVersionViewModel> Versions { get; set; }
+
     [ObservableProperty] private Bitmap? previewImage;
-    [ObservableProperty] private CivitModelVersion? selectedVersion;
+    [ObservableProperty] private ModelVersionViewModel? selectedVersionViewModel;
     [ObservableProperty] private CivitFile? selectedFile;
     [ObservableProperty] private bool isImportEnabled;
-    
-    public SelectModelVersionViewModel(ISettingsManager settingsManager, IDownloadService downloadService)
+
+    public SelectModelVersionViewModel(ISettingsManager settingsManager,
+        IDownloadService downloadService)
     {
         this.settingsManager = settingsManager;
         this.downloadService = downloadService;
     }
-    
+
     public override void OnLoaded()
     {
-        SelectedVersion = Versions[0];
+        SelectedVersionViewModel = Versions[0];
     }
-    
-    partial void OnSelectedVersionChanged(CivitModelVersion? value)
+
+    partial void OnSelectedVersionViewModelChanged(ModelVersionViewModel? value)
     {
         var nsfwEnabled = settingsManager.Settings.ModelBrowserNsfwEnabled;
-        var firstImageUrl = value?.Images?.FirstOrDefault(
-                img => nsfwEnabled || img.Nsfw == "None")?.Url;
+        var firstImageUrl = value?.ModelVersion?.Images?.FirstOrDefault(
+            img => nsfwEnabled || img.Nsfw == "None")?.Url;
 
-        Dispatcher.UIThread.InvokeAsync(async 
+        Dispatcher.UIThread.InvokeAsync(async
             () => await UpdateImage(firstImageUrl));
     }
-    
+
     partial void OnSelectedFileChanged(CivitFile? value)
     {
         IsImportEnabled = value != null;
@@ -56,7 +57,7 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
         var assetStream = string.IsNullOrWhiteSpace(url)
             ? AssetLoader.Open(new Uri("avares://StabilityMatrix.Avalonia/Assets/noimage.png"))
             : await downloadService.GetImageStreamFromUrl(url);
-        
+
         PreviewImage = new Bitmap(assetStream);
     }
 

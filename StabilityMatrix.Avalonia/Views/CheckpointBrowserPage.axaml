@@ -11,7 +11,7 @@
              d:DataContext="{x:Static designData:DesignData.CheckpointBrowserViewModel}"
              x:CompileBindings="True"
              x:Class="StabilityMatrix.Avalonia.Views.CheckpointBrowserPage">
-    
+
     <UserControl.Resources>
         <DataTemplate DataType="{x:Type viewModels:CheckpointBrowserCardViewModel}" x:Key="CivitModelTemplate">
             <controls:Card
@@ -42,37 +42,53 @@
                             VerticalContentAlignment="Top"
                             HorizontalContentAlignment="Center"
                             Source="{Binding CardImage}"
-                            Stretch="UniformToFill"/>
-                        
+                            Stretch="UniformToFill" />
+
                         <Button
                             Command="{Binding OpenModelCommand}"
                             CommandParameter="{Binding CivitModel}"
                             HorizontalAlignment="Right"
-                            Classes="info"
+                            Classes="transparent-info"
                             Margin="0,16,8,0"
                             VerticalAlignment="Top">
                             <Button.Content>
                                 <ui:SymbolIcon Symbol="Open" />
                             </Button.Content>
                         </Button>
+                        <StackPanel Orientation="Horizontal">
+                            <controls:Card
+                                Classes="info"
+                                Height="24"
+                                HorizontalAlignment="Left"
+                                Padding="4"
+                                Margin="4,16,0,0"
+                                VerticalAlignment="Top">
 
-                        <controls:Card
-                            Background="#AA1467B5"
-                            Height="20"
-                            HorizontalAlignment="Left"
-                            Padding="4"
-                            Margin="4,16,0,0"
-                            VerticalAlignment="Top">
+                                <TextBlock
+                                    FontSize="10"
+                                    FontWeight="Medium"
+                                    HorizontalAlignment="Center"
+                                    Text="{Binding CivitModel.Type}"
+                                    VerticalAlignment="Center" />
+                            </controls:Card>
 
-                            <TextBlock
-                                FontSize="10"
-                                FontWeight="Medium"
-                                Foreground="{DynamicResource TextControlForeground}"
-                                HorizontalAlignment="Center"
-                                Text="{Binding CivitModel.Type}"
-                                VerticalAlignment="Center" />
-                        </controls:Card>
+                            <controls:Card
+                                Classes="success"
+                                Height="24"
+                                HorizontalAlignment="Left"
+                                Padding="4"
+                                IsVisible="{Binding ShowUpdateCard}"
+                                Margin="4,16,0,0"
+                                VerticalAlignment="Top">
 
+                                <TextBlock
+                                    FontSize="10"
+                                    FontWeight="Medium"
+                                    HorizontalAlignment="Center"
+                                    Text="{Binding UpdateCardText}"
+                                    VerticalAlignment="Center" />
+                            </controls:Card>
+                        </StackPanel>
                         <Rectangle
                             Fill="#DD000000"
                             HorizontalAlignment="Stretch"
@@ -92,7 +108,7 @@
                                 StartAngle="90"
                                 EndAngle="450"
                                 Value="{Binding Value}"
-                                VerticalAlignment="Center"/>
+                                VerticalAlignment="Center" />
                             <TextBlock
                                 HorizontalAlignment="Center"
                                 Margin="0,8,0,0"
@@ -103,7 +119,7 @@
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="1*" />
-                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Button
                             Classes="accent"
@@ -114,26 +130,26 @@
                             Margin="0,8,0,0">
                             <Button.Content>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Import Latest -"/>
+                                    <TextBlock Text="Import Latest -" />
                                     <TextBlock Margin="4,0,0,0"
-                                               Text="{Binding CivitModel.FullFilesSize}"/>
+                                               Text="{Binding CivitModel.FullFilesSize}" />
                                 </StackPanel>
                             </Button.Content>
                         </Button>
-                        
+
                         <Button Grid.Column="1"
-                                   Margin="8,8,0,0"
-                                   Classes="accent"
-                                   IsEnabled="{Binding !IsImporting}"
-                                   Command="{Binding ShowVersionDialogCommand}"
-                                   CommandParameter="{Binding CivitModel}"
-                                   Content="All Versions"/>
+                                Margin="8,8,0,0"
+                                Classes="accent"
+                                IsEnabled="{Binding !IsImporting}"
+                                Command="{Binding ShowVersionDialogCommand}"
+                                CommandParameter="{Binding CivitModel}"
+                                Content="All Versions" />
                     </Grid>
                 </StackPanel>
             </controls:Card>
         </DataTemplate>
     </UserControl.Resources>
-    
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -206,7 +222,7 @@
             </DockPanel>
 
         </StackPanel>
-        
+
         <ScrollViewer Grid.Row="1">
             <ItemsRepeater ItemTemplate="{StaticResource CivitModelTemplate}"
                            ItemsSource="{Binding ModelCards}">
@@ -255,7 +271,7 @@
             VerticalAlignment="Center"
             Text="{Binding NoResultsText, FallbackValue=No results found}"
             IsVisible="{Binding NoResultsFound}" />
-        
+
         <controls:ProgressRing
             Grid.Row="1"
             IsIndeterminate="True"

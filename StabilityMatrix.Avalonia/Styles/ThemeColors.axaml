@@ -10,13 +10,17 @@
     <Color x:Key="ThemeDeepPurpleColor">#673AB7</Color>
     <Color x:Key="ThemeIndigoColor">#3F51B5</Color>
     <Color x:Key="ThemeDarkBlueColor">#1A72BD</Color>
+    <Color x:Key="ThemeDarkBlueColorTransparent">#AA1A72BD</Color>
     <Color x:Key="ThemeBlueColor">#2196F3</Color>
+    <Color x:Key="ThemeBlueColorTransparent">#AA2196F3</Color>
     <Color x:Key="ThemeLightBlueColor">#03A9F4</Color>
+    <Color x:Key="ThemeLightBlueColorTransparent">#AA03A9F4</Color>
     <Color x:Key="ThemeCyanColor">#00BCD4</Color>
     <Color x:Key="ThemeTealColor">#009688</Color>
     <Color x:Key="ThemeDarkDarkGreenColor">#2C582C</Color>
     <Color x:Key="ThemeDarkGreenColor">#3A783C</Color>
     <Color x:Key="ThemeGreenColor">#4BA04F</Color>
+    <Color x:Key="ThemeGreenColorTransparent">#AA4BA04F</Color>
     <Color x:Key="ThemeLightGreenColor">#8BC34A</Color>
     <Color x:Key="ThemeLimeColor">#CDDC39</Color>
     <Color x:Key="ThemeYellowColor">#FFEB3B</Color>

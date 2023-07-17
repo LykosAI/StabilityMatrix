@@ -195,8 +195,19 @@ public class PyVenvRunner : IDisposable
             {
                 {"PYTHONUNBUFFERED", "1"}
             };
-            Process = ProcessRunner.StartProcess(PythonPath, "-u " + arguments, workingDirectory, filteredOutput,
-                env);
+            
+            // If arguments starts with -, it's a flag, insert `u` after it for unbuffered mode
+            if (arguments.StartsWith('-'))
+            {
+                arguments = arguments.Insert(1, "u");
+            }
+            // Otherwise insert -u at the beginning
+            else
+            {
+                arguments = "-u " + arguments;
+            }
+            
+            Process = ProcessRunner.StartProcess(PythonPath, arguments, workingDirectory, filteredOutput, env);
         }
         else
         {

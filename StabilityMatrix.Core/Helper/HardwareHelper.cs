@@ -26,7 +26,7 @@ public static partial class HardwareHelper
         return output;
     }
     
-    [SupportedOSPlatform("Windows")]
+    [SupportedOSPlatform("windows")]
     private static IEnumerable<GpuInfo> IterGpuInfoWindows()
     {
         const string gpuRegistryKeyPath =
@@ -50,7 +50,7 @@ public static partial class HardwareHelper
         }
     }
     
-    [SupportedOSPlatform("Linux")]
+    [SupportedOSPlatform("linux")]
     private static IEnumerable<GpuInfo> IterGpuInfoLinux()
     {
         var output = RunBashCommand("lspci | grep VGA");

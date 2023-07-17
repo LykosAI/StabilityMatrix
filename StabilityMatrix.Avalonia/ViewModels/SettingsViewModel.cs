@@ -14,6 +14,7 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
@@ -25,6 +26,8 @@ public partial class SettingsViewModel : PageViewModelBase
 {
     private readonly INotificationService notificationService;
     private readonly ISettingsManager settingsManager;
+    private readonly IPrerequisiteHelper prerequisiteHelper;
+    private readonly IPyRunner pyRunner;
     
     public override string Title => "Settings";
     public override IconSource IconSource => new SymbolIconSource {Symbol = Symbol.Settings, IsFilled = true};
@@ -39,11 +42,16 @@ public partial class SettingsViewModel : PageViewModelBase
         "System",
     };
     
-    public SettingsViewModel(INotificationService notificationService, 
-        ISettingsManager settingsManager)
+    public SettingsViewModel(
+        INotificationService notificationService, 
+        ISettingsManager settingsManager,
+        IPrerequisiteHelper prerequisiteHelper,
+        IPyRunner pyRunner)
     {
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
+        this.prerequisiteHelper = prerequisiteHelper;
+        this.pyRunner = pyRunner;
 
         SelectedTheme = AvailableThemes[1];
     }
@@ -131,5 +139,32 @@ public partial class SettingsViewModel : PageViewModelBase
         var result = await dialog.ShowAsync();
         notificationService.Show(new Notification("Content dialog closed",
             $"Result: {result}"));
+    }
+    
+    public async Task ShowPythonVersion()
+    {
+        // Ensure python installed
+        if (!prerequisiteHelper.IsPythonInstalled)
+        {
+            // Need 7z as well for site packages repack
+            await prerequisiteHelper.UnpackResourcesIfNecessary();
+            await prerequisiteHelper.InstallPythonIfNecessary();
+        }
+
+        // Get python version
+        await pyRunner.Initialize();
+        var result = await pyRunner.GetVersionInfo();
+        // Show dialog box
+        var dialog = new ContentDialog
+        {
+            Title = "Python version info",
+            Content = result,
+            PrimaryButtonText = "Ok",
+            IsPrimaryButtonEnabled = true
+        };
+        dialog.Title = "Python version info";
+        dialog.Content = result;
+        dialog.PrimaryButtonText = "Ok";
+        await dialog.ShowAsync();
     }
 }

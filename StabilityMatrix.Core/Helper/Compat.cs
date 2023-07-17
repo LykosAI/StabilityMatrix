@@ -17,15 +17,18 @@ public static class Compat
     // OS Platform
     public static PlatformKind Platform { get; }
     
-    [SupportedOSPlatformGuard("Windows")]
+    [SupportedOSPlatformGuard("windows")]
     public static bool IsWindows => Platform.HasFlag(PlatformKind.Windows);
     
-    [SupportedOSPlatformGuard("Linux")]
+    [SupportedOSPlatformGuard("linux")]
     public static bool IsLinux => Platform.HasFlag(PlatformKind.Linux);
     
-    [SupportedOSPlatformGuard("macOS")]
+    [SupportedOSPlatformGuard("macos")]
     public static bool IsMacOS => Platform.HasFlag(PlatformKind.MacOS);
     public static bool IsUnix => Platform.HasFlag(PlatformKind.Unix);
+
+    public static bool IsArm => Platform.HasFlag(PlatformKind.Arm);
+    public static bool IsX64 => Platform.HasFlag(PlatformKind.X64);
     
     // Paths
     
@@ -44,18 +47,36 @@ public static class Compat
     /// </summary>
     public static DirectoryPath AppCurrentDir { get; }
     
+    // File extensions
+    /// <summary>
+    /// Platform-specific executable extension.
+    /// ".exe" on Windows, Empty string on Linux and MacOS.
+    /// </summary>
+    public static string ExeExtension { get; }
+
+    /// <summary>
+    /// Platform-specific dynamic library extension.
+    /// ".dll" on Windows, ".dylib" on MacOS, ".so" on Linux.
+    /// </summary>
+    public static string DllExtension { get; }
+    
     static Compat()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             Platform = PlatformKind.Windows;
             AppCurrentDir = AppContext.BaseDirectory;
+            ExeExtension = ".exe";
+            DllExtension = ".dll";
         }
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
             Platform = PlatformKind.MacOS | PlatformKind.Unix;
+            AppCurrentDir = AppContext.BaseDirectory; // TODO: check this
+            ExeExtension = "";
+            DllExtension = ".dylib";
         }
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
             Platform = PlatformKind.Linux | PlatformKind.Unix;
             // We need to get application path using `$APPIMAGE`, then get the directory name
@@ -63,6 +84,21 @@ public static class Compat
                           throw new Exception("Could not find application path");
             AppCurrentDir = Path.GetDirectoryName(appPath) ??
                             throw new Exception("Could not find application directory");
+            ExeExtension = "";
+            DllExtension = ".so";
+        }
+        else
+        {
+            throw new PlatformNotSupportedException();
+        }
+        
+        if (RuntimeInformation.ProcessArchitecture == Architecture.Arm)
+        {
+            Platform |= PlatformKind.Arm;
+        }
+        else
+        {
+            Platform |= PlatformKind.X64;
         }
         
         AppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);

@@ -1,25 +1,35 @@
-﻿using NLog;
+﻿using System.Diagnostics.CodeAnalysis;
+using NLog;
 using Python.Runtime;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python.Interop;
 
 namespace StabilityMatrix.Core.Python;
 
+[SuppressMessage("ReSharper", "NotAccessedPositionalProperty.Global")]
 public record struct PyVersionInfo(int Major, int Minor, int Micro, string ReleaseLevel, int Serial);
 
+[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class PyRunner : IPyRunner
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     
     // Set by ISettingsManager.TryFindLibrary()
-    public static string HomeDir { get; set; } = string.Empty;
+    public static DirectoryPath HomeDir { get; set; } = new();
     
-    public static string PythonDir => Path.Combine(HomeDir, "Assets", "Python310");
-    public static string PythonDllPath => Path.Combine(PythonDir, "python310.dll");
-    public static string PythonExePath => Path.Combine(PythonDir, "python.exe");
+    // This is same for all platforms
+    public const string PythonDirName = "Python310";
+    
+    public static string PythonDir => Path.Combine(HomeDir, "Assets", PythonDirName);
+    public static string PythonDllPath { get; }
+    public static string PythonExePath { get; }
+    public static string PipExePath { get; }
+    
     public static string GetPipPath => Path.Combine(PythonDir, "get-pip.pyc");
-    public static string PipExePath => Path.Combine(PythonDir, "Scripts", "pip.exe");
-    public static string VenvPath => Path.Combine(PythonDir, "Scripts", "virtualenv.exe");
+    // public static string PipExePath => Path.Combine(PythonDir, "Scripts", "pip" + Compat.ExeExtension);
+    public static string VenvPath => Path.Combine(PythonDir, "Scripts", "virtualenv" + Compat.ExeExtension);
 
     public static bool PipInstalled => File.Exists(PipExePath);
     public static bool VenvInstalled => File.Exists(VenvPath);
@@ -29,7 +39,28 @@ public class PyRunner : IPyRunner
     public PyIOStream? StdOutStream;
     public PyIOStream? StdErrStream;
 
-    /// <summary>
+    // Initialize paths based on platform
+    static PyRunner()
+    {
+        if (Compat.IsWindows)
+        {
+            PythonDllPath = Path.Combine(PythonDir, "python310.dll");
+            PythonExePath = Path.Combine(PythonDir, "python.exe");
+            PipExePath = Path.Combine(PythonDir, "Scripts", "pip.exe");
+        }
+        else if (Compat.IsLinux)
+        {
+            PythonDllPath = Path.Combine(PythonDir, "lib", "libpython3.10.so");
+            PythonExePath = Path.Combine(PythonDir, "bin", "python3.10");
+            PipExePath = Path.Combine(PythonDir, "bin", "pip3.10");
+        }
+        else
+        {
+            throw new PlatformNotSupportedException();
+        }
+    }
+    
+    /// <summary>$
     /// Initializes the Python runtime using the embedded dll.
     /// Can be called with no effect after initialization.
     /// </summary>
@@ -49,8 +80,8 @@ public class PyRunner : IPyRunner
         // Check PythonDLL exists
         if (!File.Exists(PythonDllPath))
         {
-            Logger.Error("Python DLL not found");
-            throw new FileNotFoundException("Python DLL not found", PythonDllPath);
+            Logger.Error("Python linked library not found");
+            throw new FileNotFoundException("Python linked library not found", PythonDllPath);
         }
         
         Runtime.PythonDLL = PythonDllPath;

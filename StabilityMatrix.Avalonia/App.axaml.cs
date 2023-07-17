@@ -27,6 +27,7 @@ using Polly.Timeout;
 using Refit;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.DesignData;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -221,6 +222,11 @@ public sealed class App : Application
         services.AddSingleton<INotificationService, NotificationService>();
         services.AddSingleton<IPyRunner, PyRunner>();
         services.AddSingleton<IUpdateHelper, UpdateHelper>();
+        
+        if (Compat.IsLinux)
+        {
+            services.AddSingleton<IPrerequisiteHelper, UnixPrerequisiteHelper>();
+        }
         
         ConfigureViews(services);
 

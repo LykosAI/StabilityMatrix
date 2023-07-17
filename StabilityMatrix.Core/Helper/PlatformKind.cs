@@ -8,4 +8,6 @@ public enum PlatformKind
     Unix = 1 << 1,
     Linux = Unix | 1 << 2,
     MacOS = Unix | 1 << 3,
+    Arm = 1 << 20,
+    X64 = 1 << 21,
 }

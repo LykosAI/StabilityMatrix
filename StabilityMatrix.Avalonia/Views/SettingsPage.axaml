@@ -6,6 +6,7 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
              xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+             xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="vm:SettingsViewModel"
              x:CompileBindings="True"
@@ -27,9 +28,9 @@
                     </ui:SettingsExpander>
 
                     <!--  TODO: Text2Image host port settings  -->
-                    
                     <!-- TODO: Keep folder links on shutdown  -->
                     
+                    <!-- Checkpoints Manager Options -->
                     <Grid RowDefinitions="auto,*">
                         <TextBlock 
                             FontWeight="Medium"
@@ -43,6 +44,26 @@
                                 Margin="8">
                                 <ui:SettingsExpander.Footer>
                                     <CheckBox Margin="8" />
+                                </ui:SettingsExpander.Footer>
+                            </ui:SettingsExpander>
+                        </StackPanel>
+                    </Grid>
+                    
+                    <!-- Python Options -->
+                    <Grid RowDefinitions="auto,*">
+                        <TextBlock 
+                            FontWeight="Medium"
+                            Text="Python Environment" 
+                            Margin="8,16,0,0" />
+                        <StackPanel Grid.Row="1">
+                            <ui:SettingsExpander
+                                Header="Embedded Python Environment"
+                                Margin="8">
+                                <ui:SettingsExpander.IconSource>
+                                    <controls:FASymbolIconSource Symbol="fa-brands fa-python"/>
+                                </ui:SettingsExpander.IconSource>
+                                <ui:SettingsExpander.Footer>
+                                    <Button Content="Check Version"/>
                                 </ui:SettingsExpander.Footer>
                             </ui:SettingsExpander>
                         </StackPanel>

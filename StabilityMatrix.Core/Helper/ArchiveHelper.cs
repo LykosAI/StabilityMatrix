@@ -1,9 +1,11 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Text.RegularExpressions;
 using NLog;
 using SharpCompress.Common;
+using SharpCompress.Compressors.Deflate;
 using SharpCompress.Readers;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -14,16 +16,34 @@ namespace StabilityMatrix.Core.Helper;
 public record struct ArchiveInfo(ulong Size, ulong CompressedSize);
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+
 public static class ArchiveHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    /// <summary>
+    /// Platform-specific 7z executable name.
+    /// </summary>
+    public static string SevenZipFileName
+    {
+        get
+        {
+            if (Compat.IsWindows)
+            {
+                return "7za.exe";
+            }
+            if (Compat.Platform.HasFlag(PlatformKind.Linux))
+            {
+                return "7zzs";
+            }
+            throw new PlatformNotSupportedException("7z is not supported on this platform.");
+        }
+    }
+    
     // HomeDir is set by ISettingsManager.TryFindLibrary()
     public static string HomeDir { get; set; } = string.Empty;
 
-    public static string SevenZipPath => RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-        ? Path.Combine(HomeDir, "Assets", "7za.exe")
-        : throw new NotImplementedException("need to implement 7z path for non-windows");
+    public static string SevenZipPath => Path.Combine(HomeDir, "Assets", SevenZipFileName);
     
     private static readonly Regex Regex7ZOutput = new(@"(?<=Size:\s*)\d+|(?<=Compressed:\s*)\d+");
     private static readonly Regex Regex7ZProgressDigits = new(@"(?<=\s*)\d+(?=%)");
@@ -39,7 +59,7 @@ public static class ArchiveHelper
         var compressed = ulong.Parse(matches[1].Value);
         return new ArchiveInfo(size, compressed);
     }
-
+    
     public static async Task AddToArchive7Z(string archivePath, string sourceDirectory)
     {
         // Start 7z in the parent directory of the source directory
@@ -164,5 +184,31 @@ public static class ArchiveHelper
         progress?.Report(new ProgressReport(progress: 1, message: "Done extracting"));
         progressMonitor?.Stop();
         Logger.Info("Finished extracting archive {}", archivePath);
+    }
+
+    /// <summary>
+    /// Extract an archive to the output directory, using SharpCompress managed code.
+    /// does not require 7z to be installed, but no progress reporting.
+    /// </summary>
+    /// <param name="archivePath"></param>
+    /// <param name="outputDirectory">Output directory, created if does not exist.</param>
+    public static async Task ExtractManaged(string archivePath, string outputDirectory)
+    {
+        await using var stream = File.OpenRead(archivePath);
+        using var reader = ReaderFactory.Open(stream);
+        while (reader.MoveToNextEntry())
+        {
+            var entry = reader.Entry;
+            if (entry.IsDirectory)
+            {
+                Directory.CreateDirectory(Path.Combine(outputDirectory, entry.Key));
+            }
+            else
+            {
+                await using var entryStream = reader.OpenEntryStream();
+                await using var fileStream = File.Create(Path.Combine(outputDirectory, entry.Key));
+                await entryStream.CopyToAsync(fileStream);
+            }
+        }
     }
 }

@@ -9,11 +9,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <AvaloniaResource Include="Assets\**" />
-    </ItemGroup>
-
-
-    <ItemGroup>
         <PackageReference Include="AsyncImageLoader.Avalonia" Version="3.0.0-avalonia11-preview6" />
         <PackageReference Include="Avalonia" Version="11.0.0" />
         <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.0.0" />
@@ -60,6 +55,13 @@
 
     <ItemGroup>
       <Resource Include="Assets\noimage.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <!-- Only for win-64 -->
+      <AvaloniaResource Include="Assets\win-x64\**" Condition="'$(RuntimeIdentifier)' == 'win-x64'" />
+      <!-- Only for linux-64 -->
+      <AvaloniaResource Include="Assets\linux-x64\**" Condition="'$(RuntimeIdentifier)' == 'linux-x64'" />
     </ItemGroup>
 
 

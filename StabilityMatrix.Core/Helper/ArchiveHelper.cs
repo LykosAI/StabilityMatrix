@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.RegularExpressions;
 using NLog;
@@ -80,13 +81,32 @@ public static partial class ArchiveHelper
     {
         var args =
             $"x {ProcessRunner.Quote(archivePath)} -o{ProcessRunner.Quote(extractDirectory)} -y";
-        var process = ProcessRunner.StartProcess(SevenZipPath, args);
+        
+        Logger.Debug($"Starting process '{SevenZipPath}' with arguments '{args}'");
+
+        using var process = new Process();
+        process.StartInfo = new ProcessStartInfo(SevenZipPath, args)
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
         await ProcessRunner.WaitForExitConditionAsync(process);
         var output = await process.StandardOutput.ReadToEndAsync();
-        var matches = Regex7ZOutput().Matches(output);
-        var size = ulong.Parse(matches[0].Value);
-        var compressed = ulong.Parse(matches[1].Value);
-        return new ArchiveInfo(size, compressed);
+        
+        try
+        {
+            var matches = Regex7ZOutput().Matches(output);
+            var size = ulong.Parse(matches[0].Value);
+            var compressed = ulong.Parse(matches[1].Value);
+            return new ArchiveInfo(size, compressed);
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Could not parse 7z output [{e.Message}]: {output.ToRepr()}");
+        }
     }
     
     public static async Task<ArchiveInfo> Extract7Z(string archivePath, string extractDirectory, IProgress<ProgressReport> progress)
@@ -110,17 +130,26 @@ public static partial class ArchiveHelper
         // Need -bsp1 for progress reports
         var args =
             $"x {ProcessRunner.Quote(archivePath)} -o{ProcessRunner.Quote(extractDirectory)} -y -bsp1";
-        var process = ProcessRunner.StartProcess(SevenZipPath, args, outputDataReceived: onOutput);
+        Logger.Debug($"Starting process '{SevenZipPath}' with arguments '{args}'");
         
-        await process.WaitForExitAsync();
+        var process = ProcessRunner.StartProcess(SevenZipPath, args, outputDataReceived: onOutput);
+        await ProcessRunner.WaitForExitConditionAsync(process);
         
         progress.Report(new ProgressReport(1, "Finished extracting", type: ProgressType.Extract));
         
         var output = outputStore.ToString();
-        var matches = Regex7ZOutput().Matches(output);
-        var size = ulong.Parse(matches[0].Value);
-        var compressed = ulong.Parse(matches[1].Value);
-        return new ArchiveInfo(size, compressed);
+        
+        try
+        {
+            var matches = Regex7ZOutput().Matches(output);
+            var size = ulong.Parse(matches[0].Value);
+            var compressed = ulong.Parse(matches[1].Value);
+            return new ArchiveInfo(size, compressed);
+        }
+        catch (Exception e)
+        {
+            throw new Exception($"Could not parse 7z output [{e.Message}]: {output.ToRepr()}");
+        }
     }
     
     /// <summary>

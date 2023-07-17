@@ -93,8 +93,9 @@ public class PyVenvRunner : IDisposable
         // Create RootPath if it doesn't exist
         RootPath.Create();
 
-        // Create venv
-        var args = new string[] { "-m", "virtualenv", "--always-copy", RootPath };
+        // Create venv (copy mode if windows)
+        var args = new string[] { "-m", "virtualenv", 
+            Compat.IsWindows ? "--always-copy" : "", RootPath };
         var venvProc = ProcessRunner.StartProcess(PyRunner.PythonExePath, args);
         await venvProc.WaitForExitAsync();
 

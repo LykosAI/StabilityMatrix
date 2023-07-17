@@ -125,7 +125,9 @@ public static class ProcessRunner
         Dictionary<string, string>? environmentVariables = null)
     {
         // Quote arguments containing spaces
-        var args = string.Join(" ", arguments.Select(Quote));
+        var args = string.Join(" ", arguments
+            .Where(s => !string.IsNullOrEmpty(s))
+            .Select(Quote));
         return StartProcess(fileName, args, workingDirectory, outputDataReceived, environmentVariables);
     }
     

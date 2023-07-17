@@ -12,7 +12,7 @@ public readonly record struct AvaloniaResource(
     Uri UriPath, 
     UnixFileMode WriteUnixFileMode = UnixFileMode.None)
 {
-    public string FileName => UriPath.Segments[^1];
+    public string FileName => Path.GetFileName(UriPath.ToString());
 
     public AvaloniaResource(string uriPath, UnixFileMode writeUnixFileMode = UnixFileMode.None) 
         : this(new Uri(uriPath), writeUnixFileMode)

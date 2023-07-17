@@ -239,6 +239,13 @@ public static partial class ArchiveHelper
                 // Check if symbolic link
                 if (entry.LinkTarget != null)
                 {
+                    // Not sure why but symlink entries have a key that ends with a space
+                    // and some broken path suffix, so we'll remove everything after the last space
+                    if (outputPath.Contains(' '))
+                    {
+                        outputPath = outputPath[..outputPath.LastIndexOf(' ')];
+                    }
+                    
                     Logger.Debug($"Extracting symbolic link [{entry.Key.ToRepr()}] " +
                                  $"({outputPath.ToRepr()} to {entry.LinkTarget.ToRepr()})");
                     // Try to write link, if fail, continue copy file

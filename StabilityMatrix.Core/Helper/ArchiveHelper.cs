@@ -223,7 +223,7 @@ public static partial class ArchiveHelper
             {
                 var folder = Path.GetDirectoryName(entry.Key)!;
                 var destDir = Path.GetFullPath(Path.Combine(fullOutputDir, folder));
-
+                
                 if (!Directory.Exists(destDir))
                 {
                     if (!destDir.StartsWith(fullOutputDir, StringComparison.Ordinal))
@@ -241,6 +241,7 @@ public static partial class ArchiveHelper
                 {
                     // Not sure why but symlink entries have a key that ends with a space
                     // and some broken path suffix, so we'll remove everything after the last space
+                    Logger.Debug($"Checking if output path {outputPath} contains space char: {outputPath.Contains(' ')}");
                     if (outputPath.Contains(' '))
                     {
                         outputPath = outputPath[..outputPath.LastIndexOf(' ')];
@@ -254,6 +255,7 @@ public static partial class ArchiveHelper
                         // Delete path if exists
                         File.Delete(outputPath);
                         File.CreateSymbolicLink(outputPath, entry.LinkTarget);
+                        return;
                     }
                     catch (IOException e)
                     {

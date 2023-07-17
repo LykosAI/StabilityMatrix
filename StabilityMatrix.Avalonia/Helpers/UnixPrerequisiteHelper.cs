@@ -8,6 +8,7 @@ using Avalonia.Platform;
 using NLog;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
@@ -22,15 +23,15 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
     private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
     
-    private string HomeDir => settingsManager.LibraryDir;
-    private string AssetsDir => Path.Combine(HomeDir, "Assets");
+    private DirectoryPath HomeDir => settingsManager.LibraryDir;
+    private DirectoryPath AssetsDir => HomeDir + "Assets";
+
+    private DirectoryPath PythonDir => AssetsDir + "Python310";
+    private FilePath PythonDllPath => PythonDir + "python310.dll";
+    public bool IsPythonInstalled => PythonDllPath.Exists;
     
-    private string PythonDir => Path.Combine(AssetsDir, "Python310");
-    private string PythonDllPath => Path.Combine(PythonDir, "python310.dll");
-    public bool IsPythonInstalled => File.Exists(PythonDllPath);
-    
-    private string PortableGitInstallDir => Path.Combine(HomeDir, "PortableGit");
-    public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
+    private DirectoryPath PortableGitInstallDir => HomeDir + "PortableGit";
+    public string GitBinPath => PortableGitInstallDir + "bin";
     
 
     public UnixPrerequisiteHelper(IDownloadService downloadService, ISettingsManager settingsManager)
@@ -106,7 +107,10 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
             
             // Extract
             Logger.Info($"Extracting Python Zip: {downloadPath} to {PythonDir}");
-            Directory.Delete(PythonDir, true);
+            if (PythonDir.Exists)
+            {
+                await PythonDir.DeleteAsync(true);
+            }
             if (progress != null)
             {
                 await ArchiveHelper.Extract7Z(downloadPath, PythonDir, progress);

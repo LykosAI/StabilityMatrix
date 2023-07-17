@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.Versioning;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Octokit;
@@ -10,6 +11,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Helper;
 
+[SupportedOSPlatform("windows")]
 public class PrerequisiteHelper : IPrerequisiteHelper
 {
     private readonly ILogger<PrerequisiteHelper> logger;
@@ -271,6 +273,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         await UnzipGit(progress);
     }
 
+    [SupportedOSPlatform("windows")]
     public async Task InstallVcRedistIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         var registry = Registry.LocalMachine;

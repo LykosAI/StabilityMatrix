@@ -5,6 +5,7 @@ using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Platform;
+using Avalonia.Utilities;
 using NLog;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
@@ -57,11 +58,11 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         };
         
         progress?.Report(new ProgressReport(0, message: "Unpacking resources", isIndeterminate: true));
-
+        
         Directory.CreateDirectory(AssetsDir);
-        foreach (var (assetUri, extractTo) in assets)
+        foreach (var (asset, extractDir) in assets)
         {
-            await Assets.ExtractAsset(assetUri, extractTo);
+            await asset.ExtractTo(extractDir);
         }
         
         progress?.Report(new ProgressReport(1, message: "Unpacking resources", isIndeterminate: false));
@@ -112,7 +113,7 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
                 await PythonDir.DeleteAsync(true);
             }
             progress?.Report(new ProgressReport(0, "Installing Python", isIndeterminate: true));
-            await ArchiveHelper.ExtractManaged(downloadPath, PythonDir);
+            await ArchiveHelper.Extract7ZAuto(downloadPath, PythonDir);
             
             // For Linux, move the inner 'python' folder up to the root PythonDir
             if (Compat.IsLinux)

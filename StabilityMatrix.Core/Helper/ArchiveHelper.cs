@@ -122,6 +122,58 @@ public static partial class ArchiveHelper
         var compressed = ulong.Parse(matches[1].Value);
         return new ArchiveInfo(size, compressed);
     }
+    
+    /// <summary>
+    /// Extracts a zipped tar (i.e. '.tar.gz') archive.
+    /// First extracts the zipped tar, then extracts the tar and removes the tar.
+    /// </summary>
+    /// <param name="archivePath"></param>
+    /// <param name="extractDirectory"></param>
+    /// <returns></returns>
+    public static async Task<ArchiveInfo> Extract7ZTar(string archivePath, string extractDirectory)
+    {
+        if (!archivePath.EndsWith(".tar.gz"))
+        {
+            throw new ArgumentException("Archive must be a zipped tar.");
+        }
+        // Extract the tar.gz to tar
+        await Extract7Z(archivePath, extractDirectory);
+        
+        // Extract the tar
+        var tarPath = Path.Combine(extractDirectory, Path.GetFileNameWithoutExtension(archivePath) + ".tar");
+        if (!File.Exists(tarPath))
+        {
+            throw new FileNotFoundException("Tar file not found.", tarPath);
+        }
+
+        try
+        {
+            return await Extract7Z(tarPath, extractDirectory);
+        }
+        finally
+        {
+            // Remove the tar
+            if (File.Exists(tarPath))
+            {
+                File.Delete(tarPath);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Extracts with auto handling of tar.gz files.
+    /// </summary>
+    public static async Task<ArchiveInfo> Extract7ZAuto(string archivePath, string extractDirectory)
+    {
+        if (archivePath.EndsWith(".tar.gz"))
+        {
+            return await Extract7ZTar(archivePath, extractDirectory);
+        }
+        else
+        {
+            return await Extract7Z(archivePath, extractDirectory);
+        }
+    }
 
     /// <summary>
     /// Extract an archive to the output directory.
@@ -212,6 +264,8 @@ public static partial class ArchiveHelper
             var entry = reader.Entry;
             var outputPath = Path.Combine(outputDirectory, entry.Key);
             
+            Logger.Debug($"Extracting key: {entry.Key.ToRepr()}");
+            
             if (entry.IsDirectory)
             {
                 if (!Directory.Exists(outputPath))
@@ -255,7 +309,7 @@ public static partial class ArchiveHelper
                         // Delete path if exists
                         File.Delete(outputPath);
                         File.CreateSymbolicLink(outputPath, entry.LinkTarget);
-                        return;
+                        continue;
                     }
                     catch (IOException e)
                     {

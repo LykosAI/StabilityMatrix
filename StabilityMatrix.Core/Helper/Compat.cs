@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Core.Helper;
@@ -103,6 +104,27 @@ public static class Compat
         
         AppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         AppDataHome = AppData + AppName;
+    }
+
+    /// <summary>
+    /// Generic function to return different objects based on platform flags.
+    /// Parameters are checked in sequence with Compat.Platform.HasFlag,
+    /// the first match is returned.
+    /// </summary>
+    /// <exception cref="PlatformNotSupportedException">Thrown when no targets match</exception>
+    public static T Switch<T>(params (PlatformKind platform, T target)[] targets)
+    {
+        foreach (var (platform, target) in targets)
+        {
+            if (Platform.HasFlag(platform))
+            {
+                return target;
+            }
+        }
+        
+        throw new PlatformNotSupportedException(
+            $"Platform {Platform.ToString()} is not in supported targets: " +
+            $"{string.Join(", ", targets.Select(t => t.platform.ToString()))}");
     }
     
     /// <summary>

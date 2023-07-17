@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Avalonia.Platform;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Avalonia;
@@ -17,39 +18,18 @@ internal static class Assets
 
     [SupportedOSPlatform("windows")]
     [SupportedOSPlatform("linux")]
-    public static Uri SevenZipExecutable
-    {
-        get
-        {
-            if (Compat.IsWindows)
-            {
-                return new Uri("avares://StabilityMatrix.Avalonia/Assets/win-x64/7za.exe");
-            }
-            if (Compat.Platform.HasFlag(PlatformKind.Linux | PlatformKind.X64))
-            {
-                return new Uri("avares://StabilityMatrix.Avalonia/Assets/linux-x64/7zzs");
-            }
-            throw new PlatformNotSupportedException();
-        }
-    }
+    public static AvaloniaResource SevenZipExecutable => Compat.Switch(
+        (PlatformKind.Windows,
+            new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/win-x64/7za.exe")),
+        (PlatformKind.Linux | PlatformKind.X64,
+            new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/linux-x64/7zzs",
+                UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute)));
     
     [SupportedOSPlatform("windows")]
     [SupportedOSPlatform("linux")]
-    public static Uri SevenZipLicense
-    {
-        get
-        {
-            if (Compat.IsWindows)
-            {
-                return new Uri("avares://StabilityMatrix.Avalonia/Assets/win-x64/7za - LICENSE.txt");
-            }
-            if (Compat.Platform.HasFlag(PlatformKind.Linux | PlatformKind.X64))
-            {
-                return new Uri("avares://StabilityMatrix.Avalonia/Assets/linux-x64/7zzs - LICENSE.txt");
-            }
-            throw new PlatformNotSupportedException();
-        }
-    }
+    public static AvaloniaResource SevenZipLicense => Compat.Switch(
+        (PlatformKind.Windows, new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/win-x64/7za - LICENSE.txt")),
+        (PlatformKind.Linux | PlatformKind.X64, new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/linux-x64/7zzs - LICENSE.txt")));
     
     [SupportedOSPlatform("windows")]
     [SupportedOSPlatform("linux")]

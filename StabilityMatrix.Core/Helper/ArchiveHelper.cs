@@ -169,7 +169,7 @@ public static partial class ArchiveHelper
         await Extract7Z(archivePath, extractDirectory);
         
         // Extract the tar
-        var tarPath = Path.Combine(extractDirectory, Path.GetFileNameWithoutExtension(archivePath) + ".tar");
+        var tarPath = Path.Combine(extractDirectory, Path.GetFileNameWithoutExtension(archivePath));
         if (!File.Exists(tarPath))
         {
             throw new FileNotFoundException("Tar file not found.", tarPath);
@@ -292,8 +292,6 @@ public static partial class ArchiveHelper
         {
             var entry = reader.Entry;
             var outputPath = Path.Combine(outputDirectory, entry.Key);
-            
-            Logger.Debug($"Extracting key: {entry.Key.ToRepr()}");
             
             if (entry.IsDirectory)
             {

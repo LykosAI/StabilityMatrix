@@ -28,6 +28,9 @@ public class PyRunner : IPyRunner
     public static string PythonExePath { get; }
     public static string PipExePath { get; }
     
+    // On Windows, PythonHome is the root path, on Unix, it's the bin path
+    public static string PythonHome => Compat.IsWindows ? PythonDir : Path.Combine(PythonDir, "bin");
+    
     public static string GetPipPath => Path.Combine(PythonDir, "get-pip.pyc");
     // public static string PipExePath => Path.Combine(PythonDir, "Scripts", "pip" + Compat.ExeExtension);
     public static string VenvPath => Path.Combine(PythonDir, "Scripts", "virtualenv" + Compat.ExeExtension);
@@ -69,17 +72,14 @@ public class PyRunner : IPyRunner
     public async Task Initialize()
     {
         if (PythonEngine.IsInitialized) return;
-
-        // On Windows, PythonHome is the root path, on Unix, it's the bin path
-        var pythonHome = Compat.IsWindows ? PythonDir : Path.Combine(PythonDir, "bin");
         
-        Logger.Info("Setting PYTHONHOME and PATH to {PythonHome}", pythonHome);
-        Environment.SetEnvironmentVariable("PYTHONHOME", pythonHome, EnvironmentVariableTarget.Process);
+        Logger.Info("Setting PYTHONHOME and PATH to {PythonHome}", PythonHome);
+        Environment.SetEnvironmentVariable("PYTHONHOME", PythonHome, EnvironmentVariableTarget.Process);
         
         // Get existing PATH
         var currentEnvPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
         // Append Python path to PATH
-        Environment.SetEnvironmentVariable("PATH", $"{pythonHome};{currentEnvPath}", EnvironmentVariableTarget.Process);
+        Environment.SetEnvironmentVariable("PATH", $"{PythonHome};{currentEnvPath}", EnvironmentVariableTarget.Process);
 
         Logger.Info("Initializing Python runtime with DLL: {DllPath}", PythonDllPath);
         // Check PythonDLL exists
@@ -90,7 +90,7 @@ public class PyRunner : IPyRunner
         }
         
         Runtime.PythonDLL = PythonDllPath;
-        PythonEngine.PythonHome = pythonHome;
+        PythonEngine.PythonHome = PythonHome;
         PythonEngine.Initialize();
         PythonEngine.BeginAllowThreads();
 

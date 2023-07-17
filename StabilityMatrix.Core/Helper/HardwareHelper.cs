@@ -73,7 +73,7 @@ public static partial class HardwareHelper
                 name = match.Groups[1].Value.Trim();
             }
 
-            match = MyRegex().Match(gpuOutput);
+            match = Regex.Match(gpuOutput, @"prefetchable\) \[size=(\\d+)M\]");
             if (match.Success)
             {
                 memoryBytes = ulong.Parse(match.Groups[1].Value) * 1024 * 1024;
@@ -123,9 +123,6 @@ public static partial class HardwareHelper
     {
         return IterGpuInfo().Any(gpu => gpu.IsAmd);
     }
-
-    [GeneratedRegex("prefetchable\\) \\[size=(\\d+)M\\]")]
-    private static partial Regex MyRegex();
 }
 
 public enum Level

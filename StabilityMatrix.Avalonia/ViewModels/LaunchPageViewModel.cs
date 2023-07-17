@@ -2,6 +2,7 @@
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -158,7 +159,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         await pyRunner.Initialize();
 
         // Get path from package
-        var packagePath = $"{settingsManager.LibraryDir}\\{activeInstall.LibraryPath!}";
+        var packagePath = Path.Combine(settingsManager.LibraryDir, activeInstall.LibraryPath!);
 
         basePackage.ConsoleOutput += OnProcessOutputReceived;
         basePackage.Exited += OnProcessExited;

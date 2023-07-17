@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -114,11 +115,13 @@ public partial class OneClickInstallViewModel : ViewModelBase
         }
         IsIndeterminate = false;
 
+        var libraryDir = settingsManager.LibraryDir;
+        
         // get latest version & download & install
         SubHeaderText = "Getting latest version...";
         var latestVersion = await SelectedPackage.GetLatestVersion();
         SelectedPackage.InstallLocation =
-            $"{settingsManager.LibraryDir}\\Packages\\{SelectedPackage.Name}";
+            Path.Combine(libraryDir, "Packages", SelectedPackage.Name);
         SelectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
         
         await DownloadPackage(latestVersion);
@@ -130,7 +133,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
         var installedPackage = new InstalledPackage
         {
             DisplayName = SelectedPackage.DisplayName,
-            LibraryPath = $"Packages\\{SelectedPackage.Name}",
+            LibraryPath = Path.Combine("Packages", SelectedPackage.Name),
             Id = Guid.NewGuid(),
             PackageName = SelectedPackage.Name,
             PackageVersion = latestVersion,

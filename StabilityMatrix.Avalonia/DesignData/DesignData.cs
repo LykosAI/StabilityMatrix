@@ -49,7 +49,7 @@ public static class DesignData
                         DisplayName = "My Installed Package",
                         PackageName = "stable-diffusion-webui",
                         PackageVersion = "v1.0.0",
-                        LibraryPath = "Packages\\example-webui",
+                        LibraryPath = $"Packages{Environment.NewLine}example-webui",
                         LastUpdateCheck = DateTimeOffset.Now
                     }
                 },

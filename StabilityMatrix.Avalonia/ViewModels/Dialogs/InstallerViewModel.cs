@@ -189,7 +189,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         var package = new InstalledPackage
         {
             DisplayName = SelectedPackage.DisplayName,
-            LibraryPath = $"Packages\\{InstallName}",
+            LibraryPath = Path.Combine("Packages", InstallName),
             Id = Guid.NewGuid(),
             PackageName = SelectedPackage.Name,
             PackageVersion = version,

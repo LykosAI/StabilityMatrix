@@ -52,7 +52,7 @@ public class InstalledPackage
         // Further check if the path is a sub-path of the library
         var isSubPath = relativePath != "."
                     && relativePath != ".."
-                    && !relativePath.StartsWith("..\\")
+                    && !relativePath.StartsWith(".." + Environment.NewLine)
                     && !System.IO.Path.IsPathRooted(relativePath);
         return isSubPath ? relativePath : null;
     } 

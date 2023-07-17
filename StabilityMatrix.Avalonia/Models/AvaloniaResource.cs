@@ -25,9 +25,12 @@ public readonly record struct AvaloniaResource(
     public async Task ExtractTo(string outputDir, bool overwrite = true)
     {
         var targetPath = Path.Combine(outputDir, FileName);
-        if (File.Exists(targetPath) && !overwrite)
+        if (File.Exists(targetPath))
         {
-            return;
+            // Skip if not overwriting
+            if (!overwrite) return;
+            // Otherwise delete the file
+            File.Delete(targetPath);
         }
         var stream = AssetLoader.Open(UriPath);
         await using var fileStream = File.Create(targetPath);

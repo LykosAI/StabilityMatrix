@@ -17,11 +17,12 @@ public static class StringExtensions
             new CodePrimitiveExpression(str), 
             writer, 
             new CodeGeneratorOptions {IndentString = "\t"});
-                
+        
         var literal = writer.ToString();
         // Replace split lines
         literal = literal.Replace($"\" +{Environment.NewLine}\t\"", "");
-        
+        // Surround with single quotes
+        literal = $"'{literal}'";
         return literal;
     }
 }

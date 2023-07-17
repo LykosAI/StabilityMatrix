@@ -2,6 +2,7 @@
 using NLog;
 using Python.Runtime;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python.Interop;
@@ -17,12 +18,12 @@ public class PyRunner : IPyRunner
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     
     // Set by ISettingsManager.TryFindLibrary()
-    public static DirectoryPath HomeDir { get; set; } = new();
+    public static DirectoryPath HomeDir { get; set; } = string.Empty;
     
     // This is same for all platforms
     public const string PythonDirName = "Python310";
     
-    public static string PythonDir => Path.Combine(HomeDir, "Assets", PythonDirName);
+    public static string PythonDir => Path.Combine(GlobalConfig.LibraryDir, "Assets", PythonDirName);
     public static string PythonDllPath { get; }
     public static string PythonExePath { get; }
     public static string PipExePath { get; }

@@ -9,6 +9,7 @@ using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using NLog;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
@@ -24,6 +25,8 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 [View(typeof(SettingsPage))]
 public partial class SettingsViewModel : PageViewModelBase
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    
     private readonly INotificationService notificationService;
     private readonly ISettingsManager settingsManager;
     private readonly IPrerequisiteHelper prerequisiteHelper;
@@ -141,13 +144,18 @@ public partial class SettingsViewModel : PageViewModelBase
             $"Result: {result}"));
     }
     
-    public async Task ShowPythonVersion()
+    [RelayCommand]
+    private async Task CheckPythonVersion()
     {
+        var isInstalled = prerequisiteHelper.IsPythonInstalled;
+        Logger.Debug($"Check python installed: {isInstalled}");
         // Ensure python installed
         if (!prerequisiteHelper.IsPythonInstalled)
         {
             // Need 7z as well for site packages repack
+            Logger.Debug("Python not installed, unpacking resources...");
             await prerequisiteHelper.UnpackResourcesIfNecessary();
+            Logger.Debug("Unpacked resources, installing python...");
             await prerequisiteHelper.InstallPythonIfNecessary();
         }
 

@@ -222,8 +222,12 @@ public sealed class App : Application
         services.AddSingleton<INotificationService, NotificationService>();
         services.AddSingleton<IPyRunner, PyRunner>();
         services.AddSingleton<IUpdateHelper, UpdateHelper>();
-        
-        if (Compat.IsLinux)
+
+        if (Compat.IsWindows)
+        {
+            services.AddSingleton<IPrerequisiteHelper, PrerequisiteHelper>();
+        }
+        else if (Compat.IsLinux)
         {
             services.AddSingleton<IPrerequisiteHelper, UnixPrerequisiteHelper>();
         }

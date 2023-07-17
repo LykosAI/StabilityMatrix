@@ -92,7 +92,7 @@ public static partial class ArchiveHelper
             UseShellExecute = false,
             CreateNoWindow = true
         };
-
+        process.Start();
         await ProcessRunner.WaitForExitConditionAsync(process);
         var output = await process.StandardOutput.ReadToEndAsync();
         

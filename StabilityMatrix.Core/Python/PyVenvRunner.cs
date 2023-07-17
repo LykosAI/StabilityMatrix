@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using NLog;
+using Python.Runtime;
 using Salaros.Configuration;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -46,7 +47,7 @@ public class PyVenvRunner : IDisposable
     /// </summary>
     public static string RelativePythonPath => Compat.Switch(
         (PlatformKind.Windows, Path.Combine("Scripts", "python.exe")),
-        (PlatformKind.Unix, Path.Combine("bin", "python3.10")));
+        (PlatformKind.Unix, Path.Combine("bin", "python3")));
 
     /// <summary>
     /// The full path to the python executable.
@@ -58,7 +59,7 @@ public class PyVenvRunner : IDisposable
     /// </summary>
     public static string RelativePipPath => Compat.Switch(
         (PlatformKind.Windows, Path.Combine("Scripts", "pip.exe")),
-        (PlatformKind.Unix, Path.Combine("bin", "pip3.10")));
+        (PlatformKind.Unix, Path.Combine("bin", "pip3")));
 
     /// <summary>
     /// The full path to the pip executable.
@@ -131,15 +132,11 @@ public class PyVenvRunner : IDisposable
         var cfg = new ConfigParser(topSection + File.ReadAllText(cfgPath));
         
         // Need to set all path keys - home, base-prefix, base-exec-prefix, base-executable
-        cfg.SetValue("top", "home", pythonDirectory);
+        cfg.SetValue("top", "home", PythonEngine.PythonHome);
         cfg.SetValue("top", "base-prefix", pythonDirectory);
         
-        // on Windows, base-exec-prefix is the same as base-prefix, with portable mode layout
-        cfg.SetValue("top", "base-exec-prefix",
-            // on unix, we use the binary folder
-            Compat.IsWindows ? pythonDirectory : Path.Combine(pythonDirectory, RelativeBinPath));
-
-        // on Windows, base-executable is in root folder, on unix it's in binary folder
+        cfg.SetValue("top", "base-exec-prefix", pythonDirectory);
+        
         cfg.SetValue("top", "base-executable",
             Path.Combine(pythonDirectory, Compat.IsWindows ? "python.exe" : RelativePythonPath));
         

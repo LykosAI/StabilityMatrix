@@ -204,18 +204,38 @@ public static class ArchiveHelper
     /// </summary>
     public static async Task ExtractManaged(Stream stream, string outputDirectory)
     {
+        var fullOutputDir = Path.GetFullPath(outputDirectory);
         using var reader = ReaderFactory.Open(stream);
         while (reader.MoveToNextEntry())
         {
             var entry = reader.Entry;
+            var outputPath = Path.Combine(outputDirectory, entry.Key);
+            
             if (entry.IsDirectory)
             {
-                Directory.CreateDirectory(Path.Combine(outputDirectory, entry.Key));
+                if (!Directory.Exists(outputPath))
+                {
+                    Directory.CreateDirectory(outputPath);
+                }
             }
             else
             {
+                var folder = Path.GetDirectoryName(entry.Key)!;
+                var destDir = Path.GetFullPath(Path.Combine(fullOutputDir, folder));
+
+                if (!Directory.Exists(destDir))
+                {
+                    if (!destDir.StartsWith(fullOutputDir, StringComparison.Ordinal))
+                    {
+                        throw new ExtractionException(
+                            "Entry is trying to create a directory outside of the destination directory."
+                        );
+                    }
+
+                    Directory.CreateDirectory(destDir);
+                }
                 await using var entryStream = reader.OpenEntryStream();
-                await using var fileStream = File.Create(Path.Combine(outputDirectory, entry.Key));
+                await using var fileStream = File.Create(outputPath);
                 await entryStream.CopyToAsync(fileStream);
             }
         }

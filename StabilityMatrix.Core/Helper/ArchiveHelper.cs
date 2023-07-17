@@ -234,6 +234,25 @@ public static partial class ArchiveHelper
 
                     Directory.CreateDirectory(destDir);
                 }
+                
+                // Check if symbolic link
+                if (entry.LinkTarget != null)
+                {
+                    Logger.Debug($"Extracting symbolic link [{entry.Key}] ({outputPath} to {entry.LinkTarget})");
+                    // Try to write link, if fail, continue copy file
+                    try
+                    {
+                        // Delete path if exists
+                        File.Delete(outputPath);
+                        File.CreateSymbolicLink(outputPath, entry.LinkTarget);
+                    }
+                    catch (IOException e)
+                    {
+                        Logger.Warn($"Could not extract symbolic link, copying file instead: {e.Message}");
+                    }
+                }
+                
+                // Write file
                 await using var entryStream = reader.OpenEntryStream();
                 await using var fileStream = File.Create(outputPath);
                 await entryStream.CopyToAsync(fileStream);

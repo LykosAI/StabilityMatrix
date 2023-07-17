@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
@@ -9,6 +10,7 @@ using SharpCompress.Compressors.Deflate;
 using SharpCompress.Readers;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using GZipStream = System.IO.Compression.GZipStream;
 using Timer = System.Timers.Timer;
 
 namespace StabilityMatrix.Core.Helper;
@@ -190,11 +192,18 @@ public static class ArchiveHelper
     /// Extract an archive to the output directory, using SharpCompress managed code.
     /// does not require 7z to be installed, but no progress reporting.
     /// </summary>
-    /// <param name="archivePath"></param>
-    /// <param name="outputDirectory">Output directory, created if does not exist.</param>
     public static async Task ExtractManaged(string archivePath, string outputDirectory)
     {
         await using var stream = File.OpenRead(archivePath);
+        await ExtractManaged(stream, outputDirectory);
+    }
+    
+    /// <summary>
+    /// Extract an archive to the output directory, using SharpCompress managed code.
+    /// does not require 7z to be installed, but no progress reporting.
+    /// </summary>
+    public static async Task ExtractManaged(Stream stream, string outputDirectory)
+    {
         using var reader = ReaderFactory.Open(stream);
         while (reader.MoveToNextEntry())
         {

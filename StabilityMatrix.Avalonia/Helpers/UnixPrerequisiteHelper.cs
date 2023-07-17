@@ -111,14 +111,8 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
             {
                 await PythonDir.DeleteAsync(true);
             }
-            if (progress != null)
-            {
-                await ArchiveHelper.Extract7Z(downloadPath, PythonDir, progress);
-            }
-            else
-            {
-                await ArchiveHelper.Extract7Z(downloadPath, PythonDir);
-            }
+            progress?.Report(new ProgressReport(0, "Installing Python", isIndeterminate: true));
+            await ArchiveHelper.ExtractManaged(downloadPath, PythonDir);
             
             // For Linux, move the inner 'python' folder up to the root PythonDir
             if (Compat.IsLinux)
@@ -138,6 +132,8 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
             // Cleanup download file
             File.Delete(downloadPath);
         }
+        
+        progress?.Report(new ProgressReport(1, "Installing Python", isIndeterminate: false));
     }
     
     public Task SetupPythonDependencies(string installLocation, string requirementsFileName,

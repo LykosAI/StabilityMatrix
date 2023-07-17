@@ -27,7 +27,7 @@ internal static class Assets
             }
             if (Compat.Platform.HasFlag(PlatformKind.Linux | PlatformKind.X64))
             {
-                return new Uri("avares://StabilityMatrix.Avalonia/Assets/linux-x64/7zzs-linux-x64");
+                return new Uri("avares://StabilityMatrix.Avalonia/Assets/linux-x64/7zzs");
             }
             throw new PlatformNotSupportedException();
         }

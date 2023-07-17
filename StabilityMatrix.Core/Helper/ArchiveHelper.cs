@@ -1,16 +1,11 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.IO.Compression;
-using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 using System.Text;
 using System.Text.RegularExpressions;
 using NLog;
 using SharpCompress.Common;
-using SharpCompress.Compressors.Deflate;
 using SharpCompress.Readers;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
-using GZipStream = System.IO.Compression.GZipStream;
 using Timer = System.Timers.Timer;
 
 namespace StabilityMatrix.Core.Helper;
@@ -19,7 +14,7 @@ public record struct ArchiveInfo(ulong Size, ulong CompressedSize);
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 
-public static class ArchiveHelper
+public static partial class ArchiveHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -47,16 +42,21 @@ public static class ArchiveHelper
 
     public static string SevenZipPath => Path.Combine(HomeDir, "Assets", SevenZipFileName);
     
-    private static readonly Regex Regex7ZOutput = new(@"(?<=Size:\s*)\d+|(?<=Compressed:\s*)\d+");
-    private static readonly Regex Regex7ZProgressDigits = new(@"(?<=\s*)\d+(?=%)");
-    private static readonly Regex Regex7ZProgressFull = new(@"(\d+)%.*- (.*)");
+    [GeneratedRegex(@"(?<=Size:\\s*)\\d+|(?<=Compressed:\\s*)\\d+")]
+    private static partial Regex Regex7ZOutput();
+    
+    [GeneratedRegex(@"(?<=\s*)\d+(?=%)")]
+    private static partial Regex Regex7ZProgressDigits();
+    
+    [GeneratedRegex(@"(\d+)%.*- (.*)")]
+    private static partial Regex Regex7ZProgressFull();
     
     public static async Task<ArchiveInfo> TestArchive(string archivePath)
     {
         var process = ProcessRunner.StartProcess(SevenZipPath, new[] {"t", archivePath});
         await process.WaitForExitAsync();
         var output = await process.StandardOutput.ReadToEndAsync();
-        var matches = Regex7ZOutput.Matches(output);
+        var matches = Regex7ZOutput().Matches(output);
         var size = ulong.Parse(matches[0].Value);
         var compressed = ulong.Parse(matches[1].Value);
         return new ArchiveInfo(size, compressed);
@@ -82,7 +82,7 @@ public static class ArchiveHelper
         var process = ProcessRunner.StartProcess(SevenZipPath, args);
         await ProcessRunner.WaitForExitConditionAsync(process);
         var output = await process.StandardOutput.ReadToEndAsync();
-        var matches = Regex7ZOutput.Matches(output);
+        var matches = Regex7ZOutput().Matches(output);
         var size = ulong.Parse(matches[0].Value);
         var compressed = ulong.Parse(matches[1].Value);
         return new ArchiveInfo(size, compressed);
@@ -96,7 +96,7 @@ public static class ArchiveHelper
             // Parse progress
             Logger.Trace($"7z: {s}");
             outputStore.AppendLine(s.Text);
-            var match = Regex7ZProgressFull.Match(s.Text ?? "");
+            var match = Regex7ZProgressFull().Match(s.Text);
             if (match.Success)
             {
                 var percent = int.Parse(match.Groups[1].Value);
@@ -116,7 +116,7 @@ public static class ArchiveHelper
         progress.Report(new ProgressReport(1, "Finished extracting", type: ProgressType.Extract));
         
         var output = outputStore.ToString();
-        var matches = Regex7ZOutput.Matches(output);
+        var matches = Regex7ZOutput().Matches(output);
         var size = ulong.Parse(matches[0].Value);
         var compressed = ulong.Parse(matches[1].Value);
         return new ArchiveInfo(size, compressed);

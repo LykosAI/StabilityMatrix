@@ -91,10 +91,10 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         var (url, hashSha256) = Assets.PythonDownloadUrl;
         var fileName = Path.GetFileName(url.LocalPath);
         var downloadPath = Path.Combine(AssetsDir, fileName);
-        Logger.Info($"Downloading Python from {url.AbsolutePath} to {downloadPath}");
+        Logger.Info($"Downloading Python from {url} to {downloadPath}");
         try
         {
-            await downloadService.DownloadToFileAsync(url.AbsolutePath, downloadPath, progress);
+            await downloadService.DownloadToFileAsync(url.ToString(), downloadPath, progress);
             
             // Verify hash
             var actualHash = await FileHash.GetSha256Async(downloadPath);

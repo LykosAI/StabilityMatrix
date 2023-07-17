@@ -1,7 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using NLog;
 using Salaros.Configuration;
+using StabilityMatrix.Core.Exceptions;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Processes;
@@ -155,9 +158,28 @@ public class PyVenvRunner : IDisposable
         {
             throw new FileNotFoundException("pip not found", PipPath);
         }
+        
+        // Record output for errors
+        var output = new StringBuilder();
+        
+        var outputAction = outputDataReceived == null ? null : new Action<ProcessOutput>(s =>
+        {
+            // Record to output
+            output.Append(s.Text);
+            // Forward to callback
+            outputDataReceived(s);
+        });
+        
         SetPyvenvCfg(PyRunner.PythonDir);
-        RunDetached($"-m pip install {args}", outputDataReceived, workingDirectory: workingDirectory ?? RootPath);
-        await ProcessRunner.WaitForExitConditionAsync(Process);
+        RunDetached($"-m pip install {args}", outputAction, workingDirectory: workingDirectory ?? RootPath);
+        await Process.WaitForExitAsync();
+        
+        // Check return code
+        if (Process.ExitCode != 0)
+        {
+            throw new ProcessException(
+                $"pip install failed with code {Process.ExitCode}: {output.ToString().ToRepr()}");
+        }
     }
 
     [MemberNotNull(nameof(Process))]

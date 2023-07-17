@@ -48,4 +48,8 @@ public class FileSystemPath : IEquatable<FileSystemPath>, IEquatable<string>
     {
         return FullPath.GetHashCode();
     }
+    
+    // Implicit conversions to and from string
+    public static implicit operator string(FileSystemPath path) => path.FullPath;
+    public static implicit operator FileSystemPath(string path) => new(path);
 }

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using NLog;
 using Salaros.Configuration;
 using StabilityMatrix.Core.Helper;
@@ -10,6 +11,7 @@ namespace StabilityMatrix.Core.Python;
 /// <summary>
 /// Python runner using a subprocess, mainly for venv support.
 /// </summary>
+[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class PyVenvRunner : IDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -34,12 +36,16 @@ public class PyVenvRunner : IDisposable
     /// <summary>
     /// The path to the python executable.
     /// </summary>
-    public FilePath PythonPath => RootPath + @"Scripts\python.exe";
+    public FilePath PythonPath => Compat.Switch(
+        (PlatformKind.Windows, RootPath.JoinFile("Scripts", "python.exe")),
+        (PlatformKind.Unix, RootPath.JoinFile("bin", "python3.10")));
 
     /// <summary>
     /// The path to the pip executable.
     /// </summary>
-    public FilePath PipPath => RootPath + @"Scripts\pip.exe";
+    public FilePath PipPath => Compat.Switch(
+        (PlatformKind.Windows, RootPath.JoinFile("Scripts", "pip.exe")),
+        (PlatformKind.Unix, RootPath.JoinFile("bin", "pip3.10")));
 
     /// <summary>
     /// List of substrings to suppress from the output.

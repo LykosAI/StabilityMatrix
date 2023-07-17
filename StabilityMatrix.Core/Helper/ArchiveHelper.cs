@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using NLog;
 using SharpCompress.Common;
 using SharpCompress.Readers;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using Timer = System.Timers.Timer;
@@ -238,7 +239,8 @@ public static partial class ArchiveHelper
                 // Check if symbolic link
                 if (entry.LinkTarget != null)
                 {
-                    Logger.Debug($"Extracting symbolic link [{entry.Key}] ({outputPath} to {entry.LinkTarget})");
+                    Logger.Debug($"Extracting symbolic link [{entry.Key.ToRepr()}] " +
+                                 $"({outputPath.ToRepr()} to {entry.LinkTarget.ToRepr()})");
                     // Try to write link, if fail, continue copy file
                     try
                     {

@@ -380,17 +380,24 @@ public sealed class App : Application
     {
         var logConfig = new LoggingConfiguration();
 
-        var fileTarget = new FileTarget("logfile")
-        {
-            ArchiveOldFileOnStartup = true,
-            FileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/app.log",
-            ArchiveFileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/app.{#}.log",
-            ArchiveNumbering = ArchiveNumberingMode.Rolling,
-            MaxArchiveFiles = 2
-        };
-        var debugTarget = new DebuggerTarget("debugger") {Layout = "${message}"};
-        logConfig.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, fileTarget);
-        logConfig.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, debugTarget);
+        // File target
+        logConfig.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, 
+            new FileTarget("logfile")
+            {
+                Layout = "${longdate}|${level:uppercase=true}|${logger}|${message:withexception=true}",
+                ArchiveOldFileOnStartup = true,
+                FileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/app.log",
+                ArchiveFileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/app.{#}.log",
+                ArchiveNumbering = ArchiveNumberingMode.Rolling,
+                MaxArchiveFiles = 2
+            });
+        
+        // Debugger Target
+        logConfig.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, 
+            new DebuggerTarget("debugger")
+            {
+                Layout = "${message}"
+            });
 
         LogManager.Configuration = logConfig;
         // Add Sentry to NLog if enabled

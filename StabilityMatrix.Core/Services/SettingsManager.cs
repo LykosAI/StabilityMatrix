@@ -429,6 +429,9 @@ public class SettingsManager : ISettingsManager
 
             var modelHashes = new HashSet<string>();
             var sharedModelDirectory = Path.Combine(LibraryDir, "Models");
+            
+            if (!Directory.Exists(sharedModelDirectory)) return;
+            
             var connectedModelJsons = Directory.GetFiles(sharedModelDirectory, "*.cm-info.json",
                 SearchOption.AllDirectories);
             foreach (var jsonFile in connectedModelJsons)

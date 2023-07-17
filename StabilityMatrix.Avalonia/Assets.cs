@@ -22,8 +22,7 @@ internal static class Assets
         (PlatformKind.Windows,
             new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/win-x64/7za.exe")),
         (PlatformKind.Linux | PlatformKind.X64,
-            new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/linux-x64/7zzs",
-                UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute)));
+            new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/linux-x64/7zzs", (UnixFileMode) 0x777)));
     
     [SupportedOSPlatform("windows")]
     [SupportedOSPlatform("linux")]

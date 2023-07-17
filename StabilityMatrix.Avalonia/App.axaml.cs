@@ -104,7 +104,6 @@ public sealed class App : Application
         
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
         settingsManager.TryFindLibrary();
-        settingsManager.IndexCheckpoints();
         Services.GetRequiredService<ProgressManagerViewModel>().StartEventListener();
     }
 

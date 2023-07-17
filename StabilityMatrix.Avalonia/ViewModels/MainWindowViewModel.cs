@@ -55,6 +55,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
         await EnsureDataDirectory();
         
+        // Index checkpoints if we dont have
+        settingsManager.IndexCheckpoints();
+        
         if (!settingsManager.Settings.InstalledPackages.Any())
         {
             var viewModel = dialogFactory.Get<OneClickInstallViewModel>();

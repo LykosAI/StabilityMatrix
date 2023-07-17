@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -41,7 +43,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     
     [ObservableProperty] private Uri? cardImage;
     [ObservableProperty] private bool isImporting;
-    [ObservableProperty] private bool isInstalled;
+    [ObservableProperty] private string updateCardText = string.Empty;
+    [ObservableProperty] private bool showUpdateCard;
 
     public CheckpointBrowserCardViewModel(
         CivitModel civitModel,
@@ -58,10 +61,44 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
 
         UpdateImage();
 
+        CheckIfInstalled();
+
         // Update image when nsfw setting changes
         settingsManager.RegisterPropertyChangedHandler(
             s => s.ModelBrowserNsfwEnabled,
             _ => Dispatcher.UIThread.Post(UpdateImage));
+    }
+
+    private void CheckIfInstalled()
+    {
+        if (Design.IsDesignMode)
+        {
+            UpdateCardText = "Installed";
+            ShowUpdateCard = true;
+            return;
+        }
+        
+        if (CivitModel.ModelVersions == null) return;
+        
+        var installedModels = settingsManager.Settings.InstalledModelHashes;
+        if (!installedModels.Any()) return;
+        
+        // check if latest version is installed
+        var latestVersion = CivitModel.ModelVersions[0];
+        var latestVersionInstalled = latestVersion.Files != null && latestVersion.Files.Any(file =>
+            file is {Type: CivitFileType.Model, Hashes.BLAKE3: not null} &&
+            installedModels.Contains(file.Hashes.BLAKE3));
+
+        // check if any of the ModelVersion.Files.Hashes.BLAKE3 hashes are in the installedModels list
+        var anyVersionInstalled = latestVersionInstalled || CivitModel.ModelVersions.Any(version =>
+            version.Files != null && version.Files.Any(file =>
+                file is {Type: CivitFileType.Model, Hashes.BLAKE3: not null} &&
+                installedModels.Contains(file.Hashes.BLAKE3)));
+
+        UpdateCardText = latestVersionInstalled ? "Installed" :
+            anyVersionInstalled ? "Update Available" : string.Empty;
+
+        ShowUpdateCard = anyVersionInstalled;
     }
 
     // Choose and load image based on nsfw setting
@@ -99,6 +136,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     private async Task Import(CivitModel model)
     {
         await DoImport(model);
+        CheckIfInstalled();
     }
 
     [RelayCommand]
@@ -122,8 +160,9 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         
         var viewModel = dialogFactory.Get<SelectModelVersionViewModel>();
         viewModel.Dialog = dialog;
-        viewModel.Versions = versions;
-        viewModel.SelectedVersion = versions[0];
+        viewModel.Versions = versions.Select(v => new ModelVersionViewModel(settingsManager, v))
+            .ToImmutableArray();
+        viewModel.SelectedVersionViewModel = viewModel.Versions[0];
         
         dialog.Content = new SelectModelVersionDialog
         {
@@ -137,7 +176,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             return;
         }
 
-        var selectedVersion = viewModel?.SelectedVersion;
+        var selectedVersion = viewModel?.SelectedVersionViewModel?.ModelVersion;
         var selectedFile = viewModel?.SelectedFile;
 
         await Task.Delay(100);
@@ -248,6 +287,9 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                     return;
                 }
 
+                settingsManager.Transaction(
+                    s => s.InstalledModelHashes.Add(modelFile.Hashes.BLAKE3));
+
                 notificationService.Show(new Notification("Import complete",
                     $"{model.Type} {model.Name} imported successfully!", NotificationType.Success));
             }
@@ -301,6 +343,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
 
             IsIndeterminate = false;
             Value = 100;
+            CheckIfInstalled();
             DelayedClearProgress(TimeSpan.FromMilliseconds(800));
         }
     }

@@ -78,4 +78,5 @@ public interface ISettingsManager
     bool IsSharedFolderCategoryVisible(SharedFolderType type);
     bool IsEulaAccepted();
     void SetEulaAccepted();
+    void IndexCheckpoints();
 }

@@ -8,6 +8,8 @@
              xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="dialogs:SelectModelVersionViewModel"
+             xmlns:icons="https://github.com/projektanker/icons.avalonia"
+             xmlns:fluentAvalonia="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
              d:DataContext="{x:Static designData:DesignData.SelectModelVersionViewModel}"
              x:Class="StabilityMatrix.Avalonia.Views.Dialogs.SelectModelVersionDialog">
     <Grid
@@ -28,31 +30,45 @@
                   Margin="8"
                   MaxHeight="450"
                   ItemsSource="{Binding Versions}"
-                  SelectedItem="{Binding SelectedVersion}">
+                  SelectedItem="{Binding SelectedVersionViewModel}">
             <TreeView.ItemTemplate>
-                <DataTemplate DataType="{x:Type api:CivitModelVersion}">
-                    <TextBlock Margin="-24,4,0,4"
-                               Padding="4"
-                               MinWidth="128"
-                               Text="{Binding Name}" />
+                <DataTemplate DataType="{x:Type dialogs:ModelVersionViewModel}">
+                    <StackPanel Orientation="Horizontal"
+                                MinWidth="128"
+                                Margin="-24,4,0,4">
+                        <fluentAvalonia:SymbolIcon Symbol="Checkmark" 
+                                                   Foreground="Lime"
+                                                   IsVisible="{Binding IsInstalled}"
+                                                   VerticalAlignment="Center"/>
+                        <TextBlock Margin="8, 0"
+                                   Padding="4"
+                                   Text="{Binding ModelVersion.Name}" />
+                        
+                    </StackPanel>
                 </DataTemplate>
             </TreeView.ItemTemplate>
         </TreeView>
 
         <TreeView Grid.Row="0" Grid.Column="2"
                  Margin="8"
-                 ItemsSource="{Binding SelectedVersion.Files}"
+                 ItemsSource="{Binding SelectedVersionViewModel.CivitFileViewModels}"
                  SelectedItem="{Binding SelectedFile}">
             <TreeView.ItemTemplate>
-                <DataTemplate DataType="{x:Type api:CivitFile}">
-                    <StackPanel Margin="-24, 4, 4, 4" VerticalAlignment="Top">
-                        <TextBlock Margin="0,4,0,4" Text="{Binding Name}" />
-                        <TextBlock Margin="0,0,0,4" FontSize="11">
-                            <Run Text="{Binding Metadata.Size}" />
-                            <Run Text="{Binding Metadata.Fp}" />
-                            <Run Text="-" />
-                            <Run Text="{Binding FullFilesSize, Mode=OneWay}" />
-                        </TextBlock>
+                <DataTemplate DataType="{x:Type dialogs:CivitFileViewModel}">
+                    <StackPanel Orientation="Horizontal" Margin="-24, 4, 4, 4">
+                        <fluentAvalonia:SymbolIcon Symbol="Checkmark" 
+                                                   Foreground="Lime"
+                                                   IsVisible="{Binding IsInstalled}"
+                                                   VerticalAlignment="Center"/>
+                        <StackPanel Margin="8,0" VerticalAlignment="Top">
+                            <TextBlock Margin="4,4,0,4" Text="{Binding CivitFile.Name}" />
+                            <TextBlock Margin="0,0,0,4" FontSize="11">
+                                <Run Text="{Binding CivitFile.Metadata.Size}" />
+                                <Run Text="{Binding CivitFile.Metadata.Fp}" />
+                                <Run Text="-" />
+                                <Run Text="{Binding CivitFile.FullFilesSize, Mode=OneWay}" />
+                            </TextBlock>
+                        </StackPanel>
                     </StackPanel>
                 </DataTemplate>
             </TreeView.ItemTemplate>

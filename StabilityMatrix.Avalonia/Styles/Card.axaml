@@ -9,7 +9,21 @@
                     MaxHeight="450"
                     Name="ModelCard"
                     Width="330">
-                    <TextBlock Text="Hello World" />
+                    <TextBlock Text="Normal Card" />
+                </controls:Card>
+                <controls:Card
+                    Margin="8"
+                    MaxHeight="450"
+                    Classes="success"
+                    Width="330">
+                    <TextBlock Text="Success Card" />
+                </controls:Card>
+                <controls:Card
+                    Margin="8"
+                    MaxHeight="450"
+                    Classes="info"
+                    Width="330">
+                    <TextBlock Text="Info Card" />
                 </controls:Card>
             </StackPanel>
         </Border>
@@ -53,5 +67,27 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        
+        <Styles>
+            
+            <!-- Success -->
+            <Style Selector="controls|Card.success">
+                <Setter Property="Background" Value="{DynamicResource ThemeGreenColorTransparent}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ThemeGreenColorTransparent}" />
+                <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
+                </Style>
+            </Style>
+            
+            <!-- Info -->
+            <Style Selector="controls|Card.info">
+                <Setter Property="Background" Value="{DynamicResource ThemeDarkBlueColorTransparent}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkBlueColorTransparent}" />
+                <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
+                </Style>
+            </Style>
+            
+        </Styles>
     </ControlTheme>
 </ResourceDictionary>

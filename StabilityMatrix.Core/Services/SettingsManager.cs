@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
@@ -414,6 +415,38 @@ public class SettingsManager : ISettingsManager
         var globalSettings = new GlobalSettings {EulaAccepted = true};
         var json = JsonSerializer.Serialize(globalSettings);
         File.WriteAllText(GlobalSettingsPath, json);
+    }
+
+    public void IndexCheckpoints()
+    {
+        if (Settings.InstalledModelHashes.Any())
+            return;
+
+        Task.Run(() =>
+        {
+            var sw = new Stopwatch();
+            sw.Start();
+
+            var modelHashes = new HashSet<string>();
+            var sharedModelDirectory = Path.Combine(LibraryDir, "Models");
+            var connectedModelJsons = Directory.GetFiles(sharedModelDirectory, "*.cm-info.json",
+                SearchOption.AllDirectories);
+            foreach (var jsonFile in connectedModelJsons)
+            {
+                var json = File.ReadAllText(jsonFile);
+                var connectedModel = JsonSerializer.Deserialize<ConnectedModelInfo>(json);
+
+                if (connectedModel?.Hashes.BLAKE3 != null)
+                {
+                    modelHashes.Add(connectedModel.Hashes.BLAKE3);
+                }
+            }
+
+            Transaction(s => s.InstalledModelHashes = modelHashes);
+            
+            sw.Stop();
+            Logger.Info($"Indexed {modelHashes.Count} checkpoints in {sw.ElapsedMilliseconds}ms");
+        }).SafeFireAndForget();
     }
 
     /// <summary>

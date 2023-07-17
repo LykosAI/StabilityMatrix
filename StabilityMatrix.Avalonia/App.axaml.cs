@@ -101,7 +101,10 @@ public sealed class App : Application
     {
         var services = ConfigureServices();
         Services = services.BuildServiceProvider();
-        Services.GetRequiredService<ISettingsManager>().TryFindLibrary();
+        
+        var settingsManager = Services.GetRequiredService<ISettingsManager>();
+        settingsManager.TryFindLibrary();
+        settingsManager.IndexCheckpoints();
         Services.GetRequiredService<ProgressManagerViewModel>().StartEventListener();
     }
 

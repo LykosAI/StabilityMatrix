@@ -56,7 +56,8 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         };
         
         progress?.Report(new ProgressReport(0, message: "Unpacking resources", isIndeterminate: true));
-        
+
+        Directory.CreateDirectory(AssetsDir);
         foreach (var (assetUri, extractTo) in assets)
         {
             await Assets.ExtractAsset(assetUri, extractTo);

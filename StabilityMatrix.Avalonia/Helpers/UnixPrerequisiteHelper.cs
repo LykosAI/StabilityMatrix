@@ -117,7 +117,12 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
             // For Linux, move the inner 'python' folder up to the root PythonDir
             if (Compat.IsLinux)
             {
-                var innerPythonDir = Path.Combine(PythonDir, "python");
+                var innerPythonDir = PythonDir.JoinDir("python");
+                if (!innerPythonDir.Exists)
+                {
+                    throw new Exception($"Python download did not contain expected inner 'python' folder: {innerPythonDir}");
+                }
+                
                 foreach (var folder in Directory.EnumerateDirectories(innerPythonDir))
                 {
                     var folderName = Path.GetFileName(folder);
@@ -130,7 +135,10 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         finally
         {
             // Cleanup download file
-            File.Delete(downloadPath);
+            if (File.Exists(downloadPath))
+            {
+                File.Delete(downloadPath);
+            }
         }
         
         progress?.Report(new ProgressReport(1, "Installing Python", isIndeterminate: false));

@@ -177,21 +177,17 @@ public class A3WebUI : BaseGitPackage
         void HandleConsoleOutput(ProcessOutput s)
         {
             OnConsoleOutput(s);
-            
-            if (s.Text.Contains("model loaded", StringComparison.OrdinalIgnoreCase))
-            {
-                OnStartupComplete(WebUrl);
-            }
 
-            if (s.Text.Contains("Running on", StringComparison.OrdinalIgnoreCase))
-            {
-                var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
-                var match = regex.Match(s.Text);
-                if (match.Success)
-                {
-                    WebUrl = match.Value;
-                }
-            }
+            if (!s.Text.Contains("Running on", StringComparison.OrdinalIgnoreCase)) 
+                return;
+            
+            var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
+            var match = regex.Match(s.Text);
+            if (!match.Success)
+                return;
+            
+            WebUrl = match.Value;
+            OnStartupComplete(WebUrl);
         }
 
         var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";

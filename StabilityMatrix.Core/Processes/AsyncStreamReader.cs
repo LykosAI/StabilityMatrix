@@ -222,6 +222,8 @@ internal sealed class AsyncStreamReader : IDisposable
                     {
                         _messageQueue.Enqueue(line);
                     }
+                    
+                    break;
                 }
                 // \r\n - Windows
                 // \r alone is parsed as carriage return

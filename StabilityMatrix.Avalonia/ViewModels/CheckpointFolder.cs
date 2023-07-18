@@ -216,7 +216,6 @@ public partial class CheckpointFolder : ViewModelBase
         var progress = new Progress<ProgressReport>(report =>
         {
             Progress.IsIndeterminate = false;
-            Progress.IsProgressVisible = true;
             Progress.Value = report.Percentage;
             // For multiple files, add count
             Progress.Text = copyPaths.Count > 1 ? $"Importing {report.Title} ({report.Message})" : $"Importing {report.Title}";
@@ -323,7 +322,6 @@ public partial class CheckpointFolder : ViewModelBase
         Task.Delay(delay).ContinueWith(_ =>
         {
             IsImportInProgress = false;
-            Progress.IsProgressVisible = false;
             Progress.Value = 0;
             Progress.Text = string.Empty;
         });

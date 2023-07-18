@@ -52,7 +52,7 @@ public static class ProcessRunner
         return process;
     }
 
-    public static async Task<string> GetProcessOutputAsync(string fileName, string arguments)
+    public static async Task<string> GetProcessOutputAsync(string fileName, string arguments, string? workingDirectory = null)
     {
         Logger.Debug($"Starting process '{fileName}' with arguments '{arguments}'");
         
@@ -64,6 +64,11 @@ public static class ProcessRunner
             RedirectStandardOutput = true,
             CreateNoWindow = true
         };
+
+        if (workingDirectory != null)
+        {
+            info.WorkingDirectory = workingDirectory;
+        }
         
         using var process = new Process();
         process.StartInfo = info;

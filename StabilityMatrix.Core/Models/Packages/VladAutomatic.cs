@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
+using NLog;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Progress;
@@ -224,16 +225,41 @@ public class VladAutomatic : BaseGitPackage
         progress?.Report(new ProgressReport(0.1f, message: "Downloading package update...", isIndeterminate: true, type: ProgressType.Download));
 
         var version = await GithubApi.GetAllCommits(Author, Name, installedPackage.InstalledBranch);
-        var latest = version is {Count: > 0} ? version[0] : null;
+        var latest = version?.FirstOrDefault();
 
         if (latest == null)
         {
             Logger.Warn("No latest version found for vlad");
             return string.Empty;
         }
-        
-        await PrerequisiteHelper.RunGit(workingDirectory: installedPackage.FullPath, "pull", "origin", installedPackage.InstalledBranch);
-        
+
+        try
+        {
+            var output =
+                await PrerequisiteHelper.GetGitOutput(workingDirectory: installedPackage.FullPath,
+                    "rev-parse", "HEAD");
+
+            if (output?.Replace("\n", "") == latest.Sha)
+            {
+                return latest.Sha;
+            }
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
+
+        try
+        {
+            await PrerequisiteHelper.RunGit(workingDirectory: installedPackage.FullPath, "pull",
+                "origin", installedPackage.InstalledBranch);
+        }
+        catch (Exception e)
+        {
+            Logger.Log(LogLevel.Error, e);
+            return string.Empty;
+        }
+
         progress?.Report(new ProgressReport(1f, message: "Update Complete", isIndeterminate: true, type: ProgressType.Generic));
         
         return latest.Sha;

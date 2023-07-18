@@ -1,4 +1,5 @@
 ﻿using Octokit;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 
@@ -25,7 +26,7 @@ public abstract class BasePackage
     public abstract Task Shutdown();
     public abstract Task<bool> CheckForUpdates(InstalledPackage package);
     public abstract Task<string> Update(InstalledPackage installedPackage, IProgress<ProgressReport>? progress = null);
-    public abstract Task<IOrderedEnumerable<Release>> GetReleaseTags();
+    public abstract Task<IEnumerable<Release>> GetReleaseTags();
 
     public abstract List<LaunchOptionDefinition> LaunchOptions { get; }
     public virtual string? ExtraLaunchArguments { get; set; } = null;
@@ -38,9 +39,9 @@ public abstract class BasePackage
     
     public abstract Task<string> GetLatestVersion();
     public abstract Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true);
-    public abstract Task<IReadOnlyList<GitHubCommit>?> GetAllCommits(string branch, int page = 1, int perPage = 10);
-    public abstract Task<IReadOnlyList<Branch>> GetAllBranches();
-    public abstract Task<IOrderedEnumerable<Release>> GetAllReleases();
+    public abstract Task<IEnumerable<GitCommit>?> GetAllCommits(string branch, int page = 1, int perPage = 10);
+    public abstract Task<IEnumerable<Branch>> GetAllBranches();
+    public abstract Task<IEnumerable<Release>> GetAllReleases();
 
     public abstract string DownloadLocation { get; }
     public abstract string InstallLocation { get; set; }

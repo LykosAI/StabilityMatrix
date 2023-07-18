@@ -20,6 +20,7 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -46,10 +47,10 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     [ObservableProperty] private PackageVersion? selectedVersion;
 
     [ObservableProperty] private IReadOnlyList<BasePackage>? availablePackages;
-    [ObservableProperty] private ObservableCollection<GitHubCommit>? availableCommits;
+    [ObservableProperty] private ObservableCollection<GitCommit>? availableCommits;
     [ObservableProperty] private ObservableCollection<PackageVersion>? availableVersions;
     
-    [ObservableProperty] private GitHubCommit? selectedCommit;
+    [ObservableProperty] private GitCommit? selectedCommit;
 
     [ObservableProperty] private string? releaseNotes;
     
@@ -104,6 +105,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     {
         if (AvailablePackages == null) return;
         SelectedPackage = AvailablePackages[0];
+        IsReleaseMode = !SelectedPackage.ShouldIgnoreReleases;
     }
     
     public override async Task OnLoadedAsync()
@@ -318,14 +320,16 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             
             if (!IsReleaseMode)
             {
-                var commits = await value.GetAllCommits(SelectedVersion.TagName);
+                var commits = (await value.GetAllCommits(SelectedVersion.TagName))?.ToList();
                 if (commits is null || commits.Count == 0) return;
                 
-                AvailableCommits = new ObservableCollection<GitHubCommit>(commits);
+                AvailableCommits = new ObservableCollection<GitCommit>(commits);
                 SelectedCommit = AvailableCommits[0];
                 SelectedVersion = AvailableVersions?.FirstOrDefault(packageVersion => 
                     packageVersion.TagName.ToLowerInvariant() is "master" or "main");
             }
+
+            InstallName = SelectedPackage.DisplayName;
         }).SafeFireAndForget();
     }
     
@@ -383,7 +387,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                     
                     Dispatcher.UIThread.Post(() =>
                     {
-                        AvailableCommits = new ObservableCollection<GitHubCommit>(hashes);
+                        AvailableCommits = new ObservableCollection<GitCommit>(hashes);
                         SelectedCommit = AvailableCommits[0];
                     });
                 }

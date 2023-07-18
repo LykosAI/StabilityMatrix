@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using LiteDB.Async;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Models.Database;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
@@ -32,7 +33,17 @@ public class MockLiteDbContext : ILiteDbContext
     {
         return Task.FromResult(true);
     }
-    
+
+    public Task<GithubCacheEntry?> GetGithubCacheEntry(string cacheKey)
+    {
+        return Task.FromResult<GithubCacheEntry>(null);
+    }
+
+    public Task<bool> UpsertGithubCacheEntry(GithubCacheEntry cacheEntry)
+    {
+        return Task.FromResult(true);
+    }
+
     public void Dispose()
     {
         GC.SuppressFinalize(this);

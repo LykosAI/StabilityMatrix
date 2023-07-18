@@ -4,6 +4,7 @@ using NLog;
 using Octokit;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
@@ -57,17 +58,17 @@ public abstract class BaseGitPackage : BasePackage
         return GithubApi.GetLatestRelease(Author, Name);
     }
     
-    public override Task<IReadOnlyList<Branch>> GetAllBranches()
+    public override Task<IEnumerable<Branch>> GetAllBranches()
     {
         return GithubApi.GetAllBranches(Author, Name);
     }
     
-    public override Task<IOrderedEnumerable<Release>> GetAllReleases()
+    public override Task<IEnumerable<Release>> GetAllReleases()
     {
         return GithubApi.GetAllReleases(Author, Name);
     }
     
-    public override Task<IReadOnlyList<GitHubCommit>?> GetAllCommits(string branch, int page = 1, int perPage = 10)
+    public override Task<IEnumerable<GitCommit>?> GetAllCommits(string branch, int page = 1, int perPage = 10)
     {
         return GithubApi.GetAllCommits(Author, Name, branch, page, perPage);
     }
@@ -91,7 +92,7 @@ public abstract class BaseGitPackage : BasePackage
         return VenvRunner;
     }
     
-    public override async Task<IOrderedEnumerable<Release>> GetReleaseTags()
+    public override async Task<IEnumerable<Release>> GetReleaseTags()
     {
         var allReleases = await GithubApi.GetAllReleases(Author, Name);
         return allReleases;
@@ -175,13 +176,13 @@ public abstract class BaseGitPackage : BasePackage
             }
             else
             {
-                var allCommits = await GetAllCommits(package.InstalledBranch);
+                var allCommits = (await GetAllCommits(package.InstalledBranch))?.ToList();
                 if (allCommits == null || !allCommits.Any())
                 {
                     Logger.Warn("No commits found for {Package}", package.PackageName);
                     return false;
                 }
-                var latestCommitHash = allCommits[0].Sha;
+                var latestCommitHash = allCommits.First().Sha;
                 return latestCommitHash != currentVersion;
             }
             

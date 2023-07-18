@@ -95,25 +95,15 @@
                     Text="{Binding SelectedPackage.FullPath, FallbackValue=''}" />
                 <StackPanel Margin="0,16,0,0" Orientation="Horizontal" Spacing="16">
                     <Button
-                        Command="{Binding LaunchCommand}"
-                        Content="Install"
+                        Command="{Binding Launch}"
+                        Content="{Binding InstallButtonText}"
                         Height="50"
                         VerticalAlignment="Top"
-                        IsEnabled="{Binding !SelectedPackage.UpdateAvailable, FallbackValue=False}"
-                        IsVisible="{Binding !SelectedPackage.UpdateAvailable, FallbackValue=False}"
+                        IsEnabled="{Binding InstallButtonEnabled}"
                         Classes="success"
                         Width="100" />
                     <Button
-                        Command="{Binding UpdateCommand}"
-                        Content="Launch"
-                        Height="50"
-                        VerticalAlignment="Top"
-                        IsEnabled="{Binding SelectedPackage.UpdateAvailable, FallbackValue=False}"
-                        IsVisible="{Binding SelectedPackage.UpdateAvailable, FallbackValue=False}"
-                        Classes="success"
-                        Width="100" />
-                    <Button
-                        Command="{Binding UninstallCommand}"
+                        Command="{Binding Uninstall}"
                         Content="Uninstall"
                         Height="50"
                         VerticalAlignment="Top"

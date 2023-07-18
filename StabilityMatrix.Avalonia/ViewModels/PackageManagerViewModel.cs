@@ -20,6 +20,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
@@ -75,6 +76,9 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
     [ObservableProperty, NotifyPropertyChangedFor(nameof(SelectedPackage))]
     private bool updateAvailable;
+
+    [ObservableProperty] private string installButtonText;
+    [ObservableProperty] private bool installButtonEnabled;
     
     public bool ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate;
     public ObservableCollection<InstalledPackage> Packages { get; }
@@ -96,6 +100,8 @@ public partial class PackageManagerViewModel : PageViewModelBase
         SelectedPackage = installedPackages.FirstOrDefault(x =>
             x.Id == settingsManager.Settings.ActiveInstalledPackage);
         SelectedPackage ??= installedPackages.FirstOrDefault();
+        
+        InstallButtonEnabled = SelectedPackage != null;
     }
 
     private async Task CheckUpdates()
@@ -122,22 +128,21 @@ public partial class PackageManagerViewModel : PageViewModelBase
         }
     }
 
-    [RelayCommand]
-    private void Launch()
+    public async Task Launch()
     {
         if (SelectedPackage == null) return;
-        EventManager.Instance.RequestPageChange(typeof(LaunchPageViewModel));
-        EventManager.Instance.OnPackageLaunchRequested(SelectedPackage.Id);
+        if (InstallButtonText == "Launch")
+        {
+            EventManager.Instance.RequestPageChange(typeof(LaunchPageViewModel));
+            EventManager.Instance.OnPackageLaunchRequested(SelectedPackage.Id);
+        }
+        else
+        {
+            await UpdateSelectedPackage();
+        }
     }
     
-    [RelayCommand]
-    private async Task Update()
-    {
-        await UpdateSelectedPackage();
-    }
-
-    [RelayCommand]
-    private async Task Uninstall()
+    public async Task Uninstall()
     {
         // In design mode, just remove the package from the list
         if (Design.IsDesignMode)
@@ -168,7 +173,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
         if (result == ContentDialogResult.Primary)
         {
             IsUninstalling = true;
-            // InstallButtonEnabled = false;
+            InstallButtonEnabled = false;
             var deleteTask = DeleteDirectoryAsync(Path.Combine(settingsManager.LibraryDir,
                 SelectedPackage.LibraryPath));
             var taskResult = await notificationService.TryAsync(deleteTask,
@@ -186,11 +191,19 @@ public partial class PackageManagerViewModel : PageViewModelBase
             }
             await OnLoadedAsync();
             IsUninstalling = false;
-            // InstallButtonEnabled = true;
+            InstallButtonEnabled = true;
         }
     }
-    
-        /// <summary>
+
+    partial void OnSelectedPackageChanged(InstalledPackage? value)
+    {
+        if (value is null) return;
+        
+        UpdateAvailable = value.UpdateAvailable;
+        InstallButtonText = value.UpdateAvailable ? "Update" : "Launch";
+    }
+
+    /// <summary>
     /// Deletes a directory and all of its contents recursively.
     /// Uses Polly to retry the deletion if it fails, up to 5 times with an exponential backoff.
     /// </summary>
@@ -292,7 +305,24 @@ public partial class PackageManagerViewModel : PageViewModelBase
             
             EventManager.Instance.OnGlobalProgressChanged(percent);
         });
+        
         var updateResult = await package.Update(SelectedPackage, progress);
+
+        if (string.IsNullOrWhiteSpace(updateResult))
+        {
+            var errorMsg =
+                $"There was an error updating {SelectedPackage.DisplayName}. Please try again later.";
+
+            if (SelectedPackage.PackageName == "automatic")
+            {
+                errorMsg = errorMsg.Replace("Please try again later.",
+                    "Please stash any changes before updating, or manually update the package.");
+            }
+            
+            // there was an error
+            notificationService.Show(new Notification("Error updating package",
+                errorMsg, NotificationType.Error));
+        }
         
         ProgressText = "Update complete";
         SelectedPackage.UpdateAvailable = false;
@@ -311,7 +341,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
         var dialog = new BetterContentDialog
         {
-            MaxDialogWidth = 700,
+            MaxDialogWidth = 1100,
             DefaultButton = ContentDialogButton.Close,
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
@@ -321,6 +351,8 @@ public partial class PackageManagerViewModel : PageViewModelBase
                 DataContext = viewModel
             }
         };
+
+        viewModel.PackageInstalled += (_, _) => dialog.Hide();
 
         await dialog.ShowAsync();
     }

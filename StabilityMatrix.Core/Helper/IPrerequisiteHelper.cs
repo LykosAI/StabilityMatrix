@@ -22,4 +22,5 @@ public interface IPrerequisiteHelper
     /// Run embedded git with the given arguments.
     /// </summary>
     Task RunGit(string? workingDirectory = null, params string[] args);
+    Task<string> GetGitOutput(string? workingDirectory = null, params string[] args);
 }

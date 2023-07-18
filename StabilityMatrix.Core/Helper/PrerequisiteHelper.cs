@@ -59,6 +59,13 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         var process = ProcessRunner.StartProcess(GitExePath, args, workingDirectory: workingDirectory);
         await ProcessRunner.WaitForExitConditionAsync(process);
     }
+
+    public async Task<string> GetGitOutput(string? workingDirectory = null, params string[] args)
+    {
+        var process = await ProcessRunner.GetProcessOutputAsync(GitExePath, string.Join(" ", args),
+            workingDirectory: workingDirectory);
+        return process;
+    }
     
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
     {

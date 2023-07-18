@@ -13,14 +13,12 @@ public partial class ProgressViewModel : ObservableObject
     [ObservableProperty]
     private string? description;
     
-    [ObservableProperty]
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(IsProgressVisible))]
     private double value;
     
-    [ObservableProperty]
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(IsProgressVisible))]
     private bool isIndeterminate;
 
-    [ObservableProperty]
-    private bool isProgressVisible;
-
+    public virtual bool IsProgressVisible => Value > 0 || IsIndeterminate;
     public virtual bool IsTextVisible => !string.IsNullOrWhiteSpace(Text);
 }

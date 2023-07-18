@@ -154,7 +154,12 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         
         progress?.Report(new ProgressReport(1, "Installing Python", isIndeterminate: false));
     }
-    
+
+    public Task<string> GetGitOutput(string? workingDirectory = null, params string[] args)
+    {
+        throw new NotImplementedException();
+    }
+
     [UnsupportedOSPlatform("Linux")]
     [UnsupportedOSPlatform("macOS")]
     public Task InstallVcRedistIfNecessary(IProgress<ProgressReport>? progress = null)

@@ -1,9 +1,11 @@
 ﻿using System.Diagnostics;
 using LiteDB.Async;
 using Microsoft.Extensions.Options;
+using Octokit;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Database;
@@ -35,7 +37,8 @@ public class LiteDbContext : ILiteDbContext
     public ILiteCollectionAsync<CivitModel> CivitModels => Database.GetCollection<CivitModel>("CivitModels");
     public ILiteCollectionAsync<CivitModelVersion> CivitModelVersions => Database.GetCollection<CivitModelVersion>("CivitModelVersions");
     public ILiteCollectionAsync<CivitModelQueryCacheEntry> CivitModelQueryCache => Database.GetCollection<CivitModelQueryCacheEntry>("CivitModelQueryCache");
-
+    public ILiteCollectionAsync<GithubCacheEntry> GithubCache => Database.GetCollection<GithubCacheEntry>("GithubCache");
+    
     public LiteDbContext(ISettingsManager settingsManager, IOptions<DebugOptions> debugOptions)
     {
         this.settingsManager = settingsManager;
@@ -109,6 +112,12 @@ public class LiteDbContext : ILiteDbContext
 
         return changed;
     }
+
+    public Task<GithubCacheEntry?> GetGithubCacheEntry(string cacheKey) =>
+        GithubCache.FindByIdAsync(cacheKey);
+
+    public Task<bool> UpsertGithubCacheEntry(GithubCacheEntry cacheEntry) =>
+        GithubCache.UpsertAsync(cacheEntry);
 
     public void Dispose()
     {

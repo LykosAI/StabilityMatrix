@@ -10,6 +10,7 @@
              xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
              xmlns:octokit="clr-namespace:Octokit;assembly=Octokit"
              xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
+             xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
              x:DataType="dialogs:InstallerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
              d:DataContext="{x:Static mocks:DesignData.InstallerViewModel}"
@@ -40,7 +41,7 @@
                 TextWrapping="Wrap" />
         </StackPanel>
 
-        <Grid Grid.Row="2" HorizontalAlignment="Left" ColumnDefinitions="auto,*,auto">
+        <Grid Grid.Row="2" HorizontalAlignment="Left" ColumnDefinitions="Auto,*,Auto">
             <ListBox
                 Margin="8,16"
                 ItemsSource="{Binding AvailablePackages}"
@@ -149,7 +150,7 @@
                             MinWidth="100"
                             SelectedItem="{Binding SelectedCommit}">
                             <ComboBox.ItemTemplate>
-                                <DataTemplate DataType="{x:Type octokit:GitHubCommit}">
+                                <DataTemplate DataType="{x:Type database:GitCommit}">
                                     <StackPanel Margin="8,0,0,0" VerticalAlignment="Top">
                                         <TextBlock
                                             Margin="0,4,0,4"
@@ -181,12 +182,13 @@
                 
                 <TextBox 
                     Margin="0,0,0,8" 
-                    Text="{Binding SelectedPackage.DisplayName}" />
+                    Text="{Binding InstallName, Mode=TwoWay}" />
 
                 <StackPanel Orientation="Horizontal">
                     <Button
                         Command="{Binding InstallCommand}"
                         Content="Install"
+                        Classes="success"
                         Height="50"
                         IsEnabled="{Binding !ShowDuplicateWarning}"
                         Margin="0,16,0,0"
@@ -206,15 +208,13 @@
                         IsVisible="{Binding InstallProgress.IsProgressVisible}" />
                 </StackPanel>
             </StackPanel>
-            
-            <mdxaml:MarkdownScrollViewer
-                Grid.Column="2"
-                Margin="16"
-                Markdown="{Binding ReleaseNotes, Mode=OneWay}"/>
-            <ContentPresenter
-                Grid.Column="0"
-                Grid.ColumnSpan="3"
-                x:Name="InstallerContentDialog" />
+            <ScrollViewer Grid.Column="2"
+                          MaxWidth="300"
+                          Margin="16"
+                          MaxHeight="600">
+                <mdxaml:MarkdownScrollViewer
+                    Markdown="{Binding ReleaseNotes, Mode=OneWay}"/>
+            </ScrollViewer>
         </Grid>
     </Grid>
     

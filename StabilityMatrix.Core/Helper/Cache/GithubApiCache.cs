@@ -9,7 +9,7 @@ public class GithubApiCache : IGithubApiCache
 {
     private readonly ILiteDbContext dbContext;
     private readonly IGitHubClient githubApi;
-    private readonly TimeSpan cacheDuration = TimeSpan.FromMinutes(5);
+    private readonly TimeSpan cacheDuration = TimeSpan.FromMinutes(15);
 
     public GithubApiCache(ILiteDbContext dbContext, IGitHubClient githubApi)
     {
@@ -96,7 +96,7 @@ public class GithubApiCache : IGithubApiCache
     {
         var cacheKey = $"Commits-{username}-{repository}-{branch}-{page}-{perPage}";
         var cacheEntry = await dbContext.GetGithubCacheEntry(cacheKey);
-        if (cacheEntry != null)
+        if (cacheEntry != null && !IsCacheExpired(cacheEntry.LastUpdated))
         {
             return cacheEntry.Commits;
         }

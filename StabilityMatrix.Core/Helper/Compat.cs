@@ -61,6 +61,11 @@ public static class Compat
     /// </summary>
     public static string DllExtension { get; }
     
+    /// <summary>
+    /// Delimiter for $PATH environment variable.
+    /// </summary>
+    public static char PathDelimiter => IsWindows ? ';' : ':';
+    
     static Compat()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

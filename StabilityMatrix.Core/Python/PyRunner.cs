@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using NLog;
 using Python.Runtime;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -27,9 +28,6 @@ public class PyRunner : IPyRunner
     public static string PythonDllPath { get; }
     public static string PythonExePath { get; }
     public static string PipExePath { get; }
-    
-    // On Windows, PythonHome is the root path, on Unix, it's the bin path
-    public static string PythonHome => Compat.IsWindows ? PythonDir : Path.Combine(PythonDir, "bin");
     
     public static string GetPipPath => Path.Combine(PythonDir, "get-pip.pyc");
     // public static string PipExePath => Path.Combine(PythonDir, "Scripts", "pip" + Compat.ExeExtension);
@@ -73,13 +71,16 @@ public class PyRunner : IPyRunner
     {
         if (PythonEngine.IsInitialized) return;
         
-        Logger.Info("Setting PYTHONHOME and PATH to {PythonHome}", PythonHome);
-        Environment.SetEnvironmentVariable("PYTHONHOME", PythonHome, EnvironmentVariableTarget.Process);
+        Logger.Info("Setting PYTHONHOME={PythonDir}", PythonDir.ToRepr());
+        Environment.SetEnvironmentVariable("PYTHONHOME", PythonDir, EnvironmentVariableTarget.Process);
         
         // Get existing PATH
         var currentEnvPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
+        var newEnvPath = PythonDir + (string.IsNullOrEmpty(currentEnvPath) ? "" 
+            : $"{Compat.PathDelimiter}{currentEnvPath}");
+        Logger.Debug("Setting PATH={NewEnvPath}", newEnvPath.ToRepr());
         // Append Python path to PATH
-        Environment.SetEnvironmentVariable("PATH", $"{PythonHome};{currentEnvPath}", EnvironmentVariableTarget.Process);
+        Environment.SetEnvironmentVariable("PATH", newEnvPath, EnvironmentVariableTarget.Process);
 
         Logger.Info("Initializing Python runtime with DLL: {DllPath}", PythonDllPath);
         // Check PythonDLL exists
@@ -90,7 +91,7 @@ public class PyRunner : IPyRunner
         }
         
         Runtime.PythonDLL = PythonDllPath;
-        PythonEngine.PythonHome = PythonHome;
+        PythonEngine.PythonHome = PythonDir;
         PythonEngine.Initialize();
         PythonEngine.BeginAllowThreads();
 

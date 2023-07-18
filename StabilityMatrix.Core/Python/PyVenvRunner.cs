@@ -135,7 +135,7 @@ public class PyVenvRunner : IDisposable
         var cfg = new ConfigParser(topSection + File.ReadAllText(cfgPath));
         
         // Need to set all path keys - home, base-prefix, base-exec-prefix, base-executable
-        cfg.SetValue("top", "home", PyRunner.PythonHome);
+        cfg.SetValue("top", "home", pythonDirectory);
         cfg.SetValue("top", "base-prefix", pythonDirectory);
         
         cfg.SetValue("top", "base-exec-prefix", pythonDirectory);

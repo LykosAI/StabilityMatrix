@@ -399,6 +399,4 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             }).SafeFireAndForget();
         }
     }
-
-    private void OnPackageInstalled() => PackageInstalled?.Invoke(this, EventArgs.Empty);
 }

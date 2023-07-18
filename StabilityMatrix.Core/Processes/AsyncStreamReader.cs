@@ -214,7 +214,6 @@ internal sealed class AsyncStreamReader : IDisposable
             {
                 case '\n':
                 {
-                    // var line = _sb.ToString(lineStart, currentIndex - lineStart);
                     // Include the '\n' as part of line.
                     var line = _sb.ToString(lineStart, currentIndex - lineStart + 1);
                     lineStart = currentIndex + 1;
@@ -223,8 +222,6 @@ internal sealed class AsyncStreamReader : IDisposable
                     {
                         _messageQueue.Enqueue(line);
                     }
-                    
-                    break;
                 }
                 // \r\n - Windows
                 // \r alone is parsed as carriage return
@@ -234,7 +231,6 @@ internal sealed class AsyncStreamReader : IDisposable
                     var nextIndex = currentIndex + 1;
                     if (nextIndex < len && _sb[nextIndex] == '\n')
                     {
-                        // var line = _sb.ToString(lineStart, currentIndex - lineStart);
                         // Include the '\r\n' as part of line.
                         var line = _sb.ToString(lineStart, currentIndex - lineStart + 2);
                         // Advance 2 chars for \r\n

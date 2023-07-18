@@ -329,6 +329,7 @@ public sealed class App : Application
         {
             builder.ClearProviders();
             builder.AddFilter("Microsoft.Extensions.Http", LogLevel.Warning)
+                .AddFilter("Microsoft.Extensions.Http.DefaultHttpClientFactory", LogLevel.Warning)
                 .AddFilter("Microsoft", LogLevel.Warning)
                 .AddFilter("System", LogLevel.Warning);
             builder.SetMinimumLevel(LogLevel.Debug);

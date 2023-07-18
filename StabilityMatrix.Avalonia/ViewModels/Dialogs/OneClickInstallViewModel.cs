@@ -79,22 +79,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
 
         var progressHandler = new Progress<ProgressReport>(progress =>
         {
-            if (progress.Message != null && progress.Message.Contains("Downloading"))
-            {
-                SubHeaderText = $"Downloading prerequisites... {progress.Percentage:N0}%";
-            }
-            else if (progress.Type == ProgressType.Extract)
-            {
-                SubHeaderText = $"Installing git... {progress.Percentage:N0}%";
-            }
-            else if (progress.Title != null && progress.Title.Contains("Unpacking"))
-            {
-                SubHeaderText = $"Unpacking resources... {progress.Percentage:N0}%";
-            }
-            else if (progress.Message != null)
-            {
-                SubHeaderText = progress.Message;
-            }
+            SubHeaderText = $"{progress.Title} {progress.Percentage:N0}%";
             
             IsIndeterminate = progress.IsIndeterminate;
             OneClickInstallProgress = Convert.ToInt32(progress.Percentage);

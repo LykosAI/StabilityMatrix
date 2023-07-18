@@ -12,6 +12,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Helpers;
@@ -23,6 +24,7 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
     
     private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
+    private readonly IPyRunner pyRunner;
     
     private DirectoryPath HomeDir => settingsManager.LibraryDir;
     private DirectoryPath AssetsDir => HomeDir + "Assets";
@@ -35,10 +37,14 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
     public string GitBinPath => PortableGitInstallDir + "bin";
     
 
-    public UnixPrerequisiteHelper(IDownloadService downloadService, ISettingsManager settingsManager)
+    public UnixPrerequisiteHelper(
+        IDownloadService downloadService, 
+        ISettingsManager settingsManager,
+        IPyRunner pyRunner)
     {
         this.downloadService = downloadService;
         this.settingsManager = settingsManager;
+        this.pyRunner = pyRunner;
     }
 
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -141,6 +147,10 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
                 File.Delete(downloadPath);
             }
         }
+        
+        // Initialize pyrunner and install virtualenv
+        await pyRunner.Initialize();
+        await pyRunner.InstallPackage("virtualenv");
         
         progress?.Report(new ProgressReport(1, "Installing Python", isIndeterminate: false));
     }

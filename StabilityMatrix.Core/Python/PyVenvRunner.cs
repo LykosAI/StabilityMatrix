@@ -164,6 +164,7 @@ public class PyVenvRunner : IDisposable
         
         var outputAction = outputDataReceived == null ? null : new Action<ProcessOutput>(s =>
         {
+            Logger.Debug($"Pip output: {s.Text}");
             // Record to output
             output.Append(s.Text);
             // Forward to callback

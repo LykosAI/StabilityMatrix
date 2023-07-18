@@ -220,7 +220,6 @@ public sealed class App : Application
         services.AddSingleton<IPackageFactory, PackageFactory>();
         services.AddSingleton<IDownloadService, DownloadService>();
         services.AddSingleton<IGithubApiCache, GithubApiCache>();
-        services.AddSingleton<IPrerequisiteHelper, PrerequisiteHelper>();
         services.AddSingleton<INotificationService, NotificationService>();
         services.AddSingleton<IPyRunner, PyRunner>();
         services.AddSingleton<IUpdateHelper, UpdateHelper>();

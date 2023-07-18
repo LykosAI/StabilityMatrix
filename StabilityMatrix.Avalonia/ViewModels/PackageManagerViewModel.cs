@@ -360,12 +360,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
             }
         };
 
-        viewModel.PackageInstalled += async (_, _) =>
-        {
-            dialog.Hide();
-            await OnLoadedAsync();
-        };
-
         await dialog.ShowAsync();
+        await OnLoadedAsync();
     }
 }

@@ -77,8 +77,6 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     
     [ObservableProperty] private string? installName;
     
-    internal event EventHandler? PackageInstalled;
-
     public ProgressViewModel InstallProgress { get; } = new();
 
     public InstallerViewModel(
@@ -140,7 +138,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         notificationService.Show(new Notification(
             $"Package {SelectedPackage.Name} installed successfully!",
             "Success", NotificationType.Success));
-        OnPackageInstalled();
+        OnPrimaryButtonClick();
     }
     
     private async Task ActuallyInstall()

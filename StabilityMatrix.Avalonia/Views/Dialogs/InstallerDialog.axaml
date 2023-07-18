@@ -44,6 +44,7 @@
         <Grid Grid.Row="2" HorizontalAlignment="Left" ColumnDefinitions="Auto,*,Auto">
             <ListBox
                 Margin="8,16"
+                IsEnabled="{Binding !InstallProgress.IsProgressVisible}"
                 ItemsSource="{Binding AvailablePackages}"
                 SelectedItem="{Binding SelectedPackage, Mode=TwoWay}">
 
@@ -197,6 +198,7 @@
                     <controls:ProgressRing
                         Height="25"
                         IsIndeterminate="True"
+                        BorderThickness="4"
                         Margin="8,16,0,0"
                         VerticalAlignment="Center"
                         IsVisible="{Binding InstallProgress.IsProgressVisible}"

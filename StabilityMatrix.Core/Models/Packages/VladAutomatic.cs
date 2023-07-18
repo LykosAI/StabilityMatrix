@@ -260,7 +260,7 @@ public class VladAutomatic : BaseGitPackage
             return string.Empty;
         }
 
-        progress?.Report(new ProgressReport(1f, message: "Update Complete", isIndeterminate: true, type: ProgressType.Generic));
+        progress?.Report(new ProgressReport(1f, message: "Update Complete", isIndeterminate: false, type: ProgressType.Generic));
         
         return latest.Sha;
     }

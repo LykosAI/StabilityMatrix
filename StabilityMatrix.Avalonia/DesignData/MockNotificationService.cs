@@ -28,4 +28,8 @@ public class MockNotificationService : INotificationService
     {
         return Task.FromResult(new TaskResult<bool>(true));
     }
+
+    public void Show(string title, string message, NotificationType appearance = NotificationType.Information)
+    {
+    }
 }

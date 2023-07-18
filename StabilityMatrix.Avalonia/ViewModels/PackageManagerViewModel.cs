@@ -4,8 +4,10 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -68,7 +70,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
     [ObservableProperty]
     private string progressText = string.Empty;
     
-    [ObservableProperty]
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(ProgressBarVisibility))]
     private bool isIndeterminate;
 
     [ObservableProperty] 
@@ -324,11 +326,17 @@ public partial class PackageManagerViewModel : PageViewModelBase
                 errorMsg, NotificationType.Error));
         }
         
-        ProgressText = "Update complete";
+        ProgressText = string.Empty;
+        ProgressValue = 0;
+        IsIndeterminate = false;
+        
         SelectedPackage.UpdateAvailable = false;
         UpdateAvailable = false;
         
         settingsManager.UpdatePackageVersionNumber(SelectedPackage.Id, updateResult);
+        notificationService.Show("Update complete",
+            $"{SelectedPackage.DisplayName} has been updated to the latest version.",
+            NotificationType.Success);
         await OnLoadedAsync();
     }
 
@@ -352,7 +360,11 @@ public partial class PackageManagerViewModel : PageViewModelBase
             }
         };
 
-        viewModel.PackageInstalled += (_, _) => dialog.Hide();
+        viewModel.PackageInstalled += async (_, _) =>
+        {
+            dialog.Hide();
+            await OnLoadedAsync();
+        };
 
         await dialog.ShowAsync();
     }

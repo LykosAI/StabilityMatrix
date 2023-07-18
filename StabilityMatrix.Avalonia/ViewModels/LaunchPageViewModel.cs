@@ -91,6 +91,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
 
     private async Task OnPackageLaunchRequested(object? sender, Guid e)
     {
+        OnLoaded();
         SelectedPackage = InstalledPackages.FirstOrDefault(x => x.Id == e);
         if (SelectedPackage is null) return;
         

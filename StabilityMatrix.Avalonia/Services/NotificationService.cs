@@ -28,7 +28,13 @@ public class NotificationService : INotificationService
     {
         notificationManager?.Show(notification);
     }
-    
+
+    public void Show(string title, string message,
+        NotificationType appearance = NotificationType.Information)
+    {
+        Show(new Notification(title, message, appearance));
+    }
+
     /// <inheritdoc />
     public async Task<TaskResult<T>> TryAsync<T>(
         Task<T> task,

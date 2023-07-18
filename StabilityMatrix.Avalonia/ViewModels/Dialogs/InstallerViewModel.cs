@@ -160,7 +160,9 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         if (!PyRunner.PipInstalled || !PyRunner.VenvInstalled)
         {
             InstallProgress.Text = "Installing dependencies...";
+            InstallProgress.IsIndeterminate = true;
             await pyRunner.Initialize();
+            
             if (!PyRunner.PipInstalled)
             {
                 await pyRunner.SetupPip();
@@ -190,7 +192,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
 
         var package = new InstalledPackage
         {
-            DisplayName = SelectedPackage.DisplayName,
+            DisplayName = InstallName,
             LibraryPath = Path.Combine("Packages", InstallName),
             Id = Guid.NewGuid(),
             PackageName = SelectedPackage.Name,
@@ -205,6 +207,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         st.Settings.ActiveInstalledPackage = package.Id;
         
         InstallProgress.Value = 0;
+        InstallProgress.IsIndeterminate = false;
     }
     
     private static string GetDisplayVersion(string version, string? branch)
@@ -398,6 +401,6 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             }).SafeFireAndForget();
         }
     }
-    
+
     private void OnPackageInstalled() => PackageInstalled?.Invoke(this, EventArgs.Empty);
 }

@@ -108,8 +108,7 @@
                         Height="50"
                         VerticalAlignment="Top"
                         Classes="danger"
-                        IsEnabled="{Binding SelectedPackage, Converter={x:Static ObjectConverters.IsNotNull}}"
-                        IsVisible="{Binding SelectedPackage, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        IsEnabled="{Binding !IsUninstalling}"
                         Width="100" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" IsVisible="{Binding IsUninstalling}">

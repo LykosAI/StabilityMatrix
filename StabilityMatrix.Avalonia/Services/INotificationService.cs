@@ -40,4 +40,7 @@ public interface INotificationService
         string title = "Error",
         string? message = null,
         NotificationType appearance = NotificationType.Error);
+
+    void Show(string title, string message,
+        NotificationType appearance = NotificationType.Information);
 }

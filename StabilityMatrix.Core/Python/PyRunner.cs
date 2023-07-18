@@ -33,8 +33,8 @@ public class PyRunner : IPyRunner
         (PlatformKind.Windows, Path.Combine(PythonDir, "python.exe")),
         (PlatformKind.Linux, Path.Combine(PythonDir, "bin", "python3")));
     public static string PipExePath => Compat.Switch(
-        (PlatformKind.Windows, Path.Combine(PythonDir, "python310.dll")),
-            (PlatformKind.Linux, Path.Combine(PythonDir, "lib", "libpython3.10.so")));
+        (PlatformKind.Windows, Path.Combine(PythonDir, "Scripts", "pip.exe")),
+            (PlatformKind.Linux, Path.Combine(PythonDir, "bin", "pip3")));
     
     public static string GetPipPath => Path.Combine(PythonDir, "get-pip.pyc");
 

@@ -25,12 +25,19 @@ public class PyRunner : IPyRunner
     public const string PythonDirName = "Python310";
     
     public static string PythonDir => Path.Combine(GlobalConfig.LibraryDir, "Assets", PythonDirName);
-    public static string PythonDllPath { get; }
-    public static string PythonExePath { get; }
-    public static string PipExePath { get; }
+
+    public static string PythonDllPath => Compat.Switch(
+        (PlatformKind.Windows, Path.Combine(PythonDir, "python310.dll")),
+        (PlatformKind.Linux, Path.Combine(PythonDir, "lib", "libpython3.10.so")));
+    public static string PythonExePath => Compat.Switch(
+        (PlatformKind.Windows, Path.Combine(PythonDir, "python.exe")),
+        (PlatformKind.Linux, Path.Combine(PythonDir, "bin", "python3")));
+    public static string PipExePath => Compat.Switch(
+        (PlatformKind.Windows, Path.Combine(PythonDir, "python310.dll")),
+            (PlatformKind.Linux, Path.Combine(PythonDir, "lib", "libpython3.10.so")));
     
     public static string GetPipPath => Path.Combine(PythonDir, "get-pip.pyc");
-    // public static string PipExePath => Path.Combine(PythonDir, "Scripts", "pip" + Compat.ExeExtension);
+
     public static string VenvPath => Path.Combine(PythonDir, "Scripts", "virtualenv" + Compat.ExeExtension);
 
     public static bool PipInstalled => File.Exists(PipExePath);
@@ -40,27 +47,6 @@ public class PyRunner : IPyRunner
 
     public PyIOStream? StdOutStream;
     public PyIOStream? StdErrStream;
-
-    // Initialize paths based on platform
-    static PyRunner()
-    {
-        if (Compat.IsWindows)
-        {
-            PythonDllPath = Path.Combine(PythonDir, "python310.dll");
-            PythonExePath = Path.Combine(PythonDir, "python.exe");
-            PipExePath = Path.Combine(PythonDir, "Scripts", "pip.exe");
-        }
-        else if (Compat.IsLinux)
-        {
-            PythonDllPath = Path.Combine(PythonDir, "lib", "libpython3.10.so");
-            PythonExePath = Path.Combine(PythonDir, "bin", "python3.10");
-            PipExePath = Path.Combine(PythonDir, "bin", "pip3.10");
-        }
-        else
-        {
-            throw new PlatformNotSupportedException();
-        }
-    }
     
     /// <summary>$
     /// Initializes the Python runtime using the embedded dll.

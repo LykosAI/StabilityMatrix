@@ -22,6 +22,7 @@ using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
@@ -142,16 +143,25 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         }
 
         // If this is the first launch (LaunchArgs is null),
-        // load and save a launch options dialog in background
+        // load and save a launch options dialog vm
         // so that dynamic initial values are saved.
-        // if (activeInstall.LaunchArgs == null)
-        // {
-        //     var definitions = basePackage.LaunchOptions;
-        //     // Open a config page and save it
-        //     var dialog = dialogFactory.CreateLaunchOptionsDialog(definitions, activeInstall);
-        //     var args = dialog.AsLaunchArgs();
-        //     settingsManager.SaveLaunchArgs(activeInstall.Id, args);
-        // }
+        if (activeInstall.LaunchArgs == null)
+        {
+            var definitions = basePackage.LaunchOptions;
+            // Open a config page and save it
+            var viewModel = dialogFactory.Get<LaunchOptionsViewModel>();
+            
+            viewModel.Cards = LaunchOptionCard
+                .FromDefinitions(definitions, Array.Empty<LaunchOption>())
+                .ToImmutableArray();
+            
+            var args = viewModel.AsLaunchArgs();   
+            
+            logger.LogDebug("Setting initial launch args: {Args}", 
+                string.Join(", ", args.Select(o => o.ToArgString()?.ToRepr())));
+     
+            settingsManager.SaveLaunchArgs(activeInstall.Id, args);
+        }
 
         // Clear console
         ConsoleDocument.Text = string.Empty;

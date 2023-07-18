@@ -161,12 +161,12 @@ public class VladAutomatic : BaseGitPackage
         else if (gpus.Any(g => g.IsAmd))
         {
             Logger.Info("Starting torch install (DirectML)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML);
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, InstallLocation, OnConsoleOutput);
         }
         else
         {
             Logger.Info("Starting torch install (CPU)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu);
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, InstallLocation, OnConsoleOutput);
         }
 
         // Install requirements file

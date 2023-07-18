@@ -121,7 +121,7 @@ public class ComfyUI : BaseGitPackage
         {
             progress?.Report(new ProgressReport(-1, "Installing PyTorch for CPU", isIndeterminate: true));
             Logger.Info("Starting torch install (CPU)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu);
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, InstallLocation, OnConsoleOutput);
         }
 
         // Install requirements file

@@ -1,4 +1,7 @@
-﻿namespace StabilityMatrix.Core.Processes;
+﻿using System.Text.RegularExpressions;
+using StabilityMatrix.Core.Extensions;
+
+namespace StabilityMatrix.Core.Processes;
 
 public readonly record struct ProcessOutput
 {
@@ -8,24 +11,33 @@ public readonly record struct ProcessOutput
     public required string Text { get; init; }
 
     /// <summary>
-    /// Raw output
+    /// Optional Raw output,
+    /// mainly for debug and logging.
     /// </summary>
     public string? RawText { get; init; }
     
     /// <summary>
-    /// True if output from stderr, false for stdout
+    /// True if output from stderr, false for stdout.
     /// </summary>
     public bool IsStdErr { get; init; }
     
     /// <summary>
-    /// Count of newlines to append to the output
+    /// Count of newlines to append to the output.
+    /// (Currently not used)
     /// </summary>
     public int NewLines { get; init; }
     
     /// <summary>
     /// Instruction to clear last n lines
+    /// From carriage return '\r'
     /// </summary>
     public int ClearLines { get; init; }
+    
+    /// <summary>
+    /// Instruction to move write cursor up n lines
+    /// From Ansi sequence ESC[#A where # is count of lines
+    /// </summary>
+    public int CursorUp { get; init; }
     
     /// <summary>
     /// Apc message sent from the subprocess
@@ -56,36 +68,41 @@ public readonly record struct ProcessOutput
                 ApcMessage = message
             };
         }
-        // If text contains newlines, split it first
-        if (text.Contains(Environment.NewLine))
+        
+        // Normal parsing
+        var originalText = text;
+        
+        // Remove \r from the beginning of the line, and add them to count
+        var clearLines = 0;
+        
+        // Skip if starts with \r\n on windows
+        if (!text.StartsWith(Environment.NewLine))
         {
-            var lines = text.Split(Environment.NewLine);
-            // Now take the first line and trim \r
-            var firstLineLength = lines[0].Length;
-            lines[0] = lines[0].TrimStart('\r');
-            var crCount = firstLineLength - lines[0].Length;
-            // Join them back together
-            var result = string.Join(Environment.NewLine, lines);
-            return new ProcessOutput
-            {
-                RawText = text,
-                Text = result,
-                IsStdErr = isStdErr,
-                ClearLines = crCount
-            };
+            clearLines += text.CountStart('\r');
+            text = text.TrimStart('\r');
         }
-        else
+        
+        // Also detect Ansi escape for cursor up, treat as clear lines also
+        if (text.StartsWith("\u001b["))
         {
-            // If no newlines, just trim \r
-            var trimmed = text.TrimStart('\r');
-            var crCount = text.Length - trimmed.Length;
-            return new ProcessOutput
+            var match = Regex.Match(text, @"\u001b\[(\d+?)A");
+            if (match.Success)
             {
-                RawText = text,
-                Text = trimmed,
-                IsStdErr = isStdErr,
-                ClearLines = crCount
-            };
+                // Default to 1 if no count
+                var count = int.TryParse(match.Groups[1].Value, out var n) ? n : 1;
+                // Add 1 to count to include current line
+                clearLines += count + 1;
+                // Set text to be after the escape sequence
+                text = text[match.Length..];
+            }
         }
+        
+        return new ProcessOutput
+        {
+            RawText = originalText,
+            Text = text,
+            IsStdErr = isStdErr,
+            ClearLines = clearLines
+        };
     }
 }

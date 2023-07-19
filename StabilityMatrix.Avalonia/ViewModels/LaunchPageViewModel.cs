@@ -4,9 +4,11 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
@@ -45,17 +47,16 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     private readonly INotificationService notificationService;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     
+    // Regex to match if input contains a yes/no prompt,
+    // i.e "Y/n", "yes/no". Case insensitive.
+    // Separated by / or |.
+    [GeneratedRegex(@"y(/|\|)n|yes(/|\|)no", RegexOptions.IgnoreCase)]
+    private static partial Regex InputYesNoRegex();
+    
     public override string Title => "Launch";
     public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Rocket, IsFilled = true};
 
-    [ObservableProperty]
-    private TextDocument consoleDocument = new();
-    
-    // Queue for console updates
-    private readonly BufferBlock<ProcessOutput> consoleUpdateBuffer = new();
-    // Task that updates the console (runs on UI thread)
-    private Task? consoleUpdateTask;
-    private CancellationTokenSource? consoleUpdateCts;
+    public ConsoleViewModel Console { get; } = new();
     
     [ObservableProperty] private bool launchButtonVisibility;
     [ObservableProperty] private bool stopButtonVisibility;
@@ -83,10 +84,19 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         this.pyRunner = pyRunner;
         this.notificationService = notificationService;
         this.dialogFactory = dialogFactory;
-
+        
         EventManager.Instance.PackageLaunchRequested +=
             async (s, e) => await OnPackageLaunchRequested(s, e);
         EventManager.Instance.OneClickInstallFinished += OnOneClickInstallFinished;
+        
+        // Handler for console input
+        Console.ApcInput += (_, message) =>
+        {
+            if (InputYesNoRegex().IsMatch(message.Data))
+            {
+                ShowConfirmInputPrompt = true;
+            }
+        };
     }
 
     private async Task OnPackageLaunchRequested(object? sender, Guid e)
@@ -164,9 +174,6 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
             settingsManager.SaveLaunchArgs(activeInstall.Id, args);
         }
 
-        // Clear console
-        ConsoleDocument.Text = string.Empty;
-
         await pyRunner.Initialize();
 
         // Get path from package
@@ -176,14 +183,13 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         basePackage.Exited += OnProcessExited;
         basePackage.StartupComplete += RunningPackageOnStartupComplete;
         
-        // Start task to update console from queue
-        consoleUpdateCts = new CancellationTokenSource();
-        // Run in UI thread
-        consoleUpdateTask = Dispatcher.UIThread.InvokeAsync(async () 
-                => await BeginUpdateConsole(consoleUpdateCts.Token), DispatcherPriority.Render);
+        // Clear console and start update processing
+        await Console.StopUpdatesAsync();
+        Console.Clear();
+        Console.StartUpdates();
 
-        // Update shared folder links (in case library paths changed)
-        //sharedFolders.UpdateLinksForPackage(basePackage, packagePath);
+        // TODO: Update shared folder links (in case library paths changed)
+        // sharedFolders.UpdateLinksForPackage(basePackage, packagePath);
 
         // Load user launch args from settings and convert to string
         var userArgs = settingsManager.GetLaunchArgs(activeInstall.Id);
@@ -256,49 +262,6 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         }
     }
     
-    private async Task BeginUpdateConsole(CancellationToken ct)
-    {
-        // This should be run in the UI thread
-        Dispatcher.UIThread.CheckAccess();
-        try
-        {
-            while (true)
-            {
-                ct.ThrowIfCancellationRequested();
-                var output = await consoleUpdateBuffer.ReceiveAsync(ct);
-                // Check for Apc messages
-                if (output.ApcMessage is not null)
-                {
-                    // Handle Apc message, for now just input audit events
-                    var message = output.ApcMessage.Value;
-                    if (message.Type == ApcType.Input)
-                    {
-                        ShowConfirmInputPrompt = true;
-                    }
-                    // Ignore further processing
-                    continue;
-                }
-                
-                using var update = ConsoleDocument.RunUpdate();
-                // Handle remove
-                if (output.ClearLines > 0)
-                {
-                    for (var i = 0; i < output.ClearLines; i++)
-                    {
-                        var lastLineIndex = ConsoleDocument.LineCount - 1;
-                        var line = ConsoleDocument.Lines[lastLineIndex];
-                        ConsoleDocument.Remove(line.Offset, line.Length);
-                    }
-                }
-                // Add new line
-                ConsoleDocument.Insert(ConsoleDocument.TextLength, output.Text);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-        }
-    }
-    
     // Send user input to running package
     public async Task SendInput(string input)
     {
@@ -325,12 +288,12 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         // Also send input to our own console
         if (value)
         {
-            consoleUpdateBuffer.Post(new ProcessOutput { Text = "y\n" });
+            Console.Post("y\n");
             await SendInput("y\n");
         }
         else
         {
-            consoleUpdateBuffer.Post(new ProcessOutput { Text = "n\n" });
+            Console.Post("n\n");
             await SendInput("n\n");
         }
 
@@ -340,12 +303,8 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     [RelayCommand]
     private async Task SendManualInput(string input)
     {
-        // This must be on the UI thread
-        Dispatcher.UIThread.CheckAccess();
-        // Add newline
-        input += Environment.NewLine;
         // Also send input to our own console
-        consoleUpdateBuffer.Post(new ProcessOutput { Text = input });
+        Console.PostLine(input);
         await SendInput(input);
     }
     
@@ -357,12 +316,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         RunningPackage = null;
         ShowWebUiButton = false;
         
-        // Can't use buffer here since is null after shutdown
-        Dispatcher.UIThread.Post(() =>
-        {
-            var msg = $"{Environment.NewLine}Stopped process at {DateTimeOffset.Now}{Environment.NewLine}";
-            ConsoleDocument.Insert(ConsoleDocument.TextLength, msg );
-        });
+        Console.PostLine($"{Environment.NewLine}Stopped process at {DateTimeOffset.Now}");
     }
 
     public void OpenWebUi()
@@ -383,31 +337,15 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         }
         RunningPackage = null;
         ShowWebUiButton = false;
-        var msg =
-            $"{Environment.NewLine}Process finished with exit code {exitCode}{Environment.NewLine}";
         
-        // Add to buffer
-        consoleUpdateBuffer.Post(new ProcessOutput { RawText = msg, Text = msg });
-        
-        // Task that waits until buffer is empty, then stops the console update task
-        Task.Run(async () =>
-        {
-            Debug.WriteLine($"Waiting for console update buffer to empty ({consoleUpdateBuffer.Count})");
-            while (consoleUpdateBuffer.Count > 0)
-            {
-                await Task.Delay(100);
-            }
-            Debug.WriteLine("Console update buffer empty, stopping console update task");
-            consoleUpdateCts?.Cancel();
-            consoleUpdateCts = null;
-            consoleUpdateTask = null;
-        });
+        Console.PostLine($"{Environment.NewLine}Process finished with exit code {exitCode}");
+        Console.StopUpdatesAsync().SafeFireAndForget();
     }
 
     // Callback for processes
     private void OnProcessOutputReceived(object? sender, ProcessOutput output)
     {
-        consoleUpdateBuffer.Post(output);
+        Console.Post(output);
         EventManager.Instance.OnScrollToBottomRequested();
     }
 
@@ -424,12 +362,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     
     public void Dispose()
     {
-        // Dispose updates
-        consoleUpdateBuffer.Complete();
-        consoleUpdateCts?.Cancel();
-        consoleUpdateCts = null;
-        consoleUpdateTask = null;
-        
+        Console.Dispose();
         RunningPackage?.Shutdown();
         GC.SuppressFinalize(this);
     }

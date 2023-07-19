@@ -11,9 +11,12 @@ using System.Text;
 namespace StabilityMatrix.Core.Processes;
 
 /// <summary>
-/// Modified from System.Diagnostics.AsyncStreamReader to support progress bars,
-/// preserving '\r' instead of parsing as a line break.
-/// This will also parse Apc escaped messages.
+/// Modified from System.Diagnostics.AsyncStreamReader to support terminal processing.
+/// 
+/// Currently has these modifications:
+/// - Carriage returns do not count as newlines '\r'.
+/// - APC messages are sent immediately without needing a newline.
+/// 
 /// <seealso cref="ApcParser"/>
 /// </summary>
 [SuppressMessage("ReSharper", "InconsistentNaming")]

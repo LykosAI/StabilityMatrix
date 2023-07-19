@@ -25,4 +25,25 @@ public static class StringExtensions
         literal = $"'{literal}'";
         return literal;
     }
+    
+    /// <summary>
+    /// Counts continuous sequence of a character
+    /// from the start of the string
+    /// </summary>
+    public static int CountStart(this string str, char c)
+    {
+        var count = 0;
+        foreach (var ch in str)
+        {
+            if (ch == c)
+            {
+                count++;
+            }
+            else
+            {
+                break;
+            }
+        }
+        return count;
+    }
 }

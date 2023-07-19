@@ -10,7 +10,8 @@ public static class StringExtensions
         var sb = new StringBuilder();
         foreach (var c in value) 
         {
-            if (c > 127)
+            // If not ascii or not printable
+            if (c > 127 || c < 32)
             {
                 // This character is too big for ASCII
                 var encodedValue = "\\u" + ((int) c).ToString("x4");
@@ -42,6 +43,7 @@ public static class StringExtensions
         // Encode non-ascii characters
         literal = EncodeNonAsciiCharacters(literal);
         // Surround with single quotes
+        literal = literal.Trim('"');
         literal = $"'{literal}'";
         return literal;
     }

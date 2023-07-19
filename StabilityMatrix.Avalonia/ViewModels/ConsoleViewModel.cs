@@ -40,8 +40,11 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable
     /// </summary>
     public async Task StopUpdatesAsync()
     {
-        updateCts?.Cancel();
-        updateCts = null;
+        // First complete the buffer
+        buffer.Complete();
+        // Wait for buffer to complete
+        await buffer.Completion;
+        // Wait for update task
         if (updateTask is not null)
         {
             await updateTask;
@@ -79,6 +82,9 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable
                 var output = await buffer.ReceiveAsync(ct);
                 ConsoleUpdateOne(output);
             }
+        }
+        catch (InvalidOperationException)
+        {
         }
         catch (OperationCanceledException)
         {

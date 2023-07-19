@@ -238,9 +238,10 @@ public abstract class BaseGitPackage : BasePackage
         await process.StandardInput.WriteLineAsync(input);
     }
 
-    public override Task Shutdown()
+    public override async Task Shutdown()
     {
-        VenvRunner?.Dispose();
-        return VenvRunner?.Process?.WaitForExitAsync() ?? Task.CompletedTask;
+        if (VenvRunner?.Process == null) return;
+        VenvRunner.Dispose();
+        await VenvRunner.Process.WaitForExitAsync();
     }
 }

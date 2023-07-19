@@ -56,7 +56,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
 
     public async Task RunGit(string? workingDirectory = null, params string[] args)
     {
-        var process = ProcessRunner.StartProcess(GitExePath, args, workingDirectory: workingDirectory);
+        var process = ProcessRunner.StartAnsiProcess(GitExePath, args, workingDirectory: workingDirectory);
         await ProcessRunner.WaitForExitConditionAsync(process);
     }
 
@@ -303,7 +303,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         
         logger.LogInformation("Installing VC Redist");
         progress?.Report(new ProgressReport(progress: 0.5f, isIndeterminate: true, type: ProgressType.Generic, message: "Installing prerequisites..."));
-        var process = ProcessRunner.StartProcess(VcRedistDownloadPath, "/install /quiet /norestart");
+        var process = ProcessRunner.StartAnsiProcess(VcRedistDownloadPath, "/install /quiet /norestart");
         await process.WaitForExitAsync();
         progress?.Report(new ProgressReport(progress: 1f, message: "Visual C++ install complete",
             type: ProgressType.Generic));

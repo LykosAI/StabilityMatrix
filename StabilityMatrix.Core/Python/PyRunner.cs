@@ -101,7 +101,7 @@ public class PyRunner : IPyRunner
         {
             throw new FileNotFoundException("get-pip not found", GetPipPath);
         }
-        var p = ProcessRunner.StartProcess(PythonExePath, "-m get-pip");
+        var p = ProcessRunner.StartAnsiProcess(PythonExePath, "-m get-pip");
         await ProcessRunner.WaitForExitConditionAsync(p);
     }
 
@@ -114,7 +114,7 @@ public class PyRunner : IPyRunner
         {
             throw new FileNotFoundException("pip not found", PipExePath);
         }
-        var p = ProcessRunner.StartProcess(PipExePath, $"install {package}");
+        var p = ProcessRunner.StartAnsiProcess(PipExePath, $"install {package}");
         await ProcessRunner.WaitForExitConditionAsync(p);
     }
 

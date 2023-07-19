@@ -329,17 +329,45 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     
     private void OnProcessExited(object? sender, int exitCode)
     {
-        if (sender is BasePackage package)
+        Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            package.ConsoleOutput -= OnProcessOutputReceived;
-            package.Exited -= OnProcessExited;
-            package.StartupComplete -= RunningPackageOnStartupComplete;
-        }
-        RunningPackage = null;
-        ShowWebUiButton = false;
+            logger.LogTrace("Process exited ({Code}) at {Time:g}", 
+                exitCode, DateTimeOffset.Now);
+            
+            // Need to wait for streams to finish before detaching handlers
+            if (RunningPackage is BaseGitPackage {VenvRunner: not null} package)
+            {
+                var process = package.VenvRunner.Process;
+                if (process is not null)
+                {
+                    // Max 5 seconds
+                    var ct = new CancellationTokenSource(5000).Token;
+                    try
+                    {
+                        await process.WaitUntilOutputEOF(ct);
+                    }
+                    catch (OperationCanceledException e)
+                    {
+                        logger.LogWarning("Waiting for process EOF timed out: {Message}", e.Message);
+                    }
+                }
+            }
         
-        Console.PostLine($"{Environment.NewLine}Process finished with exit code {exitCode}");
-        Console.StopUpdatesAsync().SafeFireAndForget();
+            // Detach handlers
+            if (sender is BasePackage basePackage)
+            {
+                basePackage.ConsoleOutput -= OnProcessOutputReceived;
+                basePackage.Exited -= OnProcessExited;
+                basePackage.StartupComplete -= RunningPackageOnStartupComplete;
+            }
+            RunningPackage = null;
+            ShowWebUiButton = false;
+            
+            await Console.StopUpdatesAsync();
+            
+            Console.PostLine($"{Environment.NewLine}Process finished with exit code {exitCode}");
+            
+        }).SafeFireAndForget();
     }
 
     // Callback for processes

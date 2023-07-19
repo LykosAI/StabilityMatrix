@@ -31,7 +31,7 @@ public readonly record struct ProcessOutput
     /// Instruction to clear last n lines
     /// From carriage return '\r'
     /// </summary>
-    public int ClearLines { get; init; }
+    public int CarriageReturn { get; init; }
     
     /// <summary>
     /// Instruction to move write cursor up n lines
@@ -83,17 +83,17 @@ public readonly record struct ProcessOutput
         }
         
         // Also detect Ansi escape for cursor up, treat as clear lines also
-        if (text.StartsWith("\u001b["))
+        var cursorUp = 0;
+        if (text.Contains('\u001b'))
         {
-            var match = Regex.Match(text, @"\u001b\[(\d+?)A");
+            var match = Regex.Match(text, @"\x1B\[(\d+)?A");
             if (match.Success)
             {
                 // Default to 1 if no count
-                var count = int.TryParse(match.Groups[1].Value, out var n) ? n : 1;
-                // Add 1 to count to include current line
-                clearLines += count + 1;
-                // Set text to be after the escape sequence
-                text = text[match.Length..];
+                cursorUp = int.TryParse(match.Groups[1].Value, out var n) ? n : 1;
+                
+                // Set text to be everything up to the match
+                text = text[..match.Index];
             }
         }
         
@@ -102,7 +102,8 @@ public readonly record struct ProcessOutput
             RawText = originalText,
             Text = text,
             IsStdErr = isStdErr,
-            ClearLines = clearLines
+            CarriageReturn = clearLines,
+            CursorUp = cursorUp,
         };
     }
 }

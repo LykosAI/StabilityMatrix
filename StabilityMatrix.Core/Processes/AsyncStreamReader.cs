@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Text;
+using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Core.Processes;
 
@@ -101,8 +102,8 @@ internal sealed class AsyncStreamReader : IDisposable
 
                 var charLen = _decoder.GetChars(_byteBuffer, 0, bytesRead, _charBuffer, 0);
                 
-                Debug.WriteLine($"AsyncStreamReader - Read {charLen} chars, " +
-                                $"'{new string(_charBuffer, 0, charLen)}' ");
+                Debug.WriteLine($"AsyncStreamReader - Read {charLen} chars: " +
+                                $"{new string(_charBuffer, 0, charLen).ToRepr()}");
                 
                 _sb!.Append(_charBuffer, 0, charLen);
                 MoveLinesFromStringBuilderToMessageQueue();
@@ -183,6 +184,10 @@ internal sealed class AsyncStreamReader : IDisposable
         var lineStart = 0;
         var len = _sb!.Length;
         
+        // Flag for last index of '/r', by end of processing
+        // If this is higher than the index sent, we send the remaining buffer
+        var lastCarriageReturnIndex = -1;
+        
         // If flagged, send next buffer immediately
         if (_sendNextBufferImmediately)
         {
@@ -193,11 +198,12 @@ internal sealed class AsyncStreamReader : IDisposable
         
         // If buffer starts with '\r' not followed by '\n', we sent this immediately
         // For progress bars
-        if (len > 0 && _sb[0] == '\r' && (len == 1 || _sb[1] != '\n'))
+        // But only if no ansi escapes, otherwise handled by ansi block
+        /*if (len > 0 && _sb[0] == '\r' && (len == 1 || _sb[1] != '\n'))
         {
             SendRemainingBuffer();
             return;
-        }
+        }*/
 
         // skip a beginning '\n' character of new block if last block ended
         // with '\r'
@@ -247,8 +253,11 @@ internal sealed class AsyncStreamReader : IDisposable
                             _messageQueue.Enqueue(line);
                         }
                     }
-                    
-                    // otherwise we ignore \r and treat it as normal char
+                    else
+                    {
+                        // otherwise we ignore \r and treat it as normal char
+                        lastCarriageReturnIndex = currentIndex;
+                    }
                     break;
                 }
                 // Additional handling for Apc escape messages
@@ -288,6 +297,22 @@ internal sealed class AsyncStreamReader : IDisposable
                     // Otherwise continue without any other changes
                     break;
                 }
+                // If we receive an Ansi escape, send the existing buffer immediately
+                // Kind of behaves like newlines
+                case '\u001b':
+                {
+                    Debug.WriteLine("Sending early buffer due to Ansi escape");
+                    // Unlike '\n', this char is not included in the line
+                    var line = _sb.ToString(lineStart, currentIndex - lineStart);
+                    lineStart = currentIndex;
+                    
+                    lock (_messageQueue)
+                    {
+                        _messageQueue.Enqueue(line);
+                    }
+
+                    break;
+                }
             }
             currentIndex++;
         }
@@ -295,6 +320,13 @@ internal sealed class AsyncStreamReader : IDisposable
         {
             _bLastCarriageReturn = true;
         }
+        // If we found a carriage return, send the remaining buffer
+        if (lastCarriageReturnIndex > -1)
+        {
+            SendRemainingBuffer(lineStart);
+            return;
+        }
+        
         // Keep the rest characters which can't form a new line in string builder.
         if (lineStart < len)
         {

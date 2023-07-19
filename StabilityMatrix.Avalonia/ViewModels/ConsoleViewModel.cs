@@ -1,17 +1,21 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
-using StabilityMatrix.Core.Attributes;
+using NLog;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 public partial class ConsoleViewModel : ObservableObject, IDisposable
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    
     // Queue for console updates
     private BufferBlock<ProcessOutput> buffer = new();
     // Task that updates the console (runs on UI thread)
@@ -22,6 +26,12 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable
     public bool IsUpdatesRunning => updateTask?.IsCompleted == false;
     
     [ObservableProperty] private TextDocument document = new();
+    
+    // Tracks the global write cursor offset
+    private int writeCursor;
+    
+    // Lock for accessing the write cursor
+    private readonly object writeCursorLock = new();
     
     // Special instruction events
     public event EventHandler<ApcMessage>? ApcInput;
@@ -40,16 +50,31 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable
     /// </summary>
     public async Task StopUpdatesAsync()
     {
+        Logger.Trace($"Stopping console updates, current buffer items: {buffer.Count}");
+        await Task.Delay(100);
         // First complete the buffer
         buffer.Complete();
-        // Wait for buffer to complete
-        await buffer.Completion;
+        // Wait for buffer to complete, max 3 seconds
+        var completionCts = new CancellationTokenSource(3000);
+        try
+        {
+            await buffer.Completion.WaitAsync(completionCts.Token);
+        }
+        catch (TaskCanceledException e)
+        {
+            Logger.Warn("Buffer completion timed out: " + e.Message);
+        }
+
+        // Cancel update task
+        updateCts?.Cancel();
+        updateCts = null;
         // Wait for update task
         if (updateTask is not null)
         {
             await updateTask;
             updateTask = null;
         }
+        Logger.Trace($"Stopped console updates with {buffer.Count} buffer items remaining");
     }
     
     /// <summary>
@@ -80,14 +105,18 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable
             while (!ct.IsCancellationRequested)
             {
                 var output = await buffer.ReceiveAsync(ct);
+                Logger.Trace($"Processing output: (Text = {output.Text.ToRepr()}, " +
+                             $"ClearLines = {output.CarriageReturn}, CursorUp = {output.CursorUp})");
                 ConsoleUpdateOne(output);
             }
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException e)
         {
+            Logger.Info($"Console update loop stopped: {e.Message}");
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException e)
         {
+            Logger.Info($"Console update loop stopped: {e.Message}");
         }
     }
 
@@ -109,21 +138,79 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable
             // Ignore further processing
             return;
         }
-                
-        using var update = Document.RunUpdate();
-        // Handle instruction to clear previous lines
-        if (output.ClearLines > 0)
+        
+        // If we have a carriage return,
+        // start current write at the beginning of the last line
+        if (output.CarriageReturn > 0)
         {
-            for (var i = 0; i < output.ClearLines; i++)
+            var lastLineIndex = Document.LineCount - 1;
+            var line = Document.Lines[lastLineIndex];
+            
+            // Get the start of line offset
+            var lineStartOffset = line.Offset;
+            
+            // Use this as new write cursor
+            if (writeCursor != lineStartOffset)
             {
-                var lastLineIndex = Document.LineCount - 1;
-                var line = Document.Lines[lastLineIndex];
-                        
-                Document.Remove(line.Offset, line.Length);
+                lock (writeCursorLock)
+                {
+                    writeCursor = lineStartOffset;
+                }
             }
         }
-        // Add new line
-        Document.Insert(Document.TextLength, output.Text);
+        
+        // Insert text
+        if (!string.IsNullOrEmpty(output.Text))
+        {
+            var currentCursor = writeCursor;
+            using var _ = Document.RunUpdate();
+            // Check if the cursor is lower than the document length
+            // If so, we need to replace the text first
+            var replaceLength = Math.Min(Document.TextLength - currentCursor, output.Text.Length);
+            if (replaceLength > 0)
+            {
+                Document.Replace(currentCursor, replaceLength, output.Text[..replaceLength]);
+                Debug.WriteLine($"Replacing: offset = {currentCursor}, length = {replaceLength}, " +
+                                $"text = {output.Text[..replaceLength].ToRepr()}");
+
+                lock (writeCursorLock)
+                {
+                    writeCursor += replaceLength;
+                }
+            }
+            // If we replaced less than content.Length, we need to insert the rest
+            var remainingLength = output.Text.Length - replaceLength;
+            if (remainingLength > 0)
+            {
+                Document.Insert(writeCursor, output.Text[replaceLength..]);
+                Debug.WriteLine($"Inserting: offset = {writeCursor}, " +
+                                $"text = {output.Text[replaceLength..].ToRepr()}");
+                
+                lock (writeCursorLock)
+                {
+                    writeCursor += remainingLength;
+                }
+            }
+        }
+        
+        // Handle cursor movements
+        if (output.CursorUp > 0)
+        {
+            var currentCursor = writeCursor;
+            // First get the line the current cursor is on
+            var currentCursorLineNum = Document.GetLineByOffset(currentCursor).LineNumber;
+                
+            // We want to move to the line above the current cursor line
+            var previousLineNum = Math.Min(0, currentCursorLineNum - output.CursorUp);
+            var previousLine = Document.GetLineByNumber(previousLineNum);
+                
+            // Set the cursor to the *end* of the previous line
+            Logger.Trace($"Moving cursor up ({currentCursor} -> {previousLine.EndOffset})");
+            lock (writeCursorLock)
+            {
+                writeCursor = previousLine.EndOffset;
+            }
+        }
     }
     
     /// <summary>
@@ -133,7 +220,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable
     public void Post(ProcessOutput output)
     {
         // If update task is running, send to buffer
-        if (updateTask?.IsCompleted == false)
+        if (updateTask != null)
         {
             buffer.Post(output);
             return;

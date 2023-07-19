@@ -80,7 +80,7 @@ public static class ProcessRunner
         return output;
     }
 
-    public static Process StartProcess(
+    public static AnsiProcess StartAnsiProcess(
         string fileName,
         string arguments,
         string? workingDirectory = null,
@@ -122,7 +122,7 @@ public static class ProcessRunner
         return process;
     }
 
-    public static Process StartProcess(
+    public static Process StartAnsiProcess(
         string fileName,
         IEnumerable<string> arguments,
         string? workingDirectory = null,
@@ -133,7 +133,7 @@ public static class ProcessRunner
         var args = string.Join(" ", arguments
             .Where(s => !string.IsNullOrEmpty(s))
             .Select(Quote));
-        return StartProcess(fileName, args, workingDirectory, outputDataReceived, environmentVariables);
+        return StartAnsiProcess(fileName, args, workingDirectory, outputDataReceived, environmentVariables);
     }
     
     public static async Task<ProcessResult> RunBashCommand(string command, string workingDirectory = "")

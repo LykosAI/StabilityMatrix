@@ -8,6 +8,9 @@ namespace StabilityMatrix.Core.Processes;
 /// </summary>
 public class AnsiProcess : Process
 {
+    private AsyncStreamReader? stdoutReader;
+    private AsyncStreamReader? stderrReader;
+    
     public AnsiProcess(ProcessStartInfo startInfo)
     {
         StartInfo = startInfo;
@@ -32,14 +35,14 @@ public class AnsiProcess : Process
     public void BeginAnsiRead(Action<ProcessOutput> callback)
     {
         var stdoutStream = StandardOutput.BaseStream;
-        var stdoutReader = new AsyncStreamReader(stdoutStream, s =>
+        stdoutReader = new AsyncStreamReader(stdoutStream, s =>
         {
             if (s == null) return;
             callback(ProcessOutput.FromStdOutLine(s));
         }, StandardOutput.CurrentEncoding);
         
         var stderrStream = StandardError.BaseStream;
-        var stderrReader = new AsyncStreamReader(stderrStream, s =>
+        stderrReader = new AsyncStreamReader(stderrStream, s =>
         {
             if (s == null) return;
             callback(ProcessOutput.FromStdErrLine(s));
@@ -47,5 +50,20 @@ public class AnsiProcess : Process
 
         stdoutReader.BeginReadLine();
         stderrReader.BeginReadLine();
+    }
+    
+    /// <summary>
+    /// Waits for output readers to finish
+    /// </summary>
+    public async Task WaitUntilOutputEOF(CancellationToken ct = default)
+    {
+        if (stdoutReader is not null)
+        {
+            await stdoutReader.EOF.WaitAsync(ct).ConfigureAwait(false);
+        }
+        if (stderrReader is not null)
+        {
+            await stderrReader.EOF.WaitAsync(ct).ConfigureAwait(false);
+        }
     }
 }

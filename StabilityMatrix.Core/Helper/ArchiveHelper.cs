@@ -55,7 +55,7 @@ public static partial class ArchiveHelper
     
     public static async Task<ArchiveInfo> TestArchive(string archivePath)
     {
-        var process = ProcessRunner.StartProcess(SevenZipPath, new[] {"t", archivePath});
+        var process = ProcessRunner.StartAnsiProcess(SevenZipPath, new[] {"t", archivePath});
         await process.WaitForExitAsync();
         var output = await process.StandardOutput.ReadToEndAsync();
         var matches = Regex7ZOutput().Matches(output);
@@ -70,7 +70,7 @@ public static partial class ArchiveHelper
         var sourceParent = Directory.GetParent(sourceDirectory)?.FullName ?? "";
         // We must pass in as `directory\` for archive path to be correct
         var sourceDirName = new DirectoryInfo(sourceDirectory).Name;
-        var process = ProcessRunner.StartProcess(SevenZipPath, new[]
+        var process = ProcessRunner.StartAnsiProcess(SevenZipPath, new[]
         {
             "a", archivePath, sourceDirName + @"\", "-y"
         }, workingDirectory: sourceParent);
@@ -132,7 +132,7 @@ public static partial class ArchiveHelper
             $"x {ProcessRunner.Quote(archivePath)} -o{ProcessRunner.Quote(extractDirectory)} -y -bsp1";
         Logger.Debug($"Starting process '{SevenZipPath}' with arguments '{args}'");
         
-        var process = ProcessRunner.StartProcess(SevenZipPath, args, outputDataReceived: onOutput);
+        var process = ProcessRunner.StartAnsiProcess(SevenZipPath, args, outputDataReceived: onOutput);
         await ProcessRunner.WaitForExitConditionAsync(process);
         
         progress.Report(new ProgressReport(1, "Finished extracting", type: ProgressType.Extract));

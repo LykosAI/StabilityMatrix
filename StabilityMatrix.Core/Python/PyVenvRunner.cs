@@ -29,7 +29,7 @@ public class PyVenvRunner : IDisposable
     /// <summary>
     /// The process running the python executable.
     /// </summary>
-    public Process? Process { get; private set; }
+    public AnsiProcess? Process { get; private set; }
 
     /// <summary>
     /// The path to the venv root directory.
@@ -99,7 +99,7 @@ public class PyVenvRunner : IDisposable
         // Create venv (copy mode if windows)
         var args = new string[] { "-m", "virtualenv", 
             Compat.IsWindows ? "--always-copy" : "", RootPath };
-        var venvProc = ProcessRunner.StartProcess(PyRunner.PythonExePath, args);
+        var venvProc = ProcessRunner.StartAnsiProcess(PyRunner.PythonExePath, args);
         await venvProc.WaitForExitAsync();
 
         // Check return code
@@ -227,11 +227,11 @@ public class PyVenvRunner : IDisposable
                 arguments = "-u " + arguments;
             }
             
-            Process = ProcessRunner.StartProcess(PythonPath, arguments, workingDirectory, filteredOutput, env);
+            Process = ProcessRunner.StartAnsiProcess(PythonPath, arguments, workingDirectory, filteredOutput, env);
         }
         else
         {
-            Process = ProcessRunner.StartProcess(PythonPath, arguments, outputDataReceived: filteredOutput,
+            Process = ProcessRunner.StartAnsiProcess(PythonPath, arguments, outputDataReceived: filteredOutput,
                 workingDirectory: workingDirectory);
         }
 

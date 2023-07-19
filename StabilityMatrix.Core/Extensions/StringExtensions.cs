@@ -1,10 +1,28 @@
 ﻿using System.CodeDom;
 using System.CodeDom.Compiler;
+using System.Text;
 
 namespace StabilityMatrix.Core.Extensions;
 
 public static class StringExtensions
 {
+    private static string EncodeNonAsciiCharacters(string value) {
+        var sb = new StringBuilder();
+        foreach (var c in value) 
+        {
+            if (c > 127)
+            {
+                // This character is too big for ASCII
+                var encodedValue = "\\u" + ((int) c).ToString("x4");
+                sb.Append(encodedValue);
+            }
+            else {
+                sb.Append(c);
+            }
+        }
+        return sb.ToString();
+    }
+    
     /// <summary>
     /// Converts string to repr
     /// </summary>
@@ -21,6 +39,8 @@ public static class StringExtensions
         var literal = writer.ToString();
         // Replace split lines
         literal = literal.Replace($"\" +{Environment.NewLine}\t\"", "");
+        // Encode non-ascii characters
+        literal = EncodeNonAsciiCharacters(literal);
         // Surround with single quotes
         literal = $"'{literal}'";
         return literal;

@@ -7,6 +7,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <InternalsVisibleTo Include="StabilityMatrix.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
       <PackageReference Include="AsyncAwaitBestPractices" Version="6.0.6" />
       <PackageReference Include="Blake3" Version="0.5.1" />
       <PackageReference Include="DeviceId" Version="6.3.0" />

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -231,6 +231,8 @@ namespace StabilityMatrix
             serviceCollection.AddSingleton<BasePackage, A3WebUI>();
             serviceCollection.AddSingleton<BasePackage, VladAutomatic>();
             serviceCollection.AddSingleton<BasePackage, ComfyUI>();
+            serviceCollection.AddSingleton<VladAutomaticSharedFolderStrategy>();
+            serviceCollection.AddTransient<LinkedFolderSharedFolderStrategy>();
             serviceCollection.AddSingleton<Wpf.Ui.Contracts.ISnackbarService, Wpf.Ui.Services.SnackbarService>();
             serviceCollection.AddSingleton<IPrerequisiteHelper, PrerequisiteHelper>();
             serviceCollection.AddSingleton<ISnackbarService, SnackbarService>();

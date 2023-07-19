@@ -157,7 +157,10 @@ public partial class LaunchViewModel : ObservableObject
         basePackage.StartupComplete += RunningPackageOnStartupComplete;
 
         // Update shared folder links (in case library paths changed)
-        sharedFolders.UpdateLinksForPackage(basePackage, packagePath);
+        if (basePackage.SharedFolderStrategy is LinkedFolderSharedFolderStrategy)
+            sharedFolders.UpdateLinksForPackage(basePackage, packagePath);
+        else
+            await basePackage.SharedFolderStrategy.ExecuteAsync(basePackage);
 
         // Load user launch args from settings and convert to string
         var userArgs = settingsManager.GetLaunchArgs(activeInstall.Id);

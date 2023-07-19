@@ -26,9 +26,10 @@ public class ComfyUI : BaseGitPackage
     public override bool ShouldIgnoreReleases => true;
 
     public ComfyUI(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper) :
+        IPrerequisiteHelper prerequisiteHelper, LinkedFolderSharedFolderStrategy sharedFolderStrategy) :
         base(githubApi, settingsManager, downloadService, prerequisiteHelper)
     {
+        SharedFolderStrategy = sharedFolderStrategy;
     }
 
     // https://github.com/comfyanonymous/ComfyUI/blob/master/folder_paths.py#L11
@@ -46,7 +47,9 @@ public class ComfyUI : BaseGitPackage
         [SharedFolderType.ESRGAN] = "models/upscale_models",
         [SharedFolderType.Hypernetwork] = "models/hypernetworks",
     };
-    
+
+    public override ISharedFolderStrategy SharedFolderStrategy { get; protected set; }
+
     public override List<LaunchOptionDefinition> LaunchOptions => new()
     {
         new()

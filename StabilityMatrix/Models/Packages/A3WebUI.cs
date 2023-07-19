@@ -24,10 +24,14 @@ public class A3WebUI : BaseGitPackage
     public string RelativeArgsDefinitionScriptPath => "modules.cmd_args";
 
 
-    public A3WebUI(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper) :
+    public A3WebUI(IGithubApiCache githubApi, 
+        ISettingsManager settingsManager, 
+        IDownloadService downloadService,
+        IPrerequisiteHelper prerequisiteHelper, 
+        LinkedFolderSharedFolderStrategy sharedFolderStrategy) :
         base(githubApi, settingsManager, downloadService, prerequisiteHelper)
     {
+        SharedFolderStrategy = sharedFolderStrategy;
     }
 
     // From https://github.com/AUTOMATIC1111/stable-diffusion-webui/tree/master/models
@@ -47,6 +51,8 @@ public class A3WebUI : BaseGitPackage
         [SharedFolderType.Hypernetwork] = "models/hypernetworks",
         [SharedFolderType.ControlNet] = "models/ControlNet"
     };
+
+    public override ISharedFolderStrategy SharedFolderStrategy { get; protected set; }
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
     public override List<LaunchOptionDefinition> LaunchOptions => new()

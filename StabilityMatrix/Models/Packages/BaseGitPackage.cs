@@ -28,7 +28,11 @@ public abstract class BaseGitPackage : BasePackage
     protected readonly IDownloadService DownloadService;
     protected readonly IPrerequisiteHelper PrerequisiteHelper;
     protected PyVenvRunner? VenvRunner;
-    
+
+    public BaseGitPackage()
+    {
+        
+    }
     /// <summary>
     /// URL of the hosted web page on launch
     /// </summary>

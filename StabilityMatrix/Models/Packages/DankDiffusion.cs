@@ -10,9 +10,10 @@ namespace StabilityMatrix.Models.Packages;
 public class DankDiffusion : BaseGitPackage
 {
     public DankDiffusion(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper) :
+        IPrerequisiteHelper prerequisiteHelper, LinkedFolderSharedFolderStrategy sharedFolderStrategy) :
         base(githubApi, settingsManager, downloadService, prerequisiteHelper)
     {
+        SharedFolderStrategy = sharedFolderStrategy;
     }
 
     public override string Name => "dank-diffusion";
@@ -27,6 +28,8 @@ public class DankDiffusion : BaseGitPackage
     }
 
     public override List<LaunchOptionDefinition> LaunchOptions { get; }
+    public override ISharedFolderStrategy SharedFolderStrategy { get; protected set; }
+
     public override Task<string> GetLatestVersion()
     {
         throw new System.NotImplementedException();

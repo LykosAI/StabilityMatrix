@@ -318,8 +318,9 @@ public partial class InstallerViewModel : ObservableObject
         await InstallPackage();
 
         ProgressText = "Setting up shared folder links...";
-        sharedFolders.SetupLinksForPackage(SelectedPackage, SelectedPackage.InstallLocation);
-        
+
+        await SelectedPackage.SharedFolderStrategy.ExecuteAsync(SelectedPackage);
+
         ProgressText = "Done";
         IsIndeterminate = false;
         ProgressValue = 100;

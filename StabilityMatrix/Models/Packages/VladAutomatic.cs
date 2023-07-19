@@ -27,9 +27,10 @@ public class VladAutomatic : BaseGitPackage
     public override bool ShouldIgnoreReleases => true;
 
     public VladAutomatic(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper) :
+        IPrerequisiteHelper prerequisiteHelper, VladAutomaticSharedFolderStrategy sharedFolderStrategy) :
         base(githubApi, settingsManager, downloadService, prerequisiteHelper)
     {
+        SharedFolderStrategy = sharedFolderStrategy;
     }
 
     // https://github.com/vladmandic/automatic/blob/master/modules/shared.py#L324
@@ -52,6 +53,8 @@ public class VladAutomatic : BaseGitPackage
         [SharedFolderType.Lora] = "models/Lora",
         [SharedFolderType.LyCORIS] = "models/LyCORIS",
     };
+
+    public override ISharedFolderStrategy SharedFolderStrategy { get; protected set; }
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
     public override List<LaunchOptionDefinition> LaunchOptions => new()

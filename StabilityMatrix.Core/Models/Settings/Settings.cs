@@ -28,7 +28,7 @@ public class Settings
     
     public bool KeepFolderLinksOnShutdown { get; set; }
 
-    public HashSet<string> InstalledModelHashes { get; set; } = new();
+    public HashSet<string>? InstalledModelHashes { get; set; } = new();
 
     public InstalledPackage? GetActiveInstalledPackage()
     {

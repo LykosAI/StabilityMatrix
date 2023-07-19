@@ -419,6 +419,7 @@ public class SettingsManager : ISettingsManager
 
     public void IndexCheckpoints()
     {
+        Settings.InstalledModelHashes ??= new HashSet<string>();
         if (Settings.InstalledModelHashes.Any())
             return;
 

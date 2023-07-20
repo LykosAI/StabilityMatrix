@@ -13,7 +13,7 @@
                         Icon="/Assets/Icon.ico"
                         Width="1100"
                         Height="850"
-                        Title="Stability Matrix Avalonia"
+                        Title="Stability Matrix"
                         x:Class="StabilityMatrix.Avalonia.Views.MainWindow">
 
 

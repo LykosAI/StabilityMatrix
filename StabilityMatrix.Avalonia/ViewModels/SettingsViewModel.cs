@@ -134,6 +134,7 @@ public partial class SettingsViewModel : PageViewModelBase
     {
         var dialog = new ContentDialog
         {
+            DefaultButton = ContentDialogButton.Primary,
             Title = "Test title",
             PrimaryButtonText = "OK",
             CloseButtonText = "Close"

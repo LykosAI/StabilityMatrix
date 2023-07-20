@@ -108,27 +108,37 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     
     public override async Task OnLoadedAsync()
     {
-        if (IsReleaseMode)
+        if (Design.IsDesignMode) return;
+        // Check for updates
+        try
         {
-            var versions = (await SelectedPackage.GetAllVersions()).ToList();
-            AvailableVersions = new ObservableCollection<PackageVersion>(versions);
-            if (!AvailableVersions.Any()) return;
-            
-            SelectedVersion = AvailableVersions[0];
-        }
-        else
-        {
-            var branches = (await SelectedPackage.GetAllBranches()).ToList();
-            AvailableVersions = new ObservableCollection<PackageVersion>(branches.Select(b => new PackageVersion
+            if (IsReleaseMode)
             {
-                TagName = b.Name,
-                ReleaseNotesMarkdown = b.Commit.Label
-            }));
-            SelectedVersion = AvailableVersions.FirstOrDefault(x => 
-                x.TagName.ToLowerInvariant() is "master" or "main") ?? AvailableVersions[0];
-        }
+                var versions = (await SelectedPackage.GetAllVersions()).ToList();
+                AvailableVersions = new ObservableCollection<PackageVersion>(versions);
+                if (!AvailableVersions.Any()) return;
 
-        ReleaseNotes = SelectedVersion.ReleaseNotesMarkdown;
+                SelectedVersion = AvailableVersions[0];
+            }
+            else
+            {
+                var branches = (await SelectedPackage.GetAllBranches()).ToList();
+                AvailableVersions = new ObservableCollection<PackageVersion>(branches.Select(b =>
+                    new PackageVersion
+                    {
+                        TagName = b.Name,
+                        ReleaseNotesMarkdown = b.Commit.Label
+                    }));
+                SelectedVersion = AvailableVersions.FirstOrDefault(x =>
+                    x.TagName.ToLowerInvariant() is "master" or "main") ?? AvailableVersions[0];
+            }
+
+            ReleaseNotes = SelectedVersion.ReleaseNotesMarkdown;
+        }
+        catch (Exception e)
+        {
+            Logger.Warn("Error getting versions: {Exception}", e.ToString());
+        }
     }
     
     [RelayCommand]

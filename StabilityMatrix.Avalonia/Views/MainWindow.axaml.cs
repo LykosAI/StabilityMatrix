@@ -50,10 +50,10 @@ public partial class MainWindow : AppWindowBase
             TryEnableMicaEffect();
         }
     }
-    
-    public override void OnLoaded(object? sender, RoutedEventArgs e)
+
+    protected override void OnLoaded(RoutedEventArgs e)
     {
-        base.OnLoaded(sender, e);
+        base.OnLoaded(e);
         NotificationService?.Initialize(this);
     }
     

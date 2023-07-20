@@ -25,6 +25,7 @@ using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
 using Polly.Timeout;
 using Refit;
+using Sentry;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.Helpers;
@@ -147,6 +148,7 @@ public sealed class App : Application
         services.AddTransient<SelectModelVersionViewModel>();
         services.AddTransient<SelectDataDirectoryViewModel>();
         services.AddTransient<LaunchOptionsViewModel>();
+        services.AddTransient<ExceptionViewModel>();
         services.AddSingleton<UpdateViewModel>();
         
         // Other transients (usually sub view models)
@@ -171,6 +173,7 @@ public sealed class App : Application
                 .Register(provider.GetRequiredService<CheckpointFolder>)
                 .Register(provider.GetRequiredService<CheckpointFile>)
                 .Register(provider.GetRequiredService<RefreshBadgeViewModel>)
+                .Register(provider.GetRequiredService<ExceptionViewModel>)
                 .Register(provider.GetRequiredService<ProgressManagerViewModel>));
     }
 
@@ -188,6 +191,7 @@ public sealed class App : Application
         services.AddTransient<SelectDataDirectoryDialog>();
         services.AddTransient<LaunchOptionsDialog>();
         services.AddTransient<UpdateDialog>();
+        services.AddTransient<ExceptionDialog>();
         
         // Controls
         services.AddTransient<RefreshBadge>();
@@ -398,10 +402,9 @@ public sealed class App : Application
             {
                 Layout = "${message}"
             });
-
-        LogManager.Configuration = logConfig;
-        // Add Sentry to NLog if enabled
-        if (true)
+        
+        // Sentry
+        if (SentrySdk.IsEnabled)
         {
             logConfig.AddSentry(o =>
             {
@@ -416,6 +419,9 @@ public sealed class App : Application
                 o.MinimumEventLevel = NLog.LogLevel.Error;
             });
         }
+
+        LogManager.Configuration = logConfig;
+
 
         return logConfig;
     }

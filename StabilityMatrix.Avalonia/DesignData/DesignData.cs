@@ -4,6 +4,8 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
+using System.Threading.Tasks;
+using Avalonia.Media;
 using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
@@ -22,6 +24,7 @@ using StabilityMatrix.Core.Updater;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
+[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public static class DesignData
 {
     [NotNull] public static IServiceProvider? Services { get; set; }
@@ -213,6 +216,8 @@ public static class DesignData
     [NotNull] public static LaunchOptionsViewModel? LaunchOptionsViewModel { get; private set; }
     [NotNull] public static UpdateViewModel? UpdateViewModel { get; private set; }
     
+    public static ServiceManager<ViewModelBase> DialogFactory => 
+        Services.GetRequiredService<ServiceManager<ViewModelBase>>();
     public static MainWindowViewModel MainWindowViewModel => 
         Services.GetRequiredService<MainWindowViewModel>();
     public static LaunchPageViewModel LaunchPageViewModel => 
@@ -233,6 +238,26 @@ public static class DesignData
         Services.GetRequiredService<SelectDataDirectoryViewModel>();
     public static ProgressManagerViewModel ProgressManagerViewModel =>
         Services.GetRequiredService<ProgressManagerViewModel>();
+    public static ExceptionViewModel ExceptionViewModel => 
+        DialogFactory.Get<ExceptionViewModel>(viewModel =>
+        {
+            // Use try-catch to generate traceback information
+            try
+            {
+                try
+                {
+                    throw new OperationCanceledException("Example");
+                }
+                catch (OperationCanceledException e)
+                {
+                    throw new AggregateException(e);
+                }
+            }
+            catch (AggregateException e)
+            {
+                viewModel.Exception = e;
+            }
+        });
 
     public static RefreshBadgeViewModel RefreshBadgeViewModel => new()
     {

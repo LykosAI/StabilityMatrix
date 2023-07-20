@@ -143,6 +143,13 @@ public partial class SettingsViewModel : PageViewModelBase
         notificationService.Show(new Notification("Content dialog closed",
             $"Result: {result}"));
     }
+
+    [RelayCommand]
+    private void DebugThrowException()
+    {
+        // Use try-catch to generate traceback information
+        throw new OperationCanceledException("Example Message");
+    }
     
     [RelayCommand]
     private async Task CheckPythonVersion()

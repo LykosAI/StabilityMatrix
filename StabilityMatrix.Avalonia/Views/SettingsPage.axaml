@@ -122,6 +122,14 @@
                                     </ui:SettingsExpanderItem.Footer>
                                 </ui:SettingsExpanderItem>
                                 
+                                <ui:SettingsExpanderItem Content="Exceptions" IconSource="Flag">
+                                    <ui:SettingsExpanderItem.Footer>
+                                        <Button
+                                            Command="{Binding DebugThrowExceptionCommand}"
+                                            Content="Unhandled Exception"/>
+                                    </ui:SettingsExpanderItem.Footer>
+                                </ui:SettingsExpanderItem>
+                                
                             </ui:SettingsExpander>
                         </StackPanel>
                     </Grid>

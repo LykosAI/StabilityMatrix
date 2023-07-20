@@ -110,5 +110,23 @@ public class ServiceManager<T>
         throw new ArgumentException(
             $"Service of type {typeof(TService)} is not registered for {typeof(T)}");
     }
-
+    
+    /// <summary>
+    /// Get a view model instance with an initializer parameter
+    /// </summary>
+    public TService Get<TService>(Func<TService, TService> initializer) where TService : T
+    {
+        var instance = Get<TService>();
+        return initializer(instance);
+    }
+    
+    /// <summary>
+    /// Get a view model instance with an initializer for a mutable instance
+    /// </summary>
+    public TService Get<TService>(Action<TService> initializer) where TService : T
+    {
+        var instance = Get<TService>();
+        initializer(instance);
+        return instance;
+    }
 }

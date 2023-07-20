@@ -1,19 +1,16 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
 using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
-using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -185,7 +182,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         
         // Clear console and start update processing
         await Console.StopUpdatesAsync();
-        Console.Clear();
+        await Console.Clear();
         Console.StartUpdates();
 
         // TODO: Update shared folder links (in case library paths changed)
@@ -365,6 +362,9 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
             
             await Console.StopUpdatesAsync();
             
+            // Need to reset cursor in case its in some weird position
+            // from progress bars
+            await Console.ResetWriteCursor();
             Console.PostLine($"{Environment.NewLine}Process finished with exit code {exitCode}");
             
         }).SafeFireAndForget();

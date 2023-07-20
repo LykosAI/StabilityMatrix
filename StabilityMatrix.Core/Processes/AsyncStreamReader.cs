@@ -255,8 +255,18 @@ internal sealed class AsyncStreamReader : IDisposable
                     }
                     else
                     {
-                        // otherwise we ignore \r and treat it as normal char
+                        // Set flag to indicate we've seen a \r
                         lastCarriageReturnIndex = currentIndex;
+                        
+                        // Send buffer up to this point, not including \r
+                        var line = _sb.ToString(lineStart, currentIndex - lineStart);
+                        lineStart = currentIndex;
+                        currentIndex++;
+                        
+                        lock (_messageQueue)
+                        {
+                            _messageQueue.Enqueue(line);
+                        }
                     }
                     break;
                 }
@@ -301,14 +311,34 @@ internal sealed class AsyncStreamReader : IDisposable
                 // Kind of behaves like newlines
                 case '\u001b':
                 {
-                    Debug.WriteLine("Sending early buffer due to Ansi escape");
                     // Unlike '\n', this char is not included in the line
                     var line = _sb.ToString(lineStart, currentIndex - lineStart);
                     lineStart = currentIndex;
-                    
                     lock (_messageQueue)
                     {
                         _messageQueue.Enqueue(line);
+                    }
+                    
+                    // Look ahead and match the escape sequence
+                    var remaining = _sb.ToString(currentIndex, _sb.Length - currentIndex);
+                    var result = AnsiParser.AnsiEscapeSequenceRegex().Match(remaining);
+                    
+                    // If we found a match, send the escape sequence match, and move forward
+                    if (result.Success)
+                    {
+                        var escapeSequence = result.Value;
+                        Debug.WriteLine($"AsyncStreamReader - Sent Ansi escape sequence: {escapeSequence.ToRepr()}");
+                        lock (_messageQueue)
+                        {
+                            _messageQueue.Enqueue(escapeSequence);
+                        }
+                        // Advance currentIndex and lineStart to end of escape sequence
+                        currentIndex += escapeSequence.Length;
+                        lineStart = currentIndex;
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"AsyncStreamReader - No match for Ansi escape sequence: {remaining.ToRepr()}");
                     }
 
                     break;

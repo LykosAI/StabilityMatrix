@@ -26,6 +26,7 @@
         <PackageReference Include="Markdown.Avalonia" Version="11.0.0" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
         <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="7.0.8" />
+        <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
         <PackageReference Include="NLog" Version="5.2.2" />
         <PackageReference Include="NLog.Extensions.Logging" Version="5.3.2" />
         <PackageReference Include="Polly" Version="7.2.4" />

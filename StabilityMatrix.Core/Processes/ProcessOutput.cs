@@ -65,6 +65,7 @@ public readonly record struct ProcessOutput
         // Parse APC message
         if (ApcParser.TryParse(text, out var message))
         {
+            Debug.WriteLine("Created new APC ProcessOutput");
             // Override and return
             return new ProcessOutput
             {
@@ -142,7 +143,7 @@ public readonly record struct ProcessOutput
             text = AnsiParser.AnsiEscapeSequenceRegex().Replace(text, "");
         }
         
-        return new ProcessOutput
+        var output = new ProcessOutput
         {
             RawText = originalText,
             Text = text,
@@ -151,5 +152,7 @@ public readonly record struct ProcessOutput
             CursorUp = cursorUp,
             AnsiCommand = ansiCommands,
         };
+        Debug.WriteLine($"Created new ProcessOutput from {originalText.ToRepr()}: {output.ToString()!.ToRepr()}");
+        return output;
     }
 }

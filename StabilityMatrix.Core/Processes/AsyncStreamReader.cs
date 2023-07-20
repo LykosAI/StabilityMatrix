@@ -137,8 +137,10 @@ internal sealed class AsyncStreamReader : IDisposable
         {
             if (_sb!.Length != 0)
             {
-                _messageQueue.Enqueue(_sb.ToString());
+                var remaining = _sb.ToString();
+                _messageQueue.Enqueue(remaining);
                 _sb.Length = 0;
+                Debug.WriteLine($"AsyncStreamReader - Reached EOF, sent remaining buffer: {remaining}");
             }
             _messageQueue.Enqueue(null);
         }
@@ -171,6 +173,16 @@ internal sealed class AsyncStreamReader : IDisposable
             _sb.Length = 0;
         }
     }
+    
+    // Sends a message to the queue if not null or empty
+    private void SendToQueue(string? message)
+    {
+        if (string.IsNullOrEmpty(message)) return;
+        lock (_messageQueue)
+        {
+            _messageQueue.Enqueue(message);
+        }
+    }
 
     // Read lines stored in StringBuilder and the buffer we just read into.
     // A line is defined as a sequence of characters followed by
@@ -184,10 +196,6 @@ internal sealed class AsyncStreamReader : IDisposable
         var lineStart = 0;
         var len = _sb!.Length;
         
-        // Flag for last index of '/r', by end of processing
-        // If this is higher than the index sent, we send the remaining buffer
-        var lastCarriageReturnIndex = -1;
-        
         // If flagged, send next buffer immediately
         if (_sendNextBufferImmediately)
         {
@@ -195,15 +203,6 @@ internal sealed class AsyncStreamReader : IDisposable
             _sendNextBufferImmediately = false;
             return;
         }
-        
-        // If buffer starts with '\r' not followed by '\n', we sent this immediately
-        // For progress bars
-        // But only if no ansi escapes, otherwise handled by ansi block
-        /*if (len > 0 && _sb[0] == '\r' && (len == 1 || _sb[1] != '\n'))
-        {
-            SendRemainingBuffer();
-            return;
-        }*/
 
         // skip a beginning '\n' character of new block if last block ended
         // with '\r'
@@ -231,42 +230,37 @@ internal sealed class AsyncStreamReader : IDisposable
                     {
                         _messageQueue.Enqueue(line);
                     }
-                    
+
                     break;
                 }
                 // \r\n - Windows
                 // \r alone is parsed as carriage return
                 case '\r':
                 {
-                    // when next char is \n, linebreak
-                    var nextIndex = currentIndex + 1;
-                    if (nextIndex < len && _sb[nextIndex] == '\n')
+                    // when next char is \n, we found \r\n - linebreak
+                    if (currentIndex + 1 < len && _sb[currentIndex + 1] == '\n')
                     {
                         // Include the '\r\n' as part of line.
                         var line = _sb.ToString(lineStart, currentIndex - lineStart + 2);
-                        // Advance 2 chars for \r\n
-                        lineStart = currentIndex + 2;
-                        currentIndex++;
-                        
                         lock (_messageQueue)
                         {
                             _messageQueue.Enqueue(line);
                         }
+                        // Advance 2 chars for \r\n
+                        lineStart = currentIndex + 2;
+                        // Increment one extra plus the end of the loop increment
+                        currentIndex++;
                     }
                     else
                     {
-                        // Set flag to indicate we've seen a \r
-                        lastCarriageReturnIndex = currentIndex;
-                        
                         // Send buffer up to this point, not including \r
                         var line = _sb.ToString(lineStart, currentIndex - lineStart);
-                        lineStart = currentIndex;
-                        currentIndex++;
-                        
                         lock (_messageQueue)
                         {
                             _messageQueue.Enqueue(line);
                         }
+                        // Set line start to current index
+                        lineStart = currentIndex;
                     }
                     break;
                 }
@@ -313,28 +307,26 @@ internal sealed class AsyncStreamReader : IDisposable
                 {
                     // Unlike '\n', this char is not included in the line
                     var line = _sb.ToString(lineStart, currentIndex - lineStart);
+                    SendToQueue(line);
+                    // Set line start to current index
                     lineStart = currentIndex;
-                    lock (_messageQueue)
-                    {
-                        _messageQueue.Enqueue(line);
-                    }
                     
                     // Look ahead and match the escape sequence
-                    var remaining = _sb.ToString(currentIndex, _sb.Length - currentIndex);
+                    var remaining = _sb.ToString(currentIndex, len - currentIndex);
                     var result = AnsiParser.AnsiEscapeSequenceRegex().Match(remaining);
                     
                     // If we found a match, send the escape sequence match, and move forward
                     if (result.Success)
                     {
                         var escapeSequence = result.Value;
+                        SendToQueue(escapeSequence);
+                        
                         Debug.WriteLine($"AsyncStreamReader - Sent Ansi escape sequence: {escapeSequence.ToRepr()}");
-                        lock (_messageQueue)
-                        {
-                            _messageQueue.Enqueue(escapeSequence);
-                        }
+                        
                         // Advance currentIndex and lineStart to end of escape sequence
-                        currentIndex += escapeSequence.Length;
-                        lineStart = currentIndex;
+                        // minus 1 since we will increment currentIndex at the end of the loop
+                        lineStart = currentIndex + escapeSequence.Length;
+                        currentIndex = lineStart - 1;
                     }
                     else
                     {
@@ -349,12 +341,6 @@ internal sealed class AsyncStreamReader : IDisposable
         if (len > 0 && _sb[len - 1] == '\r')
         {
             _bLastCarriageReturn = true;
-        }
-        // If we found a carriage return, send the remaining buffer
-        if (lastCarriageReturnIndex > -1)
-        {
-            SendRemainingBuffer(lineStart);
-            return;
         }
         
         // Keep the rest characters which can't form a new line in string builder.

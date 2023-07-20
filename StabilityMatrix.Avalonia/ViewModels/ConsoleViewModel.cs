@@ -156,11 +156,13 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable
                     // Thrown when buffer is completed, convert to OperationCanceledException
                     throw new OperationCanceledException("Update buffer completed", e);
                 }
-                
-                Debug.WriteLine($"Processing: (Text = {output.Text.ToRepr()}, " +
+
+                var outputType = output.IsStdErr ? "stderr" : "stdout";
+                Debug.WriteLine($"Processing: [{outputType}] (Text = {output.Text.ToRepr()}, " +
                                 $"Raw = {output.RawText?.ToRepr()}, " +
                                 $"CarriageReturn = {output.CarriageReturn}, " +
-                                $"CursorUp = {output.CursorUp})");
+                                $"CursorUp = {output.CursorUp}, " +
+                                $"AnsiCommand = {output.AnsiCommand})");
                 
                 // Link the cancellation token to the write cursor lock timeout
                 var linkedCt = CancellationTokenSource
@@ -222,6 +224,12 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable
             }
             else
             {
+                // Also remove everything on current line
+                // We'll temporarily do this for now to fix progress
+                var lineEndOffset = currentLine.EndOffset;
+                var lineLength = lineEndOffset - lineStartOffset;
+                Document.Remove(lineStartOffset, lineLength);
+                
                 Debug.WriteLine($"Moving cursor to start for carriage return " +
                                 $"({writeCursor} -> {lineStartOffset})");
                 writeCursor = lineStartOffset;
@@ -270,7 +278,10 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable
             
             // Insert the text
             Debug.WriteLine($"Erasing line {currentLine.LineNumber}: (length = {currentLine.Length})");
-            Document.Replace(currentLine.Offset, currentLine.Length, spaces);
+            using (Document.RunUpdate())
+            {
+                Document.Replace(currentLine.Offset, currentLine.Length, spaces);
+            }
         }
 
         DebugPrintDocument();
@@ -297,7 +308,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable
         // Split text into lines
         var lines = text.Split(Environment.NewLine).ToList();
 
-        foreach (var (i, lineText) in lines.SkipLast(1).Enumerate())
+        foreach (var lineText in lines.SkipLast(1))
         {
             // Insert text
             DirectWriteToConsole(lineText);
@@ -390,7 +401,15 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable
         var linePadding = numberPadding + 3 + cursorLineOffset;
         var cursorLineArrow = new string('~', linePadding) + $"^ ({writeCursor})";
         
-        lines.Insert(cursorLine.LineNumber, cursorLineArrow);
+        // If more than line count, append to end
+        if (cursorLine.LineNumber >= lines.Count)
+        {
+            lines.Add(cursorLineArrow);
+        }
+        else
+        {
+            lines.Insert(cursorLine.LineNumber, cursorLineArrow);
+        }
         
         var textWithCursor = string.Join(Environment.NewLine, lines);
         

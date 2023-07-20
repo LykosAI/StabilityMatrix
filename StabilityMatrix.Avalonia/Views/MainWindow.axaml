@@ -14,6 +14,7 @@
                         Width="1100"
                         Height="850"
                         Title="Stability Matrix"
+                        WindowStartupLocation="CenterScreen"
                         x:Class="StabilityMatrix.Avalonia.Views.MainWindow">
 
 

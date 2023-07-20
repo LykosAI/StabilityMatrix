@@ -124,6 +124,7 @@
                     IsIconVisible="False"
                     IsClosable="False"
                     Severity="Informational"
+                    Opacity="1"
                     IsOpen="{Binding ShowManualInputPrompt, Mode=TwoWay}" 
                     Margin="0">
                     <ui:InfoBar.ActionButton>

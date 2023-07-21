@@ -144,11 +144,14 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     [RelayCommand]
     private async Task Install()
     {
-        await ActuallyInstall();
-        notificationService.Show(new Notification(
-            $"Package {SelectedPackage.Name} installed successfully!",
-            "Success", NotificationType.Success));
-        OnPrimaryButtonClick();
+        var result = await notificationService.TryAsync(ActuallyInstall(), "Could not install package");
+        if (result.IsSuccessful)
+        {
+            notificationService.Show(new Notification(
+                $"Package {SelectedPackage.Name} installed successfully!",
+                "Success", NotificationType.Success));
+            OnPrimaryButtonClick();  
+        }
     }
     
     private async Task ActuallyInstall()

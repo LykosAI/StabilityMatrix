@@ -100,6 +100,7 @@
                         Height="50"
                         VerticalAlignment="Top"
                         IsEnabled="{Binding InstallButtonEnabled}"
+                        IsVisible="{Binding InstallButtonEnabled}"
                         Classes="success"
                         Width="100" />
                     <Button
@@ -109,6 +110,7 @@
                         VerticalAlignment="Top"
                         Classes="danger"
                         IsEnabled="{Binding !IsUninstalling}"
+                        IsVisible="{Binding InstallButtonEnabled}"
                         Width="100" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" IsVisible="{Binding IsUninstalling}">

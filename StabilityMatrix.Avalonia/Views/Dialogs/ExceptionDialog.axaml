@@ -37,7 +37,8 @@
                         <StackPanel DataContext="{Binding Exception}" Spacing="4">
                             <!--  Exception Message  -->
                             <TextBlock Theme="{DynamicResource BodyStrongTextBlockStyle}" Text="Details" />
-                            <SelectableTextBlock Text="{Binding Message}" Margin="0,0,0,8" />
+                            <SelectableTextBlock Text="{Binding Message}" Margin="0,0,0,8"
+                                                 SelectionBrush="DodgerBlue"/>
                             <!--  Callstack  -->
                             <TextBlock Theme="{DynamicResource BodyStrongTextBlockStyle}" Text="Callstack" />
                             <controls:Card 
@@ -45,6 +46,7 @@
                                 Background="{DynamicResource ComboBoxDropDownBackground}">
                                 <SelectableTextBlock
                                     FontSize="13"
+                                    SelectionBrush="DodgerBlue"
                                     FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
                                     TextWrapping="Wrap"
                                     Text="{Binding StackTrace}" />
@@ -57,6 +59,7 @@
                             <controls:Card Background="{DynamicResource ComboBoxDropDownBackground}">
                                 <SelectableTextBlock
                                     FontSize="13"
+                                    SelectionBrush="DodgerBlue"
                                     FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
                                     TextWrapping="Wrap"
                                     IsVisible="{Binding InnerException, Converter={x:Static ObjectConverters.IsNotNull}}"

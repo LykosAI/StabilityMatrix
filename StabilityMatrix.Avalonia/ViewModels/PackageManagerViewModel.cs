@@ -193,9 +193,10 @@ public partial class PackageManagerViewModel : PageViewModelBase
                     settings.RemoveInstalledPackageAndUpdateActive(SelectedPackage);
                 });
             }
-            await OnLoadedAsync();
             IsUninstalling = false;
             InstallButtonEnabled = true;
+            
+            await OnLoadedAsync();
         }
     }
 

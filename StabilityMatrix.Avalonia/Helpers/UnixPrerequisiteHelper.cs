@@ -4,8 +4,10 @@ using System.IO;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Platform;
 using Avalonia.Utilities;
+using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
@@ -36,6 +38,8 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
     private DirectoryPath PortableGitInstallDir => HomeDir + "PortableGit";
     public string GitBinPath => PortableGitInstallDir + "bin";
     
+    // Cached store of whether or not git is installed
+    private bool? isGitInstalled;
 
     public UnixPrerequisiteHelper(
         IDownloadService downloadService, 
@@ -46,11 +50,17 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         this.settingsManager = settingsManager;
         this.pyRunner = pyRunner;
     }
+    
+    private async Task<bool> CheckIsGitInstalled()
+    {
+        var result = await ProcessRunner.RunBashCommand("git --version");
+        isGitInstalled = result.ExitCode == 0;
+        return isGitInstalled == true;
+    }
 
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         await UnpackResourcesIfNecessary(progress);
-        await InstallGitIfNecessary(progress);
         await InstallPythonIfNecessary(progress);
     }
 
@@ -74,9 +84,44 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         progress?.Report(new ProgressReport(1, message: "Unpacking resources", isIndeterminate: false));
     }
 
-    public Task InstallGitIfNecessary(IProgress<ProgressReport>? progress = null)
+    public async Task InstallGitIfNecessary(IProgress<ProgressReport>? progress = null)
     {
-        return Task.CompletedTask;
+        if (isGitInstalled == true || (isGitInstalled == null && await CheckIsGitInstalled())) return;
+        
+        // Show prompt to install git
+        var dialog = new ContentDialog
+        {
+            Title = "Git not found",
+            Content = new StackPanel
+            {
+                Children =
+                {
+                    new TextBlock
+                    {
+                        Text = "The current operation requires Git. Please install it to continue."
+                    },
+                    new SelectableTextBlock
+                    {
+                        Text = "$ sudo apt install git"
+                    },
+                }
+            },
+            PrimaryButtonText = "Retry",
+            CloseButtonText = "Close",
+            DefaultButton = ContentDialogButton.Primary,
+        };
+
+        while (true)
+        {
+            // Return if installed
+            if (await CheckIsGitInstalled()) return;
+            if (await dialog.ShowAsync() == ContentDialogResult.None)
+            {
+                // Cancel
+                throw new OperationCanceledException("Git installation canceled");
+            }
+            // Otherwise continue to retry indefinitely
+        }
     }
     
     public async Task RunGit(string? workingDirectory = null, params string[] args)

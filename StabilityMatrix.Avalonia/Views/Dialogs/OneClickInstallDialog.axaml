@@ -25,7 +25,8 @@
                        TextWrapping="Wrap" TextAlignment="Center"
                        VerticalAlignment="Top" HorizontalAlignment="Center"
                        FontSize="16" FontWeight="Light" Margin="8"/>
-            <Separator Margin="16, 4" Background="#AAAAAA"/>
+            <Separator Margin="16, 4" Background="#AAAAAA"
+                       IsVisible="{Binding ShowInstallButton}"/>
         </StackPanel>
         
         <StackPanel Grid.Row="1" Grid.Column="0"
@@ -97,7 +98,7 @@
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type packages:BasePackage}">
                     <StackPanel Margin="8">
-                        <TextBlock Text="{Binding Name}"/>
+                        <TextBlock Text="{Binding DisplayName}"/>
                         <TextBlock Text="{Binding ByAuthor}"/>
                     </StackPanel>
                 </DataTemplate>

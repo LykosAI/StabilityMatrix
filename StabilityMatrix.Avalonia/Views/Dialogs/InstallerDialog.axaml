@@ -22,6 +22,7 @@
             <Button
                 Margin="0,8,8,0"
                 Classes="transparent"
+                IsEnabled="{Binding !InstallProgress.IsProgressVisible}"
                 Command="{Binding OnCloseButtonClick}"
                 icons:Attached.Icon="fa-solid fa-xmark"/>
         </Grid>

@@ -75,7 +75,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
     
     private async Task DoInstall()
     {
-        HeaderText = $"Installing {SelectedPackage.DisplayName}...";
+        HeaderText = $"Installing {SelectedPackage.DisplayName}";
 
         var progressHandler = new Progress<ProgressReport>(progress =>
         {
@@ -118,7 +118,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
         var installedPackage = new InstalledPackage
         {
             DisplayName = SelectedPackage.DisplayName,
-            LibraryPath = Path.Combine("Packages", SelectedPackage.Name),
+            LibraryPath = Path.Combine("Packages", SelectedPackage.DisplayName),
             Id = Guid.NewGuid(),
             PackageName = SelectedPackage.Name,
             PackageVersion = latestVersion,

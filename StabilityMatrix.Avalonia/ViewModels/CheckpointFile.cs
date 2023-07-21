@@ -131,12 +131,30 @@ public partial class CheckpointFile : ViewModelBase
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)
         {
             var name = textFields[0].Text;
+            var nameNoExt = Path.GetFileNameWithoutExtension(name);
+            var originalNameNoExt = Path.GetFileNameWithoutExtension(FileName);
             // Rename file in OS
             try
             {
                 var newFilePath = Path.Combine(parentPath, name);
                 File.Move(FilePath, newFilePath);
                 FilePath = newFilePath;
+                // If preview image exists, rename it too
+                if (PreviewImagePath != null && File.Exists(PreviewImagePath))
+                {
+                    var newPreviewImagePath = Path.Combine(parentPath, $"{nameNoExt}.preview{Path.GetExtension(PreviewImagePath)}");
+                    File.Move(PreviewImagePath, newPreviewImagePath);
+                    PreviewImagePath = newPreviewImagePath;
+                }
+                // If connected model info exists, rename it too (<name>.cm-info.json)
+                if (ConnectedModel != null)
+                {
+                    var cmInfoPath = Path.Combine(parentPath, $"{originalNameNoExt}.cm-info.json");
+                    if (File.Exists(cmInfoPath))
+                    {
+                        File.Move(cmInfoPath, Path.Combine(parentPath, $"{nameNoExt}.cm-info.json"));
+                    }
+                }
             }
             catch (Exception e)
             {

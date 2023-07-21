@@ -82,10 +82,8 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         this.notificationService = notificationService;
         this.dialogFactory = dialogFactory;
         
-        EventManager.Instance.PackageLaunchRequested +=
-            async (s, e) => await OnPackageLaunchRequested(s, e);
+        EventManager.Instance.PackageLaunchRequested += OnPackageLaunchRequested;
         EventManager.Instance.OneClickInstallFinished += OnOneClickInstallFinished;
-        
         // Handler for console input
         Console.ApcInput += (_, message) =>
         {
@@ -95,14 +93,13 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
             }
         };
     }
-
-    private async Task OnPackageLaunchRequested(object? sender, Guid e)
+    
+    private void OnPackageLaunchRequested(object? sender, Guid e)
     {
         OnLoaded();
-        SelectedPackage = InstalledPackages.FirstOrDefault(x => x.Id == e);
         if (SelectedPackage is null) return;
         
-        await LaunchAsync();
+        LaunchAsync().SafeFireAndForget();
     }
 
     public override void OnLoaded()
@@ -197,7 +194,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         await basePackage.RunPackage(packagePath, userArgsString);
         RunningPackage = basePackage;
     }
-    
+
     [RelayCommand]
     private async Task Config()
     {

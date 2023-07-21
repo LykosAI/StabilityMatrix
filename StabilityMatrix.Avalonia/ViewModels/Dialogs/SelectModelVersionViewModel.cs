@@ -22,7 +22,7 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
 
     [ObservableProperty] private Bitmap? previewImage;
     [ObservableProperty] private ModelVersionViewModel? selectedVersionViewModel;
-    [ObservableProperty] private CivitFile? selectedFile;
+    [ObservableProperty] private CivitFileViewModel? selectedFile;
     [ObservableProperty] private bool isImportEnabled;
 
     public SelectModelVersionViewModel(ISettingsManager settingsManager,
@@ -47,9 +47,9 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
             () => await UpdateImage(firstImageUrl));
     }
 
-    partial void OnSelectedFileChanged(CivitFile? value)
+    partial void OnSelectedFileChanged(CivitFileViewModel? value)
     {
-        IsImportEnabled = value != null;
+        IsImportEnabled = value?.CivitFile != null;
     }
 
     private async Task UpdateImage(string? url = null)

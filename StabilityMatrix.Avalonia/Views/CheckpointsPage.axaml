@@ -366,6 +366,15 @@
             HorizontalAlignment="Right"
             Margin="16,0"
             Orientation="Horizontal">
+            <controls:ProgressRing
+                Width="16"
+                Height="16"
+                BorderThickness="4"
+                IsIndeterminate="True"
+                IsVisible="{Binding IsIndexing}"/>
+            <TextBlock Text="Indexing..." FontSize="11"
+                       VerticalAlignment="Center"
+                       IsVisible="{Binding IsIndexing}"/>
             <Button 
                 Command="{Binding OpenModelsFolderCommand}">
                 <TextBlock Text="Models Folder"/>
@@ -411,6 +420,14 @@
             HorizontalScrollBarVisibility="Disabled"
             VerticalScrollBarVisibility="Auto">
             <Grid>
+                <controls:ProgressRing 
+                    Width="128"
+                    Height="128"
+                    BorderThickness="8"
+                    IsIndeterminate="True"
+                    IsVisible="{Binding IsLoading}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"/>
                 <StackPanel Orientation="Vertical">
                     <ItemsControl
                         HorizontalAlignment="Stretch"

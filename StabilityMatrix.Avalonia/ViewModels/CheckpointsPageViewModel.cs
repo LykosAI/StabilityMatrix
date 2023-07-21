@@ -32,6 +32,8 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     
     // Toggle button for auto hashing new drag-and-dropped files for connected upgrade
     [ObservableProperty] private bool isImportAsConnected;
+    [ObservableProperty] private bool isLoading;
+    [ObservableProperty] private bool isIndexing;
     
     partial void OnIsImportAsConnectedChanged(bool value)
     {
@@ -63,8 +65,12 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         
         // Set UI states
         IsImportAsConnected = settingsManager.Settings.IsImportAsConnected;
-
+        
+        IsLoading = CheckpointFolders.Count == 0;
+        IsIndexing = CheckpointFolders.Count > 0;
         await IndexFolders();
+        IsLoading = false;
+        IsIndexing = false;
     }
 
     private async Task IndexFolders()

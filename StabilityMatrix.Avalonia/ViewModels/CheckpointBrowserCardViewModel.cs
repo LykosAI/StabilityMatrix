@@ -177,7 +177,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         }
 
         var selectedVersion = viewModel?.SelectedVersionViewModel?.ModelVersion;
-        var selectedFile = viewModel?.SelectedFile;
+        var selectedFile = viewModel?.SelectedFile?.CivitFile;
 
         await Task.Delay(100);
         await DoImport(model, selectedVersion, selectedFile);

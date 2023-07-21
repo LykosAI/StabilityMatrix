@@ -180,12 +180,12 @@ public sealed class App : Application
     internal static void ConfigureViews(IServiceCollection services)
     {
         // Pages
-        services.AddTransient<CheckpointsPage>();
-        services.AddTransient<LaunchPageView>();
-        services.AddTransient<PackageManagerPage>();
-        services.AddTransient<SettingsPage>();
-        services.AddTransient<CheckpointBrowserPage>();
-        services.AddTransient<ProgressManagerPage>();
+        services.AddSingleton<CheckpointsPage>();
+        services.AddSingleton<LaunchPageView>();
+        services.AddSingleton<PackageManagerPage>();
+        services.AddSingleton<SettingsPage>();
+        services.AddSingleton<CheckpointBrowserPage>();
+        services.AddSingleton<ProgressManagerPage>();
         
         // Dialogs
         services.AddTransient<SelectDataDirectoryDialog>();

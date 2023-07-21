@@ -30,4 +30,21 @@ public class AppWindowBase : AppWindow
             }).SafeFireAndForget();
         }
     }
+
+    protected override void OnUnloaded(RoutedEventArgs e)
+    {
+        base.OnUnloaded(e);
+        
+        if (DataContext is not ViewModelBase viewModel)
+            return;
+        
+        // Run synchronous load then async unload
+        viewModel.OnUnloaded();
+        
+        // Can't block here so we'll run as async on UI thread
+        Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            await viewModel.OnUnloadedAsync();
+        }).SafeFireAndForget();
+    }
 }

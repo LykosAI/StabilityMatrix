@@ -42,6 +42,13 @@ public static class DialogHelper
                 stackPanel
             }
         };
+        grid.Loaded += (_, _) =>
+        {
+            // Focus first textbox
+            var firstTextBox = stackPanel.Children.OfType<TextBox>().First();
+            firstTextBox.Focus();
+            firstTextBox.CaretIndex = firstTextBox.Text?.LastIndexOf('.') ?? 0;
+        };
         
         // Disable primary button if any textboxes are invalid
         var primaryCommand = new RelayCommand(delegate { },

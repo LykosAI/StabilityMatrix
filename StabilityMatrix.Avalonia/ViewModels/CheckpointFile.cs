@@ -121,7 +121,8 @@ public partial class CheckpointFile : ViewModelBase
                     
                     if (File.Exists(Path.Combine(parentPath, text))) throw new 
                         DataValidationException("File name already exists");
-                }
+                },
+                Text = FileName
             }
         };
 

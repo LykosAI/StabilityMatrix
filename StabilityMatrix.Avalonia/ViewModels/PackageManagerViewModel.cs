@@ -135,6 +135,8 @@ public partial class PackageManagerViewModel : PageViewModelBase
         if (SelectedPackage == null) return;
         if (InstallButtonText == "Launch")
         {
+            settingsManager.Transaction(s => s.ActiveInstalledPackage = SelectedPackage.Id);
+            
             EventManager.Instance.RequestPageChange(typeof(LaunchPageViewModel));
             EventManager.Instance.OnPackageLaunchRequested(SelectedPackage.Id);
         }

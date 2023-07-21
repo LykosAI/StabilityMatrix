@@ -1,5 +1,6 @@
 ﻿using System;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using AvaloniaEdit;
@@ -27,7 +28,17 @@ public partial class LaunchPageView : UserControlBase
         
         textMate.SetGrammar(scope);
         textMate.SetTheme(options.LoadTheme(ThemeName.DarkPlus));
-        
+    }
+
+    protected override void OnUnloaded(RoutedEventArgs e)
+    {
+        base.OnUnloaded(e);
+        EventManager.Instance.ScrollToBottomRequested -= OnScrollToBottomRequested;
+    }
+
+    protected override void OnLoaded(RoutedEventArgs e)
+    {
+        base.OnLoaded(e);
         EventManager.Instance.ScrollToBottomRequested += OnScrollToBottomRequested;
     }
 

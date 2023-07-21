@@ -14,4 +14,14 @@ public class ViewModelBase : ObservableValidator
     {
         return Task.CompletedTask;
     }
+    
+    public virtual void OnUnloaded()
+    {
+        
+    }
+    
+    public virtual Task OnUnloadedAsync()
+    {
+        return Task.CompletedTask;
+    }
 }

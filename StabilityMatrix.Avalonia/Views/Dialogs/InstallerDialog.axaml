@@ -8,15 +8,23 @@
              xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
              xmlns:packages="clr-namespace:StabilityMatrix.Core.Models.Packages;assembly=StabilityMatrix.Core"
              xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
-             xmlns:octokit="clr-namespace:Octokit;assembly=Octokit"
              xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
              xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
+             xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
              x:DataType="dialogs:InstallerViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
              d:DataContext="{x:Static mocks:DesignData.InstallerViewModel}"
              x:Class="StabilityMatrix.Avalonia.Views.Dialogs.InstallerDialog">
 
-    <Grid RowDefinitions="Auto,Auto,*">
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+        <!-- Close button -->
+        <Grid HorizontalAlignment="Right">
+            <Button
+                Margin="0,8,8,0"
+                Classes="transparent"
+                Command="{Binding OnCloseButtonClick}"
+                icons:Attached.Icon="fa-solid fa-xmark"/>
+        </Grid>
         <StackPanel
             Grid.Row="1"
             Margin="16,8,16,0"

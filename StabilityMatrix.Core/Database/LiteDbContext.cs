@@ -1,7 +1,5 @@
-﻿using System.Diagnostics;
-using LiteDB.Async;
+﻿using LiteDB.Async;
 using Microsoft.Extensions.Options;
-using Octokit;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
@@ -20,13 +18,17 @@ public class LiteDbContext : ILiteDbContext
     {
         get
         {
-            if (database is null) throw new InvalidOperationException("Database not set before access");
+            if (database != null) return database;
+
+            var connectionString = debugOptions.TempDatabase ? ":temp:"
+                : $"Filename={Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db")};Mode=Shared";
+            database = new LiteDatabaseAsync(connectionString);
+
+            // Register reference fields
+            LiteDBExtensions.Register<CivitModel, CivitModelVersion>(m => m.ModelVersions, "CivitModelVersions");
+            LiteDBExtensions.Register<CivitModelQueryCacheEntry, CivitModel>(e => e.Items, "CivitModels");
+
             return database;
-        }
-        private set
-        {
-            database?.Dispose();
-            database = value;
         }
     }
 
@@ -43,14 +45,6 @@ public class LiteDbContext : ILiteDbContext
     {
         this.settingsManager = settingsManager;
         this.debugOptions = debugOptions.Value;
-        
-        var connectionString = debugOptions.Value.TempDatabase ? ":temp:"
-            : $"Filename={Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db")};Mode=Shared";
-        Database = new LiteDatabaseAsync(connectionString);
-
-        // Register reference fields
-        LiteDBExtensions.Register<CivitModel, CivitModelVersion>(m => m.ModelVersions, "CivitModelVersions");
-        LiteDBExtensions.Register<CivitModelQueryCacheEntry, CivitModel>(e => e.Items, "CivitModels");
     }
     
     public async Task<(CivitModel?, CivitModelVersion?)> FindCivitModelFromFileHashAsync(string hashBlake3)

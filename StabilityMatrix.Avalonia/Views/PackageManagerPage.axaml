@@ -3,14 +3,14 @@
                           xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                           xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                           xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
-                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData;assembly=StabilityMatrix.Avalonia"
                           xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
                           xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
                           xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                           x:DataType="viewModels:PackageManagerViewModel"
                           x:CompileBindings="True"
-                          d:DataContext="{x:Static mocks:DesignData.PackageManagerViewModel}"
+                          d:DataContext="{x:Static designData:DesignData.PackageManagerViewModel}"
                           x:Class="StabilityMatrix.Avalonia.Views.PackageManagerPage">
 
     <Grid Margin="16" RowDefinitions="Auto,*">

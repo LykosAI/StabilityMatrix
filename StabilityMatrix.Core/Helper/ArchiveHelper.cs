@@ -112,12 +112,14 @@ public static partial class ArchiveHelper
     public static async Task<ArchiveInfo> Extract7Z(string archivePath, string extractDirectory, IProgress<ProgressReport> progress)
     {
         var outputStore = new StringBuilder();
-        var onOutput = new Action<ProcessOutput>(s =>
+        var onOutput = new Action<string?>(s =>
         {
+            if (s == null) return;
+            
             // Parse progress
             Logger.Trace($"7z: {s}");
-            outputStore.AppendLine(s.Text);
-            var match = Regex7ZProgressFull().Match(s.Text);
+            outputStore.AppendLine(s);
+            var match = Regex7ZProgressFull().Match(s);
             if (match.Success)
             {
                 var percent = int.Parse(match.Groups[1].Value);
@@ -132,7 +134,7 @@ public static partial class ArchiveHelper
             $"x {ProcessRunner.Quote(archivePath)} -o{ProcessRunner.Quote(extractDirectory)} -y -bsp1";
         Logger.Debug($"Starting process '{SevenZipPath}' with arguments '{args}'");
         
-        var process = ProcessRunner.StartAnsiProcess(SevenZipPath, args, outputDataReceived: onOutput);
+        var process = ProcessRunner.StartProcess(SevenZipPath, args, outputDataReceived: onOutput);
         await ProcessRunner.WaitForExitConditionAsync(process);
         
         progress.Report(new ProgressReport(1, "Finished extracting", type: ProgressType.Extract));

@@ -91,6 +91,51 @@ public static class ProcessRunner
 
         return output;
     }
+    
+    public static Process StartProcess(
+        string fileName,
+        string arguments,
+        string? workingDirectory = null,
+        Action<string?>? outputDataReceived = null,
+        Dictionary<string, string>? environmentVariables = null)
+    {
+        Logger.Debug($"Starting process '{fileName}' with arguments '{arguments}'");
+        var info = new ProcessStartInfo
+        {
+            FileName = fileName,
+            Arguments = arguments,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+
+        if (environmentVariables != null)
+        {
+            foreach (var (key, value) in environmentVariables)
+            {
+                info.EnvironmentVariables[key] = value;
+            }
+        }
+
+        if (workingDirectory != null)
+        {
+            info.WorkingDirectory = workingDirectory;
+        }
+
+        var process = new Process {StartInfo = info};
+        StartTrackedProcess(process);
+
+        if (outputDataReceived == null) 
+            return process;
+        
+        process.OutputDataReceived += (sender, args) => outputDataReceived(args.Data);
+        process.ErrorDataReceived += (sender, args) => outputDataReceived(args.Data);
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+
+        return process;
+    }
 
     public static AnsiProcess StartAnsiProcess(
         string fileName,

@@ -92,6 +92,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         
         EventManager.Instance.PackageLaunchRequested += OnPackageLaunchRequested;
         EventManager.Instance.OneClickInstallFinished += OnOneClickInstallFinished;
+        EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
         // Handler for console input
         Console.ApcInput += (_, message) =>
         {
@@ -101,7 +102,9 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
             }
         };
     }
-    
+
+    private void OnInstalledPackagesChanged(object? sender, EventArgs e) => OnLoaded();
+
     private void OnPackageLaunchRequested(object? sender, Guid e)
     {
         OnLoaded();

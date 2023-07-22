@@ -91,9 +91,9 @@ public partial class SettingsViewModel : ObservableObject
     
     partial void OnKeepFolderLinksOnShutdownChanged(bool value)
     {
-        if (value != settingsManager.Settings.KeepFolderLinksOnShutdown)
+        if (value != settingsManager.Settings.RemoveFolderLinksOnShutdown)
         {
-            settingsManager.Transaction(s => s.KeepFolderLinksOnShutdown = value);
+            settingsManager.Transaction(s => s.RemoveFolderLinksOnShutdown = value);
         }
     }
 
@@ -127,7 +127,7 @@ public partial class SettingsViewModel : ObservableObject
         this.liteDbContext = liteDbContext;
         this.prerequisiteHelper = prerequisiteHelper;
         SelectedTheme = settingsManager.Settings.Theme ?? "Dark";
-        KeepFolderLinksOnShutdown = settingsManager.Settings.KeepFolderLinksOnShutdown;
+        KeepFolderLinksOnShutdown = settingsManager.Settings.RemoveFolderLinksOnShutdown;
     }
 
     [ObservableProperty]

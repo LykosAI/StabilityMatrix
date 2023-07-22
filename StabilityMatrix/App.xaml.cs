@@ -377,8 +377,8 @@ namespace StabilityMatrix
             // Skip remaining steps if no library is set
             if (!(settingsManager?.TryFindLibrary() ?? false)) return;
             
-            // Unless KeepFolderLinksOnShutdown is set, delete all package junctions
-            if (!settingsManager.Settings.KeepFolderLinksOnShutdown)
+            // If RemoveFolderLinksOnShutdown is set, delete all package junctions
+            if (settingsManager.Settings.RemoveFolderLinksOnShutdown)
             {
                 var sharedFolders = serviceProvider?.GetRequiredService<ISharedFolders>();
                 sharedFolders?.RemoveLinksForAllPackages();

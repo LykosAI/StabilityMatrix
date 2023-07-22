@@ -18,6 +18,7 @@
             Foreground="{Binding ColorBrush}"
             Margin="4"
             Padding="2"
+            Background="Transparent"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             IsEnabled="{Binding !IsWorking}">
@@ -27,6 +28,7 @@
             FontSize="14"
             Grid.Row="0"
             Height="20"
+            BorderThickness="2"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             IsEnabled="{Binding IsWorking}"

@@ -107,6 +107,9 @@ public partial class MainWindowViewModel : ViewModelBase
             throw new Exception("Could not find library after setting path");
         }
         
+        // Tell LaunchPage to load any packages if they selected an existing directory
+        EventManager.Instance.OnInstalledPackagesChanged();
+        
         // Check if there are old packages, if so show migration dialog
         // TODO: Migration dialog
 

@@ -230,7 +230,7 @@ public sealed class App : Application
 
         if (Compat.IsWindows)
         {
-            services.AddSingleton<IPrerequisiteHelper, PrerequisiteHelper>();
+            services.AddSingleton<IPrerequisiteHelper, WindowsPrerequisiteHelper>();
         }
         else if (Compat.IsLinux)
         {

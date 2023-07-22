@@ -52,7 +52,11 @@ public static class ProcessRunner
         return process;
     }
 
-    public static async Task<string> GetProcessOutputAsync(string fileName, string arguments, string? workingDirectory = null)
+    public static async Task<string> GetProcessOutputAsync(
+        string fileName, 
+        string arguments, 
+        string? workingDirectory = null,
+        Dictionary<string, string>? environmentVariables = null)
     {
         Logger.Debug($"Starting process '{fileName}' with arguments '{arguments}'");
         
@@ -65,6 +69,14 @@ public static class ProcessRunner
             CreateNoWindow = true
         };
 
+        if (environmentVariables != null)
+        {
+            foreach (var (key, value) in environmentVariables)
+            {
+                info.EnvironmentVariables[key] = value;
+            }
+        }
+        
         if (workingDirectory != null)
         {
             info.WorkingDirectory = workingDirectory;

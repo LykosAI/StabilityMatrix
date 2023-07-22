@@ -2,6 +2,7 @@
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <TargetFramework>net7.0</TargetFramework>
+        <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
         <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -41,39 +42,29 @@
 
     <ItemGroup>
       <AvaloniaResource Include="Assets\Icon.ico" />
+      <AvaloniaResource Include="Assets\Icon.png" />
     </ItemGroup>
-
-
+    
     <ItemGroup>
       <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
     </ItemGroup>
-
-
+    
     <ItemGroup>
-      <AvaloniaResource Include="Assets\Icon.png" />
+      <AvaloniaResource Include="Assets\noimage.png" />
     </ItemGroup>
 
-
     <ItemGroup>
-      <Resource Include="Assets\noimage.png" />
+        <AvaloniaResource Include="Assets\sitecustomize.py" />
     </ItemGroup>
-
+    
     <ItemGroup>
       <!-- Only for win-64 -->
       <AvaloniaResource Include="Assets\win-x64\**" Condition="'$(RuntimeIdentifier)' == 'win-x64'" />
       <!-- Only for linux-64 -->
       <AvaloniaResource Include="Assets\linux-x64\**" Condition="'$(RuntimeIdentifier)' == 'linux-x64'" />
     </ItemGroup>
-
-
+    
     <ItemGroup>
-      <Compile Update="Views\Dialogs\SelectModelVersionDialog.axaml.cs">
-        <DependentUpon>SelectModelVersionDialog.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\Dialogs\InstallerDialog.axaml.cs">
-        <DependentUpon>InstallerDialog.axaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
+        <Compile Remove="DesignData\*.cs" Condition=" '$(Configuration)' == 'Release' "/>
     </ItemGroup>
 </Project>

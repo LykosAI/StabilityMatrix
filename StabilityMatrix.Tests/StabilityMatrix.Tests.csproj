@@ -28,7 +28,6 @@
     <ItemGroup>
       <ProjectReference Include="..\StabilityMatrix.Avalonia\StabilityMatrix.Avalonia.csproj" />
       <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
-      <ProjectReference Include="..\StabilityMatrix\StabilityMatrix.csproj" />
 
     </ItemGroup>
 

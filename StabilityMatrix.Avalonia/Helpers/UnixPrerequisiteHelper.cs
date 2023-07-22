@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Platform;
-using Avalonia.Utilities;
 using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Core.Exceptions;
@@ -78,7 +74,7 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         Directory.CreateDirectory(AssetsDir);
         foreach (var (asset, extractDir) in assets)
         {
-            await asset.ExtractTo(extractDir);
+            await asset.ExtractToDir(extractDir);
         }
         
         progress?.Report(new ProgressReport(1, message: "Unpacking resources", isIndeterminate: false));
@@ -141,7 +137,10 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         Directory.CreateDirectory(AssetsDir);
             
         // Download
-        var (url, hashSha256) = Assets.PythonDownloadUrl;
+        var remote = Assets.PythonDownloadUrl;
+        var url = remote.Url;
+        var hashSha256 = remote.HashSha256;
+        
         var fileName = Path.GetFileName(url.LocalPath);
         var downloadPath = Path.Combine(AssetsDir, fileName);
         Logger.Info($"Downloading Python from {url} to {downloadPath}");

@@ -2,7 +2,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Core.Helper;
@@ -137,12 +136,38 @@ public static class Compat
     /// </summary>
     public static string GetExecutableName()
     {
+        if (IsLinux)
+        {
+            // Use name component of APPIMAGE
+            var appImage = Environment.GetEnvironmentVariable("APPIMAGE");
+            if (string.IsNullOrEmpty(appImage))
+            {
+                throw new Exception("Could not find APPIMAGE environment variable");
+            }
+            return Path.GetFileName(appImage);
+        }
         using var process = Process.GetCurrentProcess();
-        
         var fullPath = process.MainModule?.ModuleName;
 
-        if (string.IsNullOrEmpty(fullPath)) throw new Exception("Could not find executable name");
-        
+        if (string.IsNullOrEmpty(fullPath))
+        {
+            throw new Exception("Could not find executable name");
+        }
         return Path.GetFileName(fullPath);
+    }
+    
+    public static string GetEnvPathWithExtensions(params string[] paths)
+    {
+        var currentPath = Environment.GetEnvironmentVariable("PATH");
+        var newPath = string.Join(PathDelimiter, paths);
+        
+        if (string.IsNullOrEmpty(currentPath))
+        {
+            return string.Join(PathDelimiter, paths);
+        }
+        else
+        {
+            return newPath + PathDelimiter + currentPath;
+        }
     }
 }

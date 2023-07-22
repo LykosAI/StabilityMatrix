@@ -113,7 +113,10 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     public override void OnLoaded()
     {
         // Ensure active package either exists or is null
-        settingsManager.Transaction(s => s.UpdateActiveInstalledPackage());
+        settingsManager.Transaction(s =>
+        {
+            s.UpdateActiveInstalledPackage();
+        }, ignoreMissingLibraryDir: true);
         
         // Load installed packages
         InstalledPackages =

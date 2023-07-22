@@ -209,7 +209,11 @@ public class PyVenvRunner : IDisposable
             outputDataReceived.Invoke(s);
         });
 
-        var env = new Dictionary<string, string>();
+        var env = new Dictionary<string, string>
+        {
+            // Disable pip caching - uses significant memory for large packages like torch
+            {"PIP_NO_CACHE_DIR", "true"} 
+        };
 
         // On windows, add portable git 
         if (Compat.IsWindows)

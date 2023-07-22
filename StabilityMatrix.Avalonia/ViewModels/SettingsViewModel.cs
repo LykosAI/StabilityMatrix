@@ -34,9 +34,17 @@ public partial class SettingsViewModel : PageViewModelBase
     
     public override string Title => "Settings";
     public override IconSource IconSource => new SymbolIconSource {Symbol = Symbol.Settings, IsFilled = true};
+    public string AppVersion => GetAppVersion();
     
     // Theme panel
     [ObservableProperty] private string? selectedTheme;
+    
+    // Debug info
+    [ObservableProperty] private string? debugPaths;
+    [ObservableProperty] private string? debugCompatInfo;
+    [ObservableProperty] private string? debugGpuInfo;
+
+    [ObservableProperty] private bool removeSymlinksOnShutdown;
     
     public ObservableCollection<string> AvailableThemes { get; } = new()
     {
@@ -57,6 +65,7 @@ public partial class SettingsViewModel : PageViewModelBase
         this.pyRunner = pyRunner;
 
         SelectedTheme = AvailableThemes[1];
+        RemoveSymlinksOnShutdown = settingsManager.Settings.RemoveFolderLinksOnShutdown;
     }
     
     partial void OnSelectedThemeChanged(string? value)
@@ -72,10 +81,6 @@ public partial class SettingsViewModel : PageViewModelBase
         };
     }
     
-    // Debug info
-    [ObservableProperty] private string? debugPaths;
-    [ObservableProperty] private string? debugCompatInfo;
-    [ObservableProperty] private string? debugGpuInfo;
 
     public void LoadDebugInfo()
     {
@@ -182,5 +187,14 @@ public partial class SettingsViewModel : PageViewModelBase
         dialog.Content = result;
         dialog.PrimaryButtonText = "Ok";
         await dialog.ShowAsync();
+    }
+    
+    private static string GetAppVersion()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        var version = assembly.GetName().Version;
+        return version == null
+            ? "(Unknown)"
+            : $"Version {version.Major}.{version.Minor}.{version.Build}";
     }
 }

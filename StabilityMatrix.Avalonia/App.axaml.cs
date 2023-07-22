@@ -358,11 +358,11 @@ public sealed class App : Application
         // Services.GetRequiredService<LaunchViewModel>().OnShutdown();
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
 
-        // Unless KeepFolderLinksOnShutdown is set, delete all package junctions
+        // If RemoveFolderLinksOnShutdown is set, delete all package junctions
         if (settingsManager is
             {
                 IsLibraryDirSet: true,
-                Settings.KeepFolderLinksOnShutdown: false
+                Settings.RemoveFolderLinksOnShutdown: true
             })
         {
             var sharedFolders = Services.GetRequiredService<ISharedFolders>();

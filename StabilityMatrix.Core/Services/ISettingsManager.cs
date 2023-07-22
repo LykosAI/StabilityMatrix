@@ -20,7 +20,7 @@ public interface ISettingsManager
     SettingsTransaction BeginTransaction();
 
     /// <inheritdoc />
-    void Transaction(Action<Settings> func);
+    void Transaction(Action<Settings> func, bool ignoreMissingLibraryDir = false);
 
     /// <inheritdoc />
     void Transaction<TValue>(Expression<Func<Settings, TValue>> expression, TValue value);

@@ -58,12 +58,25 @@ public class SettingsManager : ISettingsManager
     /// <inheritdoc />
     public SettingsTransaction BeginTransaction()
     {
+        if (!IsLibraryDirSet)
+        {
+            throw new InvalidOperationException("LibraryDir not set when BeginTransaction was called");
+        }
         return new SettingsTransaction(this, SaveSettingsAsync);
     }
     
     /// <inheritdoc />
-    public void Transaction(Action<Settings> func)
+    public void Transaction(Action<Settings> func, bool ignoreMissingLibraryDir = false)
     {
+        if (!IsLibraryDirSet)
+        {
+            if (ignoreMissingLibraryDir)
+            {
+                func(Settings);
+                return;
+            }
+            throw new InvalidOperationException("LibraryDir not set when Transaction was called");
+        }
         using var transaction = BeginTransaction();
         func(transaction.Settings);
         transaction.Dispose();

@@ -7,8 +7,12 @@
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <TrimMode>partial</TrimMode>
+        <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+        <AssemblyName>StabilityMatrix</AssemblyName>
+        <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
     </PropertyGroup>
-
+    
     <ItemGroup>
         <PackageReference Include="AsyncImageLoader.Avalonia" Version="3.0.0-avalonia11-preview6" />
         <PackageReference Include="Avalonia" Version="11.0.0" />
@@ -47,6 +51,7 @@
     
     <ItemGroup>
       <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
+      <TrimmerRootAssembly Include="StabilityMatrix.Core" />
     </ItemGroup>
     
     <ItemGroup>

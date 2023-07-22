@@ -343,16 +343,23 @@ public sealed class App : Application
         return services;
     }
 
-    public static void Shutdown()
+    /// <summary>
+    /// Requests shutdown of the Current Application.
+    /// </summary>
+    /// <remarks>This returns asynchronously *without waiting* for Shutdown</remarks>
+    /// <param name="exitCode">Exit code for the application.</param>
+    /// <exception cref="NullReferenceException">If Application.Current is null</exception>
+    public static void Shutdown(int exitCode = 0)
     {
-        if (Current is null) throw new InvalidOperationException("Current Application is not defined");
+        if (Current is null) throw new NullReferenceException(
+            "Current Application was null when Shutdown called");
         if (Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
         {
-            lifetime.Shutdown();
+            lifetime.Shutdown(exitCode);
         }
     }
 
-    private void OnExit(object? sender, ControlledApplicationLifetimeExitEventArgs args)
+    private static void OnExit(object? sender, ControlledApplicationLifetimeExitEventArgs args)
     {
         Debug.WriteLine("Start OnExit");
         // Services.GetRequiredService<LaunchViewModel>().OnShutdown();

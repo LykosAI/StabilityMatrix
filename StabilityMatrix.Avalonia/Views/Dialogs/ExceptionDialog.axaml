@@ -56,13 +56,14 @@
                                 Theme="{DynamicResource BodyStrongTextBlockStyle}"
                                 IsVisible="{Binding InnerException, Converter={x:Static ObjectConverters.IsNotNull}}"
                                 Text="Inner exception" />
-                            <controls:Card Background="{DynamicResource ComboBoxDropDownBackground}">
+                            <controls:Card
+                                IsVisible="{Binding InnerException, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                Background="{DynamicResource ComboBoxDropDownBackground}">
                                 <SelectableTextBlock
                                     FontSize="13"
                                     SelectionBrush="DodgerBlue"
                                     FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
                                     TextWrapping="Wrap"
-                                    IsVisible="{Binding InnerException, Converter={x:Static ObjectConverters.IsNotNull}}"
                                     Text="{Binding InnerException}" />
                             </controls:Card>
                         </StackPanel>
@@ -78,8 +79,7 @@
                 Grid.Row="2"
                 HorizontalAlignment="Right"
                 Margin="16"
-                Padding="8">
-            </Button>
+                Padding="8" />
         </Grid>
     </Grid>
     

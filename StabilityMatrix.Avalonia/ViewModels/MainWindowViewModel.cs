@@ -53,7 +53,12 @@ public partial class MainWindowViewModel : ViewModelBase
         SelectedCategory = Pages.FirstOrDefault();
         EventManager.Instance.PageChangeRequested += OnPageChangeRequested;
 
-        await EnsureDataDirectory();
+        if (!await EnsureDataDirectory())
+        {
+            // False if user exited dialog, shutdown app
+            App.Shutdown();
+            return;
+        }
         
         // Index checkpoints if we dont have
         settingsManager.IndexCheckpoints();
@@ -87,12 +92,13 @@ public partial class MainWindowViewModel : ViewModelBase
     /// <summary>
     /// Check if the data directory exists, if not, show the select data directory dialog.
     /// </summary>
-    private async Task EnsureDataDirectory()
+    private async Task<bool> EnsureDataDirectory()
     {
-        // Show dialog if not set
+        // If we can't find library, show selection dialog
         if (!settingsManager.TryFindLibrary())
         {
-            await ShowSelectDataDirectoryDialog();
+            var result = await ShowSelectDataDirectoryDialog();
+            if (!result) return false;
         }
         
         // Try to find library again, should be found now
@@ -103,9 +109,15 @@ public partial class MainWindowViewModel : ViewModelBase
         
         // Check if there are old packages, if so show migration dialog
         // TODO: Migration dialog
+
+        return true;
     }
     
-    private async Task ShowSelectDataDirectoryDialog()
+    /// <summary>
+    /// Shows the select data directory dialog.
+    /// </summary>
+    /// <returns>true if path set successfully, false if user exited dialog.</returns>
+    private async Task<bool> ShowSelectDataDirectoryDialog()
     {
         var viewModel = dialogFactory.Get<SelectDataDirectoryViewModel>();
         var dialog = new BetterContentDialog
@@ -120,21 +132,23 @@ public partial class MainWindowViewModel : ViewModelBase
         };
 
         var result = await dialog.ShowAsync();
-        if (result != ContentDialogResult.Primary)
+        if (result == ContentDialogResult.Primary)
         {
-            App.Shutdown();
+            // 1. For portable mode, call settings.SetPortableMode()
+            if (viewModel.IsPortableMode)
+            {
+                settingsManager.SetPortableMode();
+            }
+            // 2. For custom path, call settings.SetLibraryPath(path)
+            else
+            {
+                settingsManager.SetLibraryPath(viewModel.DataDirectory);
+            }
+            // Indicate success
+            return true;
         }
-        
-        // 1. For portable mode, call settings.SetPortableMode()
-        if (viewModel.IsPortableMode)
-        {
-            settingsManager.SetPortableMode();
-        }
-        // 2. For custom path, call settings.SetLibraryPath(path)
-        else
-        {
-            settingsManager.SetLibraryPath(viewModel.DataDirectory);
-        }
+
+        return false;
     }
 
     public async Task ShowUpdateDialog()

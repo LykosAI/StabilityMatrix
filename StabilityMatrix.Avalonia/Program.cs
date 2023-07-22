@@ -2,21 +2,18 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
-using FluentAvalonia.UI.Controls;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using NLog;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
 using Sentry;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
-using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 
 namespace StabilityMatrix.Avalonia;
@@ -25,6 +22,8 @@ namespace StabilityMatrix.Avalonia;
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class Program
 {
+    private static bool isExceptionDialogEnabled;
+    
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
@@ -34,54 +33,28 @@ public class Program
         // Configure exception dialog for unhandled exceptions
         if (!Debugger.IsAttached || args.Contains("--debug-exception-dialog"))
         {
+            isExceptionDialogEnabled = true;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         }
         
         // Configure Sentry
-        if (!args.Contains("--no-sentry"))
+        if ((Debugger.IsAttached && args.Contains("--debug-sentry")) || !args.Contains("--no-sentry"))
         {
             ConfigureSentry();
         }
         
-        // Run main app
-        try
-        {
-            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
-        }
-        catch (Exception e)
-        {
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
-            {
-                var mainWindow = lifetime.MainWindow;
-                if (mainWindow is not null)
-                {
-                    var dialog = new ExceptionDialog
-                    {
-                        ShowAsDialog = true,
-                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                        DataContext = new ExceptionViewModel
-                        {
-                            Exception = e
-                        }
-                    };
-                    
-                    // Show synchronously without blocking UI thread
-                    // https://github.com/AvaloniaUI/Avalonia/issues/4810#issuecomment-704259221
-                    var cts = new CancellationTokenSource();
-                    
-                    dialog.ShowDialog(mainWindow).ContinueWith(t =>
-                    {
-                        cts.Cancel();
-                        // Shutdown app
-                        App.Shutdown();
-                        Dispatcher.UIThread.InvokeShutdown();
-                        Environment.Exit(1);
-                    }, TaskScheduler.FromCurrentSynchronizationContext());
-                    
-                    Dispatcher.UIThread.MainLoop(cts.Token);
-                }
-            }
-        }
+        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+    }
+    
+    // Avalonia configuration, don't remove; also used by visual designer.
+    public static AppBuilder BuildAvaloniaApp()
+    {
+        IconProvider.Current.Register<FontAwesomeIconProvider>();
+        
+        return AppBuilder.Configure<App>()
+            .UsePlatformDetect()
+            .WithInterFont()
+            .LogToTrace();
     }
     
     private static void ConfigureSentry()
@@ -102,7 +75,7 @@ public class Program
         });
     }
     
-    private static async void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+    private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
         if (e.ExceptionObject is not Exception ex) return;
         
@@ -116,35 +89,53 @@ public class Program
         
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
         {
-            var mainWindow = lifetime.MainWindow;
-            if (mainWindow is not null)
+            var dialog = new ExceptionDialog
             {
-                var dialog = new ExceptionDialog
+                DataContext = new ExceptionViewModel
                 {
-                    DataContext = new ExceptionViewModel
-                    {
-                        Exception = ex,
-                    }
-                };
-                await dialog.ShowDialog(mainWindow);
+                    Exception = ex
+                }
+            };
+                
+            var mainWindow = lifetime.MainWindow;
+            // We can only show dialog if main window exists, and is visible
+            if (mainWindow is {PlatformImpl: not null, IsVisible: true})
+            {
+                // Configure for dialog mode
+                dialog.ShowAsDialog = true;
+                dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                    
+                // Show synchronously without blocking UI thread
+                // https://github.com/AvaloniaUI/Avalonia/issues/4810#issuecomment-704259221
+                var cts = new CancellationTokenSource();
+                    
+                dialog.ShowDialog(mainWindow).ContinueWith(_ =>
+                {
+                    cts.Cancel();
+                    ExitWithException(ex);
+                }, TaskScheduler.FromCurrentSynchronizationContext());
+                    
+                Dispatcher.UIThread.MainLoop(cts.Token);
             }
             else
             {
-                logger.Fatal("Could not resolve main window in unhandled exception handler.");
+                // No parent window available
+                var cts = new CancellationTokenSource();
+                // Exit on token cancellation
+                cts.Token.Register(() => ExitWithException(ex));
+                
+                dialog.ShowWithCts(cts);
+                
+                Dispatcher.UIThread.MainLoop(cts.Token);
             }
         }
-        
-
     }
 
-    // Avalonia configuration, don't remove; also used by visual designer.
-    public static AppBuilder BuildAvaloniaApp()
+    [DoesNotReturn]
+    private static void ExitWithException(Exception exception)
     {
-        IconProvider.Current.Register<FontAwesomeIconProvider>();
-        
-        return AppBuilder.Configure<App>()
-            .UsePlatformDetect()
-            .WithInterFont()
-            .LogToTrace();
+        App.Shutdown(1);
+        Dispatcher.UIThread.InvokeShutdown();
+        Environment.Exit(Marshal.GetHRForException(exception));
     }
 }

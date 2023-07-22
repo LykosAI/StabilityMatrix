@@ -63,8 +63,4 @@
       <!-- Only for linux-64 -->
       <AvaloniaResource Include="Assets\linux-x64\**" Condition="'$(RuntimeIdentifier)' == 'linux-x64'" />
     </ItemGroup>
-    
-    <ItemGroup>
-        <Compile Remove="DesignData\*.cs" Condition=" '$(Configuration)' == 'Release' "/>
-    </ItemGroup>
 </Project>

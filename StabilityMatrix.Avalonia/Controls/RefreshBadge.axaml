@@ -6,11 +6,12 @@
                           xmlns:ui="using:FluentAvalonia.UI.Controls"
                           xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                           xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          Background="Transparent"
                           d:DataContext="{x:Static mocks:DesignData.RefreshBadgeViewModel}"
                           x:DataType="vm:RefreshBadgeViewModel"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                           x:Class="StabilityMatrix.Avalonia.Controls.RefreshBadge">
-    <Grid>
+    <Grid Background="Transparent">
         <Button
             BorderThickness="0"
             Command="{Binding RefreshCommand}"

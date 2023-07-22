@@ -15,6 +15,17 @@
           RowDefinitions="Auto,Auto,Auto,Auto,Auto" 
           ColumnDefinitions="*,Auto">
 
+        <Grid.Transitions>
+            <Transitions>
+                <DoubleTransition Property="Width"
+                                  Duration="00:00:00.25"
+                                  Easing="0,0 0,1" />
+                <DoubleTransition Property="Height"
+                                  Duration="00:00:00.25"
+                                  Easing="0,0 0,1" />
+            </Transitions>
+        </Grid.Transitions>
+        
         <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
             <TextBlock Text="{Binding HeaderText, FallbackValue=Installing Stable Diffusion WebUI...}"
                        TextWrapping="Wrap"

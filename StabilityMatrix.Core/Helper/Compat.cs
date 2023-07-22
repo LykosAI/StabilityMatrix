@@ -158,7 +158,7 @@ public static class Compat
     
     public static string GetEnvPathWithExtensions(params string[] paths)
     {
-        var currentPath = Environment.GetEnvironmentVariable("PATH");
+        var currentPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
         var newPath = string.Join(PathDelimiter, paths);
         
         if (string.IsNullOrEmpty(currentPath))

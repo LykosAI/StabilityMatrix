@@ -58,21 +58,16 @@ public class PyRunner : IPyRunner
         if (PythonEngine.IsInitialized) return;
         
         Logger.Info("Setting PYTHONHOME={PythonDir}", PythonDir.ToRepr());
-        // Environment.SetEnvironmentVariable("PYTHONHOME", PythonDir, EnvironmentVariableTarget.Process);
         
-        // Get existing PATH
-        var currentEnvPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
-        var newEnvPath = PythonDir + (string.IsNullOrEmpty(currentEnvPath) ? "" 
-            : $"{Compat.PathDelimiter}{currentEnvPath}");
-        Logger.Debug("Setting PATH={NewEnvPath}", newEnvPath.ToRepr());
         // Append Python path to PATH
+        var newEnvPath = Compat.GetEnvPathWithExtensions(PythonDir);
+        Logger.Debug("Setting PATH={NewEnvPath}", newEnvPath.ToRepr());
         Environment.SetEnvironmentVariable("PATH", newEnvPath, EnvironmentVariableTarget.Process);
 
         Logger.Info("Initializing Python runtime with DLL: {DllPath}", PythonDllPath);
         // Check PythonDLL exists
         if (!File.Exists(PythonDllPath))
         {
-            Logger.Error("Python linked library not found");
             throw new FileNotFoundException("Python linked library not found", PythonDllPath);
         }
         
@@ -86,9 +81,10 @@ public class PyRunner : IPyRunner
         StdErrStream = new PyIOStream();
         await RunInThreadWithLock(() =>
         {
-            dynamic sys = Py.Import("sys");
-            sys.stdout = StdOutStream;
-            sys.stderr = StdErrStream;
+            var sys = Py.Import("sys") as PyModule ?? 
+                      throw new NullReferenceException("sys module not found");
+            sys.Set("stdout", StdOutStream);
+            sys.Set("stderr", StdErrStream);
         });
     }
 
@@ -219,17 +215,13 @@ public class PyRunner : IPyRunner
     /// </summary>
     public async Task<PyVersionInfo> GetVersionInfo()
     {
-        var version = await RunInThreadWithLock(() =>
-        {
-            dynamic info = PythonEngine.Eval("tuple(__import__('sys').version_info)");
-            return new PyVersionInfo(
-                info[0].As<int>(),
-                info[1].As<int>(),
-                info[2].As<int>(),
-                info[3].As<string>(),
-                info[4].As<int>()
-            );
-        });
-        return version;
+        var info = await Eval<PyObject[]>("tuple(__import__('sys').version_info)");
+        return new PyVersionInfo(
+            info[0].As<int>(),
+            info[1].As<int>(),
+            info[2].As<int>(),
+            info[3].As<string>(),
+            info[4].As<int>()
+        );
     }
 }

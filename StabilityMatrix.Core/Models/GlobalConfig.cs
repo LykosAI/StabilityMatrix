@@ -1,23 +1,26 @@
-﻿using StabilityMatrix.Core.Models.FileInterfaces;
+﻿using System.Diagnostics.CodeAnalysis;
+using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Core.Models;
 
+[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public static class GlobalConfig
 {
-    private static string? libraryDir;
+    private static DirectoryPath? libraryDir;
     
     /// <summary>
     /// Absolute path to the library directory.
     /// Needs to be set by SettingsManager.TryFindLibrary() before being accessed.
     /// </summary>
     /// <exception cref="Exception"></exception>
-    public static string LibraryDir
+    public static DirectoryPath LibraryDir
     {
         get
         {
-            if (string.IsNullOrEmpty(libraryDir))
+            if (libraryDir is null)
             {
-                throw new Exception("GlobalConfig.LibraryDir was not set before being accessed.");
+                throw new NullReferenceException(
+                    "GlobalConfig.LibraryDir was not set before being accessed.");
             }
             return libraryDir;
         }
@@ -34,5 +37,5 @@ public static class GlobalConfig
     /// Full path to the fixed home directory.
     /// Currently %APPDATA%\StabilityMatrix
     ///</summary>
-    public static FilePath HomeDir { get; } = AppDataDir + @"StabilityMatrix\";
+    public static DirectoryPath HomeDir { get; } = AppDataDir.JoinDir("StabilityMatrix");
 }

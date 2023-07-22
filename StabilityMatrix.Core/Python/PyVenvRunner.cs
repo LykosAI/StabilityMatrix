@@ -1,11 +1,11 @@
-﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using NLog;
 using Salaros.Configuration;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Processes;
 
@@ -209,13 +209,19 @@ public class PyVenvRunner : IDisposable
             outputDataReceived.Invoke(s);
         });
 
+        var env = new Dictionary<string, string>();
+
+        // On windows, add portable git 
+        if (Compat.IsWindows)
+        {
+            var portableGit = GlobalConfig.LibraryDir.JoinDir("PortableGit");
+            env["PATH"] = Compat.GetEnvPathWithExtensions(portableGit);
+        }
+        
         if (unbuffered)
         {
-            var env = new Dictionary<string, string>
-            {
-                {"PYTHONUNBUFFERED", "1"}
-            };
-            
+            env["PYTHONUNBUFFERED"] = "1";
+
             // If arguments starts with -, it's a flag, insert `u` after it for unbuffered mode
             if (arguments.StartsWith('-'))
             {
@@ -226,14 +232,12 @@ public class PyVenvRunner : IDisposable
             {
                 arguments = "-u " + arguments;
             }
-            
-            Process = ProcessRunner.StartAnsiProcess(PythonPath, arguments, workingDirectory, filteredOutput, env);
         }
-        else
-        {
-            Process = ProcessRunner.StartAnsiProcess(PythonPath, arguments, outputDataReceived: filteredOutput,
-                workingDirectory: workingDirectory);
-        }
+
+        Process = ProcessRunner.StartAnsiProcess(PythonPath, arguments, 
+            workingDirectory: workingDirectory,
+            outputDataReceived: filteredOutput,
+            environmentVariables: env);
 
         if (onExit != null)
         {

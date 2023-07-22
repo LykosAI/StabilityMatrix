@@ -3,7 +3,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Threading;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -161,7 +160,7 @@ public partial class LaunchViewModel : ObservableObject
         basePackage.StartupComplete += RunningPackageOnStartupComplete;
 
         // Update shared folder links (in case library paths changed)
-        sharedFolders.UpdateLinksForPackage(basePackage, packagePath);
+        await sharedFolders.UpdateLinksForPackage(basePackage, packagePath);
 
         // Load user launch args from settings and convert to string
         var userArgs = settingsManager.GetLaunchArgs(activeInstall.Id);

@@ -42,6 +42,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     private readonly IPackageFactory packageFactory;
     private readonly IPyRunner pyRunner;
     private readonly INotificationService notificationService;
+    private readonly ISharedFolders sharedFolders;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     
     // Regex to match if input contains a yes/no prompt,
@@ -71,15 +72,22 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     // Input info-bars
     [ObservableProperty] private bool showManualInputPrompt;
     [ObservableProperty] private bool showConfirmInputPrompt;
-
-    public LaunchPageViewModel(ILogger<LaunchPageViewModel> logger, ISettingsManager settingsManager, IPackageFactory packageFactory,
-        IPyRunner pyRunner, INotificationService notificationService, ServiceManager<ViewModelBase> dialogFactory)
+    
+    public LaunchPageViewModel(
+        ILogger<LaunchPageViewModel> logger, 
+        ISettingsManager settingsManager, 
+        IPackageFactory packageFactory,
+        IPyRunner pyRunner, 
+        INotificationService notificationService, 
+        ISharedFolders sharedFolders,
+        ServiceManager<ViewModelBase> dialogFactory)
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         this.pyRunner = pyRunner;
         this.notificationService = notificationService;
+        this.sharedFolders = sharedFolders;
         this.dialogFactory = dialogFactory;
         
         EventManager.Instance.PackageLaunchRequested += OnPackageLaunchRequested;
@@ -119,7 +127,6 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     private async Task LaunchAsync()
     {
         var activeInstall = SelectedPackage;
-
         if (activeInstall == null)
         {
             // No selected package: error notification
@@ -182,8 +189,8 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         await Console.Clear();
         Console.StartUpdates();
 
-        // TODO: Update shared folder links (in case library paths changed)
-        // sharedFolders.UpdateLinksForPackage(basePackage, packagePath);
+        // Update shared folder links (in case library paths changed)
+        await sharedFolders.UpdateLinksForPackage(basePackage, packagePath);
 
         // Load user launch args from settings and convert to string
         var userArgs = settingsManager.GetLaunchArgs(activeInstall.Id);

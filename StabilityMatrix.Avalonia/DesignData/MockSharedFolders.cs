@@ -1,4 +1,5 @@
-﻿using StabilityMatrix.Core.Helper;
+﻿using System.Threading.Tasks;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
 
@@ -10,8 +11,9 @@ public class MockSharedFolders : ISharedFolders
     {
     }
 
-    public void UpdateLinksForPackage(BasePackage basePackage, DirectoryPath installDirectory)
+    public Task UpdateLinksForPackage(BasePackage basePackage, DirectoryPath installDirectory)
     {
+        return Task.CompletedTask;
     }
 
     public void RemoveLinksForAllPackages()

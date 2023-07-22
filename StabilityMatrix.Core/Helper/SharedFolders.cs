@@ -84,28 +84,55 @@ public class SharedFolders : ISharedFolders
     /// Deletes junction links and remakes them. Unlike SetupLinksForPackage, 
     /// this will not copy files from the destination to the source.
     /// </summary>
-    public void UpdateLinksForPackage(BasePackage basePackage, DirectoryPath installDirectory)
+    public async Task UpdateLinksForPackage(BasePackage basePackage, DirectoryPath installDirectory)
     {
         var sharedFolders = basePackage.SharedFolders;
-        if (sharedFolders == null) return;
+        if (sharedFolders is null) return;
         
         foreach (var (folderType, relativePath) in sharedFolders)
         {
-            var source = Path.Combine(settingsManager.ModelsDirectory, folderType.GetStringValue());
-            var destination = Path.GetFullPath(Path.Combine(installDirectory, relativePath));
+            var sourceDir = new DirectoryPath(settingsManager.ModelsDirectory, folderType.GetStringValue());
+            var destinationDir = installDirectory.JoinDir(relativePath);
+            
             // Create source folder if it doesn't exist
-            if (!Directory.Exists(source))
+            if (!sourceDir.Exists)
             {
-                Logger.Info($"Creating junction source {source}");
-                Directory.CreateDirectory(source);
+                Logger.Info($"Creating junction source {sourceDir}");
+                sourceDir.Create();
             }
-            // Delete the destination folder if it exists
-            if (Directory.Exists(destination))
+
+            if (destinationDir.Exists)
             {
-                Directory.Delete(destination, false);
+                // Existing dest is a link
+                if (destinationDir.IsSymbolicLink)
+                {
+                    // If link is already the same, just skip
+                    if (destinationDir.Info.LinkTarget == sourceDir)
+                    {
+                        Logger.Info($"Skipped updating matching folder link ({destinationDir} -> ({sourceDir})");
+                        continue;
+                    }
+                    // Otherwise delete the link
+                    Logger.Info($"Deleting existing junction at target {destinationDir}");
+                    await destinationDir.DeleteAsync(false);
+                }
+                else
+                {
+                    // Move all files if not empty
+                    if (destinationDir.Info.EnumerateFileSystemInfos().Any())
+                    {
+                        Logger.Info($"Moving files from {destinationDir} to {sourceDir}");
+                        await FileTransfers.MoveAllFilesAndDirectories(
+                            destinationDir,sourceDir, overwriteIfHashMatches: true);
+                    }
+                    
+                    Logger.Info($"Deleting existing empty folder at target {destinationDir}");
+                    await destinationDir.DeleteAsync(false);
+                }
             }
-            Logger.Info($"Updating junction link from {source} to {destination}");
-            CreateLinkOrJunction(destination, source, true);
+
+            Logger.Info($"Updating junction link from {sourceDir} to {destinationDir}");
+            CreateLinkOrJunction(destinationDir, sourceDir, true);
         }
     }
 

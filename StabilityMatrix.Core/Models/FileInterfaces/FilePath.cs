@@ -83,6 +83,26 @@ public class FilePath : FileSystemPath, IPathObject
     {
         return File.WriteAllBytesAsync(FullPath, bytes, ct);
     }
+    
+    /// <summary>
+    /// Move the file to a directory.
+    /// </summary>
+    public async Task<FilePath> MoveToAsync(DirectoryPath directory)
+    {
+        await Task.Run(() => Info.MoveTo(directory.FullPath));
+        // Return the new path
+        return directory.JoinFile(this);
+    }
+    
+    /// <summary>
+    /// Move the file to a target path.
+    /// </summary>
+    public async Task<FilePath> MoveToAsync(FilePath destinationFile)
+    {
+        await Task.Run(() => Info.MoveTo(destinationFile.FullPath));
+        // Return the new path
+        return destinationFile;
+    }
 
     // Implicit conversions to and from string
     public static implicit operator string(FilePath path) => path.FullPath;

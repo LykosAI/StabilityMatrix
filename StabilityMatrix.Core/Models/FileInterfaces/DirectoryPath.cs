@@ -28,6 +28,12 @@ public class DirectoryPath : FileSystemPath, IPathObject
     {
     }
     
+    public DirectoryPath(DirectoryInfo info) : base(info.FullName)
+    {
+        // Additionally set the info field
+        this.info = info;
+    }
+    
     public DirectoryPath(params string[] paths) : base(paths)
     {
     }
@@ -83,7 +89,7 @@ public class DirectoryPath : FileSystemPath, IPathObject
     /// <summary>
     /// Join with other paths to form a new file path.
     /// </summary>
-    public FilePath JoinFile(params FileSystemPath[] paths) => 
+    public FilePath JoinFile(params FilePath[] paths) => 
         new(Path.Combine(FullPath, Path.Combine(paths.Select(path => path.FullPath).ToArray())));
 
     public override string ToString() => FullPath;
@@ -103,4 +109,8 @@ public class DirectoryPath : FileSystemPath, IPathObject
     // Implicit conversions to and from string
     public static implicit operator string(DirectoryPath path) => path.FullPath;
     public static implicit operator DirectoryPath(string path) => new(path);
+    
+    // Implicit conversions to and from DirectoryInfo
+    public static implicit operator DirectoryInfo(DirectoryPath path) => path.Info;
+    public static implicit operator DirectoryPath(DirectoryInfo path) => new(path);
 }

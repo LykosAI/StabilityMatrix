@@ -9,7 +9,6 @@
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <TrimMode>partial</TrimMode>
         <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
-        <AssemblyName>StabilityMatrix</AssemblyName>
         <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
     </PropertyGroup>
     

@@ -64,6 +64,8 @@ public partial class CheckpointFolder : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsDragBlurEnabled))]
     private bool isImportInProgress;
+
+    [ObservableProperty] private string searchFilter;
     
     public bool IsDragBlurEnabled => IsCurrentDragTarget || IsImportInProgress;
 
@@ -77,6 +79,7 @@ public partial class CheckpointFolder : ViewModelBase
     public CheckpointFolder? ParentFolder { get; init; }
     public ObservableCollection<CheckpointFolder> SubFolders { get; init; } = new();
     public ObservableCollection<CheckpointFile> CheckpointFiles { get; init; } = new();
+    public ObservableCollection<CheckpointFile> DisplayedCheckpointFiles { get; set; }
 
     public CheckpointFolder(
         ISettingsManager settingsManager,
@@ -90,6 +93,7 @@ public partial class CheckpointFolder : ViewModelBase
         this.useCategoryVisibility = useCategoryVisibility;
         
         CheckpointFiles.CollectionChanged += OnCheckpointFilesChanged;
+        DisplayedCheckpointFiles = CheckpointFiles;
     }
     
     /// <summary>
@@ -106,7 +110,14 @@ public partial class CheckpointFolder : ViewModelBase
         
         IsCategoryEnabled = settingsManager.IsSharedFolderCategoryVisible(FolderType);
     }
-    
+
+    partial void OnSearchFilterChanged(string value)
+    {
+        var filteredFiles = CheckpointFiles.Where(y =>
+            y.FileName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase));
+        DisplayedCheckpointFiles = new ObservableCollection<CheckpointFile>(filteredFiles);
+    }
+
     /// <summary>
     /// When toggling the category enabled state, save it to settings.
     /// </summary>

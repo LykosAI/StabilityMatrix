@@ -257,7 +257,7 @@
                         <ItemsRepeater
                             Classes="ItemsDragAndDrop"
                             ItemTemplate="{StaticResource CheckpointFileDataTemplate}"
-                            ItemsSource="{Binding CheckpointFiles}">
+                            ItemsSource="{Binding DisplayedCheckpointFiles}">
                             <ItemsRepeater.Layout>
                                 <UniformGridLayout Orientation="Horizontal"/>
                             </ItemsRepeater.Layout>
@@ -366,6 +366,11 @@
             HorizontalAlignment="Right"
             Margin="16,0"
             Orientation="Horizontal">
+            <TextBox Margin="16, 16"
+                     Watermark="Search"
+                     Height="16"
+                     MinWidth="150"
+                     Text="{Binding SearchFilter, Mode=TwoWay}"/>
             <controls:ProgressRing
                 Width="16"
                 Height="16"
@@ -386,7 +391,7 @@
                 HorizontalAlignment="Right">
                 <DropDownButton.Flyout>
                     <ui:FAMenuFlyout 
-                        ItemsSource="{Binding CheckpointFolders}"/>
+                        ItemsSource="{Binding DisplayedCheckpointFolders}"/>
                 </DropDownButton.Flyout>
             </DropDownButton>
             <!--<ComboBox
@@ -432,7 +437,7 @@
                     <ItemsControl
                         HorizontalAlignment="Stretch"
                         ItemTemplate="{StaticResource CheckpointFolderGridDataTemplate}"
-                        ItemsSource="{Binding CheckpointFolders, Mode=OneWay}"
+                        ItemsSource="{Binding DisplayedCheckpointFolders, Mode=OneWay}"
                         Margin="8,0,8,8" />
                 </StackPanel>
             </Grid>

@@ -42,6 +42,7 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Packages;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
@@ -87,6 +88,19 @@ public sealed class App : Application
             var mainWindow = Services.GetRequiredService<MainWindow>();
             mainWindow.DataContext = mainViewModel;
             mainWindow.NotificationService = notificationService;
+
+            var settingsManager = Services.GetRequiredService<ISettingsManager>();
+            var windowSettings = settingsManager.Settings.WindowSettings;
+            if (windowSettings != null)
+            {
+                mainWindow.Position = new PixelPoint(windowSettings.X, windowSettings.Y);
+                mainWindow.Width = windowSettings.Width;
+                mainWindow.Height = windowSettings.Height;    
+            }
+            else
+            {
+                mainWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            }
 
             VisualRoot = mainWindow;
             StorageProvider = mainWindow.StorageProvider;
@@ -375,6 +389,10 @@ public sealed class App : Application
             var sharedFolders = Services.GetRequiredService<ISharedFolders>();
             sharedFolders.RemoveLinksForAllPackages();
         }
+
+        var mainWindow = Services.GetRequiredService<MainWindow>();
+        settingsManager.Transaction(s => s.WindowSettings = new WindowSettings(mainWindow.Width,
+            mainWindow.Height, mainWindow.Position.X, mainWindow.Position.Y));
 
         Debug.WriteLine("Start OnExit: Disposing services");
         // Dispose all services

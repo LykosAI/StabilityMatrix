@@ -12,12 +12,10 @@
                         x:CompileBindings="True"
                         Icon="/Assets/Icon.ico"
                         Width="1100"
-                        Height="850"
+                        Height="750"
                         Title="Stability Matrix"
-                        WindowStartupLocation="CenterScreen"
                         x:Class="StabilityMatrix.Avalonia.Views.MainWindow">
-
-
+    
     <Grid RowDefinitions="Auto,Auto,*">
         <Grid Name="TitleBarHost"
               ColumnDefinitions="Auto,Auto,*,Auto"

@@ -22,7 +22,7 @@ public class Settings
         SharedFolderType.Lora | 
         SharedFolderType.LyCORIS;
 
-    public string? Placement { get; set; }
+    public WindowSettings? WindowSettings { get; set; }
 
     public ModelSearchOptions? ModelSearchOptions { get; set; }
     

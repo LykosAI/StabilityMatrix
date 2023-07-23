@@ -150,12 +150,7 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <Grid RowDefinitions="Auto,*,Auto" Margin="0,8,0,0">
 
         <StackPanel Margin="8" Orientation="Vertical">
             <Grid ColumnDefinitions="*,Auto">

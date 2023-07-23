@@ -16,7 +16,8 @@
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <Grid>
                 <StackPanel Spacing="4">
-                    <ui:SettingsExpander Header="Theme" Margin="8">
+                    <ui:SettingsExpander Header="Theme" Margin="8"
+                                         IconSource="WeatherMoon">
                         <ui:SettingsExpander.Footer>
                             <ComboBox
                                 ItemsSource="{Binding AvailableThemes}"
@@ -41,7 +42,8 @@
                                 Description="Select this option if you're having problems moving Stability Matrix to another drive."
                                 Margin="8">
                                 <ui:SettingsExpander.Footer>
-                                    <CheckBox Margin="8" />
+                                    <CheckBox Margin="8"
+                                              IsChecked="{Binding RemoveSymlinksOnShutdown}"/>
                                 </ui:SettingsExpander.Footer>
                             </ui:SettingsExpander>
                         </StackPanel>

@@ -31,12 +31,18 @@
                     Grid.Row="0"
                     Grid.Column="0"
                     Width="72"
+                    Name="LaunchBtn"
                     Margin="16,8,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Stretch"
                     Classes="success"
                     Command="{Binding LaunchCommand}"
                     Content="Launch" />
+                <ui:TeachingTip Grid.Row="0" Grid.Column="0" Name="TeachingTip1"
+                                Target="{Binding #LaunchBtn}"
+                                Title="Click Launch to get started!"
+                                PreferredPlacement="BottomRight"
+                                IsOpen="{Binding IsLaunchTeachingTipsOpen}"/>
                 <Button
                     Grid.Row="0"
                     Grid.Column="0"

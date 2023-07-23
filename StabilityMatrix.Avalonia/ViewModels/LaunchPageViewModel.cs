@@ -93,6 +93,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         EventManager.Instance.PackageLaunchRequested += OnPackageLaunchRequested;
         EventManager.Instance.OneClickInstallFinished += OnOneClickInstallFinished;
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
+        EventManager.Instance.TeachingTooltipNeeded += OnTeachingTooltipNeeded;
         // Handler for console input
         Console.ApcInput += (_, message) =>
         {
@@ -102,6 +103,9 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
             }
         };
     }
+
+    private void OnTeachingTooltipNeeded(object? sender, EventArgs e) =>
+        IsLaunchTeachingTipsOpen = true;
 
     private void OnInstalledPackagesChanged(object? sender, EventArgs e) => OnLoaded();
 
@@ -132,6 +136,8 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     [RelayCommand]
     private async Task LaunchAsync()
     {
+        IsLaunchTeachingTipsOpen = false;
+        
         var activeInstall = SelectedPackage;
         if (activeInstall == null)
         {

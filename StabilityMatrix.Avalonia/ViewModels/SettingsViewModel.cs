@@ -84,6 +84,11 @@ public partial class SettingsViewModel : PageViewModelBase
         };
     }
     
+    partial void OnRemoveSymlinksOnShutdownChanged(bool value)
+    {
+        settingsManager.Transaction(s => s.RemoveFolderLinksOnShutdown = value);
+    }
+
     [RelayCommand]
     private async Task CheckPythonVersion()
     {

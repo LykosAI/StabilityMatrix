@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -13,6 +14,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
+using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog;
@@ -57,6 +59,10 @@ public sealed class App : Application
     [NotNull] public static Visual? VisualRoot { get; private set; }
     [NotNull] public static IStorageProvider? StorageProvider { get; private set; }
 
+    // ReSharper disable once MemberCanBePrivate.Global
+    public IClassicDesktopStyleApplicationLifetime? DesktopLifetime =>
+        ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -70,6 +76,8 @@ public sealed class App : Application
     
     public override void OnFrameworkInitializationCompleted()
     {
+        base.OnFrameworkInitializationCompleted();
+        
         if (Design.IsDesignMode)
         {
             DesignData.DesignData.Initialize();
@@ -79,37 +87,76 @@ public sealed class App : Application
         {
             ConfigureServiceProvider();
         }
-        
-        var mainViewModel = Services.GetRequiredService<MainWindowViewModel>();
-        var notificationService = Services.GetRequiredService<INotificationService>();
 
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        if (DesktopLifetime is not null)
         {
-            var mainWindow = Services.GetRequiredService<MainWindow>();
-            mainWindow.DataContext = mainViewModel;
-            mainWindow.NotificationService = notificationService;
+            DesktopLifetime.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
+            // First time setup if needed
             var settingsManager = Services.GetRequiredService<ISettingsManager>();
-            var windowSettings = settingsManager.Settings.WindowSettings;
-            if (windowSettings != null)
+            if (!settingsManager.IsEulaAccepted())
             {
-                mainWindow.Position = new PixelPoint(windowSettings.X, windowSettings.Y);
-                mainWindow.Width = windowSettings.Width;
-                mainWindow.Height = windowSettings.Height;    
+                var setupWindow = Services.GetRequiredService<FirstLaunchSetupWindow>();
+                var setupViewModel = Services.GetRequiredService<FirstLaunchSetupViewModel>();
+                setupWindow.DataContext = setupViewModel;
+                setupWindow.ShowAsDialog = true;
+                setupWindow.ShowActivated = true;
+                setupWindow.ShowAsyncCts = new CancellationTokenSource();
+
+                DesktopLifetime.MainWindow = setupWindow;
+
+                setupWindow.ShowAsyncCts.Token.Register(() =>
+                {
+                    if (setupWindow.Result == ContentDialogResult.Primary)
+                    {
+                        settingsManager.SetEulaAccepted();
+                        ShowMainWindow();
+                        DesktopLifetime.MainWindow.Show();
+                    }
+                    else
+                    {
+                        Shutdown();
+                    }
+                });
             }
             else
             {
-                mainWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                ShowMainWindow();
             }
-
-            VisualRoot = mainWindow;
-            StorageProvider = mainWindow.StorageProvider;
-            
-            desktop.MainWindow = mainWindow;
-            desktop.Exit += OnExit;
         }
+    }
 
-        base.OnFrameworkInitializationCompleted();
+    private void ShowMainWindow()
+    {
+        if (DesktopLifetime is null) return;
+        
+        var mainViewModel = Services.GetRequiredService<MainWindowViewModel>();
+        var notificationService = Services.GetRequiredService<INotificationService>();
+        
+        var mainWindow = Services.GetRequiredService<MainWindow>();
+        mainWindow.DataContext = mainViewModel;
+        mainWindow.NotificationService = notificationService;
+
+        var settingsManager = Services.GetRequiredService<ISettingsManager>();
+        var windowSettings = settingsManager.Settings.WindowSettings;
+        if (windowSettings != null)
+        {
+            mainWindow.Position = new PixelPoint(windowSettings.X, windowSettings.Y);
+            mainWindow.Width = windowSettings.Width;
+            mainWindow.Height = windowSettings.Height;    
+        }
+        else
+        {
+            mainWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        }
+        
+        mainWindow.Closed += (_, _) => Shutdown();
+
+        VisualRoot = mainWindow;
+        StorageProvider = mainWindow.StorageProvider;
+            
+        DesktopLifetime.MainWindow = mainWindow;
+        DesktopLifetime.Exit += OnExit;
     }
 
     private static void ConfigureServiceProvider()
@@ -163,6 +210,7 @@ public sealed class App : Application
         services.AddTransient<SelectDataDirectoryViewModel>();
         services.AddTransient<LaunchOptionsViewModel>();
         services.AddTransient<ExceptionViewModel>();
+        services.AddSingleton<FirstLaunchSetupViewModel>();
         services.AddSingleton<UpdateViewModel>();
         
         // Other transients (usually sub view models)
@@ -188,7 +236,8 @@ public sealed class App : Application
                 .Register(provider.GetRequiredService<CheckpointFile>)
                 .Register(provider.GetRequiredService<RefreshBadgeViewModel>)
                 .Register(provider.GetRequiredService<ExceptionViewModel>)
-                .Register(provider.GetRequiredService<ProgressManagerViewModel>));
+                .Register(provider.GetRequiredService<ProgressManagerViewModel>)
+                .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>));
     }
 
     internal static void ConfigureViews(IServiceCollection services)
@@ -210,8 +259,9 @@ public sealed class App : Application
         // Controls
         services.AddTransient<RefreshBadge>();
         
-        // Window
+        // Windows
         services.AddSingleton<MainWindow>();
+        services.AddSingleton<FirstLaunchSetupWindow>();
     }
     
     internal static void ConfigurePackages(IServiceCollection services)

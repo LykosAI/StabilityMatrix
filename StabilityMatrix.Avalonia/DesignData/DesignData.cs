@@ -4,8 +4,6 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
-using System.Threading.Tasks;
-using Avalonia.Media;
 using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
@@ -220,6 +218,8 @@ public static class DesignData
         Services.GetRequiredService<ServiceManager<ViewModelBase>>();
     public static MainWindowViewModel MainWindowViewModel => 
         Services.GetRequiredService<MainWindowViewModel>();
+    public static FirstLaunchSetupViewModel FirstLaunchSetupViewModel => 
+        Services.GetRequiredService<FirstLaunchSetupViewModel>();
     public static LaunchPageViewModel LaunchPageViewModel => 
         Services.GetRequiredService<LaunchPageViewModel>();
     public static PackageManagerViewModel PackageManagerViewModel => 

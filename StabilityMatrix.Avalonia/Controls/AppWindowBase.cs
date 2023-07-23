@@ -1,4 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Threading;
+using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
@@ -10,8 +13,44 @@ namespace StabilityMatrix.Avalonia.Controls;
 [SuppressMessage("ReSharper", "VirtualMemberNeverOverridden.Global")]
 public class AppWindowBase : AppWindow
 {
+    public CancellationTokenSource? ShowAsyncCts { get; set; }
+    
     protected AppWindowBase()
     {
+    }
+    
+    public void ShowWithCts(CancellationTokenSource cts)
+    {
+        ShowAsyncCts?.Cancel();
+        ShowAsyncCts = cts;
+        Show();
+    }
+
+    public Task ShowAsync()
+    {
+        ShowAsyncCts?.Cancel();
+        ShowAsyncCts = new CancellationTokenSource();
+        
+        var tcs = new TaskCompletionSource<bool>();
+        ShowAsyncCts.Token.Register(s =>
+        {
+            ((TaskCompletionSource<bool>) s!).SetResult(true);
+        }, tcs);
+        
+        Show();
+        
+        return tcs.Task;
+    }
+    
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+
+        if (ShowAsyncCts is not null)
+        {
+            ShowAsyncCts.Cancel();
+            ShowAsyncCts = null;
+        }
     }
     
     protected override void OnLoaded(RoutedEventArgs e)

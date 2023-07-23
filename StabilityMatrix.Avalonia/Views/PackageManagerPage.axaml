@@ -94,7 +94,12 @@
                     Margin="0,5,0,5"
                     Text="{Binding SelectedPackage.FullPath, FallbackValue=''}" />
                 
-                <UniformGrid Margin="0,16,0,0" Columns="2" MinHeight="48">
+                <UniformGrid 
+                    Margin="0,16,0,0" 
+                    Columns="2" 
+                    MinHeight="48" 
+                    MinWidth="208"
+                    HorizontalAlignment="Left">
                     <Button
                         Command="{Binding Launch}"
                         Content="{Binding InstallButtonText}"

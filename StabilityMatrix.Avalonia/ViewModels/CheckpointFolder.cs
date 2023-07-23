@@ -65,7 +65,7 @@ public partial class CheckpointFolder : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsDragBlurEnabled))]
     private bool isImportInProgress;
 
-    [ObservableProperty] private string searchFilter;
+    [ObservableProperty] private string searchFilter = string.Empty;
     
     public bool IsDragBlurEnabled => IsCurrentDragTarget || IsImportInProgress;
 
@@ -113,9 +113,16 @@ public partial class CheckpointFolder : ViewModelBase
 
     partial void OnSearchFilterChanged(string value)
     {
-        var filteredFiles = CheckpointFiles.Where(y =>
-            y.FileName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase));
-        DisplayedCheckpointFiles = new ObservableCollection<CheckpointFile>(filteredFiles);
+        if (string.IsNullOrEmpty(value))
+        {
+            DisplayedCheckpointFiles = CheckpointFiles;
+        }
+        else
+        {
+            var filteredFiles = CheckpointFiles.Where(y =>
+                y.FileName.Contains(value, StringComparison.OrdinalIgnoreCase));
+            DisplayedCheckpointFiles = new ObservableCollection<CheckpointFile>(filteredFiles);
+        }
     }
 
     /// <summary>
@@ -149,7 +156,11 @@ public partial class CheckpointFolder : ViewModelBase
     /// <param name="file"></param>
     private void OnCheckpointFileDelete(object? sender, CheckpointFile file)
     {
-        Dispatcher.UIThread.Invoke(() => CheckpointFiles.Remove(file));
+        Dispatcher.UIThread.Post(() =>
+        {
+            CheckpointFiles.Remove(file);
+            DisplayedCheckpointFiles.Remove(file);
+        });
     }
 
     public async Task OnDrop(DragEventArgs e)

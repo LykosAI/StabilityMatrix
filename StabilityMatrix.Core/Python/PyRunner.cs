@@ -85,7 +85,7 @@ public class PyRunner : IPyRunner
                       throw new NullReferenceException("sys module not found");
             sys.Set("stdout", StdOutStream);
             sys.Set("stderr", StdErrStream);
-        });
+        }).ConfigureAwait(false);
     }
 
     /// <summary>

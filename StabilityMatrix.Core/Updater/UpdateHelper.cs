@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Configs;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Services;
@@ -20,14 +21,13 @@ public class UpdateHelper : IUpdateHelper
     private readonly System.Timers.Timer timer = new(TimeSpan.FromMinutes(5));
     
     private string UpdateManifestUrl => debugOptions.UpdateManifestUrl ??
-        "https://cdn.lykos.ai/update.json";
+        "https://cdn.lykos.ai/update-v2.json";
+
+    public const string UpdateFolderName = ".StabilityMatrixUpdate";
+    public static DirectoryPath UpdateFolder => Compat.AppCurrentDir.JoinDir(UpdateFolderName);
+
+    private static FilePath ExecutablePath => UpdateFolder.JoinFile(Compat.GetExecutableName());
     
-    private static readonly string UpdateFolder =
-        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Update");
-
-    public static readonly string ExecutablePath =
-        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Update", "StabilityMatrix.exe");
-
     public UpdateHelper(ILogger<UpdateHelper> logger, IHttpClientFactory httpClientFactory,
         IDownloadService downloadService, IOptions<DebugOptions> debugOptions)
     {
@@ -64,7 +64,7 @@ public class UpdateHelper : IUpdateHelper
     /// Semicolon separated string of fields:
     /// "version, releaseDate, channel, type, url, changelog, hashBlake3"
     /// </summary>
-    private string GetUpdateInfoSignedData(UpdateInfo updateInfo)
+    private static string GetUpdateInfoSignedData(UpdateInfo updateInfo)
     {
         var channel = updateInfo.Channel.GetStringValue().ToLowerInvariant();
         var date = updateInfo.ReleaseDate.ToString("yyyy-MM-ddTHH:mm:ss.ffffffzzz");
@@ -85,15 +85,30 @@ public class UpdateHelper : IUpdateHelper
                 return;
             }
 
-            var updateInfo =
-                await JsonSerializer.DeserializeAsync<UpdateInfo>(
+            var updateCollection =
+                await JsonSerializer.DeserializeAsync<UpdateCollection>(
                     await response.Content.ReadAsStreamAsync());
 
-            if (updateInfo == null)
+            if (updateCollection is null)
             {
-                logger.LogError("UpdateInfo is null");
+                logger.LogError("UpdateCollection is null");
                 return;
             }
+            
+            // Get the update info for our platform
+            var updateInfo = updateCollection switch
+            {
+                _ when Compat.IsWindows && Compat.IsX64 => updateCollection.WindowsX64,
+                _ when Compat.IsLinux && Compat.IsX64 => updateCollection.LinuxX64,
+                _ => null
+            };
+
+            if (updateInfo is null)
+            {
+                logger.LogWarning("Could not find compatible update info for the platform {Platform}", Compat.Platform);
+                return;
+            }
+                
             logger.LogInformation("UpdateInfo signature: {Signature}", updateInfo.Signature);
             
             var updateInfoSignData = GetUpdateInfoSignedData(updateInfo);

@@ -18,7 +18,19 @@ public class DirectoryPath : FileSystemPath, IPathObject
         }
     }
     
+    /// <summary>
+    /// Gets a value indicating whether the directory exists.
+    /// </summary>
     public bool Exists => Info.Exists;
+    
+    /// <inheritdoc/>
+    public string Name => Info.Name;
+    
+    /// <summary>
+    /// Get the parent directory.
+    /// </summary>
+    public DirectoryPath? Parent => Info.Parent == null 
+        ? null : new DirectoryPath(Info.Parent);
 
     public DirectoryPath(string path) : base(path)
     {

@@ -10,11 +10,14 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using NLog;
+using Polly.Contrib.WaitAndRetry;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
 using Sentry;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Updater;
 
 namespace StabilityMatrix.Avalonia;
 
@@ -30,6 +33,8 @@ public class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        HandleUpdateReplacement();
+        
         // Configure exception dialog for unhandled exceptions
         if (!Debugger.IsAttached || args.Contains("--debug-exception-dialog"))
         {
@@ -55,6 +60,52 @@ public class Program
             .UsePlatformDetect()
             .WithInterFont()
             .LogToTrace();
+    }
+
+    private static void HandleUpdateReplacement()
+    {
+        // Check if we're in the named update folder
+        if (Compat.AppCurrentDir.Parent is {Name: UpdateHelper.UpdateFolderName} parentDir)
+        {
+            var retryDelays = Backoff.DecorrelatedJitterBackoffV2(
+                TimeSpan.FromMilliseconds(350), retryCount: 5);
+
+            foreach (var delay in retryDelays)
+            {
+                // Copy our current file to the parent directory, overwriting the old app file
+                var currentExe = Compat.AppCurrentDir.JoinFile(Compat.GetExecutableName());
+                var targetExe = parentDir.JoinFile(Compat.GetExecutableName());
+                try
+                {
+                    currentExe.CopyTo(targetExe, true);
+                    
+                    // Start the new app
+                    Process.Start(targetExe);
+                    
+                    // Shutdown the current app
+                    Environment.Exit(0);
+                }
+                catch (Exception)
+                {
+                    Thread.Sleep(delay);
+                }
+            }
+        }
+        
+        // Delete update folder if it exists in current directory
+        var updateDir = UpdateHelper.UpdateFolder;
+        if (updateDir.Exists)
+        {
+            try
+            {
+                updateDir.Delete(true);
+            }
+            catch (Exception e)
+            {
+                var logger = LogManager.GetCurrentClassLogger();
+                logger.Error(e, "Failed to delete update file");
+            }
+        }
     }
     
     private static void ConfigureSentry()

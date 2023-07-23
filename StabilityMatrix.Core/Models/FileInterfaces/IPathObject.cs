@@ -4,7 +4,10 @@ public interface IPathObject
 {
     /// <summary> Full path of the file system object. </summary>
     string FullPath { get; }
-
+    
+    /// <summary> Name of the file system object. </summary>
+    string Name { get; }
+    
     /// <summary> Whether the file system object is a symbolic link or junction. </summary>
     bool IsSymbolicLink { get; }
 

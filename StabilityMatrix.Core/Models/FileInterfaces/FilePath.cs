@@ -19,6 +19,8 @@ public class FilePath : FileSystemPath, IPathObject
     }
     
     public bool Exists => Info.Exists;
+    
+    public string Name => Info.Name;
 
     public FilePath(string path) : base(path)
     {
@@ -100,6 +102,16 @@ public class FilePath : FileSystemPath, IPathObject
     public async Task<FilePath> MoveToAsync(FilePath destinationFile)
     {
         await Task.Run(() => Info.MoveTo(destinationFile.FullPath));
+        // Return the new path
+        return destinationFile;
+    }
+    
+    /// <summary>
+    /// Copy the file to a target path.
+    /// </summary>
+    public FilePath CopyTo(FilePath destinationFile, bool overwrite = false)
+    {
+        Info.CopyTo(destinationFile.FullPath, overwrite);
         // Return the new path
         return destinationFile;
     }

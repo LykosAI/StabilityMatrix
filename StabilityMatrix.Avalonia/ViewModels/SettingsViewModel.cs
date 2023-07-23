@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
@@ -31,6 +32,7 @@ public partial class SettingsViewModel : PageViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly IPyRunner pyRunner;
+    public SharedState SharedState { get; }
     
     public override string Title => "Settings";
     public override IconSource IconSource => new SymbolIconSource {Symbol = Symbol.Settings, IsFilled = true};
@@ -41,6 +43,13 @@ public partial class SettingsViewModel : PageViewModelBase
     // Theme section
     [ObservableProperty] private string? selectedTheme;
     
+    public IReadOnlyList<string> AvailableThemes { get; } = new[]
+    {
+        "Light",
+        "Dark",
+        "System",
+    };
+    
     // Shared folder options
     [ObservableProperty] private bool removeSymlinksOnShutdown;
     
@@ -49,23 +58,24 @@ public partial class SettingsViewModel : PageViewModelBase
     [ObservableProperty] private string? debugCompatInfo;
     [ObservableProperty] private string? debugGpuInfo;
     
-    public IReadOnlyList<string> AvailableThemes { get; } = new[]
-    {
-        "Light",
-        "Dark",
-        "System",
-    };
+    // Info section
+    private const int VersionTapCountThreshold = 7;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(VersionFlyoutText))] private int versionTapCount;
+    [ObservableProperty] private bool isVersionTapTeachingTipOpen;
+    public string VersionFlyoutText => $"You are {VersionTapCountThreshold - VersionTapCount} clicks away from enabling Debug options.";
     
     public SettingsViewModel(
         INotificationService notificationService, 
         ISettingsManager settingsManager,
         IPrerequisiteHelper prerequisiteHelper,
-        IPyRunner pyRunner)
+        IPyRunner pyRunner,
+        SharedState sharedState)
     {
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
         this.prerequisiteHelper = prerequisiteHelper;
         this.pyRunner = pyRunner;
+        SharedState = sharedState;
 
         SelectedTheme = AvailableThemes[1];
         RemoveSymlinksOnShutdown = settingsManager.Settings.RemoveFolderLinksOnShutdown;
@@ -197,6 +207,36 @@ public partial class SettingsViewModel : PageViewModelBase
         throw new OperationCanceledException("Example Message");
     }
     #endregion
-    
+
+    #region Info Section
+
+    public void OnVersionClick()
+    {
+        // Ignore if already enabled
+        if (SharedState.IsDebugMode) return;
+        
+        VersionTapCount++;
+        
+        switch (VersionTapCount)
+        {
+            // Reached required threshold
+            case >= VersionTapCountThreshold:
+            {
+                IsVersionTapTeachingTipOpen = false;
+                // Enable debug options
+                SharedState.IsDebugMode = true;
+                notificationService.Show(
+                    "Debug options enabled", "Warning: Improper use may corrupt application state or cause loss of data.");
+                VersionTapCount = 0;
+                break;
+            }
+            // Open teaching tip above 3rd click
+            case >= 3:
+                IsVersionTapTeachingTipOpen = true;
+                break;
+        }
+    }
+
+    #endregion
 
 }

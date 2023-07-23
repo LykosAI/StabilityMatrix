@@ -76,7 +76,8 @@
                         </StackPanel>
                     </Grid>
                     
-                    <Grid RowDefinitions="auto,*">
+                    <!-- Debug Options -->
+                    <Grid RowDefinitions="auto,*" IsVisible="{Binding SharedState.IsDebugMode}">
                         <TextBlock 
                             FontWeight="Medium"
                             Text="Debug Options" 
@@ -161,14 +162,21 @@
                                 FontWeight="Medium"
                                 Margin="8"
                                 Text="Stability Matrix" />
-                            <Grid>
+                            <Panel>
                                 <Button
+                                    Name="VersionButton"
+                                    Command="{Binding OnVersionClick}"
                                     Classes="transparent"
                                     BorderThickness="0"
                                     Content="{Binding AppVersion}"
                                     Margin="8,0,8,8"
                                     Padding="2,0,2,0"/>
-                            </Grid>
+                                <ui:TeachingTip
+                                    PreferredPlacement="RightTop"
+                                    Target="{Binding #VersionButton}"
+                                    IsOpen="{Binding IsVersionTapTeachingTipOpen}"
+                                    Title="{Binding VersionFlyoutText}"/>
+                            </Panel>
                             
                             <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
                                 <Button

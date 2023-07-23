@@ -1,4 +1,5 @@
 ﻿using Python.Runtime;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
@@ -13,10 +14,12 @@ public class PyRunnerTests
     public static async Task TestInitialize(TestContext testContext)
     {
         var settingsManager = new SettingsManager();
-        Assert.IsTrue(settingsManager.TryFindLibrary());
+        if (!settingsManager.TryFindLibrary())
+        {
+            GlobalConfig.LibraryDir = GlobalConfig.HomeDir;
+            PyRunner.HomeDir = GlobalConfig.HomeDir;
+        }
         
-        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        PyRunner.HomeDir = Path.Combine(appData, "StabilityMatrix");
         await PyRunner.Initialize();
     }
     

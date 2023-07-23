@@ -9,6 +9,7 @@ using Avalonia.Data;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using Markdown.Avalonia;
 using StabilityMatrix.Avalonia.Controls;
 
 namespace StabilityMatrix.Avalonia;
@@ -23,7 +24,7 @@ public static class DialogHelper
         string description, 
         IReadOnlyList<TextBoxField> textFields)
     {
-        Dispatcher.UIThread.CheckAccess();
+        Dispatcher.UIThread.VerifyAccess();
 
         var stackPanel = new StackPanel();
         var grid = new Grid
@@ -108,6 +109,27 @@ public static class DialogHelper
             IsPrimaryButtonEnabled = true,
             PrimaryButtonCommand = primaryCommand,
             DefaultButton = ContentDialogButton.Primary
+        };
+    }
+
+    /// <summary>
+    /// Create a generic dialog for showing a markdown document
+    /// </summary>
+    public static BetterContentDialog CreateMarkdownDialog(string markdown, string? title = null)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+
+        var viewer = new MarkdownScrollViewer
+        {
+            Markdown = markdown
+        };
+        
+        return new BetterContentDialog
+        {
+            Title = title,
+            Content = viewer,
+            CloseButtonText = "Close",
+            IsPrimaryButtonEnabled = false,
         };
     }
 }

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.Notifications;
@@ -16,6 +18,7 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
@@ -235,6 +238,47 @@ public partial class SettingsViewModel : PageViewModelBase
                 IsVersionTapTeachingTipOpen = true;
                 break;
         }
+    }
+
+    [RelayCommand]
+    private async Task ShowLicensesDialog()
+    {
+        try
+        {
+            var markdown = GetLicensesMarkdown();
+
+            var dialog = DialogHelper.CreateMarkdownDialog(markdown, "Licenses");
+            dialog.MaxDialogHeight = 600;
+            await dialog.ShowAsync();
+        }
+        catch (Exception e)
+        {
+            notificationService.Show("Failed to read licenses information", 
+                $"{e}", NotificationType.Error);
+        }
+    }
+
+    private static string GetLicensesMarkdown()
+    {
+        // Read licenses.json
+        using var reader = new StreamReader(Assets.LicensesJson.Open());
+        var licenses = JsonSerializer
+            .Deserialize<IReadOnlyList<LicenseInfo>>(reader.ReadToEnd()) ??
+                       throw new InvalidOperationException("Failed to read licenses.json");
+        
+        // Generate markdown
+        var builder = new StringBuilder();
+        foreach (var license in licenses)
+        {
+            builder.AppendLine($"## [{license.PackageName}]({license.PackageUrl}) by {string.Join(", ", license.Authors)}");
+            builder.AppendLine();
+            builder.AppendLine(license.Description);
+            builder.AppendLine();
+            builder.AppendLine($"[{license.LicenseUrl}]({license.LicenseUrl})");
+            builder.AppendLine();
+        }
+
+        return builder.ToString();
     }
 
     #endregion

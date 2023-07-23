@@ -181,6 +181,7 @@
                             <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
                                 <Button
                                     Content="License and Open Source Notices"
+                                    Command="{Binding ShowLicensesDialogCommand}"
                                     HorizontalAlignment="Left"
                                     Margin="8" />
                             </StackPanel>

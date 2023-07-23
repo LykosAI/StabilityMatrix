@@ -113,6 +113,15 @@ public class BetterContentDialog : ContentDialog
         get => GetValue(MaxDialogWidthProperty);
         set => SetValue(MaxDialogWidthProperty, value);
     }
+
+    public static readonly StyledProperty<double> MaxDialogHeightProperty = AvaloniaProperty.Register<BetterContentDialog, double>(
+        "MaxDialogHeight");
+
+    public double MaxDialogHeight
+    {
+        get => GetValue(MaxDialogHeightProperty);
+        set => SetValue(MaxDialogHeightProperty, value);
+    }
     
 
     public BetterContentDialog()
@@ -130,26 +139,46 @@ public class BetterContentDialog : ContentDialog
         }
         
         // If commands provided, bind OnCanExecuteChanged to hide buttons
-        if (PrimaryButtonCommand is not null && PrimaryButton is not null)
+        // otherwise link visibility to IsEnabled
+        if (PrimaryButton is not null)
         {
-            PrimaryButtonCommand.CanExecuteChanged += (_, _) =>
+            if (PrimaryButtonCommand is not null)
+            {
+                PrimaryButtonCommand.CanExecuteChanged += (_, _) =>
+                    PrimaryButton.IsEnabled = PrimaryButtonCommand.CanExecute(null);
+                // Also set initial state
                 PrimaryButton.IsEnabled = PrimaryButtonCommand.CanExecute(null);
-            // Also set initial state
-            PrimaryButton.IsEnabled = PrimaryButtonCommand.CanExecute(null);
+            }
+            else
+            {
+                PrimaryButton.IsVisible = IsPrimaryButtonEnabled && !string.IsNullOrEmpty(PrimaryButtonText);
+            }
         }
-        if (SecondaryButtonCommand is not null && SecondaryButton is not null)
+        
+        if (SecondaryButton is not null)
         {
-            SecondaryButtonCommand.CanExecuteChanged += (_, _) =>
+            if (SecondaryButtonCommand is not null)
+            {
+                SecondaryButtonCommand.CanExecuteChanged += (_, _) =>
+                    SecondaryButton.IsEnabled = SecondaryButtonCommand.CanExecute(null);
+                // Also set initial state
                 SecondaryButton.IsEnabled = SecondaryButtonCommand.CanExecute(null);
-            // Also set initial state
-            SecondaryButton.IsEnabled = SecondaryButtonCommand.CanExecute(null);
+            }
+            else
+            {
+                SecondaryButton.IsVisible = IsSecondaryButtonEnabled && !string.IsNullOrEmpty(SecondaryButtonText);
+            }
         }
-        if (CloseButtonCommand is not null && CloseButton is not null)
+        
+        if (CloseButton is not null)
         {
-            CloseButtonCommand.CanExecuteChanged += (_, _) =>
+            if (CloseButtonCommand is not null)
+            {
+                CloseButtonCommand.CanExecuteChanged += (_, _) =>
+                    CloseButton.IsEnabled = CloseButtonCommand.CanExecute(null);
+                // Also set initial state
                 CloseButton.IsEnabled = CloseButtonCommand.CanExecute(null);
-            // Also set initial state
-            CloseButton.IsEnabled = CloseButtonCommand.CanExecute(null);
+            }
         }
     }
 
@@ -176,10 +205,15 @@ public class BetterContentDialog : ContentDialog
         var border = VisualChildren[0] as Border;
         var panel = border?.Child as Panel;
         var faBorder = panel?.Children[0] as FABorder;
-        // Set widths
+        
+        // Set dialog maximums
         if (MaxDialogWidth > 0)
         {
             faBorder!.MaxWidth = MaxDialogWidth;
+        }
+        if (MaxDialogHeight > 0)
+        {
+            faBorder!.MaxHeight = MaxDialogHeight;
         }
         
         var border2 = faBorder?.Child as Border;

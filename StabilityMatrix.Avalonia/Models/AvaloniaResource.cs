@@ -30,6 +30,11 @@ public readonly record struct AvaloniaResource(
     }
     
     /// <summary>
+    /// Opens a stream to this resource.
+    /// </summary>
+    public Stream Open() => AssetLoader.Open(UriPath);
+    
+    /// <summary>
     /// Extracts this resource to a target file path.
     /// </summary>
     public async Task ExtractTo(FilePath outputPath, bool overwrite = true)

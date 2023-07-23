@@ -137,7 +137,7 @@ public static partial class ArchiveHelper
         var process = ProcessRunner.StartProcess(SevenZipPath, args, outputDataReceived: onOutput);
         await ProcessRunner.WaitForExitConditionAsync(process);
         
-        progress.Report(new ProgressReport(1, "Finished extracting", type: ProgressType.Extract));
+        progress.Report(new ProgressReport(1f, "Finished extracting", type: ProgressType.Extract));
         
         var output = outputStore.ToString();
         

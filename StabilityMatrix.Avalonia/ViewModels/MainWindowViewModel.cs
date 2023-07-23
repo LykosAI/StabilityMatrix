@@ -49,8 +49,9 @@ public partial class MainWindowViewModel : ViewModelBase
     
     public override async Task OnLoadedAsync()
     {
-        CurrentPage = Pages.FirstOrDefault();
-        SelectedCategory = Pages.FirstOrDefault();
+        // Set only if null, since this may be called again when content dialogs open
+        CurrentPage ??= Pages.FirstOrDefault();
+        SelectedCategory ??= Pages.FirstOrDefault();
         EventManager.Instance.PageChangeRequested += OnPageChangeRequested;
 
         if (!await EnsureDataDirectory())

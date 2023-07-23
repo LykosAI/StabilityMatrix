@@ -6,7 +6,6 @@ using StabilityMatrix.Avalonia.Styles;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -58,10 +57,5 @@ public partial class FirstLaunchSetupViewModel : ViewModelBase
     {
         base.OnLoaded();
         CheckHardwareBadge.RefreshCommand.ExecuteAsync(null).SafeFireAndForget();
-    }
-
-    public void OpenLicenseLink()
-    {
-        ProcessRunner.OpenUrl("https://lykos.ai/matrix/license");
     }
 }

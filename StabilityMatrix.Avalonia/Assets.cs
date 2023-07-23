@@ -15,6 +15,9 @@ internal static class Assets
     /// </summary>
     public static Uri NoImage { get; } =
         new("avares://StabilityMatrix.Avalonia/Assets/noimage.png");
+    
+    public static AvaloniaResource LicensesJson => new(
+        "avares://StabilityMatrix.Avalonia/Assets/licenses.json");
 
     [SupportedOSPlatform("windows")]
     [SupportedOSPlatform("linux")]

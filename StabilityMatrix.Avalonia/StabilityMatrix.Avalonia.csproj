@@ -64,6 +64,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <AvaloniaResource Include="Assets\licenses.json" />
+    </ItemGroup>
+    
+    <ItemGroup>
         <AvaloniaResource Include="Assets\sitecustomize.py" />
     </ItemGroup>
     

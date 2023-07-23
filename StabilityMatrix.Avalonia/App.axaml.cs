@@ -33,6 +33,7 @@ using Sentry;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -297,6 +298,7 @@ public sealed class App : Application
         // Other services
         services.AddSingleton<ISettingsManager, SettingsManager>();
         services.AddSingleton<ISharedFolders, SharedFolders>();
+        services.AddSingleton<SharedState>();
         services.AddSingleton<ModelFinder>();
         services.AddSingleton<IPackageFactory, PackageFactory>();
         services.AddSingleton<IDownloadService, DownloadService>();
@@ -316,11 +318,11 @@ public sealed class App : Application
         {
             services.AddSingleton<IPrerequisiteHelper, WindowsPrerequisiteHelper>();
         }
-        else
+        else if (Compat.IsLinux || Compat.IsMacOS)
         {
             services.AddSingleton<IPrerequisiteHelper, UnixPrerequisiteHelper>();
         }
-        
+
         ConfigureViews(services);
 
         if (Design.IsDesignMode)

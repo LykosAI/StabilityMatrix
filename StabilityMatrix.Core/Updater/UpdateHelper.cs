@@ -123,14 +123,31 @@ public class UpdateHelper : IUpdateHelper
             }
             logger.LogInformation("UpdateInfo signature verified");
 
-            if (updateInfo.Version.ComparePrecedenceTo(Compat.AppVersion) > 0)
+            var order = updateInfo.Version.ComparePrecedenceTo(Compat.AppVersion);
+
+            if (order > 0)
             {
+                // Newer version available
                 logger.LogInformation("Update available {AppVer} -> {UpdateVer}", 
                     Compat.AppVersion, updateInfo.Version);
                 EventManager.Instance.OnUpdateAvailable(updateInfo);
                 return;
             }
-
+            if (order == 0)
+            {
+                // Same version available, check if we both have commit hash metadata
+                var updateHash = updateInfo.Version.Metadata;
+                var appHash = Compat.AppVersion.Metadata;
+                // If different, we can update
+                if (updateHash != appHash)
+                {
+                    logger.LogInformation("Update available {AppVer} -> {UpdateVer}", 
+                        Compat.AppVersion, updateInfo.Version);
+                    EventManager.Instance.OnUpdateAvailable(updateInfo);
+                    return;
+                }
+            }
+            
             logger.LogInformation("No update available");
         }
         catch (Exception e)

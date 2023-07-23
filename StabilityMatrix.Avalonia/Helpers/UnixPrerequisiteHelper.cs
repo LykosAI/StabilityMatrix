@@ -15,7 +15,8 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Helpers;
 
-[UnsupportedOSPlatform("windows")]
+[SupportedOSPlatform("macos")]
+[SupportedOSPlatform("linux")]
 public class UnixPrerequisiteHelper : IPrerequisiteHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

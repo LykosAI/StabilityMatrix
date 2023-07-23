@@ -93,26 +93,28 @@
                     FontSize="12"
                     Margin="0,5,0,5"
                     Text="{Binding SelectedPackage.FullPath, FallbackValue=''}" />
-                <StackPanel Margin="0,16,0,0" Orientation="Horizontal" Spacing="16">
+                
+                <UniformGrid Margin="0,16,0,0" Columns="2" MinHeight="48">
                     <Button
                         Command="{Binding Launch}"
                         Content="{Binding InstallButtonText}"
-                        Height="50"
-                        VerticalAlignment="Top"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        Margin="0,0,8,0"
                         IsEnabled="{Binding InstallButtonEnabled}"
                         IsVisible="{Binding InstallButtonEnabled}"
-                        Classes="success"
-                        Width="100" />
+                        Classes="success"/>
                     <Button
                         Command="{Binding Uninstall}"
                         Content="Uninstall"
-                        Height="50"
-                        VerticalAlignment="Top"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        Margin="8,0,0,0"
                         Classes="danger"
                         IsEnabled="{Binding !IsUninstalling}"
-                        IsVisible="{Binding InstallButtonEnabled}"
-                        Width="100" />
-                </StackPanel>
+                        IsVisible="{Binding InstallButtonEnabled}"/>
+                </UniformGrid>
+                
                 <StackPanel Orientation="Horizontal" IsVisible="{Binding IsUninstalling}">
                     <controls:ProgressRing Height="24" Width="24"
                                            Margin="8, 16, 8, 8"

@@ -218,7 +218,7 @@ public class PyVenvRunner : IDisposable
         // On windows, add portable git 
         if (Compat.IsWindows)
         {
-            var portableGit = GlobalConfig.LibraryDir.JoinDir("PortableGit");
+            var portableGit = GlobalConfig.LibraryDir.JoinDir("PortableGit", "bin");
             env["PATH"] = Compat.GetEnvPathWithExtensions(portableGit);
         }
         

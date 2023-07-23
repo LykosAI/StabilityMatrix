@@ -1,4 +1,4 @@
-node("diligence") {
+node("Diligence") {
     def repoName = "StabilityMatrix"
     def author = "ionite34"
     def version = ""

@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using StabilityMatrix.Core.Extensions;
@@ -26,7 +25,7 @@ public class UpdateHelper : IUpdateHelper
     public const string UpdateFolderName = ".StabilityMatrixUpdate";
     public static DirectoryPath UpdateFolder => Compat.AppCurrentDir.JoinDir(UpdateFolderName);
 
-    private static FilePath ExecutablePath => UpdateFolder.JoinFile(Compat.GetExecutableName());
+    public static FilePath ExecutablePath => UpdateFolder.JoinFile(Compat.GetExecutableName());
     
     public UpdateHelper(ILogger<UpdateHelper> logger, IHttpClientFactory httpClientFactory,
         IDownloadService downloadService, IOptions<DebugOptions> debugOptions)
@@ -81,7 +80,8 @@ public class UpdateHelper : IUpdateHelper
             var response = await httpClient.GetAsync(UpdateManifestUrl);
             if (!response.IsSuccessStatusCode)
             {
-                logger.LogError("Error while checking for update");
+                logger.LogWarning("Error while checking for update {StatusCode} - {Content}", 
+                    response.StatusCode, await response.Content.ReadAsStringAsync());
                 return;
             }
 
@@ -123,16 +123,15 @@ public class UpdateHelper : IUpdateHelper
             }
             logger.LogInformation("UpdateInfo signature verified");
 
-            var currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
-
-            if (updateInfo.Version <= currentVersion)
+            if (updateInfo.Version.ComparePrecedenceTo(Compat.AppVersion) > 0)
             {
-                logger.LogInformation("No update available");
+                logger.LogInformation("Update available {AppVer} -> {UpdateVer}", 
+                    Compat.AppVersion, updateInfo.Version);
+                EventManager.Instance.OnUpdateAvailable(updateInfo);
                 return;
             }
 
-            logger.LogInformation("Update available");
-            EventManager.Instance.OnUpdateAvailable(updateInfo);
+            logger.LogInformation("No update available");
         }
         catch (Exception e)
         {

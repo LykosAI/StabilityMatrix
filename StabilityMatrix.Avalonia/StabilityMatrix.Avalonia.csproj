@@ -8,8 +8,11 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <TrimMode>partial</TrimMode>
-        <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+        <PublishTrimmed>true</PublishTrimmed>
         <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
+        <VersionPrefix>2.0.0</VersionPrefix>
+        <VersionSuffix>dev.1</VersionSuffix>
+        <InformationalVersion>$(Version)</InformationalVersion>
     </PropertyGroup>
     
     <ItemGroup>
@@ -28,8 +31,12 @@
         <PackageReference Include="FluentIcons.FluentAvalonia" Version="1.1.207" />
         <PackageReference Include="FuzzySharp" Version="2.0.2" />
         <PackageReference Include="Markdown.Avalonia" Version="11.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="7.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
         <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="7.0.8" />
+        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
         <PackageReference Include="NLog" Version="5.2.2" />
         <PackageReference Include="NLog.Extensions.Logging" Version="5.3.2" />
@@ -50,7 +57,6 @@
     
     <ItemGroup>
       <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
-      <TrimmerRootAssembly Include="StabilityMatrix.Core" />
     </ItemGroup>
     
     <ItemGroup>

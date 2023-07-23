@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using Semver;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Core.Helper;
@@ -14,6 +16,8 @@ public static class Compat
 {
     private const string AppName = "StabilityMatrix";
     
+    public static SemVersion AppVersion { get; set; }
+    
     // OS Platform
     public static PlatformKind Platform { get; }
     
@@ -25,6 +29,8 @@ public static class Compat
     
     [SupportedOSPlatformGuard("macos")]
     public static bool IsMacOS => Platform.HasFlag(PlatformKind.MacOS);
+    
+    [UnsupportedOSPlatformGuard("windows")]
     public static bool IsUnix => Platform.HasFlag(PlatformKind.Unix);
 
     public static bool IsArm => Platform.HasFlag(PlatformKind.Arm);
@@ -67,6 +73,11 @@ public static class Compat
     
     static Compat()
     {
+        var infoVersion = Assembly.GetCallingAssembly()
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+            
+        AppVersion = SemVersion.Parse(infoVersion ?? "0.0.0", SemVersionStyles.Strict);
+        
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             Platform = PlatformKind.Windows;

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -34,19 +34,22 @@ public partial class SettingsViewModel : PageViewModelBase
     
     public override string Title => "Settings";
     public override IconSource IconSource => new SymbolIconSource {Symbol = Symbol.Settings, IsFilled = true};
-    public string AppVersion => GetAppVersion();
     
-    // Theme panel
+    // ReSharper disable once MemberCanBeMadeStatic.Global
+    public string AppVersion => $"Version {Compat.AppVersion}";
+    
+    // Theme section
     [ObservableProperty] private string? selectedTheme;
     
-    // Debug info
+    // Shared folder options
+    [ObservableProperty] private bool removeSymlinksOnShutdown;
+    
+    // Debug section
     [ObservableProperty] private string? debugPaths;
     [ObservableProperty] private string? debugCompatInfo;
     [ObservableProperty] private string? debugGpuInfo;
-
-    [ObservableProperty] private bool removeSymlinksOnShutdown;
     
-    public ObservableCollection<string> AvailableThemes { get; } = new()
+    public IReadOnlyList<string> AvailableThemes { get; } = new[]
     {
         "Light",
         "Dark",
@@ -81,7 +84,39 @@ public partial class SettingsViewModel : PageViewModelBase
         };
     }
     
+    [RelayCommand]
+    private async Task CheckPythonVersion()
+    {
+        var isInstalled = prerequisiteHelper.IsPythonInstalled;
+        Logger.Debug($"Check python installed: {isInstalled}");
+        // Ensure python installed
+        if (!prerequisiteHelper.IsPythonInstalled)
+        {
+            // Need 7z as well for site packages repack
+            Logger.Debug("Python not installed, unpacking resources...");
+            await prerequisiteHelper.UnpackResourcesIfNecessary();
+            Logger.Debug("Unpacked resources, installing python...");
+            await prerequisiteHelper.InstallPythonIfNecessary();
+        }
 
+        // Get python version
+        await pyRunner.Initialize();
+        var result = await pyRunner.GetVersionInfo();
+        // Show dialog box
+        var dialog = new ContentDialog
+        {
+            Title = "Python version info",
+            Content = result,
+            PrimaryButtonText = "Ok",
+            IsPrimaryButtonEnabled = true
+        };
+        dialog.Title = "Python version info";
+        dialog.Content = result;
+        dialog.PrimaryButtonText = "Ok";
+        await dialog.ShowAsync();
+    }
+
+    #region Debug Section
     public void LoadDebugInfo()
     {
         var assembly = Assembly.GetExecutingAssembly();
@@ -156,45 +191,7 @@ public partial class SettingsViewModel : PageViewModelBase
         // Use try-catch to generate traceback information
         throw new OperationCanceledException("Example Message");
     }
+    #endregion
     
-    [RelayCommand]
-    private async Task CheckPythonVersion()
-    {
-        var isInstalled = prerequisiteHelper.IsPythonInstalled;
-        Logger.Debug($"Check python installed: {isInstalled}");
-        // Ensure python installed
-        if (!prerequisiteHelper.IsPythonInstalled)
-        {
-            // Need 7z as well for site packages repack
-            Logger.Debug("Python not installed, unpacking resources...");
-            await prerequisiteHelper.UnpackResourcesIfNecessary();
-            Logger.Debug("Unpacked resources, installing python...");
-            await prerequisiteHelper.InstallPythonIfNecessary();
-        }
 
-        // Get python version
-        await pyRunner.Initialize();
-        var result = await pyRunner.GetVersionInfo();
-        // Show dialog box
-        var dialog = new ContentDialog
-        {
-            Title = "Python version info",
-            Content = result,
-            PrimaryButtonText = "Ok",
-            IsPrimaryButtonEnabled = true
-        };
-        dialog.Title = "Python version info";
-        dialog.Content = result;
-        dialog.PrimaryButtonText = "Ok";
-        await dialog.ShowAsync();
-    }
-    
-    private static string GetAppVersion()
-    {
-        var assembly = Assembly.GetExecutingAssembly();
-        var version = assembly.GetName().Version;
-        return version == null
-            ? "(Unknown)"
-            : $"Version {version.Major}.{version.Minor}.{version.Build}";
-    }
 }

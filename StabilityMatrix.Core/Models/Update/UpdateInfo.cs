@@ -1,10 +1,14 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
+using Semver;
+using StabilityMatrix.Core.Converters.Json;
 
 namespace StabilityMatrix.Core.Models.Update;
 
+[SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
 public record UpdateInfo(
-    [property: JsonPropertyName("version")]
-    Version Version,
+    [property: JsonPropertyName("version"), JsonConverter(typeof(SemVersionJsonConverter))]
+    SemVersion Version,
     
     [property: JsonPropertyName("releaseDate")]
     DateTimeOffset ReleaseDate,

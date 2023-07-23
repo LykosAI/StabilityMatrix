@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -15,6 +16,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using FluentAvalonia.UI.Controls;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog;
@@ -43,6 +45,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Python;
@@ -58,7 +61,8 @@ public sealed class App : Application
     [NotNull] public static IServiceProvider? Services { get; private set; }
     [NotNull] public static Visual? VisualRoot { get; private set; }
     [NotNull] public static IStorageProvider? StorageProvider { get; private set; }
-
+    [NotNull] public static IConfiguration? Config { get; private set; }
+    
     // ReSharper disable once MemberCanBePrivate.Global
     public IClassicDesktopStyleApplicationLifetime? DesktopLifetime =>
         ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
@@ -150,6 +154,15 @@ public sealed class App : Application
             mainWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
         }
         
+        mainWindow.Closing += (_, _) =>
+        {
+            settingsManager.Transaction(s =>
+                {
+                    s.WindowSettings = new WindowSettings(
+                        mainWindow.Width, mainWindow.Height, 
+                        mainWindow.Position.X, mainWindow.Position.Y);
+                }, ignoreMissingLibraryDir: true);
+        };
         mainWindow.Closed += (_, _) => Shutdown();
 
         VisualRoot = mainWindow;
@@ -292,11 +305,18 @@ public sealed class App : Application
         services.AddSingleton<IPyRunner, PyRunner>();
         services.AddSingleton<IUpdateHelper, UpdateHelper>();
 
+        Config = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .Build();
+        
+        services.Configure<DebugOptions>(Config.GetSection(nameof(DebugOptions)));
+        
         if (Compat.IsWindows)
         {
             services.AddSingleton<IPrerequisiteHelper, WindowsPrerequisiteHelper>();
         }
-        else if (Compat.IsLinux)
+        else
         {
             services.AddSingleton<IPrerequisiteHelper, UnixPrerequisiteHelper>();
         }
@@ -439,10 +459,6 @@ public sealed class App : Application
             var sharedFolders = Services.GetRequiredService<ISharedFolders>();
             sharedFolders.RemoveLinksForAllPackages();
         }
-
-        var mainWindow = Services.GetRequiredService<MainWindow>();
-        settingsManager.Transaction(s => s.WindowSettings = new WindowSettings(mainWindow.Width,
-            mainWindow.Height, mainWindow.Position.X, mainWindow.Position.Y));
 
         Debug.WriteLine("Start OnExit: Disposing services");
         // Dispose all services

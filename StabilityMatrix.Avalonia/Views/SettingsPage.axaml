@@ -6,7 +6,6 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
              xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-             xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="vm:SettingsViewModel"
              x:CompileBindings="True"
@@ -28,7 +27,6 @@
                     </ui:SettingsExpander>
 
                     <!--  TODO: Text2Image host port settings  -->
-                    <!-- TODO: Keep folder links on shutdown  -->
                     
                     <!-- Checkpoints Manager Options -->
                     <Grid RowDefinitions="auto,*">
@@ -163,7 +161,7 @@
                                 Text="Stability Matrix" />
                             <Grid>
                                 <Button
-                                    Background="Transparent"
+                                    Classes="transparent"
                                     BorderThickness="0"
                                     Content="{Binding AppVersion}"
                                     Margin="8,0,8,8"

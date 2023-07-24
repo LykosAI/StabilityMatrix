@@ -62,7 +62,7 @@ jobs:
           dotnet-version: '7.0.x'
 
       - name: Install dependencies
-        run: dotnet restore
+        run: dotnet restore -r ${{ matrix.platform-identifier }}
 
       - name: Install PupNet
         if: matrix.os == 'ubuntu-latest'

@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -180,12 +181,16 @@ public class VladAutomatic : BaseGitPackage
     public override async Task<string> DownloadPackage(string version, bool isCommitHash, IProgress<ProgressReport>? progress = null)
     {
         progress?.Report(new ProgressReport(0.1f, message: "Downloading package...", isIndeterminate: true, type: ProgressType.Download));
-        
-        Directory.CreateDirectory(InstallLocation);
 
-        await PrerequisiteHelper.RunGit(null, "clone", "https://github.com/vladmandic/automatic",
-            InstallLocation);
-        await PrerequisiteHelper.RunGit(workingDirectory: InstallLocation, "checkout", version);
+        var installDir = new DirectoryPath(InstallLocation);
+        installDir.Create();
+
+        await PrerequisiteHelper.RunGit(
+            installDir.Parent ?? "", "clone", "https://github.com/vladmandic/automatic", installDir.Name)
+            .ConfigureAwait(false);
+        
+        await PrerequisiteHelper.RunGit(
+            InstallLocation, "checkout", version).ConfigureAwait(false);
         
         return version;
     }

@@ -15,7 +15,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
-using Octokit;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
@@ -26,8 +26,6 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
-using Notification = Avalonia.Controls.Notifications.Notification;
-using PackageVersion = StabilityMatrix.Core.Models.PackageVersion;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
@@ -152,6 +150,19 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                 "Success", NotificationType.Success));
             OnPrimaryButtonClick();  
         }
+        else
+        {
+            var ex = result.Exception!;
+            Logger.Error(ex, $"Error installing package: {ex}");
+
+            var dialog = new BetterContentDialog
+            {
+                Title = "Error installing package",
+                Content = ex.ToString(),
+                CloseButtonText = "Close"
+            };
+            await dialog.ShowAsync();
+        }
     }
     
     private async Task ActuallyInstall()
@@ -163,62 +174,79 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             return;
         }
         
-        await InstallGitIfNecessary();
-        
-        SelectedPackage.InstallLocation = Path.Combine(
-            settingsManager.LibraryDir, "Packages", InstallName);
-
-        if (!PyRunner.PipInstalled || !PyRunner.VenvInstalled)
+        try
         {
-            InstallProgress.Text = "Installing dependencies...";
-            InstallProgress.IsIndeterminate = true;
-            await pyRunner.Initialize();
+            await InstallGitIfNecessary();
+        
+            SelectedPackage.InstallLocation = Path.Combine(
+                settingsManager.LibraryDir, "Packages", InstallName);
+
+            if (!PyRunner.PipInstalled || !PyRunner.VenvInstalled)
+            {
+                InstallProgress.Text = "Installing dependencies...";
+                InstallProgress.IsIndeterminate = true;
+                await pyRunner.Initialize();
+                
+                if (!PyRunner.PipInstalled)
+                {
+                    await pyRunner.SetupPip();
+                }
+                if (!PyRunner.VenvInstalled)
+                {
+                    await pyRunner.InstallPackage("virtualenv");
+                }
+            }
+
+            string version;
+            if (IsReleaseMode)
+            {
+                version = SelectedVersion?.TagName ?? 
+                          throw new NullReferenceException("Selected version is null");
+                
+                await DownloadPackage(version, false);
+            }
+            else
+            {
+                version = SelectedCommit?.Sha ?? 
+                          throw new NullReferenceException("Selected commit is null");
+                
+                await DownloadPackage(version, true);
+            }
             
-            if (!PyRunner.PipInstalled)
+            await InstallPackage();
+
+            InstallProgress.Text = "Setting up shared folder links...";
+            sharedFolders.SetupLinksForPackage(SelectedPackage, SelectedPackage.InstallLocation);
+            
+            InstallProgress.Text = "Done";
+            InstallProgress.IsIndeterminate = false;
+            InstallProgress.Value = 100;
+            EventManager.Instance.OnGlobalProgressChanged(100);
+
+            var branch = SelectedVersionType == PackageVersionType.GithubRelease ? 
+                null : SelectedVersion!.TagName;
+
+            var package = new InstalledPackage
             {
-                await pyRunner.SetupPip();
-            }
-            if (!PyRunner.VenvInstalled)
-            {
-                await pyRunner.InstallPackage("virtualenv");
-            }
+                DisplayName = InstallName,
+                LibraryPath = Path.Combine("Packages", InstallName),
+                Id = Guid.NewGuid(),
+                PackageName = SelectedPackage.Name,
+                PackageVersion = version,
+                DisplayVersion = GetDisplayVersion(version, branch),
+                InstalledBranch = branch,
+                LaunchCommand = SelectedPackage.LaunchCommand,
+                LastUpdateCheck = DateTimeOffset.Now
+            };
+            await using var st = settingsManager.BeginTransaction();
+            st.Settings.InstalledPackages.Add(package);
+            st.Settings.ActiveInstalledPackage = package.Id;
         }
-
-        var version = IsReleaseMode
-            ? await DownloadPackage(SelectedVersion!.TagName, false)
-            : await DownloadPackage(SelectedCommit!.Sha, true);
-        
-        await InstallPackage();
-
-        InstallProgress.Text = "Setting up shared folder links...";
-        sharedFolders.SetupLinksForPackage(SelectedPackage, SelectedPackage.InstallLocation);
-        
-        InstallProgress.Text = "Done";
-        InstallProgress.IsIndeterminate = false;
-        InstallProgress.Value = 100;
-        EventManager.Instance.OnGlobalProgressChanged(100);
-
-        var branch = SelectedVersionType == PackageVersionType.GithubRelease ? 
-            null : SelectedVersion!.TagName;
-
-        var package = new InstalledPackage
+        finally
         {
-            DisplayName = InstallName,
-            LibraryPath = Path.Combine("Packages", InstallName),
-            Id = Guid.NewGuid(),
-            PackageName = SelectedPackage.Name,
-            PackageVersion = version,
-            DisplayVersion = GetDisplayVersion(version, branch),
-            InstalledBranch = branch,
-            LaunchCommand = SelectedPackage.LaunchCommand,
-            LastUpdateCheck = DateTimeOffset.Now
-        };
-        await using var st = settingsManager.BeginTransaction();
-        st.Settings.InstalledPackages.Add(package);
-        st.Settings.ActiveInstalledPackage = package.Id;
-        
-        InstallProgress.Value = 0;
-        InstallProgress.IsIndeterminate = false;
+            InstallProgress.Value = 0;
+            InstallProgress.IsIndeterminate = false;
+        }
     }
     
     private static string GetDisplayVersion(string version, string? branch)

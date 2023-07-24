@@ -130,6 +130,10 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         var result = await ProcessRunner.RunBashCommand(command, workingDirectory ?? "");
         if (result.ExitCode != 0)
         {
+            Logger.Error("Git command [{Command}] failed with exit code " +
+                         "{ExitCode}:\n{StdOut}\n{StdErr}",
+                command, result.ExitCode, result.StandardOutput, result.StandardError);
+            
             throw new ProcessException($"Git command [{command}] failed with exit code" +
                                        $" {result.ExitCode}:\n{result.StandardOutput}\n{result.StandardError}");
         }

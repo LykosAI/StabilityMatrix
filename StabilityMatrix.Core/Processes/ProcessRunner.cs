@@ -231,8 +231,8 @@ public static class ProcessRunner
     public static async Task<ProcessResult> RunBashCommand(string command, string workingDirectory = "")
     {
         // Escape any single quotes in the command
-        var escapedCommand = command.Replace("'", "\\'");
-        var arguments = $"-c '{escapedCommand}'";
+        var escapedCommand = command.Replace("\"", "\\\"");
+        var arguments = $"-c \"{escapedCommand}\"";
         
         Logger.Info($"Running bash command [bash {arguments}]");
         
@@ -256,7 +256,7 @@ public static class ProcessRunner
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
         
-        await process.WaitForExitAsync();
+        await process.WaitForExitAsync().ConfigureAwait(false);
 
         return new ProcessResult(process.ExitCode, stdout.ToString(), stderr.ToString());
     }

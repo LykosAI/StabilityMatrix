@@ -1,11 +1,13 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Core.Exceptions;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -123,12 +125,14 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
     
     public async Task RunGit(string? workingDirectory = null, params string[] args)
     {
-        var command = "git " + string.Join(" ", args);
+        var command = args.Length == 0 ? "git" : 
+            "git " + string.Join(" ", args.Select(ProcessRunner.Quote));
+        
         var result = await ProcessRunner.RunBashCommand(command, workingDirectory ?? "");
         if (result.ExitCode != 0)
         {
-            throw new ProcessException($"Git command failed with exit code {result.ExitCode}:\n" +
-                                       $"{result.StandardOutput}\n{result.StandardError}");
+            throw new ProcessException($"Git command {command.ToRepr()} failed with exit code" +
+                                       $" {result.ExitCode}:\n{result.StandardOutput}\n{result.StandardError}");
         }
     }
     

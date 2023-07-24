@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -25,6 +24,7 @@ using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -190,7 +190,10 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         await pyRunner.Initialize();
 
         // Get path from package
-        var packagePath = Path.Combine(settingsManager.LibraryDir, activeInstall.LibraryPath!);
+        var packagePath = new DirectoryPath(settingsManager.LibraryDir, activeInstall.LibraryPath!);
+        
+        // Unpack sitecustomize.py to venv
+        await UnpackSiteCustomize(packagePath.JoinDir("venv"));
 
         basePackage.ConsoleOutput += OnProcessOutputReceived;
         basePackage.Exited += OnProcessExited;
@@ -212,6 +215,21 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         userArgsString = string.Join(" ", userArgsString, basePackage.ExtraLaunchArguments);
         await basePackage.RunPackage(packagePath, userArgsString);
         RunningPackage = basePackage;
+    }
+
+    // Unpacks sitecustomize.py to the target venv
+    private static async Task UnpackSiteCustomize(DirectoryPath venvPath)
+    {
+        if (Compat.IsWindows)
+        {
+            var file = venvPath.JoinFile("Lib", "site-packages", "sitecustomize.py");
+            await Assets.PyScriptSiteCustomize.ExtractTo(file, true);
+        }
+        else
+        {
+            var file = venvPath.JoinFile("lib", "python3.10", "site-packages", "sitecustomize.py");
+            await Assets.PyScriptSiteCustomize.ExtractTo(file, true);
+        }
     }
 
     [RelayCommand]

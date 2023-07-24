@@ -127,11 +127,10 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                         TagName = b.Name,
                         ReleaseNotesMarkdown = b.Commit.Label
                     }));
-                SelectedVersion = AvailableVersions.FirstOrDefault(x =>
-                    x.TagName.ToLowerInvariant() is "master" or "main") ?? AvailableVersions[0];
+                UpdateSelectedVersionToLatestMain();
             }
 
-            ReleaseNotes = SelectedVersion.ReleaseNotesMarkdown;
+            ReleaseNotes = SelectedVersion?.ReleaseNotesMarkdown;
         }
         catch (Exception e)
         {
@@ -246,6 +245,26 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         {
             InstallProgress.Value = 0;
             InstallProgress.IsIndeterminate = false;
+        }
+    }
+    
+    private void UpdateSelectedVersionToLatestMain()
+    {
+        if (AvailableVersions is null)
+        {
+            SelectedVersion = null;
+        }
+        else
+        {
+            // First try to find master
+            var version = AvailableVersions.FirstOrDefault(x => x.TagName == "master");
+            // If not found, try main
+            version ??= AvailableVersions.FirstOrDefault(x => x.TagName == "main");
+        
+            // If still not found, just use the first one
+            version ??= AvailableVersions[0];
+        
+            SelectedVersion = version;
         }
     }
     
@@ -367,8 +386,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                 
                 AvailableCommits = new ObservableCollection<GitCommit>(commits);
                 SelectedCommit = AvailableCommits[0];
-                SelectedVersion = AvailableVersions?.FirstOrDefault(packageVersion => 
-                    packageVersion.TagName.ToLowerInvariant() is "master" or "main");
+                UpdateSelectedVersionToLatestMain();
             }
 
             InstallName = SelectedPackage.DisplayName;

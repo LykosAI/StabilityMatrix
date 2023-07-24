@@ -233,12 +233,12 @@ public class SettingsManager : ISettingsManager
     public void SetPortableMode()
     {
         // Get app directory
-        var appDir = AppContext.BaseDirectory;
+        var appDir = Compat.AppCurrentDir;
         // Create data directory
-        var dataDir = Path.Combine(appDir, "Data");
-        Directory.CreateDirectory(dataDir);
+        var dataDir = appDir.JoinDir("Data");
+        dataDir.Create();
         // Create marker file
-        File.Create(Path.Combine(dataDir, ".sm-portable")).Close();
+        dataDir.JoinFile(".sm-portable").Create();
     }
 
     /// <summary>

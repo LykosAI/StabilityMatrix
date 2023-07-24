@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,6 +18,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
@@ -185,9 +185,9 @@ public partial class CheckpointFolder : ViewModelBase
     }
 
     [RelayCommand]
-    private void ShowInExplorer(string path)
+    private async Task ShowInExplorer(string path)
     {
-        Process.Start("explorer.exe", path);
+        await ProcessRunner.OpenFolderBrowser(path);
     }
     
     [RelayCommand]

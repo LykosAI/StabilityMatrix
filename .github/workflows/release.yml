@@ -5,7 +5,7 @@ on:
     inputs:
       version:
         type: string
-        description: Version
+        description: Version (Semver without leading v)
       sentry-release:
         type: boolean
         description: Make Sentry Release?
@@ -51,7 +51,7 @@ jobs:
           echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $env:GITHUB_ENV
 
       - name: Set up .NET 6 (for PupNet)
-        if: os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest'
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '6.0.x'
@@ -65,11 +65,11 @@ jobs:
         run: dotnet restore
 
       - name: Install PupNet
-        if: os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest'
         run: dotnet tool install -g KuiperZone.PupNet -f net6.0
 
       - name: .NET Publish
-        if: os == 'windows-latest'
+        if: matrix.os == 'windows-latest'
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: >
@@ -82,17 +82,17 @@ jobs:
           -p:SentryUploadSymbols=true -p:SentryUploadSources=true
           
       - name: PupNet Build
-        if: os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest'
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: pupnet -r linux-x64 -c Release --kind appimage --app-version {{ env.RELEASE_VERSION }} --clean -y
 
       - name: Post Build (win)
-        if: os == 'windows-latest'
+        if: matrix.os == 'windows-latest'
         run: mv ./out/StabilityMatrix.Avalonia.exe ./out/${{ matrix.out-name }}
       
       - name: Post Build (linux)
-        if: os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest'
         run: mv ./out/StabilityMatrix.Avalonia.AppImage ./out/${{ matrix.out-name }}
 
       - name: Upload Artifact

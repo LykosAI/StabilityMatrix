@@ -230,7 +230,9 @@ public static class ProcessRunner
     
     public static async Task<ProcessResult> RunBashCommand(string command, string workingDirectory = "")
     {
-        var processInfo = new ProcessStartInfo("bash", "-c \"" + command + "\"")
+        // Escape any single quotes in the command
+        var escapedCommand = command.Replace("'", "\\'");
+        var processInfo = new ProcessStartInfo("bash", $"-c '{escapedCommand}'")
         {
             UseShellExecute = false,
             RedirectStandardOutput = true,

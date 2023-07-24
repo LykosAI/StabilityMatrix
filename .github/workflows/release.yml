@@ -62,12 +62,16 @@ jobs:
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: pupnet -r linux-x64 -c Release --kind appimage --app-version $RELEASE_VERSION --clean -y
+      # Release/linux-x64/StabilityMatrix.x86_64.AppImage
 
+      - name: Post Build
+        run: mv ./Release/linux-x64/StabilityMatrix.x86_64.AppImage ${{ env.out-name }}
+      
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         with:
           name: StabilityMatrix-${{ env.platform-id }}
-          path: ./out/${{ env.out-name }}
+          path: ${{ env.out-name }}
           
       - name: Create Sentry release
         if: ${{ github.event_name == 'release' }}

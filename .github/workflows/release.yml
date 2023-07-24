@@ -66,7 +66,7 @@ jobs:
 
       - name: Install PupNet
         if: matrix.os == 'ubuntu-latest'
-        run: dotnet tool install -g KuiperZone.PupNet -f net6.0
+        run: dotnet tool install --framework net6.0 -g KuiperZone.PupNet
 
       - name: .NET Publish
         if: matrix.os == 'windows-latest'

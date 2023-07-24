@@ -69,6 +69,32 @@ jobs:
           name: StabilityMatrix-${{ env.platform-id }}
           path: ./out/${{ env.out-name }}
           
+      - name: Create Sentry release
+        if: ${{ github.event_name == 'release' }}
+        uses: getsentry/action-release@v1
+        env:
+          MAKE_SENTRY_RELEASE: ${{ secrets.SENTRY_PROJECT != '' }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        with:
+          environment: production
+          ignore_missing: true
+          version: StabilityMatrix@${{ env.GIT_TAG_NAME }}
+          
+      - name: Create Sentry release
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: getsentry/action-release@v1
+        env:
+          MAKE_SENTRY_RELEASE: ${{ secrets.SENTRY_PROJECT != '' }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        with:
+          environment: production
+          ignore_missing: true
+          version: StabilityMatrix@${{ github.event.inputs.version }}
+          
           
   release-windows:
     if: github.repository == 'ionite34/StabilityMatrix' || github.event_name == 'workflow_dispatch'
@@ -125,19 +151,6 @@ jobs:
         with:
           name: StabilityMatrix-${{ env.platform-id }}
           path: ./out/${{ env.out-name }}
-
-      - name: Create Sentry release
-        if: ${{ github.event_name == 'release' || github.event.inputs.sentry-release == 'true' }}
-        uses: getsentry/action-release@v1
-        env:
-          MAKE_SENTRY_RELEASE: ${{ secrets.SENTRY_PROJECT != '' }}
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-        with:
-          environment: production
-          ignore_missing: true
-          version: StabilityMatrix@${{ env.GIT_TAG_NAME }}
   
   
   cleanup:

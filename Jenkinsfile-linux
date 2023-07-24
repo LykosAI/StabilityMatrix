@@ -28,7 +28,7 @@ node("Diligence") {
         }
         
         stage('Publish') {
-            sh "pupnet --runtime linux-x64 --kind appimage --app-version ${version} --clean -y"
+            sh "/home/jenkins/.dotnet/tools/pupnet --runtime linux-x64 --kind appimage --app-version ${version} --clean -y"
         }
         
         stage ('Archive Artifacts') {
@@ -36,7 +36,7 @@ node("Diligence") {
         }
     } else {
         stage('Publish') {
-            sh "pupnet --runtime linux-x64 --kind appimage --app-version ${version} --clean -y"
+            sh "/home/jenkins/.dotnet/tools/pupnet --runtime linux-x64 --kind appimage --clean -y"
         }
     }
 }

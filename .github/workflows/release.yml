@@ -54,7 +54,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && matrix.os == 'windows-latest'
         run: |
           echo "Using version ${{ github.event.inputs.version }}"
-          echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> ${{ env.GITHUB_ENV }}
+          echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $env:GITHUB_ENV
           
       - name: Set Manual Version (linux)
         if: github.event_name == 'workflow_dispatch' && matrix.os == 'ubuntu-latest'

@@ -329,18 +329,12 @@ public partial class PackageManagerViewModel : PageViewModelBase
                 errorMsg, NotificationType.Error));
         }
         
-        ProgressText = string.Empty;
-        ProgressValue = 0;
-        IsIndeterminate = false;
-        
-        SelectedPackage.UpdateAvailable = false;
-        UpdateAvailable = false;
-        
         settingsManager.UpdatePackageVersionNumber(SelectedPackage.Id, updateResult);
         notificationService.Show("Update complete",
             $"{SelectedPackage.DisplayName} has been updated to the latest version.",
             NotificationType.Success);
         await OnLoadedAsync();
+        await DelayedClearProgress(TimeSpan.FromSeconds(3));
     }
 
     [RelayCommand]
@@ -365,5 +359,17 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
         await dialog.ShowAsync();
         await OnLoadedAsync();
+    }
+    
+    private async Task DelayedClearProgress(TimeSpan delay)
+    {
+        await Task.Delay(delay);
+        
+        ProgressText = string.Empty;
+        ProgressValue = 0;
+        IsIndeterminate = false;
+    
+        SelectedPackage.UpdateAvailable = false;
+        UpdateAvailable = false;
     }
 }

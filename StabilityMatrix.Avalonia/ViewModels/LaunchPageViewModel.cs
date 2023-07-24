@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia;
+using Avalonia.Controls.Documents;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
@@ -111,6 +112,14 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
 
     private void OnPackageLaunchRequested(object? sender, Guid e)
     {
+        if (RunningPackage is not null)
+        {
+            notificationService.Show("A package is already running",
+                "Please stop the current package before launching another.",
+                NotificationType.Error);
+            return;
+        }
+        
         OnLoaded();
         if (SelectedPackage is null) return;
         

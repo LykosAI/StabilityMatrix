@@ -232,7 +232,11 @@ public static class ProcessRunner
     {
         // Escape any single quotes in the command
         var escapedCommand = command.Replace("'", "\\'");
-        var processInfo = new ProcessStartInfo("bash", $"-c '{escapedCommand}'")
+        var arguments = $"-c '{escapedCommand}'";
+        
+        Logger.Info($"Running bash command [bash {arguments}]");
+        
+        var processInfo = new ProcessStartInfo("bash", arguments)
         {
             UseShellExecute = false,
             RedirectStandardOutput = true,

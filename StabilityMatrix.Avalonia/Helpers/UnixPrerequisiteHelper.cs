@@ -7,7 +7,6 @@ using Avalonia.Controls;
 using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Core.Exceptions;
-using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -131,7 +130,7 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         var result = await ProcessRunner.RunBashCommand(command, workingDirectory ?? "");
         if (result.ExitCode != 0)
         {
-            throw new ProcessException($"Git command {command.ToRepr()} failed with exit code" +
+            throw new ProcessException($"Git command [{command}] failed with exit code" +
                                        $" {result.ExitCode}:\n{result.StandardOutput}\n{result.StandardError}");
         }
     }

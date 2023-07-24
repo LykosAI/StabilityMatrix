@@ -38,17 +38,29 @@ jobs:
         with:
           tagRegex: "v(.*)"
 
-      - name: Set Tag
-        if: github.event_name == 'release'
+      - name: Set Tag (win)
+        if: github.event_name == 'release' && matrix.os == 'ubuntu-latest'
         run: |
           echo "Using tag ${{ env.GIT_TAG_NAME }}"
-          echo "RELEASE_VERSION=${{ env.GIT_TAG_NAME }}" >> ${{ env.GITHUB_ENV }}
+          echo "RELEASE_VERSION=${{ env.GIT_TAG_NAME }}" >> $env:GITHUB_ENV
           
-      - name: Set Manual Version
-        if: github.event_name == 'workflow_dispatch'
+      - name: Set Tag (linux)
+        if: github.event_name == 'release' && matrix.os == 'ubuntu-latest'
+        run: |
+          echo "Using tag ${{ env.GIT_TAG_NAME }}"
+          echo "RELEASE_VERSION=${{ env.GIT_TAG_NAME }}" >> $GITHUB_ENV
+          
+      - name: Set Manual Version (win)
+        if: github.event_name == 'workflow_dispatch' && matrix.os == 'ubuntu-latest'
         run: |
           echo "Using version ${{ github.event.inputs.version }}"
           echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> ${{ env.GITHUB_ENV }}
+          
+      - name: Set Manual Version (linux)
+        if: github.event_name == 'workflow_dispatch' && matrix.os == 'ubuntu-latest'
+        run: |
+          echo "Using version ${{ github.event.inputs.version }}"
+          echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
 
       - name: Set up .NET 6 (for PupNet)
         if: matrix.os == 'ubuntu-latest'
@@ -75,7 +87,7 @@ jobs:
         run: >
           dotnet publish ./StabilityMatrix.Avalonia/StabilityMatrix.Avalonia.csproj
           -o out -c Release -r ${{ matrix.platform-identifier }}
-          -p:Version=${{ env.RELEASE_VERSION }}
+          -p:Version=$env:RELEASE_VERSION
           -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
           -p:PublishTrimmed=true
           -p:SentryOrg=${{ secrets.SENTRY_ORG }} -p:SentryProject=${{ secrets.SENTRY_PROJECT }}
@@ -85,7 +97,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-        run: pupnet -r linux-x64 -c Release --kind appimage --app-version ${{ env.RELEASE_VERSION }} --clean -y
+        run: pupnet -r linux-x64 -c Release --kind appimage --app-version $RELEASE_VERSION --clean -y
 
       - name: Post Build (win)
         if: matrix.os == 'windows-latest'

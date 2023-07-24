@@ -123,7 +123,8 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
     
     public async Task RunGit(string? workingDirectory = null, params string[] args)
     {
-        var result = await ProcessRunner.RunBashCommand("git" + args, workingDirectory ?? "");
+        var command = "git " + string.Join(" ", args);
+        var result = await ProcessRunner.RunBashCommand(command, workingDirectory ?? "");
         if (result.ExitCode != 0)
         {
             throw new ProcessException($"Git command failed with exit code {result.ExitCode}:\n" +

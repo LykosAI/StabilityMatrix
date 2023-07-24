@@ -39,7 +39,7 @@ jobs:
           tagRegex: "v(.*)"
 
       - name: Set Tag (win)
-        if: github.event_name == 'release' && matrix.os == 'ubuntu-latest'
+        if: github.event_name == 'release' && matrix.os == 'windows-latest'
         run: |
           echo "Using tag ${{ env.GIT_TAG_NAME }}"
           echo "RELEASE_VERSION=${{ env.GIT_TAG_NAME }}" >> $env:GITHUB_ENV
@@ -51,7 +51,7 @@ jobs:
           echo "RELEASE_VERSION=${{ env.GIT_TAG_NAME }}" >> $GITHUB_ENV
           
       - name: Set Manual Version (win)
-        if: github.event_name == 'workflow_dispatch' && matrix.os == 'ubuntu-latest'
+        if: github.event_name == 'workflow_dispatch' && matrix.os == 'windows-latest'
         run: |
           echo "Using version ${{ github.event.inputs.version }}"
           echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> ${{ env.GITHUB_ENV }}

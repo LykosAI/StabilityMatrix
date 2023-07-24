@@ -126,6 +126,7 @@
             <StackPanel Grid.Column="1" Margin="8" Spacing="4">
                 <!-- Info bar for manual input -->
                 <ui:InfoBar 
+                    Background="{DynamicResource ComboBoxItemBackground}"
                     Title="Input"
                     IsIconVisible="False"
                     IsClosable="False"
@@ -144,6 +145,7 @@
                 </ui:InfoBar>
                 <!-- Info bar for auto prompts -->
                 <ui:InfoBar 
+                    Background="{DynamicResource ComboBoxItemBackground}"
                     Title="Input required" 
                     Severity="Informational"
                     IsOpen="{Binding ShowConfirmInputPrompt, Mode=TwoWay}" 

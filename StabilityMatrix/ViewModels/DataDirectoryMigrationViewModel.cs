@@ -5,10 +5,11 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
-using StabilityMatrix.Helper;
-using StabilityMatrix.Models;
-using StabilityMatrix.Models.FileInterfaces;
-using StabilityMatrix.Python;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Factory;
+using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Python;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.ViewModels;
 

@@ -1,0 +1,279 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+             xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+             xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+             xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:DataType="viewModels:CheckpointBrowserViewModel"
+             d:DataContext="{x:Static designData:DesignData.CheckpointBrowserViewModel}"
+             x:CompileBindings="True"
+             x:Class="StabilityMatrix.Avalonia.Views.CheckpointBrowserPage">
+
+    <UserControl.Resources>
+        <DataTemplate DataType="{x:Type viewModels:CheckpointBrowserCardViewModel}" x:Key="CivitModelTemplate">
+            <controls:Card
+                Margin="8"
+                MaxHeight="450"
+                CornerRadius="8"
+                Name="ModelCard"
+                Width="330">
+
+                <StackPanel Orientation="Vertical">
+                    <TextBlock
+                        Foreground="{DynamicResource TextControlForeground}"
+                        Margin="0,0,0,0"
+                        Text="{Binding CivitModel.Name}"
+                        VerticalAlignment="Center" />
+                    <TextBlock
+                        FontSize="11"
+                        Foreground="{DynamicResource TextControlForeground}"
+                        Margin="0,2,0,0"
+                        Text="{Binding CivitModel.ModelVersions[0].Name, FallbackValue=''}"
+                        VerticalAlignment="Center" />
+                    <Grid>
+                        <controls:BetterAdvancedImage
+                            Margin="0,8,0,8"
+                            Height="300"
+                            StretchDirection="Both"
+                            CornerRadius="4"
+                            VerticalContentAlignment="Top"
+                            HorizontalContentAlignment="Center"
+                            Source="{Binding CardImage}"
+                            Stretch="UniformToFill" />
+
+                        <Button
+                            Command="{Binding OpenModelCommand}"
+                            CommandParameter="{Binding CivitModel}"
+                            HorizontalAlignment="Right"
+                            Classes="transparent-info"
+                            Margin="0,16,8,0"
+                            VerticalAlignment="Top">
+                            <Button.Content>
+                                <ui:SymbolIcon Symbol="Open" />
+                            </Button.Content>
+                        </Button>
+                        <StackPanel Orientation="Horizontal">
+                            <controls:Card
+                                Classes="info"
+                                Height="24"
+                                HorizontalAlignment="Left"
+                                Padding="4"
+                                Margin="4,16,0,0"
+                                VerticalAlignment="Top">
+
+                                <TextBlock
+                                    FontSize="10"
+                                    FontWeight="Medium"
+                                    HorizontalAlignment="Center"
+                                    Text="{Binding CivitModel.Type}"
+                                    VerticalAlignment="Center" />
+                            </controls:Card>
+
+                            <controls:Card
+                                Classes="success"
+                                Height="24"
+                                HorizontalAlignment="Left"
+                                Padding="4"
+                                IsVisible="{Binding ShowUpdateCard}"
+                                Margin="4,16,0,0"
+                                VerticalAlignment="Top">
+
+                                <TextBlock
+                                    FontSize="10"
+                                    FontWeight="Medium"
+                                    HorizontalAlignment="Center"
+                                    Text="{Binding UpdateCardText}"
+                                    VerticalAlignment="Center" />
+                            </controls:Card>
+                        </StackPanel>
+                        <Rectangle
+                            Fill="#DD000000"
+                            HorizontalAlignment="Stretch"
+                            Margin="0,8,0,8"
+                            VerticalAlignment="Stretch"
+                            IsVisible="{Binding IsImporting}" />
+                        <StackPanel
+                            HorizontalAlignment="Stretch"
+                            Orientation="Vertical"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsImporting}">
+                            <controls:ProgressRing
+                                HorizontalAlignment="Center"
+                                IsIndeterminate="False"
+                                Width="120"
+                                Height="120"
+                                StartAngle="90"
+                                EndAngle="450"
+                                Value="{Binding Value}"
+                                VerticalAlignment="Center" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                Margin="0,8,0,0"
+                                Text="{Binding Text, TargetNullValue=Importing...}"
+                                VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Button
+                            Classes="accent"
+                            Command="{Binding ImportCommand}"
+                            CommandParameter="{Binding CivitModel}"
+                            IsEnabled="{Binding !IsImporting}"
+                            HorizontalAlignment="Stretch"
+                            Margin="0,8,0,0">
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Import Latest -" />
+                                    <TextBlock Margin="4,0,0,0"
+                                               Text="{Binding CivitModel.FullFilesSize}" />
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
+
+                        <Button Grid.Column="1"
+                                Margin="8,8,0,0"
+                                Classes="accent"
+                                IsEnabled="{Binding !IsImporting}"
+                                Command="{Binding ShowVersionDialogCommand}"
+                                CommandParameter="{Binding CivitModel}"
+                                Content="All Versions" />
+                    </Grid>
+                </StackPanel>
+            </controls:Card>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="0,8,0,0">
+
+        <StackPanel Margin="8" Orientation="Vertical">
+            <Grid ColumnDefinitions="*,Auto">
+
+                <TextBox
+                    HorizontalAlignment="Stretch"
+                    Margin="8,0,0,0"
+                    Watermark="Search models, #tags, or @users"
+                    Text="{Binding SearchQuery, Mode=TwoWay}" />
+
+                <Button
+                    Classes="accent"
+                    Command="{Binding SearchModelsCommand}"
+                    Grid.Column="1"
+                    IsDefault="True"
+                    Margin="8,0,8,0"
+                    VerticalAlignment="Stretch"
+                    Width="80">
+                    <Grid>
+                        <controls:ProgressRing
+                            MinHeight="16"
+                            IsIndeterminate="True"
+                            VerticalAlignment="Center"
+                            BorderThickness="4"
+                            IsVisible="{Binding SearchModelsCommand.IsRunning}"
+                            MinWidth="16" />
+                        <TextBlock
+                            Text="Search"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding !SearchModelsCommand.IsRunning}" />
+                    </Grid>
+                </Button>
+            </Grid>
+            <DockPanel>
+                <StackPanel Margin="8" Orientation="Vertical">
+                    <Label Content="Sort" />
+                    <ComboBox
+                        ItemsSource="{Binding AllSortModes}"
+                        MinWidth="100"
+                        SelectedItem="{Binding SortMode}" />
+                </StackPanel>
+
+                <StackPanel Margin="0,8" Orientation="Vertical">
+                    <Label Content="Period" />
+                    <ComboBox
+                        ItemsSource="{Binding AllCivitPeriods}"
+                        MinWidth="100"
+                        SelectedItem="{Binding SelectedPeriod}" />
+                </StackPanel>
+
+                <StackPanel Margin="8" Orientation="Vertical">
+                    <Label Content="Model Type" />
+                    <ComboBox
+                        ItemsSource="{Binding AllModelTypes}"
+                        MinWidth="100"
+                        SelectedItem="{Binding SelectedModelType}" />
+                </StackPanel>
+
+                <CheckBox
+                    Content="Show NSFW Content"
+                    HorizontalAlignment="Right"
+                    IsChecked="{Binding ShowNsfw, Mode=TwoWay}"
+                    Margin="8,8,8,0" />
+            </DockPanel>
+
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1">
+            <ItemsRepeater ItemTemplate="{StaticResource CivitModelTemplate}"
+                           ItemsSource="{Binding ModelCards}">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout Orientation="Horizontal" />
+                </ItemsRepeater.Layout>
+            </ItemsRepeater>
+        </ScrollViewer>
+
+        <TextBlock
+            Grid.Row="2"
+            Margin="16,8"
+            Text="Data provided by CivitAI"
+            VerticalAlignment="Bottom" />
+
+        <StackPanel
+            Grid.Row="2"
+            HorizontalAlignment="Center"
+            Margin="8"
+            Orientation="Vertical"
+            IsVisible="{Binding HasSearched}">
+            <TextBlock Margin="0,0,4,4" TextAlignment="Center">
+                <Run Text="Page" />
+                <Run Text="{Binding CurrentPageNumber, FallbackValue=1}" />
+                <Run Text="/" />
+                <Run Text="{Binding TotalPages, FallbackValue=5}" />
+            </TextBlock>
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                <Button
+                    Command="{Binding PreviousPageCommand}"
+                    IsEnabled="{Binding CanGoToPreviousPage}"
+                    Margin="0,0,8,0">
+                    <ui:SymbolIcon Symbol="PreviousFilled" />
+                </Button>
+                <Button Command="{Binding NextPageCommand}" IsEnabled="{Binding CanGoToNextPage}">
+                    <ui:SymbolIcon Symbol="NextFilled" />
+                </Button>
+            </StackPanel>
+        </StackPanel>
+
+        <TextBlock
+            Grid.Row="0"
+            Grid.RowSpan="3"
+            FontSize="20"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Text="{Binding NoResultsText, FallbackValue=No results found}"
+            IsVisible="{Binding NoResultsFound}" />
+
+        <controls:ProgressRing
+            Grid.Row="1"
+            IsIndeterminate="True"
+            Width="128"
+            Height="128"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            IsVisible="{Binding ShowMainLoadingSpinner, FallbackValue=False}" />
+    </Grid>
+</UserControl>

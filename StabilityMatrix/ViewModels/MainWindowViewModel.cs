@@ -4,24 +4,27 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
-using System.Windows.Threading;
 using System.Windows.Shell;
+using System.Windows.Threading;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Options;
+using StabilityMatrix.Core.Models.Configs;
+using StabilityMatrix.Core.Models.Update;
+using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Updater;
 using StabilityMatrix.Helper;
-using StabilityMatrix.Models.Configs;
 using StabilityMatrix.Services;
-using StabilityMatrix.Updater;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls.ContentDialogControl;
 using Wpf.Ui.Controls.Window;
-using EventManager = StabilityMatrix.Helper.EventManager;
+using EventManager = StabilityMatrix.Core.Helper.EventManager;
 
 namespace StabilityMatrix.ViewModels;
 
-public partial class MainWindowViewModel : ObservableObject
+public partial class  MainWindowViewModel : ObservableObject
 {
     private readonly ISettingsManager settingsManager;
     private readonly IDialogFactory dialogFactory;
@@ -252,18 +255,17 @@ public partial class MainWindowViewModel : ObservableObject
         {
             if (Application.Current.MainWindow != null)
             {
-                WindowBackdrop.ApplyBackdrop(Application.Current.MainWindow,
-                    settingsManager.Settings.WindowBackdropType ?? WindowBackdropType.Mica);
+                WindowBackdrop.ApplyBackdrop(Application.Current.MainWindow, WindowBackdropType.Mica);
             }
 
             var theme = settingsManager.Settings.Theme;
             switch (theme)
             {
                 case "Dark":
-                    Theme.Apply(ThemeType.Dark, settingsManager.Settings.WindowBackdropType ?? WindowBackdropType.Mica);
+                    Theme.Apply(ThemeType.Dark);
                     break;
                 case "Light":
-                    Theme.Apply(ThemeType.Light, settingsManager.Settings.WindowBackdropType ?? WindowBackdropType.Mica);
+                    Theme.Apply(ThemeType.Light);
                     break;
             }
         });

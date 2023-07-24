@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Controls;
-using StabilityMatrix.Models.Progress;
+using StabilityMatrix.Core.Models.Progress;
 using Wpf.Ui.Common;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Controls.IconElements;

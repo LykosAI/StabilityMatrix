@@ -3,19 +3,22 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Threading;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using Microsoft.Toolkit.Uwp.Notifications;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Factory;
+using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Packages;
+using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
+using StabilityMatrix.Core.Services;
 using StabilityMatrix.Helper;
-using StabilityMatrix.Models;
-using StabilityMatrix.Models.Packages;
-using StabilityMatrix.Python;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.ContentDialogControl;
-using EventManager = StabilityMatrix.Helper.EventManager;
+using EventManager = StabilityMatrix.Core.Helper.EventManager;
 using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
 
 namespace StabilityMatrix.ViewModels;
@@ -157,7 +160,7 @@ public partial class LaunchViewModel : ObservableObject
         basePackage.StartupComplete += RunningPackageOnStartupComplete;
 
         // Update shared folder links (in case library paths changed)
-        sharedFolders.UpdateLinksForPackage(basePackage, packagePath);
+        await sharedFolders.UpdateLinksForPackage(basePackage, packagePath);
 
         // Load user launch args from settings and convert to string
         var userArgs = settingsManager.GetLaunchArgs(activeInstall.Id);
@@ -318,27 +321,27 @@ public partial class LaunchViewModel : ObservableObject
         }
     }
 
-    private void OnConsoleOutput(object? sender, string output)
+    private void OnConsoleOutput(object? sender, ProcessOutput output)
     {
-        if (string.IsNullOrWhiteSpace(output)) return;
+        if (string.IsNullOrWhiteSpace(output.Text)) return;
         Application.Current.Dispatcher.Invoke(() =>
         {
             ConsoleHistory ??= new ObservableCollection<string>();
 
-            if (output.Contains("Total progress") && !output.Contains(" 0%"))
+            if (output.Text.Contains("Total progress") && !output.Text.Contains(" 0%"))
             {
-                ConsoleHistory[^2] = output.TrimEnd('\n');
+                ConsoleHistory[^2] = output.Text.TrimEnd('\n');
             }
-            else if ((output.Contains("it/s") || output.Contains("s/it") || output.Contains("B/s")) &&
-                     !output.Contains("Total progress") && !output.Contains(" 0%"))
+            else if ((output.Text.Contains("it/s") || output.Text.Contains("s/it") || output.Text.Contains("B/s")) &&
+                     !output.Text.Contains("Total progress") && !output.Text.Contains(" 0%"))
             {
-                ConsoleHistory[^1] = output.TrimEnd('\n');
+                ConsoleHistory[^1] = output.Text.TrimEnd('\n');
             }
             else
             {
-                if (!string.IsNullOrWhiteSpace(output.TrimEnd('\n')))
+                if (!string.IsNullOrWhiteSpace(output.Text.TrimEnd('\n')))
                 {
-                    ConsoleHistory.Add(output.TrimEnd('\n'));
+                    ConsoleHistory.Add(output.Text.TrimEnd('\n'));
                 }
             }
             

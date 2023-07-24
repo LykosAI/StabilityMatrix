@@ -1,0 +1,451 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+             xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             d:DataContext="{x:Static mocks:DesignData.CheckpointsPageViewModel}"
+             x:CompileBindings="True"
+             x:DataType="vm:CheckpointsPageViewModel"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="StabilityMatrix.Avalonia.Views.CheckpointsPage">
+    
+    <controls:UserControlBase.DataTemplates>
+        <!--  Template for dropdown category checkbox item  -->
+        <DataTemplate DataType="{x:Type vm:CheckpointFolder}">
+            <ui:ToggleMenuFlyoutItem 
+                Text="{Binding TitleWithFilesCount}" 
+                IsChecked="{Binding IsCategoryEnabled, Mode=TwoWay}"/>
+        </DataTemplate>
+    </controls:UserControlBase.DataTemplates>
+    
+    <controls:UserControlBase.Resources>
+        <!--Direction="0"
+            ShadowDepth="0"-->
+        <DropShadowEffect
+            BlurRadius="8"
+            Color="#FF000000"
+            Opacity="0.2"
+            x:Key="TextDropShadowEffect" />
+        
+        <!--  Template for a single badge  -->
+        <DataTemplate DataType="{x:Type system:String}" x:Key="BadgeTemplate">
+            <controls:Card
+                Height="18"
+                Margin="4,0,0,0"
+                Padding="3"
+                Width="40">
+                <TextBlock
+                    FontSize="10"
+                    FontWeight="Medium"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    HorizontalAlignment="Center"
+                    Text="{Binding}"
+                    VerticalAlignment="Center" />
+            </controls:Card>
+        </DataTemplate>
+        
+        <!-- Checkpoint File Card -->
+        <DataTemplate DataType="{x:Type vm:CheckpointFile}" x:Key="CheckpointFileDataTemplate">
+            <Border
+                DragDrop.AllowDrop="False"
+                Background="Transparent"
+                BorderThickness="2"
+                Margin="8">
+                
+                <controls:Card Width="260">
+                    <!-- Right click menu for a checkpoint file -->
+                    <controls:Card.ContextFlyout>
+                        <ui:FAMenuFlyout>
+                            <ui:MenuFlyoutItem Command="{Binding RenameCommand}" 
+                                               Text="Rename" IconSource="Rename" />
+                            <ui:MenuFlyoutItem Command="{Binding DeleteCommand}" 
+                                               Text="Delete" IconSource="Delete" />
+                            <ui:MenuFlyoutItem Command="{Binding OpenOnCivitAiCommand}" 
+                                               Text="Open on CivitAI" IconSource="Link"
+                                               IsVisible="{Binding IsConnectedModel}"/>
+                        </ui:FAMenuFlyout>
+                    </controls:Card.ContextFlyout>
+                    <Grid>
+                        <!--  Main contents, hidden when IsLoading is true  -->
+                        <StackPanel MinHeight="70">
+                            <Grid ColumnDefinitions="*,*,*,*,*" RowDefinitions="*,0.1*" IsVisible="{Binding !IsLoading}">
+                                <StackPanel
+                                    Grid.ColumnSpan="4"
+                                    HorizontalAlignment="Left"
+                                    IsEnabled="True"
+                                    Margin="4"
+                                    Orientation="Vertical">
+                                    <!--  Tooltip for title and version  -->
+                                    <ToolTip.Tip>
+                                        <StackPanel>
+                                            <!--  Title  -->
+                                            <TextBlock
+                                                FontSize="14"
+                                                FontWeight="Medium"
+                                                Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                HorizontalAlignment="Left"
+                                                Margin="0,0,0,4"
+                                                Text="{Binding Title}"
+                                                TextWrapping="WrapWithOverflow" />
+                                            <!--  Version  -->
+                                            <TextBlock
+                                                FontSize="13"
+                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                HorizontalAlignment="Left"
+                                                Margin="0,0,0,4"
+                                                Text="{Binding ConnectedModel.VersionName, FallbackValue=''}"
+                                                TextWrapping="WrapWithOverflow"
+                                                IsVisible="{Binding IsConnectedModel}" />
+                                            <!--  Image  -->
+                                            <Image
+                                                Margin="0,0,0,4"
+                                                Source="{Binding PreviewImage}"
+                                                Stretch="Uniform"
+                                                IsVisible="{Binding IsConnectedModel}" />
+                                        </StackPanel>
+                                    </ToolTip.Tip>
+                                    <TextBlock
+                                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                        HorizontalAlignment="Left"
+                                        IsEnabled="True"
+                                        MaxWidth="150"
+                                        Text="{Binding Title}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap" />
+                                    <TextBlock
+                                        FontSize="13"
+                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                        HorizontalAlignment="Left"
+                                        IsEnabled="True"
+                                        Text="{Binding ConnectedModel.VersionName, FallbackValue=''}"
+                                        TextWrapping="WrapWithOverflow"
+                                        IsVisible="{Binding IsConnectedModel}" />
+                                </StackPanel>
+                                <Grid Grid.Column="4" Grid.Row="0">
+                                    <Button
+                                        Background="Transparent"
+                                        BorderBrush="Transparent"
+                                        FontSize="20"
+                                        HorizontalAlignment="Right"
+                                        IsEnabled="True"
+                                        MaxHeight="48"
+                                        MaxWidth="64"
+                                        Padding="0"
+                                        ToolTip.Tip="Connected Model"
+                                        VerticalAlignment="Top"
+                                        IsVisible="{Binding IsConnectedModel, Mode=OneWay}">
+                                        <ui:SymbolIcon
+                                            Foreground="LightGreen"
+                                            Symbol="CloudSyncComplete"
+                                            ToolTip.Tip="Connected Model" />
+                                    </Button>
+                                    <Button
+                                        Background="Transparent"
+                                        BorderBrush="Transparent"
+                                        FontSize="20"
+                                        HorizontalAlignment="Right"
+                                        IsEnabled="True"
+                                        MaxHeight="48"
+                                        MaxWidth="64"
+                                        Padding="0"
+                                        ToolTip.Tip="Local Model"
+                                        VerticalAlignment="Top"
+                                        IsVisible="{Binding !IsConnectedModel, Mode=OneWay}">
+                                        <ui:SymbolIcon
+                                            Foreground="DimGray"
+                                            Symbol="CloudOffline"
+                                            ToolTip.Tip="Local Model" />
+                                    </Button>
+                                </Grid>
+                                <TextBlock
+                                    FontSize="11"
+                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="3"
+                                    Grid.Row="1"
+                                    IsEnabled="True"
+                                    Margin="4,4"
+                                    Text="{Binding FileName}"
+                                    TextTrimming="CharacterEllipsis"
+                                    ToolTip.Tip="{Binding FileName}"
+                                    VerticalAlignment="Bottom" />
+                                <ItemsControl
+                                    Grid.Column="3"
+                                    Grid.ColumnSpan="2"
+                                    Grid.Row="1"
+                                    ItemTemplate="{StaticResource BadgeTemplate}"
+                                    ItemsSource="{Binding Badges}"
+                                    VerticalAlignment="Bottom">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel
+                                                HorizontalAlignment="Right"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Bottom" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </Grid>
+                        </StackPanel>
+                        
+                        <!--  Progress ring  -->
+                        <controls:ProgressRing
+                            Grid.Row="0"
+                            Height="32"
+                            Width="32"
+                            Foreground="{DynamicResource ThemeRedColor}"
+                            BorderThickness="4"
+                            HorizontalAlignment="Center"
+                            IsIndeterminate="True"
+                            Padding="0"
+                            VerticalAlignment="Center"
+                            IsEnabled="{Binding IsLoading}"
+                            IsVisible="{Binding IsLoading}" />
+                    </Grid>
+                </controls:Card>
+            </Border>
+        </DataTemplate>
+        
+        <!-- Checkpoint Folder Expander -->
+        <DataTemplate DataType="{x:Type vm:CheckpointFolder}" x:Key="CheckpointFolderGridDataTemplate">
+            <Expander
+                IsExpanded="{Binding IsExpanded}"
+                Margin="8"
+                Padding="8,8,8,8"
+                IsVisible="{Binding IsCategoryEnabled, FallbackValue=True}">
+                
+                <!-- Right click menu for a checkpoint folder -->
+                <Expander.ContextFlyout>
+                    <ui:FAMenuFlyout>
+                        <ui:MenuFlyoutItem Text="Show in Explorer" IconSource="Open"
+                                           Command="{Binding ShowInExplorerCommand}"
+                                           CommandParameter="{Binding DirectoryPath}"/>
+                        <ui:MenuFlyoutSeparator/>
+                        <ui:MenuFlyoutSubItem Text="New" IconSource="Add">
+                            <ui:MenuFlyoutSubItem.Items>
+                                <ui:MenuFlyoutItem Text="Folder" IconSource="OpenFolder"
+                                                   Command="{Binding CreateSubFolderCommand}"/>
+                            </ui:MenuFlyoutSubItem.Items>
+                        </ui:MenuFlyoutSubItem>
+                    </ui:FAMenuFlyout>
+                </Expander.ContextFlyout>
+                
+                <!-- Editable header -->
+                <Expander.Header>
+                    <Grid>
+                        <TextBlock Text="{Binding Title}" VerticalAlignment="Center"/>
+                    </Grid>
+                </Expander.Header>
+                
+                <StackPanel Orientation="Vertical">
+                    <!-- Subfolders -->
+                    <StackPanel Orientation="Vertical">
+                        <ItemsControl
+                            HorizontalAlignment="Stretch"
+                            ItemTemplate="{DynamicResource CheckpointFolderGridDataTemplate}"
+                            ItemsSource="{Binding SubFolders, Mode=OneWay}"
+                            Margin="8,0,8,8" />
+                    </StackPanel>
+                    <!-- Files Grid -->
+                    <Grid Name="FilesGrid" 
+                          Background="Transparent"
+                          DragDrop.AllowDrop="True">
+                        <ItemsRepeater
+                            Classes="ItemsDragAndDrop"
+                            ItemTemplate="{StaticResource CheckpointFileDataTemplate}"
+                            ItemsSource="{Binding DisplayedCheckpointFiles}">
+                            <ItemsRepeater.Layout>
+                                <UniformGridLayout Orientation="Horizontal"/>
+                            </ItemsRepeater.Layout>
+                            <TextBlock Text="Hi"/>
+                        </ItemsRepeater>
+                        <!-- Blurred background for drag and drop -->
+                        <Border
+                            CornerRadius="8"
+                            Grid.RowSpan="4"
+                            IsEnabled="False"
+                            IsVisible="{Binding IsDragBlurEnabled}">
+                            <Border.Background>
+                                <SolidColorBrush Color="#EE202020" />
+                            </Border.Background>
+                        </Border>
+                        <!-- Drag prompt text -->
+                        <TextBlock
+                            Effect="{StaticResource TextDropShadowEffect}"
+                            FontSize="24"
+                            HorizontalAlignment="Center"
+                            Text="Drop a file here to import"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsCurrentDragTarget}" />
+                        <StackPanel
+                            Margin="0,8"
+                            Orientation="Vertical"
+                            DataContext="{Binding Progress}"
+                            VerticalAlignment="Center">
+                            <!-- Import progress -->
+                            <TextBlock
+                                Effect="{StaticResource TextDropShadowEffect}"
+                                FontSize="18"
+                                HorizontalAlignment="Center"
+                                Text="{Binding Text}"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding IsTextVisible}" />
+                            <ProgressBar
+                                Effect="{StaticResource TextDropShadowEffect}"
+                                HorizontalAlignment="Stretch"
+                                IsIndeterminate="{Binding IsIndeterminate, FallbackValue=False}"
+                                Margin="64,8"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding IsProgressVisible}"
+                                Value="{Binding Value, FallbackValue=20}" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Expander>
+        </DataTemplate>
+        
+        <!--  Template for dropdown box  -->
+        <ControlTemplate x:Key="CategoryDropDownTemplate">
+            <Grid>
+                <Border
+                    CornerRadius="{TemplateBinding Border.CornerRadius}"
+                    Margin="{TemplateBinding Margin}"
+                    Name="ContentBorder"
+                    Padding="0"
+                    VerticalAlignment="Stretch">
+                    <Grid>
+                        <Rectangle
+                            Height="16"
+                            HorizontalAlignment="Left"
+                            Margin="0"
+                            RadiusX="2"
+                            RadiusY="2"
+                            VerticalAlignment="Center"
+                            IsVisible="False"
+                            Width="3"
+                            x:Name="ActiveRectangle">
+                            <Rectangle.Fill>
+                                <SolidColorBrush Color="{DynamicResource SystemAccentColorSecondary}" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <!--  Setup grid rows  -->
+                            <StackPanel
+                                Grid.Column="0"
+                                Margin="10,0,0,0"
+                                VerticalAlignment="Top">
+                                <!--<CheckBox 
+                                    Content="{Binding TitleWithFilesCount}" 
+                                    IsChecked="{Binding IsCategoryEnabled, Mode=TwoWay}" />-->
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>  
+        </ControlTemplate>
+        
+    </controls:UserControlBase.Resources>
+    
+    <Grid ColumnDefinitions="Auto,*" RowDefinitions="0.2*,*" Margin="4, 0">
+        <!--  Top settings bar  -->
+        <ToggleSwitch
+            OffContent="Import as Connected"
+            OnContent="Import as Connected"
+            Grid.Column="0"
+            IsChecked="{Binding IsImportAsConnected}"
+            Margin="24,8"
+            ToolTip.Tip="Search for connected metadata on new local imports" />
+        <StackPanel
+            Grid.Column="1"
+            Grid.Row="0"
+            Spacing="8"
+            HorizontalAlignment="Right"
+            Margin="16,0"
+            Orientation="Horizontal">
+            <TextBox Margin="16, 16"
+                     Watermark="Search"
+                     Height="16"
+                     MinWidth="150"
+                     Text="{Binding SearchFilter, Mode=TwoWay}"/>
+            <controls:ProgressRing
+                Width="16"
+                Height="16"
+                BorderThickness="4"
+                IsIndeterminate="True"
+                IsVisible="{Binding IsIndexing}"/>
+            <TextBlock Text="Indexing..." FontSize="11"
+                       VerticalAlignment="Center"
+                       IsVisible="{Binding IsIndexing}"/>
+            <Button 
+                Command="{Binding OpenModelsFolderCommand}">
+                <TextBlock Text="Models Folder"/>
+            </Button>
+            <DropDownButton
+                Content="Categories"
+                Margin="8"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right">
+                <DropDownButton.Flyout>
+                    <ui:FAMenuFlyout 
+                        ItemsSource="{Binding DisplayedCheckpointFolders}"/>
+                </DropDownButton.Flyout>
+            </DropDownButton>
+            <!--<ComboBox
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right"
+                ItemsSource="{Binding CheckpointFolders}"
+                MinWidth="180"
+                SelectedIndex="0">
+                
+                <ComboBox.ItemContainerStyle>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Template" Value="{StaticResource CategoryDropDownStyle}" />
+                    </Style>
+                </ComboBox.ItemContainerStyle>
+
+                <ComboBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:CheckpointFolder}">
+                        <StackPanel Margin="10,0,0,0" VerticalAlignment="Top">
+                            <TextBlock Margin="0,5,0,5" Text="Categories" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>-->
+        </StackPanel>
+
+        <!--  Main view with model cards  -->
+        <ScrollViewer
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Grid.Row="1"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <controls:ProgressRing 
+                    Width="128"
+                    Height="128"
+                    BorderThickness="8"
+                    IsIndeterminate="True"
+                    IsVisible="{Binding IsLoading}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"/>
+                <StackPanel Orientation="Vertical">
+                    <ItemsControl
+                        HorizontalAlignment="Stretch"
+                        ItemTemplate="{StaticResource CheckpointFolderGridDataTemplate}"
+                        ItemsSource="{Binding DisplayedCheckpointFolders, Mode=OneWay}"
+                        Margin="8,0,8,8" />
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+        
+        <!-- Overlay for draggable file panels -->
+        <Panel Name="OverlayPanel" 
+               Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" />
+    </Grid>
+    
+</controls:UserControlBase>

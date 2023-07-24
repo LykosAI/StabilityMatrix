@@ -1,0 +1,129 @@
+<controls:AppWindowBase xmlns="https://github.com/avaloniaui"
+                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                        xmlns:vm="using:StabilityMatrix.Avalonia.ViewModels"
+                        xmlns:ui="using:FluentAvalonia.UI.Controls"
+                        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                        xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="550"
+                        d:DataContext="{x:Static mocks:DesignData.MainWindowViewModel}"
+                        x:DataType="vm:MainWindowViewModel"
+                        x:CompileBindings="True"
+                        Icon="/Assets/Icon.ico"
+                        Width="1100"
+                        Height="750"
+                        Title="Stability Matrix"
+                        x:Class="StabilityMatrix.Avalonia.Views.MainWindow">
+    
+    <Grid RowDefinitions="Auto,Auto,*">
+        <Grid Name="TitleBarHost"
+              ColumnDefinitions="Auto,Auto,*,Auto"
+              Height="32"
+              Background="Transparent">
+            <Image Margin="12 4"
+                   IsHitTestVisible="False"
+                   Source="/Assets/Icon.ico"
+                   Width="18" Height="18"
+                   DockPanel.Dock="Left"
+                   Name="WindowIcon"
+                   RenderOptions.BitmapInterpolationMode="HighQuality">
+                <Image.IsVisible>
+                    <OnPlatform Default="False">
+                        <On Options="Windows" Content="True" />
+                    </OnPlatform>
+                </Image.IsVisible>
+            </Image>
+
+            <TextBlock
+                Text="{Binding Title, 
+                RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                FontSize="12"
+                IsHitTestVisible="False"
+                VerticalAlignment="Center"
+                Grid.Column="1">
+                <TextBlock.IsVisible>
+                    <OnPlatform Default="False">
+                        <On Options="Windows" Content="True" />
+                    </OnPlatform>
+                </TextBlock.IsVisible>
+            </TextBlock>
+            <Border Grid.Column="2" Padding="6" />
+        </Grid>
+        <ui:NavigationView
+            Grid.Row="1"
+            Grid.RowSpan="2"
+            PaneDisplayMode="Left"
+            IsPaneOpen="False"
+            OpenPaneLength="200"
+            IsSettingsVisible="False"
+            Content="{Binding CurrentPage}"
+            MenuItemsSource="{Binding Pages, Mode=OneWay}"
+            FooterMenuItemsSource="{Binding FooterPages, Mode=OneWay}"
+            SelectedItem="{Binding SelectedCategory}">
+
+            <ui:NavigationView.MenuItemTemplate>
+                <DataTemplate DataType="{x:Type vm:PageViewModelBase}">
+                    <ui:NavigationViewItem
+                        Margin="0,0,0,0"
+                        IconSource="{Binding IconSource}"
+                        Content="{Binding Title}"/>
+                </DataTemplate>
+            </ui:NavigationView.MenuItemTemplate>
+
+            <ui:NavigationView.PaneFooter>
+                <StackPanel>
+                    <!-- Update button -->
+                    <ui:NavigationViewItem Name="FooterUpdateItem"
+                                           Content="Update Available"
+                                           IsVisible="{Binding IsUpdateAvailable}"
+                                           IsEnabled="{Binding IsUpdateAvailable}"
+                                           DataContext="{Binding UpdateViewModel}"
+                                           Tapped="FooterUpdateItem_OnTapped">
+                        <ui:NavigationViewItem.IconSource>
+                            <ui:SymbolIconSource Symbol="Download" Foreground="LimeGreen"/>
+                        </ui:NavigationViewItem.IconSource> 
+                    </ui:NavigationViewItem>
+                    
+                    <!-- Patreon -->
+                    <ui:NavigationViewItem Name="PatreonPatreonItem"
+                                           Content="Become a Patron"
+                                           Tapped="PatreonPatreonItem_OnTapped">
+                        <ui:NavigationViewItem.IconSource>
+                            <controls:FASymbolIconSource Symbol="fa-brands fa-patreon"/>
+                        </ui:NavigationViewItem.IconSource> 
+                    </ui:NavigationViewItem>
+                    
+                    <!-- Discord -->
+                    <ui:NavigationViewItem Name="FooterDiscordItem"
+                                           Content="Discord Server"
+                                           Tapped="FooterDiscordItem_OnTapped">
+                        <ui:NavigationViewItem.IconSource>
+                            <controls:FASymbolIconSource Symbol="fa-brands fa-discord"/>
+                        </ui:NavigationViewItem.IconSource> 
+                    </ui:NavigationViewItem>
+                    
+                    <!-- Download flyout -->
+                    <ui:NavigationViewItem Name="FooterDownloadItem"
+                                           Content="Downloads"
+                                           IconSource="{Binding IconSource}"
+                                           DataContext="{Binding ProgressManagerViewModel}"
+                                           IsVisible="{Binding !!ProgressItems.Count}"
+                                           Tapped="FooterDownloadItem_OnTapped">
+                        <ui:NavigationViewItem.ContextFlyout>
+                            <controls:BetterFlyout Placement="Right"
+                                                   HorizontalScrollBarVisibility="Hidden"
+                                                   VerticalScrollBarVisibility="Auto"
+                                                   Content="{Binding }" />
+                        </ui:NavigationViewItem.ContextFlyout>
+                        <ui:NavigationViewItem.InfoBadge>
+                            <ui:InfoBadge Value="{Binding ProgressItems.Count}"
+                                          IsVisible="{Binding !!ProgressItems.Count}"/>
+                        </ui:NavigationViewItem.InfoBadge>
+                    </ui:NavigationViewItem>
+                </StackPanel>
+            </ui:NavigationView.PaneFooter>
+
+        </ui:NavigationView>
+    </Grid>
+</controls:AppWindowBase>

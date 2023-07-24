@@ -1,0 +1,31 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="StabilityMatrix.Avalonia.App"
+             xmlns:local="using:StabilityMatrix.Avalonia"
+             xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
+             
+             RequestedThemeVariant="Default">
+             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+
+    <Application.DataTemplates>
+        <local:ViewLocator/>
+    </Application.DataTemplates>
+             
+     <Application.Resources>
+         <ResourceDictionary>
+             <ResourceDictionary.MergedDictionaries>
+                 <ResourceInclude Source="Styles/ThemeColors.axaml"/>
+                 <ResourceInclude Source="Styles/Card.axaml"/>
+             </ResourceDictionary.MergedDictionaries>
+             <x:Double x:Key="ContentDialogMaxWidth">700</x:Double>
+         </ResourceDictionary>
+     </Application.Resources>
+  
+    <Application.Styles>
+        <styling:FluentAvaloniaTheme PreferUserAccentColor="True" UseSystemFontOnWindows="True" />
+        <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
+        <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
+        <StyleInclude Source="Styles/ProgressRing.axaml"/>
+        <StyleInclude Source="Styles/ButtonStyles.axaml"/>
+    </Application.Styles>
+</Application>

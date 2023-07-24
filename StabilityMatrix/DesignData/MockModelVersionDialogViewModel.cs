@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using StabilityMatrix.Helper;
-using StabilityMatrix.Models.Api;
+using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Services;
 using StabilityMatrix.ViewModels;
 
 namespace StabilityMatrix.DesignData;

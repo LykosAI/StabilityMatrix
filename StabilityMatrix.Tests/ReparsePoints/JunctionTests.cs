@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualBasic;
-using StabilityMatrix.ReparsePoints;
+﻿using StabilityMatrix.Core.ReparsePoints;
 
 namespace StabilityMatrix.Tests.ReparsePoints;
 

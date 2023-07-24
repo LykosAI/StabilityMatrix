@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Threading;
-using System.Windows;
-using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
-using StabilityMatrix.Helper;
-using StabilityMatrix.Models.Api;
+using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.ViewModels;
 

@@ -53,9 +53,10 @@ public abstract class BaseGitPackage : BasePackage
         PrerequisiteHelper = prerequisiteHelper;
     }
 
-    protected Task<Release> GetLatestRelease()
+    protected async Task<Release> GetLatestRelease(bool includePrerelease = false)
     {
-        return GithubApi.GetLatestRelease(Author, Name);
+        var releases = await GithubApi.GetAllReleases(Author, Name);
+        return includePrerelease ? releases.First() : releases.First(x => !x.Prerelease);
     }
     
     public override Task<IEnumerable<Branch>> GetAllBranches()

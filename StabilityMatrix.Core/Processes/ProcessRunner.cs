@@ -32,6 +32,41 @@ public static class ProcessRunner
     }
     
     /// <summary>
+    /// Opens the given folder in the system file explorer.
+    /// </summary>
+    public static async Task OpenFolderBrowser(string directoryPath)
+    {
+        if (Compat.IsWindows)
+        {
+            using var process = new Process();
+            process.StartInfo.FileName = "explorer.exe";
+            process.StartInfo.Arguments = Quote(directoryPath);
+            process.Start();
+            await process.WaitForExitAsync().ConfigureAwait(false);
+        }
+        else if (Compat.IsLinux)
+        {   
+            using var process = new Process();
+            process.StartInfo.FileName = directoryPath;
+            process.StartInfo.UseShellExecute = true;
+            process.Start();
+            await process.WaitForExitAsync().ConfigureAwait(false);
+        }
+        else if (Compat.IsMacOS)
+        {
+            using var process = new Process();
+            process.StartInfo.FileName = "open";
+            process.StartInfo.Arguments = Quote(directoryPath);
+            process.Start();
+            await process.WaitForExitAsync().ConfigureAwait(false);
+        }
+        else
+        {
+            throw new PlatformNotSupportedException();
+        }
+    }
+    
+    /// <summary>
     /// Starts and tracks a process.
     /// </summary>
     private static Process StartTrackedProcess(Process process)

@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -13,6 +11,7 @@ using NLog;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
@@ -151,9 +150,8 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     }
 
     [RelayCommand]
-    [SupportedOSPlatform("windows")]
-    private void OpenModelsFolder()
+    private async Task OpenModelsFolder()
     {
-        Process.Start("explorer.exe", settingsManager.ModelsDirectory);
+        await ProcessRunner.OpenFolderBrowser(settingsManager.ModelsDirectory);
     }
 }

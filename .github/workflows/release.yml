@@ -15,20 +15,65 @@ on:
     types: [ published ]
 
 jobs:
-  release:
-    if: github.repository == 'ionite34/StabilityMatrix'
-    strategy: 
-      matrix:
-        os: [windows-latest, ubuntu-latest]
-        include:
-          - os: windows-latest
-            platform-identifier: win-x64
-            out-name: StabilityMatrix.exe
-          - os: ubuntu-latest
-            platform-identifier: linux-x64
-            out-name: StabilityMatrix.AppImage
-        
-    runs-on: ${{ matrix.os }}
+  release-linux:
+    if: github.repository == 'ionite34/StabilityMatrix' || github.event_name == 'workflow_dispatch'
+    name: Release (linux-x64)
+    env:
+      platform-id: linux-x64
+      out-name: StabilityMatrix.AppImage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: olegtarasov/get-tag@v2.1.2
+        if: github.event_name == 'release'
+        id: tag_name
+        with:
+          tagRegex: "v(.*)"
+          
+      - name: Set Version from Tag
+        if: github.event_name == 'release'
+        run: |
+          echo "Using tag ${{ env.GIT_TAG_NAME }}"
+          echo "RELEASE_VERSION=${{ env.GIT_TAG_NAME }}" >> $GITHUB_ENV
+          
+      - name: Set Version from manual input
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "Using version ${{ github.event.inputs.version }}"
+          echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+
+      - name: Set up .NET 6 (for PupNet)
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x'
+          
+      - name: Install PupNet
+        run: dotnet tool install --framework net6.0 -g KuiperZone.PupNet
+
+      - name: Set up .NET 7
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
+      
+      - name: PupNet Build
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: pupnet -r linux-x64 -c Release --kind appimage --app-version $RELEASE_VERSION --clean -y
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: StabilityMatrix
+          path: ./out/${{ env.out-name }}
+          
+          
+  release-windows:
+    if: github.repository == 'ionite34/StabilityMatrix' || github.event_name == 'workflow_dispatch'
+    name: Release (win-x64)
+    env:
+      platform-id: win-x64
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
 
@@ -38,35 +83,17 @@ jobs:
         with:
           tagRegex: "v(.*)"
 
-      - name: Set Tag (win)
-        if: github.event_name == 'release' && matrix.os == 'windows-latest'
+      - name: Set Version from Tag
+        if: github.event_name == 'release'
         run: |
           echo "Using tag ${{ env.GIT_TAG_NAME }}"
           echo "RELEASE_VERSION=${{ env.GIT_TAG_NAME }}" >> $env:GITHUB_ENV
-          
-      - name: Set Tag (linux)
-        if: github.event_name == 'release' && matrix.os == 'ubuntu-latest'
-        run: |
-          echo "Using tag ${{ env.GIT_TAG_NAME }}"
-          echo "RELEASE_VERSION=${{ env.GIT_TAG_NAME }}" >> $GITHUB_ENV
-          
-      - name: Set Manual Version (win)
-        if: github.event_name == 'workflow_dispatch' && matrix.os == 'windows-latest'
+
+      - name: Set Version from manual input
+        if: github.event_name == 'workflow_dispatch'
         run: |
           echo "Using version ${{ github.event.inputs.version }}"
           echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $env:GITHUB_ENV
-          
-      - name: Set Manual Version (linux)
-        if: github.event_name == 'workflow_dispatch' && matrix.os == 'ubuntu-latest'
-        run: |
-          echo "Using version ${{ github.event.inputs.version }}"
-          echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
-
-      - name: Set up .NET 6 (for PupNet)
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '6.0.x'
 
       - name: Set up .NET 7
         uses: actions/setup-dotnet@v3
@@ -74,50 +101,34 @@ jobs:
           dotnet-version: '7.0.x'
 
       - name: Install dependencies
-        run: dotnet restore -r ${{ matrix.platform-identifier }} -p:EnableWindowsTargeting=true
-
-      - name: Install PupNet
-        if: matrix.os == 'ubuntu-latest'
-        run: dotnet tool install --framework net6.0 -g KuiperZone.PupNet
+        run: dotnet restore
 
       - name: .NET Publish
-        if: matrix.os == 'windows-latest'
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: >
           dotnet publish ./StabilityMatrix.Avalonia/StabilityMatrix.Avalonia.csproj
-          -o out -c Release -r ${{ matrix.platform-identifier }}
+          -o out -c Release -r ${{ env.platform-id }}
           -p:Version=$env:RELEASE_VERSION
           -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
           -p:PublishTrimmed=true
           -p:SentryOrg=${{ secrets.SENTRY_ORG }} -p:SentryProject=${{ secrets.SENTRY_PROJECT }}
           -p:SentryUploadSymbols=true -p:SentryUploadSources=true
-          
-      - name: PupNet Build
-        if: matrix.os == 'ubuntu-latest'
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-        run: pupnet -r linux-x64 -c Release --kind appimage --app-version $RELEASE_VERSION --clean -y
 
-      - name: Post Build (win)
-        if: matrix.os == 'windows-latest'
-        run: mv ./out/StabilityMatrix.Avalonia.exe ./out/${{ matrix.out-name }}
-      
-      - name: Post Build (linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: mv ./out/StabilityMatrix.Avalonia.AppImage ./out/${{ matrix.out-name }}
+      - name: Post Build
+        run: mv ./out/StabilityMatrix.Avalonia.exe ./out/${{ env.out-name }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
         with:
           name: StabilityMatrix
-          path: ./out/${{ matrix.out-name }}
-          
+          path: ./out/${{ env.out-name }}
+
       - name: Create Sentry release
-        if: ${{ matrix.os == 'windows-latest' && (github.event_name == 'release' || github.event.inputs.sentry-release == 'true') }}
+        if: ${{ github.event_name == 'release' || github.event.inputs.sentry-release == 'true' }}
         uses: getsentry/action-release@v1
         env:
-          MAKE_SENTRY_RELEASE: ${{ secrets.SENTRY_PROJECT != '' }} 
+          MAKE_SENTRY_RELEASE: ${{ secrets.SENTRY_PROJECT != '' }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
@@ -125,10 +136,11 @@ jobs:
           environment: production
           ignore_missing: true
           version: StabilityMatrix@${{ env.GIT_TAG_NAME }}
-          
+  
+  
   cleanup:
     name: Artifact Cleanup
-    needs: release
+    needs: [release-linux, release-windows]
     if: github.repository == 'ionite34/StabilityMatrix'
     runs-on: ubuntu-latest
 

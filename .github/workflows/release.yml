@@ -6,6 +6,10 @@ on:
       version:
         type: string
         description: Version
+      sentry-release:
+        type: boolean
+        description: Make Sentry Release?
+        default: false
 
   release:
     types: [ published ]
@@ -98,7 +102,7 @@ jobs:
           path: ./out/${{ matrix.out-name }}
           
       - name: Create Sentry release
-        if: ${{ env.MAKE_SENTRY_RELEASE == 'true' }} && ${{ matrix.os == 'windows-latest' }}
+        if: ${{ matrix.os == 'windows-latest' && (github.event_name == 'release' || github.event.inputs.sentry-release == 'true') }}
         uses: getsentry/action-release@v1
         env:
           MAKE_SENTRY_RELEASE: ${{ secrets.SENTRY_PROJECT != '' }} 

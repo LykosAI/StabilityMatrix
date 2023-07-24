@@ -10,8 +10,7 @@
         <TrimMode>partial</TrimMode>
         <PublishTrimmed>true</PublishTrimmed>
         <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
-        <VersionPrefix>2.0.0</VersionPrefix>
-        <VersionSuffix>dev.1</VersionSuffix>
+        <Version>2.0.0-dev.1</Version>
         <InformationalVersion>$(Version)</InformationalVersion>
     </PropertyGroup>
     

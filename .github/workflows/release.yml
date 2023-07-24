@@ -85,7 +85,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-        run: pupnet -r linux-x64 -c Release --kind appimage --app-version {{ env.RELEASE_VERSION }} --clean -y
+        run: pupnet -r linux-x64 -c Release --kind appimage --app-version ${{ env.RELEASE_VERSION }} --clean -y
 
       - name: Post Build (win)
         if: matrix.os == 'windows-latest'

@@ -42,13 +42,13 @@ jobs:
         if: github.event_name == 'release'
         run: |
           echo "Using tag ${{ env.GIT_TAG_NAME }}"
-          echo "RELEASE_VERSION=${{ env.GIT_TAG_NAME }}" >> $env:GITHUB_ENV
+          echo "RELEASE_VERSION=${{ env.GIT_TAG_NAME }}" >> ${{ env.GITHUB_ENV }}
           
       - name: Set Manual Version
         if: github.event_name == 'workflow_dispatch'
         run: |
           echo "Using version ${{ github.event.inputs.version }}"
-          echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $env:GITHUB_ENV
+          echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> ${{ env.GITHUB_ENV }}
 
       - name: Set up .NET 6 (for PupNet)
         if: matrix.os == 'ubuntu-latest'
@@ -75,7 +75,7 @@ jobs:
         run: >
           dotnet publish ./StabilityMatrix.Avalonia/StabilityMatrix.Avalonia.csproj
           -o out -c Release -r ${{ matrix.platform-identifier }}
-          -p:Version=$env:RELEASE_VERSION
+          -p:Version=${{ env.RELEASE_VERSION }}
           -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
           -p:PublishTrimmed=true
           -p:SentryOrg=${{ secrets.SENTRY_ORG }} -p:SentryProject=${{ secrets.SENTRY_PROJECT }}

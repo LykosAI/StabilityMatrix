@@ -116,21 +116,6 @@ public class Program
                 logger.Error(e, "Failed to delete update file");
             }
         }
-        
-        // for 1.2.0 -> 2.0.0 update
-        var legacyUpdateDir = Compat.AppCurrentDir.JoinDir("Update");
-        if (legacyUpdateDir.Exists)
-        {
-            try
-            {
-                legacyUpdateDir.Delete(true);
-            }
-            catch (Exception e)
-            {
-                var logger = LogManager.GetCurrentClassLogger();
-                logger.Error(e, "Failed to delete legacy update file");
-            }
-        }
     }
     
     private static void ConfigureSentry()

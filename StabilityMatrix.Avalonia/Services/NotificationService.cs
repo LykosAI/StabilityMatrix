@@ -29,10 +29,13 @@ public class NotificationService : INotificationService
         notificationManager?.Show(notification);
     }
 
-    public void Show(string title, string message,
-        NotificationType appearance = NotificationType.Information)
+    public void Show(
+        string title, 
+        string message,
+        NotificationType appearance = NotificationType.Information,
+        TimeSpan? expiration = null)
     {
-        Show(new Notification(title, message, appearance));
+        Show(new Notification(title, message, appearance, expiration));
     }
 
     /// <inheritdoc />

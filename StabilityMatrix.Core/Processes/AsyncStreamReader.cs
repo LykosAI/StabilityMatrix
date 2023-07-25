@@ -254,6 +254,9 @@ internal sealed class AsyncStreamReader : IDisposable
                     else
                     {
                         // Send buffer up to this point, not including \r
+                        // But skip if there's no content
+                        if (currentIndex == lineStart) break;
+                        
                         var line = _sb.ToString(lineStart, currentIndex - lineStart);
                         lock (_messageQueue)
                         {

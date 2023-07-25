@@ -38,6 +38,14 @@ public class NotificationService : INotificationService
         Show(new Notification(title, message, appearance, expiration));
     }
 
+    public void ShowPersistent(
+        string title, 
+        string message,
+        NotificationType appearance = NotificationType.Information)
+    {
+        Show(new Notification(title, message, appearance, TimeSpan.Zero));
+    }
+    
     /// <inheritdoc />
     public async Task<TaskResult<T>> TryAsync<T>(
         Task<T> task,

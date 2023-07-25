@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.Notifications;
 using StabilityMatrix.Avalonia.Services;
@@ -29,7 +30,18 @@ public class MockNotificationService : INotificationService
         return Task.FromResult(new TaskResult<bool>(true));
     }
 
-    public void Show(string title, string message, NotificationType appearance = NotificationType.Information)
+    public void Show(
+        string title, 
+        string message, 
+        NotificationType appearance = NotificationType.Information,
+        TimeSpan? expiration = null)
+    {
+    }
+    
+    public void ShowPersistent(
+        string title, 
+        string message, 
+        NotificationType appearance = NotificationType.Information)
     {
     }
 }

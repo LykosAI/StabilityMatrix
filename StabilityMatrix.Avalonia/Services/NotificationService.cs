@@ -14,7 +14,7 @@ public class NotificationService : INotificationService
     public void Initialize(
         Visual? visual, 
         NotificationPosition position = NotificationPosition.BottomRight,
-        int maxItems = 3)
+        int maxItems = 4)
     {
         if (notificationManager is not null) return;
         notificationManager = new WindowNotificationManager(TopLevel.GetTopLevel(visual))

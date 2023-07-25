@@ -19,17 +19,20 @@ using Microsoft.Extensions.Logging;
 using Ookii.Dialogs.Wpf;
 using Polly.Timeout;
 using Refit;
-using StabilityMatrix.Api;
-using StabilityMatrix.Database;
+using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Database;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Factory;
+using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Python;
+using StabilityMatrix.Core.Services;
 using StabilityMatrix.Helper;
-using StabilityMatrix.Models;
-using StabilityMatrix.Models.Progress;
-using StabilityMatrix.Python;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Controls.Window;
-using EventManager = StabilityMatrix.Helper.EventManager;
+using EventManager = StabilityMatrix.Core.Helper.EventManager;
 using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
 
 namespace StabilityMatrix.ViewModels;
@@ -88,9 +91,9 @@ public partial class SettingsViewModel : ObservableObject
     
     partial void OnKeepFolderLinksOnShutdownChanged(bool value)
     {
-        if (value != settingsManager.Settings.KeepFolderLinksOnShutdown)
+        if (value != settingsManager.Settings.RemoveFolderLinksOnShutdown)
         {
-            settingsManager.Transaction(s => s.KeepFolderLinksOnShutdown = value);
+            settingsManager.Transaction(s => s.RemoveFolderLinksOnShutdown = value);
         }
     }
 
@@ -124,8 +127,7 @@ public partial class SettingsViewModel : ObservableObject
         this.liteDbContext = liteDbContext;
         this.prerequisiteHelper = prerequisiteHelper;
         SelectedTheme = settingsManager.Settings.Theme ?? "Dark";
-        WindowBackdropType = settingsManager.Settings.WindowBackdropType ?? WindowBackdropType.Mica;
-        KeepFolderLinksOnShutdown = settingsManager.Settings.KeepFolderLinksOnShutdown;
+        KeepFolderLinksOnShutdown = settingsManager.Settings.RemoveFolderLinksOnShutdown;
     }
 
     [ObservableProperty]
@@ -134,9 +136,6 @@ public partial class SettingsViewModel : ObservableObject
     
     [ObservableProperty]
     private string selectedTheme;
-    
-    [ObservableProperty] 
-    private WindowBackdropType windowBackdropType;
 
     public string AppVersion => $"Version {Utilities.GetAppVersion()}";
 
@@ -147,18 +146,8 @@ public partial class SettingsViewModel : ObservableObject
         ApplyTheme(value);
     }
 
-    partial void OnWindowBackdropTypeChanged(WindowBackdropType oldValue, WindowBackdropType newValue)
-    {
-        settingsManager.Transaction(s => s.WindowBackdropType = newValue);
-        if (Application.Current.MainWindow != null)
-        {
-            WindowBackdrop.ApplyBackdrop(Application.Current.MainWindow, newValue);
-        }
-    }
-
     [ObservableProperty]
-    private string gpuInfo =
-        $"{HardwareHelper.GetGpuChipName()} ({HardwareHelper.GetGpuMemoryBytes() / 1024 / 1024 / 1024} GB)";
+    private string gpuInfo = $"{HardwareHelper.IterGpuInfo().FirstOrDefault()}";
 
     [ObservableProperty] private string? testProperty;
 
@@ -445,13 +434,13 @@ public partial class SettingsViewModel : ObservableObject
         switch (value)
         {
             case "Light":
-                Theme.Apply(ThemeType.Light, WindowBackdropType);
+                Theme.Apply(ThemeType.Light);
                 break;
             case "Dark":
-                Theme.Apply(ThemeType.Dark, WindowBackdropType);
+                Theme.Apply(ThemeType.Dark);
                 break;
             case "System":
-                Theme.Apply(SystemInfo.ShouldUseDarkMode() ? ThemeType.Dark : ThemeType.Light, WindowBackdropType);
+                Theme.Apply(SystemInfo.ShouldUseDarkMode() ? ThemeType.Dark : ThemeType.Light);
                 break;
         }
     }

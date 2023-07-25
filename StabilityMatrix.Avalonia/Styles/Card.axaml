@@ -1,0 +1,93 @@
+﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <StackPanel>
+                <controls:Card
+                    Margin="8"
+                    MaxHeight="450"
+                    Name="ModelCard"
+                    Width="330">
+                    <TextBlock Text="Normal Card" />
+                </controls:Card>
+                <controls:Card
+                    Margin="8"
+                    MaxHeight="450"
+                    Classes="success"
+                    Width="330">
+                    <TextBlock Text="Success Card" />
+                </controls:Card>
+                <controls:Card
+                    Margin="8"
+                    MaxHeight="450"
+                    Classes="info"
+                    Width="330">
+                    <TextBlock Text="Info Card" />
+                </controls:Card>
+            </StackPanel>
+        </Border>
+    </Design.PreviewWith>
+
+    <ControlTheme x:Key="{x:Type controls:Card}" TargetType="controls:Card">
+        <Setter Property="Background" Value="{DynamicResource ComboBoxBackground}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ComboBoxBorderBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource ComboBoxForeground}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="14,16,14,16" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Border.CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="KeyboardNavigation.IsTabStop" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Grid>
+                        <Border
+                            x:Name="ContentBorder"
+                            Padding="{TemplateBinding Padding}"
+                            HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalAlignment}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding Border.CornerRadius}">
+                            <ContentPresenter
+                                x:Name="ContentPresenter"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}" 
+                                Content="{TemplateBinding Content}" />
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        
+        <Styles>
+            
+            <!-- Success -->
+            <Style Selector="controls|Card.success">
+                <Setter Property="Background" Value="{DynamicResource ThemeGreenColorTransparent}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ThemeGreenColorTransparent}" />
+                <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
+                </Style>
+            </Style>
+            
+            <!-- Info -->
+            <Style Selector="controls|Card.info">
+                <Setter Property="Background" Value="{DynamicResource ThemeDarkBlueColorTransparent}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkBlueColorTransparent}" />
+                <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
+                </Style>
+            </Style>
+            
+        </Styles>
+    </ControlTheme>
+</ResourceDictionary>

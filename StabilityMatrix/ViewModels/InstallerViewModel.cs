@@ -6,25 +6,28 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using Octokit;
-using StabilityMatrix.Helper;
-using StabilityMatrix.Models;
-using StabilityMatrix.Models.Packages;
-using StabilityMatrix.Models.Progress;
-using StabilityMatrix.Python;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Factory;
+using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Packages;
+using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
+using StabilityMatrix.Core.Services;
 using StabilityMatrix.Services;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls;
 using Wpf.Ui.Controls.ContentDialogControl;
-using Wpf.Ui.Controls.Window;
 using Application = System.Windows.Application;
-using EventManager = StabilityMatrix.Helper.EventManager;
+using EventManager = StabilityMatrix.Core.Helper.EventManager;
 using ISnackbarService = StabilityMatrix.Helper.ISnackbarService;
-using PackageVersion = StabilityMatrix.Models.PackageVersion;
+using PackageVersion = StabilityMatrix.Core.Models.PackageVersion;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -91,7 +94,6 @@ public partial class InstallerViewModel : ObservableObject
     private bool showDuplicateWarning;
 
 
-    public WindowBackdropType WindowBackdropType => settingsManager.Settings.WindowBackdropType ?? Wpf.Ui.Controls.Window.WindowBackdropType.Mica;
     public Visibility ProgressBarVisibility => ProgressValue > 0 || IsIndeterminate ? Visibility.Visible : Visibility.Collapsed;
 
     public string ReleaseLabelText => IsReleaseMode ? "Version" : "Branch";
@@ -380,9 +382,9 @@ public partial class InstallerViewModel : ObservableObject
         await SelectedPackage.InstallPackage(progress);
     }
 
-    private void SelectedPackageOnConsoleOutput(object? sender, string e)
+    private void SelectedPackageOnConsoleOutput(object? sender, ProcessOutput e)
     {
-        SecondaryProgressText = e;
+        SecondaryProgressText = e.Text;
     }
 
     private async Task InstallGitIfNecessary()

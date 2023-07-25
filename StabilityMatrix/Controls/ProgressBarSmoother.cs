@@ -19,7 +19,8 @@ public class ProgressBarSmoother
     }
 
     public static readonly DependencyProperty SmoothValueProperty =
-        DependencyProperty.RegisterAttached("SmoothValue", typeof(double), typeof(ProgressBarSmoother), new PropertyMetadata(0.0, Changing));
+        DependencyProperty.RegisterAttached("SmoothValue", typeof(double),
+            typeof(ProgressBarSmoother), new PropertyMetadata(0.0, Changing));
 
     private static void Changing(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {

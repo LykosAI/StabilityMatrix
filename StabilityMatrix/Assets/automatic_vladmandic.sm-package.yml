@@ -1,0 +1,33 @@
+﻿name: automatic
+display-name: SD.Next Web UI
+author: vladmandic
+
+download:
+  steps:
+    - uses: git
+      with:
+        args: clone ${git_repo_url} ${install_dir}
+    - uses: git
+      with:
+        args: checkout ${version_commit_sha}
+
+install:
+  steps:
+    - name: Install PyTorch (CUDA)
+      uses: venv-run
+      if: system.has_nvidia_gpu
+      with:
+        args:
+          - pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
+          - pip install xformers
+
+    - name: Install PyTorch (DirectML)
+      uses: venv-run
+      if: not system.has_nvidia_gpu and system.has_amd_gpu
+      with:
+        args: pip install torch-directml
+
+    - name: Install Requirements
+      uses: venv-run
+      with:
+        args: pip install -r requirements.txt

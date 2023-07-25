@@ -1,0 +1,64 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          d:DataContext="{x:Static mocks:DesignData.ProgressManagerViewModel}"
+                          x:DataType="vm:ProgressManagerViewModel"
+                          MaxHeight="250"
+                          mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="250"
+                          x:Class="StabilityMatrix.Avalonia.Views.ProgressManagerPage">
+    <ScrollViewer>
+        <Grid RowDefinitions="Auto, *">
+            <TextBlock Grid.Row="0" Text="Downloads"
+                       VerticalAlignment="Center"
+                       TextDecorations="Underline"
+                       FontSize="16"
+                       TextAlignment="Left" />
+            <Button Grid.Row="0"
+                    Content="Clear Finished"
+                    Padding="4"
+                    Classes="transparent"
+                    Margin="0,0,8,0"
+                    IsVisible="{Binding !!ProgressItems.Count}"
+                    Command="{Binding ClearDownloads}"
+                    HorizontalAlignment="Right" />
+
+            <ItemsRepeater Margin="0,4,0,0" Grid.Row="1" ItemsSource="{Binding ProgressItems, Mode=OneWay}">
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:ProgressItemViewModel}">
+                        <Border BorderBrush="#33000000"
+                                Background="#22000000"
+                                BorderThickness="2"
+                                CornerRadius="8"
+                                Padding="8"
+                                Margin="4">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Name, Mode=OneWay}"
+                                           Margin="0, 4" />
+                                <ProgressBar Value="{Binding Progress.Percentage, Mode=OneWay}"
+                                             Margin="0, 4">
+                                    <ProgressBar.Transitions>
+                                        <Transitions>
+                                            <DoubleTransition Property="Value" Duration="00:00:00.150">
+                                                <DoubleTransition.Easing>
+                                                    <SineEaseInOut />
+                                                </DoubleTransition.Easing>
+                                            </DoubleTransition>
+                                        </Transitions>
+                                    </ProgressBar.Transitions>
+                                </ProgressBar>
+                                <TextBlock Margin="0, 4">
+                                    <Run Text="{Binding ProgressText, Mode=OneWay}" />
+                                    <Run Text="{Binding Progress.Percentage, Mode=OneWay}" /><Run Text="%" />
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </Grid>
+    </ScrollViewer>
+</controls:UserControlBase>

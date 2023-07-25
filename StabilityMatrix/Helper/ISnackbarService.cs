@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using StabilityMatrix.Models;
+using StabilityMatrix.Core.Models;
 using Wpf.Ui.Common;
 using Wpf.Ui.Controls;
 

@@ -4,7 +4,8 @@ using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Controls;
-using StabilityMatrix.Helper;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.ViewModels;
 

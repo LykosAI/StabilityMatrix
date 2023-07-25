@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Data;
 using System.Windows.Media.Imaging;
-using StabilityMatrix.Models.Api;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.ViewModels;
 
 namespace StabilityMatrix.DesignData;

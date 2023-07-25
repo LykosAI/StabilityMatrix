@@ -20,15 +20,15 @@ node("Windows") {
         stage('Set Version') {
             script {
                 if (env.TAG_NAME) {
-                    version = env.TAG_NAME.replaceFirst(/^v/, '') + ".0"
+                    version = env.TAG_NAME.replaceFirst(/^v/, '')
                 } else {
-                    version = VersionNumber projectStartDate: '2023-06-21', versionNumberString: '1.0.${BUILDS_ALL_TIME}.0', versionPrefix: '', worstResultForIncrement: 'SUCCESS'
+                    version = VersionNumber projectStartDate: '2023-06-21', versionNumberString: '${BUILDS_ALL_TIME}', worstResultForIncrement: 'SUCCESS'
                 }
             }
         }
         
         stage('Publish') {
-            bat "dotnet publish .\\StabilityMatrix\\StabilityMatrix.csproj -c Release -o out -r win-x64 -p:PublishSingleFile=true -p:Version=${version} -p:FileVersion=${version} -p:AssemblyVersion=${version} --self-contained true"
+            bat "dotnet publish .\\StabilityMatrix.Avalonia\\StabilityMatrix.Avalonia.csproj -c Release -o out -r win-x64 -p:PublishSingleFile=true -p:VersionPrefix=2.0.0 -p:VersionSuffix=${version} -p:IncludeNativeLibrariesForSelfExtract=true"
         }
         
         stage ('Archive Artifacts') {
@@ -36,7 +36,7 @@ node("Windows") {
         }
     } else {
         stage('Publish') {
-            bat "dotnet publish .\\StabilityMatrix\\StabilityMatrix.csproj -c Release -o out -r win-x64 -p:PublishSingleFile=true --self-contained true"
+            bat "dotnet publish .\\StabilityMatrix.Avalonia\\StabilityMatrix.Avalonia.csproj -c Release -o out -r win-x64 -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true"
         }
     }
 }

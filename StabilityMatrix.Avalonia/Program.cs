@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -67,6 +68,9 @@ public class Program
     public static AppBuilder BuildAvaloniaApp()
     {
         IconProvider.Current.Register<FontAwesomeIconProvider>();
+        // Use our custom image loader for custom local load error handling
+        ImageLoader.AsyncImageLoader.Dispose();
+        ImageLoader.AsyncImageLoader = new FallbackRamCachedWebImageLoader();
         
         return AppBuilder.Configure<App>()
             .UsePlatformDetect()

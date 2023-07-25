@@ -7,8 +7,6 @@
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-        <TrimMode>partial</TrimMode>
-        <PublishTrimmed>true</PublishTrimmed>
         <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
         <Version>2.0.0-dev.1</Version>
         <InformationalVersion>$(Version)</InformationalVersion>
@@ -50,16 +48,16 @@
 
 
     <ItemGroup>
-      <AvaloniaResource Include="Assets\Icon.ico" />
-      <AvaloniaResource Include="Assets\Icon.png" />
+        <AvaloniaResource Include="Assets\Icon.ico" />
+        <AvaloniaResource Include="Assets\Icon.png" />
     </ItemGroup>
     
     <ItemGroup>
-      <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
+        <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
     </ItemGroup>
     
     <ItemGroup>
-      <AvaloniaResource Include="Assets\noimage.png" />
+        <AvaloniaResource Include="Assets\noimage.png" />
     </ItemGroup>
 
     <ItemGroup>

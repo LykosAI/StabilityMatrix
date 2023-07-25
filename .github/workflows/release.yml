@@ -143,7 +143,6 @@ jobs:
           -o out -c Release -r ${{ env.platform-id }}
           -p:Version=$env:RELEASE_VERSION
           -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
-          -p:PublishTrimmed=true
           -p:SentryOrg=${{ secrets.SENTRY_ORG }} -p:SentryProject=${{ secrets.SENTRY_PROJECT }}
           -p:SentryUploadSymbols=true -p:SentryUploadSources=true
 

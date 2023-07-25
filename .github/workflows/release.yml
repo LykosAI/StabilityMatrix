@@ -84,7 +84,7 @@ jobs:
         with:
           environment: production
           ignore_missing: true
-          version: StabilityMatrix@${{ env.GIT_TAG_NAME }}
+          version: StabilityMatrix.Avalonia@${{ env.GIT_TAG_NAME }}
           
       - name: Create Sentry release
         if: ${{ github.event_name == 'workflow_dispatch' }}
@@ -97,7 +97,7 @@ jobs:
         with:
           environment: production
           ignore_missing: true
-          version: StabilityMatrix@${{ github.event.inputs.version }}
+          version: StabilityMatrix.Avalonia@${{ github.event.inputs.version }}
           
           
   release-windows:

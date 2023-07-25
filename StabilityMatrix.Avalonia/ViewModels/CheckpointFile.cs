@@ -39,10 +39,12 @@ public partial class CheckpointFile : ViewModelBase
     /// </summary>
     [ObservableProperty]
     private string title = string.Empty;
-    
-    public string? PreviewImagePath { get; set; }
-    public Bitmap? PreviewImage { get; set; }
-    public bool IsPreviewImageLoaded => PreviewImage != null;
+
+    /// <summary>
+    /// Path to preview image. Can be local or remote URL.
+    /// </summary>
+    [ObservableProperty]
+    private string? previewImagePath;
 
     [ObservableProperty]
     private ConnectedModelInfo? connectedModel;
@@ -75,6 +77,18 @@ public partial class CheckpointFile : ViewModelBase
         }
     }
 
+    private string GetConnectedModelInfoFilePath()
+    {
+        if (string.IsNullOrEmpty(FilePath))
+        {
+            throw new InvalidOperationException(
+                "Cannot get connected model info file path when FilePath is empty");
+        }
+        var modelNameNoExt = Path.GetFileNameWithoutExtension(FilePath);
+        var modelDir = Path.GetDirectoryName(FilePath) ?? "";
+        return Path.Combine(modelDir, $"{modelNameNoExt}.cm-info.json");
+    }
+
     [RelayCommand]
     private async Task DeleteAsync()
     {
@@ -88,6 +102,14 @@ public partial class CheckpointFile : ViewModelBase
                 if (PreviewImagePath != null && File.Exists(PreviewImagePath))
                 {
                     await Task.Run(() => File.Delete(PreviewImagePath));
+                }
+                if (ConnectedModel != null)
+                {
+                    var cmInfoPath = GetConnectedModelInfoFilePath();
+                    if (File.Exists(cmInfoPath))
+                    {
+                        await Task.Run(() => File.Delete(cmInfoPath));
+                    }
                 }
             }
             catch (IOException ex)
@@ -169,16 +191,6 @@ public partial class CheckpointFile : ViewModelBase
         if (ConnectedModel?.ModelId == null) return;
         ProcessRunner.OpenUrl($"https://civitai.com/models/{ConnectedModel.ModelId}");
     }
-    
-    // Loads image from path
-    private async Task LoadPreviewImage()
-    {
-        if (PreviewImagePath == null) return;
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            PreviewImage = new Bitmap(File.OpenRead(PreviewImagePath));
-        });
-    }
 
     /// <summary>
     /// Indexes directory and yields all checkpoint files.
@@ -226,7 +238,6 @@ public partial class CheckpointFile : ViewModelBase
             if (previewImage != null)
             {
                 checkpointFile.PreviewImagePath = files[previewImage];
-                checkpointFile.LoadPreviewImage().SafeFireAndForget();
             }
 
             yield return checkpointFile;

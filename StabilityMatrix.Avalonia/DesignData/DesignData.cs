@@ -188,11 +188,11 @@ public static class DesignData
                 }
             }
         };
-        
-        CheckpointsPageViewModel.CheckpointFolders[0].DisplayedCheckpointFiles =
-            CheckpointsPageViewModel.CheckpointFolders[0].CheckpointFiles;
-        CheckpointsPageViewModel.CheckpointFolders[1].DisplayedCheckpointFiles =
-            CheckpointsPageViewModel.CheckpointFolders[1].CheckpointFiles;
+
+        foreach (var folder in CheckpointsPageViewModel.CheckpointFolders)
+        {
+            folder.DisplayedCheckpointFiles = folder.CheckpointFiles;
+        }
 
         CheckpointBrowserViewModel.ModelCards = new 
             ObservableCollection<CheckpointBrowserCardViewModel>

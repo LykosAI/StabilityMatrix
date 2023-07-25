@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -88,6 +89,12 @@ public class Program
                 try
                 {
                     currentExe.CopyTo(targetExe, true);
+                    
+                    // Ensure permissions are set for unix
+                    if (Compat.IsUnix)
+                    {
+                        File.SetUnixFileMode(targetExe, (UnixFileMode) 0x755);
+                    }
                     
                     // Start the new app
                     Process.Start(targetExe);

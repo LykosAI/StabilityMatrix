@@ -5,7 +5,7 @@
     Loaded="InstallPage_OnLoaded"
     Title="Stability Matrix - Installer"
     Width="1100"
-    WindowBackdropType="{Binding WindowBackdropType}"
+    WindowBackdropType="Mica"
     WindowStartupLocation="CenterOwner"
     d:DataContext="{d:DesignInstance Type=viewModels:InstallerViewModel,
                                      IsDesignTimeCreatable=True}"
@@ -20,14 +20,14 @@
     xmlns:converters="clr-namespace:StabilityMatrix.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:models="clr-namespace:StabilityMatrix.Models"
+    xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
     xmlns:octokit="clr-namespace:Octokit;assembly=Octokit"
-    xmlns:packages="clr-namespace:StabilityMatrix.Models.Packages"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:viewModels="clr-namespace:StabilityMatrix.ViewModels"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:xaml="clr-namespace:MdXaml;assembly=MdXaml">
+    xmlns:xaml="clr-namespace:MdXaml;assembly=MdXaml"
+    xmlns:packages="clr-namespace:StabilityMatrix.Core.Models.Packages;assembly=StabilityMatrix.Core">
 
     <ui:FluentWindow.Resources>
         <converters:ValueConverterGroup x:Key="InvertAndVisibilitate">
@@ -37,7 +37,7 @@
 
         <converters:BoolNegationConverter x:Key="BoolNegationConverter" />
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
-        <converters:UriToBitmapConverter x:Key="UriToBitmapConverter"/>
+        <converters:UriToBitmapConverter x:Key="UriToBitmapConverter" />
 
         <xaml:Markdown
             AssetPathRoot="{x:Static system:Environment.CurrentDirectory}"
@@ -137,11 +137,12 @@
                     Text="{Binding SelectedPackage.DisplayName, FallbackValue=Stable Diffusion Web UI}" />
                 <TextBlock FontSize="12" Text="{Binding SelectedPackage.ByAuthor, FallbackValue=by Automatic111}" />
 
-                <ui:Button Command="{Binding ShowPreviewCommand}"
-                           Appearance="Transparent"
-                           BorderBrush="Transparent"
-                           Margin="0,8,0,0"
-                           Content="UI Preview">
+                <ui:Button
+                    Appearance="Transparent"
+                    BorderBrush="Transparent"
+                    Command="{Binding ShowPreviewCommand}"
+                    Content="UI Preview"
+                    Margin="0,8,0,0">
                     <ui:Button.Style>
                         <Style BasedOn="{StaticResource {x:Type ui:Button}}" TargetType="{x:Type ui:Button}">
                             <Setter Property="Foreground">
@@ -153,8 +154,7 @@
                     </ui:Button.Style>
                 </ui:Button>
 
-                <ui:Hyperlink NavigateUri="{Binding SelectedPackage.GithubUrl}"
-                              Margin="0,0,0,8">
+                <ui:Hyperlink Margin="0,0,0,8" NavigateUri="{Binding SelectedPackage.GithubUrl}">
                     <TextBlock TextWrapping="Wrap">
                         <Run Text="GitHub Page:" />
                         <Run Text="{Binding SelectedPackage.GithubUrl, Mode=OneWay}" TextDecorations="Underline" />
@@ -216,8 +216,7 @@
                 </StackPanel>
 
                 <Label Content="Display Name" Margin="0,16,0,0" />
-                <StackPanel Orientation="Horizontal"
-                            Visibility="{Binding ShowDuplicateWarning, Converter={StaticResource BoolToVisConverter}}">
+                <StackPanel Orientation="Horizontal" Visibility="{Binding ShowDuplicateWarning, Converter={StaticResource BoolToVisConverter}}">
                     <ui:SymbolIcon
                         Foreground="{ui:ThemeResource SystemFillColorCriticalBrush}"
                         Margin="8"
@@ -260,12 +259,15 @@
             </StackPanel>
 
             <FlowDocumentScrollViewer
-                Grid.Column="2"
-                Margin="16"
                 Document="{Binding ReleaseNotes, Converter={StaticResource TextToFlowDocumentConverter}}"
+                Grid.Column="2"
                 HorizontalAlignment="Stretch"
+                Margin="16"
                 VerticalAlignment="Stretch" />
-            <ContentPresenter Grid.Column="0" Grid.ColumnSpan="3" x:Name="InstallerContentDialog" />
+            <ContentPresenter
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                x:Name="InstallerContentDialog" />
         </Grid>
     </Grid>
 </ui:FluentWindow>

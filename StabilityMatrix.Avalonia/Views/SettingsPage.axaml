@@ -1,0 +1,200 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="vm:SettingsViewModel"
+             x:CompileBindings="True"
+             d:DataContext="{x:Static mocks:DesignData.SettingsViewModel}"
+             x:Class="StabilityMatrix.Avalonia.Views.SettingsPage">
+    
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <StackPanel Spacing="4">
+                    <ui:SettingsExpander Header="Theme" Margin="8"
+                                         IconSource="WeatherMoon">
+                        <ui:SettingsExpander.Footer>
+                            <ComboBox
+                                ItemsSource="{Binding AvailableThemes}"
+                                SelectedItem="{Binding SelectedTheme}"
+                                Margin="8"
+                                MinWidth="100"/>
+                        </ui:SettingsExpander.Footer>
+                    </ui:SettingsExpander>
+
+                    <!--  TODO: Text2Image host port settings  -->
+                    
+                    <!-- Checkpoints Manager Options -->
+                    <Grid RowDefinitions="auto,*">
+                        <TextBlock 
+                            FontWeight="Medium"
+                            Text="Checkpoint Manager" 
+                            Margin="8,16,0,0" />
+                        <StackPanel Grid.Row="1">
+                            <ui:SettingsExpander
+                                IconSource="Folder"
+                                Header="Remove shared checkpoints directory symbolic links on shutdown"
+                                Description="Select this option if you're having problems moving Stability Matrix to another drive."
+                                Margin="8">
+                                <ui:SettingsExpander.Footer>
+                                    <CheckBox Margin="8"
+                                              IsChecked="{Binding RemoveSymlinksOnShutdown}"/>
+                                </ui:SettingsExpander.Footer>
+                            </ui:SettingsExpander>
+                        </StackPanel>
+                    </Grid>
+                    
+                    <!-- Python Options -->
+                    <Grid RowDefinitions="auto,*">
+                        <TextBlock 
+                            FontWeight="Medium"
+                            Text="Python Environment" 
+                            Margin="8,16,0,0" />
+                        <StackPanel Grid.Row="1">
+                            <ui:SettingsExpander
+                                Header="Embedded Python Environment"
+                                Margin="8">
+                                <ui:SettingsExpander.IconSource>
+                                    <controls:FASymbolIconSource Symbol="fa-brands fa-python"/>
+                                </ui:SettingsExpander.IconSource>
+                                <ui:SettingsExpander.Footer>
+                                    <StackPanel Orientation="Horizontal" Spacing="16">
+                                        <controls:ProgressRing 
+                                            IsEnabled="{Binding CheckPythonVersionCommand.IsRunning}"
+                                            IsVisible="{Binding CheckPythonVersionCommand.IsRunning}"
+                                            IsIndeterminate="True" 
+                                            BorderThickness="3"/>
+                                        <Button Content="Check Version" Command="{Binding CheckPythonVersionCommand}"/>
+                                    </StackPanel>
+                                </ui:SettingsExpander.Footer>
+                            </ui:SettingsExpander>
+                        </StackPanel>
+                    </Grid>
+                    
+                    <!-- Debug Options -->
+                    <Grid RowDefinitions="auto,*" IsVisible="{Binding SharedState.IsDebugMode}">
+                        <TextBlock 
+                            FontWeight="Medium"
+                            Text="Debug Options" 
+                            Margin="8,16,0,0" />
+                        <StackPanel Grid.Row="1">
+                            <ui:SettingsExpander
+                                IconSource="Code"
+                                Command="{Binding LoadDebugInfo}"
+                                Header="Debug Options"
+                                Margin="8">
+                                
+                                <ui:SettingsExpanderItem Description="Paths" IconSource="Folder">
+                                    <SelectableTextBlock Text="{Binding DebugPaths}"
+                                                         Foreground="{DynamicResource TextControlPlaceholderForeground}"
+                                                         TextWrapping="WrapWithOverflow" />
+                                </ui:SettingsExpanderItem>
+
+                                <ui:SettingsExpanderItem Description="Compat Info" IconSource="StarFilled">
+                                    <SelectableTextBlock Text="{Binding DebugCompatInfo}"
+                                                         Foreground="{DynamicResource TextControlPlaceholderForeground}"
+                                                         TextWrapping="WrapWithOverflow" />
+                                </ui:SettingsExpanderItem>
+                                
+                                <ui:SettingsExpanderItem Description="GPU Info" IconSource="FullScreenMaximize">
+                                    <SelectableTextBlock Text="{Binding DebugGpuInfo}"
+                                                         Foreground="{DynamicResource TextControlPlaceholderForeground}"
+                                                         TextWrapping="WrapWithOverflow" />
+                                </ui:SettingsExpanderItem>
+
+                                <ui:SettingsExpanderItem Content="Notification" IconSource="CommentAdd">
+                                    <ui:SettingsExpanderItem.Footer>
+                                        <Button
+                                            Command="{Binding DebugNotificationCommand}"
+                                            Content="New Notification"/>
+                                    </ui:SettingsExpanderItem.Footer>
+                                </ui:SettingsExpanderItem>
+                                
+                                <ui:SettingsExpanderItem Content="Content Dialog" IconSource="NewWindow">
+                                    <ui:SettingsExpanderItem.Footer>
+                                        <Button
+                                            Command="{Binding DebugContentDialogCommand}"
+                                            Content="Show Dialog"/>
+                                    </ui:SettingsExpanderItem.Footer>
+                                </ui:SettingsExpanderItem>
+                                
+                                <ui:SettingsExpanderItem Content="Exceptions" IconSource="Flag">
+                                    <ui:SettingsExpanderItem.Footer>
+                                        <Button
+                                            Command="{Binding DebugThrowExceptionCommand}"
+                                            Content="Unhandled Exception"/>
+                                    </ui:SettingsExpanderItem.Footer>
+                                </ui:SettingsExpanderItem>
+                                
+                            </ui:SettingsExpander>
+                        </StackPanel>
+                    </Grid>
+                    
+                    <!-- TODO: Python card -->
+                    
+                    <!-- TODO: Debug card -->
+                    
+                    <!-- TODO: Directories card -->
+                    
+                    <Grid RowDefinitions="auto,*">
+                        <StackPanel 
+                            Margin="8,0,0,0"
+                            Grid.Row="1" 
+                            HorizontalAlignment="Left" 
+                            Orientation="Vertical">
+                            <TextBlock
+                                FontSize="15"
+                                FontWeight="Bold"
+                                Margin="0,8"
+                                Text="About" />
+                            <Image
+                                Height="112"
+                                HorizontalAlignment="Left"
+                                Margin="8"
+                                Source="/Assets/Icon.png"
+                                Width="112" />
+                            <TextBlock
+                                FontWeight="Medium"
+                                Margin="8"
+                                Text="Stability Matrix" />
+                            <Panel>
+                                <Button
+                                    Name="VersionButton"
+                                    Command="{Binding OnVersionClick}"
+                                    Classes="transparent"
+                                    BorderThickness="0"
+                                    Content="{Binding AppVersion}"
+                                    Margin="8,0,8,8"
+                                    Padding="2,0,2,0"/>
+                                <ui:TeachingTip
+                                    PreferredPlacement="RightTop"
+                                    Target="{Binding #VersionButton}"
+                                    IsOpen="{Binding IsVersionTapTeachingTipOpen}"
+                                    Title="{Binding VersionFlyoutText}"/>
+                            </Panel>
+                            
+                            <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+                                <Button
+                                    Content="License and Open Source Notices"
+                                    Command="{Binding ShowLicensesDialogCommand}"
+                                    HorizontalAlignment="Left"
+                                    Margin="8" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                    
+                    <!-- Extra space at the bottom -->
+                    <Panel Margin="0,0,0,16" />
+                    
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+    
+    
+</controls:UserControlBase>

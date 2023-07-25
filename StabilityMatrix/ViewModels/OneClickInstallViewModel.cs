@@ -4,12 +4,14 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
-using StabilityMatrix.Helper;
-using StabilityMatrix.Models;
-using StabilityMatrix.Models.Packages;
-using StabilityMatrix.Models.Progress;
-using StabilityMatrix.Python;
-using EventManager = StabilityMatrix.Helper.EventManager;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Factory;
+using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Packages;
+using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Python;
+using StabilityMatrix.Core.Services;
+using EventManager = StabilityMatrix.Core.Helper.EventManager;
 
 namespace StabilityMatrix.ViewModels;
 
@@ -118,7 +120,7 @@ public partial class OneClickInstallViewModel : ObservableObject
         SubHeaderText = "Getting latest version...";
         var latestVersion = await a1111.GetLatestVersion();
         a1111.InstallLocation = $"{settingsManager.LibraryDir}\\Packages\\stable-diffusion-webui";
-        a1111.ConsoleOutput += (_, output) => SubSubHeaderText = output;
+        a1111.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
         
         await DownloadPackage(a1111, latestVersion);
         await InstallPackage(a1111);
@@ -173,7 +175,7 @@ public partial class OneClickInstallViewModel : ObservableObject
 
     private async Task InstallPackage(BasePackage selectedPackage)
     {
-        selectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output;
+        selectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
         SubHeaderText = "Downloading and installing package requirements...";
         
         var progress = new Progress<ProgressReport>(progress =>

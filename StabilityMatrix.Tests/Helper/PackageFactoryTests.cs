@@ -1,22 +1,20 @@
-﻿using StabilityMatrix.Helper;
-using StabilityMatrix.Models;
-using StabilityMatrix.Models.Packages;
+﻿using StabilityMatrix.Core.Helper.Factory;
+using StabilityMatrix.Core.Models.Packages;
 
 namespace StabilityMatrix.Tests.Helper;
 
 [TestClass]
 public class PackageFactoryTests
 {
-    private PackageFactory packageFactory;
-    private IEnumerable<BasePackage> fakeBasePackages;
+    private PackageFactory packageFactory = null!;
+    private IEnumerable<BasePackage> fakeBasePackages = null!;
     
     [TestInitialize]
     public void Setup()
     {
         fakeBasePackages = new List<BasePackage>
         {
-            // TODO: inject mocks
-            new DankDiffusion(null, null, null, null)
+            new DankDiffusion(null!, null!, null!, null!)
         };
         packageFactory = new PackageFactory(fakeBasePackages);
     }

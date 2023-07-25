@@ -1,0 +1,72 @@
+﻿{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "name": { "type": "string" },
+    "display-name": { "type": "string" },
+    "author": { "type": "string" },
+    "download": { "$ref": "#/definitions/steps" },
+    "install": { "$ref": "#/definitions/steps" }
+  },
+  "required": ["name", "display-name", "author", "download", "install"],
+  "definitions": {
+    "steps": {
+      "type": "object",
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/step" }
+        }
+      },
+      "required": ["steps"]
+    },
+    "step": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "uses": { "enum": ["venv", "venv-run", "git"] },
+        "if": { "type": "string" },
+        "with": {}
+      },
+      "required": ["uses", "with"],
+      "allOf": [
+        {
+          "if": { "properties": { "uses": { "const": "venv" } } },
+          "then": { "properties": { "with": { "$ref": "#/definitions/with-path" } } }
+        },
+        {
+          "if": { "properties": { "uses": { "const": "venv-run" } } },
+          "then": { "properties": { "with": { "$ref": "#/definitions/with-args" } } }
+        },
+        {
+          "if": { "properties": { "uses": { "const": "git" } } },
+          "then": { "properties": { "with": { "$ref": "#/definitions/with-args" } } }
+        }
+      ]
+    },
+    "with-path": {
+      "type": "object",
+      "properties": {
+        "path": { "type": "string" }
+      },
+      "required": ["path"],
+      "additionalProperties": false
+    },
+    "with-args": {
+      "type": "object",
+      "properties": {
+        "args": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          ]
+        }
+      },
+      "required": ["args"],
+      "additionalProperties": false
+    }
+  }
+}

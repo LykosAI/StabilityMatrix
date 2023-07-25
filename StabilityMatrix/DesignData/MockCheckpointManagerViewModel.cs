@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel;
-using StabilityMatrix.Models.Api;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.ViewModels;
 
 namespace StabilityMatrix.DesignData;

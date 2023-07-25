@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <InternalsVisibleTo Include="StabilityMatrix.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="AsyncAwaitBestPractices" Version="6.0.6" />
+      <PackageReference Include="Blake3" Version="0.5.1" />
+      <PackageReference Include="DeviceId" Version="6.3.0" />
+      <PackageReference Include="DeviceId.Linux" Version="6.3.0" />
+      <PackageReference Include="DeviceId.Mac" Version="6.2.0" />
+      <PackageReference Include="DeviceId.Windows" Version="6.2.0" />
+      <PackageReference Include="DeviceId.Windows.Wmi" Version="6.2.1" />
+      <PackageReference Include="LiteDB" Version="5.0.16" />
+      <PackageReference Include="LiteDB.Async" Version="0.1.6" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
+      <PackageReference Include="NLog" Version="5.2.2" />
+      <PackageReference Include="NLog.Extensions.Logging" Version="5.3.2" />
+      <PackageReference Include="NSec.Cryptography" Version="22.4.0" />
+      <PackageReference Include="Octokit" Version="7.0.1" />
+      <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
+      <PackageReference Include="pythonnet" Version="3.0.1" />
+      <PackageReference Include="Refit" Version="7.0.0" />
+      <PackageReference Include="Refit.HttpClientFactory" Version="7.0.0" />
+      <PackageReference Include="Salaros.ConfigParser" Version="0.3.8" />
+      <PackageReference Include="Semver" Version="3.0.0-beta.0" />
+      <PackageReference Include="Sentry.NLog" Version="3.33.1" />
+      <PackageReference Include="SharpCompress" Version="0.33.0" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,16 @@
+﻿using System;
+using CommunityToolkit.Mvvm.ComponentModel;
+using StabilityMatrix.Avalonia.Views.Dialogs;
+using StabilityMatrix.Core.Attributes;
+
+namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
+
+[View(typeof(ExceptionDialog))]
+public partial class ExceptionViewModel : ViewModelBase
+{
+    public Exception? Exception { get; set; }
+    
+    public string? Message => Exception?.Message;
+    
+    public string? ExceptionType => Exception?.GetType().Name ?? "";
+}

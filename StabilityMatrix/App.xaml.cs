@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -26,16 +27,20 @@ using Polly.Extensions.Http;
 using Polly.Timeout;
 using Refit;
 using Sentry;
-using StabilityMatrix.Api;
-using StabilityMatrix.Database;
+using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Converters.Json;
+using StabilityMatrix.Core.Database;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.Factory;
+using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Models.Configs;
+using StabilityMatrix.Core.Models.Packages;
+using StabilityMatrix.Core.Python;
+using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Updater;
 using StabilityMatrix.Helper;
-using StabilityMatrix.Helper.Cache;
-using StabilityMatrix.Models;
-using StabilityMatrix.Models.Configs;
-using StabilityMatrix.Models.Packages;
-using StabilityMatrix.Python;
 using StabilityMatrix.Services;
-using StabilityMatrix.Updater;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Services;
@@ -372,8 +377,8 @@ namespace StabilityMatrix
             // Skip remaining steps if no library is set
             if (!(settingsManager?.TryFindLibrary() ?? false)) return;
             
-            // Unless KeepFolderLinksOnShutdown is set, delete all package junctions
-            if (!settingsManager.Settings.KeepFolderLinksOnShutdown)
+            // If RemoveFolderLinksOnShutdown is set, delete all package junctions
+            if (settingsManager.Settings.RemoveFolderLinksOnShutdown)
             {
                 var sharedFolders = serviceProvider?.GetRequiredService<ISharedFolders>();
                 sharedFolders?.RemoveLinksForAllPackages();

@@ -1,7 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using StabilityMatrix.Models.Api;
 using StabilityMatrix.ViewModels;
 using Wpf.Ui.Contracts;
 using Wpf.Ui.Controls.ContentDialogControl;

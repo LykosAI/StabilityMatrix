@@ -63,6 +63,7 @@ public sealed class App : Application
     [NotNull] public static IServiceProvider? Services { get; private set; }
     [NotNull] public static Visual? VisualRoot { get; private set; }
     [NotNull] public static IStorageProvider? StorageProvider { get; private set; }
+    // ReSharper disable once MemberCanBePrivate.Global
     [NotNull] public static IConfiguration? Config { get; private set; }
     
     // ReSharper disable once MemberCanBePrivate.Global

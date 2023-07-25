@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
@@ -77,6 +78,12 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         {
             ProgressValue = Convert.ToInt32(report.Percentage);
         }));
+        
+        // On unix, we need to set the executable bit
+        if (Compat.IsUnix)
+        {
+            File.SetUnixFileMode(UpdateHelper.ExecutablePath, (UnixFileMode) 0x755);
+        }
         
         UpdateText = "Update complete. Restarting Stability Matrix in 3 seconds...";
         await Task.Delay(1000);

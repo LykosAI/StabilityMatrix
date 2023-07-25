@@ -151,6 +151,8 @@ public static class DesignData
                     {
                         FilePath = "~/Models/Lora/electricity-light.safetensors",
                         Title = "Auroral Background",
+                        PreviewImagePath = "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/" +
+                                           "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
                         ConnectedModel = new ConnectedModelInfo
                         {
                             VersionName = "Lightning Auroral",
@@ -170,7 +172,7 @@ public static class DesignData
                         FilePath = "~/Models/Lora/model.safetensors",
                         Title = "Some model"
                     },
-                }
+                },
             },
             new(settingsManager, downloadService, modelFinder)
             {
@@ -186,6 +188,11 @@ public static class DesignData
                 }
             }
         };
+
+        foreach (var folder in CheckpointsPageViewModel.CheckpointFolders)
+        {
+            folder.DisplayedCheckpointFiles = folder.CheckpointFiles;
+        }
 
         CheckpointBrowserViewModel.ModelCards = new 
             ObservableCollection<CheckpointBrowserCardViewModel>

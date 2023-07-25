@@ -35,14 +35,14 @@ public class UpdateHelper : IUpdateHelper
         this.downloadService = downloadService;
         this.debugOptions = debugOptions.Value;
         
-        timer.Elapsed += async (_, _) => { await CheckForUpdate(); };
+        timer.Elapsed += async (_, _) => { await CheckForUpdate().ConfigureAwait(false); };
     }
 
     public async Task StartCheckingForUpdates()
     {
         timer.Enabled = true;
         timer.Start();
-        await CheckForUpdate();
+        await CheckForUpdate().ConfigureAwait(false);
     }
 
     public async Task DownloadUpdate(UpdateInfo updateInfo,
@@ -54,7 +54,7 @@ public class UpdateHelper : IUpdateHelper
         
         // download the file from URL
         await downloadService.DownloadToFileAsync(downloadUrl, ExecutablePath, progress: progress,
-            httpClientName: "UpdateClient");
+            httpClientName: "UpdateClient").ConfigureAwait(false);
     }
 
 
@@ -77,17 +77,18 @@ public class UpdateHelper : IUpdateHelper
         try
         {
             var httpClient = httpClientFactory.CreateClient("UpdateClient");
-            var response = await httpClient.GetAsync(UpdateManifestUrl);
+            var response = await httpClient.GetAsync(UpdateManifestUrl).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
                 logger.LogWarning("Error while checking for update {StatusCode} - {Content}", 
-                    response.StatusCode, await response.Content.ReadAsStringAsync());
+                    response.StatusCode, await response.Content.ReadAsStringAsync().ConfigureAwait(false));
                 return;
             }
 
             var updateCollection =
                 await JsonSerializer.DeserializeAsync<UpdateCollection>(
-                    await response.Content.ReadAsStreamAsync());
+                    await response.Content.ReadAsStreamAsync()
+                        .ConfigureAwait(false)).ConfigureAwait(false);
 
             if (updateCollection is null)
             {

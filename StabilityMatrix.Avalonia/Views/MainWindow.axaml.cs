@@ -1,8 +1,11 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using AsyncAwaitBestPractices;
+using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -54,9 +57,27 @@ public partial class MainWindow : AppWindowBase
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
+        // Initialize notification service using this window as the visual root
         NotificationService?.Initialize(this);
+        
+        // Attach error notification handler for image loader
+        if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
+        {
+            loader.LoadFailed += OnImageLoadFailed;
+        }
     }
-    
+
+    protected override void OnUnloaded(RoutedEventArgs e)
+    {
+        base.OnUnloaded(e);
+        
+        // Detach error notification handler for image loader
+        if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
+        {
+            loader.LoadFailed -= OnImageLoadFailed;
+        }
+    }
+
     private void OnActualThemeVariantChanged(object? sender, EventArgs e)
     {
         if (IsWindows11)
@@ -71,6 +92,19 @@ public partial class MainWindow : AppWindowBase
                 ClearValue(TransparencyBackgroundFallbackProperty);
             }
         }
+    }
+    
+    private void OnImageLoadFailed(object? sender, ImageLoadFailedEventArgs e)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            var fileName = Path.GetFileName(e.Url);
+            var displayName = string.IsNullOrEmpty(fileName) ? e.Url : fileName;
+            NotificationService?.ShowPersistent(
+                "Failed to load image",
+                $"Could not load '{displayName}'\n({e.Exception.Message})",
+                NotificationType.Warning);
+        });
     }
     
     private void TryEnableMicaEffect()

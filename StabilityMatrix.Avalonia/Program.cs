@@ -70,9 +70,13 @@ public class Program
 
     private static void HandleUpdateReplacement()
     {
-        // Check if we're in the named update folder
-        if (Compat.AppCurrentDir.Parent is {Name: UpdateHelper.UpdateFolderName} parentDir)
+        // Check if we're in the named update folder or the legacy update folder for 1.2.0 -> 2.0.0
+        if (Compat.AppCurrentDir is {Name: UpdateHelper.UpdateFolderName} or {Name: "Update"})
         {
+            var parentDir = Compat.AppCurrentDir.Parent;
+            if (parentDir is null) 
+                return;
+            
             var retryDelays = Backoff.DecorrelatedJitterBackoffV2(
                 TimeSpan.FromMilliseconds(350), retryCount: 5);
 

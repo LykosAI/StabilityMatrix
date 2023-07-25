@@ -27,25 +27,30 @@ public static class StringExtensions
     /// <summary>
     /// Converts string to repr
     /// </summary>
-    public static string ToRepr(this string str)
+    public static string ToRepr(this string? str)
     {
+        if (str is null)
+        {
+            return "<null>";
+        }
         using var writer = new StringWriter();
-        using var provider = CodeDomProvider.CreateProvider("CSharp");
+        writer.Write("'");
+        foreach (var ch in str)
+        {
+            writer.Write(ch switch
+            {
+                '\0' => "\\0",
+                '\n' => "\\n",
+                '\r' => "\\r",
+                '\t' => "\\t",
+                // Non ascii
+                _ when ch > 127 || ch < 32 => $"\\u{(int) ch:x4}",
+                _ => ch.ToString()
+            });
+        }
+        writer.Write("'");
         
-        provider.GenerateCodeFromExpression(
-            new CodePrimitiveExpression(str), 
-            writer, 
-            new CodeGeneratorOptions {IndentString = "\t"});
-        
-        var literal = writer.ToString();
-        // Replace split lines
-        literal = literal.Replace($"\" +{Environment.NewLine}\t\"", "");
-        // Encode non-ascii characters
-        literal = EncodeNonAsciiCharacters(literal);
-        // Surround with single quotes
-        literal = literal.Trim('"');
-        literal = $"'{literal}'";
-        return literal;
+        return writer.ToString();
     }
     
     /// <summary>

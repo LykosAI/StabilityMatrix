@@ -8,6 +8,7 @@ using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Nito.AsyncEx;
+using Nito.AsyncEx.Synchronous;
 using NLog;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Processes;
@@ -454,8 +455,25 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable
     public void Dispose()
     {
         updateCts?.Cancel();
-        updateTask?.Dispose();
         updateCts?.Dispose();
+        
+        if (updateTask is not null)
+        {
+            try
+            {
+                updateTask.WaitWithoutException(
+                    new CancellationTokenSource(5000).Token);
+                updateTask.Dispose();
+            }
+            catch (OperationCanceledException)
+            {
+                Logger.Error("During shutdown - Console update task cancellation timed out");
+            }
+            catch (InvalidOperationException e)
+            {
+                Logger.Error(e, "During shutdown - Console update task cancellation failed");
+            }
+        }
         
         GC.SuppressFinalize(this);
     }

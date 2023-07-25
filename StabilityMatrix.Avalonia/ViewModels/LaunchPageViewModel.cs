@@ -433,8 +433,9 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     
     public void Dispose()
     {
-        Console.Dispose();
         RunningPackage?.Shutdown();
+        Console.Dispose();
+
         GC.SuppressFinalize(this);
     }
 }

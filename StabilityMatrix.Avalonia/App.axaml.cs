@@ -13,6 +13,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using FluentAvalonia.UI.Controls;
@@ -107,6 +108,9 @@ public sealed class App : Application
                 setupWindow.ShowAsDialog = true;
                 setupWindow.ShowActivated = true;
                 setupWindow.ShowAsyncCts = new CancellationTokenSource();
+                
+                setupWindow.ExtendClientAreaChromeHints = Program.Args.NoWindowChromeEffects ?
+                    ExtendClientAreaChromeHints.NoChrome : ExtendClientAreaChromeHints.PreferSystemChrome;
 
                 DesktopLifetime.MainWindow = setupWindow;
 
@@ -141,6 +145,9 @@ public sealed class App : Application
         var mainWindow = Services.GetRequiredService<MainWindow>();
         mainWindow.DataContext = mainViewModel;
         mainWindow.NotificationService = notificationService;
+        
+        mainWindow.ExtendClientAreaChromeHints = Program.Args.NoWindowChromeEffects ?
+            ExtendClientAreaChromeHints.NoChrome : ExtendClientAreaChromeHints.PreferSystemChrome;
 
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
         var windowSettings = settingsManager.Settings.WindowSettings;

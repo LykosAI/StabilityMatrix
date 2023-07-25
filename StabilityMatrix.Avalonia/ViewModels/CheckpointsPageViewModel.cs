@@ -67,12 +67,13 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     public override async Task OnLoadedAsync()
     {
         DisplayedCheckpointFolders = CheckpointFolders;
-        if (Design.IsDesignMode) return;
 
         // Set UI states
         IsImportAsConnected = settingsManager.Settings.IsImportAsConnected;
         SearchFilter = string.Empty;
-
+        
+        if (Design.IsDesignMode) return;
+        
         IsLoading = CheckpointFolders.Count == 0;
         IsIndexing = CheckpointFolders.Count > 0;
         await IndexFolders();

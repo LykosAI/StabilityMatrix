@@ -101,9 +101,10 @@
                                                 TextWrapping="WrapWithOverflow"
                                                 IsVisible="{Binding IsConnectedModel}" />
                                             <!--  Image  -->
-                                            <Image
+                                            <controls:BetterAdvancedImage
                                                 Margin="0,0,0,4"
-                                                Source="{Binding PreviewImage}"
+                                                CornerRadius="4"
+                                                Source="{Binding PreviewImagePath}"
                                                 Stretch="Uniform"
                                                 IsVisible="{Binding IsConnectedModel}" />
                                         </StackPanel>

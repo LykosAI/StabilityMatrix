@@ -14,7 +14,7 @@ public class NotificationService : INotificationService
     public void Initialize(
         Visual? visual, 
         NotificationPosition position = NotificationPosition.BottomRight,
-        int maxItems = 3)
+        int maxItems = 4)
     {
         if (notificationManager is not null) return;
         notificationManager = new WindowNotificationManager(TopLevel.GetTopLevel(visual))
@@ -29,12 +29,23 @@ public class NotificationService : INotificationService
         notificationManager?.Show(notification);
     }
 
-    public void Show(string title, string message,
-        NotificationType appearance = NotificationType.Information)
+    public void Show(
+        string title, 
+        string message,
+        NotificationType appearance = NotificationType.Information,
+        TimeSpan? expiration = null)
     {
-        Show(new Notification(title, message, appearance));
+        Show(new Notification(title, message, appearance, expiration));
     }
 
+    public void ShowPersistent(
+        string title, 
+        string message,
+        NotificationType appearance = NotificationType.Information)
+    {
+        Show(new Notification(title, message, appearance, TimeSpan.Zero));
+    }
+    
     /// <inheritdoc />
     public async Task<TaskResult<T>> TryAsync<T>(
         Task<T> task,

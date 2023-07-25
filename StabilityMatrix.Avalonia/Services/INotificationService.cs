@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.Notifications;
 using StabilityMatrix.Core.Models;
@@ -41,6 +42,23 @@ public interface INotificationService
         string? message = null,
         NotificationType appearance = NotificationType.Error);
 
-    void Show(string title, string message,
+    /// <summary>
+    /// Show a notification with the given parameters.
+    /// </summary>
+    void Show(
+        string title, 
+        string message,
+        NotificationType appearance = NotificationType.Information,
+        TimeSpan? expiration = null);
+
+    /// <summary>
+    /// Show a notification that will not auto-dismiss.
+    /// </summary>
+    /// <param name="title"></param>
+    /// <param name="message"></param>
+    /// <param name="appearance"></param>
+    void ShowPersistent(
+        string title,
+        string message,
         NotificationType appearance = NotificationType.Information);
 }

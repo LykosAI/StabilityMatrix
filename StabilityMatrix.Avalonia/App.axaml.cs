@@ -13,6 +13,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using FluentAvalonia.UI.Controls;
@@ -62,6 +63,7 @@ public sealed class App : Application
     [NotNull] public static IServiceProvider? Services { get; private set; }
     [NotNull] public static Visual? VisualRoot { get; private set; }
     [NotNull] public static IStorageProvider? StorageProvider { get; private set; }
+    // ReSharper disable once MemberCanBePrivate.Global
     [NotNull] public static IConfiguration? Config { get; private set; }
     
     // ReSharper disable once MemberCanBePrivate.Global
@@ -107,6 +109,9 @@ public sealed class App : Application
                 setupWindow.ShowAsDialog = true;
                 setupWindow.ShowActivated = true;
                 setupWindow.ShowAsyncCts = new CancellationTokenSource();
+                
+                setupWindow.ExtendClientAreaChromeHints = Program.Args.NoWindowChromeEffects ?
+                    ExtendClientAreaChromeHints.NoChrome : ExtendClientAreaChromeHints.PreferSystemChrome;
 
                 DesktopLifetime.MainWindow = setupWindow;
 
@@ -141,6 +146,9 @@ public sealed class App : Application
         var mainWindow = Services.GetRequiredService<MainWindow>();
         mainWindow.DataContext = mainViewModel;
         mainWindow.NotificationService = notificationService;
+        
+        mainWindow.ExtendClientAreaChromeHints = Program.Args.NoWindowChromeEffects ?
+            ExtendClientAreaChromeHints.NoChrome : ExtendClientAreaChromeHints.PreferSystemChrome;
 
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
         var windowSettings = settingsManager.Settings.WindowSettings;
@@ -475,11 +483,13 @@ public sealed class App : Application
 
     private static LoggingConfiguration ConfigureLogging()
     {
-        var logConfig = new LoggingConfiguration();
-
-        // File target
-        logConfig.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, 
-            new FileTarget("logfile")
+        LogManager.Setup().LoadConfiguration(builder => {
+            var debugTarget = builder.ForTarget("console").WriteTo(new DebuggerTarget
+            {
+                Layout = "${message}"
+            }).WithAsync();
+            
+            var fileTarget = builder.ForTarget("logfile").WriteTo(new FileTarget
             {
                 Layout = "${longdate}|${level:uppercase=true}|${logger}|${message:withexception=true}",
                 ArchiveOldFileOnStartup = true,
@@ -487,19 +497,21 @@ public sealed class App : Application
                 ArchiveFileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/app.{#}.log",
                 ArchiveNumbering = ArchiveNumberingMode.Rolling,
                 MaxArchiveFiles = 2
-            });
-        
-        // Debugger Target
-        logConfig.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, 
-            new DebuggerTarget("debugger")
-            {
-                Layout = "${message}"
-            });
+            }).WithAsync();
+            
+            // Filter some sources to be warn levels or above only
+            builder.ForLogger("System.*").WriteToNil(NLog.LogLevel.Warn);
+            builder.ForLogger("Microsoft.*").WriteToNil(NLog.LogLevel.Warn);
+            builder.ForLogger("Microsoft.Extensions.Http.*").WriteToNil(NLog.LogLevel.Warn);
+            
+            builder.ForLogger().FilterMinLevel(NLog.LogLevel.Trace).WriteTo(debugTarget);
+            builder.ForLogger().FilterMinLevel(NLog.LogLevel.Debug).WriteTo(fileTarget);
+        });
         
         // Sentry
         if (SentrySdk.IsEnabled)
         {
-            logConfig.AddSentry(o =>
+            LogManager.Configuration.AddSentry(o =>
             {
                 o.InitializeSdk = false;
                 o.Layout = "${message}";
@@ -513,9 +525,6 @@ public sealed class App : Application
             });
         }
 
-        LogManager.Configuration = logConfig;
-
-
-        return logConfig;
+        return LogManager.Configuration;
     }
 }

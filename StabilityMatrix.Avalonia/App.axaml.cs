@@ -483,11 +483,13 @@ public sealed class App : Application
 
     private static LoggingConfiguration ConfigureLogging()
     {
-        var logConfig = new LoggingConfiguration();
-
-        // File target
-        logConfig.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, 
-            new FileTarget("logfile")
+        LogManager.Setup().LoadConfiguration(builder => {
+            var debugTarget = builder.ForTarget("console").WriteTo(new DebuggerTarget
+            {
+                Layout = "${message}"
+            }).WithAsync();
+            
+            var fileTarget = builder.ForTarget("logfile").WriteTo(new FileTarget
             {
                 Layout = "${longdate}|${level:uppercase=true}|${logger}|${message:withexception=true}",
                 ArchiveOldFileOnStartup = true,
@@ -495,19 +497,21 @@ public sealed class App : Application
                 ArchiveFileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/app.{#}.log",
                 ArchiveNumbering = ArchiveNumberingMode.Rolling,
                 MaxArchiveFiles = 2
-            });
-        
-        // Debugger Target
-        logConfig.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, 
-            new DebuggerTarget("debugger")
-            {
-                Layout = "${message}"
-            });
+            }).WithAsync();
+            
+            // Filter some sources to be warn levels or above only
+            builder.ForLogger("System.*").WriteToNil(NLog.LogLevel.Warn);
+            builder.ForLogger("Microsoft.*").WriteToNil(NLog.LogLevel.Warn);
+            builder.ForLogger("Microsoft.Extensions.Http.*").WriteToNil(NLog.LogLevel.Warn);
+            
+            builder.ForLogger().FilterMinLevel(NLog.LogLevel.Trace).WriteTo(debugTarget);
+            builder.ForLogger().FilterMinLevel(NLog.LogLevel.Debug).WriteTo(fileTarget);
+        });
         
         // Sentry
         if (SentrySdk.IsEnabled)
         {
-            logConfig.AddSentry(o =>
+            LogManager.Configuration.AddSentry(o =>
             {
                 o.InitializeSdk = false;
                 o.Layout = "${message}";
@@ -521,9 +525,6 @@ public sealed class App : Application
             });
         }
 
-        LogManager.Configuration = logConfig;
-
-
-        return logConfig;
+        return LogManager.Configuration;
     }
 }

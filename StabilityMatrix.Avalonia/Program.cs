@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -16,6 +17,7 @@ using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
 using Semver;
 using Sentry;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Helper;
@@ -27,7 +29,7 @@ namespace StabilityMatrix.Avalonia;
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class Program
 {
-    private static bool isExceptionDialogEnabled;
+    public static AppArgs Args { get; } = new();
     
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
@@ -35,6 +37,11 @@ public class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        Args.DebugExceptionDialog = args.Contains("--debug-exception-dialog");
+        Args.DebugSentry = args.Contains("--debug-sentry");
+        Args.NoSentry = args.Contains("--no-sentry");
+        Args.NoWindowChromeEffects = args.Contains("--no-window-chrome-effects");
+        
         HandleUpdateReplacement();
         
         var infoVersion = Assembly.GetExecutingAssembly()
@@ -42,14 +49,13 @@ public class Program
         Compat.AppVersion = SemVersion.Parse(infoVersion ?? "0.0.0", SemVersionStyles.Strict);
         
         // Configure exception dialog for unhandled exceptions
-        if (!Debugger.IsAttached || args.Contains("--debug-exception-dialog"))
+        if (!Debugger.IsAttached || Args.DebugExceptionDialog)
         {
-            isExceptionDialogEnabled = true;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         }
         
         // Configure Sentry
-        if ((Debugger.IsAttached && args.Contains("--debug-sentry")) || !args.Contains("--no-sentry"))
+        if (!Args.NoSentry && (!Debugger.IsAttached || Args.DebugSentry))
         {
             ConfigureSentry();
         }
@@ -88,6 +94,12 @@ public class Program
                 try
                 {
                     currentExe.CopyTo(targetExe, true);
+                    
+                    // Ensure permissions are set for unix
+                    if (Compat.IsUnix)
+                    {
+                        File.SetUnixFileMode(targetExe, (UnixFileMode) 0x755);
+                    }
                     
                     // Start the new app
                     Process.Start(targetExe);

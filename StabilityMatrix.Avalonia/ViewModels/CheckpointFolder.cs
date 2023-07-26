@@ -198,9 +198,11 @@ public partial class CheckpointFolder : ViewModelBase
         var textBox = new TextBox();
         var dialog = new ContentDialog
         {
+            Title = "Folder name",
             Content = textBox,
             DefaultButton = ContentDialogButton.Primary,
-            PrimaryButtonText = "OK",
+            PrimaryButtonText = "Create",
+            CloseButtonText = "Cancel",
             IsPrimaryButtonEnabled = true,
         };
 
@@ -232,106 +234,112 @@ public partial class CheckpointFolder : ViewModelBase
     /// </summary>
     public async Task ImportFilesAsync(IEnumerable<string> files, bool convertToConnected = false)
     {
-        Progress.Value = 0;
-        var copyPaths = files.ToDictionary(k => k, v => Path.Combine(DirectoryPath, Path.GetFileName(v)));
-        
-        var progress = new Progress<ProgressReport>(report =>
+        try
         {
-            Progress.IsIndeterminate = false;
-            Progress.Value = report.Percentage;
-            // For multiple files, add count
-            Progress.Text = copyPaths.Count > 1 ? $"Importing {report.Title} ({report.Message})" : $"Importing {report.Title}";
-        });
-
-        await FileTransfers.CopyFiles(copyPaths, progress);
-        
-        // Hash files and convert them to connected model if found
-        if (convertToConnected)
-        {
-            var modelFilesCount = copyPaths.Count;
-            var modelFiles = copyPaths.Values
-                .Select(path => new FilePath(path));
+            Progress.Value = 0;
+            var copyPaths = files.ToDictionary(k => k, v => Path.Combine(DirectoryPath, Path.GetFileName(v)));
             
-            // Holds tasks for model queries after hash
-            var modelQueryTasks = new List<Task<bool>>();
-
-            foreach (var (i, modelFile) in modelFiles.Enumerate())
+            var progress = new Progress<ProgressReport>(report =>
             {
-                var hashProgress = new Progress<ProgressReport>(report =>
-                {
-                    Progress.IsIndeterminate = false;
-                    Progress.Value = report.Percentage;
-                    Progress.Text = modelFilesCount > 1 ? 
-                        $"Computing metadata for {modelFile.Info.Name} ({i}/{modelFilesCount})" : 
-                        $"Computing metadata for {report.Title}";
-                });
+                Progress.IsIndeterminate = false;
+                Progress.Value = report.Percentage;
+                // For multiple files, add count
+                Progress.Text = copyPaths.Count > 1 ? $"Importing {report.Title} ({report.Message})" : $"Importing {report.Title}";
+            });
+
+            await FileTransfers.CopyFiles(copyPaths, progress);
+            
+            // Hash files and convert them to connected model if found
+            if (convertToConnected)
+            {
+                var modelFilesCount = copyPaths.Count;
+                var modelFiles = copyPaths.Values
+                    .Select(path => new FilePath(path));
                 
-                var hashBlake3 = await FileHash.GetBlake3Async(modelFile, hashProgress);
-                
-                // Start a task to query the model in background
-                var queryTask = Task.Run(async () =>
+                // Holds tasks for model queries after hash
+                var modelQueryTasks = new List<Task<bool>>();
+
+                foreach (var (i, modelFile) in modelFiles.Enumerate())
                 {
-                    var result = await modelFinder.LocalFindModel(hashBlake3);
-                    result ??= await modelFinder.RemoteFindModel(hashBlake3);
-
-                    if (result is null) return false; // Not found
-
-                    var (model, version, file) = result.Value;
-                    
-                    // Save connected model info json
-                    var modelFileName = Path.GetFileNameWithoutExtension(modelFile.Info.Name);
-                    var modelInfo = new ConnectedModelInfo(
-                        model, version, file, DateTimeOffset.UtcNow);
-                    await modelInfo.SaveJsonToDirectory(DirectoryPath, modelFileName);
-
-                    // If available, save thumbnail
-                    var image = version.Images?.FirstOrDefault();
-                    if (image != null)
+                    var hashProgress = new Progress<ProgressReport>(report =>
                     {
-                        var imageExt = Path.GetExtension(image.Url).TrimStart('.');
-                        if (imageExt is "jpg" or "jpeg" or "png")
+                        Progress.IsIndeterminate = report.IsIndeterminate;
+                        Progress.Value = report.Percentage;
+                        Progress.Text = modelFilesCount > 1 ? 
+                            $"Computing metadata for {modelFile.Name} ({i}/{modelFilesCount})" : 
+                            $"Computing metadata for {modelFile.Name}";
+                    });
+                    
+                    var hashBlake3 = await FileHash.GetBlake3Async(modelFile, hashProgress);
+                    
+                    // Start a task to query the model in background
+                    var queryTask = Task.Run(async () =>
+                    {
+                        var result = await modelFinder.LocalFindModel(hashBlake3);
+                        result ??= await modelFinder.RemoteFindModel(hashBlake3);
+
+                        if (result is null) return false; // Not found
+
+                        var (model, version, file) = result.Value;
+                        
+                        // Save connected model info json
+                        var modelFileName = Path.GetFileNameWithoutExtension(modelFile.Info.Name);
+                        var modelInfo = new ConnectedModelInfo(
+                            model, version, file, DateTimeOffset.UtcNow);
+                        await modelInfo.SaveJsonToDirectory(DirectoryPath, modelFileName);
+
+                        // If available, save thumbnail
+                        var image = version.Images?.FirstOrDefault();
+                        if (image != null)
                         {
-                            var imageDownloadPath = Path.GetFullPath(
-                                Path.Combine(DirectoryPath, $"{modelFileName}.preview.{imageExt}"));
-                            await downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
+                            var imageExt = Path.GetExtension(image.Url).TrimStart('.');
+                            if (imageExt is "jpg" or "jpeg" or "png")
+                            {
+                                var imageDownloadPath = Path.GetFullPath(
+                                    Path.Combine(DirectoryPath, $"{modelFileName}.preview.{imageExt}"));
+                                await downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
+                            }
                         }
-                    }
 
-                    return true;
-                });
-                modelQueryTasks.Add(queryTask);
+                        return true;
+                    });
+                    modelQueryTasks.Add(queryTask);
+                }
+                
+                // Set progress to indeterminate
+                Progress.IsIndeterminate = true;
+                Progress.Text = "Checking connected model information";
+                
+                // Wait for all model queries to finish
+                var modelQueryResults = await Task.WhenAll(modelQueryTasks);
+                
+                var successCount = modelQueryResults.Count(r => r);
+                var totalCount = modelQueryResults.Length;
+                var failCount = totalCount - successCount;
+
+                await IndexAsync();
+                
+                Progress.Value = 100;
+                Progress.Text = successCount switch
+                {
+                    0 when failCount > 0 =>
+                        "Import complete. No connected data found.",
+                    > 0 when failCount > 0 =>
+                        $"Import complete. Found connected data for {successCount} of {totalCount} models.",
+                    1 when failCount == 0 =>
+                        "Import complete. Found connected data for 1 model.",
+                    _ => $"Import complete. Found connected data for all {totalCount} models."
+                };
             }
-            
-            // Set progress to indeterminate
-            Progress.IsIndeterminate = true;
-            Progress.Text = "Checking connected model information";
-            
-            // Wait for all model queries to finish
-            var modelQueryResults = await Task.WhenAll(modelQueryTasks);
-            
-            var successCount = modelQueryResults.Count(r => r);
-            var totalCount = modelQueryResults.Length;
-            var failCount = totalCount - successCount;
-
-            await IndexAsync();
-            
-            Progress.Value = 100;
-            Progress.Text = successCount switch
+            else
             {
-                0 when failCount > 0 =>
-                    "Import complete. No connected data found.",
-                > 0 when failCount > 0 =>
-                    $"Import complete. Found connected data for {successCount} of {totalCount} models.",
-                _ => $"Import complete. Found connected data for all {totalCount} models."
-            };
-            
-            DelayedClearProgress(TimeSpan.FromSeconds(1.5));
+                Progress.Text = "Import complete";
+                Progress.Value = 100;
+                await IndexAsync();
+            }
         }
-        else
+        finally
         {
-            Progress.Text = "Import complete";
-            Progress.Value = 100;
-            await IndexAsync();
             DelayedClearProgress(TimeSpan.FromSeconds(1.5));
         }
     }
@@ -345,6 +353,7 @@ public partial class CheckpointFolder : ViewModelBase
         {
             IsImportInProgress = false;
             Progress.Value = 0;
+            Progress.IsIndeterminate = false;
             Progress.Text = string.Empty;
         });
     }

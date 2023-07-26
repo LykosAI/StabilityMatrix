@@ -196,12 +196,12 @@ public abstract class BaseGitPackage : BasePackage
     }
 
     public override async Task<string> Update(InstalledPackage installedPackage,
-        IProgress<ProgressReport>? progress = null)
+        IProgress<ProgressReport>? progress = null, bool includePrerelease = false)
     {
         if (string.IsNullOrWhiteSpace(installedPackage.InstalledBranch))
         {
             var releases = await GetAllReleases();
-            var latestRelease = releases.First();
+            var latestRelease = releases.First(x => includePrerelease || !x.Prerelease);
             await DownloadPackage(latestRelease.TagName, false, progress);
             await InstallPackage(progress);
             return latestRelease.TagName;

@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Semver;
+using Sentry.Protocol;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Core.Helper;
@@ -52,6 +53,11 @@ public static class Compat
     /// Current directory the app is in.
     /// </summary>
     public static DirectoryPath AppCurrentDir { get; }
+
+    /// <summary>
+    /// Current path to the app.
+    /// </summary>
+    public static FilePath AppCurrentPath => AppCurrentDir.JoinFile(GetExecutableName());
     
     // File extensions
     /// <summary>
@@ -95,9 +101,10 @@ public static class Compat
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
             Platform = PlatformKind.Linux | PlatformKind.Unix;
-            // We need to get application path using `$APPIMAGE`, then get the directory name
+            
+            // For AppImage builds, the path is in `$APPIMAGE`
             var appPath = Environment.GetEnvironmentVariable("APPIMAGE") ??
-                          throw new Exception("Could not find application path");
+                          AppContext.BaseDirectory;
             AppCurrentDir = Path.GetDirectoryName(appPath) ??
                             throw new Exception("Could not find application directory");
             ExeExtension = "";

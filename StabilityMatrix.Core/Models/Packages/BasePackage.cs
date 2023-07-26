@@ -25,7 +25,9 @@ public abstract class BasePackage
     public abstract Task RunPackage(string installedPackagePath, string arguments);
     public abstract Task Shutdown();
     public abstract Task<bool> CheckForUpdates(InstalledPackage package);
-    public abstract Task<string> Update(InstalledPackage installedPackage, IProgress<ProgressReport>? progress = null);
+
+    public abstract Task<string> Update(InstalledPackage installedPackage,
+        IProgress<ProgressReport>? progress = null, bool includePrerelease = false);
     public abstract Task<IEnumerable<Release>> GetReleaseTags();
 
     public abstract List<LaunchOptionDefinition> LaunchOptions { get; }

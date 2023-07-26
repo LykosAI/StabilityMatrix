@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit;
 using AvaloniaEdit.TextMate;
@@ -19,15 +20,23 @@ public partial class LaunchPageView : UserControlBase
     {
         InitializeComponent();
         var editor = this.FindControl<TextEditor>("Console");
-        var options = new RegistryOptions(ThemeName.HighContrastLight);
+        if (editor is not null)
+        {
+            var options = new RegistryOptions(ThemeName.DarkPlus);
         
-        var textMate = editor.InstallTextMate(options);
-        var scope = options.GetScopeByLanguageId("log");
+            // Config hyperlinks
+            editor.TextArea.Options.EnableHyperlinks = true;
+            editor.TextArea.Options.RequireControlModifierForHyperlinkClick = false;
+            editor.TextArea.TextView.LinkTextForegroundBrush = Brushes.Coral;
         
-        if (scope is null) throw new InvalidOperationException("Scope is null");
+            var textMate = editor.InstallTextMate(options);
+            var scope = options.GetScopeByLanguageId("log");
         
-        textMate.SetGrammar(scope);
-        textMate.SetTheme(options.LoadTheme(ThemeName.DarkPlus));
+            if (scope is null) throw new InvalidOperationException("Scope is null");
+        
+            textMate.SetGrammar(scope);
+            textMate.SetTheme(options.LoadTheme(ThemeName.DarkPlus));
+        }
     }
 
     protected override void OnUnloaded(RoutedEventArgs e)

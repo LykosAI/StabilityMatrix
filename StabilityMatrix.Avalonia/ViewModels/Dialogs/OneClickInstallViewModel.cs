@@ -106,7 +106,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
         SubHeaderText = "Getting latest version...";
         var latestVersion = await SelectedPackage.GetLatestVersion();
         SelectedPackage.InstallLocation =
-            Path.Combine(libraryDir, "Packages", SelectedPackage.DisplayName);
+            Path.Combine(libraryDir, "Packages", SelectedPackage.Name);
         SelectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
         
         await DownloadPackage(latestVersion);
@@ -118,7 +118,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
         var installedPackage = new InstalledPackage
         {
             DisplayName = SelectedPackage.DisplayName,
-            LibraryPath = Path.Combine("Packages", SelectedPackage.DisplayName),
+            LibraryPath = Path.Combine("Packages", SelectedPackage.Name),
             Id = Guid.NewGuid(),
             PackageName = SelectedPackage.Name,
             PackageVersion = latestVersion,

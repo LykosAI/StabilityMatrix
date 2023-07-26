@@ -1,5 +1,4 @@
-﻿using System.Runtime.Versioning;
-using StabilityMatrix.Core.Helper;
+﻿using System.Runtime.InteropServices;
 using StabilityMatrix.Core.ReparsePoints;
 
 namespace StabilityMatrix.Tests.ReparsePoints;
@@ -15,7 +14,7 @@ public class JunctionTest
     [TestInitialize]
     public void Initialize()
     {
-        if (!Compat.IsWindows)
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             Assert.Inconclusive("Test cannot be run on anything but Windows currently.");
             return;

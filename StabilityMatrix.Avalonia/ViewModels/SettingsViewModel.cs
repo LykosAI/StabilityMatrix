@@ -41,7 +41,8 @@ public partial class SettingsViewModel : PageViewModelBase
     public override IconSource IconSource => new SymbolIconSource {Symbol = Symbol.Settings, IsFilled = true};
     
     // ReSharper disable once MemberCanBeMadeStatic.Global
-    public string AppVersion => $"Version {Compat.AppVersion}";
+    public string AppVersion => $"Version {Compat.AppVersion}" + 
+                                (Program.IsDebugBuild ? " (Debug)" : "");
     
     // Theme section
     [ObservableProperty] private string? selectedTheme;

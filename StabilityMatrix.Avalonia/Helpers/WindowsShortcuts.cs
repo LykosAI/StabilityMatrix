@@ -18,6 +18,7 @@ public static class WindowsShortcuts
         string iconPath,
         string description)
     {
+        // ReSharper disable once SuspiciousTypeConversion.Global
         var link = (IShellLink) new ShellLink();
 
         // setup shortcut information
@@ -25,7 +26,7 @@ public static class WindowsShortcuts
         link.SetPath(targetPath);
         link.SetIconLocation(iconPath, 0);
 
-        // save it
+        // ReSharper disable once SuspiciousTypeConversion.Global
         var file = (IPersistFile) link;
         file.Save(shortcutPath, false);
     }

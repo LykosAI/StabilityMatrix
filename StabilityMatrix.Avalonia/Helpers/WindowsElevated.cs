@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
+using System.Linq;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
-using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.Helpers;
 
@@ -11,13 +11,15 @@ public static class WindowsElevated
     /// <summary>
     /// Move a file from source to target using elevated privileges.
     /// </summary>
-    /// <param name="sourcePath"></param>
-    /// <param name="targetPath"></param>
-    public static async Task<int> MoveFile(string sourcePath, string targetPath)
+    public static async Task<int> MoveFiles(params (string sourcePath, string targetPath)[] moves)
     {
+        // Combine into single command
+        var args = string.Join(" & ", moves.Select(
+            x => $"move \"{x.sourcePath}\" \"{x.targetPath}\""));
+        
         using var process = new Process();
         process.StartInfo.FileName = "cmd.exe";
-        process.StartInfo.Arguments = $"/c move \"{sourcePath}\" \"{targetPath}\"";
+        process.StartInfo.Arguments = $"/c {args}";
         process.StartInfo.UseShellExecute = true;
         process.StartInfo.Verb = "runas";
         

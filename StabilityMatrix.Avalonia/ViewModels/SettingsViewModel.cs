@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -12,6 +13,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
@@ -181,6 +183,21 @@ public partial class SettingsViewModel : PageViewModelBase
             return;
         }
         
+        // Confirmation dialog
+        var dialog = new BetterContentDialog
+        {
+            Title = "This will create a shortcut for Stability Matrix in the Start Menu for all users",
+            Content = "You will be prompted for administrator privileges. Continue?",
+            PrimaryButtonText = "Yes",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary
+        };
+        
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+        
         await using var _ = new MinimumDelay(200, 300);
         
         var shortcutDir = new DirectoryPath(
@@ -200,20 +217,22 @@ public partial class SettingsViewModel : PageViewModelBase
             "Stability Matrix");
         
         // Move to target
-        var moveLinkResult = await WindowsElevated.MoveFile(
-            tempDir.JoinFile("Stability Matrix.lnk"), shortcutLink);
-        if (moveLinkResult != 0)
+        try
         {
-            notificationService.Show("Failed to create shortcut", $"Could not copy shortcut to {shortcutLink}");
-            return;
+            var moveLinkResult = await WindowsElevated.MoveFiles(
+                (tempDir.JoinFile("Stability Matrix.lnk"), shortcutLink),
+                (tempDir.JoinFile("Stability Matrix.ico"), iconPath));
+            if (moveLinkResult != 0)
+            {
+                notificationService.ShowPersistent("Failed to create shortcut", $"Could not copy shortcut", 
+                    NotificationType.Error);
+            }
         }
-        
-        // Move icon
-        var moveIconResult = await WindowsElevated.MoveFile(
-            tempDir.JoinFile("Stability Matrix.ico"), iconPath);
-        if (moveIconResult != 0)
+        catch (Win32Exception e)
         {
-            notificationService.Show("Failed to create shortcut", $"Could not copy icon to {iconPath}");
+            // We'll get this exception if user cancels UAC
+            Logger.Warn(e, "Could not create shortcut");
+            notificationService.Show("Could not create shortcut", "", NotificationType.Warning);
         }
     }
 

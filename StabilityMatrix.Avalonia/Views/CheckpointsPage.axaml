@@ -383,7 +383,7 @@
                 HorizontalAlignment="Right">
                 <DropDownButton.Flyout>
                     <ui:FAMenuFlyout 
-                        ItemsSource="{Binding DisplayedCheckpointFolders}">
+                        ItemsSource="{Binding CheckpointFolders}">
                         <ui:FAMenuFlyout.ItemTemplate>
                             <DataTemplate DataType="{x:Type vm:CheckpointFolder}">
                                 <ui:ToggleMenuFlyoutItem 

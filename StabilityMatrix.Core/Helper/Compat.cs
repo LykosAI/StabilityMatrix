@@ -52,6 +52,11 @@ public static class Compat
     /// Current directory the app is in.
     /// </summary>
     public static DirectoryPath AppCurrentDir { get; }
+
+    /// <summary>
+    /// Current path to the app.
+    /// </summary>
+    public static FilePath AppCurrentPath => AppCurrentDir.JoinFile(GetExecutableName());
     
     // File extensions
     /// <summary>

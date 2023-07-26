@@ -156,11 +156,14 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
             IsFooterVisible = false,
+            MaxDialogWidth = 750,
         };
         
         var viewModel = dialogFactory.Get<SelectModelVersionViewModel>();
         viewModel.Dialog = dialog;
-        viewModel.Versions = versions.Select(v => new ModelVersionViewModel(settingsManager, v))
+        viewModel.Versions = versions.Select(version =>
+                new ModelVersionViewModel(
+                    settingsManager.Settings.InstalledModelHashes ?? new HashSet<string>(), version))
             .ToImmutableArray();
         viewModel.SelectedVersionViewModel = viewModel.Versions[0];
         

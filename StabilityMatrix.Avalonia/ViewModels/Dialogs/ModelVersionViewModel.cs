@@ -13,18 +13,16 @@ public partial class ModelVersionViewModel : ObservableObject
     [ObservableProperty] private ObservableCollection<CivitFileViewModel> civitFileViewModels;
     [ObservableProperty] private bool isInstalled;
 
-    public ModelVersionViewModel(ISettingsManager settingsManager, CivitModelVersion modelVersion)
+    public ModelVersionViewModel(HashSet<string> installedModelHashes, CivitModelVersion modelVersion)
     {
         ModelVersion = modelVersion;
 
-        var installedModelHashes = settingsManager.Settings.InstalledModelHashes;
         IsInstalled = ModelVersion.Files?.Any(file =>
-                          file is {Type: CivitFileType.Model, Hashes.BLAKE3: not null} &&
-                          installedModelHashes.Contains(file.Hashes.BLAKE3)) ??
-                      false;
+            file is {Type: CivitFileType.Model, Hashes.BLAKE3: not null} &&
+            installedModelHashes.Contains(file.Hashes.BLAKE3)) ?? false;
 
         CivitFileViewModels = new ObservableCollection<CivitFileViewModel>(
-            ModelVersion.Files?.Select(file => new CivitFileViewModel(settingsManager, file)) ??
+            ModelVersion.Files?.Select(file => new CivitFileViewModel(installedModelHashes, file)) ??
             new List<CivitFileViewModel>());
     }
 }

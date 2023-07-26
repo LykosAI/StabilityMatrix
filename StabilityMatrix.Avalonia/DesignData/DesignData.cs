@@ -96,22 +96,6 @@ public static class DesignData
         var packageFactory = Services.GetRequiredService<IPackageFactory>();
         var notificationService = Services.GetRequiredService<INotificationService>();
         
-        // Sample data
-        var sampleCivitVersions = new List<CivitModelVersion>
-        {
-            new()
-            {
-                Name = "BB95 Furry Mix",
-                Description = "v1.0.0",
-            }
-        };
-
-        var sampleViewModel = new ModelVersionViewModel(settingsManager, sampleCivitVersions[0]);
-        
-        // Sample data for dialogs
-        SelectModelVersionViewModel.Versions = new[] {sampleViewModel};
-        SelectModelVersionViewModel.SelectedVersionViewModel = sampleViewModel;
-
         LaunchOptionsViewModel = Services.GetRequiredService<LaunchOptionsViewModel>();
         LaunchOptionsViewModel.Cards = new[]
         {
@@ -240,7 +224,53 @@ public static class DesignData
     public static CheckpointBrowserViewModel CheckpointBrowserViewModel => 
         Services.GetRequiredService<CheckpointBrowserViewModel>();
     public static SelectModelVersionViewModel SelectModelVersionViewModel => 
-        Services.GetRequiredService<SelectModelVersionViewModel>();
+        DialogFactory.Get<SelectModelVersionViewModel>(vm =>
+        {
+            // Sample data
+            var sampleCivitVersions = new List<CivitModelVersion>
+            {
+                new()
+                {
+                    Name = "BB95 Furry Mix",
+                    Description = "v1.0.0",
+                    Files = new List<CivitFile>
+                    {
+                        new()
+                        {
+                            Name = "bb95-v100-uwu-reallylongfilename-v1234576802.safetensors",
+                            Type = CivitFileType.Model,
+                            Metadata = new CivitFileMetadata
+                            {
+                                Format = CivitModelFormat.SafeTensor,
+                                Fp = CivitModelFpType.fp16,
+                                Size = CivitModelSize.pruned
+                            }
+                        },
+                        new()
+                        {
+                            Name = "bb95-v100-uwu-reallylongfilename-v1234576802-fp32.safetensors",
+                            Type = CivitFileType.Model,
+                            Metadata = new CivitFileMetadata
+                            {
+                                Format = CivitModelFormat.SafeTensor,
+                                Fp = CivitModelFpType.fp32,
+                                Size = CivitModelSize.full
+                            },
+                            Hashes = new CivitFileHashes
+                            {
+                                BLAKE3 = "ABCD"
+                            }
+                        }
+                    }
+                }
+            };
+            var sampleViewModel =
+                new ModelVersionViewModel(new HashSet<string> {"ABCD"}, sampleCivitVersions[0]);
+        
+            // Sample data for dialogs
+            vm.Versions = new List<ModelVersionViewModel>{sampleViewModel};
+            vm.SelectedVersionViewModel = sampleViewModel;
+        });
     public static OneClickInstallViewModel OneClickInstallViewModel => 
         Services.GetRequiredService<OneClickInstallViewModel>();
     public static SelectDataDirectoryViewModel SelectDataDirectoryViewModel => 

@@ -13,15 +13,6 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="StabilityMatrix.Avalonia.Views.CheckpointsPage">
     
-    <controls:UserControlBase.DataTemplates>
-        <!--  Template for dropdown category checkbox item  -->
-        <DataTemplate DataType="{x:Type vm:CheckpointFolder}">
-            <ui:ToggleMenuFlyoutItem 
-                Text="{Binding TitleWithFilesCount}" 
-                IsChecked="{Binding IsCategoryEnabled, Mode=TwoWay}"/>
-        </DataTemplate>
-    </controls:UserControlBase.DataTemplates>
-    
     <controls:UserControlBase.Resources>
         <!--Direction="0"
             ShadowDepth="0"-->
@@ -392,30 +383,17 @@
                 HorizontalAlignment="Right">
                 <DropDownButton.Flyout>
                     <ui:FAMenuFlyout 
-                        ItemsSource="{Binding DisplayedCheckpointFolders}"/>
+                        ItemsSource="{Binding DisplayedCheckpointFolders}">
+                        <ui:FAMenuFlyout.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:CheckpointFolder}">
+                                <ui:ToggleMenuFlyoutItem 
+                                    Text="{Binding TitleWithFilesCount}" 
+                                    IsChecked="{Binding IsCategoryEnabled, Mode=TwoWay}"/>
+                            </DataTemplate>
+                        </ui:FAMenuFlyout.ItemTemplate>
+                    </ui:FAMenuFlyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
-            <!--<ComboBox
-                VerticalAlignment="Center"
-                HorizontalAlignment="Right"
-                ItemsSource="{Binding CheckpointFolders}"
-                MinWidth="180"
-                SelectedIndex="0">
-                
-                <ComboBox.ItemContainerStyle>
-                    <Style TargetType="ComboBoxItem">
-                        <Setter Property="Template" Value="{StaticResource CategoryDropDownStyle}" />
-                    </Style>
-                </ComboBox.ItemContainerStyle>
-
-                <ComboBox.ItemTemplate>
-                    <DataTemplate DataType="{x:Type vm:CheckpointFolder}">
-                        <StackPanel Margin="10,0,0,0" VerticalAlignment="Top">
-                            <TextBlock Margin="0,5,0,5" Text="Categories" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>-->
         </StackPanel>
 
         <!--  Main view with model cards  -->

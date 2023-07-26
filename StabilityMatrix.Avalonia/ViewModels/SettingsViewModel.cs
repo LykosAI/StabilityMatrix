@@ -85,8 +85,12 @@ public partial class SettingsViewModel : PageViewModelBase
         this.pyRunner = pyRunner;
         SharedState = sharedState;
 
-        SelectedTheme = AvailableThemes[1];
+        SelectedTheme = settingsManager.Settings.Theme ?? AvailableThemes[1];
         RemoveSymlinksOnShutdown = settingsManager.Settings.RemoveFolderLinksOnShutdown;
+        
+        settingsManager.RelayPropertyFor(this, 
+            vm => vm.SelectedTheme, 
+            settings => settings.Theme);
     }
     
     partial void OnSelectedThemeChanged(string? value)

@@ -201,7 +201,8 @@ public partial class CheckpointFolder : ViewModelBase
             Title = "Folder name",
             Content = textBox,
             DefaultButton = ContentDialogButton.Primary,
-            PrimaryButtonText = "OK",
+            PrimaryButtonText = "Create",
+            CloseButtonText = "Cancel",
             IsPrimaryButtonEnabled = true,
         };
 

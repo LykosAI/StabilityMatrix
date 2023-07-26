@@ -6,7 +6,7 @@
              xmlns:api="clr-namespace:StabilityMatrix.Core.Models.Api;assembly=StabilityMatrix.Core"
              xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
              xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="450"
              x:DataType="dialogs:SelectModelVersionViewModel"
              xmlns:icons="https://github.com/projektanker/icons.avalonia"
              xmlns:fluentAvalonia="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
@@ -15,8 +15,8 @@
     <Grid
         Margin="8"
         MinHeight="450"
-        MinWidth="700" 
-        RowDefinitions="*,Auto" 
+        MinWidth="700"
+        RowDefinitions="*,Auto"
         ColumnDefinitions="*,Auto,*">
 
         <controls:BetterImage Grid.Column="0" Grid.Row="0" Margin="8"
@@ -26,71 +26,95 @@
                               Source="{Binding PreviewImage}" />
 
 
-        <TreeView Grid.Row="0" Grid.Column="1"
+        <ListBox Grid.Row="0" Grid.Column="1"
                   Margin="8"
                   MaxHeight="450"
                   ItemsSource="{Binding Versions}"
                   SelectedItem="{Binding SelectedVersionViewModel}">
-            <TreeView.ItemTemplate>
+            <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type dialogs:ModelVersionViewModel}">
                     <StackPanel Orientation="Horizontal"
                                 MinWidth="128"
-                                Margin="-24,4,0,4">
-                        <fluentAvalonia:SymbolIcon Symbol="Checkmark" 
+                                Margin="0,4,0,4">
+                        <fluentAvalonia:SymbolIcon Symbol="Checkmark"
                                                    Foreground="Lime"
                                                    IsVisible="{Binding IsInstalled}"
-                                                   VerticalAlignment="Center"/>
-                        <TextBlock Margin="8, 0"
+                                                   VerticalAlignment="Center" />
+                        <TextBlock Margin="4, 0"
                                    Padding="4"
                                    Text="{Binding ModelVersion.Name}" />
-                        
+
                     </StackPanel>
                 </DataTemplate>
-            </TreeView.ItemTemplate>
-        </TreeView>
+            </ListBox.ItemTemplate>
+            <ListBox.Template>
+                <ControlTemplate>
+                    <ScrollViewer>
+                        <ItemsPresenter />
+                    </ScrollViewer>
+                </ControlTemplate>
+            </ListBox.Template>
+        </ListBox>
 
-        <TreeView Grid.Row="0" Grid.Column="2"
-                 Margin="8"
+        <ListBox Grid.Row="0" Grid.Column="2"
                  ItemsSource="{Binding SelectedVersionViewModel.CivitFileViewModels}"
                  SelectedItem="{Binding SelectedFile}">
-            <TreeView.ItemTemplate>
+            <ListBox.Template>
+                <ControlTemplate>
+                    <ScrollViewer>
+                        <ItemsPresenter Margin="8" />
+                    </ScrollViewer>
+                </ControlTemplate>
+            </ListBox.Template>
+            <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type dialogs:CivitFileViewModel}">
-                    <StackPanel Orientation="Horizontal" Margin="-24, 4, 4, 4">
-                        <fluentAvalonia:SymbolIcon Symbol="Checkmark" 
+                    <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="Auto, *"
+                          Margin="-4,0,0,0">
+                        <fluentAvalonia:SymbolIcon Grid.Row="0" Grid.RowSpan="2"
+                                                   Grid.Column="0"
+                                                   Margin="0, 0, 8, 0"
+                                                   Symbol="Checkmark"
                                                    Foreground="Lime"
                                                    IsVisible="{Binding IsInstalled}"
-                                                   VerticalAlignment="Center"/>
-                        <StackPanel Margin="8,0" VerticalAlignment="Top">
-                            <TextBlock Margin="4,4,0,4" Text="{Binding CivitFile.Name}" />
-                            <TextBlock Margin="0,0,0,4" FontSize="11">
-                                <Run Text="{Binding CivitFile.Metadata.Size}" />
-                                <Run Text="{Binding CivitFile.Metadata.Fp}" />
-                                <Run Text="-" />
-                                <Run Text="{Binding CivitFile.FullFilesSize, Mode=OneWay}" />
-                            </TextBlock>
-                        </StackPanel>
-                    </StackPanel>
+                                                   VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="0" Grid.Column="1"
+                            Text="{Binding CivitFile.Name}"
+                            Margin="0, 4, 0, 4"
+                            TextWrapping="Wrap" />
+                        <TextBlock Grid.Row="1" Grid.Column="1"
+                            FontSize="11"
+                            Margin="0, 4, 0, 4"
+                            TextWrapping="Wrap">
+                            <Run Text="{Binding CivitFile.Metadata.Format}" />
+                            <Run Text="-" />
+                            <Run Text="{Binding CivitFile.Metadata.Size}" />
+                            <Run Text="-" />
+                            <Run Text="{Binding CivitFile.Metadata.Fp}" />
+                            <Run Text="-" />
+                            <Run Text="{Binding CivitFile.FullFilesSize, Mode=OneWay}" />
+                        </TextBlock>
+                    </Grid>
                 </DataTemplate>
-            </TreeView.ItemTemplate>
-        </TreeView>
+            </ListBox.ItemTemplate>
+        </ListBox>
 
-        <StackPanel Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="1" 
+        <StackPanel Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="1"
                     Orientation="Horizontal"
                     HorizontalAlignment="Center">
             <Button
                 Content="Cancel"
                 HorizontalAlignment="Center"
                 Command="{Binding Cancel}"
-                Margin="8, 0"/>
-            
+                Margin="8, 0" />
+
             <Button
                 Margin="8, 0"
                 Content="Import"
                 Command="{Binding Import}"
                 IsEnabled="{Binding IsImportEnabled}"
-                Classes="accent"/>
+                Classes="accent" />
         </StackPanel>
 
     </Grid>
-    
+
 </UserControl>

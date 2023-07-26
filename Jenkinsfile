@@ -1,4 +1,4 @@
-node("Windows") {
+node("Diligence") {
     def repoName = "StabilityMatrix"
     def author = "ionite34"
     def version = ""
@@ -12,7 +12,7 @@ node("Windows") {
     }
     
     stage('Test') {
-        bat "dotnet test StabilityMatrix.Tests"
+        sh "dotnet test StabilityMatrix.Tests"
     }
 
     if (env.BRANCH_NAME == 'main') {
@@ -27,16 +27,21 @@ node("Windows") {
             }
         }
         
-        stage('Publish') {
-            bat "dotnet publish .\\StabilityMatrix.Avalonia\\StabilityMatrix.Avalonia.csproj -c Release -o out -r win-x64 -p:PublishSingleFile=true -p:VersionPrefix=2.0.0 -p:VersionSuffix=${version} -p:IncludeNativeLibrariesForSelfExtract=true"
+        stage('Publish Windows') {
+            sh "dotnet publish ./StabilityMatrix.Avalonia/StabilityMatrix.Avalonia.csproj -c Release -o out -r win-x64 -p:PublishSingleFile=true -p:VersionPrefix=2.0.0 -p:VersionSuffix=${version} -p:IncludeNativeLibrariesForSelfExtract=true"
+        }
+
+        stage('Publish Linux') {
+            sh "/home/jenkins/.dotnet/tools/pupnet --runtime linux-x64 --kind appimage --app-version ${version} --clean -y"
         }
         
         stage ('Archive Artifacts') {
             archiveArtifacts artifacts: 'out/*.exe', followSymlinks: false
+            archiveArtifacts artifacts: 'out/*.appimage', followSymlinks: false
         }
-    } else {
-        stage('Publish') {
-            bat "dotnet publish .\\StabilityMatrix.Avalonia\\StabilityMatrix.Avalonia.csproj -c Release -o out -r win-x64 -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true"
-        }
+    }
+
+    stage('Cleanup') {
+        cleanWs()
     }
 }

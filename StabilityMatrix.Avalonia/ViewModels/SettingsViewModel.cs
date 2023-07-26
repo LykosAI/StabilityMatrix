@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -12,6 +13,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
+using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.Views;
@@ -19,6 +22,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
@@ -41,7 +45,8 @@ public partial class SettingsViewModel : PageViewModelBase
     public override IconSource IconSource => new SymbolIconSource {Symbol = Symbol.Settings, IsFilled = true};
     
     // ReSharper disable once MemberCanBeMadeStatic.Global
-    public string AppVersion => $"Version {Compat.AppVersion}";
+    public string AppVersion => $"Version {Compat.AppVersion}" + 
+                                (Program.IsDebugBuild ? " (Debug)" : "");
     
     // Theme section
     [ObservableProperty] private string? selectedTheme;
@@ -80,8 +85,12 @@ public partial class SettingsViewModel : PageViewModelBase
         this.pyRunner = pyRunner;
         SharedState = sharedState;
 
-        SelectedTheme = AvailableThemes[1];
+        SelectedTheme = settingsManager.Settings.Theme ?? AvailableThemes[1];
         RemoveSymlinksOnShutdown = settingsManager.Settings.RemoveFolderLinksOnShutdown;
+        
+        settingsManager.RelayPropertyFor(this, 
+            vm => vm.SelectedTheme, 
+            settings => settings.Theme);
     }
     
     partial void OnSelectedThemeChanged(string? value)
@@ -134,6 +143,112 @@ public partial class SettingsViewModel : PageViewModelBase
         await dialog.ShowAsync();
     }
 
+    #region System
+
+    /// <summary>
+    /// Adds Stability Matrix to Start Menu for the current user.
+    /// </summary>
+    [RelayCommand]
+    private async Task AddToStartMenu()
+    {
+        if (!Compat.IsWindows)
+        {
+            notificationService.Show(
+                "Not supported", "This feature is only supported on Windows.");
+            return;
+        }
+        
+        await using var _ = new MinimumDelay(200, 300);
+        
+        var shortcutDir = new DirectoryPath(
+            Environment.GetFolderPath(Environment.SpecialFolder.StartMenu),
+            "Programs");
+        var shortcutLink = shortcutDir.JoinFile("Stability Matrix.lnk");
+
+        var appPath = Compat.AppCurrentPath;
+        var iconPath = shortcutDir.JoinFile("Stability Matrix.ico");
+        await Assets.AppIcon.ExtractTo(iconPath);
+        
+        WindowsShortcuts.CreateShortcut(
+            shortcutLink, appPath, iconPath, "Stability Matrix");
+        
+        notificationService.Show("Added to Start Menu",
+            "Stability Matrix has been added to the Start Menu.", NotificationType.Success);
+    }
+
+    /// <summary>
+    /// Add Stability Matrix to Start Menu for all users.
+    /// <remarks>Requires Admin elevation.</remarks>
+    /// </summary>
+    [RelayCommand]
+    private async Task AddToGlobalStartMenu()
+    {
+        if (!Compat.IsWindows)
+        {
+            notificationService.Show(
+                "Not supported", "This feature is only supported on Windows.");
+            return;
+        }
+        
+        // Confirmation dialog
+        var dialog = new BetterContentDialog
+        {
+            Title = "This will create a shortcut for Stability Matrix in the Start Menu for all users",
+            Content = "You will be prompted for administrator privileges. Continue?",
+            PrimaryButtonText = "Yes",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary
+        };
+        
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+        
+        await using var _ = new MinimumDelay(200, 300);
+        
+        var shortcutDir = new DirectoryPath(
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu),
+            "Programs");
+        var shortcutLink = shortcutDir.JoinFile("Stability Matrix.lnk");
+        
+        var appPath = Compat.AppCurrentPath;
+        var iconPath = shortcutDir.JoinFile("Stability Matrix.ico");
+        
+        // We can't directly write to the targets, so extract to temporary directory first
+        using var tempDir = new TempDirectoryPath();
+        
+        await Assets.AppIcon.ExtractTo(tempDir.JoinFile("Stability Matrix.ico"));
+        WindowsShortcuts.CreateShortcut(
+            tempDir.JoinFile("Stability Matrix.lnk"), appPath, iconPath, 
+            "Stability Matrix");
+        
+        // Move to target
+        try
+        {
+            var moveLinkResult = await WindowsElevated.MoveFiles(
+                (tempDir.JoinFile("Stability Matrix.lnk"), shortcutLink),
+                (tempDir.JoinFile("Stability Matrix.ico"), iconPath));
+            if (moveLinkResult != 0)
+            {
+                notificationService.ShowPersistent("Failed to create shortcut", $"Could not copy shortcut", 
+                    NotificationType.Error);
+            }
+        }
+        catch (Win32Exception e)
+        {
+            // We'll get this exception if user cancels UAC
+            Logger.Warn(e, "Could not create shortcut");
+            notificationService.Show("Could not create shortcut", "", NotificationType.Warning);
+            return;
+        }
+        
+        notificationService.Show("Added to Start Menu", 
+            "Stability Matrix has been added to the Start Menu for all users.", NotificationType.Success);
+    }
+
+    #endregion
+    
     #region Debug Section
     public void LoadDebugInfo()
     {

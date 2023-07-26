@@ -110,7 +110,12 @@ public partial class MainWindow : AppWindowBase
     private void TryEnableMicaEffect()
     {
         TransparencyBackgroundFallback = Brushes.Transparent;
-        TransparencyLevelHint = new[] { WindowTransparencyLevel.Mica, WindowTransparencyLevel.Blur };
+        TransparencyLevelHint = new[]
+        {
+            WindowTransparencyLevel.Mica, 
+            WindowTransparencyLevel.AcrylicBlur,
+            WindowTransparencyLevel.Blur
+        };
         
         if (ActualThemeVariant == ThemeVariant.Dark)
         {
@@ -119,7 +124,7 @@ public partial class MainWindow : AppWindowBase
 
             color = color.LightenPercent(-0.8f);
 
-            Background = new ImmutableSolidColorBrush(color, 0.9);
+            Background = new ImmutableSolidColorBrush(color, 0.8);
         }
         else if (ActualThemeVariant == ThemeVariant.Light)
         {

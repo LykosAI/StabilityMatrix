@@ -15,18 +15,29 @@
     <Grid>
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <Grid>
-                <StackPanel Spacing="4">
-                    <ui:SettingsExpander Header="Theme" Margin="8"
-                                         IconSource="WeatherMoon">
-                        <ui:SettingsExpander.Footer>
-                            <ComboBox
-                                ItemsSource="{Binding AvailableThemes}"
-                                SelectedItem="{Binding SelectedTheme}"
-                                Margin="8"
-                                MinWidth="100"/>
-                        </ui:SettingsExpander.Footer>
-                    </ui:SettingsExpander>
-
+                <StackPanel Spacing="2" Margin="12,16">
+                    <!-- Theme -->
+                    <Grid RowDefinitions="auto,*">
+                        <TextBlock 
+                            FontWeight="Medium"
+                            Text="Appearance" 
+                            Margin="0,0,0,8" />
+                        <StackPanel Grid.Row="1">
+                            <ui:SettingsExpander 
+                                Header="Theme" 
+                                IconSource="WeatherMoon"
+                                Margin="8,0">
+                                <ui:SettingsExpander.Footer>
+                                    <ComboBox
+                                        ItemsSource="{Binding AvailableThemes}"
+                                        SelectedItem="{Binding SelectedTheme}"
+                                        Margin="8"
+                                        MinWidth="100"/>
+                                </ui:SettingsExpander.Footer>
+                            </ui:SettingsExpander>
+                        </StackPanel>
+                    </Grid>
+                    
                     <!--  TODO: Text2Image host port settings  -->
                     
                     <!-- Checkpoints Manager Options -->
@@ -34,19 +45,18 @@
                         <TextBlock 
                             FontWeight="Medium"
                             Text="Checkpoint Manager" 
-                            Margin="8,16,0,0" />
-                        <StackPanel Grid.Row="1">
-                            <ui:SettingsExpander
-                                IconSource="Folder"
-                                Header="Remove shared checkpoints directory symbolic links on shutdown"
-                                Description="Select this option if you're having problems moving Stability Matrix to another drive."
-                                Margin="8">
-                                <ui:SettingsExpander.Footer>
-                                    <CheckBox Margin="8"
-                                              IsChecked="{Binding RemoveSymlinksOnShutdown}"/>
-                                </ui:SettingsExpander.Footer>
-                            </ui:SettingsExpander>
-                        </StackPanel>
+                            Margin="0,16,0,8" />
+                        <ui:SettingsExpander
+                            Grid.Row="1"
+                            IconSource="Folder"
+                            Header="Remove shared checkpoints directory symbolic links on shutdown"
+                            Description="Select this option if you're having problems moving Stability Matrix to another drive"
+                            Margin="8,0">
+                            <ui:SettingsExpander.Footer>
+                                <CheckBox Margin="8"
+                                          IsChecked="{Binding RemoveSymlinksOnShutdown}"/>
+                            </ui:SettingsExpander.Footer>
+                        </ui:SettingsExpander>
                     </Grid>
                     
                     <!-- Python Options -->
@@ -54,36 +64,82 @@
                         <TextBlock 
                             FontWeight="Medium"
                             Text="Python Environment" 
-                            Margin="8,16,0,0" />
-                        <StackPanel Grid.Row="1">
-                            <ui:SettingsExpander
-                                Header="Embedded Python Environment"
-                                Margin="8">
-                                <ui:SettingsExpander.IconSource>
-                                    <controls:FASymbolIconSource Symbol="fa-brands fa-python"/>
-                                </ui:SettingsExpander.IconSource>
-                                <ui:SettingsExpander.Footer>
-                                    <StackPanel Orientation="Horizontal" Spacing="16">
-                                        <controls:ProgressRing 
-                                            IsEnabled="{Binding CheckPythonVersionCommand.IsRunning}"
-                                            IsVisible="{Binding CheckPythonVersionCommand.IsRunning}"
-                                            IsIndeterminate="True" 
-                                            BorderThickness="3"/>
-                                        <Button Content="Check Version" Command="{Binding CheckPythonVersionCommand}"/>
-                                    </StackPanel>
-                                </ui:SettingsExpander.Footer>
-                            </ui:SettingsExpander>
-                        </StackPanel>
+                            Margin="0,16,0,0" />
+                        <ui:SettingsExpander
+                            Grid.Row="1"
+                            Header="Embedded Python Environment"
+                            Margin="8">
+                            <ui:SettingsExpander.IconSource>
+                                <controls:FASymbolIconSource Symbol="fa-brands fa-python"/>
+                            </ui:SettingsExpander.IconSource>
+                            <ui:SettingsExpander.Footer>
+                                <StackPanel Orientation="Horizontal" Spacing="16">
+                                    <controls:ProgressRing 
+                                        IsEnabled="{Binding CheckPythonVersionCommand.IsRunning}"
+                                        IsVisible="{Binding CheckPythonVersionCommand.IsRunning}"
+                                        IsIndeterminate="True" 
+                                        BorderThickness="3"/>
+                                    <Button Content="Check Version" Command="{Binding CheckPythonVersionCommand}"/>
+                                </StackPanel>
+                            </ui:SettingsExpander.Footer>
+                        </ui:SettingsExpander>
+                    </Grid>
+                    
+                    <!-- System Options -->
+                    <Grid RowDefinitions="auto,*">
+                        <TextBlock 
+                            FontWeight="Medium"
+                            Text="System" 
+                            Margin="0,16,0,0" />
+                        <ui:SettingsExpander
+                            Grid.Row="1"
+                            ToolTip.Tip="{OnPlatform Default='Only available on Windows', Windows={x:Null}}"
+                            Header="Add Stability Matrix to the Start Menu"
+                            Description="Uses the current app location, you can run this again if you move the app"
+                            IconSource="StarAdd"
+                            Margin="8">
+                            <ui:SettingsExpander.Footer>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <controls:ProgressRing 
+                                        IsIndeterminate="True" 
+                                        IsEnabled="{Binding IsVisible, RelativeSource={RelativeSource Self}}"
+                                        BorderThickness="3">
+                                        <controls:ProgressRing.IsVisible>
+                                            <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                                                <Binding Path="AddToStartMenuCommand.IsRunning"/>
+                                                <Binding Path="AddToGlobalStartMenuCommand.IsRunning"/>
+                                            </MultiBinding>
+                                        </controls:ProgressRing.IsVisible>
+                                    </controls:ProgressRing>
+                                    
+                                    <SplitButton 
+                                        Command="{Binding AddToStartMenuCommand}"
+                                        IsEnabled="{OnPlatform Default=False, Windows=True}"
+                                        Content="Add for Current User">
+                                        <SplitButton.Flyout>
+                                            <ui:FAMenuFlyout Placement="Bottom">
+                                                <ui:MenuFlyoutItem 
+                                                    Command="{Binding AddToGlobalStartMenuCommand}"
+                                                    IconSource="Admin" 
+                                                    Text="Add for All Users"/>
+                                            </ui:FAMenuFlyout>
+                                        </SplitButton.Flyout>
+                                    </SplitButton>
+                                </StackPanel>
+                            </ui:SettingsExpander.Footer>
+                        </ui:SettingsExpander>
                     </Grid>
                     
                     <!-- Debug Options -->
-                    <Grid RowDefinitions="auto,*" IsVisible="{Binding SharedState.IsDebugMode}">
+                    <Grid RowDefinitions="auto,*" 
+                          Margin="0,4,0,0"
+                          IsVisible="{Binding SharedState.IsDebugMode}" >
                         <TextBlock 
                             FontWeight="Medium"
                             Text="Debug Options" 
-                            Margin="8,16,0,0" />
-                        <StackPanel Grid.Row="1">
+                            Margin="0,16,0,0" />
                             <ui:SettingsExpander
+                                Grid.Row="1"
                                 IconSource="Code"
                                 Command="{Binding LoadDebugInfo}"
                                 Header="Debug Options"
@@ -132,7 +188,6 @@
                                 </ui:SettingsExpanderItem>
                                 
                             </ui:SettingsExpander>
-                        </StackPanel>
                     </Grid>
                     
                     <!-- TODO: Python card -->
@@ -141,9 +196,8 @@
                     
                     <!-- TODO: Directories card -->
                     
-                    <Grid RowDefinitions="auto,*">
+                    <Grid RowDefinitions="auto,*" Margin="0,4,0,0">
                         <StackPanel 
-                            Margin="8,0,0,0"
                             Grid.Row="1" 
                             HorizontalAlignment="Left" 
                             Orientation="Vertical">

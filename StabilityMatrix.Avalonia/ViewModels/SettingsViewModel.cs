@@ -167,6 +167,9 @@ public partial class SettingsViewModel : PageViewModelBase
         
         WindowsShortcuts.CreateShortcut(
             shortcutLink, appPath, iconPath, "Stability Matrix");
+        
+        notificationService.Show("Added to Start Menu",
+            "Stability Matrix has been added to the Start Menu.", NotificationType.Success);
     }
 
     /// <summary>
@@ -233,7 +236,11 @@ public partial class SettingsViewModel : PageViewModelBase
             // We'll get this exception if user cancels UAC
             Logger.Warn(e, "Could not create shortcut");
             notificationService.Show("Could not create shortcut", "", NotificationType.Warning);
+            return;
         }
+        
+        notificationService.Show("Added to Start Menu", 
+            "Stability Matrix has been added to the Start Menu for all users.", NotificationType.Success);
     }
 
     #endregion

@@ -99,19 +99,33 @@
                             IconSource="StarAdd"
                             Margin="8">
                             <ui:SettingsExpander.Footer>
-                                <SplitButton 
-                                    Command="{Binding AddToStartMenuCommand}"
-                                    IsEnabled="{OnPlatform Default=False, Windows=True}"
-                                    Content="Add for Current User">
-                                    <SplitButton.Flyout>
-                                        <ui:FAMenuFlyout Placement="Bottom">
-                                            <ui:MenuFlyoutItem 
-                                                Command="{Binding AddToGlobalStartMenuCommand}"
-                                                IconSource="Admin" 
-                                                Text="Add for All Users"/>
-                                        </ui:FAMenuFlyout>
-                                    </SplitButton.Flyout>
-                                </SplitButton>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <controls:ProgressRing 
+                                        IsIndeterminate="True" 
+                                        IsEnabled="{Binding IsVisible, RelativeSource={RelativeSource Self}}"
+                                        BorderThickness="3">
+                                        <controls:ProgressRing.IsVisible>
+                                            <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                                                <Binding Path="AddToStartMenuCommand.IsRunning"/>
+                                                <Binding Path="AddToGlobalStartMenuCommand.IsRunning"/>
+                                            </MultiBinding>
+                                        </controls:ProgressRing.IsVisible>
+                                    </controls:ProgressRing>
+                                    
+                                    <SplitButton 
+                                        Command="{Binding AddToStartMenuCommand}"
+                                        IsEnabled="{OnPlatform Default=False, Windows=True}"
+                                        Content="Add for Current User">
+                                        <SplitButton.Flyout>
+                                            <ui:FAMenuFlyout Placement="Bottom">
+                                                <ui:MenuFlyoutItem 
+                                                    Command="{Binding AddToGlobalStartMenuCommand}"
+                                                    IconSource="Admin" 
+                                                    Text="Add for All Users"/>
+                                            </ui:FAMenuFlyout>
+                                        </SplitButton.Flyout>
+                                    </SplitButton>
+                                </StackPanel>
                             </ui:SettingsExpander.Footer>
                         </ui:SettingsExpander>
                     </Grid>

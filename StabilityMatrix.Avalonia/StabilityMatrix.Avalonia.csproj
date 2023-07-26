@@ -10,6 +10,7 @@
         <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
         <Version>2.0.3-dev.1</Version>
         <InformationalVersion>$(Version)</InformationalVersion>
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
     </PropertyGroup>
     
     <ItemGroup>

@@ -1,4 +1,5 @@
-﻿using NLog;
+﻿using System.Globalization;
+using NLog;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
@@ -30,6 +31,8 @@ public class SharedFolders : ISharedFolders
         }
         else
         {
+            // Create parent directory if it doesn't exist, since CreateSymbolicLink doesn't seem to
+            new DirectoryPath(junctionDir).Parent?.Create();
             Directory.CreateSymbolicLink(junctionDir, targetDir);
         }
     }

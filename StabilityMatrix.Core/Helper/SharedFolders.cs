@@ -30,6 +30,8 @@ public class SharedFolders : ISharedFolders
         }
         else
         {
+            // Create directory if it doesn't exist, since CreateSymbolicLink doesn't seem to
+            Directory.CreateDirectory(junctionDir);
             Directory.CreateSymbolicLink(junctionDir, targetDir);
         }
     }

@@ -202,18 +202,18 @@ public partial class SettingsViewModel : PageViewModelBase
         // Move to target
         var moveLinkResult = await WindowsElevated.MoveFile(
             tempDir.JoinFile("Stability Matrix.lnk"), shortcutLink);
-        if (moveLinkResult.ExitCode != 0)
+        if (moveLinkResult != 0)
         {
-            notificationService.Show("Failed to create shortcut", $"{moveLinkResult.StandardOutput}\n{moveLinkResult.StandardOutput}");
+            notificationService.Show("Failed to create shortcut", $"Could not copy shortcut to {shortcutLink}");
             return;
         }
         
         // Move icon
         var moveIconResult = await WindowsElevated.MoveFile(
             tempDir.JoinFile("Stability Matrix.ico"), iconPath);
-        if (moveIconResult.ExitCode != 0)
+        if (moveIconResult != 0)
         {
-            notificationService.Show("Failed to create shortcut", $"{moveIconResult.StandardOutput}\n{moveIconResult.StandardOutput}");
+            notificationService.Show("Failed to create shortcut", $"Could not copy icon to {iconPath}");
         }
     }
 

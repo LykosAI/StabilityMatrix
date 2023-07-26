@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Core.Models.Api;
 
@@ -13,12 +13,7 @@ public partial class CivitFileViewModel : ObservableObject
     public CivitFileViewModel(HashSet<string> installedModelHashes, CivitFile civitFile)
     {
         CivitFile = civitFile;
-        var lastIndexOfPeriod = CivitFile.Name.LastIndexOf(".", StringComparison.Ordinal);
-        if (lastIndexOfPeriod > 0)
-        {
-            CivitFile.Name = CivitFile.Name[..lastIndexOfPeriod];
-        }
-        
+        CivitFile.Name = Path.GetFileNameWithoutExtension(CivitFile.Name);
         IsInstalled = CivitFile is {Type: CivitFileType.Model, Hashes.BLAKE3: not null} &&
                       installedModelHashes.Contains(CivitFile.Hashes.BLAKE3);
     }

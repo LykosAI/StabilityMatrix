@@ -1,4 +1,6 @@
-﻿using StabilityMatrix.Core.ReparsePoints;
+﻿using System.Runtime.Versioning;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.ReparsePoints;
 
 namespace StabilityMatrix.Tests.ReparsePoints;
 
@@ -13,6 +15,12 @@ public class JunctionTest
     [TestInitialize]
     public void Initialize()
     {
+        if (!Compat.IsWindows)
+        {
+            Assert.Inconclusive("Test cannot be run on anything but Windows currently.");
+            return;
+        }
+        
         tempFolder = Path.GetTempFileName();
         File.Delete(tempFolder);
         Directory.CreateDirectory(tempFolder);

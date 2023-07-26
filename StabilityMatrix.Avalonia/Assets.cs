@@ -10,6 +10,12 @@ namespace StabilityMatrix.Avalonia;
 
 internal static class Assets
 {
+    public static AvaloniaResource AppIcon { get; } =
+        new("avares://StabilityMatrix.Avalonia/Assets/Icon.ico");
+    
+    public static AvaloniaResource AppIconPng { get; } =
+        new("avares://StabilityMatrix.Avalonia/Assets/Icon.png");
+    
     /// <summary>
     /// Fixed image for models with no images.
     /// </summary>

@@ -111,7 +111,7 @@
                                            IsVisible="{Binding !!ProgressItems.Count}"
                                            Tapped="FooterDownloadItem_OnTapped">
                         <ui:NavigationViewItem.ContextFlyout>
-                            <controls:BetterFlyout Placement="Right"
+                            <controls:BetterFlyout Placement="RightEdgeAlignedBottom"
                                                    HorizontalScrollBarVisibility="Hidden"
                                                    VerticalScrollBarVisibility="Auto"
                                                    Content="{Binding }" />

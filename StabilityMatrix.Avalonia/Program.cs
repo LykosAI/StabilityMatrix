@@ -32,6 +32,8 @@ public class Program
 {
     public static AppArgs Args { get; } = new();
     
+    public static bool IsDebugBuild { get; private set; }
+    
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
@@ -42,6 +44,8 @@ public class Program
         Args.DebugSentry = args.Contains("--debug-sentry");
         Args.NoSentry = args.Contains("--no-sentry");
         Args.NoWindowChromeEffects = args.Contains("--no-window-chrome-effects");
+
+        SetDebugBuild();
         
         HandleUpdateReplacement();
         
@@ -214,5 +218,11 @@ public class Program
         App.Shutdown(1);
         Dispatcher.UIThread.InvokeShutdown();
         Environment.Exit(Marshal.GetHRForException(exception));
+    }
+
+    [Conditional("DEBUG")]
+    private static void SetDebugBuild()
+    {
+        IsDebugBuild = true;
     }
 }

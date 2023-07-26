@@ -68,7 +68,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable
             throw new InvalidOperationException("Update task is already running");
         }
         updateCts = new CancellationTokenSource();
-        updateTask = Dispatcher.UIThread.InvokeAsync(ConsoleUpdateLoop, DispatcherPriority.Render);
+        updateTask = Dispatcher.UIThread.InvokeAsync(ConsoleUpdateLoop, DispatcherPriority.Send);
     }
     
     /// <summary>

@@ -14,12 +14,12 @@
     
     <ItemGroup>
         <PackageReference Include="AsyncImageLoader.Avalonia" Version="3.0.0" />
-        <PackageReference Include="Avalonia" Version="11.0.0" />
+        <PackageReference Include="Avalonia" Version="11.0.999-cibuild0038094-beta" />
         <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.0.0" />
-        <PackageReference Include="Avalonia.Desktop" Version="11.0.0" />
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.0" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.0.999-cibuild0038094-beta" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.999-cibuild0038094-beta" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.0" />
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.999-cibuild0038094-beta" />
         <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.0.0.1" />
         <PackageReference Include="AvaloniaEdit.TextMate" Version="11.0.0" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />

@@ -12,6 +12,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.Views;
@@ -19,6 +20,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
@@ -135,6 +137,88 @@ public partial class SettingsViewModel : PageViewModelBase
         await dialog.ShowAsync();
     }
 
+    #region System
+
+    /// <summary>
+    /// Adds Stability Matrix to Start Menu for the current user.
+    /// </summary>
+    [RelayCommand]
+    private async Task AddToStartMenu()
+    {
+        if (!Compat.IsWindows)
+        {
+            notificationService.Show(
+                "Not supported", "This feature is only supported on Windows.");
+            return;
+        }
+        
+        await using var _ = new MinimumDelay(200, 300);
+        
+        var shortcutDir = new DirectoryPath(
+            Environment.GetFolderPath(Environment.SpecialFolder.StartMenu),
+            "Programs");
+        var shortcutLink = shortcutDir.JoinFile("Stability Matrix.lnk");
+
+        var appPath = Compat.AppCurrentPath;
+        var iconPath = shortcutDir.JoinFile("Stability Matrix.ico");
+        await Assets.AppIcon.ExtractTo(iconPath);
+        
+        WindowsShortcuts.CreateShortcut(
+            shortcutLink, appPath, iconPath, "Stability Matrix");
+    }
+
+    /// <summary>
+    /// Add Stability Matrix to Start Menu for all users.
+    /// <remarks>Requires Admin elevation.</remarks>
+    /// </summary>
+    [RelayCommand]
+    private async Task AddToGlobalStartMenu()
+    {
+        if (!Compat.IsWindows)
+        {
+            notificationService.Show(
+                "Not supported", "This feature is only supported on Windows.");
+            return;
+        }
+        
+        await using var _ = new MinimumDelay(200, 300);
+        
+        var shortcutDir = new DirectoryPath(
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu),
+            "Programs");
+        var shortcutLink = shortcutDir.JoinFile("Stability Matrix.lnk");
+        
+        var appPath = Compat.AppCurrentPath;
+        var iconPath = shortcutDir.JoinFile("Stability Matrix.ico");
+        
+        // We can't directly write to the targets, so extract to temporary directory first
+        using var tempDir = new TempDirectoryPath();
+        
+        await Assets.AppIcon.ExtractTo(tempDir.JoinFile("Stability Matrix.ico"));
+        WindowsShortcuts.CreateShortcut(
+            tempDir.JoinFile("Stability Matrix.lnk"), appPath, iconPath, 
+            "Stability Matrix");
+        
+        // Move to target
+        var moveLinkResult = await WindowsElevated.MoveFile(
+            tempDir.JoinFile("Stability Matrix.lnk"), shortcutLink);
+        if (moveLinkResult.ExitCode != 0)
+        {
+            notificationService.Show("Failed to create shortcut", $"{moveLinkResult.StandardOutput}\n{moveLinkResult.StandardOutput}");
+            return;
+        }
+        
+        // Move icon
+        var moveIconResult = await WindowsElevated.MoveFile(
+            tempDir.JoinFile("Stability Matrix.ico"), iconPath);
+        if (moveIconResult.ExitCode != 0)
+        {
+            notificationService.Show("Failed to create shortcut", $"{moveIconResult.StandardOutput}\n{moveIconResult.StandardOutput}");
+        }
+    }
+
+    #endregion
+    
     #region Debug Section
     public void LoadDebugInfo()
     {

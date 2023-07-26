@@ -225,9 +225,11 @@ public class VladAutomatic : BaseGitPackage
         VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit, workingDirectory: installedPackagePath);
     }
 
-    public override async Task<string> Update(InstalledPackage installedPackage, IProgress<ProgressReport>? progress = null)
+    public override async Task<string> Update(InstalledPackage installedPackage,
+        IProgress<ProgressReport>? progress = null, bool includePrerelease = false)
     {
-        progress?.Report(new ProgressReport(0.1f, message: "Downloading package update...", isIndeterminate: true, type: ProgressType.Download));
+        progress?.Report(new ProgressReport(0.1f, message: "Downloading package update...",
+            isIndeterminate: true, type: ProgressType.Download));
 
         var version = await GithubApi.GetAllCommits(Author, Name, installedPackage.InstalledBranch);
         var latest = version?.FirstOrDefault();
@@ -265,8 +267,9 @@ public class VladAutomatic : BaseGitPackage
             return string.Empty;
         }
 
-        progress?.Report(new ProgressReport(1f, message: "Update Complete", isIndeterminate: false, type: ProgressType.Generic));
-        
+        progress?.Report(new ProgressReport(1f, message: "Update Complete", isIndeterminate: false,
+            type: ProgressType.Generic));
+
         return latest.Sha;
     }
 }

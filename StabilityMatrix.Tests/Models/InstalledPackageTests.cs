@@ -1,4 +1,5 @@
-﻿using StabilityMatrix.Core.Models;
+﻿using System.Runtime.InteropServices;
+using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Tests.Models;
 
@@ -12,6 +13,16 @@ public class InstalledPackageTests
     [DataRow("C:\\User\\AppData\\StabilityMatrix", "C:\\User\\AppData\\StabilityMatrix\\Packages\\abc", "Packages\\abc")]
     public void TestGetSubPath(string relativeTo, string path, string? expected)
     {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            relativeTo = relativeTo.Replace("C:\\", $"{Path.DirectorySeparatorChar}")
+                .Replace('\\', Path.DirectorySeparatorChar);
+            path = path.Replace("C:\\", $"{Path.DirectorySeparatorChar}")
+                .Replace('\\', Path.DirectorySeparatorChar);
+            expected = expected?.Replace("C:\\", $"{Path.DirectorySeparatorChar}")
+                .Replace('\\', Path.DirectorySeparatorChar);
+        }
+        
         var result = InstalledPackage.GetSubPath(relativeTo, path);
         Assert.AreEqual(expected, result);
     }

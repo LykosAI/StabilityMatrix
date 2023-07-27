@@ -1,4 +1,4 @@
-node("Windows") {
+node("Diligence") {
     def repoName = "StabilityMatrix"
     def author = "ionite34"
     def version = ""
@@ -11,32 +11,41 @@ node("Windows") {
         git branch: env.BRANCH_NAME, credentialsId: 'Ionite', url: "https://github.com/${author}/${repoName}.git"
     }
     
-    stage('Test') {
-        bat "dotnet test StabilityMatrix.Tests"
-    }
+    try {
+        stage('Test') {
+            sh "dotnet test StabilityMatrix.Tests"
+        }
 
-    if (env.BRANCH_NAME == 'main') {
-    
-        stage('Set Version') {
-            script {
-                if (env.TAG_NAME) {
-                    version = env.TAG_NAME.replaceFirst(/^v/, '')
-                } else {
-                    version = VersionNumber projectStartDate: '2023-06-21', versionNumberString: '${BUILDS_ALL_TIME}', worstResultForIncrement: 'SUCCESS'
+        if (env.BRANCH_NAME == 'main') {
+        
+            stage('Set Version') {
+                script {
+                    if (env.TAG_NAME) {
+                        version = env.TAG_NAME.replaceFirst(/^v/, '')
+                    } else {
+                        version = VersionNumber projectStartDate: '2023-06-21', versionNumberString: '${BUILDS_ALL_TIME}', worstResultForIncrement: 'SUCCESS'
+                    }
                 }
             }
+            
+            stage('Publish Windows') {
+                sh "dotnet publish ./StabilityMatrix.Avalonia/StabilityMatrix.Avalonia.csproj -c Release -o out -r win-x64 -p:PublishSingleFile=true -p:VersionPrefix=2.0.0 -p:VersionSuffix=${version} -p:IncludeNativeLibrariesForSelfExtract=true"
+            }
+
+            stage('Publish Linux') {
+                sh "/home/jenkins/.dotnet/tools/pupnet --runtime linux-x64 --kind appimage --app-version ${version} --clean -y"
+            }
+            
+            stage ('Archive Artifacts') {
+                archiveArtifacts artifacts: 'out/*.exe', followSymlinks: false
+                archiveArtifacts artifacts: 'out/*.appimage', followSymlinks: false
+            }
         }
-        
-        stage('Publish') {
-            bat "dotnet publish .\\StabilityMatrix.Avalonia\\StabilityMatrix.Avalonia.csproj -c Release -o out -r win-x64 -p:PublishSingleFile=true -p:VersionPrefix=2.0.0 -p:VersionSuffix=${version} -p:IncludeNativeLibrariesForSelfExtract=true"
-        }
-        
-        stage ('Archive Artifacts') {
-            archiveArtifacts artifacts: 'out/*.exe', followSymlinks: false
-        }
-    } else {
-        stage('Publish') {
-            bat "dotnet publish .\\StabilityMatrix.Avalonia\\StabilityMatrix.Avalonia.csproj -c Release -o out -r win-x64 -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true"
+    } finally {
+        stage('Cleanup') {
+            cleanWs()
         }
     }
+
+    
 }

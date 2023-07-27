@@ -232,6 +232,7 @@ public sealed class App : Application
         services.AddTransient<SelectDataDirectoryViewModel>();
         services.AddTransient<LaunchOptionsViewModel>();
         services.AddTransient<ExceptionViewModel>();
+        services.AddTransient<EnvVarsViewModel>();
         services.AddSingleton<FirstLaunchSetupViewModel>();
         services.AddSingleton<UpdateViewModel>();
         
@@ -258,6 +259,7 @@ public sealed class App : Application
                 .Register(provider.GetRequiredService<CheckpointFile>)
                 .Register(provider.GetRequiredService<RefreshBadgeViewModel>)
                 .Register(provider.GetRequiredService<ExceptionViewModel>)
+                .Register(provider.GetRequiredService<EnvVarsViewModel>)
                 .Register(provider.GetRequiredService<ProgressManagerViewModel>)
                 .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>));
     }
@@ -277,6 +279,7 @@ public sealed class App : Application
         services.AddTransient<LaunchOptionsDialog>();
         services.AddTransient<UpdateDialog>();
         services.AddTransient<ExceptionDialog>();
+        services.AddTransient<EnvVarsDialog>();
         
         // Controls
         services.AddTransient<RefreshBadge>();

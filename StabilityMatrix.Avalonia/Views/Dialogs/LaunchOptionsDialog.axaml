@@ -46,7 +46,7 @@
                 IsVisible="{Binding IsSearchBoxEnabled}"
                 x:Name="SearchBox">
                 <TextBox.InnerRightContent>
-                    <ui:SymbolIcon Symbol="Find" />
+                    <ui:SymbolIcon Symbol="Find" Margin="0,0,8,0" />
                 </TextBox.InnerRightContent>
             </TextBox>
         </StackPanel>
@@ -60,7 +60,7 @@
                 
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <VirtualizingStackPanel />
+                        <StackPanel Spacing="4" />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 
@@ -68,7 +68,7 @@
                     <controls:LaunchOptionCardTemplateSelector>
                         <!--  Int type card (textboxes)  -->
                         <DataTemplate x:DataType="models:LaunchOptionCard" x:Key="{x:Static models:LaunchOptionType.Int}">
-                            <controls:Card Margin="0,8">
+                            <controls:Card>
                                 <StackPanel
                                     HorizontalAlignment="Stretch"
                                     Margin="8,0,8,0"

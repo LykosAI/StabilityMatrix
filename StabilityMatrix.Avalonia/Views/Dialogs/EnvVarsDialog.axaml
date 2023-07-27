@@ -36,8 +36,8 @@
         <Panel Grid.Row="1">
             <ui:CommandBar >
                 <ui:CommandBar.PrimaryCommands>
-                    <ui:CommandBarButton IconSource="Add" Label="Save" Command="{Binding AddEnvVarCommand}"/>
-                    <ui:CommandBarButton IconSource="Remove" Label="Undo" />
+                    <ui:CommandBarButton IconSource="Add" Label="Save" Command="{Binding AddRowCommand}"/>
+                    <ui:CommandBarButton IconSource="Remove" Label="Undo" Command="{Binding RemoveSelectedRowCommand}"/>
                     <ui:CommandBarSeparator />
                     <ui:CommandBarButton IconSource="Copy" Label="Bold" />
                 </ui:CommandBar.PrimaryCommands>

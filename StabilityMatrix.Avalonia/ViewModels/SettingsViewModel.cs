@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -127,8 +128,8 @@ public partial class SettingsViewModel : PageViewModelBase
         // Load current settings
         var current = settingsManager.Settings.EnvironmentVariables 
                       ?? new Dictionary<string, string>();
-        viewModel.EnvVars = current.Select(kvp => 
-            new EnvVarKeyPair(kvp.Key, kvp.Value)).ToList();
+        viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>(
+            current.Select(kvp => new EnvVarKeyPair(kvp.Key, kvp.Value)));
         
         var dialog = new BetterContentDialog
         {

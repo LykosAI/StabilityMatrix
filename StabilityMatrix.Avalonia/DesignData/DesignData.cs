@@ -300,7 +300,7 @@ public static class DesignData
 
     public static EnvVarsViewModel EnvVarsViewModel => DialogFactory.Get<EnvVarsViewModel>(viewModel =>
     {
-        viewModel.EnvVars = new List<EnvVarKeyPair>
+        viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>
         {
             new("UWU", "TRUE"),
         };

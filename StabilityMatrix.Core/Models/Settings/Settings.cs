@@ -27,6 +27,8 @@ public class Settings
     public ModelSearchOptions? ModelSearchOptions { get; set; }
     
     public bool RemoveFolderLinksOnShutdown { get; set; }
+    
+    public Dictionary<string, string>? EnvironmentVariables { get; set; }
 
     public HashSet<string>? InstalledModelHashes { get; set; } = new();
 

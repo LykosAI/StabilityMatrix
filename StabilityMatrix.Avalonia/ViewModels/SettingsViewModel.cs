@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -122,6 +123,13 @@ public partial class SettingsViewModel : PageViewModelBase
     private async Task OpenEnvVarsDialog()
     {
         var viewModel = dialogFactory.Get<EnvVarsViewModel>();
+        
+        // Load current settings
+        var current = settingsManager.Settings.EnvironmentVariables 
+                      ?? new Dictionary<string, string>();
+        viewModel.EnvVars = current.Select(kvp => 
+            new EnvVarKeyPair(kvp.Key, kvp.Value)).ToList();
+        
         var dialog = new BetterContentDialog
         {
             Content = new EnvVarsDialog
@@ -133,7 +141,14 @@ public partial class SettingsViewModel : PageViewModelBase
             CloseButtonText = "Cancel",
         };
 
-        await dialog.ShowAsync();
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            // Save settings
+            var newEnvVars = viewModel.EnvVars
+                .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Key))
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            settingsManager.Transaction(s => s.EnvironmentVariables = newEnvVars);
+        }
     }
 
     [RelayCommand]

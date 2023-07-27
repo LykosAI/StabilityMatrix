@@ -1,0 +1,70 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+                          xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+                          xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+                          d:DataContext="{x:Static mocks:DesignData.EnvVarsViewModel}"
+                          x:DataType="dialogs:EnvVarsViewModel"
+                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.EnvVarsDialog">
+    
+    <controls:UserControlBase.Resources>
+        <Style Selector="DataGridCell /template/ Border#CellBorder">
+            <Setter Property="Background" Value="Aqua"/>
+        </Style>
+    </controls:UserControlBase.Resources>
+    
+    <Grid RowDefinitions="Auto,Auto,*" MinHeight="300" Margin="8">
+        <StackPanel
+            HorizontalAlignment="Stretch"
+            Spacing="4"
+            Margin="0,0,0,0"
+            Orientation="Vertical">
+            <!--  Title  -->
+            <TextBlock
+                FontSize="24"
+                FontWeight="Bold"
+                Margin="16,16,16,0"
+                Text="{Binding Title}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+        
+        <Panel Grid.Row="1">
+            <ui:CommandBar >
+                <ui:CommandBar.PrimaryCommands>
+                    <ui:CommandBarButton IconSource="Add" Label="Save" Command="{Binding AddEnvVarCommand}"/>
+                    <ui:CommandBarButton IconSource="Remove" Label="Undo" />
+                    <ui:CommandBarSeparator />
+                    <ui:CommandBarButton IconSource="Copy" Label="Bold" />
+                </ui:CommandBar.PrimaryCommands>
+            </ui:CommandBar>
+        </Panel>
+
+        <!--  Option Cards  -->
+        <controls:Card Grid.Row="2" 
+                       Background="Transparent"
+                       VerticalAlignment="Stretch" 
+                       VerticalContentAlignment="Stretch">
+            <DataGrid 
+                MinHeight="200"
+                ItemsSource="{Binding EnvVarsView}" >
+                <DataGrid.Columns>
+                    <DataGridTextColumn x:DataType="models:EnvVarKeyPair" 
+                                        Width="5*"
+                                        Header="Name" 
+                                        Binding="{Binding Key}" />
+                    <DataGridTextColumn x:DataType="models:EnvVarKeyPair" 
+                                        Width="5*"
+                                        Header="Value" 
+                                        Binding="{Binding Value}" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </controls:Card>
+
+    </Grid>
+    
+</controls:UserControlBase>

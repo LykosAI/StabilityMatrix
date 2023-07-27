@@ -17,7 +17,9 @@ using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -39,6 +41,7 @@ public partial class SettingsViewModel : PageViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly IPyRunner pyRunner;
+    private readonly ServiceManager<ViewModelBase> dialogFactory;
     public SharedState SharedState { get; }
     
     public override string Title => "Settings";
@@ -77,12 +80,14 @@ public partial class SettingsViewModel : PageViewModelBase
         ISettingsManager settingsManager,
         IPrerequisiteHelper prerequisiteHelper,
         IPyRunner pyRunner,
+        ServiceManager<ViewModelBase> dialogFactory,
         SharedState sharedState)
     {
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
         this.prerequisiteHelper = prerequisiteHelper;
         this.pyRunner = pyRunner;
+        this.dialogFactory = dialogFactory;
         SharedState = sharedState;
 
         SelectedTheme = settingsManager.Settings.Theme ?? AvailableThemes[1];
@@ -109,6 +114,26 @@ public partial class SettingsViewModel : PageViewModelBase
     partial void OnRemoveSymlinksOnShutdownChanged(bool value)
     {
         settingsManager.Transaction(s => s.RemoveFolderLinksOnShutdown = value);
+    }
+
+    #region Package Environment
+    
+    [RelayCommand]
+    private async Task OpenEnvVarsDialog()
+    {
+        var viewModel = dialogFactory.Get<EnvVarsViewModel>();
+        var dialog = new BetterContentDialog
+        {
+            Content = new EnvVarsDialog
+            {
+                DataContext = viewModel
+            },
+            PrimaryButtonText = "Save",
+            IsPrimaryButtonEnabled = true,
+            CloseButtonText = "Cancel",
+        };
+
+        await dialog.ShowAsync();
     }
 
     [RelayCommand]
@@ -142,6 +167,10 @@ public partial class SettingsViewModel : PageViewModelBase
         dialog.PrimaryButtonText = "Ok";
         await dialog.ShowAsync();
     }
+    
+    #endregion
+    
+
 
     #region System
 

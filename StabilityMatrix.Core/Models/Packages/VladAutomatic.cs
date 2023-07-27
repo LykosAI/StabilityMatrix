@@ -14,6 +14,8 @@ namespace StabilityMatrix.Core.Models.Packages;
 
 public class VladAutomatic : BaseGitPackage
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    
     public override string Name => "automatic";
     public override string DisplayName { get; set; } = "SD.Next Web UI";
     public override string Author => "vladmandic";

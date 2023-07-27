@@ -59,30 +59,41 @@
                         </ui:SettingsExpander>
                     </Grid>
                     
-                    <!-- Python Options -->
+                    <!-- Environment Options -->
                     <Grid RowDefinitions="auto,*">
                         <TextBlock 
                             FontWeight="Medium"
-                            Text="Python Environment" 
+                            Text="Package Environment" 
                             Margin="0,16,0,0" />
-                        <ui:SettingsExpander
-                            Grid.Row="1"
-                            Header="Embedded Python Environment"
-                            Margin="8">
-                            <ui:SettingsExpander.IconSource>
-                                <controls:FASymbolIconSource Symbol="fa-brands fa-python"/>
-                            </ui:SettingsExpander.IconSource>
-                            <ui:SettingsExpander.Footer>
-                                <StackPanel Orientation="Horizontal" Spacing="16">
-                                    <controls:ProgressRing 
-                                        IsEnabled="{Binding CheckPythonVersionCommand.IsRunning}"
-                                        IsVisible="{Binding CheckPythonVersionCommand.IsRunning}"
-                                        IsIndeterminate="True" 
-                                        BorderThickness="3"/>
-                                    <Button Content="Check Version" Command="{Binding CheckPythonVersionCommand}"/>
-                                </StackPanel>
-                            </ui:SettingsExpander.Footer>
-                        </ui:SettingsExpander>
+                        
+                        <StackPanel Grid.Row="1" Margin="0,8" Spacing="4">
+                            <ui:SettingsExpander
+                                Header="Environment Variables"
+                                IconSource="OtherUser"
+                                Margin="8,0">
+                                <ui:SettingsExpander.Footer>
+                                    <Button Content="Edit" Command="{Binding OpenEnvVarsDialogCommand}"/>
+                                </ui:SettingsExpander.Footer>
+                            </ui:SettingsExpander>
+                        
+                            <ui:SettingsExpander
+                                Header="Embedded Python"
+                                Margin="8,0">
+                                <ui:SettingsExpander.IconSource>
+                                    <controls:FASymbolIconSource Symbol="fa-brands fa-python"/>
+                                </ui:SettingsExpander.IconSource>
+                                <ui:SettingsExpander.Footer>
+                                    <StackPanel Orientation="Horizontal" Spacing="16">
+                                        <controls:ProgressRing 
+                                            IsEnabled="{Binding CheckPythonVersionCommand.IsRunning}"
+                                            IsVisible="{Binding CheckPythonVersionCommand.IsRunning}"
+                                            IsIndeterminate="True" 
+                                            BorderThickness="3"/>
+                                        <Button Content="Check Version" Command="{Binding CheckPythonVersionCommand}"/>
+                                    </StackPanel>
+                                </ui:SettingsExpander.Footer>
+                            </ui:SettingsExpander>
+                        </StackPanel>
                     </Grid>
                     
                     <!-- System Options -->

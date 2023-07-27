@@ -36,7 +36,9 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     [ObservableProperty] private bool isImportAsConnected;
     [ObservableProperty] private bool isLoading;
     [ObservableProperty] private bool isIndexing;
-    [ObservableProperty] private string searchFilter;
+    
+    [ObservableProperty]
+    private string searchFilter = string.Empty;
 
     partial void OnIsImportAsConnectedChanged(bool value)
     {
@@ -47,7 +49,8 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         }
     }
 
-    [ObservableProperty] private ObservableCollection<CheckpointFolder> checkpointFolders = new();
+    [ObservableProperty]
+    private ObservableCollection<CheckpointFolder> checkpointFolders = new();
 
     [ObservableProperty]
     private ObservableCollection<CheckpointFolder> displayedCheckpointFolders = new();
@@ -70,7 +73,8 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
         // Set UI states
         IsImportAsConnected = settingsManager.Settings.IsImportAsConnected;
-        SearchFilter = string.Empty;
+        // Refresh search filter
+        OnSearchFilterChanged(string.Empty);
         
         if (Design.IsDesignMode) return;
         
@@ -81,6 +85,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         IsIndexing = false;
     }
 
+    // ReSharper disable once UnusedParameterInPartialMethod
     partial void OnSearchFilterChanged(string value)
     {
         var filteredFolders = CheckpointFolders
@@ -92,7 +97,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
         DisplayedCheckpointFolders = new ObservableCollection<CheckpointFolder>(filteredFolders);
     }
-
+    
     private bool ContainsSearchFilter(CheckpointFolder folder)
     {
         if (folder == null)

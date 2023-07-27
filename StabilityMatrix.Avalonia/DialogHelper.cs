@@ -4,8 +4,10 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
+using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -130,6 +132,41 @@ public static class DialogHelper
             Content = viewer,
             CloseButtonText = "Close",
             IsPrimaryButtonEnabled = false,
+        };
+    }
+    
+    /// <summary>
+    /// Create a simple title and description task dialog.
+    /// Sets the XamlRoot to the current top level window.
+    /// </summary>
+    public static TaskDialog CreateTaskDialog(string title, string description)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        
+        var content = new StackPanel
+        {
+            Children =
+            {
+                new TextBlock
+                {
+                    Margin = new Thickness(0,0,0,8),
+                    FontSize = 16,
+                    Text = title,
+                    TextWrapping = TextWrapping.WrapWithOverflow,
+                },
+                new TextBlock
+                {
+                    Text = description,
+                    TextWrapping = TextWrapping.WrapWithOverflow,
+                }
+            }
+        };
+
+        return new TaskDialog
+        {
+            Title = title,
+            Content = content,
+            XamlRoot = App.VisualRoot
         };
     }
 }

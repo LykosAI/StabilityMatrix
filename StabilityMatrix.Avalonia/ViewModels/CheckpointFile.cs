@@ -5,10 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
 using Avalonia.Data;
-using Avalonia.Media.Imaging;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -24,9 +21,6 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 public partial class CheckpointFile : ViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
-    // Event for when this file is deleted
-    public event EventHandler<CheckpointFile>? Deleted;
 
     /// <summary>
     /// Absolute path to the checkpoint file.
@@ -122,7 +116,7 @@ public partial class CheckpointFile : ViewModelBase
                 IsLoading = false;
             }
         }
-        Deleted?.Invoke(this, this);
+        RemoveFromParentList();
     }
 
     [RelayCommand]

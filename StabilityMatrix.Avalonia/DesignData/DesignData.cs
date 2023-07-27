@@ -129,7 +129,7 @@ public static class DesignData
             {
                 Title = "Lora",
                 DirectoryPath = "Packages/lora",
-                CheckpointFiles = new ObservableCollection<CheckpointFile>
+                CheckpointFiles = new AdvancedObservableList<CheckpointFile>
                 {
                     new()
                     {
@@ -162,7 +162,7 @@ public static class DesignData
             {
                 Title = "VAE",
                 DirectoryPath = "Packages/VAE",
-                CheckpointFiles = new ObservableCollection<CheckpointFile>
+                CheckpointFiles = new AdvancedObservableList<CheckpointFile>
                 {
                     new()
                     {

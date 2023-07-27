@@ -50,7 +50,7 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
     
     public override async Task OnLoadedAsync()
     {
-        UpdateText = $"Stability Matrix v{UpdateInfo?.Version} is now available! You currently have v{Utilities.GetAppVersion()}. Would you like to update now?";
+        UpdateText = $"Stability Matrix v{UpdateInfo?.Version} is now available! You currently have v{Compat.AppVersion}. Would you like to update now?";
         
         var client = httpClientFactory.CreateClient();
         var response = await client.GetAsync(UpdateInfo?.ChangelogUrl);

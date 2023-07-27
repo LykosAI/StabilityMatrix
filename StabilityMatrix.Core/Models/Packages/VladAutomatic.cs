@@ -224,7 +224,12 @@ public class VladAutomatic : BaseGitPackage
 
         var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
 
-        VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit, workingDirectory: installedPackagePath);
+        VenvRunner?.RunDetached(
+            args.TrimEnd(), 
+            HandleConsoleOutput, 
+            HandleExit, 
+            workingDirectory: installedPackagePath,
+            environmentVariables: SettingsManager.Settings.EnvironmentVariables);
     }
 
     public override async Task<string> Update(InstalledPackage installedPackage,

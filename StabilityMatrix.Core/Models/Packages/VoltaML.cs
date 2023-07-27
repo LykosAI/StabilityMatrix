@@ -146,6 +146,7 @@ public class VoltaML : BaseGitPackage
             args.TrimEnd(),
             outputDataReceived: OnConsoleOutput, 
             onExit: OnExit, 
-            workingDirectory: installedPackagePath);
+            workingDirectory: installedPackagePath,
+            environmentVariables: SettingsManager.Settings.EnvironmentVariables);
     }
 }

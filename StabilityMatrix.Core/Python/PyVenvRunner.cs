@@ -197,7 +197,8 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         Action<ProcessOutput>? outputDataReceived,
         Action<int>? onExit = null,
         bool unbuffered = true, 
-        string workingDirectory = "")
+        string workingDirectory = "", 
+        Dictionary<string, string>? environmentVariables = null)
     {
         if (!Exists())
         {
@@ -217,22 +218,21 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
             outputDataReceived.Invoke(s);
         });
 
-        var env = new Dictionary<string, string>
-        {
-            // Disable pip caching - uses significant memory for large packages like torch
-            {"PIP_NO_CACHE_DIR", "true"} 
-        };
+        environmentVariables ??= new Dictionary<string, string>();
+        
+        // Disable pip caching - uses significant memory for large packages like torch
+        environmentVariables["PIP_NO_CACHE_DIR"] = "true";
 
         // On windows, add portable git 
         if (Compat.IsWindows)
         {
             var portableGit = GlobalConfig.LibraryDir.JoinDir("PortableGit", "bin");
-            env["PATH"] = Compat.GetEnvPathWithExtensions(portableGit);
+            environmentVariables["PATH"] = Compat.GetEnvPathWithExtensions(portableGit);
         }
         
         if (unbuffered)
         {
-            env["PYTHONUNBUFFERED"] = "1";
+            environmentVariables["PYTHONUNBUFFERED"] = "1";
 
             // If arguments starts with -, it's a flag, insert `u` after it for unbuffered mode
             if (arguments.StartsWith('-'))
@@ -249,7 +249,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         Process = ProcessRunner.StartAnsiProcess(PythonPath, arguments, 
             workingDirectory: workingDirectory,
             outputDataReceived: filteredOutput,
-            environmentVariables: env);
+            environmentVariables: environmentVariables);
 
         if (onExit != null)
         {

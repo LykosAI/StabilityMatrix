@@ -177,6 +177,11 @@ public class A3WebUI : BaseGitPackage
 
         var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
 
-        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit, workingDirectory: installedPackagePath);
+        VenvRunner.RunDetached(
+            args.TrimEnd(), 
+            HandleConsoleOutput, 
+            OnExit, 
+            workingDirectory: installedPackagePath,
+            environmentVariables: SettingsManager.Settings.EnvironmentVariables);
     }
 }

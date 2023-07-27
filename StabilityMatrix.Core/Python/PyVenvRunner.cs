@@ -15,7 +15,7 @@ namespace StabilityMatrix.Core.Python;
 /// Python runner using a subprocess, mainly for venv support.
 /// </summary>
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-public class PyVenvRunner : IDisposable
+public class PyVenvRunner : IDisposable, IAsyncDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -25,6 +25,14 @@ public class PyVenvRunner : IDisposable
         "torch torchvision torchaudio";
     public const string TorchPipInstallArgsDirectML = 
         "torch-directml";
+
+    /// <summary>
+    /// Relative path to the site-packages folder from the venv root.
+    /// This is platform specific.
+    /// </summary>
+    public static string RelativeSitePackagesPath => Compat.Switch(
+        (PlatformKind.Windows, "Lib/site-packages"),
+        (PlatformKind.Unix, "lib/python3.10/site-packages"));
     
     /// <summary>
     /// The process running the python executable.
@@ -246,13 +254,30 @@ public class PyVenvRunner : IDisposable
         if (onExit != null)
         {
             Process.EnableRaisingEvents = true;
-            Process.Exited += (_, _) => onExit(Process.ExitCode);
+            Process.Exited += (sender, _) =>
+            {
+                onExit((sender as AnsiProcess)?.ExitCode ?? -1);
+            };
         }
     }
-
+    
     public void Dispose()
     {
+        Process?.CancelStreamReaders();
         Process?.Kill();
+        Process = null;
+        GC.SuppressFinalize(this);
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        if (Process is not null)
+        {
+            Process.Kill();
+            await Process.WaitForExitAsync().ConfigureAwait(false);
+        }
+
+        Process = null;
         GC.SuppressFinalize(this);
     }
 }

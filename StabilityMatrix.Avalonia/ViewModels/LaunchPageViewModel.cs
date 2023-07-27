@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -7,14 +8,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia;
-using Avalonia.Controls.Documents;
+using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Nito.AsyncEx.Synchronous;
+using Octokit;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -30,13 +34,14 @@ using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using Notification = Avalonia.Controls.Notifications.Notification;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(LaunchPageView))]
-public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
+public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyncDisposable
 {
     private readonly ILogger<LaunchPageViewModel> logger;
     private readonly ISettingsManager settingsManager;
@@ -181,14 +186,14 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         if (activeInstall.LaunchArgs == null)
         {
             var definitions = basePackage.LaunchOptions;
-            // Open a config page and save it
-            var viewModel = dialogFactory.Get<LaunchOptionsViewModel>();
-            
-            viewModel.Cards = LaunchOptionCard
+            // Create config cards and save them
+            var cards = LaunchOptionCard
                 .FromDefinitions(definitions, Array.Empty<LaunchOption>())
                 .ToImmutableArray();
-            
-            var args = viewModel.AsLaunchArgs();   
+
+            var args = cards
+                .SelectMany(c => c.Options)
+                .ToList();
             
             logger.LogDebug("Setting initial launch args: {Args}", 
                 string.Join(", ", args.Select(o => o.ToArgString()?.ToRepr())));
@@ -229,16 +234,10 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     // Unpacks sitecustomize.py to the target venv
     private static async Task UnpackSiteCustomize(DirectoryPath venvPath)
     {
-        if (Compat.IsWindows)
-        {
-            var file = venvPath.JoinFile("Lib", "site-packages", "sitecustomize.py");
-            await Assets.PyScriptSiteCustomize.ExtractTo(file, true);
-        }
-        else
-        {
-            var file = venvPath.JoinFile("lib", "python3.10", "site-packages", "sitecustomize.py");
-            await Assets.PyScriptSiteCustomize.ExtractTo(file, true);
-        }
+        var sitePackages = venvPath.JoinDir(PyVenvRunner.RelativeSitePackagesPath);
+        var file = sitePackages.JoinFile("sitecustomize.py");
+        file.Directory?.Create();
+        await Assets.PyScriptSiteCustomize.ExtractTo(file, true);
     }
 
     [RelayCommand]
@@ -351,7 +350,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
     public async Task Stop()
     {
         if (RunningPackage is null) return;
-        await RunningPackage.Shutdown();
+        await RunningPackage.WaitForShutdown();
         
         RunningPackage = null;
         ShowWebUiButton = false;
@@ -375,7 +374,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
                 exitCode, DateTimeOffset.Now);
             
             // Need to wait for streams to finish before detaching handlers
-            if (RunningPackage is BaseGitPackage {VenvRunner: not null} package)
+            if (sender is BaseGitPackage {VenvRunner: not null} package)
             {
                 var process = package.VenvRunner.Process;
                 if (process is not null)
@@ -430,12 +429,67 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable
         webUiUrl = e;
         ShowWebUiButton = !string.IsNullOrWhiteSpace(webUiUrl);
     }
+
+    public void OnMainWindowClosing(WindowClosingEventArgs e)
+    {
+        if (RunningPackage != null)
+        {
+            // Show confirmation
+            if (e.CloseReason is WindowCloseReason.WindowClosing)
+            {
+                e.Cancel = true;
+                
+                var dialog = CreateExitConfirmDialog();
+                Dispatcher.UIThread.InvokeAsync(async () =>
+                {
+                    if ((TaskDialogStandardResult)
+                        await dialog.ShowAsync(true) == TaskDialogStandardResult.Yes)
+                    {
+                        App.Services.GetRequiredService<MainWindow>().Hide();
+                        App.Shutdown();
+                    }
+                }).SafeFireAndForget();
+            }
+        }
+    }
+
+    private static TaskDialog CreateExitConfirmDialog()
+    {
+        var dialog = DialogHelper.CreateTaskDialog("Confirm Exit",
+            "Are you sure you want to exit? This will also close the currently running package.");
+
+        dialog.ShowProgressBar = false;
+        dialog.FooterVisibility = TaskDialogFooterVisibility.Never;
+        
+        dialog.Buttons = new List<TaskDialogButton>
+        {
+            new("Exit", TaskDialogStandardResult.Yes),
+            TaskDialogButton.CancelButton
+        };
+        dialog.Buttons[0].IsDefault = true;
+        
+        return dialog;
+    }
     
     public void Dispose()
     {
         RunningPackage?.Shutdown();
+        RunningPackage = null;
+
         Console.Dispose();
 
+        GC.SuppressFinalize(this);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (RunningPackage is not null)
+        {
+            await RunningPackage.WaitForShutdown();
+            RunningPackage = null;
+        }
+        await Console.DisposeAsync();
+        
         GC.SuppressFinalize(this);
     }
 }

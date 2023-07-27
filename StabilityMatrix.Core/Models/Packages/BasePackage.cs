@@ -23,7 +23,18 @@ public abstract class BasePackage
         IProgress<ProgressReport>? progress = null);
     public abstract Task InstallPackage(IProgress<ProgressReport>? progress = null);
     public abstract Task RunPackage(string installedPackagePath, string arguments);
-    public abstract Task Shutdown();
+    
+    
+    /// <summary>
+    /// Shuts down the subprocess, canceling any pending streams.
+    /// </summary>
+    public abstract void Shutdown();
+
+    /// <summary>
+    /// Shuts down the process, returning a Task to wait for output EOF.
+    /// </summary>
+    public abstract Task WaitForShutdown();
+    
     public abstract Task<bool> CheckForUpdates(InstalledPackage package);
 
     public abstract Task<string> Update(InstalledPackage installedPackage,

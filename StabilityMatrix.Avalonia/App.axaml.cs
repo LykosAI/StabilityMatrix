@@ -291,6 +291,7 @@ public sealed class App : Application
         services.AddSingleton<BasePackage, A3WebUI>();
         services.AddSingleton<BasePackage, VladAutomatic>();
         services.AddSingleton<BasePackage, ComfyUI>();
+        services.AddSingleton<BasePackage, VoltaML>();
     }
 
     private static IServiceCollection ConfigureServices()

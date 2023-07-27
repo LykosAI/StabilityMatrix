@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
+using NLog;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Progress;
@@ -12,6 +13,8 @@ namespace StabilityMatrix.Core.Models.Packages;
 
 public class A3WebUI : BaseGitPackage
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    
     public override string Name => "stable-diffusion-webui";
     public override string DisplayName { get; set; } = "Stable Diffusion WebUI";
     public override string Author => "AUTOMATIC1111";
@@ -110,26 +113,8 @@ public class A3WebUI : BaseGitPackage
 
     public override async Task<string> GetLatestVersion()
     {
-        var release = await GetLatestRelease();
+        var release = await GetLatestRelease().ConfigureAwait(false);
         return release.TagName!;
-    }
-
-    public override async Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true)
-    {
-        if (isReleaseMode)
-        {
-            var allReleases = await GetAllReleases();
-            return allReleases.Where(r => r.Prerelease == false).Select(r => new PackageVersion
-                {TagName = r.TagName!, ReleaseNotesMarkdown = r.Body});
-        }
-
-        // else, branch mode
-        var allBranches = await GetAllBranches();
-        return allBranches.Select(b => new PackageVersion
-        {
-            TagName = $"{b.Name}",
-            ReleaseNotesMarkdown = string.Empty
-        });
     }
 
     public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)

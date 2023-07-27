@@ -15,7 +15,7 @@ namespace StabilityMatrix.Core.Python;
 /// Python runner using a subprocess, mainly for venv support.
 /// </summary>
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-public class PyVenvRunner : IDisposable
+public class PyVenvRunner : IDisposable, IAsyncDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -25,6 +25,14 @@ public class PyVenvRunner : IDisposable
         "torch torchvision torchaudio";
     public const string TorchPipInstallArgsDirectML = 
         "torch-directml";
+
+    /// <summary>
+    /// Relative path to the site-packages folder from the venv root.
+    /// This is platform specific.
+    /// </summary>
+    public static string RelativeSitePackagesPath => Compat.Switch(
+        (PlatformKind.Windows, "Lib/site-packages"),
+        (PlatformKind.Unix, "lib/python3.10/site-packages"));
     
     /// <summary>
     /// The process running the python executable.
@@ -189,7 +197,8 @@ public class PyVenvRunner : IDisposable
         Action<ProcessOutput>? outputDataReceived,
         Action<int>? onExit = null,
         bool unbuffered = true, 
-        string workingDirectory = "")
+        string workingDirectory = "", 
+        Dictionary<string, string>? environmentVariables = null)
     {
         if (!Exists())
         {
@@ -209,22 +218,21 @@ public class PyVenvRunner : IDisposable
             outputDataReceived.Invoke(s);
         });
 
-        var env = new Dictionary<string, string>
-        {
-            // Disable pip caching - uses significant memory for large packages like torch
-            {"PIP_NO_CACHE_DIR", "true"} 
-        };
+        environmentVariables ??= new Dictionary<string, string>();
+        
+        // Disable pip caching - uses significant memory for large packages like torch
+        environmentVariables["PIP_NO_CACHE_DIR"] = "true";
 
         // On windows, add portable git 
         if (Compat.IsWindows)
         {
             var portableGit = GlobalConfig.LibraryDir.JoinDir("PortableGit", "bin");
-            env["PATH"] = Compat.GetEnvPathWithExtensions(portableGit);
+            environmentVariables["PATH"] = Compat.GetEnvPathWithExtensions(portableGit);
         }
         
         if (unbuffered)
         {
-            env["PYTHONUNBUFFERED"] = "1";
+            environmentVariables["PYTHONUNBUFFERED"] = "1";
 
             // If arguments starts with -, it's a flag, insert `u` after it for unbuffered mode
             if (arguments.StartsWith('-'))
@@ -241,18 +249,35 @@ public class PyVenvRunner : IDisposable
         Process = ProcessRunner.StartAnsiProcess(PythonPath, arguments, 
             workingDirectory: workingDirectory,
             outputDataReceived: filteredOutput,
-            environmentVariables: env);
+            environmentVariables: environmentVariables);
 
         if (onExit != null)
         {
             Process.EnableRaisingEvents = true;
-            Process.Exited += (_, _) => onExit(Process.ExitCode);
+            Process.Exited += (sender, _) =>
+            {
+                onExit((sender as AnsiProcess)?.ExitCode ?? -1);
+            };
         }
     }
-
+    
     public void Dispose()
     {
+        Process?.CancelStreamReaders();
         Process?.Kill();
+        Process = null;
+        GC.SuppressFinalize(this);
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        if (Process is not null)
+        {
+            Process.Kill();
+            await Process.WaitForExitAsync().ConfigureAwait(false);
+        }
+
+        Process = null;
         GC.SuppressFinalize(this);
     }
 }

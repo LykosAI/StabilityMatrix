@@ -14,6 +14,8 @@ namespace StabilityMatrix.Core.Models.Packages;
 
 public class VladAutomatic : BaseGitPackage
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    
     public override string Name => "automatic";
     public override string DisplayName { get; set; } = "SD.Next Web UI";
     public override string Author => "vladmandic";
@@ -222,7 +224,12 @@ public class VladAutomatic : BaseGitPackage
 
         var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
 
-        VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit, workingDirectory: installedPackagePath);
+        VenvRunner?.RunDetached(
+            args.TrimEnd(), 
+            HandleConsoleOutput, 
+            HandleExit, 
+            workingDirectory: installedPackagePath,
+            environmentVariables: SettingsManager.Settings.EnvironmentVariables);
     }
 
     public override async Task<string> Update(InstalledPackage installedPackage,

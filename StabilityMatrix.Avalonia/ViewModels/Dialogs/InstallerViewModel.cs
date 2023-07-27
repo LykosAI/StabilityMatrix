@@ -322,7 +322,6 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         
         var dialog = new ContentDialog
         {
-            Title = "Test title",
             PrimaryButtonText = "Open in Browser",
             CloseButtonText = "Close",
             Content = new Image

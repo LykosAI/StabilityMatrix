@@ -15,9 +15,11 @@ using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
-public partial class ConsoleViewModel : ObservableObject, IDisposable
+public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    private bool isDisposed;
     
     // Queue for console updates
     private BufferBlock<ProcessOutput> buffer = new();
@@ -454,26 +456,54 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        if (isDisposed) return;
+        
         updateCts?.Cancel();
         updateCts?.Dispose();
+        updateCts = null;
+        
+        buffer.Complete();
         
         if (updateTask is not null)
         {
             try
             {
                 updateTask.WaitWithoutException(
-                    new CancellationTokenSource(5000).Token);
+                    new CancellationTokenSource(1000).Token);
                 updateTask.Dispose();
+                updateTask = null;
             }
             catch (OperationCanceledException)
             {
-                Logger.Error("During shutdown - Console update task cancellation timed out");
+                Logger.Warn("During shutdown - Console update task cancellation timed out");
             }
             catch (InvalidOperationException e)
             {
-                Logger.Error(e, "During shutdown - Console update task cancellation failed");
+                Logger.Warn(e, "During shutdown - Console update task dispose failed");
             }
         }
+
+        isDisposed = true;
+        
+        GC.SuppressFinalize(this);
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        if (isDisposed) return;
+        
+        updateCts?.Cancel();
+        updateCts?.Dispose();
+        updateCts = null;
+        
+        if (updateTask is not null)
+        {
+            await updateTask;
+            updateTask.Dispose();
+            updateTask = null;
+        }
+
+        isDisposed = true;
         
         GC.SuppressFinalize(this);
     }

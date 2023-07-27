@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using Avalonia.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -14,14 +16,26 @@ public partial class EnvVarsViewModel : ContentDialogViewModelBase
     private string title = "Environment Variables";
 
     [ObservableProperty, NotifyPropertyChangedFor(nameof(EnvVarsView))]
-    private IList<EnvVarKeyPair> envVars = new List<EnvVarKeyPair>();
+    private ObservableCollection<EnvVarKeyPair> envVars = new();
 
     public DataGridCollectionView EnvVarsView => new(EnvVars);
     
-    // Add new environment variable
     [RelayCommand]
-    private void AddEnvVar()
+    private void AddRow()
     {
         EnvVars.Add(new EnvVarKeyPair());
+    }
+
+    [RelayCommand]
+    private void RemoveSelectedRow(int selectedIndex)
+    {
+        try
+        {
+            EnvVars.RemoveAt(selectedIndex);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            Debug.WriteLine($"RemoveSelectedRow: Index {selectedIndex} out of range");
+        }
     }
 }

@@ -22,6 +22,25 @@ public class FilePath : FileSystemPath, IPathObject
     
     public string Name => Info.Name;
 
+    /// <summary>
+    /// Get the directory of the file.
+    /// </summary>
+    public DirectoryPath? Directory
+    {
+        get
+        {
+            try
+            {
+                return Info.Directory == null ? null
+                    : new DirectoryPath(Info.Directory);
+            }
+            catch (DirectoryNotFoundException)
+            {
+                return null;
+            }
+        }
+    }
+
     public FilePath(string path) : base(path)
     {
     }

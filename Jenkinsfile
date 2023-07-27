@@ -38,7 +38,7 @@ node("Diligence") {
             
             stage ('Archive Artifacts') {
                 archiveArtifacts artifacts: 'out/*.exe', followSymlinks: false
-                archiveArtifacts artifacts: 'out/*.appimage', followSymlinks: false
+                archiveArtifacts artifacts: 'Release/linux-x64/*.appimage', followSymlinks: false
             }
         }
     } finally {

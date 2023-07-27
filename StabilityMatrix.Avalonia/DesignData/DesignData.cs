@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Models;
@@ -51,7 +52,7 @@ public static class DesignData
                         DisplayName = "My Installed Package",
                         PackageName = "stable-diffusion-webui",
                         PackageVersion = "v1.0.0",
-                        LibraryPath = $"Packages{Environment.NewLine}example-webui",
+                        LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
                         LastUpdateCheck = DateTimeOffset.Now
                     }
                 },

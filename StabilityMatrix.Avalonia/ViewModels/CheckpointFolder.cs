@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
@@ -9,10 +8,10 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
-using AvaloniaEdit.Utils;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -77,9 +76,9 @@ public partial class CheckpointFolder : ViewModelBase
     public ProgressViewModel Progress { get; } = new();
 
     public CheckpointFolder? ParentFolder { get; init; }
-    public ObservableCollection<CheckpointFolder> SubFolders { get; init; } = new();
-    public ObservableCollection<CheckpointFile> CheckpointFiles { get; init; } = new();
-    public ObservableCollection<CheckpointFile> DisplayedCheckpointFiles { get; set; }
+    public AdvancedObservableList<CheckpointFolder> SubFolders { get; init; } = new();
+    public AdvancedObservableList<CheckpointFile> CheckpointFiles { get; init; } = new();
+    public AdvancedObservableList<CheckpointFile> DisplayedCheckpointFiles { get; set; }
 
     public CheckpointFolder(
         ISettingsManager settingsManager,
@@ -121,7 +120,7 @@ public partial class CheckpointFolder : ViewModelBase
         {
             var filteredFiles = CheckpointFiles.Where(y =>
                 y.FileName.Contains(value, StringComparison.OrdinalIgnoreCase));
-            DisplayedCheckpointFiles = new ObservableCollection<CheckpointFile>(filteredFiles);
+            DisplayedCheckpointFiles = new AdvancedObservableList<CheckpointFile>(filteredFiles);
         }
     }
 
@@ -136,31 +135,10 @@ public partial class CheckpointFolder : ViewModelBase
             settingsManager.SetSharedFolderCategoryVisible(FolderType, value);
         }
     }
-
-    // On collection changes
+    
     private void OnCheckpointFilesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         OnPropertyChanged(nameof(TitleWithFilesCount));
-        if (e.NewItems == null) return;
-        // On new added items, add event handler for deletion
-        foreach (CheckpointFile item in e.NewItems)
-        {
-            item.Deleted += OnCheckpointFileDelete;
-        }
-    }
-
-    /// <summary>
-    /// Handler for CheckpointFile requesting to be deleted from the collection.
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="file"></param>
-    private void OnCheckpointFileDelete(object? sender, CheckpointFile file)
-    {
-        Dispatcher.UIThread.Post(() =>
-        {
-            CheckpointFiles.Remove(file);
-            DisplayedCheckpointFiles.Remove(file);
-        });
     }
 
     public async Task OnDrop(DragEventArgs e)
@@ -188,6 +166,52 @@ public partial class CheckpointFolder : ViewModelBase
     private async Task ShowInExplorer(string path)
     {
         await ProcessRunner.OpenFolderBrowser(path);
+    }
+    
+    [RelayCommand]
+    private async Task Delete()
+    {
+        var directory = new DirectoryPath(DirectoryPath);
+
+        if (!directory.Exists)
+        {
+            RemoveFromParentList();
+            return;
+        }
+
+        var dialog = DialogHelper.CreateTaskDialog(
+            "Are you sure you want to delete this folder?",directory);
+
+        dialog.ShowProgressBar = false;
+        dialog.Buttons = new List<TaskDialogButton>
+        {
+            TaskDialogButton.YesButton,
+            TaskDialogButton.NoButton
+        };
+        
+        dialog.Closing += async (sender, e) =>
+        {
+            // We only want to use the deferral on the 'Yes' Button
+            if ((TaskDialogStandardResult)e.Result == TaskDialogStandardResult.Yes)
+            {
+                var deferral = e.GetDeferral();
+
+                sender.ShowProgressBar = true;
+                sender.SetProgressBarState(0, TaskDialogProgressState.Indeterminate);
+
+                await using (new MinimumDelay(200, 300))
+                {
+                    await directory.DeleteAsync(true);
+                }
+                
+                RemoveFromParentList();
+                deferral.Complete();
+            }
+        };
+
+        dialog.XamlRoot = App.VisualRoot;
+
+        await dialog.ShowAsync(true);
     }
     
     [RelayCommand]

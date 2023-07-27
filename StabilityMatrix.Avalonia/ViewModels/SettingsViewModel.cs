@@ -147,7 +147,8 @@ public partial class SettingsViewModel : PageViewModelBase
             // Save settings
             var newEnvVars = viewModel.EnvVars
                 .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Key))
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                .GroupBy(kvp => kvp.Key, StringComparer.Ordinal)
+                .ToDictionary(g => g.Key, g => g.First().Value, StringComparer.Ordinal);
             settingsManager.Transaction(s => s.EnvironmentVariables = newEnvVars);
         }
     }

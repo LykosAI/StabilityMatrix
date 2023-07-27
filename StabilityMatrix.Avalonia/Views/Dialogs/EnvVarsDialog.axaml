@@ -12,10 +12,19 @@
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                           x:Class="StabilityMatrix.Avalonia.Views.Dialogs.EnvVarsDialog">
     
-    <controls:UserControlBase.Resources>
-        <Style Selector="DataGridCell /template/ Border#CellBorder">
-            <Setter Property="Background" Value="Aqua"/>
+    <controls:UserControlBase.Styles>
+        <Style Selector="DataGridRow:not(:selected) /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="{DynamicResource ComboBoxItemBackgroundSelected}"/>
         </Style>
+        <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="{DynamicResource ComboBoxItemBackgroundPointerOver}"/>
+        </Style>
+    </controls:UserControlBase.Styles>
+    
+    <controls:UserControlBase.Resources>
+        <DataTemplate x:Key="DataGridCellDividerTemplate">
+            <Rectangle VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Fill="#08ffffff"/>
+        </DataTemplate>
     </controls:UserControlBase.Resources>
     
     <Grid RowDefinitions="Auto,Auto,*" MinHeight="300" Margin="8">
@@ -34,12 +43,26 @@
         </StackPanel>
         
         <Panel Grid.Row="1">
-            <ui:CommandBar >
+            <ui:CommandBar>
                 <ui:CommandBar.PrimaryCommands>
-                    <ui:CommandBarButton IconSource="Add" Label="Save" Command="{Binding AddRowCommand}"/>
-                    <ui:CommandBarButton IconSource="Remove" Label="Undo" Command="{Binding RemoveSelectedRowCommand}"/>
+                    <ui:CommandBarButton Width="45" Height="50" 
+                                         IconSource="Add" 
+                                         Label="Save" 
+                                         Command="{Binding AddRowCommand}"/>
+                    <ui:CommandBarButton Width="45" Height="50" 
+                                         IconSource="Remove" 
+                                         Label="Undo" 
+                                         CommandParameter="{Binding #EnvVarsGrid.SelectedIndex}"
+                                         Command="{Binding RemoveSelectedRowCommand}">
+                        <ui:CommandBarButton.IsEnabled>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="!EnvVarsView.IsEmpty" />
+                                <Binding ElementName="EnvVarsGrid" Path="SelectedItem" Converter="{x:Static ObjectConverters.IsNotNull}" />
+                            </MultiBinding>
+                        </ui:CommandBarButton.IsEnabled>
+                    </ui:CommandBarButton>
                     <ui:CommandBarSeparator />
-                    <ui:CommandBarButton IconSource="Copy" Label="Bold" />
+                    <ui:CommandBarButton Width="45" Height="50" FontSize="5" IconSource="Copy" Label="Bold" />
                 </ui:CommandBar.PrimaryCommands>
             </ui:CommandBar>
         </Panel>
@@ -50,15 +73,19 @@
                        VerticalAlignment="Stretch" 
                        VerticalContentAlignment="Stretch">
             <DataGrid 
+                x:Name="EnvVarsGrid"
                 MinHeight="200"
                 ItemsSource="{Binding EnvVarsView}" >
                 <DataGrid.Columns>
                     <DataGridTextColumn x:DataType="models:EnvVarKeyPair" 
                                         Width="5*"
+                                        FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
                                         Header="Name" 
                                         Binding="{Binding Key}" />
+                    <DataGridTemplateColumn MinWidth="0" Width="1" CellTemplate="{StaticResource DataGridCellDividerTemplate}"/>
                     <DataGridTextColumn x:DataType="models:EnvVarKeyPair" 
                                         Width="5*"
+                                        FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
                                         Header="Value" 
                                         Binding="{Binding Value}" />
                 </DataGrid.Columns>

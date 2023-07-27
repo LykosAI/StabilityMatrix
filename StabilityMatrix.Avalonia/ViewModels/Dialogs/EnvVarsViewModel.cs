@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using Avalonia.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -26,10 +27,15 @@ public partial class EnvVarsViewModel : ContentDialogViewModelBase
     }
 
     [RelayCommand]
-    private void RemoveSelectedRow()
+    private void RemoveSelectedRow(int selectedIndex)
     {
-        if (EnvVarsView.CurrentItem is not EnvVarKeyPair envVar) return;
-        
-        EnvVars.Remove(envVar);
+        try
+        {
+            EnvVars.RemoveAt(selectedIndex);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            Debug.WriteLine($"RemoveSelectedRow: Index {selectedIndex} out of range");
+        }
     }
 }

@@ -13,7 +13,6 @@ public partial class CivitFileViewModel : ObservableObject
     public CivitFileViewModel(HashSet<string> installedModelHashes, CivitFile civitFile)
     {
         CivitFile = civitFile;
-        CivitFile.Name = Path.GetFileNameWithoutExtension(CivitFile.Name);
         IsInstalled = CivitFile is {Type: CivitFileType.Model, Hashes.BLAKE3: not null} &&
                       installedModelHashes.Contains(CivitFile.Hashes.BLAKE3);
     }

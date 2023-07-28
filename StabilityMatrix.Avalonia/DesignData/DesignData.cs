@@ -88,6 +88,10 @@ public static class DesignData
         App.ConfigureDialogViewModels(services);
         App.ConfigureViews(services);
         
+        // Override Launch page with mock
+        services.Remove(ServiceDescriptor.Singleton<LaunchPageViewModel, LaunchPageViewModel>());
+        services.AddSingleton<LaunchPageViewModel, MockLaunchPageViewModel>();
+        
         Services = services.BuildServiceProvider();
 
         var dialogFactory = Services.GetRequiredService<ServiceManager<ViewModelBase>>();

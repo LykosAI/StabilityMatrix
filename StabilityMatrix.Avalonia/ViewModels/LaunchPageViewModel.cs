@@ -12,14 +12,11 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
-using AvaloniaEdit.Utils;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Nito.AsyncEx.Synchronous;
-using Octokit;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -150,6 +147,11 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
 
     [RelayCommand]
     private async Task LaunchAsync()
+    {
+        await notificationService.TryAsync(LaunchImpl());
+    }
+
+    protected virtual async Task LaunchImpl()
     {
         IsLaunchTeachingTipsOpen = false;
         
@@ -349,7 +351,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         await SendInput(input);
     }
     
-    public async Task Stop()
+    public virtual async Task Stop()
     {
         if (RunningPackage is null) return;
         await RunningPackage.WaitForShutdown();

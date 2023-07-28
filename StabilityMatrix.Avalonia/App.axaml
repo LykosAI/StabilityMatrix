@@ -27,5 +27,6 @@
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
         <StyleInclude Source="Styles/ProgressRing.axaml"/>
         <StyleInclude Source="Styles/ButtonStyles.axaml"/>
+        <StyleInclude Source="Styles/SplitButtonStyles.axaml"/>
     </Application.Styles>
 </Application>

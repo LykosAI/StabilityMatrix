@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using NLog;
 using Salaros.Configuration;
@@ -108,14 +109,14 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         var args = new string[] { "-m", "virtualenv", 
             Compat.IsWindows ? "--always-copy" : "", RootPath };
         var venvProc = ProcessRunner.StartAnsiProcess(PyRunner.PythonExePath, args);
-        await venvProc.WaitForExitAsync();
+        await venvProc.WaitForExitAsync().ConfigureAwait(false);
 
         // Check return code
         var returnCode = venvProc.ExitCode;
         if (returnCode != 0)
         {
-            var output = await venvProc.StandardOutput.ReadToEndAsync();
-            output += await venvProc.StandardError.ReadToEndAsync();
+            var output = await venvProc.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
+            output += await venvProc.StandardError.ReadToEndAsync().ConfigureAwait(false);
             throw new InvalidOperationException($"Venv creation failed with code {returnCode}: {output}");
         }
     }
@@ -181,7 +182,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         
         SetPyvenvCfg(PyRunner.PythonDir);
         RunDetached($"-m pip install {args}", outputAction, workingDirectory: workingDirectory ?? RootPath);
-        await Process.WaitForExitAsync();
+        await Process.WaitForExitAsync().ConfigureAwait(false);
         
         // Check return code
         if (Process.ExitCode != 0)
@@ -198,7 +199,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         Action<int>? onExit = null,
         bool unbuffered = true, 
         string workingDirectory = "", 
-        Dictionary<string, string>? environmentVariables = null)
+        IReadOnlyDictionary<string, string>? environmentVariables = null)
     {
         if (!Exists())
         {
@@ -218,21 +219,25 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
             outputDataReceived.Invoke(s);
         });
 
-        environmentVariables ??= new Dictionary<string, string>();
+        var env = new Dictionary<string, string>();
+        if (environmentVariables != null)
+        {
+            env.Update(environmentVariables);
+        }
         
         // Disable pip caching - uses significant memory for large packages like torch
-        environmentVariables["PIP_NO_CACHE_DIR"] = "true";
+        env["PIP_NO_CACHE_DIR"] = "true";
 
         // On windows, add portable git 
         if (Compat.IsWindows)
         {
             var portableGit = GlobalConfig.LibraryDir.JoinDir("PortableGit", "bin");
-            environmentVariables["PATH"] = Compat.GetEnvPathWithExtensions(portableGit);
+            env["PATH"] = Compat.GetEnvPathWithExtensions(portableGit);
         }
         
         if (unbuffered)
         {
-            environmentVariables["PYTHONUNBUFFERED"] = "1";
+            env["PYTHONUNBUFFERED"] = "1";
 
             // If arguments starts with -, it's a flag, insert `u` after it for unbuffered mode
             if (arguments.StartsWith('-'))
@@ -249,7 +254,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         Process = ProcessRunner.StartAnsiProcess(PythonPath, arguments, 
             workingDirectory: workingDirectory,
             outputDataReceived: filteredOutput,
-            environmentVariables: environmentVariables);
+            environmentVariables: env);
 
         if (onExit != null)
         {
@@ -261,14 +266,25 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         }
     }
     
+    /// <summary>
+    /// Kills the running process and cancels stream readers, does not wait for exit.
+    /// </summary>
     public void Dispose()
     {
-        Process?.CancelStreamReaders();
-        Process?.Kill();
+        if (Process is not null)
+        {
+            Process.CancelStreamReaders();
+            Process.Kill();
+            Process.Dispose();
+        }
+        
         Process = null;
         GC.SuppressFinalize(this);
     }
     
+    /// <summary>
+    /// Kills the running process, waits for exit.
+    /// </summary>
     public async ValueTask DisposeAsync()
     {
         if (Process is not null)
@@ -279,5 +295,10 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
 
         Process = null;
         GC.SuppressFinalize(this);
+    }
+
+    ~PyVenvRunner()
+    {
+        Dispose();
     }
 }

@@ -68,11 +68,21 @@ public class AnsiProcess : Process
     }
 
     /// <summary>
-    /// Cancels stream readers
+    /// Cancels stream readers, no effect if already cancelled
     /// </summary>
     public void CancelStreamReaders()
     {
         stdoutReader?.CancelOperation();
         stderrReader?.CancelOperation();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        CancelStreamReaders();
+        stdoutReader?.Dispose();
+        stdoutReader = null;
+        stderrReader?.Dispose();
+        stderrReader = null;
+        base.Dispose(disposing);
     }
 }

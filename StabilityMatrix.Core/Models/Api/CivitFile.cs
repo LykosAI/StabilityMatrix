@@ -41,4 +41,6 @@ public class CivitFile
             return fullFilesSize;
         }
     }
+
+    public string DisplayName => Path.GetFileNameWithoutExtension(Name);
 }

@@ -24,7 +24,7 @@ jobs:
           dotnet-version: '6.0.x'
             
       - name: Install dependencies
-        run: dotnet restore -p:PublishReadyToRun=true
+        run: dotnet restore
 
       - name: Build
-        run: dotnet publish ./StabilityMatrix/StabilityMatrix.csproj -o out -c Release -r win-x64 -p:PublishSingleFile=true --self-contained true
+        run: dotnet publish ./StabilityMatrix.Avalonia/StabilityMatrix.Avalonia.csproj -o out -c Release -r win-x64 -p:PublishSingleFile=true --self-contained true

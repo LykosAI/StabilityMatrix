@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using NLog;
 using Salaros.Configuration;
@@ -45,6 +44,16 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     /// </summary>
     public DirectoryPath RootPath { get; }
 
+    /// <summary>
+    /// Optional working directory for the python process.
+    /// </summary>
+    public DirectoryPath? WorkingDirectory { get; set; }
+    
+    /// <summary>
+    /// Optional environment variables for the python process.
+    /// </summary>
+    public IReadOnlyDictionary<string, string>? EnvironmentVariables { get; set; }
+    
     /// <summary>
     /// Name of the python binary folder.
     /// 'Scripts' on Windows, 'bin' on Unix.
@@ -161,7 +170,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     /// Run a pip install command. Waits for the process to exit.
     /// workingDirectory defaults to RootPath.
     /// </summary>
-    public async Task PipInstall(string args, string? workingDirectory = null, Action<ProcessOutput>? outputDataReceived = null)
+    public async Task PipInstall(string args, Action<ProcessOutput>? outputDataReceived = null)
     {
         if (!File.Exists(PipPath))
         {
@@ -181,7 +190,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         });
         
         SetPyvenvCfg(PyRunner.PythonDir);
-        RunDetached($"-m pip install {args}", outputAction, workingDirectory: workingDirectory ?? RootPath);
+        RunDetached($"-m pip install {args}", outputAction);
         await Process.WaitForExitAsync().ConfigureAwait(false);
         
         // Check return code
@@ -191,15 +200,41 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
                 $"pip install failed with code {Process.ExitCode}: {output.ToString().ToRepr()}");
         }
     }
+    
+    /// <summary>
+    /// Run a command using the venv Python executable and return the result.
+    /// </summary>
+    /// <param name="arguments">Arguments to pass to the Python executable.</param>
+    public async Task<ProcessResult> Run(string arguments)
+    {
+        // Record output for errors
+        var output = new StringBuilder();
+        
+        var outputAction = new Action<string?>(s =>
+        {
+            if (s == null) return;
+            Logger.Debug("Pip output: {Text}", s);
+            output.Append(s);
+        });
+        
+        SetPyvenvCfg(PyRunner.PythonDir);
+        using var process = ProcessRunner.StartProcess(PythonPath, arguments,
+            WorkingDirectory?.FullPath, outputAction, EnvironmentVariables);
+        await process.WaitForExitAsync().ConfigureAwait(false);
+
+        return new ProcessResult
+        {
+            ExitCode = process.ExitCode,
+            StandardOutput = output.ToString()
+        };
+    }
 
     [MemberNotNull(nameof(Process))]
     public void RunDetached(
         string arguments, 
         Action<ProcessOutput>? outputDataReceived,
         Action<int>? onExit = null,
-        bool unbuffered = true, 
-        string workingDirectory = "", 
-        IReadOnlyDictionary<string, string>? environmentVariables = null)
+        bool unbuffered = true)
     {
         if (!Exists())
         {
@@ -220,9 +255,9 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         });
 
         var env = new Dictionary<string, string>();
-        if (environmentVariables != null)
+        if (EnvironmentVariables != null)
         {
-            env.Update(environmentVariables);
+            env.Update(EnvironmentVariables);
         }
         
         // Disable pip caching - uses significant memory for large packages like torch
@@ -252,7 +287,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         }
 
         Process = ProcessRunner.StartAnsiProcess(PythonPath, arguments, 
-            workingDirectory: workingDirectory,
+            workingDirectory: WorkingDirectory?.FullPath,
             outputDataReceived: filteredOutput,
             environmentVariables: env);
 
@@ -264,6 +299,29 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
                 onExit((sender as AnsiProcess)?.ExitCode ?? -1);
             };
         }
+    }
+    
+    /// <summary>
+    /// Get entry points for a package.
+    /// https://packaging.python.org/en/latest/specifications/entry-points/#entry-points
+    /// </summary>
+    public async Task<string?> GetEntryPoint(string entryPointName)
+    {
+        // ReSharper disable once StringLiteralTypo
+        var code = $"""
+                   from importlib.metadata import entry_points
+                   
+                   results = entry_points(group='console_scripts', name='{entryPointName}')
+                   print(results[0].value, end='')
+                   """;
+        
+        var result = await Run($"-c \"{code}\"").ConfigureAwait(false);
+        if (result.ExitCode != 0 && !string.IsNullOrWhiteSpace(result.StandardOutput))
+        {
+            return result.StandardOutput;
+        }
+
+        return null;
     }
     
     /// <summary>

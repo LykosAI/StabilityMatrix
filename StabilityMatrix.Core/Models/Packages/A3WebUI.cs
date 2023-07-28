@@ -125,10 +125,11 @@ public class A3WebUI : BaseGitPackage
         
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
         // Setup venv
-        var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
+        await using var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
+        venvRunner.WorkingDirectory = InstallLocation;
         if (!venvRunner.Exists())
         {
-            await venvRunner.Setup();
+            await venvRunner.Setup().ConfigureAwait(false);
         }
 
         // Install torch / xformers based on gpu info
@@ -136,30 +137,32 @@ public class A3WebUI : BaseGitPackage
         if (gpus.Any(g => g.IsNvidia))
         {
             progress?.Report(new ProgressReport(-1, "Installing PyTorch for CUDA", isIndeterminate: true));
+            
             Logger.Info("Starting torch install (CUDA)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, 
-                InstallLocation, OnConsoleOutput);
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, OnConsoleOutput)
+                .ConfigureAwait(false);
+            
             Logger.Info("Installing xformers...");
-            await venvRunner.PipInstall("xformers", InstallLocation, OnConsoleOutput);
+            await venvRunner.PipInstall("xformers", OnConsoleOutput).ConfigureAwait(false);
         }
         else
         {
             progress?.Report(new ProgressReport(-1, "Installing PyTorch for CPU", isIndeterminate: true));
             Logger.Info("Starting torch install (CPU)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, InstallLocation, OnConsoleOutput);
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, OnConsoleOutput).ConfigureAwait(false);
         }
 
         // Install requirements file
         progress?.Report(new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true));
         Logger.Info("Installing requirements_versions.txt");
-        await venvRunner.PipInstall($"-r requirements_versions.txt", InstallLocation, OnConsoleOutput);
+        await venvRunner.PipInstall($"-r requirements_versions.txt", OnConsoleOutput).ConfigureAwait(false);
         
         progress?.Report(new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false));
     }
 
     public override async Task RunPackage(string installedPackagePath, string arguments)
     {
-        await SetupVenv(installedPackagePath);
+        await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -179,11 +182,6 @@ public class A3WebUI : BaseGitPackage
 
         var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
 
-        VenvRunner.RunDetached(
-            args.TrimEnd(), 
-            HandleConsoleOutput, 
-            OnExit, 
-            workingDirectory: installedPackagePath,
-            environmentVariables: SettingsManager.Settings.EnvironmentVariables);
+        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
     }
 }

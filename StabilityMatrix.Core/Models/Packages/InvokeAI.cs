@@ -57,7 +57,9 @@ public class InvokeAI : BaseGitPackage
     {
         // Setup venv
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
+        
         await using var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
+        venvRunner.WorkingDirectory = InstallLocation;
         await venvRunner.Setup().ConfigureAwait(false);
         
         
@@ -71,7 +73,7 @@ public class InvokeAI : BaseGitPackage
             Logger.Info("Starting InvokeAI install (CUDA)...");
             await venvRunner.PipInstall(
                 "InvokeAI[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu117", 
-                InstallLocation, OnConsoleOutput).ConfigureAwait(false);
+                OnConsoleOutput).ConfigureAwait(false);
         }
         // For AMD, Install ROCm version
         else if (gpus.Any(g => g.IsAmd))
@@ -79,7 +81,7 @@ public class InvokeAI : BaseGitPackage
             Logger.Info("Starting InvokeAI install (ROCm)...");
             await venvRunner.PipInstall(
                 "InvokeAI --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2",
-                InstallLocation, OnConsoleOutput).ConfigureAwait(false);
+                OnConsoleOutput).ConfigureAwait(false);
         }
         // For Apple silicon, use MPS
         else if (Compat.IsMacOS && Compat.IsArm)
@@ -87,7 +89,7 @@ public class InvokeAI : BaseGitPackage
             Logger.Info("Starting InvokeAI install (MPS)...");
             await venvRunner.PipInstall(
                 "InvokeAI --use-pep517",
-                InstallLocation, OnConsoleOutput).ConfigureAwait(false);
+                OnConsoleOutput).ConfigureAwait(false);
         }
         // CPU Version
         else
@@ -95,11 +97,11 @@ public class InvokeAI : BaseGitPackage
             Logger.Info("Starting InvokeAI install (CPU)...");
             await venvRunner.PipInstall(
                 "pip install InvokeAI --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu",
-                InstallLocation, OnConsoleOutput).ConfigureAwait(false);
+                OnConsoleOutput).ConfigureAwait(false);
         }
         
         await venvRunner
-            .PipInstall("rich packaging python-dotenv", InstallLocation, OnConsoleOutput)
+            .PipInstall("rich packaging python-dotenv", OnConsoleOutput)
             .ConfigureAwait(false);
         
         progress?.Report(new ProgressReport(1, "Installing Package", isIndeterminate: false));
@@ -111,11 +113,6 @@ public class InvokeAI : BaseGitPackage
 
         var args = $"{LaunchCommand} {arguments}";
         
-        VenvRunner?.RunDetached(
-            args.TrimEnd(),
-            outputDataReceived: OnConsoleOutput, 
-            onExit: OnExit, 
-            workingDirectory: installedPackagePath,
-            environmentVariables: SettingsManager.Settings.EnvironmentVariables);
+        VenvRunner?.RunDetached(args.TrimEnd(), OnConsoleOutput, OnExit);
     }
 }

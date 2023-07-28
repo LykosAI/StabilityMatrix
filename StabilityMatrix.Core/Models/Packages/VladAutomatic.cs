@@ -160,25 +160,28 @@ public class VladAutomatic : BaseGitPackage
         if (gpus.Any(g => g.IsNvidia))
         {
             Logger.Info("Starting torch install (CUDA)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, 
-                InstallLocation, OnConsoleOutput);
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, OnConsoleOutput)
+                .ConfigureAwait(false);
+            
             Logger.Info("Installing xformers...");
-            await venvRunner.PipInstall("xformers", InstallLocation, OnConsoleOutput);
+            await venvRunner.PipInstall("xformers", OnConsoleOutput).ConfigureAwait(false);
         }
         else if (gpus.Any(g => g.IsAmd))
         {
             Logger.Info("Starting torch install (DirectML)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, InstallLocation, OnConsoleOutput);
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, OnConsoleOutput)
+                .ConfigureAwait(false);
         }
         else
         {
             Logger.Info("Starting torch install (CPU)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, InstallLocation, OnConsoleOutput);
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, OnConsoleOutput)
+                .ConfigureAwait(false);
         }
 
         // Install requirements file
         Logger.Info("Installing requirements.txt");
-        await venvRunner.PipInstall($"-r requirements.txt", InstallLocation, OnConsoleOutput);
+        await venvRunner.PipInstall($"-r requirements.txt", OnConsoleOutput).ConfigureAwait(false);
         
         progress?.Report(new ProgressReport(1, isIndeterminate: false));
     }
@@ -202,7 +205,7 @@ public class VladAutomatic : BaseGitPackage
 
     public override async Task RunPackage(string installedPackagePath, string arguments)
     {
-        await SetupVenv(installedPackagePath);
+        await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -227,12 +230,7 @@ public class VladAutomatic : BaseGitPackage
 
         var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
 
-        VenvRunner?.RunDetached(
-            args.TrimEnd(), 
-            HandleConsoleOutput, 
-            HandleExit, 
-            workingDirectory: installedPackagePath,
-            environmentVariables: SettingsManager.Settings.EnvironmentVariables);
+        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
     }
 
     public override async Task<string> Update(InstalledPackage installedPackage,

@@ -129,12 +129,9 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             CheckpointFolders.Clear();
             return;
         }
-
-        // Skip if the shared folder root doesn't exist
-        if (!Directory.Exists(modelsDirectory))
-        {
-            await Task.Run(() => sharedFolders.SetupSharedModelFolders());
-        }
+        
+        // Setup shared folders in case they're missing
+        sharedFolders.SetupSharedModelFolders();
 
         var folders = Directory.GetDirectories(modelsDirectory);
 

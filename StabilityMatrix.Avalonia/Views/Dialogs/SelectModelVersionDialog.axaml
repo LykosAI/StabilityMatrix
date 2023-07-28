@@ -78,7 +78,7 @@
                                                    IsVisible="{Binding IsInstalled}"
                                                    VerticalAlignment="Center" />
                         <TextBlock Grid.Row="0" Grid.Column="1"
-                            Text="{Binding CivitFile.Name}"
+                            Text="{Binding CivitFile.DisplayName}"
                             Margin="0, 4, 0, 4"
                             TextWrapping="Wrap" />
                         <TextBlock Grid.Row="1" Grid.Column="1"

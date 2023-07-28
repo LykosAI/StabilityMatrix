@@ -312,11 +312,11 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
                    from importlib.metadata import entry_points
                    
                    results = entry_points(group='console_scripts', name='{entryPointName}')
-                   print(results[0].value, end='')
+                   print(tuple(results)[0].value, end='')
                    """;
         
         var result = await Run($"-c \"{code}\"").ConfigureAwait(false);
-        if (result.ExitCode != 0 && !string.IsNullOrWhiteSpace(result.StandardOutput))
+        if (result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.StandardOutput))
         {
             return result.StandardOutput;
         }

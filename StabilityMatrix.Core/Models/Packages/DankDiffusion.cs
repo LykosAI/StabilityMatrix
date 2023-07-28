@@ -22,19 +22,19 @@ public class DankDiffusion : BaseGitPackage
     public override string LaunchCommand { get; }
     public override Uri PreviewImageUri { get; }
 
-    public override Task RunPackage(string installedPackagePath, string arguments)
+    public override Task RunPackage(string installedPackagePath, string command, string arguments)
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
     public override List<LaunchOptionDefinition> LaunchOptions { get; }
     public override Task<string> GetLatestVersion()
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 
     public override Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true)
     {
-        throw new System.NotImplementedException();
+        throw new NotImplementedException();
     }
 }

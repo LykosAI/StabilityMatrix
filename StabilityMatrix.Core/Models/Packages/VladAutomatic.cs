@@ -203,7 +203,7 @@ public class VladAutomatic : BaseGitPackage
         return version;
     }
 
-    public override async Task RunPackage(string installedPackagePath, string arguments)
+    public override async Task RunPackage(string installedPackagePath, string command, string arguments)
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
@@ -228,7 +228,7 @@ public class VladAutomatic : BaseGitPackage
             OnExit(i);
         }
 
-        var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
+        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
         VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
     }

@@ -12,6 +12,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
+using AvaloniaEdit.Utils;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -227,7 +228,8 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
 
         // Join with extras, if any
         userArgsString = string.Join(" ", userArgsString, basePackage.ExtraLaunchArguments);
-        await basePackage.RunPackage(packagePath, userArgsString);
+        // TODO: dropdown multi launch options
+        await basePackage.RunPackage(packagePath, basePackage.LaunchCommand, userArgsString);
         RunningPackage = basePackage;
     }
 

@@ -1,4 +1,5 @@
 ﻿using NLog;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Progress;
@@ -18,8 +19,12 @@ public class InvokeAI : BaseGitPackage
     public override string LicenseUrl => 
         "https://github.com/invoke-ai/InvokeAI/blob/main/LICENSE";
     public override string Blurb => "Professional Creative Tools for Stable Diffusion";
-    public override string LaunchCommand => 
-        "-c \"__import__('invokeai.frontend.legacy_launch_invokeai').frontend.legacy_launch_invokeai.main()\"";
+    public override string LaunchCommand => "invokeai";
+
+    public override IReadOnlyList<string> ExtraLaunchCommands => new[]
+    {
+        "invokeai-configure",
+    };
 
     public override Uri PreviewImageUri => new(
         "https://raw.githubusercontent.com/invoke-ai/InvokeAI/main/docs/assets/canvas_preview.png");
@@ -107,12 +112,25 @@ public class InvokeAI : BaseGitPackage
         progress?.Report(new ProgressReport(1, "Installing Package", isIndeterminate: false));
     }
     
-    public override async Task RunPackage(string installedPackagePath, string arguments)
+    public override async Task RunPackage(string installedPackagePath, string command, string arguments)
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
-        var args = $"{LaunchCommand} {arguments}";
+        // Launch command is for a console entry point, and not a direct script
+        var entryPoint = await VenvRunner.GetEntryPoint(command).ConfigureAwait(false);
         
-        VenvRunner?.RunDetached(args.TrimEnd(), OnConsoleOutput, OnExit);
+        // Split at ':' to get package and function
+        var split = entryPoint?.Split(':');
+        
+        if (split is not {Length: > 1})
+        {
+            throw new Exception($"Could not find entry point for InvokeAI: {entryPoint.ToRepr()}");
+        }
+        
+        // Compile a startup command according to 
+        // https://packaging.python.org/en/latest/specifications/entry-points/#use-for-scripts
+        var args = $"-c \"import sys; from {split[0]} import {split[1]}; sys.exit({split[1]}())\"";
+        
+        VenvRunner.RunDetached(args.TrimEnd(), OnConsoleOutput, OnExit);
     }
 }

@@ -160,7 +160,7 @@ public class A3WebUI : BaseGitPackage
         progress?.Report(new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false));
     }
 
-    public override async Task RunPackage(string installedPackagePath, string arguments)
+    public override async Task RunPackage(string installedPackagePath, string command, string arguments)
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
@@ -180,7 +180,7 @@ public class A3WebUI : BaseGitPackage
             OnStartupComplete(WebUrl);
         }
 
-        var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
+        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
         VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
     }

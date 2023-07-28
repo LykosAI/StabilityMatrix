@@ -16,7 +16,17 @@ public abstract class BasePackage
     public abstract string GithubUrl { get; }
     public abstract string LicenseType { get; }
     public abstract string LicenseUrl { get; }
+    
+    /// <summary>
+    /// Primary command to launch the package. 'Launch' buttons uses this.
+    /// </summary>
     public abstract string LaunchCommand { get; }
+    
+    /// <summary>
+    /// Optional commands (e.g. 'config') that are on the launch button split drop-down.
+    /// </summary>
+    public virtual IReadOnlyList<string> ExtraLaunchCommands { get; } = Array.Empty<string>();
+    
     public abstract Uri PreviewImageUri { get; }
     public virtual bool ShouldIgnoreReleases => false;
     public virtual bool UpdateAvailable { get; set; }
@@ -24,7 +34,7 @@ public abstract class BasePackage
     public abstract Task<string> DownloadPackage(string version, bool isCommitHash,
         IProgress<ProgressReport>? progress = null);
     public abstract Task InstallPackage(IProgress<ProgressReport>? progress = null);
-    public abstract Task RunPackage(string installedPackagePath, string arguments);
+    public abstract Task RunPackage(string installedPackagePath, string command, string arguments);
     
     
     /// <summary>

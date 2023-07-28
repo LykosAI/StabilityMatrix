@@ -84,7 +84,9 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         if (!installedModels.Any()) return;
         
         // check if latest version is installed
-        var latestVersion = CivitModel.ModelVersions[0];
+        var latestVersion = CivitModel.ModelVersions.FirstOrDefault();
+        if (latestVersion == null) return;
+        
         var latestVersionInstalled = latestVersion.Files != null && latestVersion.Files.Any(file =>
             file is {Type: CivitFileType.Model, Hashes.BLAKE3: not null} &&
             installedModels.Contains(file.Hashes.BLAKE3));

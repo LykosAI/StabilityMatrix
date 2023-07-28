@@ -31,7 +31,7 @@
                         FontSize="11"
                         Foreground="{DynamicResource TextControlForeground}"
                         Margin="0,2,0,0"
-                        Text="{Binding CivitModel.ModelVersions[0].Name, FallbackValue=''}"
+                        Text="{Binding CivitModel.Name, FallbackValue=''}"
                         VerticalAlignment="Center" />
                     <Grid>
                         <controls:BetterAdvancedImage

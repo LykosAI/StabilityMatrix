@@ -54,6 +54,15 @@ public static class DesignData
                         PackageVersion = "v1.0.0",
                         LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
                         LastUpdateCheck = DateTimeOffset.Now
+                    },
+                    new()
+                    {
+                        Id = Guid.NewGuid(),
+                        DisplayName = "Dank Diffusion",
+                        PackageName = "dank-diffusion",
+                        PackageVersion = "v2.0.0",
+                        LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
+                        LastUpdateCheck = DateTimeOffset.Now
                     }
                 },
                 ActiveInstalledPackage = activePackageId

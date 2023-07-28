@@ -19,7 +19,13 @@ public class DankDiffusion : BaseGitPackage
     public override string LicenseUrl => 
         "https://github.com/LykosAI/StabilityMatrix/blob/main/LICENSE";
     public override string Blurb => "A dank interface for diffusion";
-    public override string LaunchCommand { get; }
+    public override string LaunchCommand => "test";
+    
+    public override IReadOnlyList<string> ExtraLaunchCommands => new[]
+    {
+        "test-config",
+    };
+    
     public override Uri PreviewImageUri { get; }
 
     public override Task RunPackage(string installedPackagePath, string command, string arguments)

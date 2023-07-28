@@ -43,11 +43,11 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
 {
     private readonly ILogger<LaunchPageViewModel> logger;
     private readonly ISettingsManager settingsManager;
-    private readonly IPackageFactory packageFactory;
     private readonly IPyRunner pyRunner;
     private readonly INotificationService notificationService;
     private readonly ISharedFolders sharedFolders;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
+    protected readonly IPackageFactory PackageFactory;
     
     // Regex to match if input contains a yes/no prompt,
     // i.e "Y/n", "yes/no". Case insensitive.
@@ -65,10 +65,15 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     [ObservableProperty] private bool isLaunchTeachingTipsOpen;
     [ObservableProperty] private bool showWebUiButton;
     
-    [ObservableProperty] private InstalledPackage? selectedPackage;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(SelectedBasePackage))] 
+    private InstalledPackage? selectedPackage;
+    
     [ObservableProperty] private ObservableCollection<InstalledPackage> installedPackages = new();
 
     [ObservableProperty] private BasePackage? runningPackage;
+
+    public virtual BasePackage? SelectedBasePackage =>
+        PackageFactory.FindPackageByName(SelectedPackage?.PackageName);
     
     // private bool clearingPackages;
     private string webUiUrl = string.Empty;
@@ -88,7 +93,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
-        this.packageFactory = packageFactory;
+        this.PackageFactory = packageFactory;
         this.pyRunner = pyRunner;
         this.notificationService = notificationService;
         this.sharedFolders = sharedFolders;
@@ -169,7 +174,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         var activeInstallName = activeInstall.PackageName;
         var basePackage = string.IsNullOrWhiteSpace(activeInstallName)
             ? null
-            : packageFactory.FindPackageByName(activeInstallName);
+            : PackageFactory.FindPackageByName(activeInstallName);
 
         if (basePackage == null)
         {
@@ -255,7 +260,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
             return;
         }
 
-        var package = packageFactory.FindPackageByName(name);
+        var package = PackageFactory.FindPackageByName(name);
         if (package == null)
         {
             logger.LogWarning("Package {Name} not found", name);

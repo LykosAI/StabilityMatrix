@@ -168,7 +168,7 @@ public class SharedFolders : ISharedFolders
             var basePackage = packageFactory.FindPackageByName(package.PackageName);
             if (basePackage == null) continue;
             if (package.LibraryPath == null) continue;
-
+ 
             try
             {
                 RemoveLinksForPackage(basePackage, Path.Combine(libraryDir, package.LibraryPath));
@@ -178,6 +178,20 @@ public class SharedFolders : ISharedFolders
                 Logger.Warn("Failed to remove junction links for package {Package} " +
                             "({DisplayName}): {Message}", package.PackageName, package.DisplayName, e.Message);
             }
+        }
+    }
+
+    public void SetupSharedModelFolders()
+    {
+        var modelsDir = settingsManager.ModelsDirectory;
+        if (string.IsNullOrWhiteSpace(modelsDir)) return;
+        
+        Directory.CreateDirectory(modelsDir);
+        var allSharedFolderTypes = Enum.GetValues<SharedFolderType>();
+        foreach (var sharedFolder in allSharedFolderTypes)
+        {
+            var dir = new DirectoryPath(modelsDir, sharedFolder.GetStringValue());
+            dir.Create();
         }
     }
 }

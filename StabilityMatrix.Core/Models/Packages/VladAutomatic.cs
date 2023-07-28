@@ -54,6 +54,7 @@ public class VladAutomatic : BaseGitPackage
         [SharedFolderType.CLIP] = "models/CLIP",
         [SharedFolderType.Lora] = "models/Lora",
         [SharedFolderType.LyCORIS] = "models/LyCORIS",
+        [SharedFolderType.ControlNet] = "models/ControlNet"
     };
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]

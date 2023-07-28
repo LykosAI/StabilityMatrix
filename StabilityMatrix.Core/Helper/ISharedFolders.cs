@@ -8,4 +8,5 @@ public interface ISharedFolders
     void SetupLinksForPackage(BasePackage basePackage, DirectoryPath installDirectory);
     Task UpdateLinksForPackage(BasePackage basePackage, DirectoryPath installDirectory);
     void RemoveLinksForAllPackages();
+    void SetupSharedModelFolders();
 }

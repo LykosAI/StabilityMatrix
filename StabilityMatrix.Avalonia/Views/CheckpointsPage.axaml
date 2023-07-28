@@ -260,6 +260,15 @@
                             </ItemsRepeater.Layout>
                             <TextBlock Text="Hi"/>
                         </ItemsRepeater>
+                        <TextBlock VerticalAlignment="Center"
+                                   TextAlignment="Center"
+                                   HorizontalAlignment="Center"
+                                   Margin="8"
+                                   IsVisible="{Binding !CheckpointFiles.Count}">
+                            <Run Text="Drag &amp; drop"/>
+                            <Run Text="{Binding FolderType}"/>
+                            <Run Text="checkpoints here to import"/>
+                        </TextBlock>
                         <!-- Blurred background for drag and drop -->
                         <Border
                             CornerRadius="8"

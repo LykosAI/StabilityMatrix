@@ -19,4 +19,8 @@ public class MockSharedFolders : ISharedFolders
     public void RemoveLinksForAllPackages()
     {
     }
+
+    public void SetupSharedModelFolders()
+    {
+    }
 }

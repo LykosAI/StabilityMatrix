@@ -15,6 +15,9 @@ public class DankDiffusion : BaseGitPackage
     public override string Name => "dank-diffusion";
     public override string DisplayName { get; set; } = "Dank Diffusion";
     public override string Author => "mohnjiles";
+    public override string LicenseType => "AGPL-3.0";
+    public override string LicenseUrl => 
+        "https://github.com/LykosAI/StabilityMatrix/blob/main/LICENSE";
     public override string Blurb => "A dank interface for diffusion";
     public override string LaunchCommand { get; }
     public override Uri PreviewImageUri { get; }

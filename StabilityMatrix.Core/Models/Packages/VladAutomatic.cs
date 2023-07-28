@@ -19,6 +19,9 @@ public class VladAutomatic : BaseGitPackage
     public override string Name => "automatic";
     public override string DisplayName { get; set; } = "SD.Next Web UI";
     public override string Author => "vladmandic";
+    public override string LicenseType => "AGPL-3.0";
+    public override string LicenseUrl => 
+        "https://github.com/vladmandic/automatic/blob/master/LICENSE.txt";
     public override string Blurb => "Stable Diffusion implementation with advanced features";
     public override string LaunchCommand => "launch.py";
 

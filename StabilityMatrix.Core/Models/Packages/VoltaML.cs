@@ -11,6 +11,9 @@ public class VoltaML : BaseGitPackage
     public override string Name => "voltaML-fast-stable-diffusion";
     public override string DisplayName { get; set; } = "VoltaML";
     public override string Author => "VoltaML";
+    public override string LicenseType => "GPL-3.0";
+    public override string LicenseUrl => 
+        "https://github.com/VoltaML/voltaML-fast-stable-diffusion/blob/main/License";
     public override string Blurb => "Fast Stable Diffusion with support for AITemplate";
     public override string LaunchCommand => "main.py";
 

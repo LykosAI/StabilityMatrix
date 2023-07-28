@@ -14,6 +14,8 @@ public abstract class BasePackage
     public abstract string Author { get; }
     public abstract string Blurb { get; }
     public abstract string GithubUrl { get; }
+    public abstract string LicenseType { get; }
+    public abstract string LicenseUrl { get; }
     public abstract string LaunchCommand { get; }
     public abstract Uri PreviewImageUri { get; }
     public virtual bool ShouldIgnoreReleases => false;

@@ -177,7 +177,7 @@ public static class ProcessRunner
         string arguments,
         string? workingDirectory = null,
         Action<ProcessOutput>? outputDataReceived = null,
-        Dictionary<string, string>? environmentVariables = null)
+        IReadOnlyDictionary<string, string>? environmentVariables = null)
     {
         Logger.Debug($"Starting process '{fileName}' with arguments '{arguments}'");
         var info = new ProcessStartInfo

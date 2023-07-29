@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Helper;
@@ -123,7 +124,7 @@ public class A3WebUI : BaseGitPackage
     {
         await UnzipPackage(progress);
         
-        progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
+        progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
         venvRunner.WorkingDirectory = InstallLocation;
@@ -136,7 +137,7 @@ public class A3WebUI : BaseGitPackage
         var gpus = HardwareHelper.IterGpuInfo().ToList();
         if (gpus.Any(g => g.IsNvidia))
         {
-            progress?.Report(new ProgressReport(-1, "Installing PyTorch for CUDA", isIndeterminate: true));
+            progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CUDA", isIndeterminate: true));
             
             Logger.Info("Starting torch install (CUDA)...");
             await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, OnConsoleOutput)
@@ -147,17 +148,25 @@ public class A3WebUI : BaseGitPackage
         }
         else
         {
-            progress?.Report(new ProgressReport(-1, "Installing PyTorch for CPU", isIndeterminate: true));
+            progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CPU", isIndeterminate: true));
             Logger.Info("Starting torch install (CPU)...");
             await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, OnConsoleOutput).ConfigureAwait(false);
         }
 
         // Install requirements file
-        progress?.Report(new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true));
+        progress?.Report(new ProgressReport(-1f, "Installing Package Requirements", isIndeterminate: true));
         Logger.Info("Installing requirements_versions.txt");
         await venvRunner.PipInstall($"-r requirements_versions.txt", OnConsoleOutput).ConfigureAwait(false);
         
-        progress?.Report(new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false));
+        progress?.Report(new ProgressReport(1f, "Installing Package Requirements", isIndeterminate: false));
+        
+        progress?.Report(new ProgressReport(-1f, "Updating configuration", isIndeterminate: true));
+        // Create and add {"show_progress_type": "TAESD"} to config.json
+        var configPath = Path.Combine(InstallLocation, "config.json");
+        var config = new JsonObject {{"show_progress_type", "TAESD"}};
+        await File.WriteAllTextAsync(configPath, config.ToString()).ConfigureAwait(false);
+
+        progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
     }
 
     public override async Task RunPackage(string installedPackagePath, string command, string arguments)

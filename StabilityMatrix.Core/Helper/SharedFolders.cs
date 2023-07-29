@@ -37,41 +37,44 @@ public class SharedFolders : ISharedFolders
         }
     }
 
-    public static void SetupLinks(Dictionary<SharedFolderType, string> definitions, 
+    public static void SetupLinks(Dictionary<SharedFolderType, IReadOnlyList<string>> definitions, 
         DirectoryPath modelsDirectory, DirectoryPath installDirectory)
     {
-        foreach (var (folderType, relativePath) in definitions)
+        foreach (var (folderType, relativePaths) in definitions)
         {
-            var sourceDir = new DirectoryPath(modelsDirectory, folderType.GetStringValue());
-            var destinationDir = new DirectoryPath(installDirectory, relativePath);
-            // Create source folder if it doesn't exist
-            if (!sourceDir.Exists)
+            foreach (var relativePath in relativePaths)
             {
-                Logger.Info($"Creating junction source {sourceDir}");
-                sourceDir.Create();
-            }
-            // Delete the destination folder if it exists
-            if (destinationDir.Exists)
-            {
-                // Copy all files from destination to source
-                Logger.Info($"Copying files from {destinationDir} to {sourceDir}");
-                foreach (var file in destinationDir.Info.EnumerateFiles())
+                var sourceDir = new DirectoryPath(modelsDirectory, folderType.GetStringValue());
+                var destinationDir = new DirectoryPath(installDirectory, relativePath);
+                // Create source folder if it doesn't exist
+                if (!sourceDir.Exists)
                 {
-                    var sourceFile = sourceDir + file;
-                    var destinationFile = destinationDir + file;
-                    // Skip name collisions
-                    if (File.Exists(sourceFile))
-                    {
-                        Logger.Warn($"Skipping file {file.FullName} because it already exists in {sourceDir}");
-                        continue;
-                    }
-                    destinationFile.Info.MoveTo(sourceFile);
+                    Logger.Info($"Creating junction source {sourceDir}");
+                    sourceDir.Create();
                 }
-                Logger.Info($"Deleting junction target {destinationDir}");
-                destinationDir.Delete(true);
+                // Delete the destination folder if it exists
+                if (destinationDir.Exists)
+                {
+                    // Copy all files from destination to source
+                    Logger.Info($"Copying files from {destinationDir} to {sourceDir}");
+                    foreach (var file in destinationDir.Info.EnumerateFiles())
+                    {
+                        var sourceFile = sourceDir + file;
+                        var destinationFile = destinationDir + file;
+                        // Skip name collisions
+                        if (File.Exists(sourceFile))
+                        {
+                            Logger.Warn($"Skipping file {file.FullName} because it already exists in {sourceDir}");
+                            continue;
+                        }
+                        destinationFile.Info.MoveTo(sourceFile);
+                    }
+                    Logger.Info($"Deleting junction target {destinationDir}");
+                    destinationDir.Delete(true);
+                }
+                Logger.Info($"Creating junction link from {sourceDir} to {destinationDir}");
+                CreateLinkOrJunction(destinationDir, sourceDir, true);
             }
-            Logger.Info($"Creating junction link from {sourceDir} to {destinationDir}");
-            CreateLinkOrJunction(destinationDir, sourceDir, true);
         }
     }
 
@@ -92,50 +95,54 @@ public class SharedFolders : ISharedFolders
         var sharedFolders = basePackage.SharedFolders;
         if (sharedFolders is null) return;
         
-        foreach (var (folderType, relativePath) in sharedFolders)
+        foreach (var (folderType, relativePaths) in sharedFolders)
         {
-            var sourceDir = new DirectoryPath(settingsManager.ModelsDirectory, folderType.GetStringValue());
-            var destinationDir = installDirectory.JoinDir(relativePath);
+            foreach (var relativePath in relativePaths)
+            {
+                var sourceDir = new DirectoryPath(settingsManager.ModelsDirectory, folderType.GetStringValue());
+                var destinationDir = installDirectory.JoinDir(relativePath);
             
-            // Create source folder if it doesn't exist
-            if (!sourceDir.Exists)
-            {
-                Logger.Info($"Creating junction source {sourceDir}");
-                sourceDir.Create();
-            }
-
-            if (destinationDir.Exists)
-            {
-                // Existing dest is a link
-                if (destinationDir.IsSymbolicLink)
+                // Create source folder if it doesn't exist
+                if (!sourceDir.Exists)
                 {
-                    // If link is already the same, just skip
-                    if (destinationDir.Info.LinkTarget == sourceDir)
-                    {
-                        Logger.Info($"Skipped updating matching folder link ({destinationDir} -> ({sourceDir})");
-                        continue;
-                    }
-                    // Otherwise delete the link
-                    Logger.Info($"Deleting existing junction at target {destinationDir}");
-                    await destinationDir.DeleteAsync(false);
+                    Logger.Info($"Creating junction source {sourceDir}");
+                    sourceDir.Create();
                 }
-                else
+
+                if (destinationDir.Exists)
                 {
-                    // Move all files if not empty
-                    if (destinationDir.Info.EnumerateFileSystemInfos().Any())
+                    // Existing dest is a link
+                    if (destinationDir.IsSymbolicLink)
                     {
-                        Logger.Info($"Moving files from {destinationDir} to {sourceDir}");
-                        await FileTransfers.MoveAllFilesAndDirectories(
-                            destinationDir,sourceDir, overwriteIfHashMatches: true);
+                        // If link is already the same, just skip
+                        if (destinationDir.Info.LinkTarget == sourceDir)
+                        {
+                            Logger.Info($"Skipped updating matching folder link ({destinationDir} -> ({sourceDir})");
+                            continue;
+                        }
+                        // Otherwise delete the link
+                        Logger.Info($"Deleting existing junction at target {destinationDir}");
+                        await destinationDir.DeleteAsync(false).ConfigureAwait(false);
                     }
+                    else
+                    {
+                        // Move all files if not empty
+                        if (destinationDir.Info.EnumerateFileSystemInfos().Any())
+                        {
+                            Logger.Info($"Moving files from {destinationDir} to {sourceDir}");
+                            await FileTransfers.MoveAllFilesAndDirectories(
+                                destinationDir,sourceDir, overwriteIfHashMatches: true)
+                                .ConfigureAwait(false);
+                        }
                     
-                    Logger.Info($"Deleting existing empty folder at target {destinationDir}");
-                    await destinationDir.DeleteAsync(false);
+                        Logger.Info($"Deleting existing empty folder at target {destinationDir}");
+                        await destinationDir.DeleteAsync(false).ConfigureAwait(false);
+                    }
                 }
-            }
 
-            Logger.Info($"Updating junction link from {sourceDir} to {destinationDir}");
-            CreateLinkOrJunction(destinationDir, sourceDir, true);
+                Logger.Info($"Updating junction link from {sourceDir} to {destinationDir}");
+                CreateLinkOrJunction(destinationDir, sourceDir, true);
+            }
         }
     }
 
@@ -147,14 +154,17 @@ public class SharedFolders : ISharedFolders
             return;
         }
         
-        foreach (var (_, relativePath) in sharedFolders)
+        foreach (var (_, relativePaths) in sharedFolders)
         {
-            var destination = Path.GetFullPath(Path.Combine(installPath, relativePath));
-            // Delete the destination folder if it exists
-            if (!Directory.Exists(destination)) continue;
+            foreach (var relativePath in relativePaths)
+            {
+                var destination = Path.GetFullPath(Path.Combine(installPath, relativePath));
+                // Delete the destination folder if it exists
+                if (!Directory.Exists(destination)) continue;
             
-            Logger.Info($"Deleting junction target {destination}");
-            Directory.Delete(destination, false);
+                Logger.Info($"Deleting junction target {destination}");
+                Directory.Delete(destination, false);
+            }
         }
     }
 

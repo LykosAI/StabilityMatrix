@@ -34,11 +34,11 @@ public class VoltaML : BaseGitPackage
     }
 
     // https://github.com/VoltaML/voltaML-fast-stable-diffusion/blob/main/main.py#L86
-    public override Dictionary<SharedFolderType, string> SharedFolders => new()
+    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders => new()
     {
-        [SharedFolderType.StableDiffusion] = "data/models",
-        [SharedFolderType.Lora] = "data/lora",
-        [SharedFolderType.TextualInversion] = "data/textual-inversion",
+        [SharedFolderType.StableDiffusion] = new[] {"data/models"},
+        [SharedFolderType.Lora] = new[] {"data/lora"},
+        [SharedFolderType.TextualInversion] = new[] {"data/textual-inversion"},
     };
     
     // https://github.com/VoltaML/voltaML-fast-stable-diffusion/blob/main/main.py#L45

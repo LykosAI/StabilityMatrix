@@ -177,7 +177,8 @@ public static class ProcessRunner
         Action<ProcessOutput>? outputDataReceived = null,
         IReadOnlyDictionary<string, string>? environmentVariables = null)
     {
-        Logger.Debug($"Starting process '{fileName}' with arguments '{arguments}'");
+        Logger.Debug(
+            $"Starting process '{fileName}' with arguments '{arguments}' in working directory '{workingDirectory}'");
         var info = new ProcessStartInfo
         {
             FileName = fileName,
@@ -319,7 +320,8 @@ public static class ProcessRunner
         var stderr = new StringBuilder();
         process.OutputDataReceived += (_, args) => stdout.Append(args.Data);
         process.ErrorDataReceived += (_, args) => stderr.Append(args.Data);
-        await process.WaitForExitAsync(cancelToken);
-        await ValidateExitConditionAsync(process, expectedExitCode, stdout.ToString(), stderr.ToString());
+        await process.WaitForExitAsync(cancelToken).ConfigureAwait(false);
+        await ValidateExitConditionAsync(process, expectedExitCode, stdout.ToString(), stderr.ToString())
+            .ConfigureAwait(false);
     }
 }

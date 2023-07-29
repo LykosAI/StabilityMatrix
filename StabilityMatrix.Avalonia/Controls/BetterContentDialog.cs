@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -247,8 +248,7 @@ public class BetterContentDialog : ContentDialog
         if (Content is Control {DataContext: ViewModelBase viewModel})
         {
             viewModel.OnLoaded();
-            Dispatcher.UIThread.InvokeAsync(
-                async () => await viewModel.OnLoadedAsync());
+            Dispatcher.UIThread.InvokeAsync(viewModel.OnLoadedAsync).SafeFireAndForget();
         }
     }
 }

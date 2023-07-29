@@ -36,25 +36,25 @@ public class VladAutomatic : BaseGitPackage
     }
 
     // https://github.com/vladmandic/automatic/blob/master/modules/shared.py#L324
-    public override Dictionary<SharedFolderType, string> SharedFolders => new()
+    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders => new()
     {
-        [SharedFolderType.StableDiffusion] = "models/Stable-diffusion",
-        [SharedFolderType.Diffusers] = "models/Diffusers",
-        [SharedFolderType.VAE] = "models/VAE",
-        [SharedFolderType.TextualInversion] = "models/embeddings",
-        [SharedFolderType.Hypernetwork] = "models/hypernetworks",
-        [SharedFolderType.Codeformer] = "models/Codeformer",
-        [SharedFolderType.GFPGAN] = "models/GFPGAN",
-        [SharedFolderType.BSRGAN] = "models/BSRGAN",
-        [SharedFolderType.ESRGAN] = "models/ESRGAN",
-        [SharedFolderType.RealESRGAN] = "models/RealESRGAN",
-        [SharedFolderType.ScuNET] = "models/ScuNET",
-        [SharedFolderType.SwinIR] = "models/SwinIR",
-        [SharedFolderType.LDSR] = "models/LDSR",
-        [SharedFolderType.CLIP] = "models/CLIP",
-        [SharedFolderType.Lora] = "models/Lora",
-        [SharedFolderType.LyCORIS] = "models/LyCORIS",
-        [SharedFolderType.ControlNet] = "models/ControlNet"
+        [SharedFolderType.StableDiffusion] = new[] {"models/Stable-diffusion"},
+        [SharedFolderType.Diffusers] = new[] {"models/Diffusers"},
+        [SharedFolderType.VAE] = new[] {"models/VAE"},
+        [SharedFolderType.TextualInversion] = new[] {"models/embeddings"},
+        [SharedFolderType.Hypernetwork] = new[] {"models/hypernetworks"},
+        [SharedFolderType.Codeformer] = new[] {"models/Codeformer"},
+        [SharedFolderType.GFPGAN] = new[] {"models/GFPGAN"},
+        [SharedFolderType.BSRGAN] = new[] {"models/BSRGAN"},
+        [SharedFolderType.ESRGAN] = new[] {"models/ESRGAN"},
+        [SharedFolderType.RealESRGAN] = new[] {"models/RealESRGAN"},
+        [SharedFolderType.ScuNET] = new[] {"models/ScuNET"},
+        [SharedFolderType.SwinIR] = new[] {"models/SwinIR"},
+        [SharedFolderType.LDSR] = new[] {"models/LDSR"},
+        [SharedFolderType.CLIP] = new[] {"models/CLIP"},
+        [SharedFolderType.Lora] = new[] {"models/Lora"},
+        [SharedFolderType.LyCORIS] = new[] {"models/LyCORIS"},
+        [SharedFolderType.ControlNet] = new[] {"models/ControlNet"}
     };
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
@@ -151,9 +151,10 @@ public class VladAutomatic : BaseGitPackage
         progress?.Report(new ProgressReport(-1, isIndeterminate: true));
         // Setup venv
         var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
+        venvRunner.WorkingDirectory = InstallLocation;
         if (!venvRunner.Exists())
         {
-            await venvRunner.Setup();
+            await venvRunner.Setup().ConfigureAwait(false);
         }
 
         // Install torch / xformers based on gpu info

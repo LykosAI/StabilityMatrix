@@ -33,19 +33,19 @@ public class ComfyUI : BaseGitPackage
     }
 
     // https://github.com/comfyanonymous/ComfyUI/blob/master/folder_paths.py#L11
-    public override Dictionary<SharedFolderType, string> SharedFolders => new()
+    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders => new()
     {
-        [SharedFolderType.StableDiffusion] = "models/checkpoints",
-        [SharedFolderType.Diffusers] = "models/diffusers",
-        [SharedFolderType.Lora] = "models/loras",
-        [SharedFolderType.CLIP] = "models/clip",
-        [SharedFolderType.TextualInversion] = "models/embeddings",
-        [SharedFolderType.VAE] = "models/vae",
-        [SharedFolderType.ApproxVAE] = "models/vae_approx",
-        [SharedFolderType.ControlNet] = "models/controlnet",
-        [SharedFolderType.GLIGEN] = "models/gligen",
-        [SharedFolderType.ESRGAN] = "models/upscale_models",
-        [SharedFolderType.Hypernetwork] = "models/hypernetworks",
+        [SharedFolderType.StableDiffusion] = new[] {"models/checkpoints"},
+        [SharedFolderType.Diffusers] = new[] {"models/diffusers"},
+        [SharedFolderType.Lora] = new[] {"models/loras"},
+        [SharedFolderType.CLIP] = new[] {"models/clip"},
+        [SharedFolderType.TextualInversion] = new[] {"models/embeddings"},
+        [SharedFolderType.VAE] = new[] {"models/vae"},
+        [SharedFolderType.ApproxVAE] = new[] {"models/vae_approx"},
+        [SharedFolderType.ControlNet] = new[] {"models/controlnet"},
+        [SharedFolderType.GLIGEN] = new[] {"models/gligen"},
+        [SharedFolderType.ESRGAN] = new[] {"models/upscale_models"},
+        [SharedFolderType.Hypernetwork] = new[] {"models/hypernetworks"},
     };
     
     public override List<LaunchOptionDefinition> LaunchOptions => new List<LaunchOptionDefinition>

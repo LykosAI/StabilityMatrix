@@ -36,21 +36,21 @@ public class A3WebUI : BaseGitPackage
     }
 
     // From https://github.com/AUTOMATIC1111/stable-diffusion-webui/tree/master/models
-    public override Dictionary<SharedFolderType, string> SharedFolders => new()
+    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders => new()
     {
-        [SharedFolderType.StableDiffusion] = "models/Stable-diffusion",
-        [SharedFolderType.ESRGAN] = "models/ESRGAN",
-        [SharedFolderType.RealESRGAN] = "models/RealESRGAN",
-        [SharedFolderType.SwinIR] = "models/SwinIR",
-        [SharedFolderType.Lora] = "models/Lora",
-        [SharedFolderType.LyCORIS] = "models/LyCORIS",
-        [SharedFolderType.ApproxVAE] = "models/VAE-approx",
-        [SharedFolderType.VAE] = "models/VAE",
-        [SharedFolderType.DeepDanbooru] = "models/deepbooru",
-        [SharedFolderType.Karlo] = "models/karlo",
-        [SharedFolderType.TextualInversion] = "embeddings",
-        [SharedFolderType.Hypernetwork] = "models/hypernetworks",
-        [SharedFolderType.ControlNet] = "models/ControlNet"
+        [SharedFolderType.StableDiffusion] = new[] {"models/Stable-diffusion"},
+        [SharedFolderType.ESRGAN] = new[] {"models/ESRGAN"},
+        [SharedFolderType.RealESRGAN] = new[] {"models/RealESRGAN"},
+        [SharedFolderType.SwinIR] = new[] {"models/SwinIR"},
+        [SharedFolderType.Lora] = new[] {"models/Lora"},
+        [SharedFolderType.LyCORIS] = new[] {"models/LyCORIS"},
+        [SharedFolderType.ApproxVAE] = new[] {"models/VAE-approx"},
+        [SharedFolderType.VAE] = new[] {"models/VAE"},
+        [SharedFolderType.DeepDanbooru] = new[] {"models/deepbooru"},
+        [SharedFolderType.Karlo] = new[] {"models/karlo"},
+        [SharedFolderType.TextualInversion] = new[] {"embeddings"},
+        [SharedFolderType.Hypernetwork] = new[] {"models/hypernetworks"},
+        [SharedFolderType.ControlNet] = new[] {"models/ControlNet"}
     };
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]

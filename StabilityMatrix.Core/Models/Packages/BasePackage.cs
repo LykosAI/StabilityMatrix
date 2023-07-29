@@ -58,9 +58,9 @@ public abstract class BasePackage
     
     /// <summary>
     /// The shared folders that this package supports.
-    /// Mapping of <see cref="SharedFolderType"/> to the relative path from the package root.
+    /// Mapping of <see cref="SharedFolderType"/> to the relative paths from the package root.
     /// </summary>
-    public virtual Dictionary<SharedFolderType, string>? SharedFolders { get; }
+    public virtual Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
     
     public abstract Task<string> GetLatestVersion();
     public abstract Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true);

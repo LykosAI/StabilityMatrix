@@ -152,7 +152,7 @@ public sealed class App : Application
 
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
         var windowSettings = settingsManager.Settings.WindowSettings;
-        if (windowSettings != null)
+        if (windowSettings != null && !Program.Args.ResetWindowPosition)
         {
             mainWindow.Position = new PixelPoint(windowSettings.X, windowSettings.Y);
             mainWindow.Width = windowSettings.Width;

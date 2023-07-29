@@ -25,4 +25,9 @@ public class AppArgs
     /// Whether to disable window chrome effects
     /// </summary>
     public bool NoWindowChromeEffects { get; set; }
+    
+    /// <summary>
+    /// Flag to indicate if we should reset the saved window position back to (O,0)
+    /// </summary>
+    public bool ResetWindowPosition { get; set; }
 }

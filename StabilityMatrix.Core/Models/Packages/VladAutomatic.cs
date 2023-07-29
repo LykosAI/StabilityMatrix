@@ -151,9 +151,10 @@ public class VladAutomatic : BaseGitPackage
         progress?.Report(new ProgressReport(-1, isIndeterminate: true));
         // Setup venv
         var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
+        venvRunner.WorkingDirectory = InstallLocation;
         if (!venvRunner.Exists())
         {
-            await venvRunner.Setup();
+            await venvRunner.Setup().ConfigureAwait(false);
         }
 
         // Install torch / xformers based on gpu info

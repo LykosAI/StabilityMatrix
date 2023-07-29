@@ -24,6 +24,12 @@ public class InvokeAI : BaseGitPackage
     public override IReadOnlyList<string> ExtraLaunchCommands => new[]
     {
         "invokeai-configure",
+        "invokeai-merge",
+        "invokeai-metadata",
+        "invokeai-model-install",
+        "invokeai-node-cli",
+        "invokeai-ti",
+        "invokeai-update",
     };
 
     public override Uri PreviewImageUri => new(

@@ -28,6 +28,8 @@ public class Settings
     
     public bool RemoveFolderLinksOnShutdown { get; set; }
     
+    public bool IsDiscordRichPresenceEnabled { get; set; }
+    
     public Dictionary<string, string>? EnvironmentVariables { get; set; }
 
     public HashSet<string>? InstalledModelHashes { get; set; } = new();

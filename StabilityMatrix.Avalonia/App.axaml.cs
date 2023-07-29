@@ -295,6 +295,7 @@ public sealed class App : Application
         services.AddSingleton<BasePackage, VladAutomatic>();
         services.AddSingleton<BasePackage, ComfyUI>();
         services.AddSingleton<BasePackage, VoltaML>();
+        services.AddSingleton<BasePackage, InvokeAI>();
     }
 
     private static IServiceCollection ConfigureServices()

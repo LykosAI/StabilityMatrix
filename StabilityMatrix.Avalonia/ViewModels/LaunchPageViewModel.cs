@@ -17,8 +17,6 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Nito.AsyncEx.Synchronous;
-using Octokit;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -45,11 +43,11 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
 {
     private readonly ILogger<LaunchPageViewModel> logger;
     private readonly ISettingsManager settingsManager;
-    private readonly IPackageFactory packageFactory;
     private readonly IPyRunner pyRunner;
     private readonly INotificationService notificationService;
     private readonly ISharedFolders sharedFolders;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
+    protected readonly IPackageFactory PackageFactory;
     
     // Regex to match if input contains a yes/no prompt,
     // i.e "Y/n", "yes/no". Case insensitive.
@@ -67,10 +65,19 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     [ObservableProperty] private bool isLaunchTeachingTipsOpen;
     [ObservableProperty] private bool showWebUiButton;
     
-    [ObservableProperty] private InstalledPackage? selectedPackage;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(SelectedBasePackage),
+         nameof(SelectedPackageExtraCommands))] 
+    private InstalledPackage? selectedPackage;
+    
     [ObservableProperty] private ObservableCollection<InstalledPackage> installedPackages = new();
 
     [ObservableProperty] private BasePackage? runningPackage;
+
+    public virtual BasePackage? SelectedBasePackage =>
+        PackageFactory.FindPackageByName(SelectedPackage?.PackageName);
+    
+    public IEnumerable<string> SelectedPackageExtraCommands =>
+        SelectedBasePackage?.ExtraLaunchCommands ?? Enumerable.Empty<string>();
     
     // private bool clearingPackages;
     private string webUiUrl = string.Empty;
@@ -90,7 +97,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
-        this.packageFactory = packageFactory;
+        this.PackageFactory = packageFactory;
         this.pyRunner = pyRunner;
         this.notificationService = notificationService;
         this.sharedFolders = sharedFolders;
@@ -148,7 +155,12 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     }
 
     [RelayCommand]
-    private async Task LaunchAsync()
+    private async Task LaunchAsync(string? command = null)
+    {
+        await notificationService.TryAsync(LaunchImpl(command));
+    }
+
+    protected virtual async Task LaunchImpl(string? command)
     {
         IsLaunchTeachingTipsOpen = false;
         
@@ -166,7 +178,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         var activeInstallName = activeInstall.PackageName;
         var basePackage = string.IsNullOrWhiteSpace(activeInstallName)
             ? null
-            : packageFactory.FindPackageByName(activeInstallName);
+            : PackageFactory.FindPackageByName(activeInstallName);
 
         if (basePackage == null)
         {
@@ -227,7 +239,11 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
 
         // Join with extras, if any
         userArgsString = string.Join(" ", userArgsString, basePackage.ExtraLaunchArguments);
-        await basePackage.RunPackage(packagePath, userArgsString);
+        
+        // Use input command if provided, otherwise use package launch command
+        command ??= basePackage.LaunchCommand;
+        
+        await basePackage.RunPackage(packagePath, command, userArgsString);
         RunningPackage = basePackage;
     }
 
@@ -251,7 +267,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
             return;
         }
 
-        var package = packageFactory.FindPackageByName(name);
+        var package = PackageFactory.FindPackageByName(name);
         if (package == null)
         {
             logger.LogWarning("Package {Name} not found", name);
@@ -347,7 +363,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         await SendInput(input);
     }
     
-    public async Task Stop()
+    public virtual async Task Stop()
     {
         if (RunningPackage is null) return;
         await RunningPackage.WaitForShutdown();

@@ -111,8 +111,17 @@ public abstract class BaseGitPackage : BasePackage
     protected async Task<PyVenvRunner> SetupVenv(string installedPackagePath, string venvName = "venv")
     {
         var venvPath = Path.Combine(installedPackagePath, "venv");
-        VenvRunner?.Dispose();
-        VenvRunner = new PyVenvRunner(venvPath);
+        if (VenvRunner != null)
+        {
+            await VenvRunner.DisposeAsync().ConfigureAwait(false);
+        }
+
+        VenvRunner = new PyVenvRunner(venvPath)
+        {
+            WorkingDirectory = installedPackagePath,
+            EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables,
+        };
+        
         if (!VenvRunner.Exists())
         {
             await VenvRunner.Setup().ConfigureAwait(false);

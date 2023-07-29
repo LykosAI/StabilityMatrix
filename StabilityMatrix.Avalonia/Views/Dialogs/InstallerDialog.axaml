@@ -112,6 +112,13 @@
                     </Button.Style>-->
                 </Button>
 
+                <ui:HyperlinkButton Margin="0,0,0,0" NavigateUri="{Binding SelectedPackage.LicenseUrl}">
+                    <TextBlock TextWrapping="Wrap">
+                        <Run Text="{Binding SelectedPackage.LicenseType, Mode=OneWay}" />
+                        <Run Text="License" />
+                    </TextBlock>
+                </ui:HyperlinkButton>
+                
                 <ui:HyperlinkButton Margin="0,0,0,8" NavigateUri="{Binding SelectedPackage.GithubUrl}">
                     <TextBlock TextWrapping="Wrap">
                         <Run Text="GitHub Page:" />

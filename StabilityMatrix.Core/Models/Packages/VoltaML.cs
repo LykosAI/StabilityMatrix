@@ -11,6 +11,9 @@ public class VoltaML : BaseGitPackage
     public override string Name => "voltaML-fast-stable-diffusion";
     public override string DisplayName { get; set; } = "VoltaML";
     public override string Author => "VoltaML";
+    public override string LicenseType => "GPL-3.0";
+    public override string LicenseUrl => 
+        "https://github.com/VoltaML/voltaML-fast-stable-diffusion/blob/main/License";
     public override string Blurb => "Fast Stable Diffusion with support for AITemplate";
     public override string LaunchCommand => "main.py";
 
@@ -124,29 +127,26 @@ public class VoltaML : BaseGitPackage
         
         // Setup venv
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
-        using var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
+        await using var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
+        venvRunner.WorkingDirectory = InstallLocation;
+        
         await venvRunner.Setup().ConfigureAwait(false);
         
         // Install requirements
         progress?.Report(new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true));
         await venvRunner
-            .PipInstall("rich packaging python-dotenv", InstallLocation, OnConsoleOutput)
+            .PipInstall("rich packaging python-dotenv", OnConsoleOutput)
             .ConfigureAwait(false);
         
         progress?.Report(new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false));
     }
     
-    public override async Task RunPackage(string installedPackagePath, string arguments)
+    public override async Task RunPackage(string installedPackagePath, string command, string arguments)
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
-        var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
+        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
         
-        VenvRunner?.RunDetached(
-            args.TrimEnd(),
-            outputDataReceived: OnConsoleOutput, 
-            onExit: OnExit, 
-            workingDirectory: installedPackagePath,
-            environmentVariables: SettingsManager.Settings.EnvironmentVariables);
+        VenvRunner.RunDetached(args.TrimEnd(), OnConsoleOutput, OnExit);
     }
 }

@@ -19,6 +19,9 @@ public class VladAutomatic : BaseGitPackage
     public override string Name => "automatic";
     public override string DisplayName { get; set; } = "SD.Next Web UI";
     public override string Author => "vladmandic";
+    public override string LicenseType => "AGPL-3.0";
+    public override string LicenseUrl => 
+        "https://github.com/vladmandic/automatic/blob/master/LICENSE.txt";
     public override string Blurb => "Stable Diffusion implementation with advanced features";
     public override string LaunchCommand => "launch.py";
 
@@ -158,25 +161,28 @@ public class VladAutomatic : BaseGitPackage
         if (gpus.Any(g => g.IsNvidia))
         {
             Logger.Info("Starting torch install (CUDA)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, 
-                InstallLocation, OnConsoleOutput);
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, OnConsoleOutput)
+                .ConfigureAwait(false);
+            
             Logger.Info("Installing xformers...");
-            await venvRunner.PipInstall("xformers", InstallLocation, OnConsoleOutput);
+            await venvRunner.PipInstall("xformers", OnConsoleOutput).ConfigureAwait(false);
         }
         else if (gpus.Any(g => g.IsAmd))
         {
             Logger.Info("Starting torch install (DirectML)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, InstallLocation, OnConsoleOutput);
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, OnConsoleOutput)
+                .ConfigureAwait(false);
         }
         else
         {
             Logger.Info("Starting torch install (CPU)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, InstallLocation, OnConsoleOutput);
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, OnConsoleOutput)
+                .ConfigureAwait(false);
         }
 
         // Install requirements file
         Logger.Info("Installing requirements.txt");
-        await venvRunner.PipInstall($"-r requirements.txt", InstallLocation, OnConsoleOutput);
+        await venvRunner.PipInstall($"-r requirements.txt", OnConsoleOutput).ConfigureAwait(false);
         
         progress?.Report(new ProgressReport(1, isIndeterminate: false));
     }
@@ -198,9 +204,9 @@ public class VladAutomatic : BaseGitPackage
         return version;
     }
 
-    public override async Task RunPackage(string installedPackagePath, string arguments)
+    public override async Task RunPackage(string installedPackagePath, string command, string arguments)
     {
-        await SetupVenv(installedPackagePath);
+        await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -223,14 +229,9 @@ public class VladAutomatic : BaseGitPackage
             OnExit(i);
         }
 
-        var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
+        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
-        VenvRunner?.RunDetached(
-            args.TrimEnd(), 
-            HandleConsoleOutput, 
-            HandleExit, 
-            workingDirectory: installedPackagePath,
-            environmentVariables: SettingsManager.Settings.EnvironmentVariables);
+        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
     }
 
     public override async Task<string> Update(InstalledPackage installedPackage,

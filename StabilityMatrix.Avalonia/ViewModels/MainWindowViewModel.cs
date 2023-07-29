@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls.Primitives;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
@@ -62,7 +63,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         
         // Index checkpoints if we dont have
-        settingsManager.IndexCheckpoints();
+        Task.Run(() => settingsManager.IndexCheckpoints()).SafeFireAndForget();
         
         if (!settingsManager.Settings.InstalledPackages.Any())
         {

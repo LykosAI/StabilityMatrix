@@ -436,34 +436,31 @@ public class SettingsManager : ISettingsManager
         if (Settings.InstalledModelHashes.Any())
             return;
 
-        Task.Run(() =>
+        var sw = new Stopwatch();
+        sw.Start();
+
+        var modelHashes = new HashSet<string>();
+        var sharedModelDirectory = Path.Combine(LibraryDir, "Models");
+        
+        if (!Directory.Exists(sharedModelDirectory)) return;
+        
+        var connectedModelJsons = Directory.GetFiles(sharedModelDirectory, "*.cm-info.json",
+            SearchOption.AllDirectories);
+        foreach (var jsonFile in connectedModelJsons)
         {
-            var sw = new Stopwatch();
-            sw.Start();
+            var json = File.ReadAllText(jsonFile);
+            var connectedModel = JsonSerializer.Deserialize<ConnectedModelInfo>(json);
 
-            var modelHashes = new HashSet<string>();
-            var sharedModelDirectory = Path.Combine(LibraryDir, "Models");
-            
-            if (!Directory.Exists(sharedModelDirectory)) return;
-            
-            var connectedModelJsons = Directory.GetFiles(sharedModelDirectory, "*.cm-info.json",
-                SearchOption.AllDirectories);
-            foreach (var jsonFile in connectedModelJsons)
+            if (connectedModel?.Hashes.BLAKE3 != null)
             {
-                var json = File.ReadAllText(jsonFile);
-                var connectedModel = JsonSerializer.Deserialize<ConnectedModelInfo>(json);
-
-                if (connectedModel?.Hashes.BLAKE3 != null)
-                {
-                    modelHashes.Add(connectedModel.Hashes.BLAKE3);
-                }
+                modelHashes.Add(connectedModel.Hashes.BLAKE3);
             }
+        }
 
-            Transaction(s => s.InstalledModelHashes = modelHashes);
-            
-            sw.Stop();
-            Logger.Info($"Indexed {modelHashes.Count} checkpoints in {sw.ElapsedMilliseconds}ms");
-        }).SafeFireAndForget();
+        Transaction(s => s.InstalledModelHashes = modelHashes);
+        
+        sw.Stop();
+        Logger.Info($"Indexed {modelHashes.Count} checkpoints in {sw.ElapsedMilliseconds}ms");
     }
 
     /// <summary>

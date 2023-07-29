@@ -35,7 +35,7 @@ public class MockLaunchPageViewModel : LaunchPageViewModel
         SelectedPackage?.PackageName != "dank-diffusion" ? base.SelectedBasePackage :
         new DankDiffusion(null!, null!, null!, null!);
     
-    protected override Task LaunchImpl()
+    protected override Task LaunchImpl(string? command)
     {
         IsLaunchTeachingTipsOpen = false;
 

@@ -19,7 +19,7 @@ public class InvokeAI : BaseGitPackage
     public override string LicenseUrl => 
         "https://github.com/invoke-ai/InvokeAI/blob/main/LICENSE";
     public override string Blurb => "Professional Creative Tools for Stable Diffusion";
-    public override string LaunchCommand => "invokeai";
+    public override string LaunchCommand => "invokeai-web";
 
     public override IReadOnlyList<string> ExtraLaunchCommands => new[]
     {
@@ -129,8 +129,30 @@ public class InvokeAI : BaseGitPackage
         
         // Compile a startup command according to 
         // https://packaging.python.org/en/latest/specifications/entry-points/#use-for-scripts
-        var args = $"-c \"import sys; from {split[0]} import {split[1]}; sys.exit({split[1]}())\"";
+        // For invokeai, also patch the shutil.get_terminal_size function to return a fixed value
+        // above the minimum in invokeai.frontend.install.widgets
         
-        VenvRunner.RunDetached(args.TrimEnd(), OnConsoleOutput, OnExit);
+        var code = $"""
+                   try:
+                       import os
+                       import shutil
+                       from invokeai.frontend.install import widgets
+                       
+                       _min_cols = widgets.MIN_COLS
+                       _min_lines = widgets.MIN_LINES
+                       
+                       static_size_fn = lambda: os.terminal_size((_min_cols, _min_lines))
+                       shutil.get_terminal_size = static_size_fn
+                       widgets.get_terminal_size = static_size_fn
+                   except Exception as e:
+                       import warnings
+                       warnings.warn('Could not patch terminal size for InvokeAI' + str(e))
+                   
+                   import sys
+                   from {split[0]} import {split[1]}
+                   sys.exit({split[1]}())
+                   """;
+        
+        VenvRunner.RunDetached($"-c \"{code}\"".TrimEnd(), OnConsoleOutput, OnExit);
     }
 }

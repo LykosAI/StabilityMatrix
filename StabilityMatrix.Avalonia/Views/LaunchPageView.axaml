@@ -35,7 +35,7 @@
                     <Button
                         Width="72"
                         IsVisible="{Binding !SelectedBasePackage.ExtraLaunchCommands.Count, FallbackValue=False}"
-                        Background="{DynamicResource ThemeGreenColor}"
+                        Classes="success"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Stretch"
                         Command="{Binding LaunchCommand}"
@@ -43,11 +43,31 @@
                     <SplitButton
                         Width="104"
                         IsVisible="{Binding !!SelectedBasePackage.ExtraLaunchCommands.Count, FallbackValue=False}"
-                        Background="{DynamicResource ThemeGreenColor}"
+                        Classes="success"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Stretch"
                         Command="{Binding LaunchCommand}"
-                        Content="Launch" />
+                        Content="Launch">
+                        <SplitButton.Flyout>
+                            <ui:FAMenuFlyout 
+                                Placement="Bottom"
+                                ItemsSource="{Binding SelectedPackageExtraCommands}">
+                                <ui:FAMenuFlyout.ItemTemplate>
+                                    <DataTemplate x:DataType="{x:Type system:String}">
+                                        <!-- ReSharper disable Xaml.PossibleNullReferenceException -->
+                                        <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                        <ui:MenuFlyoutItem
+                                            Text="{Binding}"
+                                            CommandParameter="{Binding}"
+                                            Command="{ReflectionBinding
+                                                    #LaunchButtonGrid.DataContext.LaunchCommand}"/>
+                                        <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                        <!-- ReSharper restore Xaml.PossibleNullReferenceException -->
+                                    </DataTemplate>
+                                </ui:FAMenuFlyout.ItemTemplate>
+                            </ui:FAMenuFlyout>
+                        </SplitButton.Flyout>
+                    </SplitButton>
                 </Grid>
 
                 <ui:TeachingTip Grid.Row="0" Grid.Column="0" Name="TeachingTip1"

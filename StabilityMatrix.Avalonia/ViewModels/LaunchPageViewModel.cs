@@ -65,7 +65,8 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     [ObservableProperty] private bool isLaunchTeachingTipsOpen;
     [ObservableProperty] private bool showWebUiButton;
     
-    [ObservableProperty, NotifyPropertyChangedFor(nameof(SelectedBasePackage))] 
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(SelectedBasePackage),
+         nameof(SelectedPackageExtraCommands))] 
     private InstalledPackage? selectedPackage;
     
     [ObservableProperty] private ObservableCollection<InstalledPackage> installedPackages = new();
@@ -74,6 +75,9 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
 
     public virtual BasePackage? SelectedBasePackage =>
         PackageFactory.FindPackageByName(SelectedPackage?.PackageName);
+    
+    public IEnumerable<string> SelectedPackageExtraCommands =>
+        SelectedBasePackage?.ExtraLaunchCommands ?? Enumerable.Empty<string>();
     
     // private bool clearingPackages;
     private string webUiUrl = string.Empty;
@@ -151,12 +155,12 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     }
 
     [RelayCommand]
-    private async Task LaunchAsync()
+    private async Task LaunchAsync(string? command = null)
     {
-        await notificationService.TryAsync(LaunchImpl());
+        await notificationService.TryAsync(LaunchImpl(command));
     }
 
-    protected virtual async Task LaunchImpl()
+    protected virtual async Task LaunchImpl(string? command)
     {
         IsLaunchTeachingTipsOpen = false;
         
@@ -235,8 +239,11 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
 
         // Join with extras, if any
         userArgsString = string.Join(" ", userArgsString, basePackage.ExtraLaunchArguments);
-        // TODO: dropdown multi launch options
-        await basePackage.RunPackage(packagePath, basePackage.LaunchCommand, userArgsString);
+        
+        // Use input command if provided, otherwise use package launch command
+        command ??= basePackage.LaunchCommand;
+        
+        await basePackage.RunPackage(packagePath, command, userArgsString);
         RunningPackage = basePackage;
     }
 

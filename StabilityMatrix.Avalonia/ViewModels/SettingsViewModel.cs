@@ -118,6 +118,14 @@ public partial class SettingsViewModel : PageViewModelBase
         settingsManager.Transaction(s => s.RemoveFolderLinksOnShutdown = value);
     }
 
+    public async Task ResetCheckpointCache()
+    {
+        settingsManager.Transaction(s => s.InstalledModelHashes = new HashSet<string>());
+        await Task.Run(() => settingsManager.IndexCheckpoints());
+        notificationService.Show("Checkpoint cache reset", "The checkpoint cache has been reset.",
+            NotificationType.Success);
+    }
+
     #region Package Environment
     
     [RelayCommand]
@@ -186,8 +194,6 @@ public partial class SettingsViewModel : PageViewModelBase
     }
     
     #endregion
-    
-
 
     #region System
 

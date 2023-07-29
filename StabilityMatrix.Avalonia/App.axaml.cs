@@ -150,6 +150,9 @@ public sealed class App : Application
         mainWindow.ExtendClientAreaChromeHints = Program.Args.NoWindowChromeEffects ?
             ExtendClientAreaChromeHints.NoChrome : ExtendClientAreaChromeHints.PreferSystemChrome;
 
+        // Initialize rich presence
+        Services.GetRequiredService<IDiscordRichPresenceService>().Initialize();
+        
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
         var windowSettings = settingsManager.Settings.WindowSettings;
         if (windowSettings != null)
@@ -319,6 +322,11 @@ public sealed class App : Application
         services.AddSingleton<INotificationService, NotificationService>();
         services.AddSingleton<IPyRunner, PyRunner>();
         services.AddSingleton<IUpdateHelper, UpdateHelper>();
+        
+        // Rich presence
+        services.AddSingleton<IDiscordRichPresenceService, DiscordRichPresenceService>();
+        services.AddSingleton<IDisposable>(provider => 
+            provider.GetRequiredService<IDiscordRichPresenceService>());
 
         Config = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())

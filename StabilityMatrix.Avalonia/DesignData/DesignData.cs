@@ -295,6 +295,8 @@ public static class DesignData
         });
     public static OneClickInstallViewModel OneClickInstallViewModel => 
         Services.GetRequiredService<OneClickInstallViewModel>();
+    public static InferenceViewModel InferenceViewModel =>
+        Services.GetRequiredService<InferenceViewModel>();
     public static SelectDataDirectoryViewModel SelectDataDirectoryViewModel => 
         Services.GetRequiredService<SelectDataDirectoryViewModel>();
     public static ProgressManagerViewModel ProgressManagerViewModel =>

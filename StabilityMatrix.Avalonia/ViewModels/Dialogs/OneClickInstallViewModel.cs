@@ -168,6 +168,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
         
         var progress = new Progress<ProgressReport>(progress =>
         {
+            SubHeaderText = "Downloading and installing package requirements...";
             IsIndeterminate = progress.IsIndeterminate;
             OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
             EventManager.Instance.OnGlobalProgressChanged(OneClickInstallProgress);

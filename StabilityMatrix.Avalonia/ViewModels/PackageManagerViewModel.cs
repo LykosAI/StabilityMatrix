@@ -347,6 +347,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
         var dialog = new BetterContentDialog
         {
             MaxDialogWidth = 1100,
+            MinDialogWidth = 900,
             DefaultButton = ContentDialogButton.Close,
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
@@ -371,5 +372,6 @@ public partial class PackageManagerViewModel : PageViewModelBase
     
         SelectedPackage.UpdateAvailable = false;
         UpdateAvailable = false;
+        InstallButtonText = "Launch";
     }
 }

@@ -150,7 +150,7 @@ public class VladAutomatic : BaseGitPackage
     
     public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
     {
-        progress?.Report(new ProgressReport(-1, isIndeterminate: true));
+        progress?.Report(new ProgressReport(-1f, "Installing dependencies...", isIndeterminate: true));
         // Setup venv
         var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
         venvRunner.WorkingDirectory = InstallLocation;
@@ -193,10 +193,10 @@ public class VladAutomatic : BaseGitPackage
     public override async Task<string> DownloadPackage(string version, bool isCommitHash, IProgress<ProgressReport>? progress = null)
     {
         progress?.Report(new ProgressReport(0.1f, message: "Downloading package...", isIndeterminate: true, type: ProgressType.Download));
-
+    
         var installDir = new DirectoryPath(InstallLocation);
         installDir.Create();
-
+    
         await PrerequisiteHelper.RunGit(
             installDir.Parent ?? "", "clone", "https://github.com/vladmandic/automatic", installDir.Name)
             .ConfigureAwait(false);

@@ -13,159 +13,174 @@
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     d:DataContext="{x:Static mocks:DesignData.InferenceViewModel}"
     d:DesignHeight="650"
-    d:DesignWidth="950"
+    d:DesignWidth="1000"
     x:DataType="vm:InferenceViewModel"
     mc:Ignorable="d">
-    <Grid RowDefinitions="Auto,*">
+    <Grid>
         <TextBlock
-            Theme="{DynamicResource SubtitleTextBlockStyle}"
-            Margin="16,16,0,0"
-            Text="Inference" />
-        <Grid
-            Grid.Row="1"
-            Margin="16,8,16,16"
-            ColumnDefinitions="*,*"
-            RowDefinitions="*,Auto">
+            Margin="0,8,16,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Text="Inference"
+            Theme="{DynamicResource SubtitleTextBlockStyle}" />
 
-            <!--  Controls  -->
+        <ui:TabView
+            Grid.Row="0"
+            VerticalAlignment="Stretch"
+            CanReorderTabs="True"
+            CloseButtonOverlayMode="Always"
+            TabStripFooter=""
+            TabStripHeader=""
+            TabWidthMode="SizeToContent">
+            <ui:TabViewItem Header="Project 1" IconSource="Document">
+                <Grid
+                    Margin="16,8,16,32"
+                    ColumnDefinitions="*,Auto,*,Auto,*"
+                    RowDefinitions="*,Auto">
 
-            <ScrollViewer
-                Margin="8,8,8,16"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch">
-                <StackPanel Spacing="8">
-                    <!--  Checkpoint  -->
-                    <controls:Card Padding="8">
-                        <Grid Margin="8" ColumnDefinitions="Auto,*,Auto">
-                            <TextBlock
-                                Grid.Column="0"
-                                Margin="0,0,8,0"
-                                VerticalAlignment="Center"
-                                Text="Model" />
-                            <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" />
-                            <!--<ComboBox
+                    <!--  Controls  -->
+                    <ScrollViewer
+                        Margin="8,8,8,16"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch">
+                        <StackPanel Spacing="8">
+                            <!--  Checkpoint  -->
+                            <controls:Card Padding="8">
+                                <Grid Margin="8" ColumnDefinitions="Auto,*,Auto">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        Margin="0,0,8,0"
+                                        VerticalAlignment="Center"
+                                        Text="Model" />
+                                    <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" />
+                                    <!--<ComboBox
                                 DisplayMemberPath="FileName"
                                 Grid.Column="1"
                                 ItemsSource="{Binding DiffusionCheckpointFolder.CheckpointFiles}"
                                 Margin="8"
                                 MinWidth="200"
                                 SelectedValuePath="FileName" />-->
-                            <Button Grid.Column="2" Margin="8,0,0,0">
-                                <ui:SymbolIcon FontSize="16" Symbol="Settings" />
-                            </Button>
-                        </Grid>
-                    </controls:Card>
-                    <!--  Prompt card  -->
-                    <controls:Card Padding="8">
-                        <StackPanel Margin="8" Spacing="4">
-                            <TextBlock
-                                Margin="2"
-                                FontSize="14"
-                                Text="Prompt" />
-                            <avaloniaEdit:TextEditor
-                                x:Name="PromptEditor"
-                                Margin="8"
-                                FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
-                                LineNumbersForeground="DarkSlateGray"
-                                ShowLineNumbers="True"
-                                VerticalScrollBarVisibility="Auto"
-                                WordWrap="True" />
+                                    <Button Grid.Column="2" Margin="8,0,0,0">
+                                        <ui:SymbolIcon FontSize="16" Symbol="Settings" />
+                                    </Button>
+                                </Grid>
+                            </controls:Card>
+                            <!--  Samplers and steps  -->
+                            <controls:Card Padding="8">
+                                <StackPanel Margin="8">
+                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                        <TextBlock
+                                            Grid.Column="0"
+                                            Margin="0,0,8,0"
+                                            VerticalAlignment="Center"
+                                            Text="Sampler" />
+                                        <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" />
+                                        <TextBlock
+                                            Grid.Column="2"
+                                            Margin="16,0,8,0"
+                                            VerticalAlignment="Center"
+                                            Text="Steps" />
+                                        <TextBox Grid.Column="3" />
+                                    </Grid>
 
-                            <TextBlock
-                                Margin="2"
-                                FontSize="14"
-                                Text="Negative Prompt" />
-                            <avaloniaEdit:TextEditor
-                                x:Name="NegativePromptEditor"
-                                Margin="8"
-                                FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
-                                LineNumbersForeground="DarkSlateGray"
-                                ShowLineNumbers="True"
-                                VerticalScrollBarVisibility="Auto"
-                                WordWrap="True" />
+                                    <Slider
+                                        IsSnapToTickEnabled="True"
+                                        Maximum="150"
+                                        Minimum="0"
+                                        TickFrequency="10"
+                                        TickPlacement="BottomRight" />
+                                </StackPanel>
+                            </controls:Card>
+
+                            <controls:SeedCard DataContext="{Binding SeedCardViewModel}" />
+
                         </StackPanel>
-                    </controls:Card>
-                    <!--  Samplers and steps  -->
-                    <controls:Card Padding="8">
-                        <StackPanel Margin="8">
-                            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-                                <TextBlock
-                                    Grid.Column="0"
-                                    Margin="0,0,8,0"
-                                    VerticalAlignment="Center"
-                                    Text="Sampler" />
-                                <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" />
-                                <TextBlock
-                                    Grid.Column="2"
-                                    Margin="16,0,8,0"
-                                    VerticalAlignment="Center"
-                                    Text="Steps" />
-                                <TextBox Grid.Column="3" />
-                            </Grid>
-
-                            <Slider
-                                IsSnapToTickEnabled="True"
-                                Maximum="150"
-                                Minimum="0"
-                                TickFrequency="10"
-                                TickPlacement="BottomRight" />
-                        </StackPanel>
-                    </controls:Card>
-                    <!--  Seed  -->
-                    <controls:Card Padding="8">
-                        <Grid Margin="4" RowDefinitions="Auto,*">
-
-                            <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,Auto">
-                                <TextBlock
-                                    Grid.Column="0"
-                                    Margin="0,0,8,0"
-                                    VerticalAlignment="Center"
-                                    Text="Seed" />
-                                <ui:NumberBox
-                                    Grid.Column="1"
-                                    HorizontalAlignment="Stretch"
-                                    SpinButtonPlacementMode="Inline" />
-                                <RepeatButton Grid.Column="2" Margin="8,0,0,0">
-                                    <icons:Icon Margin="1" Value="fa-solid fa-dice-d20" />
-                                </RepeatButton>
-                                <ToggleButton Grid.Column="3" Margin="8,0,0,0">
-                                    <icons:Icon Margin="1" Value="fa-solid fa-lock-open" />
-                                </ToggleButton>
-                            </Grid>
-                        </Grid>
-                    </controls:Card>
-                </StackPanel>
-            </ScrollViewer>
-
-            <!--  Image Viewer  -->
-            <controls:Card
-                Grid.Row="0"
-                Grid.Column="1"
-                Margin="8,8,8,16"
-                Padding="8"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Top">
-                <Grid RowDefinitions="0.2*,0.7*">
-                    <StackPanel
+                    </ScrollViewer>
+                    
+                    <GridSplitter 
                         Grid.Row="0"
-                        VerticalAlignment="Top"
-                        Orientation="Vertical">
-                        <TextBlock
-                            Margin="2"
-                            FontSize="14"
-                            Text="Image" />
-                        <!--<ProgressBar
+                        Grid.Column="1" 
+                        Background="{DynamicResource ScrollBarTrackStroke}"/>
+
+                    <!--  Prompt card  -->
+                    <controls:Card 
+                        Grid.Row="0" 
+                        Grid.Column="2" 
+                        Margin="8,8,8,16"
+                        VerticalAlignment="Stretch"
+                        VerticalContentAlignment="Stretch"
+                        Padding="8">
+                        <Grid RowDefinitions="*,*,Auto" Margin="4,8">
+                            <StackPanel Spacing="4">
+                                <TextBlock
+                                    Margin="2"
+                                    FontSize="14"
+                                    Text="Prompt" />
+                                <avaloniaEdit:TextEditor
+                                    x:Name="PromptEditor"
+                                    Margin="8"
+                                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                    LineNumbersForeground="DarkSlateGray"
+                                    ShowLineNumbers="True"
+                                    VerticalScrollBarVisibility="Auto"
+                                    WordWrap="True" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Spacing="4">
+                                <TextBlock
+                                    Margin="2"
+                                    FontSize="14"
+                                    Text="Negative Prompt" />
+                                <avaloniaEdit:TextEditor
+                                    x:Name="NegativePromptEditor"
+                                    Margin="8"
+                                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                    LineNumbersForeground="DarkSlateGray"
+                                    ShowLineNumbers="True"
+                                    VerticalScrollBarVisibility="Auto"
+                                    WordWrap="True" />
+                            </StackPanel>
+                            <Button
+                                Grid.Row="2"
+                                HorizontalAlignment="Center"
+                                Classes="accent"
+                                Content="Generate Image" />
+                        </Grid>
+                    </controls:Card>
+                    
+                    <GridSplitter 
+                        Grid.Row="0"
+                        Grid.Column="3" 
+                        Background="{DynamicResource ScrollBarTrackStroke}"/>
+                    
+                    <!--  Image Viewer  -->
+                    <controls:Card
+                        Grid.Row="0"
+                        Grid.Column="4"
+                        Margin="8,8,8,16"
+                        Padding="8"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Top">
+                        <Grid RowDefinitions="0.2*,0.7*">
+                            <StackPanel
+                                Grid.Row="0"
+                                VerticalAlignment="Top"
+                                Orientation="Vertical">
+                                <TextBlock
+                                    Margin="2"
+                                    FontSize="14"
+                                    Text="Image" />
+                                <!--<ProgressBar
                             Maximum="100"
                             Value="{Binding ProgressValue, FallbackValue=10}"
                             Visibility="{Binding ProgressBarVisibility, FallbackValue=Visible}"
                             Width="500" />-->
-                    </StackPanel>
-                    <Grid
-                        Grid.Row="1"
-                        MinHeight="512"
-                        VerticalAlignment="Stretch"
-                        Background="{DynamicResource ApplicationBackgroundBrush}">
-                        <!--<controls:ProgressRing
+                            </StackPanel>
+                            <Grid
+                                Grid.Row="1"
+                                MinHeight="512"
+                                VerticalAlignment="Stretch"
+                                Background="{DynamicResource ApplicationBackgroundBrush}">
+                                <!--<controls:ProgressRing
                             Background="DarkRed"
                             Grid.Row="0"
                             Height="72"
@@ -176,25 +191,18 @@
                             Visibility="{Binding ProgressRingVisibility, FallbackValue=Collapsed}"
                             Width="72"
                             x:Name="ImageProgressRing" />-->
-                        <!--<Image
+                                <!--<Image
                             HorizontalAlignment="Stretch"
                             Margin="8"
                             Source="{Binding ImagePreview}"
                             Stretch="Uniform"
                             VerticalAlignment="Stretch"
                             Visibility="{Binding ImagePreviewVisibility, FallbackValue=Visible}" />-->
-                    </Grid>
-                </Grid>
-            </controls:Card>
+                            </Grid>
+                        </Grid>
+                    </controls:Card>
 
-            <Button
-                Grid.Row="1"
-                Grid.Column="0"
-                HorizontalAlignment="Center"
-                Classes="accent"
-                Content="Generate Image" />
-
-            <!--<Button
+                    <!--<Button
                 Classes="accent"
                 Command="{Binding TextToImageGenerateCommand}"
                 Content="Generate Image"
@@ -202,6 +210,9 @@
                 HorizontalAlignment="Center"
                 Name="TextToImageButton" />-->
 
-        </Grid>
+                </Grid>
+            </ui:TabViewItem>
+            <ui:TabViewItem Header="Project 2" IconSource="Document" />
+        </ui:TabView>
     </Grid>
 </controls:UserControlBase>

@@ -100,6 +100,7 @@
                     BorderBrush="Transparent"
                     Command="{Binding ShowPreviewCommand}"
                     Content="UI Preview"
+                    Padding="4"
                     Margin="0,8,0,0">
                     <!--<Button.Style>
                         <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
@@ -112,21 +113,29 @@
                     </Button.Style>-->
                 </Button>
 
-                <ui:HyperlinkButton Margin="0,0,0,0" NavigateUri="{Binding SelectedPackage.LicenseUrl}">
+                <ui:HyperlinkButton Padding="4"
+                                    NavigateUri="{Binding SelectedPackage.LicenseUrl}">
                     <TextBlock TextWrapping="Wrap">
                         <Run Text="{Binding SelectedPackage.LicenseType, Mode=OneWay}" />
                         <Run Text="License" />
                     </TextBlock>
                 </ui:HyperlinkButton>
                 
-                <ui:HyperlinkButton Margin="0,0,0,8" NavigateUri="{Binding SelectedPackage.GithubUrl}">
+                <ui:HyperlinkButton Padding="4"
+                                    NavigateUri="{Binding SelectedPackage.GithubUrl}">
                     <TextBlock TextWrapping="Wrap">
                         <Run Text="GitHub Page:" />
                         <Run Text="{Binding SelectedPackage.GithubUrl, Mode=OneWay}" TextDecorations="Underline" />
                     </TextBlock>
                 </ui:HyperlinkButton>
+                
+                <TextBlock Text="{Binding SelectedPackage.Disclaimer}"
+                           Padding="4"
+                           Foreground="OrangeRed"
+                           TextWrapping="Wrap"
+                           IsVisible="{Binding SelectedPackage.Disclaimer, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
-                <StackPanel Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                     <ToggleButton
                         Content="Releases"
                         IsChecked="{Binding IsReleaseMode}"

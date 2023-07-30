@@ -17,6 +17,7 @@ public abstract class BasePackage
     public abstract string GithubUrl { get; }
     public abstract string LicenseType { get; }
     public abstract string LicenseUrl { get; }
+    public virtual string Disclaimer => string.Empty;
     
     /// <summary>
     /// Primary command to launch the package. 'Launch' buttons uses this.

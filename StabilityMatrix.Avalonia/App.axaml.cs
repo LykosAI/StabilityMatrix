@@ -203,7 +203,8 @@ public sealed class App : Application
             .AddSingleton<CheckpointBrowserCardViewModel>()
             .AddSingleton<CheckpointsPageViewModel>()
             .AddSingleton<LaunchPageViewModel>()
-            .AddSingleton<ProgressManagerViewModel>();
+            .AddSingleton<ProgressManagerViewModel>()
+            .AddSingleton<InferenceViewModel>();
         
         services.AddSingleton<MainWindowViewModel>(provider =>
             new MainWindowViewModel(provider.GetRequiredService<ISettingsManager>(),
@@ -212,6 +213,7 @@ public sealed class App : Application
                 Pages =
                 {
                     provider.GetRequiredService<LaunchPageViewModel>(),
+                    provider.GetRequiredService<InferenceViewModel>(),
                     provider.GetRequiredService<PackageManagerViewModel>(),
                     provider.GetRequiredService<CheckpointsPageViewModel>(),
                     provider.GetRequiredService<CheckpointBrowserViewModel>(),
@@ -277,6 +279,7 @@ public sealed class App : Application
         services.AddSingleton<SettingsPage>();
         services.AddSingleton<CheckpointBrowserPage>();
         services.AddSingleton<ProgressManagerPage>();
+        services.AddSingleton<InferencePage>();
         
         // Dialogs
         services.AddTransient<SelectDataDirectoryDialog>();

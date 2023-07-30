@@ -10,6 +10,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Helper;
@@ -334,4 +335,28 @@ public static class DesignData
     {
         State = ProgressState.Success
     };
+
+    public static SeedCardViewModel SeedCardViewModel => new();
+    
+    public static Indexer Types => new();
+    
+    public class Indexer
+    {
+        public object? this[string typeName]
+        {
+            get
+            {
+                var type = Type.GetType(typeName) ?? 
+                           throw new ArgumentException($"Type {typeName} not found");
+                try
+                {
+                    return Services.GetService(type);
+                }
+                catch (InvalidOperationException)
+                {
+                    return Activator.CreateInstance(type);
+                }
+            }
+        }
+    }
 }

@@ -28,5 +28,6 @@
         <StyleInclude Source="Styles/ProgressRing.axaml"/>
         <StyleInclude Source="Styles/ButtonStyles.axaml"/>
         <StyleInclude Source="Styles/SplitButtonStyles.axaml"/>
+        <StyleInclude Source="Controls/SeedCard.axaml"/>
     </Application.Styles>
 </Application>

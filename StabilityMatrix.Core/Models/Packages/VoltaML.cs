@@ -1,5 +1,6 @@
 ﻿using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
@@ -148,5 +149,18 @@ public class VoltaML : BaseGitPackage
         var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
         
         VenvRunner.RunDetached(args.TrimEnd(), OnConsoleOutput, OnExit);
+    }
+
+    public override Task SetupModelFolders(DirectoryPath installDirectory)
+    {
+        StabilityMatrix.Core.Helper.SharedFolders.SetupLinks(SharedFolders,
+            SettingsManager.ModelsDirectory, installDirectory);
+        return Task.CompletedTask;
+    }
+
+    public override async Task UpdateModelFolders(DirectoryPath installDirectory)
+    {
+        await StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(this,
+            SettingsManager.ModelsDirectory, installDirectory).ConfigureAwait(false);
     }
 }

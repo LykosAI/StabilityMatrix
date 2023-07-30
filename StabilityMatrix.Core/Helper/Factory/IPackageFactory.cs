@@ -6,4 +6,5 @@ public interface IPackageFactory
 {
     IEnumerable<BasePackage> GetAllAvailablePackages();
     BasePackage? FindPackageByName(string? packageName);
+    BasePackage? this[string packageName] { get; }
 }

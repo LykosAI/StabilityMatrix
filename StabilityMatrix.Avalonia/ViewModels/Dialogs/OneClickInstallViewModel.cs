@@ -113,7 +113,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
         await InstallPackage();
 
         SubHeaderText = "Setting up shared folder links...";
-        sharedFolders.SetupLinksForPackage(SelectedPackage, SelectedPackage.InstallLocation);
+        await SelectedPackage.SetupModelFolders(SelectedPackage.InstallLocation);
         
         var installedPackage = new InstalledPackage
         {

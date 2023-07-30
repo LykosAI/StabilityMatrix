@@ -1,5 +1,6 @@
 ﻿using Octokit;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 
@@ -35,7 +36,8 @@ public abstract class BasePackage
         IProgress<ProgressReport>? progress = null);
     public abstract Task InstallPackage(IProgress<ProgressReport>? progress = null);
     public abstract Task RunPackage(string installedPackagePath, string command, string arguments);
-    
+    public abstract Task SetupModelFolders(DirectoryPath installDirectory);
+    public abstract Task UpdateModelFolders(DirectoryPath installDirectory);
     
     /// <summary>
     /// Shuts down the subprocess, canceling any pending streams.

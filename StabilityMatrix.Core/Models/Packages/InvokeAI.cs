@@ -272,7 +272,7 @@ public class InvokeAI : BaseGitPackage
 
         // Need to make subdirectory because they store config in the
         // directory *above* the root directory
-        var root = installPath.JoinDir("invokeai_root");
+        var root = installPath.JoinDir(RelativeRootPath);
         root.Create();
         env["INVOKEAI_ROOT"] = root;
 

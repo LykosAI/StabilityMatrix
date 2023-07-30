@@ -33,11 +33,11 @@ public partial class ProgressManagerViewModel : PageViewModelBase
 
     public void ClearDownloads()
     {
-        if (!ProgressItems.Any(p => Math.Abs(p.Progress.Percentage - 100) < 0.01f))
+        if (!ProgressItems.Any(p => Math.Abs(p.Progress.Percentage - 100) < 0.01f || p.Failed))
             return;
         
         var itemsInProgress = ProgressItems
-            .Where(p => p.Progress.Percentage < 100).ToList();
+            .Where(p => p.Progress.Percentage < 100 && !p.Failed).ToList();
         ProgressItems = new ObservableCollection<ProgressItemViewModel>(itemsInProgress);
     }
 

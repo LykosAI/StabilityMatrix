@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -113,7 +114,7 @@ public class A3WebUI : BaseGitPackage
         },
         LaunchOptionDefinition.Extras
     };
-
+    
     public override async Task<string> GetLatestVersion()
     {
         var release = await GetLatestRelease().ConfigureAwait(false);
@@ -192,5 +193,18 @@ public class A3WebUI : BaseGitPackage
         var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
         VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
+    }
+
+    public override Task SetupModelFolders(DirectoryPath installDirectory)
+    {
+        StabilityMatrix.Core.Helper.SharedFolders
+            .SetupLinks(SharedFolders, SettingsManager.ModelsDirectory, installDirectory);
+        return Task.CompletedTask;
+    }
+
+    public override async Task UpdateModelFolders(DirectoryPath installDirectory)
+    {
+        await StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(this,
+            SettingsManager.ModelsDirectory, installDirectory).ConfigureAwait(false);
     }
 }

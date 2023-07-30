@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using NLog;
+﻿using NLog;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
@@ -90,7 +89,7 @@ public class SharedFolders : ISharedFolders
     /// Deletes junction links and remakes them. Unlike SetupLinksForPackage, 
     /// this will not copy files from the destination to the source.
     /// </summary>
-    public async Task UpdateLinksForPackage(BasePackage basePackage, DirectoryPath installDirectory)
+    public static async Task UpdateLinksForPackage(BasePackage basePackage, DirectoryPath modelsDirectory, DirectoryPath installDirectory)
     {
         var sharedFolders = basePackage.SharedFolders;
         if (sharedFolders is null) return;
@@ -99,9 +98,9 @@ public class SharedFolders : ISharedFolders
         {
             foreach (var relativePath in relativePaths)
             {
-                var sourceDir = new DirectoryPath(settingsManager.ModelsDirectory, folderType.GetStringValue());
+                var sourceDir = new DirectoryPath(modelsDirectory, folderType.GetStringValue());
                 var destinationDir = installDirectory.JoinDir(relativePath);
-            
+
                 // Create source folder if it doesn't exist
                 if (!sourceDir.Exists)
                 {
@@ -117,9 +116,11 @@ public class SharedFolders : ISharedFolders
                         // If link is already the same, just skip
                         if (destinationDir.Info.LinkTarget == sourceDir)
                         {
-                            Logger.Info($"Skipped updating matching folder link ({destinationDir} -> ({sourceDir})");
-                            continue;
+                            Logger.Info(
+                                $"Skipped updating matching folder link ({destinationDir} -> ({sourceDir})");
+                            return;
                         }
+
                         // Otherwise delete the link
                         Logger.Info($"Deleting existing junction at target {destinationDir}");
                         await destinationDir.DeleteAsync(false).ConfigureAwait(false);
@@ -131,10 +132,10 @@ public class SharedFolders : ISharedFolders
                         {
                             Logger.Info($"Moving files from {destinationDir} to {sourceDir}");
                             await FileTransfers.MoveAllFilesAndDirectories(
-                                destinationDir,sourceDir, overwriteIfHashMatches: true)
+                                    destinationDir, sourceDir, overwriteIfHashMatches: true)
                                 .ConfigureAwait(false);
                         }
-                    
+
                         Logger.Info($"Deleting existing empty folder at target {destinationDir}");
                         await destinationDir.DeleteAsync(false).ConfigureAwait(false);
                     }
@@ -175,7 +176,7 @@ public class SharedFolders : ISharedFolders
         foreach (var package in packages)
         {
             if (package.PackageName == null) continue;
-            var basePackage = packageFactory.FindPackageByName(package.PackageName);
+            var basePackage = packageFactory[package.PackageName];
             if (basePackage == null) continue;
             if (package.LibraryPath == null) continue;
  

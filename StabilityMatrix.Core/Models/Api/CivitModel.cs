@@ -55,4 +55,8 @@ public class CivitModel
             return fullFilesSize;
         }
     }
+
+    public string LatestModelVersion => ModelVersions != null && ModelVersions.Any()
+        ? ModelVersions[0].Name
+        : string.Empty;
 }

@@ -170,38 +170,36 @@ public class InvokeAI : BaseGitPackage
 
         progress?.Report(new ProgressReport(-1f, "Installing Package", isIndeterminate: true));
 
+        var pipCommandArgs =
+            "InvokeAI --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu";
+
         // If has Nvidia Gpu, install CUDA version
         if (gpus.Any(g => g.IsNvidia))
         {
             Logger.Info("Starting InvokeAI install (CUDA)...");
-            await venvRunner.PipInstall(
-                "InvokeAI[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu117",
-                OnConsoleOutput).ConfigureAwait(false);
+            pipCommandArgs =
+                "InvokeAI[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu117";
         }
         // For AMD, Install ROCm version
         else if (gpus.Any(g => g.IsAmd))
         {
             Logger.Info("Starting InvokeAI install (ROCm)...");
-            await venvRunner.PipInstall(
-                "InvokeAI --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2",
-                OnConsoleOutput).ConfigureAwait(false);
+            pipCommandArgs =
+                "InvokeAI --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2";
         }
         // For Apple silicon, use MPS
         else if (Compat.IsMacOS && Compat.IsArm)
         {
             Logger.Info("Starting InvokeAI install (MPS)...");
-            await venvRunner.PipInstall(
-                "InvokeAI --use-pep517",
-                OnConsoleOutput).ConfigureAwait(false);
+            pipCommandArgs = "InvokeAI --use-pep517";
         }
         // CPU Version
         else
         {
             Logger.Info("Starting InvokeAI install (CPU)...");
-            await venvRunner.PipInstall(
-                "pip install InvokeAI --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu",
-                OnConsoleOutput).ConfigureAwait(false);
         }
+
+        await venvRunner.PipInstall(pipCommandArgs, OnConsoleOutput).ConfigureAwait(false);
 
         await venvRunner
             .PipInstall("rich packaging python-dotenv", OnConsoleOutput)
@@ -215,9 +213,80 @@ public class InvokeAI : BaseGitPackage
         progress?.Report(new ProgressReport(1f, "Done!", isIndeterminate: false));
     }
 
+    public override async Task<string> Update(InstalledPackage installedPackage, IProgress<ProgressReport>? progress = null,
+        bool includePrerelease = false)
+    {
+        progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
+
+        await using var venvRunner = new PyVenvRunner(Path.Combine(installedPackage.FullPath, "venv"));
+        venvRunner.WorkingDirectory = installedPackage.FullPath;
+        venvRunner.EnvironmentVariables = GetEnvVars(installedPackage.FullPath);
+
+        var latestVersion = await GetUpdateVersion(installedPackage).ConfigureAwait(false);
+        var isReleaseMode = string.IsNullOrWhiteSpace(installedPackage.InstalledBranch);
+
+        var downloadUrl = isReleaseMode
+            ? $"https://github.com/invoke-ai/InvokeAI/archive/{latestVersion}.zip"
+            : $"https://github.com/invoke-ai/InvokeAI/archive/refs/heads/{installedPackage.InstalledBranch}.zip";
+
+        var gpus = HardwareHelper.IterGpuInfo().ToList();
+
+        progress?.Report(new ProgressReport(-1f, "Installing Package", isIndeterminate: true));
+
+        var pipCommandArgs =
+            $"\"InvokeAI @ {downloadUrl}\" --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu --upgrade";
+
+        // If has Nvidia Gpu, install CUDA version
+        if (gpus.Any(g => g.IsNvidia))
+        {
+            Logger.Info("Starting InvokeAI install (CUDA)...");
+            pipCommandArgs =
+                $"\"InvokeAI[xformers] @ {downloadUrl}\" --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu117 --upgrade";
+        }
+        // For AMD, Install ROCm version
+        else if (gpus.Any(g => g.IsAmd))
+        {
+            Logger.Info("Starting InvokeAI install (ROCm)...");
+            pipCommandArgs =
+                $"\"InvokeAI @ {downloadUrl}\" --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2 --upgrade";
+        }
+        // For Apple silicon, use MPS
+        else if (Compat.IsMacOS && Compat.IsArm)
+        {
+            Logger.Info("Starting InvokeAI install (MPS)...");
+            pipCommandArgs = $"\"InvokeAI @ {downloadUrl}\" --use-pep517 --upgrade";
+        }
+        // CPU Version
+        else
+        {
+            Logger.Info("Starting InvokeAI install (CPU)...");
+        }
+
+        await venvRunner.PipInstall(pipCommandArgs, OnConsoleOutput).ConfigureAwait(false);
+
+        progress?.Report(new ProgressReport(1f, "Done!", isIndeterminate: false));
+
+        return latestVersion;
+    }
+
     public override Task
         RunPackage(string installedPackagePath, string command, string arguments) =>
         RunInvokeCommand(installedPackagePath, command, arguments, true);
+
+    private async Task<string> GetUpdateVersion(InstalledPackage installedPackage, bool includePrerelease = false)
+    {
+        if (string.IsNullOrWhiteSpace(installedPackage.InstalledBranch))
+        {
+            var releases = await GetAllReleases().ConfigureAwait(false);
+            var latestRelease = releases.First(x => includePrerelease || !x.Prerelease);
+            return latestRelease.TagName;
+        }
+
+        var allCommits = await GetAllCommits(
+            installedPackage.InstalledBranch).ConfigureAwait(false);
+        var latestCommit = allCommits.First();
+        return latestCommit.Sha;
+    }
 
     private async Task RunInvokeCommand(string installedPackagePath, string command,
         string arguments, bool runDetached)

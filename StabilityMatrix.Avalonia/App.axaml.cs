@@ -440,6 +440,13 @@ public sealed class App : Application
         services.AddHttpClient("A3Client")
             .AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));
 
+        // Add Refit client factory
+        services.AddSingleton<IApiFactory, ApiFactory>(provider =>
+            new ApiFactory(provider.GetRequiredService<IHttpClientFactory>())
+            {
+                RefitSettings = defaultRefitSettings,
+            });
+        
         // Add logging
         services.AddLogging(builder =>
         {

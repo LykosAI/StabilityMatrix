@@ -2,7 +2,7 @@
 
 namespace StabilityMatrix.Core.Api;
 
-public class ApiFactory
+public class ApiFactory : IApiFactory
 {
     private readonly IHttpClientFactory httpClientFactory;
     public RefitSettings? RefitSettings { get; init; }

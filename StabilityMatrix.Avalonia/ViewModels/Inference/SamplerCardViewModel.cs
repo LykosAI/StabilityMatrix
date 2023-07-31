@@ -10,6 +10,8 @@ public partial class SamplerCardViewModel : ViewModelBase
 {
     [ObservableProperty] private int steps;
     [ObservableProperty] private double cfgScale;
+    [ObservableProperty] private int width;
+    [ObservableProperty] private int height;
     
     [ObservableProperty] private string? selectedSampler;
     [ObservableProperty] private IReadOnlyList<string> samplers = new List<string>();

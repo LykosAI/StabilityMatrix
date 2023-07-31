@@ -60,21 +60,44 @@
                                 SpinButtonPlacementMode="Inline"/>
                         </Grid>
                         
-                        <!--<Grid ColumnDefinitions="Auto,*,Auto,*">
-                            <TextBlock
-                                VerticalAlignment="Center"
-                                Text="Steps" />
-                            <ui:NumberBox
-                                Grid.Column="1"
-                                SpinButtonPlacementMode="Compact"/>
-                            <TextBlock
-                                Grid.Column="2"
-                                VerticalAlignment="Center"
-                                Text="CFG Scale" />
-                            <ui:NumberBox
-                                Grid.Column="3"
-                                SpinButtonPlacementMode="Compact"/>
-                        </Grid>-->
+                        <StackPanel>
+                            <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,*">
+                                <TextBlock
+                                    Text="Width" />
+                                <Slider 
+                                    Grid.Row="1" 
+                                    Grid.Column="0" 
+                                    Grid.ColumnSpan="2"
+                                    Minimum="0"
+                                    Maximum="2048"
+                                    Value="{Binding Width}"/>
+                                <ui:NumberBox
+                                    Grid.Row="1"
+                                    Grid.Column="2"
+                                    Value="{Binding Width}"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    SpinButtonPlacementMode="Compact"/>
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,*">
+                                <TextBlock
+                                    Text="Height" />
+                                <Slider 
+                                    Grid.Row="1" 
+                                    Grid.Column="0" 
+                                    Grid.ColumnSpan="2"
+                                    Minimum="0"
+                                    Maximum="2048"
+                                    Value="{Binding Height}"/>
+                                <ui:NumberBox
+                                    Grid.Row="1"
+                                    Grid.Column="2"
+                                    Value="{Binding Height}"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    SpinButtonPlacementMode="Compact"/>
+                            </Grid>
+                        </StackPanel>
                     </StackPanel>
                 </controls:Card>
             </ControlTemplate>

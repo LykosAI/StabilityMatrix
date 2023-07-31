@@ -56,7 +56,7 @@ public class CivitModel
         }
     }
 
-    public string LatestModelVersion => ModelVersions != null && ModelVersions.Any()
+    public string LatestModelVersionName => ModelVersions != null && ModelVersions.Any()
         ? ModelVersions[0].Name
         : string.Empty;
 }

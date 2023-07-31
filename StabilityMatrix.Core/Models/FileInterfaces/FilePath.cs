@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 namespace StabilityMatrix.Core.Models.FileInterfaces;
 
@@ -85,6 +86,15 @@ public class FilePath : FileSystemPath, IPathObject
     public Task<string> ReadAllTextAsync(CancellationToken ct = default)
     {
         return File.ReadAllTextAsync(FullPath, ct);
+    }
+    
+    /// <summary> Write text </summary>
+    public void WriteAllText(string text) => File.WriteAllText(FullPath, text, Encoding.UTF8);
+    
+    /// <summary> Write text asynchronously </summary>
+    public Task WriteAllTextAsync(string text, CancellationToken ct = default)
+    {
+        return File.WriteAllTextAsync(FullPath, text, Encoding.UTF8, ct);
     }
     
     /// <summary> Read bytes </summary>

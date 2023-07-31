@@ -38,6 +38,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Api;
@@ -245,6 +246,7 @@ public sealed class App : Application
         // Other transients (usually sub view models)
         services.AddTransient<CheckpointFolder>();
         services.AddTransient<CheckpointFile>();
+        services.AddTransient<InferenceTextToImageViewModel>();
         
         // Global progress
         services.AddSingleton<ProgressManagerViewModel>();
@@ -267,6 +269,7 @@ public sealed class App : Application
                 .Register(provider.GetRequiredService<ExceptionViewModel>)
                 .Register(provider.GetRequiredService<EnvVarsViewModel>)
                 .Register(provider.GetRequiredService<ProgressManagerViewModel>)
+                .Register(provider.GetRequiredService<InferenceTextToImageViewModel>)
                 .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>));
     }
 
@@ -280,6 +283,9 @@ public sealed class App : Application
         services.AddSingleton<CheckpointBrowserPage>();
         services.AddSingleton<ProgressManagerPage>();
         services.AddSingleton<InferencePage>();
+        
+        // Inference tabs
+        services.AddTransient<InferenceTextToImageView>();
         
         // Dialogs
         services.AddTransient<SelectDataDirectoryDialog>();

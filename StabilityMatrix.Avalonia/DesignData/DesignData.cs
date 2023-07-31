@@ -29,15 +29,16 @@ namespace StabilityMatrix.Avalonia.DesignData;
 public static class DesignData
 {
     [NotNull] public static IServiceProvider? Services { get; set; }
-    
+
     private static bool isInitialized;
-    
+
     // This needs to be static method instead of static constructor
     // or else Avalonia analyzers won't work.
     public static void Initialize()
     {
-        if (isInitialized) throw new InvalidOperationException("DesignData is already initialized.");
-        
+        if (isInitialized)
+            throw new InvalidOperationException("DesignData is already initialized.");
+
         var services = new ServiceCollection();
 
         var activePackageId = Guid.NewGuid();
@@ -69,21 +70,21 @@ public static class DesignData
                 ActiveInstalledPackage = activePackageId
             }
         });
-        
+
         // General services
         services.AddLogging()
             .AddSingleton<IPackageFactory, PackageFactory>()
             .AddSingleton<IUpdateHelper, UpdateHelper>()
             .AddSingleton<ModelFinder>()
             .AddSingleton<SharedState>();
-        
+
         // Mock services
         services
             .AddSingleton<INotificationService, MockNotificationService>()
             .AddSingleton<ISharedFolders, MockSharedFolders>()
             .AddSingleton<IDownloadService, MockDownloadService>()
             .AddSingleton<IHttpClientFactory, MockHttpClientFactory>();
-        
+
         // Placeholder services that nobody should need during design time
         services
             .AddSingleton<IPyRunner>(_ => null!)
@@ -91,17 +92,17 @@ public static class DesignData
             .AddSingleton<ICivitApi>(_ => null!)
             .AddSingleton<IGithubApiCache>(_ => null!)
             .AddSingleton<IPrerequisiteHelper>(_ => null!);
-        
+
         // Using some default service implementations from App
         App.ConfigurePackages(services);
         App.ConfigurePageViewModels(services);
         App.ConfigureDialogViewModels(services);
         App.ConfigureViews(services);
-        
+
         // Override Launch page with mock
         services.Remove(ServiceDescriptor.Singleton<LaunchPageViewModel, LaunchPageViewModel>());
         services.AddSingleton<LaunchPageViewModel, MockLaunchPageViewModel>();
-        
+
         Services = services.BuildServiceProvider();
 
         var dialogFactory = Services.GetRequiredService<ServiceManager<ViewModelBase>>();
@@ -110,7 +111,7 @@ public static class DesignData
         var modelFinder = Services.GetRequiredService<ModelFinder>();
         var packageFactory = Services.GetRequiredService<IPackageFactory>();
         var notificationService = Services.GetRequiredService<INotificationService>();
-        
+
         LaunchOptionsViewModel = Services.GetRequiredService<LaunchOptionsViewModel>();
         LaunchOptionsViewModel.Cards = new[]
         {
@@ -120,13 +121,13 @@ public static class DesignData
                 Type = LaunchOptionType.String,
                 Description = "The host name for the Web UI",
                 DefaultValue = "localhost",
-                Options = { "--host" }
+                Options = {"--host"}
             }),
             LaunchOptionCard.FromDefinition(new LaunchOptionDefinition
             {
                 Name = "API",
                 Type = LaunchOptionType.Bool,
-                Options = { "--api" }
+                Options = {"--api"}
             })
         };
         LaunchOptionsViewModel.UpdateFilterCards();
@@ -136,7 +137,7 @@ public static class DesignData
             packageFactory.GetAllAvailablePackages().ToImmutableArray();
         InstallerViewModel.SelectedPackage = InstallerViewModel.AvailablePackages[0];
         InstallerViewModel.ReleaseNotes = "## Release Notes\nThis is a test release note.";
-        
+
         // Checkpoints page
         CheckpointsPageViewModel.CheckpointFolders = new ObservableCollection<CheckpointFolder>
         {
@@ -201,7 +202,7 @@ public static class DesignData
             folder.DisplayedCheckpointFiles = folder.CheckpointFiles;
         }
 
-        CheckpointBrowserViewModel.ModelCards = new 
+        CheckpointBrowserViewModel.ModelCards = new
             ObservableCollection<CheckpointBrowserCardViewModel>
             {
                 new(new CivitModel
@@ -211,42 +212,53 @@ public static class DesignData
                     }, downloadService, settingsManager,
                     dialogFactory, notificationService)
             };
-        
+
         ProgressManagerViewModel.ProgressItems = new ObservableCollection<ProgressItemViewModel>
         {
-            new(new ProgressItem(Guid.NewGuid(), "Test File.exe", new ProgressReport(0.5f, "Downloading..."))),
-            new(new ProgressItem(Guid.NewGuid(), "Test File 2.uwu", new ProgressReport(0.25f, "Extracting...")))
+            new(new ProgressItem(Guid.NewGuid(), "Test File.exe",
+                new ProgressReport(0.5f, "Downloading..."))),
+            new(new ProgressItem(Guid.NewGuid(), "Test File 2.uwu",
+                new ProgressReport(0.25f, "Extracting...")))
         };
 
         UpdateViewModel = Services.GetRequiredService<UpdateViewModel>();
         UpdateViewModel.UpdateText =
             $"Stability Matrix v2.0.1 is now available! You currently have v2.0.0. Would you like to update now?";
-        UpdateViewModel.ReleaseNotes = "## v2.0.1\n- Fixed a bug\n- Added a feature\n- Removed a feature";
-        
+        UpdateViewModel.ReleaseNotes =
+            "## v2.0.1\n- Fixed a bug\n- Added a feature\n- Removed a feature";
+
         isInitialized = true;
     }
-    
+
     [NotNull] public static InstallerViewModel? InstallerViewModel { get; private set; }
     [NotNull] public static LaunchOptionsViewModel? LaunchOptionsViewModel { get; private set; }
     [NotNull] public static UpdateViewModel? UpdateViewModel { get; private set; }
-    
-    public static ServiceManager<ViewModelBase> DialogFactory => 
+
+    public static ServiceManager<ViewModelBase> DialogFactory =>
         Services.GetRequiredService<ServiceManager<ViewModelBase>>();
-    public static MainWindowViewModel MainWindowViewModel => 
+
+    public static MainWindowViewModel MainWindowViewModel =>
         Services.GetRequiredService<MainWindowViewModel>();
-    public static FirstLaunchSetupViewModel FirstLaunchSetupViewModel => 
+
+    public static FirstLaunchSetupViewModel FirstLaunchSetupViewModel =>
         Services.GetRequiredService<FirstLaunchSetupViewModel>();
-    public static LaunchPageViewModel LaunchPageViewModel => 
+
+    public static LaunchPageViewModel LaunchPageViewModel =>
         Services.GetRequiredService<LaunchPageViewModel>();
-    public static PackageManagerViewModel PackageManagerViewModel => 
+
+    public static PackageManagerViewModel PackageManagerViewModel =>
         Services.GetRequiredService<PackageManagerViewModel>();
-    public static CheckpointsPageViewModel CheckpointsPageViewModel => 
+
+    public static CheckpointsPageViewModel CheckpointsPageViewModel =>
         Services.GetRequiredService<CheckpointsPageViewModel>();
-    public static SettingsViewModel SettingsViewModel => 
+
+    public static SettingsViewModel SettingsViewModel =>
         Services.GetRequiredService<SettingsViewModel>();
-    public static CheckpointBrowserViewModel CheckpointBrowserViewModel => 
+
+    public static CheckpointBrowserViewModel CheckpointBrowserViewModel =>
         Services.GetRequiredService<CheckpointBrowserViewModel>();
-    public static SelectModelVersionViewModel SelectModelVersionViewModel => 
+
+    public static SelectModelVersionViewModel SelectModelVersionViewModel =>
         DialogFactory.Get<SelectModelVersionViewModel>(vm =>
         {
             // Sample data
@@ -289,20 +301,25 @@ public static class DesignData
             };
             var sampleViewModel =
                 new ModelVersionViewModel(new HashSet<string> {"ABCD"}, sampleCivitVersions[0]);
-        
+
             // Sample data for dialogs
-            vm.Versions = new List<ModelVersionViewModel>{sampleViewModel};
+            vm.Versions = new List<ModelVersionViewModel> {sampleViewModel};
             vm.SelectedVersionViewModel = sampleViewModel;
         });
-    public static OneClickInstallViewModel OneClickInstallViewModel => 
+
+    public static OneClickInstallViewModel OneClickInstallViewModel =>
         Services.GetRequiredService<OneClickInstallViewModel>();
+
     public static InferenceViewModel InferenceViewModel =>
         Services.GetRequiredService<InferenceViewModel>();
-    public static SelectDataDirectoryViewModel SelectDataDirectoryViewModel => 
+
+    public static SelectDataDirectoryViewModel SelectDataDirectoryViewModel =>
         Services.GetRequiredService<SelectDataDirectoryViewModel>();
+
     public static ProgressManagerViewModel ProgressManagerViewModel =>
         Services.GetRequiredService<ProgressManagerViewModel>();
-    public static ExceptionViewModel ExceptionViewModel => 
+
+    public static ExceptionViewModel ExceptionViewModel =>
         DialogFactory.Get<ExceptionViewModel>(viewModel =>
         {
             // Use try-catch to generate traceback information
@@ -323,13 +340,17 @@ public static class DesignData
             }
         });
 
-    public static EnvVarsViewModel EnvVarsViewModel => DialogFactory.Get<EnvVarsViewModel>(viewModel =>
-    {
-        viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>
+    public static EnvVarsViewModel EnvVarsViewModel => DialogFactory.Get<EnvVarsViewModel>(
+        viewModel =>
         {
-            new("UWU", "TRUE"),
-        };
-    });
+            viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>
+            {
+                new("UWU", "TRUE"),
+            };
+        });
+    
+    public static InferenceTextToImageViewModel InferenceTextToImageViewModel =>
+        DialogFactory.Get<InferenceTextToImageViewModel>();
 
     public static RefreshBadgeViewModel RefreshBadgeViewModel => new()
     {
@@ -337,8 +358,25 @@ public static class DesignData
     };
 
     public static SeedCardViewModel SeedCardViewModel => new();
-    
-    public static Indexer Types => new();
+
+    public static SamplerCardViewModel SamplerCardViewModel => new()
+    {
+        Steps = 20,
+        CfgScale = 7,
+        SelectedSampler = "Euler a",
+        Samplers = new []
+        {
+            "Euler a",
+            "Euler",
+            "LMS",
+            "Heun",
+            "DPM2",
+            "DPM2 a",
+            "DPM++ 2S a",
+        }
+    };
+
+public static Indexer Types => new();
     
     public class Indexer
     {

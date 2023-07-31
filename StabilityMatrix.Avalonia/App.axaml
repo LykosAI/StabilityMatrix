@@ -29,5 +29,6 @@
         <StyleInclude Source="Styles/ButtonStyles.axaml"/>
         <StyleInclude Source="Styles/SplitButtonStyles.axaml"/>
         <StyleInclude Source="Controls/SeedCard.axaml"/>
+        <StyleInclude Source="Controls/SamplerCard.axaml"/>
     </Application.Styles>
 </Application>

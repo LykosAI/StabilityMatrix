@@ -23,9 +23,10 @@ public partial class InferenceTextToImageView : UserControlBase
             {
                 var options = new RegistryOptions(ThemeName.DarkPlus);
         
+                var editorOptions = editor.TextArea.Options;
                 // Config hyperlinks
-                editor.TextArea.Options.EnableHyperlinks = true;
-                editor.TextArea.Options.RequireControlModifierForHyperlinkClick = true;
+                editorOptions.EnableHyperlinks = true;
+                editorOptions.RequireControlModifierForHyperlinkClick = true;
                 editor.TextArea.TextView.LinkTextForegroundBrush = Brushes.Coral;
         
                 var textMate = editor.InstallTextMate(options);

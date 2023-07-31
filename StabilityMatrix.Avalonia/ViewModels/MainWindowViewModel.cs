@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
+using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
@@ -47,14 +48,25 @@ public partial class MainWindowViewModel : ViewModelBase
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
     }
-    
-    public override async Task OnLoadedAsync()
+
+    public override void OnLoaded()
     {
+        base.OnLoaded();
+        
         // Set only if null, since this may be called again when content dialogs open
         CurrentPage ??= Pages.FirstOrDefault();
         SelectedCategory ??= Pages.FirstOrDefault();
+        
         EventManager.Instance.PageChangeRequested += OnPageChangeRequested;
+    }
 
+    public override async Task OnLoadedAsync()
+    {
+        await base.OnLoadedAsync();
+
+        // Skip if design mode
+        if (Design.IsDesignMode) return;
+        
         if (!await EnsureDataDirectory())
         {
             // False if user exited dialog, shutdown app

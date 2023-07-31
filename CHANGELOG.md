@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added ControlNet link for vlad/SD.Next
 - Settings option to set global environment variables for Packages
   > <img width="771" alt="image" src="https://github.com/LykosAI/StabilityMatrix/assets/13956642/d577918e-82bb-46d4-9a3a-9b5318d3d4d8">
-
+### Changed
+- Compatible packages (ComfyUI, Vlad/SD.Next) now use config files / launch args instead of symbolic links for shared model folder redirect
 ### Fixed
 - Fixed [#48](https://github.com/LykosAI/StabilityMatrix/issues/48) - model folders not showing in UI when they were empty
 - Updater now shows correct current version without trailing `.0`

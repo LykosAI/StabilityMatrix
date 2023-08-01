@@ -84,7 +84,8 @@ public static class DesignData
             .AddSingleton<ISharedFolders, MockSharedFolders>()
             .AddSingleton<IDownloadService, MockDownloadService>()
             .AddSingleton<IHttpClientFactory, MockHttpClientFactory>()
-            .AddSingleton<IApiFactory, MockApiFactory>();
+            .AddSingleton<IApiFactory, MockApiFactory>()
+            .AddSingleton<IInferenceClientManager, MockInferenceClientManager>();
 
         // Placeholder services that nobody should need during design time
         services
@@ -360,22 +361,12 @@ public static class DesignData
 
     public static SeedCardViewModel SeedCardViewModel => new();
 
-    public static SamplerCardViewModel SamplerCardViewModel => new()
+    public static SamplerCardViewModel SamplerCardViewModel => DialogFactory.Get<SamplerCardViewModel>(vm =>
     {
-        Steps = 20,
-        CfgScale = 7,
-        SelectedSampler = "Euler a",
-        Samplers = new []
-        {
-            "Euler a",
-            "Euler",
-            "LMS",
-            "Heun",
-            "DPM2",
-            "DPM2 a",
-            "DPM++ 2S a",
-        }
-    };
+        vm.Steps = 20;
+        vm.CfgScale = 7;
+        vm.SelectedSampler = "Euler a";
+    });
 
 public static Indexer Types => new();
     

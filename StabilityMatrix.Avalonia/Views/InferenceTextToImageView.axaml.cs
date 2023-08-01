@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using AvaloniaEdit.TextMate;
@@ -13,6 +14,11 @@ public partial class InferenceTextToImageView : UserControlBase
     {
         InitializeComponent();
         InitializeEditors();
+    }
+    
+    private void InitializeComponent()
+    {
+        AvaloniaXamlLoader.Load(this);
     }
     
     private void InitializeEditors()
@@ -40,8 +46,5 @@ public partial class InferenceTextToImageView : UserControlBase
         }
     }
 
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
+
 }

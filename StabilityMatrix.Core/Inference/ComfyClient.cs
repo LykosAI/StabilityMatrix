@@ -5,7 +5,6 @@ using NLog;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
-using StabilityMatrix.Core.Models.Progress;
 using Websocket.Client;
 
 namespace StabilityMatrix.Core.Inference;
@@ -215,6 +214,30 @@ public class ComfyClient : InferenceClientBase
     {
         var response = await comfyApi.GetImage(comfyImage.FileName, comfyImage.SubFolder, comfyImage.Type, cancellationToken).ConfigureAwait(false);
         return response;
+    }
+    
+    /// <summary>
+    /// Get a list of strings representing available model names
+    /// </summary>
+    public async Task<List<string>?> GetModelNamesAsync(CancellationToken cancellationToken = default)
+    {
+        const string modelLoaderType = "CheckpointLoaderSimple";
+        var response = await comfyApi.GetObjectInfo(modelLoaderType, cancellationToken).ConfigureAwait(false);
+
+        var info = response[modelLoaderType];
+        return info.Input.GetRequiredValueAsNestedList("ckpt_name");
+    }
+    
+    /// <summary>
+    /// Get a list of strings representing available sampler names
+    /// </summary>
+    public async Task<List<string>?> GetSamplerNamesAsync(CancellationToken cancellationToken = default)
+    {
+        const string samplerType = "KSampler";
+        var response = await comfyApi.GetObjectInfo(samplerType, cancellationToken).ConfigureAwait(false);
+
+        var info = response[samplerType];
+        return info.Input.GetRequiredValueAsNestedList("sampler_name");
     }
 
     protected override void Dispose(bool disposing)

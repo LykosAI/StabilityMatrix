@@ -36,6 +36,7 @@
                             VerticalAlignment="Center"
                             Text="Model" />
                         <ui:FAComboBox 
+                            ItemsSource="{Binding ClientManager.ModelNames}"
                             SelectedItem="{Binding SelectedModelName, Mode=TwoWay}"
                             IsEditable="True"
                             Grid.Column="1" 

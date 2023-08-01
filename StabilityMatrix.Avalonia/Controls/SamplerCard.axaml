@@ -28,7 +28,7 @@
                                 Grid.Row="0"
                                 Grid.Column="1"
                                 IsEditable="True"
-                                ItemsSource="{Binding Samplers}"
+                                ItemsSource="{Binding ClientManager.Samplers}"
                                 SelectedItem="{Binding SelectedSampler, Mode=TwoWay}"
                                 Margin="8,0,0,8"
                                 HorizontalAlignment="Stretch"/>

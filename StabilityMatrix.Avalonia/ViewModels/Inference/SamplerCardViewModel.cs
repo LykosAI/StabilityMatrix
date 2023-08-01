@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -14,5 +15,11 @@ public partial class SamplerCardViewModel : ViewModelBase
     [ObservableProperty] private int height;
     
     [ObservableProperty] private string? selectedSampler;
-    [ObservableProperty] private IReadOnlyList<string> samplers = new List<string>();
+    
+    public IInferenceClientManager ClientManager { get; }
+
+    public SamplerCardViewModel(IInferenceClientManager clientManager)
+    {
+        ClientManager = clientManager;
+    }
 }

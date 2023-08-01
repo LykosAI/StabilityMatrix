@@ -44,12 +44,12 @@
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top">
                     <Button 
-                        IsVisible="{Binding !IsConnected}"
+                        IsVisible="{Binding !ClientManager.IsConnected}"
                         Command="{Binding ConnectCommand}"
                         Classes="accent"
                         Content="Connect"/> 
                     <Button 
-                        IsVisible="{Binding IsConnected}"
+                        IsVisible="{Binding ClientManager.IsConnected}"
                         Command="{Binding DisconnectCommand}"
                         Content="Disconnect"/> 
                     <TextBlock

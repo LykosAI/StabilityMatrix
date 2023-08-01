@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
@@ -21,10 +22,15 @@ public partial class InferenceTextToImageViewModel : ViewModelBase
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     
     private readonly INotificationService notificationService;
+    private readonly ServiceManager<ViewModelBase> vmFactory;
+
+    public IInferenceClientManager ClientManager { get; }
+
+    // These are set in OnLoaded due to needing the vmFactory
+    [NotNull] public SeedCardViewModel? SeedCardViewModel { get; private set; }
+    [NotNull] public SamplerCardViewModel? SamplerCardViewModel { get; private set; }
     
     public InferenceViewModel? Parent { get; set; }
-    public SeedCardViewModel SeedCardViewModel { get; init; } = new();
-    public SamplerCardViewModel SamplerCardViewModel { get; init; } = new();
     
     public TextDocument PromptDocument { get; } = new();
     public TextDocument NegativePromptDocument { get; } = new();
@@ -37,12 +43,27 @@ public partial class InferenceTextToImageViewModel : ViewModelBase
 
     [ObservableProperty] private string? outputImageSource;
 
-    public InferenceTextToImageViewModel(INotificationService notificationService)
+    public InferenceTextToImageViewModel(
+        INotificationService notificationService, 
+        IInferenceClientManager inferenceClientManager,
+        ServiceManager<ViewModelBase> vmFactory)
     {
         this.notificationService = notificationService;
+        this.vmFactory = vmFactory;
+        ClientManager = inferenceClientManager;
+    }
+
+    public override void OnLoaded()
+    {
+        base.OnLoaded();
+        
+        // ReSharper disable twice NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+        SeedCardViewModel ??= vmFactory.Get<SeedCardViewModel>();
+        SamplerCardViewModel ??= vmFactory.Get<SamplerCardViewModel>();
+        
         SetDefaults();
     }
-    
+
     private void SetDefaults()
     {
         SelectedModelName = "v1-5-pruned-emaonly.safetensors";
@@ -179,13 +200,13 @@ public partial class InferenceTextToImageViewModel : ViewModelBase
     [RelayCommand]
     private async Task GenerateImage()
     {
-        var client = Parent?.Client;
-
-        if (client is null)
+        if (!ClientManager.IsConnected)
         {
             notificationService.Show("Client not connected", "Please connect first");
             return;
         }
+
+        var client = ClientManager.Client;
         
         var nodes = GetCurrentPrompt();
 

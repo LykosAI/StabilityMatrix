@@ -247,6 +247,8 @@ public sealed class App : Application
         services.AddTransient<CheckpointFolder>();
         services.AddTransient<CheckpointFile>();
         services.AddTransient<InferenceTextToImageViewModel>();
+        services.AddTransient<SeedCardViewModel>();
+        services.AddTransient<SamplerCardViewModel>();
         
         // Global progress
         services.AddSingleton<ProgressManagerViewModel>();
@@ -270,6 +272,8 @@ public sealed class App : Application
                 .Register(provider.GetRequiredService<EnvVarsViewModel>)
                 .Register(provider.GetRequiredService<ProgressManagerViewModel>)
                 .Register(provider.GetRequiredService<InferenceTextToImageViewModel>)
+                .Register(provider.GetRequiredService<SeedCardViewModel>)
+                .Register(provider.GetRequiredService<SamplerCardViewModel>)
                 .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>));
     }
 
@@ -332,6 +336,7 @@ public sealed class App : Application
         services.AddSingleton<INotificationService, NotificationService>();
         services.AddSingleton<IPyRunner, PyRunner>();
         services.AddSingleton<IUpdateHelper, UpdateHelper>();
+        services.AddSingleton<IInferenceClientManager, InferenceClientManager>();
 
         Config = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())

@@ -17,6 +17,12 @@ public interface IComfyApi
         string promptId,
         CancellationToken cancellationToken = default
     );
+    
+    [Get("/object_info/{nodeType}")]
+    Task<Dictionary<string, ComfyObjectInfo>> GetObjectInfo(
+        string nodeType,
+        CancellationToken cancellationToken = default
+    );
 
     [Get("/view")]
     Task<Stream> GetImage(

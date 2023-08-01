@@ -217,9 +217,15 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
             var updateCards = models
                 .Select(model =>
                 {
-                    if (cache.Get(model.Id) != null)
+                    var cachedViewModel = cache.Get(model.Id);
+                    if (cachedViewModel != null)
                     {
-                        return cache.Get(model.Id);
+                        if (!cachedViewModel.IsImporting)
+                        {
+                            cache.Remove(model.Id);
+                        }
+
+                        return cachedViewModel;
                     }
 
                     var newCard = new CheckpointBrowserCardViewModel(model,

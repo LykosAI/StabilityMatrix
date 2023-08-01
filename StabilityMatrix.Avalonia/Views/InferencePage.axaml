@@ -26,6 +26,7 @@
             TabStripHeader=""
             AddTabButtonCommand="{Binding AddTabCommand}"
             TabItems="{Binding Tabs}"
+            SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
             TabWidthMode="SizeToContent">
             <ui:TabView.TabItemTemplate>
                 <DataTemplate DataType="{x:Type vmInference:InferenceTextToImageViewModel}">

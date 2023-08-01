@@ -30,6 +30,9 @@ public partial class InferenceViewModel : PageViewModelBase, IDisposable
     public bool IsConnected => Client is not null;
     
     public AvaloniaList<ViewModelBase> Tabs { get; } = new();
+    
+    [ObservableProperty]
+    private ViewModelBase? selectedTab;
 
     public InferenceViewModel(ServiceManager<ViewModelBase> vmFactory, IApiFactory apiFactory, INotificationService notificationService)
     {
@@ -52,6 +55,13 @@ public partial class InferenceViewModel : PageViewModelBase, IDisposable
         {
             Tabs.Add(CreateTextToImageViewModel());
         }
+        
+        // Select first tab if none is selected
+        if (SelectedTab is null && Tabs.Count > 0)
+        {
+            SelectedTab = Tabs[0];
+        }
+        
         base.OnLoaded();
     }
 

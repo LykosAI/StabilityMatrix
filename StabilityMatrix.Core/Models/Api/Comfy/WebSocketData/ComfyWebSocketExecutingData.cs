@@ -11,5 +11,5 @@ public class ComfyWebSocketExecutingData
     /// When this is null it indicates completed
     /// </summary>
     [JsonPropertyName("node")]
-    public required int? Node { get; set; }
+    public required string? Node { get; set; }
 }

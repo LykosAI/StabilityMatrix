@@ -13,13 +13,13 @@ public interface IComfyApi
     );
 
     [Get("/history/{promptId}")]
-    Task<ComfyHistoryResponse> GetHistory(
+    Task<Dictionary<string, ComfyHistoryResponse>> GetHistory(
         string promptId,
         CancellationToken cancellationToken = default
     );
 
     [Get("/view")]
-    Task<Stream> DownloadImage(
+    Task<Stream> GetImage(
         string filename,
         string subfolder,
         string type,

@@ -389,6 +389,16 @@ public sealed class App : Application
             ContentSerializer =
                 new SystemTextJsonContentSerializer(jsonSerializerOptions)
         };
+        
+        // Refit settings for IApiFactory
+        var defaultSystemTextJsonSettings =
+            SystemTextJsonContentSerializer.GetDefaultJsonSerializerOptions();
+        defaultSystemTextJsonSettings.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        var apiFactoryRefitSettings = new RefitSettings
+        {
+            ContentSerializer =
+                new SystemTextJsonContentSerializer(defaultSystemTextJsonSettings),
+        };
 
         // HTTP Policies
         var retryStatusCodes = new[]
@@ -440,11 +450,14 @@ public sealed class App : Application
         services.AddHttpClient("A3Client")
             .AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));
 
+        /*services.AddHttpClient("IComfyApi")
+            .AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));*/
+        
         // Add Refit client factory
         services.AddSingleton<IApiFactory, ApiFactory>(provider =>
             new ApiFactory(provider.GetRequiredService<IHttpClientFactory>())
             {
-                RefitSettings = defaultRefitSettings,
+                RefitSettings = apiFactoryRefitSettings,
             });
         
         // Add logging

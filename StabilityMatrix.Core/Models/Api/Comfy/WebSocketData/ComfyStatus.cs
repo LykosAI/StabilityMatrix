@@ -2,8 +2,8 @@
 
 namespace StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 
-public record struct ComfyStatus
+public record ComfyStatus
 {
     [JsonPropertyName("exec_info")]
-    public required int ExecInfo { get; set; }
+    public required ComfyStatusExecInfo ExecInfo { get; set; }
 }

@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Controls.Notifications;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Api.Comfy;
-using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -16,6 +19,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public partial class InferenceTextToImageViewModel : ViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    
+    private readonly INotificationService notificationService;
     
     public InferenceViewModel? Parent { get; set; }
     public SeedCardViewModel SeedCardViewModel { get; init; } = new();
@@ -28,11 +33,13 @@ public partial class InferenceTextToImageViewModel : ViewModelBase
 
     [ObservableProperty] private int progressCurrent;
     [ObservableProperty] private int progressMax;
+    [ObservableProperty] private bool isProgressIndeterminate;
 
     [ObservableProperty] private string? outputImageSource;
 
-    public InferenceTextToImageViewModel()
+    public InferenceTextToImageViewModel(INotificationService notificationService)
     {
+        this.notificationService = notificationService;
         SetDefaults();
     }
     
@@ -162,22 +169,52 @@ public partial class InferenceTextToImageViewModel : ViewModelBase
         return prompt;
     }
 
+    private void OnProgressUpdateReceived(object? sender, ComfyWebSocketProgressData args)
+    {
+        ProgressCurrent = args.Value;
+        ProgressMax = args.Max;
+        IsProgressIndeterminate = false;
+    }
+
     [RelayCommand]
     private async Task GenerateImage()
     {
+        var client = Parent?.Client;
+
+        if (client is null)
+        {
+            notificationService.Show("Client not connected", "Please connect first");
+            return;
+        }
+        
         var nodes = GetCurrentPrompt();
 
-        var client = Parent!.Client!;
+        // Connect progress handler
+        IsProgressIndeterminate = true;
+        client.ProgressUpdateReceived += OnProgressUpdateReceived;
         
-        // Progress handler
-        var progress = new Progress<ProgressReport>(report =>
+        try
         {
-            ProgressCurrent = Convert.ToInt32(report.Current);
-            ProgressMax = Convert.ToInt32(report.Total);
-        });
+            var (response, promptTask) = await client.QueuePromptAsync(nodes);
+            Logger.Info(response);
 
-        var results = await client.ExecutePromptAsync(nodes, progress);
-        
-        Logger.Info(results);
+            // Wait for prompt to finish
+            await promptTask;
+            Logger.Trace($"Prompt task {response.PromptId} finished");
+
+            // Get output images
+            var outputs = await client.GetImagesForExecutedPromptAsync(response.PromptId);
+            
+            // Only get the SaveImage from node 9
+            var images = outputs["9"]?.FirstOrDefault();
+
+            OutputImageSource = images?.ToUri(client.BaseAddress).ToString();
+        }
+        finally
+        {
+            // Disconnect progress handler
+            ProgressCurrent = 0;
+            client.ProgressUpdateReceived -= OnProgressUpdateReceived;
+        }
     }
 }

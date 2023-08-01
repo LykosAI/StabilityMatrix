@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Models;
@@ -51,7 +52,16 @@ public static class DesignData
                         DisplayName = "My Installed Package",
                         PackageName = "stable-diffusion-webui",
                         PackageVersion = "v1.0.0",
-                        LibraryPath = $"Packages{Environment.NewLine}example-webui",
+                        LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
+                        LastUpdateCheck = DateTimeOffset.Now
+                    },
+                    new()
+                    {
+                        Id = Guid.NewGuid(),
+                        DisplayName = "Dank Diffusion",
+                        PackageName = "dank-diffusion",
+                        PackageVersion = "v2.0.0",
+                        LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
                         LastUpdateCheck = DateTimeOffset.Now
                     }
                 },
@@ -86,6 +96,10 @@ public static class DesignData
         App.ConfigurePageViewModels(services);
         App.ConfigureDialogViewModels(services);
         App.ConfigureViews(services);
+        
+        // Override Launch page with mock
+        services.Remove(ServiceDescriptor.Singleton<LaunchPageViewModel, LaunchPageViewModel>());
+        services.AddSingleton<LaunchPageViewModel, MockLaunchPageViewModel>();
         
         Services = services.BuildServiceProvider();
 
@@ -127,13 +141,13 @@ public static class DesignData
         {
             new(settingsManager, downloadService, modelFinder)
             {
-                Title = "Lora",
-                DirectoryPath = "Packages/lora",
-                CheckpointFiles = new ObservableCollection<CheckpointFile>
+                Title = "StableDiffusion",
+                DirectoryPath = "Models/StableDiffusion",
+                CheckpointFiles = new AdvancedObservableList<CheckpointFile>
                 {
                     new()
                     {
-                        FilePath = "~/Models/Lora/electricity-light.safetensors",
+                        FilePath = "~/Models/StableDiffusion/electricity-light.safetensors",
                         Title = "Auroral Background",
                         PreviewImagePath = "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/" +
                                            "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
@@ -142,7 +156,7 @@ public static class DesignData
                             VersionName = "Lightning Auroral",
                             BaseModel = "SD 1.5",
                             ModelName = "Auroral Background",
-                            ModelType = CivitModelType.LORA,
+                            ModelType = CivitModelType.Model,
                             FileMetadata = new CivitFileMetadata
                             {
                                 Format = CivitModelFormat.SafeTensor,
@@ -160,14 +174,22 @@ public static class DesignData
             },
             new(settingsManager, downloadService, modelFinder)
             {
-                Title = "VAE",
-                DirectoryPath = "Packages/VAE",
-                CheckpointFiles = new ObservableCollection<CheckpointFile>
+                Title = "Lora",
+                DirectoryPath = "Packages/Lora",
+                SubFolders = new AdvancedObservableList<CheckpointFolder>()
+                {
+                    new(settingsManager, downloadService, modelFinder)
+                    {
+                        Title = "StableDiffusion",
+                        DirectoryPath = "Packages/Lora/Subfolder",
+                    }
+                },
+                CheckpointFiles = new AdvancedObservableList<CheckpointFile>
                 {
                     new()
                     {
-                        FilePath = "~/Models/VAE/vae_v2.pt",
-                        Title = "VAE v2",
+                        FilePath = "~/Models/Lora/lora_v2.pt",
+                        Title = "Best Lora v2",
                     }
                 }
             }
@@ -297,6 +319,14 @@ public static class DesignData
                 viewModel.Exception = e;
             }
         });
+
+    public static EnvVarsViewModel EnvVarsViewModel => DialogFactory.Get<EnvVarsViewModel>(viewModel =>
+    {
+        viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>
+        {
+            new("UWU", "TRUE"),
+        };
+    });
 
     public static RefreshBadgeViewModel RefreshBadgeViewModel => new()
     {

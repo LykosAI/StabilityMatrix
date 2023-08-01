@@ -213,14 +213,12 @@ public class SettingsManager : ISettingsManager
     /// </summary>
     public void SetLibraryPath(string path)
     {
-        var appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var homeDir = Path.Combine(appDataDir, "StabilityMatrix");
-        Directory.CreateDirectory(homeDir);
-        var libraryJsonPath = Path.Combine(homeDir, "library.json");
+        Compat.AppDataHome.Create();
+        var libraryJsonFile = Compat.AppDataHome.JoinFile("library.json");
 
         var library = new LibrarySettings { LibraryPath = path };
         var libraryJson = JsonSerializer.Serialize(library, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(libraryJsonPath, libraryJson);
+        libraryJsonFile.WriteAllText(libraryJson);
         
         // actually create the LibraryPath directory
         Directory.CreateDirectory(path);
@@ -436,34 +434,31 @@ public class SettingsManager : ISettingsManager
         if (Settings.InstalledModelHashes.Any())
             return;
 
-        Task.Run(() =>
+        var sw = new Stopwatch();
+        sw.Start();
+
+        var modelHashes = new HashSet<string>();
+        var sharedModelDirectory = Path.Combine(LibraryDir, "Models");
+        
+        if (!Directory.Exists(sharedModelDirectory)) return;
+        
+        var connectedModelJsons = Directory.GetFiles(sharedModelDirectory, "*.cm-info.json",
+            SearchOption.AllDirectories);
+        foreach (var jsonFile in connectedModelJsons)
         {
-            var sw = new Stopwatch();
-            sw.Start();
+            var json = File.ReadAllText(jsonFile);
+            var connectedModel = JsonSerializer.Deserialize<ConnectedModelInfo>(json);
 
-            var modelHashes = new HashSet<string>();
-            var sharedModelDirectory = Path.Combine(LibraryDir, "Models");
-            
-            if (!Directory.Exists(sharedModelDirectory)) return;
-            
-            var connectedModelJsons = Directory.GetFiles(sharedModelDirectory, "*.cm-info.json",
-                SearchOption.AllDirectories);
-            foreach (var jsonFile in connectedModelJsons)
+            if (connectedModel?.Hashes.BLAKE3 != null)
             {
-                var json = File.ReadAllText(jsonFile);
-                var connectedModel = JsonSerializer.Deserialize<ConnectedModelInfo>(json);
-
-                if (connectedModel?.Hashes.BLAKE3 != null)
-                {
-                    modelHashes.Add(connectedModel.Hashes.BLAKE3);
-                }
+                modelHashes.Add(connectedModel.Hashes.BLAKE3);
             }
+        }
 
-            Transaction(s => s.InstalledModelHashes = modelHashes);
-            
-            sw.Stop();
-            Logger.Info($"Indexed {modelHashes.Count} checkpoints in {sw.ElapsedMilliseconds}ms");
-        }).SafeFireAndForget();
+        Transaction(s => s.InstalledModelHashes = modelHashes);
+        
+        sw.Stop();
+        Logger.Info($"Indexed {modelHashes.Count} checkpoints in {sw.ElapsedMilliseconds}ms");
     }
 
     /// <summary>

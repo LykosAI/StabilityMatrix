@@ -88,6 +88,15 @@
                 </Style>
             </Style>
             
+            <!-- Transparent -->
+            <Style Selector="controls|Card.transparent">
+                <Setter Property="Background" Value="{DynamicResource ThemeControlTransparentBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ThemeControlTransparentBrush}" />
+                <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
+                </Style>
+            </Style>
+            
         </Styles>
     </ControlTheme>
 </ResourceDictionary>

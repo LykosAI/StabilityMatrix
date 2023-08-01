@@ -215,7 +215,8 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             await InstallPackage();
 
             InstallProgress.Text = "Setting up shared folder links...";
-            sharedFolders.SetupLinksForPackage(SelectedPackage, SelectedPackage.InstallLocation);
+            await SelectedPackage.SetupModelFolders(SelectedPackage.InstallLocation);
+            //sharedFolders.SetupLinksForPackage(SelectedPackage, SelectedPackage.InstallLocation);
             
             InstallProgress.Text = "Done";
             InstallProgress.IsIndeterminate = false;
@@ -322,7 +323,6 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         
         var dialog = new ContentDialog
         {
-            Title = "Test title",
             PrimaryButtonText = "Open in Browser",
             CloseButtonText = "Close",
             Content = new Image

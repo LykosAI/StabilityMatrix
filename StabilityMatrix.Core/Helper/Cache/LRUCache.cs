@@ -52,6 +52,15 @@ public class LRUCache<TK,TV> where TK : notnull
         cacheMap[key] = node;
     }
 
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    public void Remove(TK key)
+    {
+        if (!cacheMap.TryGetValue(key, out var node)) return;
+        
+        lruList.Remove(node);
+        cacheMap.Remove(key);
+    }
+
     private void RemoveFirst()
     {
         // Remove from LRUPriority

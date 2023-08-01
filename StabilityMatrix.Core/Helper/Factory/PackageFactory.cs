@@ -24,4 +24,6 @@ public class PackageFactory : IPackageFactory
         return packageName == null ? null : 
             basePackages.GetValueOrDefault(packageName);
     }
+
+    public BasePackage? this[string packageName] => basePackages[packageName];
 }

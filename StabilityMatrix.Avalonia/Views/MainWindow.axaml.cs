@@ -16,6 +16,7 @@ using FluentAvalonia.Styling;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media;
 using FluentAvalonia.UI.Windowing;
+using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
@@ -52,6 +53,17 @@ public partial class MainWindow : AppWindowBase
         {
             TryEnableMicaEffect();
         }
+    }
+
+    protected override void OnClosing(WindowClosingEventArgs e)
+    {
+        // Show confirmation if package running
+        var launchPageViewModel = App.Services
+            .GetRequiredService<LaunchPageViewModel>();
+
+        launchPageViewModel.OnMainWindowClosing(e);
+        
+        base.OnClosing(e);
     }
 
     protected override void OnLoaded(RoutedEventArgs e)

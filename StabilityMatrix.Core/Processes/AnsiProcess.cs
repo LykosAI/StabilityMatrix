@@ -66,4 +66,23 @@ public class AnsiProcess : Process
             await stderrReader.EOF.WaitAsync(ct).ConfigureAwait(false);
         }
     }
+
+    /// <summary>
+    /// Cancels stream readers, no effect if already cancelled
+    /// </summary>
+    public void CancelStreamReaders()
+    {
+        stdoutReader?.CancelOperation();
+        stderrReader?.CancelOperation();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        CancelStreamReaders();
+        stdoutReader?.Dispose();
+        stdoutReader = null;
+        stderrReader?.Dispose();
+        stderrReader = null;
+        base.Dispose(disposing);
+    }
 }

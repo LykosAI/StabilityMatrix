@@ -50,14 +50,20 @@ public class DirectoryPath : FileSystemPath, IPathObject
     {
     }
 
+    /// <inheritdoc />
     public long GetSize()
     {
-        ulong size = 1 + 2;
         Info.Refresh();
         return Info.EnumerateFiles("*", SearchOption.AllDirectories)
             .Sum(file => file.Length);
     }
     
+    /// <summary>
+    /// Gets the size of the directory.
+    /// </summary>
+    /// <param name="includeSymbolicLinks">
+    /// Whether to include files and subdirectories that are symbolic links / reparse points.
+    /// </param>
     public long GetSize(bool includeSymbolicLinks)
     {
         if (includeSymbolicLinks) return GetSize();
@@ -72,24 +78,39 @@ public class DirectoryPath : FileSystemPath, IPathObject
         return files + subDirs;
     }
 
+    /// <summary>
+    /// Gets the size of the directory asynchronously.
+    /// </summary>
+    /// <param name="includeSymbolicLinks">
+    /// Whether to include files and subdirectories that are symbolic links / reparse points.
+    /// </param>
     public Task<long> GetSizeAsync(bool includeSymbolicLinks)
     {
         return Task.Run(() => GetSize(includeSymbolicLinks));
     }
     
-    /// <summary> Creates the directory. </summary>
+    /// <summary>
+    /// Creates the directory.
+    /// </summary>
     public void Create() => Directory.CreateDirectory(FullPath);
 
-    /// <summary> Deletes the directory. </summary>
+    /// <summary>
+    /// Deletes the directory.
+    /// </summary>
     public void Delete() => Directory.Delete(FullPath);
     
     /// <summary> Deletes the directory asynchronously. </summary>
     public Task DeleteAsync() => Task.Run(Delete);
-    
-    /// <summary> Deletes the directory. </summary>
-    public void Delete(bool recursive) => Directory.Delete(FullPath, recursive);
 
-    /// <summary> Deletes the directory asynchronously. </summary>
+    /// <summary>
+    /// Deletes the directory.
+    /// </summary>
+    /// <param name="recursive">Whether to delete subdirectories and files.</param>
+    public void Delete(bool recursive) => Info.Delete(recursive);
+
+    /// <summary>
+    /// Deletes the directory asynchronously.
+    /// </summary>
     public Task DeleteAsync(bool recursive) => Task.Run(() => Delete(recursive));
     
     /// <summary>

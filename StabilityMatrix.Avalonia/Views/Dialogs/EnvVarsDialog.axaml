@@ -1,0 +1,97 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+                          xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+                          xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+                          d:DataContext="{x:Static mocks:DesignData.EnvVarsViewModel}"
+                          x:DataType="dialogs:EnvVarsViewModel"
+                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.EnvVarsDialog">
+    
+    <controls:UserControlBase.Styles>
+        <Style Selector="DataGridRow:not(:selected) /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="{DynamicResource ComboBoxItemBackgroundSelected}"/>
+        </Style>
+        <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+            <Setter Property="Fill" Value="{DynamicResource ComboBoxItemBackgroundPointerOver}"/>
+        </Style>
+    </controls:UserControlBase.Styles>
+    
+    <controls:UserControlBase.Resources>
+        <DataTemplate x:Key="DataGridCellDividerTemplate">
+            <Rectangle VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Fill="#08ffffff"/>
+        </DataTemplate>
+    </controls:UserControlBase.Resources>
+    
+    <Grid RowDefinitions="Auto,Auto,*" MinHeight="300" Margin="8">
+        <StackPanel
+            HorizontalAlignment="Stretch"
+            Spacing="4"
+            Margin="0,0,0,0"
+            Orientation="Vertical">
+            <!--  Title  -->
+            <TextBlock
+                FontSize="24"
+                FontWeight="Bold"
+                Margin="16,16,16,0"
+                Text="{Binding Title}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+        
+        <Panel Grid.Row="1">
+            <ui:CommandBar>
+                <ui:CommandBar.PrimaryCommands>
+                    <ui:CommandBarButton Width="45" Height="50" 
+                                         IconSource="Add" 
+                                         Label="Save" 
+                                         Command="{Binding AddRowCommand}"/>
+                    <ui:CommandBarButton Width="45" Height="50" 
+                                         IconSource="Remove" 
+                                         Label="Undo" 
+                                         CommandParameter="{Binding #EnvVarsGrid.SelectedIndex}"
+                                         Command="{Binding RemoveSelectedRowCommand}">
+                        <ui:CommandBarButton.IsEnabled>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="!EnvVarsView.IsEmpty" />
+                                <Binding ElementName="EnvVarsGrid" Path="SelectedItem" Converter="{x:Static ObjectConverters.IsNotNull}" />
+                            </MultiBinding>
+                        </ui:CommandBarButton.IsEnabled>
+                    </ui:CommandBarButton>
+                    <ui:CommandBarSeparator />
+                    <ui:CommandBarButton Width="45" Height="50" FontSize="5" IconSource="Copy" Label="Bold" />
+                </ui:CommandBar.PrimaryCommands>
+            </ui:CommandBar>
+        </Panel>
+
+        <!--  Option Cards  -->
+        <controls:Card Grid.Row="2" 
+                       Background="Transparent"
+                       VerticalAlignment="Stretch" 
+                       VerticalContentAlignment="Stretch">
+            <DataGrid 
+                x:Name="EnvVarsGrid"
+                MinHeight="200"
+                ItemsSource="{Binding EnvVarsView}" >
+                <DataGrid.Columns>
+                    <DataGridTextColumn x:DataType="models:EnvVarKeyPair" 
+                                        Width="5*"
+                                        FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                        Header="Name" 
+                                        Binding="{Binding Key}" />
+                    <DataGridTemplateColumn MinWidth="0" Width="1" CellTemplate="{StaticResource DataGridCellDividerTemplate}"/>
+                    <DataGridTextColumn x:DataType="models:EnvVarKeyPair" 
+                                        Width="5*"
+                                        FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                        Header="Value" 
+                                        Binding="{Binding Value}" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </controls:Card>
+
+    </Grid>
+    
+</controls:UserControlBase>

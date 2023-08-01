@@ -6,8 +6,6 @@ using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Core.Processes;
 
-public record struct ProcessResult(int ExitCode, string? StandardOutput, string? StandardError);
-
 public static class ProcessRunner
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -132,7 +130,7 @@ public static class ProcessRunner
         string arguments,
         string? workingDirectory = null,
         Action<string?>? outputDataReceived = null,
-        Dictionary<string, string>? environmentVariables = null)
+        IReadOnlyDictionary<string, string>? environmentVariables = null)
     {
         Logger.Debug($"Starting process '{fileName}' with arguments '{arguments}'");
         var info = new ProcessStartInfo
@@ -177,9 +175,10 @@ public static class ProcessRunner
         string arguments,
         string? workingDirectory = null,
         Action<ProcessOutput>? outputDataReceived = null,
-        Dictionary<string, string>? environmentVariables = null)
+        IReadOnlyDictionary<string, string>? environmentVariables = null)
     {
-        Logger.Debug($"Starting process '{fileName}' with arguments '{arguments}'");
+        Logger.Debug(
+            $"Starting process '{fileName}' with arguments '{arguments}' in working directory '{workingDirectory}'");
         var info = new ProcessStartInfo
         {
             FileName = fileName,
@@ -258,7 +257,12 @@ public static class ProcessRunner
         
         await process.WaitForExitAsync().ConfigureAwait(false);
 
-        return new ProcessResult(process.ExitCode, stdout.ToString(), stderr.ToString());
+        return new ProcessResult
+        {
+            ExitCode = process.ExitCode, 
+            StandardOutput = stdout.ToString(), 
+            StandardError = stderr.ToString()
+        };
     }
     
     public static Task<ProcessResult> RunBashCommand(
@@ -316,7 +320,8 @@ public static class ProcessRunner
         var stderr = new StringBuilder();
         process.OutputDataReceived += (_, args) => stdout.Append(args.Data);
         process.ErrorDataReceived += (_, args) => stderr.Append(args.Data);
-        await process.WaitForExitAsync(cancelToken);
-        await ValidateExitConditionAsync(process, expectedExitCode, stdout.ToString(), stderr.ToString());
+        await process.WaitForExitAsync(cancelToken).ConfigureAwait(false);
+        await ValidateExitConditionAsync(process, expectedExitCode, stdout.ToString(), stderr.ToString())
+            .ConfigureAwait(false);
     }
 }

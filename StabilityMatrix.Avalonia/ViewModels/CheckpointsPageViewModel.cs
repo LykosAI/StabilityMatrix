@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -36,7 +37,9 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     [ObservableProperty] private bool isImportAsConnected;
     [ObservableProperty] private bool isLoading;
     [ObservableProperty] private bool isIndexing;
-    [ObservableProperty] private string searchFilter;
+    
+    [ObservableProperty]
+    private string searchFilter = string.Empty;
 
     partial void OnIsImportAsConnectedChanged(bool value)
     {
@@ -47,7 +50,8 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         }
     }
 
-    [ObservableProperty] private ObservableCollection<CheckpointFolder> checkpointFolders = new();
+    [ObservableProperty]
+    private ObservableCollection<CheckpointFolder> checkpointFolders = new();
 
     [ObservableProperty]
     private ObservableCollection<CheckpointFolder> displayedCheckpointFolders = new();
@@ -70,19 +74,30 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
         // Set UI states
         IsImportAsConnected = settingsManager.Settings.IsImportAsConnected;
-        SearchFilter = string.Empty;
+        // Refresh search filter
+        OnSearchFilterChanged(string.Empty);
         
         if (Design.IsDesignMode) return;
-        
-        IsLoading = CheckpointFolders.Count == 0;
-        IsIndexing = CheckpointFolders.Count > 0;
-        await IndexFolders();
-        IsLoading = false;
-        IsIndexing = false;
+
+        await Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            IsLoading = CheckpointFolders.Count == 0;
+            IsIndexing = CheckpointFolders.Count > 0;
+            await IndexFolders();
+            IsLoading = false;
+            IsIndexing = false;
+        });
     }
 
+    // ReSharper disable once UnusedParameterInPartialMethod
     partial void OnSearchFilterChanged(string value)
     {
+        if (string.IsNullOrWhiteSpace(SearchFilter))
+        {
+            DisplayedCheckpointFolders = CheckpointFolders;
+            return;
+        }
+        
         var filteredFolders = CheckpointFolders
             .Where(ContainsSearchFilter).ToList();
         foreach (var folder in filteredFolders)
@@ -92,7 +107,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
         DisplayedCheckpointFolders = new ObservableCollection<CheckpointFolder>(filteredFolders);
     }
-
+    
     private bool ContainsSearchFilter(CheckpointFolder folder)
     {
         if (folder == null)
@@ -114,14 +129,9 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             CheckpointFolders.Clear();
             return;
         }
-
-        // Skip if the shared folder root doesn't exist
-        if (!Directory.Exists(modelsDirectory))
-        {
-            Logger.Debug($"Skipped shared folder index - {modelsDirectory} doesn't exist");
-            CheckpointFolders.Clear();
-            return;
-        }
+        
+        // Setup shared folders in case they're missing
+        sharedFolders.SetupSharedModelFolders();
 
         var folders = Directory.GetDirectories(modelsDirectory);
 
@@ -146,8 +156,17 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             new ObservableCollection<CheckpointFolder>(indexTasks
                 .Select(t => t.Result)
                 .OrderBy(f => f.Title));
-        DisplayedCheckpointFolders = new ObservableCollection<CheckpointFolder>(CheckpointFolders
-            .Where(x => x.CheckpointFiles.Any(y => y.FileName.Contains(SearchFilter))));
+
+        if (!string.IsNullOrWhiteSpace(SearchFilter))
+        {
+            DisplayedCheckpointFolders = new ObservableCollection<CheckpointFolder>(
+                CheckpointFolders
+                    .Where(x => x.CheckpointFiles.Any(y => y.FileName.Contains(SearchFilter))));
+        }
+        else
+        {
+            DisplayedCheckpointFolders = CheckpointFolders;
+        }
     }
 
     [RelayCommand]

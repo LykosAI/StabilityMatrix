@@ -216,6 +216,11 @@
                         <ui:MenuFlyoutItem Text="Show in Explorer" IconSource="Open"
                                            Command="{Binding ShowInExplorerCommand}"
                                            CommandParameter="{Binding DirectoryPath}"/>
+                        <!-- Only allow deletion of non-root folders (Parent is not null) -->
+                        <ui:MenuFlyoutItem Text="Delete" IconSource="Delete"
+                                           IsEnabled="{Binding ParentFolder, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                           IsVisible="{Binding ParentFolder, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                           Command="{Binding DeleteCommand}"/>
                         <ui:MenuFlyoutSeparator/>
                         <ui:MenuFlyoutSubItem Text="New" IconSource="Add">
                             <ui:MenuFlyoutSubItem.Items>
@@ -255,6 +260,15 @@
                             </ItemsRepeater.Layout>
                             <TextBlock Text="Hi"/>
                         </ItemsRepeater>
+                        <TextBlock VerticalAlignment="Center"
+                                   TextAlignment="Center"
+                                   HorizontalAlignment="Center"
+                                   Margin="8"
+                                   IsVisible="{Binding !CheckpointFiles.Count}">
+                            <Run Text="Drag &amp; drop"/>
+                            <Run Text="{Binding FolderType}"/>
+                            <Run Text="checkpoints here to import"/>
+                        </TextBlock>
                         <!-- Blurred background for drag and drop -->
                         <Border
                             CornerRadius="8"

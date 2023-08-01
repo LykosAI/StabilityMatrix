@@ -26,39 +26,84 @@
     <Grid RowDefinitions="Auto,*,Auto">
         <Grid ColumnDefinitions="Auto,*,Auto"
               Margin="0,8,0, 8">
-            <Grid ColumnDefinitions="0.8*,0.2*">
-                <Button
+            <Grid ColumnDefinitions="0.8*,0.2*" Margin="16,8,0,0">
+                <!-- Use split if extra commands, otherwise normal launch button -->
+                <Grid 
+                    x:Name="LaunchButtonGrid"
                     Grid.Row="0"
-                    Grid.Column="0"
-                    Width="72"
-                    Name="LaunchBtn"
-                    Margin="16,8,0,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Stretch"
-                    Classes="success"
-                    Command="{Binding LaunchCommand}"
-                    Content="Launch" />
+                    Grid.Column="0">
+                    <Button
+                        Width="72"
+                        IsVisible="{Binding !SelectedBasePackage.ExtraLaunchCommands.Count, FallbackValue=False}"
+                        Classes="success"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Stretch"
+                        Command="{Binding LaunchCommand}"
+                        Content="Launch" />
+                    <SplitButton
+                        Width="104"
+                        IsVisible="{Binding !!SelectedBasePackage.ExtraLaunchCommands.Count, FallbackValue=False}"
+                        Classes="success"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Stretch"
+                        Command="{Binding LaunchCommand}"
+                        Content="Launch">
+                        <SplitButton.Flyout>
+                            <ui:FAMenuFlyout 
+                                Placement="Bottom"
+                                ItemsSource="{Binding SelectedPackageExtraCommands}">
+                                <ui:FAMenuFlyout.ItemTemplate>
+                                    <DataTemplate x:DataType="{x:Type system:String}">
+                                        <!-- ReSharper disable Xaml.PossibleNullReferenceException -->
+                                        <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                        <ui:MenuFlyoutItem
+                                            Text="{Binding}"
+                                            CommandParameter="{Binding}"
+                                            Command="{ReflectionBinding
+                                                    #LaunchButtonGrid.DataContext.LaunchCommand}"/>
+                                        <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                        <!-- ReSharper restore Xaml.PossibleNullReferenceException -->
+                                    </DataTemplate>
+                                </ui:FAMenuFlyout.ItemTemplate>
+                            </ui:FAMenuFlyout>
+                        </SplitButton.Flyout>
+                    </SplitButton>
+                </Grid>
+
                 <ui:TeachingTip Grid.Row="0" Grid.Column="0" Name="TeachingTip1"
-                                Target="{Binding #LaunchBtn}"
+                                Target="{Binding #LaunchButtonGrid}"
                                 Title="Click Launch to get started!"
                                 PreferredPlacement="BottomRight"
                                 IsOpen="{Binding IsLaunchTeachingTipsOpen}"/>
-                <Button
+                
+                <Grid 
+                    x:Name="StopButtonGrid"
+                    IsVisible="{Binding RunningPackage, Converter={x:Static ObjectConverters.IsNotNull}}"
                     Grid.Row="0"
-                    Grid.Column="0"
-                    Width="72"
-                    Margin="16,8,0,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Stretch"
-                    Classes="danger"
-                    Command="{Binding Stop}"
-                    Content="Stop"
-                    IsVisible="{Binding RunningPackage, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    Grid.Column="0">
+                    <Button
+                        Width="72"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Stretch"
+                        Classes="danger"
+                        Command="{Binding Stop}"
+                        Content="Stop"
+                        IsVisible="{Binding !SelectedBasePackage.ExtraLaunchCommands.Count, FallbackValue=False}" />
+                    <Button
+                        Width="104"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Stretch"
+                        Classes="danger"
+                        Command="{Binding Stop}"
+                        Content="Stop"
+                        IsVisible="{Binding !!SelectedBasePackage.ExtraLaunchCommands.Count, FallbackValue=False}" />
+                </Grid>
+                
                 <Button
                     Grid.Row="0"
                     Grid.Column="1"
                     Width="48"
-                    Margin="8,8,0,0"
+                    Margin="8,0,0,0"
                     Command="{Binding ConfigCommand}"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Stretch"
@@ -126,12 +171,10 @@
             <StackPanel Grid.Column="1" Margin="8" Spacing="4">
                 <!-- Info bar for manual input -->
                 <ui:InfoBar 
-                    Background="{DynamicResource ComboBoxItemBackground}"
+                    Severity="Warning"
                     Title="Input"
                     IsIconVisible="False"
                     IsClosable="False"
-                    Severity="Informational"
-                    Opacity="1"
                     IsOpen="{Binding ShowManualInputPrompt, Mode=TwoWay}" 
                     Margin="0">
                     <ui:InfoBar.ActionButton>
@@ -145,9 +188,8 @@
                 </ui:InfoBar>
                 <!-- Info bar for auto prompts -->
                 <ui:InfoBar 
-                    Background="{DynamicResource ComboBoxItemBackground}"
+                    Severity="Warning"
                     Title="Input required" 
-                    Severity="Informational"
                     IsOpen="{Binding ShowConfirmInputPrompt, Mode=TwoWay}" 
                     Margin="0"
                     Message="Confirm?">

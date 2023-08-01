@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Helper;
@@ -14,9 +16,14 @@ namespace StabilityMatrix.Core.Models.Packages;
 
 public class VladAutomatic : BaseGitPackage
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    
     public override string Name => "automatic";
     public override string DisplayName { get; set; } = "SD.Next Web UI";
     public override string Author => "vladmandic";
+    public override string LicenseType => "AGPL-3.0";
+    public override string LicenseUrl => 
+        "https://github.com/vladmandic/automatic/blob/master/LICENSE.txt";
     public override string Blurb => "Stable Diffusion implementation with advanced features";
     public override string LaunchCommand => "launch.py";
 
@@ -31,24 +38,25 @@ public class VladAutomatic : BaseGitPackage
     }
 
     // https://github.com/vladmandic/automatic/blob/master/modules/shared.py#L324
-    public override Dictionary<SharedFolderType, string> SharedFolders => new()
+    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders => new()
     {
-        [SharedFolderType.StableDiffusion] = "models/Stable-diffusion",
-        [SharedFolderType.Diffusers] = "models/Diffusers",
-        [SharedFolderType.VAE] = "models/VAE",
-        [SharedFolderType.TextualInversion] = "models/embeddings",
-        [SharedFolderType.Hypernetwork] = "models/hypernetworks",
-        [SharedFolderType.Codeformer] = "models/Codeformer",
-        [SharedFolderType.GFPGAN] = "models/GFPGAN",
-        [SharedFolderType.BSRGAN] = "models/BSRGAN",
-        [SharedFolderType.ESRGAN] = "models/ESRGAN",
-        [SharedFolderType.RealESRGAN] = "models/RealESRGAN",
-        [SharedFolderType.ScuNET] = "models/ScuNET",
-        [SharedFolderType.SwinIR] = "models/SwinIR",
-        [SharedFolderType.LDSR] = "models/LDSR",
-        [SharedFolderType.CLIP] = "models/CLIP",
-        [SharedFolderType.Lora] = "models/Lora",
-        [SharedFolderType.LyCORIS] = "models/LyCORIS",
+        [SharedFolderType.StableDiffusion] = new[] {"models/Stable-diffusion"},
+        [SharedFolderType.Diffusers] = new[] {"models/Diffusers"},
+        [SharedFolderType.VAE] = new[] {"models/VAE"},
+        [SharedFolderType.TextualInversion] = new[] {"models/embeddings"},
+        [SharedFolderType.Hypernetwork] = new[] {"models/hypernetworks"},
+        [SharedFolderType.Codeformer] = new[] {"models/Codeformer"},
+        [SharedFolderType.GFPGAN] = new[] {"models/GFPGAN"},
+        [SharedFolderType.BSRGAN] = new[] {"models/BSRGAN"},
+        [SharedFolderType.ESRGAN] = new[] {"models/ESRGAN"},
+        [SharedFolderType.RealESRGAN] = new[] {"models/RealESRGAN"},
+        [SharedFolderType.ScuNET] = new[] {"models/ScuNET"},
+        [SharedFolderType.SwinIR] = new[] {"models/SwinIR"},
+        [SharedFolderType.LDSR] = new[] {"models/LDSR"},
+        [SharedFolderType.CLIP] = new[] {"models/CLIP"},
+        [SharedFolderType.Lora] = new[] {"models/Lora"},
+        [SharedFolderType.LyCORIS] = new[] {"models/LyCORIS"},
+        [SharedFolderType.ControlNet] = new[] {"models/ControlNet"}
     };
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
@@ -142,12 +150,13 @@ public class VladAutomatic : BaseGitPackage
     
     public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
     {
-        progress?.Report(new ProgressReport(-1, isIndeterminate: true));
+        progress?.Report(new ProgressReport(-1f, "Installing dependencies...", isIndeterminate: true));
         // Setup venv
         var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
+        venvRunner.WorkingDirectory = InstallLocation;
         if (!venvRunner.Exists())
         {
-            await venvRunner.Setup();
+            await venvRunner.Setup().ConfigureAwait(false);
         }
 
         // Install torch / xformers based on gpu info
@@ -155,25 +164,28 @@ public class VladAutomatic : BaseGitPackage
         if (gpus.Any(g => g.IsNvidia))
         {
             Logger.Info("Starting torch install (CUDA)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, 
-                InstallLocation, OnConsoleOutput);
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, OnConsoleOutput)
+                .ConfigureAwait(false);
+            
             Logger.Info("Installing xformers...");
-            await venvRunner.PipInstall("xformers", InstallLocation, OnConsoleOutput);
+            await venvRunner.PipInstall("xformers", OnConsoleOutput).ConfigureAwait(false);
         }
         else if (gpus.Any(g => g.IsAmd))
         {
             Logger.Info("Starting torch install (DirectML)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, InstallLocation, OnConsoleOutput);
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, OnConsoleOutput)
+                .ConfigureAwait(false);
         }
         else
         {
             Logger.Info("Starting torch install (CPU)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, InstallLocation, OnConsoleOutput);
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, OnConsoleOutput)
+                .ConfigureAwait(false);
         }
 
         // Install requirements file
         Logger.Info("Installing requirements.txt");
-        await venvRunner.PipInstall($"-r requirements.txt", InstallLocation, OnConsoleOutput);
+        await venvRunner.PipInstall($"-r requirements.txt", OnConsoleOutput).ConfigureAwait(false);
         
         progress?.Report(new ProgressReport(1, isIndeterminate: false));
     }
@@ -181,10 +193,10 @@ public class VladAutomatic : BaseGitPackage
     public override async Task<string> DownloadPackage(string version, bool isCommitHash, IProgress<ProgressReport>? progress = null)
     {
         progress?.Report(new ProgressReport(0.1f, message: "Downloading package...", isIndeterminate: true, type: ProgressType.Download));
-
+    
         var installDir = new DirectoryPath(InstallLocation);
         installDir.Create();
-
+    
         await PrerequisiteHelper.RunGit(
             installDir.Parent ?? "", "clone", "https://github.com/vladmandic/automatic", installDir.Name)
             .ConfigureAwait(false);
@@ -195,9 +207,9 @@ public class VladAutomatic : BaseGitPackage
         return version;
     }
 
-    public override async Task RunPackage(string installedPackagePath, string arguments)
+    public override async Task RunPackage(string installedPackagePath, string command, string arguments)
     {
-        await SetupVenv(installedPackagePath);
+        await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -220,9 +232,63 @@ public class VladAutomatic : BaseGitPackage
             OnExit(i);
         }
 
-        var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
+        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
-        VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit, workingDirectory: installedPackagePath);
+        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
+    }
+
+    public override Task SetupModelFolders(DirectoryPath installDirectory)
+    {
+        var configJsonPath = installDirectory + "config.json";
+        var exists = File.Exists(configJsonPath);
+        JsonObject? configRoot;
+        if (exists)
+        {
+            var configJson = File.ReadAllText(configJsonPath);
+            try
+            {
+                configRoot = JsonSerializer.Deserialize<JsonObject>(configJson) ?? new JsonObject();
+            }
+            catch (JsonException)
+            {
+                configRoot = new JsonObject();
+            }
+        }
+        else
+        {
+            configRoot = new JsonObject();
+        }
+
+        configRoot["ckpt_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "StableDiffusion");
+        configRoot["diffusers_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "Diffusers");
+        configRoot["vae_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "VAE");
+        configRoot["lora_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "Lora");
+        configRoot["lyco_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "LyCORIS");
+        configRoot["embeddings_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "TextualInversion");
+        configRoot["hypernetwork_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "Hypernetwork");
+        configRoot["codeformer_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "Codeformer");
+        configRoot["gfpgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "GFPGAN");
+        configRoot["bsrgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "BSRGAN");
+        configRoot["esrgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "ESRGAN");
+        configRoot["realesrgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "RealESRGAN");
+        configRoot["scunet_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "ScuNET");
+        configRoot["swinir_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "SwinIR");
+        configRoot["ldsr_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "LDSR");
+        configRoot["clip_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "CLIP");
+        configRoot["control_net_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "ControlNet");
+        
+        var configJsonStr = JsonSerializer.Serialize(configRoot, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        File.WriteAllText(configJsonPath, configJsonStr);
+
+        return Task.CompletedTask;
+    }
+
+    public override Task UpdateModelFolders(DirectoryPath installDirectory)
+    {
+        return SetupModelFolders(installDirectory);
     }
 
     public override async Task<string> Update(InstalledPackage installedPackage,

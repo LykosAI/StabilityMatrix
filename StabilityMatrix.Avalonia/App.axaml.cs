@@ -152,7 +152,7 @@ public sealed class App : Application
 
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
         var windowSettings = settingsManager.Settings.WindowSettings;
-        if (windowSettings != null)
+        if (windowSettings != null && !Program.Args.ResetWindowPosition)
         {
             mainWindow.Position = new PixelPoint(windowSettings.X, windowSettings.Y);
             mainWindow.Width = windowSettings.Width;
@@ -165,12 +165,16 @@ public sealed class App : Application
         
         mainWindow.Closing += (_, _) =>
         {
+            var validWindowPosition =
+                mainWindow.Screens.All.Any(screen => screen.Bounds.Contains(mainWindow.Position));
+
             settingsManager.Transaction(s =>
-                {
-                    s.WindowSettings = new WindowSettings(
-                        mainWindow.Width, mainWindow.Height, 
-                        mainWindow.Position.X, mainWindow.Position.Y);
-                }, ignoreMissingLibraryDir: true);
+            {
+                s.WindowSettings = new WindowSettings(
+                    mainWindow.Width, mainWindow.Height,
+                    validWindowPosition ? mainWindow.Position.X : 0,
+                    validWindowPosition ? mainWindow.Position.Y : 0);
+            }, ignoreMissingLibraryDir: true);
         };
         mainWindow.Closed += (_, _) => Shutdown();
 
@@ -232,6 +236,7 @@ public sealed class App : Application
         services.AddTransient<SelectDataDirectoryViewModel>();
         services.AddTransient<LaunchOptionsViewModel>();
         services.AddTransient<ExceptionViewModel>();
+        services.AddTransient<EnvVarsViewModel>();
         services.AddSingleton<FirstLaunchSetupViewModel>();
         services.AddSingleton<UpdateViewModel>();
         
@@ -258,6 +263,7 @@ public sealed class App : Application
                 .Register(provider.GetRequiredService<CheckpointFile>)
                 .Register(provider.GetRequiredService<RefreshBadgeViewModel>)
                 .Register(provider.GetRequiredService<ExceptionViewModel>)
+                .Register(provider.GetRequiredService<EnvVarsViewModel>)
                 .Register(provider.GetRequiredService<ProgressManagerViewModel>)
                 .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>));
     }
@@ -277,6 +283,7 @@ public sealed class App : Application
         services.AddTransient<LaunchOptionsDialog>();
         services.AddTransient<UpdateDialog>();
         services.AddTransient<ExceptionDialog>();
+        services.AddTransient<EnvVarsDialog>();
         
         // Controls
         services.AddTransient<RefreshBadge>();
@@ -291,6 +298,8 @@ public sealed class App : Application
         services.AddSingleton<BasePackage, A3WebUI>();
         services.AddSingleton<BasePackage, VladAutomatic>();
         services.AddSingleton<BasePackage, ComfyUI>();
+        services.AddSingleton<BasePackage, VoltaML>();
+        services.AddSingleton<BasePackage, InvokeAI>();
     }
 
     private static IServiceCollection ConfigureServices()

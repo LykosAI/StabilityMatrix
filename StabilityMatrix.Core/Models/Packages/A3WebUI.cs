@@ -1,8 +1,11 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using NLog;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -12,10 +15,14 @@ namespace StabilityMatrix.Core.Models.Packages;
 
 public class A3WebUI : BaseGitPackage
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    
     public override string Name => "stable-diffusion-webui";
     public override string DisplayName { get; set; } = "Stable Diffusion WebUI";
     public override string Author => "AUTOMATIC1111";
-
+    public override string LicenseType => "AGPL-3.0";
+    public override string LicenseUrl => 
+        "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/master/LICENSE.txt";
     public override string Blurb =>
         "A browser interface based on Gradio library for Stable Diffusion";
     public override string LaunchCommand => "launch.py";
@@ -31,21 +38,21 @@ public class A3WebUI : BaseGitPackage
     }
 
     // From https://github.com/AUTOMATIC1111/stable-diffusion-webui/tree/master/models
-    public override Dictionary<SharedFolderType, string> SharedFolders => new()
+    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders => new()
     {
-        [SharedFolderType.StableDiffusion] = "models/Stable-diffusion",
-        [SharedFolderType.ESRGAN] = "models/ESRGAN",
-        [SharedFolderType.RealESRGAN] = "models/RealESRGAN",
-        [SharedFolderType.SwinIR] = "models/SwinIR",
-        [SharedFolderType.Lora] = "models/Lora",
-        [SharedFolderType.LyCORIS] = "models/LyCORIS",
-        [SharedFolderType.ApproxVAE] = "models/VAE-approx",
-        [SharedFolderType.VAE] = "models/VAE",
-        [SharedFolderType.DeepDanbooru] = "models/deepbooru",
-        [SharedFolderType.Karlo] = "models/karlo",
-        [SharedFolderType.TextualInversion] = "embeddings",
-        [SharedFolderType.Hypernetwork] = "models/hypernetworks",
-        [SharedFolderType.ControlNet] = "models/ControlNet"
+        [SharedFolderType.StableDiffusion] = new[] {"models/Stable-diffusion"},
+        [SharedFolderType.ESRGAN] = new[] {"models/ESRGAN"},
+        [SharedFolderType.RealESRGAN] = new[] {"models/RealESRGAN"},
+        [SharedFolderType.SwinIR] = new[] {"models/SwinIR"},
+        [SharedFolderType.Lora] = new[] {"models/Lora"},
+        [SharedFolderType.LyCORIS] = new[] {"models/LyCORIS"},
+        [SharedFolderType.ApproxVAE] = new[] {"models/VAE-approx"},
+        [SharedFolderType.VAE] = new[] {"models/VAE"},
+        [SharedFolderType.DeepDanbooru] = new[] {"models/deepbooru"},
+        [SharedFolderType.Karlo] = new[] {"models/karlo"},
+        [SharedFolderType.TextualInversion] = new[] {"embeddings"},
+        [SharedFolderType.Hypernetwork] = new[] {"models/hypernetworks"},
+        [SharedFolderType.ControlNet] = new[] {"models/ControlNet"}
     };
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
@@ -107,72 +114,65 @@ public class A3WebUI : BaseGitPackage
         },
         LaunchOptionDefinition.Extras
     };
-
+    
     public override async Task<string> GetLatestVersion()
     {
-        var release = await GetLatestRelease();
+        var release = await GetLatestRelease().ConfigureAwait(false);
         return release.TagName!;
-    }
-
-    public override async Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true)
-    {
-        if (isReleaseMode)
-        {
-            var allReleases = await GetAllReleases();
-            return allReleases.Where(r => r.Prerelease == false).Select(r => new PackageVersion
-                {TagName = r.TagName!, ReleaseNotesMarkdown = r.Body});
-        }
-
-        // else, branch mode
-        var allBranches = await GetAllBranches();
-        return allBranches.Select(b => new PackageVersion
-        {
-            TagName = $"{b.Name}",
-            ReleaseNotesMarkdown = string.Empty
-        });
     }
 
     public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
     {
         await UnzipPackage(progress);
         
-        progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
+        progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
         // Setup venv
-        var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
+        await using var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
+        venvRunner.WorkingDirectory = InstallLocation;
         if (!venvRunner.Exists())
         {
-            await venvRunner.Setup();
+            await venvRunner.Setup().ConfigureAwait(false);
         }
 
         // Install torch / xformers based on gpu info
         var gpus = HardwareHelper.IterGpuInfo().ToList();
         if (gpus.Any(g => g.IsNvidia))
         {
-            progress?.Report(new ProgressReport(-1, "Installing PyTorch for CUDA", isIndeterminate: true));
+            progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CUDA", isIndeterminate: true));
+            
             Logger.Info("Starting torch install (CUDA)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, 
-                InstallLocation, OnConsoleOutput);
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, OnConsoleOutput)
+                .ConfigureAwait(false);
+            
             Logger.Info("Installing xformers...");
-            await venvRunner.PipInstall("xformers", InstallLocation, OnConsoleOutput);
+            await venvRunner.PipInstall("xformers", OnConsoleOutput).ConfigureAwait(false);
         }
         else
         {
-            progress?.Report(new ProgressReport(-1, "Installing PyTorch for CPU", isIndeterminate: true));
+            progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CPU", isIndeterminate: true));
             Logger.Info("Starting torch install (CPU)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, InstallLocation, OnConsoleOutput);
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, OnConsoleOutput).ConfigureAwait(false);
         }
 
         // Install requirements file
-        progress?.Report(new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true));
+        progress?.Report(new ProgressReport(-1f, "Installing Package Requirements", isIndeterminate: true));
         Logger.Info("Installing requirements_versions.txt");
-        await venvRunner.PipInstall($"-r requirements_versions.txt", InstallLocation, OnConsoleOutput);
+        await venvRunner.PipInstall($"-r requirements_versions.txt", OnConsoleOutput).ConfigureAwait(false);
         
-        progress?.Report(new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false));
+        progress?.Report(new ProgressReport(1f, "Installing Package Requirements", isIndeterminate: false));
+        
+        progress?.Report(new ProgressReport(-1f, "Updating configuration", isIndeterminate: true));
+        // Create and add {"show_progress_type": "TAESD"} to config.json
+        var configPath = Path.Combine(InstallLocation, "config.json");
+        var config = new JsonObject {{"show_progress_type", "TAESD"}};
+        await File.WriteAllTextAsync(configPath, config.ToString()).ConfigureAwait(false);
+
+        progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
     }
 
-    public override async Task RunPackage(string installedPackagePath, string arguments)
+    public override async Task RunPackage(string installedPackagePath, string command, string arguments)
     {
-        await SetupVenv(installedPackagePath);
+        await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -190,8 +190,21 @@ public class A3WebUI : BaseGitPackage
             OnStartupComplete(WebUrl);
         }
 
-        var args = $"\"{Path.Combine(installedPackagePath, LaunchCommand)}\" {arguments}";
+        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
-        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit, workingDirectory: installedPackagePath);
+        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
+    }
+
+    public override Task SetupModelFolders(DirectoryPath installDirectory)
+    {
+        StabilityMatrix.Core.Helper.SharedFolders
+            .SetupLinks(SharedFolders, SettingsManager.ModelsDirectory, installDirectory);
+        return Task.CompletedTask;
+    }
+
+    public override async Task UpdateModelFolders(DirectoryPath installDirectory)
+    {
+        await StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(this,
+            SettingsManager.ModelsDirectory, installDirectory).ConfigureAwait(false);
     }
 }

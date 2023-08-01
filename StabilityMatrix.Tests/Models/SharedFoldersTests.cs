@@ -35,11 +35,11 @@ public class SharedFoldersTests
 
     private void CreateSampleJunctions()
     {
-        var definitions = new Dictionary<SharedFolderType, string>
+        var definitions = new Dictionary<SharedFolderType, IReadOnlyList<string>>
         {
-            [SharedFolderType.StableDiffusion] = "models/Stable-diffusion",
-            [SharedFolderType.ESRGAN] = "models/ESRGAN",
-            [SharedFolderType.TextualInversion] = "embeddings",
+            [SharedFolderType.StableDiffusion] = new[] {"models/Stable-diffusion"},
+            [SharedFolderType.ESRGAN] = new[] {"models/ESRGAN"},
+            [SharedFolderType.TextualInversion] = new[] {"embeddings"},
         };
         SharedFolders.SetupLinks(definitions, TempModelsFolder, TempPackageFolder);
     }

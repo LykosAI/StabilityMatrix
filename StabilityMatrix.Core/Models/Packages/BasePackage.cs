@@ -1,5 +1,6 @@
 ﻿using Octokit;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 
@@ -14,7 +15,20 @@ public abstract class BasePackage
     public abstract string Author { get; }
     public abstract string Blurb { get; }
     public abstract string GithubUrl { get; }
+    public abstract string LicenseType { get; }
+    public abstract string LicenseUrl { get; }
+    public virtual string Disclaimer => string.Empty;
+    
+    /// <summary>
+    /// Primary command to launch the package. 'Launch' buttons uses this.
+    /// </summary>
     public abstract string LaunchCommand { get; }
+    
+    /// <summary>
+    /// Optional commands (e.g. 'config') that are on the launch button split drop-down.
+    /// </summary>
+    public virtual IReadOnlyList<string> ExtraLaunchCommands { get; } = Array.Empty<string>();
+    
     public abstract Uri PreviewImageUri { get; }
     public virtual bool ShouldIgnoreReleases => false;
     public virtual bool UpdateAvailable { get; set; }
@@ -22,8 +36,20 @@ public abstract class BasePackage
     public abstract Task<string> DownloadPackage(string version, bool isCommitHash,
         IProgress<ProgressReport>? progress = null);
     public abstract Task InstallPackage(IProgress<ProgressReport>? progress = null);
-    public abstract Task RunPackage(string installedPackagePath, string arguments);
-    public abstract Task Shutdown();
+    public abstract Task RunPackage(string installedPackagePath, string command, string arguments);
+    public abstract Task SetupModelFolders(DirectoryPath installDirectory);
+    public abstract Task UpdateModelFolders(DirectoryPath installDirectory);
+    
+    /// <summary>
+    /// Shuts down the subprocess, canceling any pending streams.
+    /// </summary>
+    public abstract void Shutdown();
+
+    /// <summary>
+    /// Shuts down the process, returning a Task to wait for output EOF.
+    /// </summary>
+    public abstract Task WaitForShutdown();
+    
     public abstract Task<bool> CheckForUpdates(InstalledPackage package);
 
     public abstract Task<string> Update(InstalledPackage installedPackage,
@@ -35,9 +61,9 @@ public abstract class BasePackage
     
     /// <summary>
     /// The shared folders that this package supports.
-    /// Mapping of <see cref="SharedFolderType"/> to the relative path from the package root.
+    /// Mapping of <see cref="SharedFolderType"/> to the relative paths from the package root.
     /// </summary>
-    public virtual Dictionary<SharedFolderType, string>? SharedFolders { get; }
+    public virtual Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
     
     public abstract Task<string> GetLatestVersion();
     public abstract Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true);

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -17,7 +19,9 @@ using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -39,6 +43,7 @@ public partial class SettingsViewModel : PageViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly IPyRunner pyRunner;
+    private readonly ServiceManager<ViewModelBase> dialogFactory;
     public SharedState SharedState { get; }
     
     public override string Title => "Settings";
@@ -77,12 +82,14 @@ public partial class SettingsViewModel : PageViewModelBase
         ISettingsManager settingsManager,
         IPrerequisiteHelper prerequisiteHelper,
         IPyRunner pyRunner,
+        ServiceManager<ViewModelBase> dialogFactory,
         SharedState sharedState)
     {
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
         this.prerequisiteHelper = prerequisiteHelper;
         this.pyRunner = pyRunner;
+        this.dialogFactory = dialogFactory;
         SharedState = sharedState;
 
         SelectedTheme = settingsManager.Settings.Theme ?? AvailableThemes[1];
@@ -109,6 +116,49 @@ public partial class SettingsViewModel : PageViewModelBase
     partial void OnRemoveSymlinksOnShutdownChanged(bool value)
     {
         settingsManager.Transaction(s => s.RemoveFolderLinksOnShutdown = value);
+    }
+
+    public async Task ResetCheckpointCache()
+    {
+        settingsManager.Transaction(s => s.InstalledModelHashes = new HashSet<string>());
+        await Task.Run(() => settingsManager.IndexCheckpoints());
+        notificationService.Show("Checkpoint cache reset", "The checkpoint cache has been reset.",
+            NotificationType.Success);
+    }
+
+    #region Package Environment
+    
+    [RelayCommand]
+    private async Task OpenEnvVarsDialog()
+    {
+        var viewModel = dialogFactory.Get<EnvVarsViewModel>();
+        
+        // Load current settings
+        var current = settingsManager.Settings.EnvironmentVariables 
+                      ?? new Dictionary<string, string>();
+        viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>(
+            current.Select(kvp => new EnvVarKeyPair(kvp.Key, kvp.Value)));
+        
+        var dialog = new BetterContentDialog
+        {
+            Content = new EnvVarsDialog
+            {
+                DataContext = viewModel
+            },
+            PrimaryButtonText = "Save",
+            IsPrimaryButtonEnabled = true,
+            CloseButtonText = "Cancel",
+        };
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            // Save settings
+            var newEnvVars = viewModel.EnvVars
+                .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Key))
+                .GroupBy(kvp => kvp.Key, StringComparer.Ordinal)
+                .ToDictionary(g => g.Key, g => g.First().Value, StringComparer.Ordinal);
+            settingsManager.Transaction(s => s.EnvironmentVariables = newEnvVars);
+        }
     }
 
     [RelayCommand]
@@ -142,6 +192,8 @@ public partial class SettingsViewModel : PageViewModelBase
         dialog.PrimaryButtonText = "Ok";
         await dialog.ShowAsync();
     }
+    
+    #endregion
 
     #region System
 

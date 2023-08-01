@@ -32,6 +32,7 @@ public class ComfyWebSocketClient : IDisposable
     {
         var uri = new UriBuilder(baseAddress)
         {
+            Scheme = "ws",
             Path = "/ws",
             Query = $"client_id={clientId}"
         }.Uri;

@@ -35,14 +35,11 @@
                             Margin="0,0,8,0"
                             VerticalAlignment="Center"
                             Text="Model" />
-                        <ComboBox Grid.Column="1" HorizontalAlignment="Stretch" />
-                        <!--<ComboBox
-                                DisplayMemberPath="FileName"
-                                Grid.Column="1"
-                                ItemsSource="{Binding DiffusionCheckpointFolder.CheckpointFiles}"
-                                Margin="8"
-                                MinWidth="200"
-                                SelectedValuePath="FileName" />-->
+                        <ui:FAComboBox 
+                            SelectedItem="{Binding SelectedModelName, Mode=TwoWay}"
+                            IsEditable="True"
+                            Grid.Column="1" 
+                            HorizontalAlignment="Stretch" />
                         <Button Grid.Column="2" Margin="8,0,0,0">
                             <ui:SymbolIcon FontSize="16" Symbol="Settings" />
                         </Button>
@@ -77,6 +74,7 @@
                         Text="Prompt" />
                     <avaloniaEdit:TextEditor
                         x:Name="PromptEditor"
+                        Document="{Binding PromptDocument}"
                         Margin="8"
                         FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
                         LineNumbersForeground="DarkSlateGray"
@@ -91,6 +89,7 @@
                         Text="Negative Prompt" />
                     <avaloniaEdit:TextEditor
                         x:Name="NegativePromptEditor"
+                        Document="{Binding NegativePromptDocument}"
                         Margin="8"
                         FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
                         LineNumbersForeground="DarkSlateGray"
@@ -108,6 +107,7 @@
                         IsVisible="False" />
                     <Button
                         Grid.Row="1"
+                        Command="{Binding GenerateImageCommand}"
                         HorizontalAlignment="Stretch"
                         Classes="accent"
                         Content="Generate Image" />
@@ -147,25 +147,19 @@
                     Grid.Row="1"
                     MinHeight="512"
                     VerticalAlignment="Stretch"
+                    RowDefinitions="Auto,*"
                     Background="{DynamicResource ApplicationBackgroundBrush}">
-                    <!--<controls:ProgressRing
-                            Background="DarkRed"
-                            Grid.Row="0"
-                            Height="72"
-                            HorizontalAlignment="Center"
-                            IsIndeterminate="True"
-                            Margin="8"
-                            VerticalAlignment="Center"
-                            Visibility="{Binding ProgressRingVisibility, FallbackValue=Collapsed}"
-                            Width="72"
-                            x:Name="ImageProgressRing" />-->
-                    <!--<Image
-                            HorizontalAlignment="Stretch"
-                            Margin="8"
-                            Source="{Binding ImagePreview}"
-                            Stretch="Uniform"
-                            VerticalAlignment="Stretch"
-                            Visibility="{Binding ImagePreviewVisibility, FallbackValue=Visible}" />-->
+                    <ProgressBar
+                        Value="{Binding ProgressCurrent}"
+                        Maximum="{Binding ProgressMax}"/>
+                    <controls:BetterAdvancedImage
+                        Grid.Row="1"
+                        HorizontalAlignment="Stretch"
+                        CornerRadius="8"
+                        Margin="8"
+                        Source="{Binding OutputImageSource}"
+                        Stretch="Uniform"
+                        VerticalAlignment="Stretch"/>
                 </Grid>
             </Grid>
         </controls:Card>

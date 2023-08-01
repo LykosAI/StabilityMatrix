@@ -18,19 +18,11 @@
     x:DataType="vm:InferenceViewModel"
     mc:Ignorable="d">
     <Grid>
-        <TextBlock
-            Margin="0,8,16,0"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            Text="Inference"
-            Theme="{DynamicResource SubtitleTextBlockStyle}" />
-
         <ui:TabView
             Grid.Row="0"
             VerticalAlignment="Stretch"
             CanReorderTabs="True"
             CloseButtonOverlayMode="Always"
-            TabStripFooter=""
             TabStripHeader=""
             AddTabButtonCommand="{Binding AddTabCommand}"
             TabItems="{Binding Tabs}"
@@ -43,6 +35,27 @@
                     </ui:TabViewItem>
                 </DataTemplate>
             </ui:TabView.TabItemTemplate>
+            <ui:TabView.TabStripFooter>
+                <StackPanel
+                    Orientation="Horizontal"
+                    Margin="0,4,16,4"
+                    Spacing="8"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top">
+                    <Button 
+                        IsVisible="{Binding !IsConnected}"
+                        Command="{Binding ConnectCommand}"
+                        Classes="accent"
+                        Content="Connect"/> 
+                    <Button 
+                        IsVisible="{Binding IsConnected}"
+                        Command="{Binding DisconnectCommand}"
+                        Content="Disconnect"/> 
+                    <TextBlock
+                        Text="Inference"
+                        Theme="{DynamicResource SubtitleTextBlockStyle}" />
+                </StackPanel>
+            </ui:TabView.TabStripFooter>
         </ui:TabView>
     </Grid>
 </controls:UserControlBase>

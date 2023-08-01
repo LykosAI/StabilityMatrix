@@ -35,7 +35,7 @@ public class ComfyClient : InferenceClientBase
         await webSocketClient.CloseAsync().ConfigureAwait(false);
     }
     
-    public Task<ComfyPromptResponse> QueuePromptAsync(
+    public async Task<ComfyPromptResponse> QueuePromptAsync(
         Dictionary<string, ComfyNode> nodes, 
         CancellationToken cancellationToken = default)
     {
@@ -44,7 +44,8 @@ public class ComfyClient : InferenceClientBase
             ClientId = ClientId,
             Prompt = nodes,
         };
-        return comfyApi.PostPrompt(request, cancellationToken);
+        var result = await comfyApi.PostPrompt(request, cancellationToken).ConfigureAwait(false);
+        return result;
     }
     
     public async Task<Dictionary<string, List<ComfyImage>?>> ExecutePromptAsync(

@@ -21,6 +21,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Settings;
@@ -41,6 +42,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     private readonly ILiteDbContext liteDbContext;
     private readonly INotificationService notificationService;
     private const int MaxModelsPerPage = 14;
+    private LRUCache<int /* model id */, CheckpointBrowserCardViewModel> cache = new(50);
 
     [ObservableProperty] private ObservableCollection<CheckpointBrowserCardViewModel>? modelCards;
     [ObservableProperty] private DataGridCollectionView? modelCardsView;
@@ -213,8 +215,23 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         else
         {
             var updateCards = models
-                .Select(model => new CheckpointBrowserCardViewModel(model,
-                    downloadService, settingsManager, dialogFactory, notificationService)).ToList();
+                .Select(model =>
+                {
+                    if (cache.Get(model.Id) != null)
+                    {
+                        return cache.Get(model.Id);
+                    }
+
+                    var newCard = new CheckpointBrowserCardViewModel(model,
+                        downloadService, settingsManager, dialogFactory, notificationService,
+                        viewModel =>
+                        {
+                            if (cache.Get(viewModel.CivitModel.Id) != null) return;
+                            cache.Add(viewModel.CivitModel.Id, viewModel);
+                        });
+                    return newCard;
+                }).ToList();
+            
             allModelCards = updateCards;
             ModelCards =
                 new ObservableCollection<CheckpointBrowserCardViewModel>(

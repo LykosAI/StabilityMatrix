@@ -1,76 +1,135 @@
-﻿using System.Buffers;
-using System.Net.WebSockets;
-using System.Text;
-using System.Text.Json;
-using StabilityMatrix.Core.Helper;
+﻿using System.Net.WebSockets;
+using NLog;
+using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Models.Api.Comfy;
+using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
+using StabilityMatrix.Core.Models.Progress;
 
 namespace StabilityMatrix.Core.Inference;
 
-/// <summary>
-/// Websocket client for Comfy inference server
-/// Connects to localhost:8188 by default
-/// </summary>
-public class ComfyClient : IInferenceClient
+public class ComfyClient : InferenceClientBase
 {
-    private readonly ClientWebSocket clientWebSocket = new();
-    private readonly CancellationTokenSource cancellationTokenSource = new();
-    private readonly CancellationToken cancellationToken;
-    private readonly JsonSerializerOptions? jsonSerializerOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = true
-    };
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     
-    protected Guid ClientId { get; } = Guid.NewGuid();
+    private readonly ComfyWebSocketClient webSocketClient = new();
+    private readonly IComfyApi comfyApi;
+    private readonly Uri baseAddress;
+    private bool isDisposed;
 
-    public ComfyClient()
+    // ReSharper disable once MemberCanBePrivate.Global
+    public string ClientId { get; private set; } = Guid.NewGuid().ToString();
+    
+    public ComfyClient(IApiFactory apiFactory, Uri baseAddress)
     {
-        cancellationToken = cancellationTokenSource.Token;
+        comfyApi = apiFactory.CreateRefitClient<IComfyApi>(baseAddress);
+        this.baseAddress = baseAddress;
     }
 
-    public async Task ConnectAsync(Uri uri)
+    public override async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
-        await clientWebSocket.ConnectAsync(uri, cancellationToken).ConfigureAwait(false);
+        await webSocketClient.ConnectAsync(baseAddress, ClientId).ConfigureAwait(false);
     }
 
-    public async Task SendAsync<T>(T message)
+    public override async Task CloseAsync(CancellationToken cancellationToken = default)
     {
-        var json = JsonSerializer.Serialize(message, jsonSerializerOptions);
-        var bytes = Encoding.UTF8.GetBytes(json);
-        var buffer = new ArraySegment<byte>(bytes);
-        await clientWebSocket
-            .SendAsync(buffer, WebSocketMessageType.Text, true, cancellationToken)
-            .ConfigureAwait(false);
+        await webSocketClient.CloseAsync().ConfigureAwait(false);
     }
-
-    public async Task<T?> ReceiveAsync<T>()
+    
+    public Task<ComfyPromptResponse> QueuePromptAsync(
+        Dictionary<string, ComfyNode> nodes, 
+        CancellationToken cancellationToken = default)
     {
-        var shared = ArrayPool<byte>.Shared;
-        var buffer = shared.Rent(1024);
-        try
+        var request = new ComfyPromptRequest
         {
-            var result = await clientWebSocket
-                .ReceiveAsync(buffer, cancellationToken)
-                .ConfigureAwait(false);
-            var json = Encoding.UTF8.GetString(buffer, 0, result.Count);
-            return JsonSerializer.Deserialize<T>(json, jsonSerializerOptions);
-        }
-        finally
+            ClientId = ClientId,
+            Prompt = nodes,
+        };
+        return comfyApi.PostPrompt(request, cancellationToken);
+    }
+    
+    public async Task<Dictionary<string, List<ComfyImage>?>> ExecutePromptAsync(
+        Dictionary<string, ComfyNode> nodes, 
+        IProgress<ProgressReport>? progress = default,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await QueuePromptAsync(nodes, cancellationToken).ConfigureAwait(false);
+        var promptId = response.PromptId;
+
+        while (true)
         {
-            shared.Return(buffer);
+            var message = await webSocketClient.ReceiveAsync().ConfigureAwait(false);
+
+            if (message is null)
+            {
+                Logger.Warn("Received null message");
+                break;
+            }
+            
+            // Stop if closed
+            if (message.MessageType == WebSocketMessageType.Close)
+            {
+                Logger.Trace("Received close message");
+                break;
+            }
+            
+            if (message.Json is { } json)
+            {
+                Logger.Trace("Received json message: (Type = {Type}, Data = {Data})", 
+                    json.Type, json.Data);
+                
+                // Stop if we get an executing response with null Node property
+                if (json.Type is ComfyWebSocketResponseType.Executing)
+                {
+                    var executingData = json.GetDataAsType<ComfyWebSocketExecutingData>();
+                    // We need this to stop the loop, so if it's null, we'll throw
+                    if (executingData is null)
+                    {
+                        throw new NullReferenceException("Could not parse executing data");
+                    }
+                    // Check this is for us
+                    if (executingData.PromptId != promptId)
+                    {
+                        Logger.Trace("Received executing message for different prompt - ignoring");
+                        continue;
+                    }
+                    if (executingData.Node is null)
+                    {
+                        Logger.Trace("Received executing message with null node - stopping");
+                        break;
+                    }
+                }
+                else if (json.Type is ComfyWebSocketResponseType.Progress)
+                {
+                    var progressData = json.GetDataAsType<ComfyWebSocketProgressData>();
+                    if (progressData is null)
+                    {
+                        Logger.Warn("Could not parse progress data");
+                        continue;
+                    }
+                    progress?.Report(new ProgressReport
+                    {
+                        Current = Convert.ToUInt64(progressData.Value),
+                        Total = Convert.ToUInt64(progressData.Max),
+                    });
+                }
+            }
         }
+        
+        // Get history for images
+        var history = await comfyApi.GetHistory(promptId, cancellationToken).ConfigureAwait(false);
+        
+        var dict = new Dictionary<string, List<ComfyImage>?>();
+        foreach (var (nodeKey, output) in history.Outputs)
+        {
+            dict[nodeKey] = output.Images;
+        }
+        return dict;
     }
 
-    public async Task CloseAsync()
+    protected override void Dispose(bool disposing)
     {
-        await clientWebSocket
-            .CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", cancellationToken)
-            .ConfigureAwait(false);
-    }
-
-    public void Dispose()
-    {
-        clientWebSocket.Dispose();
-        cancellationTokenSource.Dispose();
+        if (isDisposed) return;
+        webSocketClient.Dispose();
+        isDisposed = true;
     }
 }

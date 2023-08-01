@@ -1,9 +1,12 @@
-﻿using NLog;
+﻿using System.Data;
+using System.Text.RegularExpressions;
+using NLog;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
@@ -13,15 +16,20 @@ public class InvokeAI : BaseGitPackage
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private const string RelativeRootPath = "invokeai-root";
-    
+
     public override string Name => "InvokeAI";
     public override string DisplayName { get; set; } = "InvokeAI";
     public override string Author => "invoke-ai";
     public override string LicenseType => "Apache-2.0";
-    public override string LicenseUrl => 
+
+    public override string LicenseUrl =>
         "https://github.com/invoke-ai/InvokeAI/blob/main/LICENSE";
+
     public override string Blurb => "Professional Creative Tools for Stable Diffusion";
     public override string LaunchCommand => "invokeai-web";
+
+    public override string Disclaimer =>
+        "Note: InvokeAI support is currently experimental, and checkpoints in the shared models folder will not be available with InvokeAI.";
 
     public override IReadOnlyList<string> ExtraLaunchCommands => new[]
     {
@@ -36,18 +44,18 @@ public class InvokeAI : BaseGitPackage
 
     public override Uri PreviewImageUri => new(
         "https://raw.githubusercontent.com/invoke-ai/InvokeAI/main/docs/assets/canvas_preview.png");
-    
+
     public override bool ShouldIgnoreReleases => true;
-    
+
     public InvokeAI(
         IGithubApiCache githubApi,
         ISettingsManager settingsManager,
         IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper) : 
+        IPrerequisiteHelper prerequisiteHelper) :
         base(githubApi, settingsManager, downloadService, prerequisiteHelper)
     {
     }
-    
+
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders => new()
     {
         [SharedFolderType.StableDiffusion] = new[]
@@ -86,7 +94,7 @@ public class InvokeAI : BaseGitPackage
             RelativeRootPath + "/models/sdxl-refiner/controlnet",
         },
     };
-    
+
     // https://github.com/invoke-ai/InvokeAI/blob/main/docs/features/CONFIGURATION.md
     public override List<LaunchOptionDefinition> LaunchOptions => new List<LaunchOptionDefinition>
     {
@@ -108,7 +116,7 @@ public class InvokeAI : BaseGitPackage
         {
             Name = "Allow Origins",
             Description = "List of host names or IP addresses that are allowed to connect to the " +
-                   "InvokeAI API in the format ['host1','host2',...]",
+                          "InvokeAI API in the format ['host1','host2',...]",
             Type = LaunchOptionType.String,
             DefaultValue = "[]",
             Options = new List<string> {"--allow-origins"}
@@ -138,127 +146,221 @@ public class InvokeAI : BaseGitPackage
         },
         LaunchOptionDefinition.Extras
     };
-    
+
     public override Task<string> GetLatestVersion() => Task.FromResult("main");
-    
+
     public override Task<string> DownloadPackage(string version, bool isCommitHash,
         IProgress<ProgressReport>? progress = null)
     {
         return Task.FromResult(version);
     }
-    
+
     public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
     {
         // Setup venv
-        progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
-        
+        progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
+
         await using var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
         venvRunner.WorkingDirectory = InstallLocation;
         await venvRunner.Setup().ConfigureAwait(false);
-        
+
         venvRunner.EnvironmentVariables = GetEnvVars(InstallLocation);
-        
+
         var gpus = HardwareHelper.IterGpuInfo().ToList();
-        
-        progress?.Report(new ProgressReport(1, "Installing Package", isIndeterminate: true));
-        
+
+        progress?.Report(new ProgressReport(-1f, "Installing Package", isIndeterminate: true));
+
+        var pipCommandArgs =
+            "InvokeAI --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu";
+
         // If has Nvidia Gpu, install CUDA version
         if (gpus.Any(g => g.IsNvidia))
         {
             Logger.Info("Starting InvokeAI install (CUDA)...");
-            await venvRunner.PipInstall(
-                "InvokeAI[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu117", 
-                OnConsoleOutput).ConfigureAwait(false);
+            pipCommandArgs =
+                "InvokeAI[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu117";
         }
         // For AMD, Install ROCm version
         else if (gpus.Any(g => g.IsAmd))
         {
             Logger.Info("Starting InvokeAI install (ROCm)...");
-            await venvRunner.PipInstall(
-                "InvokeAI --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2",
-                OnConsoleOutput).ConfigureAwait(false);
+            pipCommandArgs =
+                "InvokeAI --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2";
         }
         // For Apple silicon, use MPS
         else if (Compat.IsMacOS && Compat.IsArm)
         {
             Logger.Info("Starting InvokeAI install (MPS)...");
-            await venvRunner.PipInstall(
-                "InvokeAI --use-pep517",
-                OnConsoleOutput).ConfigureAwait(false);
+            pipCommandArgs = "InvokeAI --use-pep517";
         }
         // CPU Version
         else
         {
             Logger.Info("Starting InvokeAI install (CPU)...");
-            await venvRunner.PipInstall(
-                "pip install InvokeAI --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu",
-                OnConsoleOutput).ConfigureAwait(false);
         }
-        
+
+        await venvRunner.PipInstall(pipCommandArgs, OnConsoleOutput).ConfigureAwait(false);
+
         await venvRunner
             .PipInstall("rich packaging python-dotenv", OnConsoleOutput)
             .ConfigureAwait(false);
-        
-        progress?.Report(new ProgressReport(1, "Installing Package", isIndeterminate: false));
+
+        progress?.Report(new ProgressReport(-1f, "Configuring InvokeAI", isIndeterminate: true));
+
+        await RunInvokeCommand(InstallLocation, "invokeai-configure", "--yes --skip-sd-weights",
+            false).ConfigureAwait(false);
+
+        progress?.Report(new ProgressReport(1f, "Done!", isIndeterminate: false));
     }
-    
-    public override async Task RunPackage(string installedPackagePath, string command, string arguments)
+
+    public override async Task<string> Update(InstalledPackage installedPackage, IProgress<ProgressReport>? progress = null,
+        bool includePrerelease = false)
+    {
+        progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
+
+        await using var venvRunner = new PyVenvRunner(Path.Combine(installedPackage.FullPath, "venv"));
+        venvRunner.WorkingDirectory = installedPackage.FullPath;
+        venvRunner.EnvironmentVariables = GetEnvVars(installedPackage.FullPath);
+
+        var latestVersion = await GetUpdateVersion(installedPackage).ConfigureAwait(false);
+        var isReleaseMode = string.IsNullOrWhiteSpace(installedPackage.InstalledBranch);
+
+        var downloadUrl = isReleaseMode
+            ? $"https://github.com/invoke-ai/InvokeAI/archive/{latestVersion}.zip"
+            : $"https://github.com/invoke-ai/InvokeAI/archive/refs/heads/{installedPackage.InstalledBranch}.zip";
+
+        var gpus = HardwareHelper.IterGpuInfo().ToList();
+
+        progress?.Report(new ProgressReport(-1f, "Installing Package", isIndeterminate: true));
+
+        var pipCommandArgs =
+            $"\"InvokeAI @ {downloadUrl}\" --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu --upgrade";
+
+        // If has Nvidia Gpu, install CUDA version
+        if (gpus.Any(g => g.IsNvidia))
+        {
+            Logger.Info("Starting InvokeAI install (CUDA)...");
+            pipCommandArgs =
+                $"\"InvokeAI[xformers] @ {downloadUrl}\" --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu117 --upgrade";
+        }
+        // For AMD, Install ROCm version
+        else if (gpus.Any(g => g.IsAmd))
+        {
+            Logger.Info("Starting InvokeAI install (ROCm)...");
+            pipCommandArgs =
+                $"\"InvokeAI @ {downloadUrl}\" --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2 --upgrade";
+        }
+        // For Apple silicon, use MPS
+        else if (Compat.IsMacOS && Compat.IsArm)
+        {
+            Logger.Info("Starting InvokeAI install (MPS)...");
+            pipCommandArgs = $"\"InvokeAI @ {downloadUrl}\" --use-pep517 --upgrade";
+        }
+        // CPU Version
+        else
+        {
+            Logger.Info("Starting InvokeAI install (CPU)...");
+        }
+
+        await venvRunner.PipInstall(pipCommandArgs, OnConsoleOutput).ConfigureAwait(false);
+
+        progress?.Report(new ProgressReport(1f, "Done!", isIndeterminate: false));
+
+        return latestVersion;
+    }
+
+    public override Task
+        RunPackage(string installedPackagePath, string command, string arguments) =>
+        RunInvokeCommand(installedPackagePath, command, arguments, true);
+
+    private async Task<string> GetUpdateVersion(InstalledPackage installedPackage, bool includePrerelease = false)
+    {
+        if (string.IsNullOrWhiteSpace(installedPackage.InstalledBranch))
+        {
+            var releases = await GetAllReleases().ConfigureAwait(false);
+            var latestRelease = releases.First(x => includePrerelease || !x.Prerelease);
+            return latestRelease.TagName;
+        }
+
+        var allCommits = await GetAllCommits(
+            installedPackage.InstalledBranch).ConfigureAwait(false);
+        var latestCommit = allCommits.First();
+        return latestCommit.Sha;
+    }
+
+    private async Task RunInvokeCommand(string installedPackagePath, string command,
+        string arguments, bool runDetached)
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
+        if (command.Equals("invokeai-configure"))
+        {
+            arguments = "--yes --skip-sd-weights";
+        }
+
         VenvRunner.EnvironmentVariables = GetEnvVars(installedPackagePath);
-        
+
         // Launch command is for a console entry point, and not a direct script
         var entryPoint = await VenvRunner.GetEntryPoint(command).ConfigureAwait(false);
-        
+
         // Split at ':' to get package and function
         var split = entryPoint?.Split(':');
-        
+
         if (split is not {Length: > 1})
         {
             throw new Exception($"Could not find entry point for InvokeAI: {entryPoint.ToRepr()}");
         }
-        
+
         // Compile a startup command according to 
         // https://packaging.python.org/en/latest/specifications/entry-points/#use-for-scripts
         // For invokeai, also patch the shutil.get_terminal_size function to return a fixed value
         // above the minimum in invokeai.frontend.install.widgets
-        
+
         var code = $"""
-                   try:
-                       import os
-                       import shutil
-                       from invokeai.frontend.install import widgets
-                       
-                       _min_cols = widgets.MIN_COLS
-                       _min_lines = widgets.MIN_LINES
-                       
-                       static_size_fn = lambda: os.terminal_size((_min_cols, _min_lines))
-                       shutil.get_terminal_size = static_size_fn
-                       widgets.get_terminal_size = static_size_fn
-                   except Exception as e:
-                       import warnings
-                       warnings.warn('Could not patch terminal size for InvokeAI' + str(e))
-                   
-                   import sys
-                   from {split[0]} import {split[1]}
-                   sys.exit({split[1]}())
-                   """;
-        
-        VenvRunner.RunDetached($"-c \"{code}\"".TrimEnd(), OnConsoleOutput, OnExit);
+                    import sys
+                    from {split[0]} import {split[1]}
+                    sys.exit({split[1]}())
+                    """;
+
+        if (runDetached)
+        {
+            void HandleConsoleOutput(ProcessOutput s)
+            {
+                OnConsoleOutput(s);
+
+                if (!s.Text.Contains("running on", StringComparison.OrdinalIgnoreCase)) 
+                    return;
+            
+                var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
+                var match = regex.Match(s.Text);
+                if (!match.Success)
+                    return;
+            
+                WebUrl = match.Value;
+                OnStartupComplete(WebUrl);
+            }
+            
+            VenvRunner.RunDetached($"-c \"{code}\" {arguments}".TrimEnd(), HandleConsoleOutput, OnExit);
+        }
+        else
+        {
+            var result = await VenvRunner.Run($"-c \"{code}\" {arguments}".TrimEnd())
+                .ConfigureAwait(false);
+            OnConsoleOutput(new ProcessOutput
+            {
+                Text = result.StandardOutput
+            });
+        }
     }
 
     public override Task SetupModelFolders(DirectoryPath installDirectory)
     {
-        StabilityMatrix.Core.Helper.SharedFolders.SetupLinks(SharedFolders,
-            SettingsManager.ModelsDirectory, installDirectory);
         return Task.CompletedTask;
     }
 
-    public override async Task UpdateModelFolders(DirectoryPath installDirectory)
+    public override Task UpdateModelFolders(DirectoryPath installDirectory)
     {
-        await StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(this,
-            SettingsManager.ModelsDirectory, installDirectory).ConfigureAwait(false);
+        return Task.CompletedTask;
     }
 
     private Dictionary<string, string> GetEnvVars(DirectoryPath installPath)
@@ -272,7 +374,7 @@ public class InvokeAI : BaseGitPackage
 
         // Need to make subdirectory because they store config in the
         // directory *above* the root directory
-        var root = installPath.JoinDir("invokeai_root");
+        var root = installPath.JoinDir(RelativeRootPath);
         root.Create();
         env["INVOKEAI_ROOT"] = root;
 

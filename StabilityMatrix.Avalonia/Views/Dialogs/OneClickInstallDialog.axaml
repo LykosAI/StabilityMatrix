@@ -47,6 +47,12 @@
                        Margin="16, 16, 0, 4"/>
             <TextBlock Text="{Binding SelectedPackage.Blurb}"
                        Margin="16, 0, 0, 8"/>
+            <TextBlock Text="{Binding SelectedPackage.Disclaimer}"
+                       Padding="4"
+                       Margin="16, 0, 0, 0"
+                       TextWrapping="Wrap"
+                       Foreground="OrangeRed"
+                       IsVisible="{Binding SelectedPackage.Disclaimer, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
             <controls:BetterAdvancedImage Source="{Binding SelectedPackage.PreviewImageUri}"
                                           HorizontalAlignment="Left"
                                           MaxHeight="300"

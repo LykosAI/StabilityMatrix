@@ -213,14 +213,12 @@ public class SettingsManager : ISettingsManager
     /// </summary>
     public void SetLibraryPath(string path)
     {
-        var appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var homeDir = Path.Combine(appDataDir, "StabilityMatrix");
-        Directory.CreateDirectory(homeDir);
-        var libraryJsonPath = Path.Combine(homeDir, "library.json");
+        Compat.AppDataHome.Create();
+        var libraryJsonFile = Compat.AppDataHome.JoinFile("library.json");
 
         var library = new LibrarySettings { LibraryPath = path };
         var libraryJson = JsonSerializer.Serialize(library, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(libraryJsonPath, libraryJson);
+        libraryJsonFile.WriteAllText(libraryJson);
         
         // actually create the LibraryPath directory
         Directory.CreateDirectory(path);

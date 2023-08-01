@@ -106,6 +106,15 @@ public class BetterContentDialog : ContentDialog
         set => SetValue(ContentVerticalScrollBarVisibilityProperty, value);
     }
 
+    public static readonly StyledProperty<double> MinDialogWidthProperty = AvaloniaProperty.Register<BetterContentDialog, double>(
+        "MinDialogWidth");
+
+    public double MinDialogWidth
+    {
+        get => GetValue(MinDialogWidthProperty);
+        set => SetValue(MinDialogWidthProperty, value);
+    }
+    
     public static readonly StyledProperty<double> MaxDialogWidthProperty = AvaloniaProperty.Register<BetterContentDialog, double>(
         "MaxDialogWidth");
 
@@ -207,10 +216,15 @@ public class BetterContentDialog : ContentDialog
         var panel = border?.Child as Panel;
         var faBorder = panel?.Children[0] as FABorder;
         
-        // Set dialog maximums
+        // Set dialog bounds
         if (MaxDialogWidth > 0)
         {
             faBorder!.MaxWidth = MaxDialogWidth;
+        }
+
+        if (MinDialogWidth > 0)
+        {
+            faBorder!.MinWidth = MinDialogWidth;
         }
         if (MaxDialogHeight > 0)
         {

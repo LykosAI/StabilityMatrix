@@ -11,7 +11,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - New installable Package - [InvokeAI](https://github.com/invoke-ai/InvokeAI)
 - Launch button can now support alternate commands / modes - currently only for InvokeAI
   > <img width="249" alt="image" src="https://github.com/LykosAI/StabilityMatrix/assets/13956642/16a8ffdd-a3cb-4f4f-acc5-c062d3ade363">
-- Added ControlNet link for vlad/SD.Next
 - Settings option to set global environment variables for Packages
   > <img width="771" alt="image" src="https://github.com/LykosAI/StabilityMatrix/assets/13956642/d577918e-82bb-46d4-9a3a-9b5318d3d4d8">
 ### Changed
@@ -23,6 +22,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed console input box transparency
 - Fixed [#52](https://github.com/LykosAI/StabilityMatrix/issues/52) - A1111 default approx-vae model download errors by switching default preview method to TAESD
 - Fixes [#50](https://github.com/LykosAI/StabilityMatrix/issues/50) - model browser crash when no model versions exist
+- Fixed [#31](https://github.com/LykosAI/StabilityMatrix/issues/31) - missing ControlNet link to Shared Models Folder for SD.Next
+- Fixed download progress disappearing when changing pages in Model Browser
 
 ## v2.0.4
 ### Fixed

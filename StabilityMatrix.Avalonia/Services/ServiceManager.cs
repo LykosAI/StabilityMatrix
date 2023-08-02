@@ -76,6 +76,42 @@ public class ServiceManager<T>
     }
     
     /// <summary>
+    /// Get a service instance
+    /// </summary>
+    [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
+    public T Get(Type type)
+    {
+        if (instances.TryGetValue(type, out var instance))
+        {
+            if (instance is null)
+            {
+                throw new ArgumentException(
+                    $"Service of type {type} was registered as null");
+            }
+            return instance;
+        }
+
+        if (providers.TryGetValue(type, out var provider))
+        {
+            if (provider is null)
+            {
+                throw new ArgumentException(
+                    $"Service of type {type} was registered as null");
+            }
+            var result = provider();
+            if (result is null)
+            {
+                throw new ArgumentException(
+                    $"Service provider for type {type} returned null");
+            }
+            return result;
+        }
+
+        throw new ArgumentException(
+            $"Service of type {type} is not registered in ServiceManager for {typeof(T)}");
+    }
+    
+    /// <summary>
     /// Get a view model instance
     /// </summary>
     [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]

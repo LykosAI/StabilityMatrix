@@ -38,6 +38,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly INotificationService notificationService;
+    private readonly Action<CheckpointBrowserCardViewModel>? onDownloadStart;
     public CivitModel CivitModel { get; init; }
     public override bool IsTextVisible => Value > 0;
     
@@ -51,12 +52,14 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         IDownloadService downloadService,
         ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> dialogFactory,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        Action<CheckpointBrowserCardViewModel>? onDownloadStart = null)
     {
         this.downloadService = downloadService;
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
         this.notificationService = notificationService;
+        this.onDownloadStart = onDownloadStart;
         CivitModel = civitModel;
 
         UpdateImage();
@@ -193,6 +196,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     {
         IsImporting = true;
         Text = "Downloading...";
+
+        onDownloadStart?.Invoke(this);
 
         // Holds files to be deleted on errors
         var filesForCleanup = new HashSet<FilePath>();

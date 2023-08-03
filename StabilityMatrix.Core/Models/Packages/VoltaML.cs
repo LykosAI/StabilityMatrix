@@ -1,6 +1,9 @@
-﻿using StabilityMatrix.Core.Helper;
+﻿using System.Text.RegularExpressions;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
@@ -34,11 +37,11 @@ public class VoltaML : BaseGitPackage
     }
 
     // https://github.com/VoltaML/voltaML-fast-stable-diffusion/blob/main/main.py#L86
-    public override Dictionary<SharedFolderType, string> SharedFolders => new()
+    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders => new()
     {
-        [SharedFolderType.StableDiffusion] = "data/models",
-        [SharedFolderType.Lora] = "data/lora",
-        [SharedFolderType.TextualInversion] = "data/textual-inversion",
+        [SharedFolderType.StableDiffusion] = new[] {"data/models"},
+        [SharedFolderType.Lora] = new[] {"data/lora"},
+        [SharedFolderType.TextualInversion] = new[] {"data/textual-inversion"},
     };
     
     // https://github.com/VoltaML/voltaML-fast-stable-diffusion/blob/main/main.py#L45
@@ -146,7 +149,46 @@ public class VoltaML : BaseGitPackage
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
         var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
+
+        var foundIndicator = false;
         
-        VenvRunner.RunDetached(args.TrimEnd(), OnConsoleOutput, OnExit);
+        void HandleConsoleOutput(ProcessOutput s)
+        {
+            OnConsoleOutput(s);
+
+            if (s.Text.Contains("running on", StringComparison.OrdinalIgnoreCase))
+            {
+                // Next line will have the Web UI URL, so set a flag & wait for that
+                foundIndicator = true;
+                return;
+            }
+
+            if (!foundIndicator)
+                return;
+            
+            var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
+            var match = regex.Match(s.Text);
+            if (!match.Success)
+                return;
+            
+            WebUrl = match.Value;
+            OnStartupComplete(WebUrl);
+            foundIndicator = false;
+        }
+            
+        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
+    }
+
+    public override Task SetupModelFolders(DirectoryPath installDirectory)
+    {
+        StabilityMatrix.Core.Helper.SharedFolders.SetupLinks(SharedFolders,
+            SettingsManager.ModelsDirectory, installDirectory);
+        return Task.CompletedTask;
+    }
+
+    public override async Task UpdateModelFolders(DirectoryPath installDirectory)
+    {
+        await StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(this,
+            SettingsManager.ModelsDirectory, installDirectory).ConfigureAwait(false);
     }
 }

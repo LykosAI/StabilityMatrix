@@ -103,6 +103,10 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         this.sharedFolders = sharedFolders;
         this.dialogFactory = dialogFactory;
         
+        settingsManager.RelayPropertyFor(this, 
+            vm => vm.SelectedPackage,
+            settings => settings.ActiveInstalledPackage);
+        
         EventManager.Instance.PackageLaunchRequested += OnPackageLaunchRequested;
         EventManager.Instance.OneClickInstallFinished += OnOneClickInstallFinished;
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
@@ -151,7 +155,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
             new ObservableCollection<InstalledPackage>(settingsManager.Settings.InstalledPackages);
         
         // Load active package
-        SelectedPackage = settingsManager.Settings.GetActiveInstalledPackage();
+        SelectedPackage = settingsManager.Settings.ActiveInstalledPackage;
     }
 
     [RelayCommand]
@@ -231,7 +235,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         Console.StartUpdates();
 
         // Update shared folder links (in case library paths changed)
-        await sharedFolders.UpdateLinksForPackage(basePackage, packagePath);
+        await basePackage.UpdateModelFolders(packagePath);
 
         // Load user launch args from settings and convert to string
         var userArgs = settingsManager.GetLaunchArgs(activeInstall.Id);

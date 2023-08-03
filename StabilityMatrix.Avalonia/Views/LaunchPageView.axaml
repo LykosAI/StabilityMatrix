@@ -171,12 +171,10 @@
             <StackPanel Grid.Column="1" Margin="8" Spacing="4">
                 <!-- Info bar for manual input -->
                 <ui:InfoBar 
-                    Background="{DynamicResource ComboBoxItemBackground}"
+                    Severity="Warning"
                     Title="Input"
                     IsIconVisible="False"
                     IsClosable="False"
-                    Severity="Informational"
-                    Opacity="1"
                     IsOpen="{Binding ShowManualInputPrompt, Mode=TwoWay}" 
                     Margin="0">
                     <ui:InfoBar.ActionButton>
@@ -190,9 +188,8 @@
                 </ui:InfoBar>
                 <!-- Info bar for auto prompts -->
                 <ui:InfoBar 
-                    Background="{DynamicResource ComboBoxItemBackground}"
+                    Severity="Warning"
                     Title="Input required" 
-                    Severity="Informational"
                     IsOpen="{Binding ShowConfirmInputPrompt, Mode=TwoWay}" 
                     Margin="0"
                     Message="Confirm?">

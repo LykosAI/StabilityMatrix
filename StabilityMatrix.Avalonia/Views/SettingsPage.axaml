@@ -41,7 +41,7 @@
                     <!--  TODO: Text2Image host port settings  -->
                     
                     <!-- Checkpoints Manager Options -->
-                    <Grid RowDefinitions="auto,*">
+                    <Grid RowDefinitions="auto,*,Auto">
                         <TextBlock 
                             FontWeight="Medium"
                             Text="Checkpoint Manager" 
@@ -51,10 +51,22 @@
                             IconSource="Folder"
                             Header="Remove shared checkpoints directory symbolic links on shutdown"
                             Description="Select this option if you're having problems moving Stability Matrix to another drive"
-                            Margin="8,0">
+                            Margin="8,8">
                             <ui:SettingsExpander.Footer>
                                 <CheckBox Margin="8"
                                           IsChecked="{Binding RemoveSymlinksOnShutdown}"/>
+                            </ui:SettingsExpander.Footer>
+                        </ui:SettingsExpander>
+                        <ui:SettingsExpander
+                            Grid.Row="2"
+                            IconSource="Refresh"
+                            Header="Reset Checkpoints Cache"
+                            Description="Rebuilds the installed checkpoints cache. Use if checkpoints are incorrectly labeled in the Model Browser."
+                            Margin="8,0">
+                            <ui:SettingsExpander.Footer>
+                                <Button Margin="8"
+                                        Command="{Binding ResetCheckpointCache}"
+                                        Content="Reset Checkpoints Cache"/>
                             </ui:SettingsExpander.Footer>
                         </ui:SettingsExpander>
                     </Grid>

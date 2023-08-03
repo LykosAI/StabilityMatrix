@@ -5,18 +5,27 @@ on:
     inputs:
       version:
         type: string
+        required: true
         description: Version (Semver without leading v)
       sentry-release:
         type: boolean
         description: Make Sentry Release?
+        default: true
+      github-release:
+        type: boolean
+        description: Make GitHub Release?
+        default: true
+      github-release-draft:
+        type: boolean
+        description: Mark GitHub Release as Draft?
         default: false
-
-  release:
-    types: [ published ]
+      github-release-prerelease:
+        type: boolean
+        description: Mark GitHub Release as Prerelease?
+        default: false
 
 jobs:
   release-linux:
-    if: github.repository == 'ionite34/StabilityMatrix' || github.event_name == 'workflow_dispatch'
     name: Release (linux-x64)
     env:
       platform-id: linux-x64
@@ -62,7 +71,6 @@ jobs:
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: pupnet -r linux-x64 -c Release --kind appimage --app-version $RELEASE_VERSION --clean -y
-      # Release/linux-x64/StabilityMatrix.x86_64.AppImage
 
       - name: Post Build
         run: mv ./Release/linux-x64/StabilityMatrix.x86_64.AppImage ${{ env.out-name }}
@@ -74,7 +82,7 @@ jobs:
           path: ${{ env.out-name }}
           
       - name: Create Sentry release
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' || github.event.inputs.sentry-release == 'true' }}
         uses: getsentry/action-release@v1
         env:
           MAKE_SENTRY_RELEASE: ${{ secrets.SENTRY_PROJECT != '' }}
@@ -101,10 +109,10 @@ jobs:
           
           
   release-windows:
-    if: github.repository == 'ionite34/StabilityMatrix' || github.event_name == 'workflow_dispatch'
     name: Release (win-x64)
     env:
       platform-id: win-x64
+      out-name: StabilityMatrix.exe
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
@@ -154,24 +162,48 @@ jobs:
         with:
           name: StabilityMatrix-${{ env.platform-id }}
           path: ./out/${{ env.out-name }}
+    
   
-  
-  cleanup:
-    name: Artifact Cleanup
-    needs: [release-linux, release-windows]
-    if: github.repository == 'ionite34/StabilityMatrix'
+  publish-release:
+    name: Publish GitHub Release
+    needs: [ release-linux, release-windows ]
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.github-release == 'true' }}
     runs-on: ubuntu-latest
-    continue-on-error: true
-
     steps:
-      - name: Remove old artifacts
-        uses: c-hive/gha-remove-artifacts@v1
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          age: '1 hour'
-          skip-recent: 2
-          skip-tags: false
+      - uses: actions/checkout@v3
 
-      - name: Output
-        if: always() && true
-        run: exit 0
+      - name: Extract Release Notes
+        id: release_notes
+        run: |
+          RELEASE_NOTES="$(awk -v version="${{ github.event.inputs.version }}" '/## v/{if(p) exit; if($0 ~ version) p=1}; p' CHANGELOG.md)"
+          RELEASE_NOTES="${RELEASE_NOTES//'%'/'%25'}"
+          RELEASE_NOTES="${RELEASE_NOTES//$'\n'/'%0A'}"
+          RELEASE_NOTES="${RELEASE_NOTES//$'\r'/'%0D'}"
+          echo "::set-output name=release_notes::$RELEASE_NOTES"
+
+      # Downloads all previous artifacts to the current working directory
+      - name: Download Artifacts
+        uses: actions/download-artifact@v3
+        
+      # Zip each build
+      - name: Zip Artifacts
+        run: |
+          zip -r StabilityMatrix-win-x64.zip StabilityMatrix-win-x64
+          zip -r StabilityMatrix-linux-x64.zip StabilityMatrix-linux-x64
+
+      - name: Create Github Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            StabilityMatrix-win-x64.zip
+            StabilityMatrix-linux-x64.zip
+            StabilityMatrix-win-x64/StabilityMatrix.exe
+            StabilityMatrix-linux-x64/StabilityMatrix.AppImage
+          fail_on_unmatched_files: true
+          tag_name: v${{ github.event.inputs.version }}
+          body: ${{ steps.release_notes.outputs.release_notes }}
+          draft: ${{ github.event.inputs.github-release-draft == 'true' }}
+          prerelease: ${{ github.event.inputs.github-release-prerelease == 'true' }}

@@ -119,13 +119,20 @@ public class SettingsManager : ISettingsManager
         var sourceSetter = assigner.Compile();
         
         var settingsGetter = settingsProperty.Compile();
-        var (_, settingsAssigner) = Expressions.GetAssigner(settingsProperty);
+        var (targetPropertyName, settingsAssigner) = Expressions.GetAssigner(settingsProperty);
         var settingsSetter = settingsAssigner.Compile();
+        
+        var sourceTypeName = source.GetType().Name;
         
         // Update source when settings change
         SettingsPropertyChanged += (_, args) =>
         {
             if (args.PropertyName != propertyName) return;
+            
+            Logger.Trace(
+                "[RelayPropertyFor] " +
+                "Settings.{TargetProperty:l} -> {SourceType:l}.{SourceProperty:l}", 
+                targetPropertyName, sourceTypeName, propertyName);
             
             sourceSetter(source, settingsGetter(Settings));
         };
@@ -134,6 +141,11 @@ public class SettingsManager : ISettingsManager
         source.PropertyChanged += (_, args) =>
         {
             if (args.PropertyName != propertyName) return;
+            
+            Logger.Trace(
+                "[RelayPropertyFor] " +
+                "{SourceType:l}.{SourceProperty:l} -> Settings.{TargetProperty:l}", 
+                sourceTypeName, propertyName, targetPropertyName);
             
             settingsSetter(Settings, sourceGetter(source));
             SaveSettingsAsync().SafeFireAndForget();
@@ -213,14 +225,12 @@ public class SettingsManager : ISettingsManager
     /// </summary>
     public void SetLibraryPath(string path)
     {
-        var appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var homeDir = Path.Combine(appDataDir, "StabilityMatrix");
-        Directory.CreateDirectory(homeDir);
-        var libraryJsonPath = Path.Combine(homeDir, "library.json");
+        Compat.AppDataHome.Create();
+        var libraryJsonFile = Compat.AppDataHome.JoinFile("library.json");
 
         var library = new LibrarySettings { LibraryPath = path };
         var libraryJson = JsonSerializer.Serialize(library, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(libraryJsonPath, libraryJson);
+        libraryJsonFile.WriteAllText(libraryJson);
         
         // actually create the LibraryPath directory
         Directory.CreateDirectory(path);
@@ -290,7 +300,7 @@ public class SettingsManager : ISettingsManager
         if (oldSettings == null)
             return default;
         
-        return oldSettings.ActiveInstalledPackage ?? default;
+        return oldSettings.ActiveInstalledPackageId ?? default;
     }
     
     public void AddPathExtension(string pathExtension)
@@ -365,7 +375,7 @@ public class SettingsManager : ISettingsManager
     
     public string? GetActivePackageHost()
     {
-        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == Settings.ActiveInstalledPackage);
+        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == Settings.ActiveInstalledPackageId);
         if (package == null) return null;
         var hostOption = package.LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "host");
         if (hostOption?.OptionValue != null)
@@ -377,7 +387,7 @@ public class SettingsManager : ISettingsManager
 
     public string? GetActivePackagePort()
     {
-        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == Settings.ActiveInstalledPackage);
+        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == Settings.ActiveInstalledPackageId);
         if (package == null) return null;
         var portOption = package.LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "port");
         if (portOption?.OptionValue != null)
@@ -436,34 +446,31 @@ public class SettingsManager : ISettingsManager
         if (Settings.InstalledModelHashes.Any())
             return;
 
-        Task.Run(() =>
+        var sw = new Stopwatch();
+        sw.Start();
+
+        var modelHashes = new HashSet<string>();
+        var sharedModelDirectory = Path.Combine(LibraryDir, "Models");
+        
+        if (!Directory.Exists(sharedModelDirectory)) return;
+        
+        var connectedModelJsons = Directory.GetFiles(sharedModelDirectory, "*.cm-info.json",
+            SearchOption.AllDirectories);
+        foreach (var jsonFile in connectedModelJsons)
         {
-            var sw = new Stopwatch();
-            sw.Start();
+            var json = File.ReadAllText(jsonFile);
+            var connectedModel = JsonSerializer.Deserialize<ConnectedModelInfo>(json);
 
-            var modelHashes = new HashSet<string>();
-            var sharedModelDirectory = Path.Combine(LibraryDir, "Models");
-            
-            if (!Directory.Exists(sharedModelDirectory)) return;
-            
-            var connectedModelJsons = Directory.GetFiles(sharedModelDirectory, "*.cm-info.json",
-                SearchOption.AllDirectories);
-            foreach (var jsonFile in connectedModelJsons)
+            if (connectedModel?.Hashes.BLAKE3 != null)
             {
-                var json = File.ReadAllText(jsonFile);
-                var connectedModel = JsonSerializer.Deserialize<ConnectedModelInfo>(json);
-
-                if (connectedModel?.Hashes.BLAKE3 != null)
-                {
-                    modelHashes.Add(connectedModel.Hashes.BLAKE3);
-                }
+                modelHashes.Add(connectedModel.Hashes.BLAKE3);
             }
+        }
 
-            Transaction(s => s.InstalledModelHashes = modelHashes);
-            
-            sw.Stop();
-            Logger.Info($"Indexed {modelHashes.Count} checkpoints in {sw.ElapsedMilliseconds}ms");
-        }).SafeFireAndForget();
+        Transaction(s => s.InstalledModelHashes = modelHashes);
+        
+        sw.Stop();
+        Logger.Info($"Indexed {modelHashes.Count} checkpoints in {sw.ElapsedMilliseconds}ms");
     }
 
     /// <summary>

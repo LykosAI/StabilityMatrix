@@ -65,7 +65,7 @@ public static class DesignData
                         LastUpdateCheck = DateTimeOffset.Now
                     }
                 },
-                ActiveInstalledPackage = activePackageId
+                ActiveInstalledPackageId = activePackageId
             }
         });
         

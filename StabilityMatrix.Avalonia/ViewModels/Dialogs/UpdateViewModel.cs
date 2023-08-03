@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Python.Runtime;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
@@ -13,6 +14,7 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
+using Dispatcher = Avalonia.Threading.Dispatcher;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
@@ -50,13 +52,28 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
     
     public override async Task OnLoadedAsync()
     {
-        UpdateText = $"Stability Matrix v{UpdateInfo?.Version} is now available! You currently have v{Compat.AppVersion}. Would you like to update now?";
+        if (UpdateInfo is null) return;
+        
+        UpdateText = $"Stability Matrix v{UpdateInfo.Version} is now available! You currently have v{Compat.AppVersion}. Would you like to update now?";
         
         var client = httpClientFactory.CreateClient();
-        var response = await client.GetAsync(UpdateInfo?.ChangelogUrl);
+        var response = await client.GetAsync(UpdateInfo.ChangelogUrl);
         if (response.IsSuccessStatusCode)
         {
             ReleaseNotes = await response.Content.ReadAsStringAsync();
+            
+            // Formatting for new changelog format
+            // https://keepachangelog.com/en/1.1.0/
+            if (UpdateInfo.ChangelogUrl.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+            {
+                // Skip until the first occurrence of "##"
+                const string delimiter = "##";
+                var startIndex = ReleaseNotes.IndexOf(delimiter, StringComparison.Ordinal);
+                if (startIndex != -1)
+                {
+                    ReleaseNotes = ReleaseNotes[startIndex..];
+                }
+            }
         }
         else
         {

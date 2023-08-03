@@ -1,5 +1,6 @@
 ﻿using Octokit;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 
@@ -16,6 +17,7 @@ public abstract class BasePackage
     public abstract string GithubUrl { get; }
     public abstract string LicenseType { get; }
     public abstract string LicenseUrl { get; }
+    public virtual string Disclaimer => string.Empty;
     
     /// <summary>
     /// Primary command to launch the package. 'Launch' buttons uses this.
@@ -35,7 +37,8 @@ public abstract class BasePackage
         IProgress<ProgressReport>? progress = null);
     public abstract Task InstallPackage(IProgress<ProgressReport>? progress = null);
     public abstract Task RunPackage(string installedPackagePath, string command, string arguments);
-    
+    public abstract Task SetupModelFolders(DirectoryPath installDirectory);
+    public abstract Task UpdateModelFolders(DirectoryPath installDirectory);
     
     /// <summary>
     /// Shuts down the subprocess, canceling any pending streams.
@@ -58,9 +61,9 @@ public abstract class BasePackage
     
     /// <summary>
     /// The shared folders that this package supports.
-    /// Mapping of <see cref="SharedFolderType"/> to the relative path from the package root.
+    /// Mapping of <see cref="SharedFolderType"/> to the relative paths from the package root.
     /// </summary>
-    public virtual Dictionary<SharedFolderType, string>? SharedFolders { get; }
+    public virtual Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
     
     public abstract Task<string> GetLatestVersion();
     public abstract Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true);

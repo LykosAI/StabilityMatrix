@@ -41,6 +41,16 @@ public class MockLaunchPageViewModel : LaunchPageViewModel
 
         RunningPackage = new DankDiffusion(null!, null!, null!, null!);
         
+        Console.Document.Insert(0, 
+            """
+            Python 3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]
+            Version: 1.5.0
+            Commit hash: <none>
+
+            Fetching updates for midas...
+            Checking out commit for midas with hash: 2e42b7f...
+            """);
+        
         return Task.CompletedTask;
     }
 

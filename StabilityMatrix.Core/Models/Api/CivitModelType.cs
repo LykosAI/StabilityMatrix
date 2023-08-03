@@ -26,5 +26,6 @@ public enum CivitModelType
     Model,
     [ConvertTo<SharedFolderType>(SharedFolderType.LyCORIS)]
     LoCon,
+    Other,
     All,
 }

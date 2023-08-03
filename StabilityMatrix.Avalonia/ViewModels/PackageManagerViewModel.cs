@@ -100,7 +100,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
         var installedPackages = settingsManager.Settings.InstalledPackages;
 
         SelectedPackage = installedPackages.FirstOrDefault(x =>
-            x.Id == settingsManager.Settings.ActiveInstalledPackage);
+            x.Id == settingsManager.Settings.ActiveInstalledPackageId);
         SelectedPackage ??= installedPackages.FirstOrDefault();
         
         InstallButtonEnabled = SelectedPackage != null;
@@ -135,7 +135,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
         if (SelectedPackage == null) return;
         if (InstallButtonText == "Launch")
         {
-            settingsManager.Transaction(s => s.ActiveInstalledPackage = SelectedPackage.Id);
+            settingsManager.Transaction(s => s.ActiveInstalledPackageId = SelectedPackage.Id);
             
             EventManager.Instance.RequestPageChange(typeof(LaunchPageViewModel));
             EventManager.Instance.OnPackageLaunchRequested(SelectedPackage.Id);
@@ -289,17 +289,17 @@ public partial class PackageManagerViewModel : PageViewModelBase
     private async Task UpdateSelectedPackage()
     {
         if (SelectedPackage == null) return;
-        
-        var package = packageFactory.FindPackageByName(SelectedPackage.PackageName);
+        var installedPackage = SelectedPackage;
+        var package = packageFactory.FindPackageByName(installedPackage.PackageName);
         if (package == null)
         {
             logger.LogError("Could not find package {SelectedPackagePackageName}", 
-                SelectedPackage.PackageName);
+                installedPackage.PackageName);
             return;
         }
 
-        ProgressText = $"Updating {SelectedPackage.DisplayName} to latest version...";
-        package.InstallLocation = SelectedPackage.FullPath!;
+        ProgressText = $"Updating {installedPackage.DisplayName} to latest version...";
+        package.InstallLocation = installedPackage.FullPath!;
         var progress = new Progress<ProgressReport>(progress =>
         {
             var percent = Convert.ToInt32(progress.Percentage);
@@ -311,14 +311,14 @@ public partial class PackageManagerViewModel : PageViewModelBase
             EventManager.Instance.OnGlobalProgressChanged(percent);
         });
         
-        var updateResult = await package.Update(SelectedPackage, progress);
+        var updateResult = await package.Update(installedPackage, progress);
 
         if (string.IsNullOrWhiteSpace(updateResult))
         {
             var errorMsg =
-                $"There was an error updating {SelectedPackage.DisplayName}. Please try again later.";
+                $"There was an error updating {installedPackage.DisplayName}. Please try again later.";
 
-            if (SelectedPackage.PackageName == "automatic")
+            if (installedPackage.PackageName == "automatic")
             {
                 errorMsg = errorMsg.Replace("Please try again later.",
                     "Please stash any changes before updating, or manually update the package.");
@@ -329,10 +329,15 @@ public partial class PackageManagerViewModel : PageViewModelBase
                 errorMsg, NotificationType.Error));
         }
         
-        settingsManager.UpdatePackageVersionNumber(SelectedPackage.Id, updateResult);
+        settingsManager.UpdatePackageVersionNumber(installedPackage.Id, updateResult);
         notificationService.Show("Update complete",
-            $"{SelectedPackage.DisplayName} has been updated to the latest version.",
+            $"{installedPackage.DisplayName} has been updated to the latest version.",
             NotificationType.Success);
+        
+        installedPackage.UpdateAvailable = false;
+        UpdateAvailable = false;
+        InstallButtonText = "Launch";
+        
         await OnLoadedAsync();
         await DelayedClearProgress(TimeSpan.FromSeconds(3));
     }
@@ -347,6 +352,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
         var dialog = new BetterContentDialog
         {
             MaxDialogWidth = 1100,
+            MinDialogWidth = 900,
             DefaultButton = ContentDialogButton.Close,
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
@@ -368,8 +374,5 @@ public partial class PackageManagerViewModel : PageViewModelBase
         ProgressText = string.Empty;
         ProgressValue = 0;
         IsIndeterminate = false;
-    
-        SelectedPackage.UpdateAvailable = false;
-        UpdateAvailable = false;
     }
 }

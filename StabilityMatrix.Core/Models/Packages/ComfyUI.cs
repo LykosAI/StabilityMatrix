@@ -3,10 +3,13 @@ using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -33,19 +36,19 @@ public class ComfyUI : BaseGitPackage
     }
 
     // https://github.com/comfyanonymous/ComfyUI/blob/master/folder_paths.py#L11
-    public override Dictionary<SharedFolderType, string> SharedFolders => new()
+    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders => new()
     {
-        [SharedFolderType.StableDiffusion] = "models/checkpoints",
-        [SharedFolderType.Diffusers] = "models/diffusers",
-        [SharedFolderType.Lora] = "models/loras",
-        [SharedFolderType.CLIP] = "models/clip",
-        [SharedFolderType.TextualInversion] = "models/embeddings",
-        [SharedFolderType.VAE] = "models/vae",
-        [SharedFolderType.ApproxVAE] = "models/vae_approx",
-        [SharedFolderType.ControlNet] = "models/controlnet",
-        [SharedFolderType.GLIGEN] = "models/gligen",
-        [SharedFolderType.ESRGAN] = "models/upscale_models",
-        [SharedFolderType.Hypernetwork] = "models/hypernetworks",
+        [SharedFolderType.StableDiffusion] = new[] {"models/checkpoints"},
+        [SharedFolderType.Diffusers] = new[] {"models/diffusers"},
+        [SharedFolderType.Lora] = new[] {"models/loras"},
+        [SharedFolderType.CLIP] = new[] {"models/clip"},
+        [SharedFolderType.TextualInversion] = new[] {"models/embeddings"},
+        [SharedFolderType.VAE] = new[] {"models/vae"},
+        [SharedFolderType.ApproxVAE] = new[] {"models/vae_approx"},
+        [SharedFolderType.ControlNet] = new[] {"models/controlnet"},
+        [SharedFolderType.GLIGEN] = new[] {"models/gligen"},
+        [SharedFolderType.ESRGAN] = new[] {"models/upscale_models"},
+        [SharedFolderType.Hypernetwork] = new[] {"models/hypernetworks"},
     };
     
     public override List<LaunchOptionDefinition> LaunchOptions => new List<LaunchOptionDefinition>
@@ -170,5 +173,75 @@ public class ComfyUI : BaseGitPackage
             args.TrimEnd(), 
             HandleConsoleOutput, 
             HandleExit);
+    }
+
+    public override Task SetupModelFolders(DirectoryPath installDirectory)
+    {
+        var extraPathsYamlPath = installDirectory + "extra_model_paths.yaml";
+        var modelsDir = SettingsManager.ModelsDirectory;
+
+        var deserializer = new DeserializerBuilder()
+            .WithNamingConvention(UnderscoredNamingConvention.Instance)
+            .IgnoreUnmatchedProperties()
+            .Build();
+
+        var exists = File.Exists(extraPathsYamlPath);
+        if (!exists)
+        {
+            Logger.Info("Creating extra_model_paths.yaml");
+            File.WriteAllText(extraPathsYamlPath, string.Empty);
+        }
+        var yaml = File.ReadAllText(extraPathsYamlPath);
+        var comfyModelPaths = deserializer.Deserialize<ComfyModelPathsYaml>(yaml) ??
+                              // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+                              // cuz it can actually be null lol 
+                              new ComfyModelPathsYaml();
+        
+        comfyModelPaths.StabilityMatrix ??= new ComfyModelPathsYaml.SmData();
+        comfyModelPaths.StabilityMatrix.Checkpoints = Path.Combine(modelsDir, "StableDiffusion");
+        comfyModelPaths.StabilityMatrix.Vae = Path.Combine(modelsDir, "VAE");
+        comfyModelPaths.StabilityMatrix.Loras = $"{Path.Combine(modelsDir, "Lora")}\n" +
+                                       $"{Path.Combine(modelsDir, "LyCORIS")}";
+        comfyModelPaths.StabilityMatrix.UpscaleModels = $"{Path.Combine(modelsDir, "ESRGAN")}\n" +
+                                              $"{Path.Combine(modelsDir, "RealESRGAN")}\n" +
+                                              $"{Path.Combine(modelsDir, "SwinIR")}";
+        comfyModelPaths.StabilityMatrix.Embeddings = Path.Combine(modelsDir, "TextualInversion");
+        comfyModelPaths.StabilityMatrix.Hypernetworks = Path.Combine(modelsDir, "Hypernetwork");
+        comfyModelPaths.StabilityMatrix.Controlnet = Path.Combine(modelsDir, "ControlNet");
+        comfyModelPaths.StabilityMatrix.Clip = Path.Combine(modelsDir, "CLIP");
+        comfyModelPaths.StabilityMatrix.Diffusers = Path.Combine(modelsDir, "Diffusers");
+        comfyModelPaths.StabilityMatrix.Gligen = Path.Combine(modelsDir, "GLIGEN");
+        comfyModelPaths.StabilityMatrix.VaeApprox = Path.Combine(modelsDir, "ApproxVAE");
+        
+        var serializer = new SerializerBuilder()
+            .WithNamingConvention(UnderscoredNamingConvention.Instance)
+            .Build();
+        var yamlData = serializer.Serialize(comfyModelPaths);
+        File.WriteAllText(extraPathsYamlPath, yamlData);
+
+        return Task.CompletedTask;
+    }
+
+    public override Task UpdateModelFolders(DirectoryPath installDirectory) =>
+        SetupModelFolders(installDirectory);
+
+    public class ComfyModelPathsYaml
+    {
+        public class SmData
+        {
+            public string Checkpoints { get; set; }
+            public string Vae { get; set; }
+            public string Loras { get; set; }
+            public string UpscaleModels { get; set; }
+            public string Embeddings { get; set; }
+            public string Hypernetworks { get; set; }
+            public string Controlnet { get; set; }
+            public string Clip { get; set; }
+            public string Diffusers { get; set; }
+            public string Gligen { get; set; }
+            public string VaeApprox { get; set; }
+        }
+
+        public SmData? StabilityMatrix { get; set; }
     }
 }

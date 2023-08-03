@@ -151,7 +151,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
             new ObservableCollection<InstalledPackage>(settingsManager.Settings.InstalledPackages);
         
         // Load active package
-        SelectedPackage = settingsManager.Settings.GetActiveInstalledPackage();
+        SelectedPackage = settingsManager.Settings.ActiveInstalledPackage;
     }
 
     [RelayCommand]

@@ -100,7 +100,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
         var installedPackages = settingsManager.Settings.InstalledPackages;
 
         SelectedPackage = installedPackages.FirstOrDefault(x =>
-            x.Id == settingsManager.Settings.ActiveInstalledPackage);
+            x.Id == settingsManager.Settings.ActiveInstalledPackageId);
         SelectedPackage ??= installedPackages.FirstOrDefault();
         
         InstallButtonEnabled = SelectedPackage != null;
@@ -135,7 +135,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
         if (SelectedPackage == null) return;
         if (InstallButtonText == "Launch")
         {
-            settingsManager.Transaction(s => s.ActiveInstalledPackage = SelectedPackage.Id);
+            settingsManager.Transaction(s => s.ActiveInstalledPackageId = SelectedPackage.Id);
             
             EventManager.Instance.RequestPageChange(typeof(LaunchPageViewModel));
             EventManager.Instance.OnPackageLaunchRequested(SelectedPackage.Id);

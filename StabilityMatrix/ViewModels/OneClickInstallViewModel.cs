@@ -141,7 +141,7 @@ public partial class OneClickInstallViewModel : ObservableObject
         };
         await using var st = settingsManager.BeginTransaction();
         st.Settings.InstalledPackages.Add(package);
-        st.Settings.ActiveInstalledPackage = package.Id;
+        st.Settings.ActiveInstalledPackageId = package.Id;
         EventManager.Instance.OnInstalledPackagesChanged();
         
         HeaderText = "Installation complete!";

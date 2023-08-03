@@ -1,13 +1,30 @@
-﻿namespace StabilityMatrix.Core.Models.Settings;
+﻿using System.Text.Json.Serialization;
+
+namespace StabilityMatrix.Core.Models.Settings;
 
 public class Settings
 {
     public int? Version { get; set; } = 1;
-    public bool FirstLaunchSetupComplete { get; set; }
+    public bool FirstLaunchSetupComplete { get; set; }$""
     public string? Theme { get; set; } = "Dark";
 
     public List<InstalledPackage> InstalledPackages { get; set; } = new();
-    public Guid? ActiveInstalledPackage { get; set; }
+    
+    [JsonPropertyName("ActiveInstalledPackage")]
+    public Guid? ActiveInstalledPackageId { get; set; }
+
+    /// <summary>
+    /// The first installed package matching the <see cref="ActiveInstalledPackageId"/>
+    /// or null if no matching package
+    /// </summary>
+    [JsonIgnore]
+    public InstalledPackage? ActiveInstalledPackage
+    {
+        get => ActiveInstalledPackageId == null ? null : 
+            InstalledPackages.FirstOrDefault(x => x.Id == ActiveInstalledPackageId);
+        set => ActiveInstalledPackageId = value?.Id;
+    }
+    
     public bool HasSeenWelcomeNotification { get; set; }
     public List<string>? PathExtensions { get; set; }
     public string? WebApiHost { get; set; }
@@ -32,11 +49,6 @@ public class Settings
 
     public HashSet<string>? InstalledModelHashes { get; set; } = new();
 
-    public InstalledPackage? GetActiveInstalledPackage()
-    {
-        return GetInstalledPackageById(ActiveInstalledPackage);
-    }
-
     public void RemoveInstalledPackageAndUpdateActive(InstalledPackage package)
     {
         RemoveInstalledPackageAndUpdateActive(package.Id);
@@ -49,16 +61,6 @@ public class Settings
     }
     
     /// <summary>
-    /// Get a package by Id
-    /// Return null if not found
-    /// </summary>
-    public InstalledPackage? GetInstalledPackageById(Guid? id)
-    {
-        return id == null ? null : 
-            InstalledPackages.FirstOrDefault(x => x.Id == id);
-    }
-    
-    /// <summary>
     /// Update ActiveInstalledPackage if not valid
     /// uses first package or null if no packages
     /// </summary>
@@ -67,12 +69,12 @@ public class Settings
         // Empty packages - set to null
         if (InstalledPackages.Count == 0)
         {
-            ActiveInstalledPackage = null;
+            ActiveInstalledPackageId = null;
         }
         // Active package is not in package - set to first package
-        else if (InstalledPackages.All(x => x.Id != ActiveInstalledPackage))
+        else if (InstalledPackages.All(x => x.Id != ActiveInstalledPackageId))
         {
-            ActiveInstalledPackage = InstalledPackages[0].Id;
+            ActiveInstalledPackageId = InstalledPackages[0].Id;
         }
     }
 }

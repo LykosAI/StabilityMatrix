@@ -13,7 +13,7 @@ concurrency:
 jobs:
   build:
     if: github.repository == 'LykosAI/StabilityMatrix'
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
@@ -21,10 +21,16 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '7.0.x'
             
       - name: Install dependencies
         run: dotnet restore
+        
+      - name: Test
+        run: dotnet test StabilityMatrix.Tests
 
       - name: Build
-        run: dotnet publish ./StabilityMatrix.Avalonia/StabilityMatrix.Avalonia.csproj -o out -c Release -r win-x64 -p:PublishSingleFile=true --self-contained true
+        run: >
+          dotnet publish ./StabilityMatrix.Avalonia/StabilityMatrix.Avalonia.csproj 
+          -o out -c Release -r linux-x64 
+          --self-contained

@@ -5,16 +5,24 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.1.1
+
+### Fixed
+- Launch Page selected package now persists in settings
+
 ## v2.1.0
+
 ### Added
 - New installable Package - [VoltaML](https://github.com/VoltaML/voltaML-fast-stable-diffusion)
 - New installable Package - [InvokeAI](https://github.com/invoke-ai/InvokeAI)
 - Launch button can now support alternate commands / modes - currently only for InvokeAI
-  > <img width="249" alt="image" src="https://github.com/LykosAI/StabilityMatrix/assets/13956642/16a8ffdd-a3cb-4f4f-acc5-c062d3ade363">
+  > ![](https://github.com/LykosAI/StabilityMatrix/assets/13956642/16a8ffdd-a3cb-4f4f-acc5-c062d3ade363)
 - Settings option to set global environment variables for Packages
-  > <img width="771" alt="image" src="https://github.com/LykosAI/StabilityMatrix/assets/13956642/d577918e-82bb-46d4-9a3a-9b5318d3d4d8">
+  > ![](https://github.com/LykosAI/StabilityMatrix/assets/13956642/d577918e-82bb-46d4-9a3a-9b5318d3d4d8)
+
 ### Changed
 - Compatible packages (ComfyUI, Vlad/SD.Next) now use config files / launch args instead of symbolic links for shared model folder redirect
+
 ### Fixed
 - Fixed [#48](https://github.com/LykosAI/StabilityMatrix/issues/48) - model folders not showing in UI when they were empty
 - Updater now shows correct current version without trailing `.0`
@@ -26,13 +34,16 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#49](https://github.com/LykosAI/StabilityMatrix/issues/49) - download progress disappearing when changing pages in Model Browser
 
 ## v2.0.4
+
 ### Fixed
 - Fixed Model Browser downloading files without extensions
 
 ## v2.0.3
+
 ### Added
 - (Windows) New settings option to add Stability Matrix to the start menu
 - (Windows) Improved background "Mica" effect on Windows 11, should be smoother with less banding artifacts
+
 ### Fixed
 - Fixed model categories sometimes not showing if they are empty
 - Improved model download hash verification performance
@@ -41,12 +52,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - One click first time installer now defaults to using the "Package" name instead of the display name ("stable-diffusion-webui" instead of "Stable Diffusion WebUI") for the install folder name - probably safer against upstream issues on folder names with spaces.
 
 ## v2.0.2
+
 ### Fixed
 - (Linux) Updater now sets correct execute permissions
 - Image loading (i.e. Checkpoints File preview thumbnail) now has a notification for unsupported local image formats instead of crashing
 - Fix unable to start app issues on some machines and dropdowns showing wrong categories - disabled assembly trimming
 
 ## v2.0.1
+
 ### Added
 - Fully rewritten using Avalonia for improved UI and cross-platform support, our biggest update so far, with over 18,000 lines of code.
 - Release support for Windows and Linux, with macOS coming soon
@@ -57,6 +70,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Download Indicator on the nav menu for ongoing downloads and progress; supports multiple concurrent model downloads
 - Improved console with syntax highlighting, and provisional ANSI rendering for progress bars and advanced graphics
 - Input can now be sent to the running package process using the top-right keyboard button on the Launch page. Package input requests for a (y/n) response will now have an interactive popup.
+
 ### Fixed
 - Fixed crash on exit
 - Fixed updating from versions prior to 2.x.x

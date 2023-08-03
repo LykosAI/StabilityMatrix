@@ -79,7 +79,7 @@ public partial class LaunchViewModel : ObservableObject
     partial void OnSelectedPackageChanged(InstalledPackage? value)
     {
         if (clearingPackages) return;
-        settingsManager.Transaction(s => s.ActiveInstalledPackage = value?.Id);
+        settingsManager.Transaction(s => s.ActiveInstalledPackageId = value?.Id);
     }
 
     private void OnTeachingTooltipNeeded(object? sender, EventArgs e)
@@ -254,7 +254,7 @@ public partial class LaunchViewModel : ObservableObject
                 return;
             }
 
-            var activePackageId = settingsManager.Settings.ActiveInstalledPackage;
+            var activePackageId = settingsManager.Settings.ActiveInstalledPackageId;
             if (activePackageId != null)
             {
                 SelectedPackage = InstalledPackages.FirstOrDefault(

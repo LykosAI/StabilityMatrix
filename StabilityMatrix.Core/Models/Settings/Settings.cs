@@ -5,7 +5,7 @@ namespace StabilityMatrix.Core.Models.Settings;
 public class Settings
 {
     public int? Version { get; set; } = 1;
-    public bool FirstLaunchSetupComplete { get; set; }$""
+    public bool FirstLaunchSetupComplete { get; set; }
     public string? Theme { get; set; } = "Dark";
 
     public List<InstalledPackage> InstalledPackages { get; set; } = new();

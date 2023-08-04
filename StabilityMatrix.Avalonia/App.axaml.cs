@@ -250,6 +250,7 @@ public sealed class App : Application
         services.AddTransient<InferenceTextToImageViewModel>();
         services.AddTransient<SeedCardViewModel>();
         services.AddTransient<SamplerCardViewModel>();
+        services.AddTransient<ImageGalleryCardViewModel>();
         
         // Global progress
         services.AddSingleton<ProgressManagerViewModel>();
@@ -275,6 +276,7 @@ public sealed class App : Application
                 .Register(provider.GetRequiredService<InferenceTextToImageViewModel>)
                 .Register(provider.GetRequiredService<SeedCardViewModel>)
                 .Register(provider.GetRequiredService<SamplerCardViewModel>)
+                .Register(provider.GetRequiredService<ImageGalleryCardViewModel>)
                 .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>));
     }
 

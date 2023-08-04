@@ -369,6 +369,18 @@ public static class DesignData
         vm.SelectedSampler = "Euler a";
     });
 
+    public static ImageGalleryCardViewModel ImageGalleryCardViewModel =>
+        DialogFactory.Get<ImageGalleryCardViewModel>(vm =>
+        {
+            vm.ImageSources.AddRange(new []
+            {
+                "https://picsum.photos/seed/i1/200/300",
+                "https://picsum.photos/seed/i2/200/300",
+                "https://picsum.photos/seed/i3/200/300",
+                "https://picsum.photos/seed/i4/200/300",
+            });
+        });
+
 public static Indexer Types => new();
     
     public class Indexer

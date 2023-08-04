@@ -23,10 +23,10 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     public bool IsConnected => Client is not null;
     
     [ObservableProperty]
-    private List<string>? modelNames;
+    private IReadOnlyCollection<string>? modelNames;
 
     [ObservableProperty]
-    private List<string>? samplers;
+    private IReadOnlyCollection<string>? samplers;
     
     public InferenceClientManager(IApiFactory apiFactory)
     {
@@ -44,6 +44,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     protected void ClearSharedProperties()
     {
         ModelNames = null;
+        Samplers = null;
     }
 
     public async Task ConnectAsync()

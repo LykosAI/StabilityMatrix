@@ -1,13 +1,22 @@
-﻿using System.Threading.Tasks;
+﻿using System.Text.Json;
+using System.Threading.Tasks;
 using Avalonia.Collections;
+using Avalonia.Controls.Notifications;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using NLog;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
@@ -16,7 +25,9 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 [View(typeof(InferencePage))]
 public partial class InferenceViewModel : PageViewModelBase
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly INotificationService notificationService;
+    private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> vmFactory;
     private readonly IApiFactory apiFactory;
 
@@ -24,6 +35,14 @@ public partial class InferenceViewModel : PageViewModelBase
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.AppGeneric, IsFilled = true };
 
+    public RefreshBadgeViewModel ConnectionBadge { get; } = new()
+    {
+        State = ProgressState.Failed,
+        FailToolTipText = "Not connected",
+        FailIcon = FluentAvalonia.UI.Controls.Symbol.Refresh,
+        SuccessToolTipText = "Connected",
+    };
+    
     public IInferenceClientManager ClientManager { get; }
 
     public AvaloniaList<ViewModelBase> Tabs { get; } = new();
@@ -35,12 +54,14 @@ public partial class InferenceViewModel : PageViewModelBase
         ServiceManager<ViewModelBase> vmFactory,
         IApiFactory apiFactory,
         INotificationService notificationService,
-        IInferenceClientManager inferenceClientManager
-    )
+        IInferenceClientManager inferenceClientManager, 
+        ISettingsManager settingsManager)
     {
         this.vmFactory = vmFactory;
         this.apiFactory = apiFactory;
         this.notificationService = notificationService;
+        this.settingsManager = settingsManager;
+        
         ClientManager = inferenceClientManager;
     }
 
@@ -105,5 +126,59 @@ public partial class InferenceViewModel : PageViewModelBase
         }
 
         await ClientManager.CloseAsync();
+    }
+
+    /// <summary>
+    /// Menu "Save As" command.
+    /// </summary>
+    [RelayCommand]
+    private async Task MenuSaveAs()
+    {
+        var currentTab = SelectedTab;
+        if (currentTab == null)
+        {
+            Logger.Trace("MenuSaveAs: currentTab is null");
+            return;
+        }
+        
+        var document = InferenceProjectDocument.FromLoadable(currentTab);
+        
+        // Prompt for save file dialog
+        var provider = App.StorageProvider;
+
+        var projectDir = new DirectoryPath(settingsManager.LibraryDir, "Projects");
+        var startDir = await provider.TryGetFolderFromPathAsync(projectDir);
+        
+        var result = await provider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Save As",
+            SuggestedFileName = "Untitled",
+            FileTypeChoices = new FilePickerFileType[]
+            {
+                new("StabilityMatrix Project")
+                {
+                    Patterns = new[] { ".smproj" },
+                    MimeTypes = new[] { "application/json" },
+                }
+            },
+            SuggestedStartLocation = startDir,
+            DefaultExtension = ".smproj",
+            ShowOverwritePrompt = true,
+        });
+        
+        if (result is null)
+        {
+            Logger.Trace("MenuSaveAs: user cancelled");
+            return;
+        }
+        
+        // Save to file
+        await using var stream = await result.OpenWriteAsync();
+        await JsonSerializer.SerializeAsync(stream, document, new JsonSerializerOptions
+        {
+            WriteIndented = true,
+        });
+        
+        notificationService.Show("Saved", $"Saved project to {result.Name}", NotificationType.Success);
     }
 }

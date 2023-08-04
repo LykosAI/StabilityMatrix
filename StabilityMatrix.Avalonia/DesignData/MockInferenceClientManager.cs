@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Core.Inference;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
-public class MockInferenceClientManager : IInferenceClientManager
+public class MockInferenceClientManager : ObservableObject, IInferenceClientManager
 {
     public ComfyClient? Client { get; set; }
     
-    public List<string>? ModelNames { get; set; }
-    public List<string>? Samplers { get; set; } = new()
+    public IReadOnlyCollection<string>? ModelNames { get; set; }
+    public IReadOnlyCollection<string>? Samplers { get; set; } = new[]
     {
         "Euler a",
         "Euler",

@@ -5,6 +5,7 @@
     xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
@@ -35,12 +36,11 @@
                             Margin="0,0,8,0"
                             VerticalAlignment="Center"
                             Text="Model" />
-                        <ui:FAComboBox 
+                        <ui:FAComboBox
+                            Grid.Column="1"
+                            HorizontalAlignment="Stretch"
                             ItemsSource="{Binding ClientManager.ModelNames}"
-                            SelectedItem="{Binding SelectedModelName, Mode=TwoWay}"
-                            IsEditable="True"
-                            Grid.Column="1" 
-                            HorizontalAlignment="Stretch" />
+                            SelectedItem="{Binding SelectedModelName, Mode=TwoWay}" />
                         <Button Grid.Column="2" Margin="8,0,0,0">
                             <ui:SymbolIcon FontSize="16" Symbol="Settings" />
                         </Button>
@@ -48,9 +48,22 @@
                 </controls:Card>
                 <!--  Samplers and steps  -->
                 <controls:SamplerCard DataContext="{Binding SamplerCardViewModel}" />
+                <!--  Batch Size  -->
+                <controls:Card Padding="8">
+                    <Grid Margin="8">
+                        <ui:NumberBox
+                            HorizontalAlignment="Stretch"
+                            Header="Batch Size"
+                            Maximum="8"
+                            Minimum="1"
+                            SelectionHighlightColor="Transparent"
+                            SpinButtonPlacementMode="Inline"
+                            ValidationMode="InvalidInputOverwritten"
+                            Value="{Binding BatchSize}" />
+                    </Grid>
+                </controls:Card>
                 <!--  Seed  -->
                 <controls:SeedCard DataContext="{Binding SeedCardViewModel}" />
-
             </StackPanel>
         </ScrollViewer>
 
@@ -60,61 +73,68 @@
             Background="{DynamicResource ScrollBarTrackStroke}" />
 
         <!--  Prompt card  -->
-        <controls:Card
+        <Grid
             Grid.Row="0"
             Grid.Column="2"
-            Margin="8,8,8,16"
-            Padding="8"
-            VerticalAlignment="Stretch"
-            VerticalContentAlignment="Stretch">
-            <Grid Margin="4,8" RowDefinitions="*,*,Auto">
-                <StackPanel Spacing="4">
+            Margin="8,8,8,16">
+            <controls:Card
+                Padding="8"
+                VerticalAlignment="Stretch"
+                VerticalContentAlignment="Stretch">
+                <Grid Margin="4,8" RowDefinitions="Auto,*,Auto,*,Auto">
+
                     <TextBlock
+                        Grid.Row="0"
                         Margin="2"
                         FontSize="14"
                         Text="Prompt" />
                     <avaloniaEdit:TextEditor
                         x:Name="PromptEditor"
+                        Grid.Row="1"
+                        Margin="0,8,0,8"
+                        CornerRadius="8"
                         Document="{Binding PromptDocument}"
-                        Margin="8"
                         FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
                         LineNumbersForeground="DarkSlateGray"
                         ShowLineNumbers="True"
                         VerticalScrollBarVisibility="Auto"
                         WordWrap="True" />
-                </StackPanel>
-                <StackPanel Grid.Row="1" Spacing="4">
+
                     <TextBlock
+                        Grid.Row="2"
                         Margin="2"
                         FontSize="14"
                         Text="Negative Prompt" />
                     <avaloniaEdit:TextEditor
                         x:Name="NegativePromptEditor"
+                        Grid.Row="3"
+                        Margin="0,8,0,8"
                         Document="{Binding NegativePromptDocument}"
-                        Margin="8"
                         FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
                         LineNumbersForeground="DarkSlateGray"
                         ShowLineNumbers="True"
                         VerticalScrollBarVisibility="Auto"
                         WordWrap="True" />
-                </StackPanel>
-                <Grid
-                    Grid.Row="2"
-                    HorizontalAlignment="Center"
-                    RowDefinitions="Auto,*">
-                    <ProgressBar
-                        Grid.Row="0"
-                        VerticalAlignment="Bottom"
-                        IsVisible="False" />
-                    <Button
-                        Grid.Row="1"
-                        Command="{Binding GenerateImageCommand}"
-                        HorizontalAlignment="Stretch"
-                        Classes="accent"
-                        Content="Generate Image" />
+
+                    <Grid
+                        Grid.Row="4"
+                        HorizontalAlignment="Center"
+                        RowDefinitions="Auto,*">
+                        <ProgressBar
+                            Grid.Row="0"
+                            VerticalAlignment="Bottom"
+                            IsVisible="False" />
+                        <Button
+                            Grid.Row="1"
+                            HorizontalAlignment="Stretch"
+                            Classes="accent"
+                            Command="{Binding GenerateImageCommand}"
+                            Content="Generate Image" />
+                    </Grid>
                 </Grid>
-            </Grid>
-        </controls:Card>
+            </controls:Card>
+        </Grid>
+
 
         <GridSplitter
             Grid.Row="0"
@@ -122,7 +142,24 @@
             Background="{DynamicResource ScrollBarTrackStroke}" />
 
         <!--  Image Viewer  -->
-        <controls:Card
+        <Grid
+            Grid.Row="0"
+            Grid.Column="4"
+            RowDefinitions="Auto,*"
+            Margin="8,8,8,16"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Top">
+            <ProgressBar
+                DataContext="{Binding OutputProgress}"
+                IsVisible="{Binding IsProgressVisible}"
+                Maximum="{Binding Maximum}"
+                Value="{Binding Value}" />
+            <controls:ImageGalleryCard
+                Grid.Row="1"
+                VerticalAlignment="Stretch"
+                DataContext="{Binding ImageGalleryCardViewModel}" />
+        </Grid>
+        <!--<controls:Card
             Grid.Row="0"
             Grid.Column="4"
             Margin="8,8,8,16"
@@ -138,32 +175,34 @@
                         Margin="2"
                         FontSize="14"
                         Text="Image" />
-                    <!--<ProgressBar
+                    ~1~<ProgressBar
                             Maximum="100"
                             Value="{Binding ProgressValue, FallbackValue=10}"
                             Visibility="{Binding ProgressBarVisibility, FallbackValue=Visible}"
-                            Width="500" />-->
+                            Width="500" />@1@
                 </StackPanel>
                 <Grid
                     Grid.Row="1"
                     MinHeight="512"
                     VerticalAlignment="Stretch"
-                    RowDefinitions="Auto,*"
-                    Background="{DynamicResource ApplicationBackgroundBrush}">
+                    Background="{DynamicResource ApplicationBackgroundBrush}"
+                    RowDefinitions="Auto,*">
                     <ProgressBar
-                        Value="{Binding ProgressCurrent}"
-                        Maximum="{Binding ProgressMax}"/>
+                        DataContext="{Binding OutputProgress}"
+                        IsVisible="{Binding IsProgressVisible}"
+                        Maximum="{Binding Maximum}"
+                        Value="{Binding Value}" />
                     <controls:BetterAdvancedImage
                         Grid.Row="1"
-                        HorizontalAlignment="Stretch"
-                        CornerRadius="8"
                         Margin="8"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        CornerRadius="8"
                         Source="{Binding OutputImageSource}"
-                        Stretch="Uniform"
-                        VerticalAlignment="Stretch"/>
+                        Stretch="Uniform" />
                 </Grid>
             </Grid>
-        </controls:Card>
+        </controls:Card>-->
 
         <!--<Button
                 Classes="accent"

@@ -19,11 +19,10 @@
     mc:Ignorable="d">
     <Grid>
         <ui:TabView
-            Grid.Row="0"
+            HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
             CanReorderTabs="True"
-            CloseButtonOverlayMode="Always"
-            TabStripHeader=""
+            CloseButtonOverlayMode="Auto"
             AddTabButtonCommand="{Binding AddTabCommand}"
             TabItems="{Binding Tabs}"
             SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
@@ -39,22 +38,35 @@
             <ui:TabView.TabStripFooter>
                 <StackPanel
                     Orientation="Horizontal"
-                    Margin="0,4,16,4"
                     Spacing="8"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Top">
+                    HorizontalAlignment="Right">
                     <Button 
+                        Padding="12,4"
                         IsVisible="{Binding !ClientManager.IsConnected}"
                         Command="{Binding ConnectCommand}"
-                        Classes="accent"
-                        Content="Connect"/> 
+                        Classes="success"
+                        Content="Connect"/>
                     <Button 
-                        IsVisible="{Binding ClientManager.IsConnected}"
-                        Command="{Binding DisconnectCommand}"
-                        Content="Disconnect"/> 
-                    <TextBlock
-                        Text="Inference"
-                        Theme="{DynamicResource SubtitleTextBlockStyle}" />
+                        Classes="transparent" 
+                        BorderThickness="0">
+                        <ui:SymbolIcon FontSize="18" Symbol="MoreVertical"/>
+                        <Button.Flyout>
+                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                <MenuItem Header="Open Project..."
+                                          InputGesture="Ctrl+O"/>
+                                <Separator/>
+                                <MenuItem Header="Save"
+                                          InputGesture="Ctrl+S"/>
+                                <MenuItem Header="Save As..."
+                                          Command="{Binding MenuSaveAsCommand}"
+                                          InputGesture="Ctrl+Shift+S"/>
+                                <Separator IsVisible="{Binding ClientManager.IsConnected}"/>
+                                <MenuItem Header="Disconnect"
+                                          Command="{Binding DisconnectCommand}"
+                                          IsVisible="{Binding ClientManager.IsConnected}"/>
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
                 </StackPanel>
             </ui:TabView.TabStripFooter>
         </ui:TabView>

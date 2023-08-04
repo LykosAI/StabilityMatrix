@@ -30,5 +30,6 @@
         <StyleInclude Source="Styles/SplitButtonStyles.axaml"/>
         <StyleInclude Source="Controls/SeedCard.axaml"/>
         <StyleInclude Source="Controls/SamplerCard.axaml"/>
+        <StyleInclude Source="Controls/ImageGalleryCard.axaml"/>
     </Application.Styles>
 </Application>

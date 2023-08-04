@@ -16,8 +16,9 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <controls:Card Padding="8" HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
-                    <StackPanel Margin="8" Spacing="8">
+                    <StackPanel Margin="8" Spacing="16">
                         <Grid ColumnDefinitions="Auto,*" RowDefinitions="*,*,*">
+                            <!-- Sampler -->
                             <TextBlock
                                 Grid.Row="0"
                                 Grid.Column="0"
@@ -27,11 +28,11 @@
                             <ui:FAComboBox
                                 Grid.Row="0"
                                 Grid.Column="1"
-                                IsEditable="True"
                                 ItemsSource="{Binding ClientManager.Samplers}"
-                                SelectedItem="{Binding SelectedSampler, Mode=TwoWay}"
+                                SelectedItem="{Binding SelectedSampler}"
                                 Margin="8,0,0,8"
                                 HorizontalAlignment="Stretch"/>
+                            <!-- Steps -->
                             <TextBlock
                                 Grid.Row="1"
                                 Grid.Column="0"
@@ -41,10 +42,12 @@
                             <ui:NumberBox
                                 Grid.Row="1"
                                 Grid.Column="1"
+                                SelectionHighlightColor="Transparent"
                                 Value="{Binding Steps}"
                                 Margin="8,0,0,8"
                                 HorizontalAlignment="Stretch"
                                 SpinButtonPlacementMode="Inline"/>
+                            <!-- CFG Scale -->
                             <TextBlock
                                 Grid.Row="2"
                                 Grid.Column="0"
@@ -53,6 +56,7 @@
                             <ui:NumberBox
                                 Grid.Row="2"
                                 Grid.Column="1"
+                                SelectionHighlightColor="Transparent"
                                 Value="{Binding CfgScale}"
                                 Margin="8,0,0,0"
                                 SimpleNumberFormat="F2"
@@ -62,40 +66,37 @@
                         </Grid>
                         
                         <StackPanel>
-                            <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,*">
+                            <!-- Dimensions -->
+                            <Grid ColumnDefinitions="*,Auto,*" RowDefinitions="Auto,*">
                                 <TextBlock
-                                    Text="Width" />
-                                <Slider 
-                                    Grid.Row="1" 
-                                    Grid.Column="0" 
-                                    Grid.ColumnSpan="2"
-                                    Minimum="0"
-                                    Maximum="2048"
-                                    Value="{Binding Width}"/>
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Margin="0,0,4,4"
+                                    Text="Width"/>
                                 <ui:NumberBox
                                     Grid.Row="1"
-                                    Grid.Column="2"
+                                    Grid.Column="0"
+                                    Margin="0,0,4,0"
+                                    PlaceholderText="128"
+                                    SmallChange="128"
+                                    ValidationMode="InvalidInputOverwritten"
                                     Value="{Binding Width}"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Stretch"
                                     SpinButtonPlacementMode="Compact"/>
-                            </Grid>
-                            <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,*">
                                 <TextBlock
-                                    Text="Height" />
-                                <Slider 
-                                    Grid.Row="1" 
-                                    Grid.Column="0" 
-                                    Grid.ColumnSpan="2"
-                                    Minimum="0"
-                                    Maximum="2048"
-                                    Value="{Binding Height}"/>
+                                    Grid.Row="0"
+                                    Grid.Column="2"
+                                    Margin="4,0,0,4"
+                                    Text="Height"/>
                                 <ui:NumberBox
                                     Grid.Row="1"
                                     Grid.Column="2"
+                                    Margin="4,0,0,0"
+                                    PlaceholderText="128"
+                                    SmallChange="128"
+                                    ValidationMode="InvalidInputOverwritten"
                                     Value="{Binding Height}"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Stretch"
                                     SpinButtonPlacementMode="Compact"/>
                             </Grid>
                         </StackPanel>

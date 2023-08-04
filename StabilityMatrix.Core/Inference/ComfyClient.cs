@@ -41,6 +41,11 @@ public class ComfyClient : InferenceClientBase
     /// Event raised when a executing update is received from the server
     /// </summary>
     public event EventHandler<ComfyWebSocketExecutingData>? ExecutingUpdateReceived;
+
+    /// <summary>
+    /// Event raised when a preview image is received from the server
+    /// </summary>
+    public event EventHandler<ComfyWebSocketImageData>? PreviewImageReceived; 
     
     public ComfyClient(IApiFactory apiFactory, Uri baseAddress)
     {
@@ -74,11 +79,10 @@ public class ComfyClient : InferenceClientBase
         switch (message.MessageType)
         {
             case WebSocketMessageType.Text:
-                Logger.Trace($"Received text message: {message.Text}");
                 HandleTextMessage(message.Text);
                 break;
             case WebSocketMessageType.Binary:
-                Logger.Trace($"Received binary message: {message.Binary.Length} bytes");
+                HandleBinaryMessage(message.Binary);
                 break;
             case WebSocketMessageType.Close:
                 Logger.Trace($"Received ws close message: {message.Text}");
@@ -164,6 +168,39 @@ public class ComfyClient : InferenceClientBase
         {
             Logger.Warn($"Unknown message type {json.Type} ({json.Data}), skipping");
         }
+    }
+
+    /// <summary>
+    /// Parses binary data (previews) into image streams
+    /// https://github.com/comfyanonymous/ComfyUI/blob/master/server.py#L518
+    /// </summary>
+    private void HandleBinaryMessage(byte[] data)
+    {
+        if (data is not {Length: > 4})
+        {
+            Logger.Warn("The input data is null or not long enough.");
+            return;
+        }
+        
+        // The first 4 bytes is int32 of the message type
+        // Subsequent 4 bytes following is int32 of the image format
+        // The rest is the image data
+        
+        // Read the image type from the first 4 bytes of the data.
+        // Python's struct.pack(">I", type_num) will pack the data as a big-endian unsigned int
+        /*var typeBytes = new byte[4];
+        stream.Read(typeBytes, 0, 4);
+        var imageType = BitConverter.ToInt32(typeBytes, 0);*/
+
+        /*if (!BitConverter.IsLittleEndian)
+        {
+            Array.Reverse(typeBytes);
+        }*/
+        
+        PreviewImageReceived?.Invoke(this, new ComfyWebSocketImageData
+        {
+            ImageBytes = data[8..],
+        });
     }
 
     public override async Task ConnectAsync(CancellationToken cancellationToken = default)

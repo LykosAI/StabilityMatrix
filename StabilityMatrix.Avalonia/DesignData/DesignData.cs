@@ -67,7 +67,7 @@ public static class DesignData
                         LastUpdateCheck = DateTimeOffset.Now
                     }
                 },
-                ActiveInstalledPackage = activePackageId
+                ActiveInstalledPackageId = activePackageId
             }
         });
 
@@ -85,8 +85,9 @@ public static class DesignData
             .AddSingleton<IDownloadService, MockDownloadService>()
             .AddSingleton<IHttpClientFactory, MockHttpClientFactory>()
             .AddSingleton<IApiFactory, MockApiFactory>()
-            .AddSingleton<IInferenceClientManager, MockInferenceClientManager>();
-
+            .AddSingleton<IInferenceClientManager, MockInferenceClientManager>()
+            .AddSingleton<IDiscordRichPresenceService, MockDiscordRichPresenceService>();
+        
         // Placeholder services that nobody should need during design time
         services
             .AddSingleton<IPyRunner>(_ => null!)

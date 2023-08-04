@@ -103,6 +103,10 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         this.sharedFolders = sharedFolders;
         this.dialogFactory = dialogFactory;
         
+        settingsManager.RelayPropertyFor(this, 
+            vm => vm.SelectedPackage,
+            settings => settings.ActiveInstalledPackage);
+        
         EventManager.Instance.PackageLaunchRequested += OnPackageLaunchRequested;
         EventManager.Instance.OneClickInstallFinished += OnOneClickInstallFinished;
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
@@ -151,7 +155,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
             new ObservableCollection<InstalledPackage>(settingsManager.Settings.InstalledPackages);
         
         // Load active package
-        SelectedPackage = settingsManager.Settings.GetActiveInstalledPackage();
+        SelectedPackage = settingsManager.Settings.ActiveInstalledPackage;
     }
 
     [RelayCommand]
@@ -245,6 +249,8 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         
         await basePackage.RunPackage(packagePath, command, userArgsString);
         RunningPackage = basePackage;
+        
+        EventManager.Instance.OnRunningPackageStatusChanged(new PackagePair(activeInstall, basePackage));
     }
 
     // Unpacks sitecustomize.py to the target venv
@@ -384,6 +390,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     
     private void OnProcessExited(object? sender, int exitCode)
     {
+        EventManager.Instance.OnRunningPackageStatusChanged(null);
         Dispatcher.UIThread.InvokeAsync(async () =>
         {
             logger.LogTrace("Process exited ({Code}) at {Time:g}", 

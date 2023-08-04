@@ -170,7 +170,7 @@ public partial class DataDirectoryMigrationViewModel : ObservableObject
             await package.MigratePath();
             MigrateProgressCount++;
             st.Settings.InstalledPackages.Add(package);
-            st.Settings.ActiveInstalledPackage = package.Id;
+            st.Settings.ActiveInstalledPackageId = package.Id;
 
             if (oldLibraryPath != libraryPath)
             {

@@ -1,7 +1,10 @@
-﻿using StabilityMatrix.Core.Models.Progress;
+﻿using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Update;
 
 namespace StabilityMatrix.Core.Helper;
+
+public record struct RunningPackageStatusChangedEventArgs(PackagePair? CurrentPackagePair);
 
 public class EventManager
 {
@@ -22,6 +25,7 @@ public class EventManager
     public event EventHandler<Guid> PackageLaunchRequested;
     public event EventHandler? ScrollToBottomRequested;
     public event EventHandler<ProgressItem>? ProgressChanged;
+    public event EventHandler<RunningPackageStatusChangedEventArgs>? RunningPackageStatusChanged; 
     
     public void OnGlobalProgressChanged(int progress) => GlobalProgressChanged?.Invoke(this, progress);
     public void RequestPageChange(Type pageType) => PageChangeRequested?.Invoke(this, pageType);
@@ -36,4 +40,6 @@ public class EventManager
         ScrollToBottomRequested?.Invoke(this, EventArgs.Empty);
     public void OnProgressChanged(ProgressItem progress) =>
         ProgressChanged?.Invoke(this, progress);
+    public void OnRunningPackageStatusChanged(PackagePair? currentPackagePair) =>
+        RunningPackageStatusChanged?.Invoke(this, new RunningPackageStatusChangedEventArgs(currentPackagePair));
 }

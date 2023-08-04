@@ -119,13 +119,20 @@ public class SettingsManager : ISettingsManager
         var sourceSetter = assigner.Compile();
         
         var settingsGetter = settingsProperty.Compile();
-        var (_, settingsAssigner) = Expressions.GetAssigner(settingsProperty);
+        var (targetPropertyName, settingsAssigner) = Expressions.GetAssigner(settingsProperty);
         var settingsSetter = settingsAssigner.Compile();
+        
+        var sourceTypeName = source.GetType().Name;
         
         // Update source when settings change
         SettingsPropertyChanged += (_, args) =>
         {
             if (args.PropertyName != propertyName) return;
+            
+            Logger.Trace(
+                "[RelayPropertyFor] " +
+                "Settings.{TargetProperty:l} -> {SourceType:l}.{SourceProperty:l}", 
+                targetPropertyName, sourceTypeName, propertyName);
             
             sourceSetter(source, settingsGetter(Settings));
         };
@@ -134,6 +141,11 @@ public class SettingsManager : ISettingsManager
         source.PropertyChanged += (_, args) =>
         {
             if (args.PropertyName != propertyName) return;
+            
+            Logger.Trace(
+                "[RelayPropertyFor] " +
+                "{SourceType:l}.{SourceProperty:l} -> Settings.{TargetProperty:l}", 
+                sourceTypeName, propertyName, targetPropertyName);
             
             settingsSetter(Settings, sourceGetter(source));
             SaveSettingsAsync().SafeFireAndForget();
@@ -288,7 +300,7 @@ public class SettingsManager : ISettingsManager
         if (oldSettings == null)
             return default;
         
-        return oldSettings.ActiveInstalledPackage ?? default;
+        return oldSettings.ActiveInstalledPackageId ?? default;
     }
     
     public void AddPathExtension(string pathExtension)
@@ -363,7 +375,7 @@ public class SettingsManager : ISettingsManager
     
     public string? GetActivePackageHost()
     {
-        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == Settings.ActiveInstalledPackage);
+        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == Settings.ActiveInstalledPackageId);
         if (package == null) return null;
         var hostOption = package.LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "host");
         if (hostOption?.OptionValue != null)
@@ -375,7 +387,7 @@ public class SettingsManager : ISettingsManager
 
     public string? GetActivePackagePort()
     {
-        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == Settings.ActiveInstalledPackage);
+        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == Settings.ActiveInstalledPackageId);
         if (package == null) return null;
         var portOption = package.LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "port");
         if (portOption?.OptionValue != null)

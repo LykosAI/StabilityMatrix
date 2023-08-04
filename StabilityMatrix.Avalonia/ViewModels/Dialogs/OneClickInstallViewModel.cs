@@ -128,7 +128,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
         };
         await using var st = settingsManager.BeginTransaction();
         st.Settings.InstalledPackages.Add(installedPackage);
-        st.Settings.ActiveInstalledPackage = installedPackage.Id;
+        st.Settings.ActiveInstalledPackageId = installedPackage.Id;
         EventManager.Instance.OnInstalledPackagesChanged();
         
         HeaderText = "Installation complete!";

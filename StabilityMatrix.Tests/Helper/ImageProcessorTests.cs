@@ -1,6 +1,6 @@
-﻿using StabilityMatrix.Core.Helper;
+﻿using StabilityMatrix.Avalonia.Helpers;
 
-namespace StabilityMatrix.Tests.Core;
+namespace StabilityMatrix.Tests.Helper;
 
 [TestClass]
 public class ImageProcessorTests

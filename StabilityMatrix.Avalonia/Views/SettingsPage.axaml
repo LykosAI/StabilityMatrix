@@ -232,6 +232,14 @@
                                     </ui:SettingsExpanderItem.Footer>
                                 </ui:SettingsExpanderItem>
                                 
+                                <ui:SettingsExpanderItem Content="Image Processor Demos" IconSource="ImageCopy">
+                                    <ui:SettingsExpanderItem.Footer>
+                                        <Button
+                                            Command="{Binding DebugMakeImageGridCommand}"
+                                            Content="Make Image Grid from Files"/>
+                                    </ui:SettingsExpanderItem.Footer>
+                                </ui:SettingsExpanderItem>
+                                
                             </ui:SettingsExpander>
                     </Grid>
                     

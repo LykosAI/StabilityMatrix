@@ -4,5 +4,5 @@ namespace StabilityMatrix.Avalonia.Services;
 
 public interface IDiscordRichPresenceService : IDisposable
 {
-    public void Initialize();
+    public void UpdateState();
 }

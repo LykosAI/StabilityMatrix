@@ -249,6 +249,8 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         
         await basePackage.RunPackage(packagePath, command, userArgsString);
         RunningPackage = basePackage;
+        
+        EventManager.Instance.OnRunningPackageStatusChanged(new PackagePair(activeInstall, basePackage));
     }
 
     // Unpacks sitecustomize.py to the target venv
@@ -388,6 +390,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     
     private void OnProcessExited(object? sender, int exitCode)
     {
+        EventManager.Instance.OnRunningPackageStatusChanged(null);
         Dispatcher.UIThread.InvokeAsync(async () =>
         {
             logger.LogTrace("Process exited ({Code}) at {Time:g}", 

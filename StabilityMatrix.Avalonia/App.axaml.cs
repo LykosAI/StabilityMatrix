@@ -149,9 +149,6 @@ public sealed class App : Application
         
         mainWindow.ExtendClientAreaChromeHints = Program.Args.NoWindowChromeEffects ?
             ExtendClientAreaChromeHints.NoChrome : ExtendClientAreaChromeHints.PreferSystemChrome;
-
-        // Initialize rich presence
-        Services.GetRequiredService<IDiscordRichPresenceService>().Initialize();
         
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
         var windowSettings = settingsManager.Settings.WindowSettings;
@@ -210,6 +207,7 @@ public sealed class App : Application
         
         services.AddSingleton<MainWindowViewModel>(provider =>
             new MainWindowViewModel(provider.GetRequiredService<ISettingsManager>(),
+                provider.GetRequiredService<IDiscordRichPresenceService>(),
                 provider.GetRequiredService<ServiceManager<ViewModelBase>>())
             {
                 Pages =

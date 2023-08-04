@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
@@ -18,8 +19,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
@@ -401,22 +401,21 @@ public partial class SettingsViewModel : PageViewModelBase
         });
         
         if (files.Count == 0) return;
-
+        
         var images = await files.SelectAsync(async f =>
-            await Image.LoadAsync<Rgba32>(await f.OpenReadAsync()));
+            SKImage.FromEncodedData(await f.OpenReadAsync()));
 
         var grid = ImageProcessor.CreateImageGrid(images.ToImmutableArray());
         
         // Show preview
-        var image = new global::Avalonia.Controls.Image();
-        
-        using (var ms = new MemoryStream())
-        {
-            await grid.SaveAsPngAsync(ms);
-            var bitmap = new Bitmap(ms);
-            image.Source = bitmap;
-        }
+        var image = new Image();
 
+        using var peekPixels = grid.PeekPixels();
+        using var data = peekPixels.Encode(SKEncodedImageFormat.Jpeg, 100);
+        await using var stream = data.AsStream();
+
+        image.Source = WriteableBitmap.Decode(stream);
+        
         var dialog = new BetterContentDialog
         {
             Content = image,

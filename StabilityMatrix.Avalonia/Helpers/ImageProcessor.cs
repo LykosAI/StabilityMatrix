@@ -1,7 +1,10 @@
-﻿using SixLabors.ImageSharp;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using SkiaSharp;
 using StabilityMatrix.Core.Extensions;
 
-namespace StabilityMatrix.Core.Helper;
+namespace StabilityMatrix.Avalonia.Helpers;
 
 public static class ImageProcessor
 {
@@ -21,41 +24,42 @@ public static class ImageProcessor
         return (rows, columns);
     }
     
-    public static Image<TPixel> CreateImageGrid<TPixel>(
-        IReadOnlyList<Image<TPixel>> images, 
-        int spacing = 0) where TPixel : unmanaged, IPixel<TPixel>
+    public static SKImage CreateImageGrid(
+        IReadOnlyList<SKImage> images, 
+        int spacing = 0)
     {
         var (rows, columns) = GetGridDimensionsFromImageCount(images.Count);
 
         var singleWidth = images[0].Width;
         var singleHeight = images[0].Height;
-        
+    
         // Make output image
-        var output = new Image<TPixel>(
+        using var output = new SKBitmap(
             singleWidth * columns + spacing * (columns - 1), 
             singleHeight * rows + spacing * (rows - 1));
-        
-        
+    
         // Draw images
+        using var canvas = new SKCanvas(output);
+        
         foreach (var (row, column) in 
                  Enumerable.Range(0, rows).Product(Enumerable.Range(0, columns)))
         {
             // Stop if we have drawn all images
             var index = row * columns + column;
             if (index >= images.Count) break;
-                
+            
             // Get image
             var image = images[index];
-                
+            
             // Draw image
-            output.Mutate(op =>
-            {
-                op.DrawImage(image,
-                    new Point(singleWidth * column + spacing * column,
-                        singleHeight * row + spacing * row), 1);
-            });
+            var destination = new SKRect(
+                singleWidth * column + spacing * column,
+                singleHeight * row + spacing * row,
+                singleWidth * column + spacing * column + image.Width,
+                singleHeight * row + spacing * row + image.Height);
+            canvas.DrawImage(image, destination);
         }
 
-        return output;
+        return SKImage.FromBitmap(output);
     }
 }

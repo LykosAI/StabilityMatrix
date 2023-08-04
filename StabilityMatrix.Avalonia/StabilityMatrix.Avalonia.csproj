@@ -45,7 +45,6 @@
         <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" Version="6.6.0" />
         <PackageReference Include="Sentry" Version="3.33.1" />
         <PackageReference Include="Sentry.NLog" Version="3.33.1" />
-        <PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />
         <PackageReference Include="TextMateSharp.Grammars" Version="1.0.55" />
     </ItemGroup>
 

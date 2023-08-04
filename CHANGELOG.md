@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.1.1
 
+### Added
+- Discord Rich Presence support can now be enabled in Settings
+
 ### Fixed
 - Launch Page selected package now persists in settings
 

@@ -81,7 +81,8 @@ public static class DesignData
             .AddSingleton<INotificationService, MockNotificationService>()
             .AddSingleton<ISharedFolders, MockSharedFolders>()
             .AddSingleton<IDownloadService, MockDownloadService>()
-            .AddSingleton<IHttpClientFactory, MockHttpClientFactory>();
+            .AddSingleton<IHttpClientFactory, MockHttpClientFactory>()
+            .AddSingleton<IDiscordRichPresenceService, MockDiscordRichPresenceService>();
         
         // Placeholder services that nobody should need during design time
         services

@@ -23,6 +23,7 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
+    private readonly IDiscordRichPresenceService discordRichPresenceService;
     public string Greeting => "Welcome to Avalonia!";
     
     [ObservableProperty]
@@ -40,10 +41,14 @@ public partial class MainWindowViewModel : ViewModelBase
     public ProgressManagerViewModel ProgressManagerViewModel { get; init; }
     public UpdateViewModel UpdateViewModel { get; init; }
 
-    public MainWindowViewModel(ISettingsManager settingsManager, ServiceManager<ViewModelBase> dialogFactory)
+    public MainWindowViewModel(
+        ISettingsManager settingsManager, 
+        IDiscordRichPresenceService discordRichPresenceService,
+        ServiceManager<ViewModelBase> dialogFactory)
     {
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
+        this.discordRichPresenceService = discordRichPresenceService;
         
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
@@ -73,6 +78,9 @@ public partial class MainWindowViewModel : ViewModelBase
             App.Shutdown();
             return;
         }
+        
+        // Initialize Discord Rich Presence (this needs LibraryDir so is set here)
+        discordRichPresenceService.UpdateState();
         
         // Index checkpoints if we dont have
         Task.Run(() => settingsManager.IndexCheckpoints()).SafeFireAndForget();

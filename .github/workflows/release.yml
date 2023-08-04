@@ -92,6 +92,7 @@ jobs:
         with:
           environment: production
           ignore_missing: true
+          ignore-empty: true
           version: StabilityMatrix.Avalonia@${{ env.GIT_TAG_NAME }}
           
       - name: Create Sentry release

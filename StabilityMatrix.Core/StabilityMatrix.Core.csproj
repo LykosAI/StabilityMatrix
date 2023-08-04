@@ -38,6 +38,7 @@
       <PackageReference Include="Sentry.NLog" Version="3.33.1" />
       <PackageReference Include="SharpCompress" Version="0.33.0" />
       <PackageReference Include="Websocket.Client" Version="4.6.1" />
+      <PackageReference Include="SixLabors.ImageSharp" Version="3.0.1" />
       <PackageReference Include="YamlDotNet" Version="13.1.1" />
     </ItemGroup>
 

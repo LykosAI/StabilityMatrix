@@ -82,7 +82,7 @@ jobs:
           path: ${{ env.out-name }}
           
       - name: Create Sentry release
-        if: ${{ github.event_name == 'release' || github.event.inputs.sentry-release == 'true' }}
+        if: ${{ github.event.inputs.sentry-release == 'true' }}
         uses: getsentry/action-release@v1
         env:
           MAKE_SENTRY_RELEASE: ${{ secrets.SENTRY_PROJECT != '' }}
@@ -92,22 +92,9 @@ jobs:
         with:
           environment: production
           ignore_missing: true
-          ignore-empty: true
-          version: StabilityMatrix.Avalonia@${{ env.GIT_TAG_NAME }}
-          
-      - name: Create Sentry release
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        uses: getsentry/action-release@v1
-        env:
-          MAKE_SENTRY_RELEASE: ${{ secrets.SENTRY_PROJECT != '' }}
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-        with:
-          environment: production
-          ignore_missing: true
+          ignore_empty: true
           version: StabilityMatrix.Avalonia@${{ github.event.inputs.version }}
-          
+
           
   release-windows:
     name: Release (win-x64)

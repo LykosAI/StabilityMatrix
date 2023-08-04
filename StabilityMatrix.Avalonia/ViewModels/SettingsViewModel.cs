@@ -44,6 +44,7 @@ public partial class SettingsViewModel : PageViewModelBase
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly IPyRunner pyRunner;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
+    
     public SharedState SharedState { get; }
     
     public override string Title => "Settings";
@@ -65,6 +66,9 @@ public partial class SettingsViewModel : PageViewModelBase
     
     // Shared folder options
     [ObservableProperty] private bool removeSymlinksOnShutdown;
+    
+    // Integrations section
+    [ObservableProperty] private bool isDiscordRichPresenceEnabled;
     
     // Debug section
     [ObservableProperty] private string? debugPaths;
@@ -90,14 +94,19 @@ public partial class SettingsViewModel : PageViewModelBase
         this.prerequisiteHelper = prerequisiteHelper;
         this.pyRunner = pyRunner;
         this.dialogFactory = dialogFactory;
+        
         SharedState = sharedState;
-
+        
         SelectedTheme = settingsManager.Settings.Theme ?? AvailableThemes[1];
         RemoveSymlinksOnShutdown = settingsManager.Settings.RemoveFolderLinksOnShutdown;
         
         settingsManager.RelayPropertyFor(this, 
             vm => vm.SelectedTheme, 
             settings => settings.Theme);
+        
+        settingsManager.RelayPropertyFor(this,
+            vm => vm.IsDiscordRichPresenceEnabled,
+            settings => settings.IsDiscordRichPresenceEnabled);
     }
     
     partial void OnSelectedThemeChanged(string? value)

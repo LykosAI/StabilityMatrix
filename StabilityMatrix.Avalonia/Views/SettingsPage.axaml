@@ -6,7 +6,7 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
              xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="700"
              x:DataType="vm:SettingsViewModel"
              x:CompileBindings="True"
              d:DataContext="{x:Static mocks:DesignData.SettingsViewModel}"
@@ -53,7 +53,7 @@
                             Description="Select this option if you're having problems moving Stability Matrix to another drive"
                             Margin="8,8">
                             <ui:SettingsExpander.Footer>
-                                <CheckBox Margin="8"
+                                <CheckBox Margin="4"
                                           IsChecked="{Binding RemoveSymlinksOnShutdown}"/>
                             </ui:SettingsExpander.Footer>
                         </ui:SettingsExpander>
@@ -103,6 +103,28 @@
                                             BorderThickness="3"/>
                                         <Button Content="Check Version" Command="{Binding CheckPythonVersionCommand}"/>
                                     </StackPanel>
+                                </ui:SettingsExpander.Footer>
+                            </ui:SettingsExpander>
+                        </StackPanel>
+                    </Grid>
+                    
+                    <!-- Integrations -->
+                    <Grid RowDefinitions="auto,*">
+                        <TextBlock 
+                            FontWeight="Medium"
+                            Text="Integrations" 
+                            Margin="0,16,0,8" />
+                        <StackPanel Grid.Row="1">
+                            <ui:SettingsExpander 
+                                Header="Discord Rich Presence" 
+                                Margin="8,0">
+                                <ui:SettingsExpander.IconSource>
+                                    <controls:FASymbolIconSource Symbol="fa-brands fa-discord"/>
+                                </ui:SettingsExpander.IconSource>
+                                <ui:SettingsExpander.Footer>
+                                    <ToggleSwitch
+                                        IsChecked="{Binding IsDiscordRichPresenceEnabled}"
+                                        Margin="4" />
                                 </ui:SettingsExpander.Footer>
                             </ui:SettingsExpander>
                         </StackPanel>

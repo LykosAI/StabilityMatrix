@@ -128,7 +128,7 @@ public partial class PackageManagerViewModel : ObservableObject
         }
 
         SelectedPackage =
-            installedPackages.FirstOrDefault(x => x.Id == settingsManager.Settings.ActiveInstalledPackage) ??
+            installedPackages.FirstOrDefault(x => x.Id == settingsManager.Settings.ActiveInstalledPackageId) ??
             Packages[0];
     }
 

@@ -14,4 +14,5 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
     [ObservableProperty] private IImage? previewImage;
 
     [ObservableProperty] private AvaloniaList<string> imageSources = new();
+    [ObservableProperty] private string? selectedImage;
 }

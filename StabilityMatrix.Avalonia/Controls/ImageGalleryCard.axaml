@@ -9,11 +9,15 @@
     x:DataType="vmInference:ImageGalleryCardViewModel">
 
     <Design.PreviewWith>
-        <Grid Width="512" Height="512">
+        <Grid Width="600" Height="800">
             <controls:ImageGalleryCard DataContext="{x:Static mocks:DesignData.ImageGalleryCardViewModel}" />
         </Grid>
     </Design.PreviewWith>
 
+    <Style Selector="ListBox /template/ VirtualizingStackPanel">
+        <Setter Property="Orientation" Value="Horizontal" />
+    </Style>
+    
     <Style Selector="controls|ImageGalleryCard">
         <!--  Set Defaults  -->
         <Setter Property="Template">
@@ -22,60 +26,94 @@
                     Padding="8"
                     HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
                     VerticalAlignment="{TemplateBinding VerticalAlignment}">
-                    <Grid Margin="4" ColumnDefinitions="Auto,*,Auto">
-                        <Button
-                            Grid.Column="0"
+                    <Grid RowDefinitions="*,Auto">
+                        <!-- Main image view -->
+                        <Grid Margin="4" ColumnDefinitions="Auto,*,Auto">
+                            <Button
+                                Grid.Column="0"
+                                Margin="4"
+                                Padding="10,20"
+                                VerticalAlignment="Center"
+                                Command="{Binding #ImageCarousel.Previous}">
+                                <Path Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" Fill="Black" />
+                            </Button>
+                            <Panel Grid.Column="1">
+                                <Carousel
+                                    Name="ImageCarousel"
+                                    IsVisible="{Binding !IsPreviewOverlayEnabled}"
+                                    SelectedItem="{Binding SelectedImage}"
+                                    ItemsSource="{Binding ImageSources}">
+                                    <Carousel.PageTransition>
+                                        <CompositePageTransition>
+                                            <PageSlide Orientation="Horizontal" Duration="0.167">
+                                                <PageSlide.SlideInEasing>
+                                                    <QuadraticEaseIn />
+                                                </PageSlide.SlideInEasing>
+                                                <PageSlide.SlideOutEasing>
+                                                    <SineEaseInOut />
+                                                </PageSlide.SlideOutEasing>
+                                            </PageSlide>
+                                            <CrossFade Duration="0.1" />
+                                        </CompositePageTransition>
+                                    </Carousel.PageTransition>
+                                    <Carousel.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type system:String}">
+                                            <controls:BetterAdvancedImage
+                                                CornerRadius="4"
+                                                Source="{Binding}"
+                                                Stretch="Uniform"
+                                                StretchDirection="Both" />
+                                        </DataTemplate>
+                                    </Carousel.ItemTemplate>
+                                </Carousel>
+                                <Border
+                                    ClipToBounds="True"
+                                    CornerRadius="4"
+                                    IsVisible="{Binding IsPreviewOverlayEnabled}">
+                                    <Image
+                                        Source="{Binding PreviewImage}"
+                                        Stretch="Uniform"
+                                        StretchDirection="Both" />
+                                </Border>
+                            </Panel>
+                            <Button
+                                Grid.Column="2"
+                                Margin="4"
+                                Padding="10,20"
+                                VerticalAlignment="Center"
+                                Command="{Binding #ImageCarousel.Next}">
+                                <Path Data="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" Fill="Black" />
+                            </Button>
+                        </Grid>
+                        <!-- Thumbnails -->
+                        <ListBox
+                            Grid.Row="1"
                             Margin="4"
-                            Padding="10,20"
-                            VerticalAlignment="Center"
-                            Command="{Binding #ImageCarousel.Previous}">
-                            <Path Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" Fill="Black" />
-                        </Button>
-                        <Panel Grid.Column="1">
-                            <Carousel 
-                                Name="ImageCarousel" 
-                                IsVisible="{Binding !IsPreviewOverlayEnabled}"
-                                ItemsSource="{Binding ImageSources}">
-                                <Carousel.PageTransition>
-                                    <CompositePageTransition>
-                                        <PageSlide Orientation="Horizontal" Duration="0.167">
-                                            <PageSlide.SlideInEasing>
-                                                <QuadraticEaseIn />
-                                            </PageSlide.SlideInEasing>
-                                            <PageSlide.SlideOutEasing>
-                                                <SineEaseInOut />
-                                            </PageSlide.SlideOutEasing>
-                                        </PageSlide>
-                                        <CrossFade Duration="0.1" />
-                                    </CompositePageTransition>
-                                </Carousel.PageTransition>
-                                <Carousel.ItemTemplate>
-                                    <DataTemplate DataType="{x:Type system:String}">
-                                        <controls:BetterAdvancedImage
-                                            CornerRadius="4"
-                                            Source="{Binding}"
-                                            Stretch="Uniform"
-                                            StretchDirection="Both" />
-                                    </DataTemplate>
-                                </Carousel.ItemTemplate>
-                            </Carousel>
-                            <Border
-                                IsVisible="{Binding IsPreviewOverlayEnabled}"
-                                ClipToBounds="True" CornerRadius="4">
-                                <Image
-                                    Source="{Binding PreviewImage}"
-                                    Stretch="Uniform"
-                                    StretchDirection="Both" />
-                            </Border>
-                        </Panel>
-                        <Button
-                            Grid.Column="2"
-                            Margin="4"
-                            Padding="10,20"
-                            VerticalAlignment="Center"
-                            Command="{Binding #ImageCarousel.Next}">
-                            <Path Data="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" Fill="Black" />
-                        </Button>
+                            VerticalAlignment="Stretch"
+                            HorizontalAlignment="Center"
+                            SelectionMode="AlwaysSelected"
+                            SelectedItem="{Binding SelectedImage}"
+                            ItemsSource="{Binding ImageSources}">
+                            <!--<ItemsRepeater.Layout>
+                                <StackLayout
+                                    Orientation="Horizontal" Spacing="8" />
+                            </ItemsRepeater.Layout>-->
+                            <!--<ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>-->
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type system:String}">
+                                    <controls:BetterAdvancedImage
+                                        MaxHeight="60"
+                                        CornerRadius="4"
+                                        Source="{Binding}"
+                                        Stretch="Uniform"
+                                        StretchDirection="Both" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                     </Grid>
                 </controls:Card>
             </ControlTemplate>

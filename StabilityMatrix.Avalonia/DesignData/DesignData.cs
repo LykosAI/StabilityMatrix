@@ -374,10 +374,9 @@ public static class DesignData
         {
             vm.ImageSources.AddRange(new []
             {
-                "https://picsum.photos/seed/i1/200/300",
-                "https://picsum.photos/seed/i2/200/300",
-                "https://picsum.photos/seed/i3/200/300",
-                "https://picsum.photos/seed/i4/200/300",
+                "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/4a7e00a7-6f18-42d4-87c0-10e792df2640/width=1152",
+                "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1024",
+                "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/16588c94-6595-4be9-8806-d7e6e22d198c/width=1152",
             });
         });
 

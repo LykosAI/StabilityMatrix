@@ -98,6 +98,17 @@ public partial class InferenceViewModel : PageViewModelBase
     {
         Tabs.Add(CreateTextToImageViewModel());
     }
+    
+    /// <summary>
+    /// When the close button on the tab is clicked, remove the tab.
+    /// </summary>
+    public void OnTabCloseRequested(TabViewTabCloseRequestedEventArgs e)
+    {
+        if (e.Item is ViewModelBase vm)
+        {
+            Tabs.Remove(vm);
+        }
+    }
 
     /// <summary>
     /// Connect to the inference server.

@@ -23,6 +23,7 @@
             VerticalAlignment="Stretch"
             CanReorderTabs="True"
             CloseButtonOverlayMode="Auto"
+            TabCloseRequested="TabView_OnTabCloseRequested"
             AddTabButtonCommand="{Binding AddTabCommand}"
             TabItems="{Binding Tabs}"
             SelectedItem="{Binding SelectedTab, Mode=TwoWay}"

@@ -45,7 +45,7 @@
                             <ToggleButton
                                 Name="RandomizeToggleButton"
                                 ToolTip.Tip="{Binding RandomizeButtonToolTip}"
-                                IsChecked="{Binding IsRandomizeEnabled}"
+                                IsChecked="{Binding !IsRandomizeEnabled}"
                                 Grid.Column="3" Margin="8,0,0,0">
                                 <Panel>
                                     <icons:Icon 

@@ -12,7 +12,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public partial class SeedCardViewModel : ViewModelBase, ILoadableState<SeedCardModel>
 {
     [ObservableProperty, NotifyPropertyChangedFor(nameof(RandomizeButtonToolTip))]
-    private bool isRandomizeEnabled;
+    private bool isRandomizeEnabled = true;
     
     [ObservableProperty] 
     private long seed;

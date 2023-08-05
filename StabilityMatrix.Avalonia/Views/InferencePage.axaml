@@ -53,6 +53,7 @@
                         <Button.Flyout>
                             <MenuFlyout Placement="BottomEdgeAlignedLeft">
                                 <MenuItem Header="Open Project..."
+                                          Command="{Binding MenuOpenProjectCommand}"
                                           InputGesture="Ctrl+O"/>
                                 <Separator/>
                                 <MenuItem Header="Save"

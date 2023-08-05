@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.Views;
@@ -147,6 +148,7 @@ public partial class InferenceViewModel : PageViewModelBase
         var provider = App.StorageProvider;
 
         var projectDir = new DirectoryPath(settingsManager.LibraryDir, "Projects");
+        projectDir.Create();
         var startDir = await provider.TryGetFolderFromPathAsync(projectDir);
         
         var result = await provider.SaveFilePickerAsync(new FilePickerSaveOptions
@@ -157,7 +159,7 @@ public partial class InferenceViewModel : PageViewModelBase
             {
                 new("StabilityMatrix Project")
                 {
-                    Patterns = new[] { ".smproj" },
+                    Patterns = new[] { "*.smproj" },
                     MimeTypes = new[] { "application/json" },
                 }
             },
@@ -180,5 +182,66 @@ public partial class InferenceViewModel : PageViewModelBase
         });
         
         notificationService.Show("Saved", $"Saved project to {result.Name}", NotificationType.Success);
+    }
+
+    /// <summary>
+    /// Menu "Open Project" command.
+    /// </summary>
+    [RelayCommand]
+    private async Task MenuOpenProject()
+    {
+        // Prompt for open file dialog
+        var provider = App.StorageProvider;
+
+        var projectDir = new DirectoryPath(settingsManager.LibraryDir, "Projects");
+        projectDir.Create();
+        var startDir = await provider.TryGetFolderFromPathAsync(projectDir);
+        
+        var results = await provider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Open Project File",
+            FileTypeFilter = new FilePickerFileType[]
+            {
+                new("StabilityMatrix Project")
+                {
+                    Patterns = new[] { "*.smproj" },
+                    MimeTypes = new[] { "application/json" },
+                }
+            },
+            SuggestedStartLocation = startDir,
+        });
+        
+        if (results.Count == 0)
+        {
+            Logger.Trace("MenuOpenProject: No files selected");
+            return;
+        }
+        
+        // Load from file
+        var file = results[0];
+        await using var stream = await file.OpenReadAsync();
+        
+        var document = await JsonSerializer.DeserializeAsync<InferenceProjectDocument>(stream);
+        if (document == null)
+        {
+            Logger.Warn("MenuOpenProject: Deserialize project file returned null");
+            return;
+        }
+
+        ViewModelBase? vm = null;
+        if (document.ProjectType is InferenceProjectType.TextToImage)
+        {
+            var textToImage = CreateTextToImageViewModel();
+            textToImage.LoadState(document.State.Deserialize<InferenceTextToImageModel>()!);
+            vm = textToImage;
+        }
+        
+        if (vm == null)
+        {
+            Logger.Warn("MenuOpenProject: Unknown project type");
+            return;
+        }
+        
+        Tabs.Add(vm);
     }
 }

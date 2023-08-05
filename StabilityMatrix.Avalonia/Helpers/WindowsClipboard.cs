@@ -2,10 +2,12 @@
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using Avalonia.Media.Imaging;
 
 namespace StabilityMatrix.Avalonia.Helpers;
 
+[SupportedOSPlatform("windows")]
 public static class WindowsClipboard
 {
     public static void SetBitmap(Bitmap bitmap)

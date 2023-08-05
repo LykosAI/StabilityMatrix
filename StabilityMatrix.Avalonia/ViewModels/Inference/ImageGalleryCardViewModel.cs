@@ -1,4 +1,6 @@
-﻿using Avalonia.Collections;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
+using Avalonia.Collections;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -7,6 +9,7 @@ using NLog;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -23,14 +26,18 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
     [ObservableProperty] private string? selectedImage;
 
     [RelayCommand]
-    private void FlyoutCopy(IImage? image)
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
+    // ReSharper disable once UnusedMember.Local
+    private async Task FlyoutCopy(IImage? image)
     {
+        if (!Compat.IsWindows) return;
+        
         if (image is null)
         {
             Logger.Trace("FlyoutCopy: image is null");
             return;
         }
         Logger.Trace($"FlyoutCopy is copying {image}");
-        WindowsClipboard.SetBitmap((Bitmap) image);
+        await Task.Run(() => WindowsClipboard.SetBitmap((Bitmap) image));
     }
 }

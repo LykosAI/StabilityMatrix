@@ -70,6 +70,7 @@
                                                 <controls:BetterAdvancedImage.ContextFlyout>
                                                     <ui:FAMenuFlyout>
                                                         <ui:MenuFlyoutItem 
+                                                            IsEnabled="{OnPlatform Windows=True, Default=False}"
                                                             Command="{ReflectionBinding #ImageCarousel.DataContext.FlyoutCopyCommand}" 
                                                             CommandParameter="{Binding #ImageView.CurrentImage}"
                                                             Text="Copy"

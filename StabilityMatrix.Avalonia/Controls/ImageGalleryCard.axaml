@@ -13,7 +13,8 @@
             <controls:ImageGalleryCard DataContext="{x:Static mocks:DesignData.ImageGalleryCardViewModel}" />
         </Grid>
     </Design.PreviewWith>
-
+    
+    
     <Style Selector="ListBox /template/ VirtualizingStackPanel">
         <Setter Property="Orientation" Value="Horizontal" />
     </Style>
@@ -39,10 +40,11 @@
                             </Button>
                             <Panel Grid.Column="1">
                                 <Carousel
-                                    Name="ImageCarousel"
+                                    x:Name="ImageCarousel"
                                     IsVisible="{Binding !IsPreviewOverlayEnabled}"
                                     SelectedItem="{Binding SelectedImage}"
                                     ItemsSource="{Binding ImageSources}">
+                                    
                                     <Carousel.PageTransition>
                                         <CompositePageTransition>
                                             <PageSlide Orientation="Horizontal" Duration="0.167">
@@ -56,15 +58,28 @@
                                             <CrossFade Duration="0.1" />
                                         </CompositePageTransition>
                                     </Carousel.PageTransition>
+                                    
                                     <Carousel.ItemTemplate>
                                         <DataTemplate DataType="{x:Type system:String}">
                                             <controls:BetterAdvancedImage
+                                                x:Name="ImageView"
                                                 CornerRadius="4"
                                                 Source="{Binding}"
                                                 Stretch="Uniform"
-                                                StretchDirection="Both" />
+                                                StretchDirection="Both">
+                                                <controls:BetterAdvancedImage.ContextFlyout>
+                                                    <ui:FAMenuFlyout>
+                                                        <ui:MenuFlyoutItem 
+                                                            Command="{ReflectionBinding #ImageCarousel.DataContext.CopyImageCommand}" 
+                                                            CommandParameter="{Binding #ImageView.CurrentImage}"
+                                                            Text="Copy"
+                                                            IconSource="Copy" />
+                                                    </ui:FAMenuFlyout>
+                                                </controls:BetterAdvancedImage.ContextFlyout>
+                                            </controls:BetterAdvancedImage>
                                         </DataTemplate>
                                     </Carousel.ItemTemplate>
+                                    
                                 </Carousel>
                                 <Border
                                     ClipToBounds="True"

@@ -166,10 +166,9 @@ public class VladAutomatic : BaseGitPackage
         // Setup venv
         var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
         venvRunner.WorkingDirectory = InstallLocation;
-        if (!venvRunner.Exists())
-        {
-            await venvRunner.Setup().ConfigureAwait(false);
-        }
+        venvRunner.EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables;
+        
+        await venvRunner.Setup().ConfigureAwait(false);
 
         // Run initial install
         if (HardwareHelper.HasNvidiaGpu())

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Core.Inference;
+using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
@@ -26,6 +27,12 @@ public class MockInferenceClientManager : ObservableObject, IInferenceClientMana
     public bool IsConnected { get; set; }
     
     public Task ConnectAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task ConnectAsync(PackagePair packagePair)
     {
         return Task.CompletedTask;
     }

@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using StabilityMatrix.Core.Inference;
+using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Avalonia.Services;
 
@@ -18,6 +19,8 @@ public interface IInferenceClientManager : IDisposable,  INotifyPropertyChanged,
     IReadOnlyCollection<string>? Samplers { get; set; }
     
     Task ConnectAsync();
+
+    Task ConnectAsync(PackagePair packagePair);
 
     Task CloseAsync();
 }

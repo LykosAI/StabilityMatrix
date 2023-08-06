@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using AvaloniaEdit.Document;
@@ -31,6 +33,7 @@ public partial class InferenceTextToImageViewModel : ViewModelBase, ILoadableSta
     // These are set in OnLoaded due to needing the vmFactory
     [NotNull] public SeedCardViewModel? SeedCardViewModel { get; private set; }
     [NotNull] public SamplerCardViewModel? SamplerCardViewModel { get; private set; }
+    [NotNull] public SamplerCardViewModel? HiresFixSamplerCardViewModel { get; private set; }
     [NotNull] public ImageGalleryCardViewModel? ImageGalleryCardViewModel { get; private set; }
     
     public InferenceViewModel? Parent { get; set; }
@@ -59,11 +62,20 @@ public partial class InferenceTextToImageViewModel : ViewModelBase, ILoadableSta
 
         // ReSharper disable twice NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
         SeedCardViewModel ??= vmFactory.Get<SeedCardViewModel>();
-        OnPropertyChanged(nameof(SeedCardViewModel));
+        // OnPropertyChanged(nameof(SeedCardViewModel));
         SamplerCardViewModel ??= vmFactory.Get<SamplerCardViewModel>();
-        OnPropertyChanged(nameof(SamplerCardViewModel));
-        ImageGalleryCardViewModel ??= vmFactory.Get<ImageGalleryCardViewModel>();
-        OnPropertyChanged(nameof(ImageGalleryCardViewModel));
+        // OnPropertyChanged(nameof(SamplerCardViewModel));
+        HiresFixSamplerCardViewModel ??= vmFactory.Get<SamplerCardViewModel>(vm =>
+        {
+            vm.IsScaleSizeMode = true;
+            vm.IsCfgScaleEnabled = false;
+            vm.IsSamplerSelectionEnabled = false;
+            vm.IsDenoiseStrengthEnabled = true;
+        });
+        // OnPropertyChanged(nameof(HiresFixSamplerCardViewModel));
+        // ImageGalleryCardViewModel ??= vmFactory.Get<ImageGalleryCardViewModel>();
+        ImageGalleryCardViewModel = new ImageGalleryCardViewModel();
+        // OnPropertyChanged(nameof(ImageGalleryCardViewModel));
         
         SeedCardViewModel.GenerateNewSeed();
         
@@ -201,8 +213,7 @@ public partial class InferenceTextToImageViewModel : ViewModelBase, ILoadableSta
         ImageGalleryCardViewModel.IsPreviewOverlayEnabled = true;
     }
 
-    [RelayCommand]
-    private async Task GenerateImage()
+    private async Task GenerateImageImpl(CancellationToken cancellationToken = default)
     {
         if (!ClientManager.IsConnected)
         {
@@ -227,15 +238,16 @@ public partial class InferenceTextToImageViewModel : ViewModelBase, ILoadableSta
         
         try
         {
-            var (response, promptTask) = await client.QueuePromptAsync(nodes);
+            var (response, promptTask) = await client.QueuePromptAsync(nodes, cancellationToken);
             Logger.Info(response);
 
             // Wait for prompt to finish
-            await promptTask;
+            await promptTask.WaitAsync(cancellationToken);
             Logger.Trace($"Prompt task {response.PromptId} finished");
 
             // Get output images
-            var outputs = await client.GetImagesForExecutedPromptAsync(response.PromptId);
+            var outputs = await client
+                .GetImagesForExecutedPromptAsync(response.PromptId, cancellationToken);
             
             // Only get the SaveImage from node 9
             var images = outputs["9"];
@@ -253,6 +265,19 @@ public partial class InferenceTextToImageViewModel : ViewModelBase, ILoadableSta
             ImageGalleryCardViewModel.IsPreviewOverlayEnabled = false;
             client.ProgressUpdateReceived -= OnProgressUpdateReceived;
             client.PreviewImageReceived -= OnPreviewImageReceived;
+        }
+    }
+    
+    [RelayCommand(IncludeCancelCommand = true)]
+    private async Task GenerateImage(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await GenerateImageImpl(cancellationToken);
+        }
+        catch (OperationCanceledException e)
+        {
+            Logger.Debug($"[Image Generation Canceled] {e.Message}");
         }
     }
 

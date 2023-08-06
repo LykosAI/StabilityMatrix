@@ -51,8 +51,9 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     {
         if (IsConnected) return;
         
-        Client = new ComfyClient(apiFactory, new Uri("http://127.0.0.1:8188"));
-        await Client.ConnectAsync();
+        var tempClient = new ComfyClient(apiFactory, new Uri("http://127.0.0.1:8188"));
+        await tempClient.ConnectAsync();
+        Client = tempClient;
         await LoadSharedPropertiesAsync();
     }
     

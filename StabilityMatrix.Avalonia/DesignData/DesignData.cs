@@ -368,7 +368,18 @@ public static class DesignData
         vm.CfgScale = 7;
         vm.SelectedSampler = "Euler a";
     });
-
+    
+    public static SamplerCardViewModel SamplerCardViewModelScaleMode => DialogFactory.Get<SamplerCardViewModel>(vm =>
+    {
+        vm.Steps = 20;
+        vm.CfgScale = 7;
+        vm.SelectedSampler = "Euler a";
+        vm.IsScaleSizeMode = true;
+        vm.IsCfgScaleEnabled = false;
+        vm.IsSamplerSelectionEnabled = false;
+        vm.IsDenoiseStrengthEnabled = true;
+    });
+    
     public static ImageGalleryCardViewModel ImageGalleryCardViewModel =>
         DialogFactory.Get<ImageGalleryCardViewModel>(vm =>
         {

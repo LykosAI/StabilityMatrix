@@ -1,19 +1,37 @@
 ﻿<controls:UserControlBase
+    x:Name="RootControl"
     x:Class="StabilityMatrix.Avalonia.Views.InferenceTextToImageView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:flex="clr-namespace:Avalonia.Flexbox;assembly=Avalonia.Flexbox"
+    xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
+    Focusable="True"
     d:DataContext="{x:Static mocks:DesignData.InferenceTextToImageViewModel}"
-    d:DesignHeight="600"
+    d:DesignHeight="800"
     d:DesignWidth="1000"
     x:DataType="vmInference:InferenceTextToImageViewModel"
     mc:Ignorable="d">
+    
+    <controls:UserControlBase.Styles>
+        
+        <!-- Default grid splitter style -->
+        <Style Selector="GridSplitter">
+            <Setter Property="Opacity" Value="0.6"/>
+            <Setter Property="Background" Value="{DynamicResource ScrollBarTrackStroke}" />
+            <!--<Setter Property="Background" Value="{DynamicResource ScrollBarTrackStroke}" />-->
+            <Setter Property="BorderThickness" Value="6" />
+            <Setter Property="CornerRadius" Value="4" />
+        </Style>
+        
+    </controls:UserControlBase.Styles>
+    
     <Grid
         Margin="16,8,16,32"
         ColumnDefinitions="*,Auto,*,Auto,*"
@@ -43,43 +61,92 @@
                         </Button>
                     </Grid>
                 </controls:Card>
-                <!--  Samplers and steps  -->
-                <controls:SamplerCard DataContext="{Binding SamplerCardViewModel}" />
+                <!--  Main Sampler  -->
+                <controls:Card>
+                    <controls:SamplerCard DataContext="{Binding SamplerCardViewModel}" />
+                </controls:Card>
+
+                <!--  Hires Fix Sampler  -->
+                <Expander Padding="12,8">
+                    <Expander.Header>
+                        <ToggleSwitch
+                            VerticalContentAlignment="Center"
+                            OnContent="Hires Fix" 
+                            OffContent="Hires Fix"/>
+                    </Expander.Header>
+                    <controls:SamplerCard 
+                        HorizontalAlignment="Stretch" 
+                        DataContext="{Binding HiresFixSamplerCardViewModel}" />
+                </Expander>
+
+                <!--  Seed  -->
+                <controls:SeedCard 
+                    Margin="0,4"
+                    DataContext="{Binding SeedCardViewModel}" />
+                
                 <!--  Batch Size  -->
                 <controls:Card Padding="8">
-                    <Grid Margin="8">
-                        <ui:NumberBox
-                            HorizontalAlignment="Stretch"
-                            Header="Batch Size"
-                            Maximum="8"
+                    <Grid Margin="8" RowDefinitions="Auto,*" ColumnDefinitions="*,*">
+                        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" >
+                            <TextBlock 
+                                VerticalAlignment="Center"
+                                Margin="0,0,8,0"
+                                Text="Batch Size"/>
+                            <icons:Icon
+                                FontSize="12"
+                                Value="fa-solid fa-table-cells-large"/>
+                        </StackPanel>
+                        <NumericUpDown 
+                            Grid.Row="1" 
+                            Grid.Column="0"
+                            HorizontalAlignment="Left"
+                            Margin="0,4,0,0"
+                            MinWidth="120"
                             Minimum="1"
-                            SelectionHighlightColor="Transparent"
-                            SpinButtonPlacementMode="Inline"
-                            ValidationMode="InvalidInputOverwritten"
-                            Value="{Binding BatchSize}" />
+                            Increment="1"
+                            ParsingNumberStyle="Integer"
+                            Value="{Binding BatchSize}"
+                            ClipValueToMinMax="True"/>
+                        
+                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" >
+                            <TextBlock 
+                                VerticalAlignment="Center"
+                                Margin="0,0,8,0"
+                                Text="Batches"/>
+                            <icons:Icon
+                                FontSize="14"
+                                Value="fa-regular fa-images"/>
+                        </StackPanel>
+                        <NumericUpDown 
+                            Grid.Row="1" 
+                            Grid.Column="1"
+                            HorizontalAlignment="Left"
+                            Margin="0,4,0,0"
+                            MinWidth="120"
+                            Minimum="1"
+                            Increment="1"
+                            ParsingNumberStyle="Integer"
+                            Value="{Binding BatchSize}"
+                            ClipValueToMinMax="True"/>
                     </Grid>
                 </controls:Card>
-                <!--  Seed  -->
-                <controls:SeedCard DataContext="{Binding SeedCardViewModel}" />
             </StackPanel>
         </ScrollViewer>
 
-        <GridSplitter
-            Grid.Row="0"
-            Grid.Column="1"
-            Background="{DynamicResource ScrollBarTrackStroke}" />
+        <GridSplitter Grid.Row="0" Grid.Column="1"/>
 
-        <!--  Prompt card  -->
+        <!--  Center Panel  -->
         <Grid
             Grid.Row="0"
             Grid.Column="2"
-            Margin="8,8,8,16">
+            Margin="8,8,8,16"
+            Grid.RowDefinitions="*,Auto">
+            <!--  Prompt card  -->
             <controls:Card
+                Margin="0,0,0,4"
                 Padding="8"
-                VerticalAlignment="Stretch"
-                VerticalContentAlignment="Stretch">
-                <Grid Margin="4,8" RowDefinitions="Auto,*,Auto,*,Auto">
-
+                DockPanel.Dock="Top">
+                <Grid Margin="4,8" RowDefinitions="Auto,*,Auto,*">
                     <TextBlock
                         Grid.Row="0"
                         Margin="2"
@@ -112,31 +179,71 @@
                         ShowLineNumbers="True"
                         VerticalScrollBarVisibility="Auto"
                         WordWrap="True" />
+                </Grid>
+            </controls:Card>
 
+            <StackPanel Grid.Row="1">
+                <!--  Generate Buttons  -->
+                <controls:Card
+                    Margin="0,4"
+                    Padding="8">
                     <Grid
                         Grid.Row="4"
                         HorizontalAlignment="Center"
+                        ColumnDefinitions="Auto,*,Auto"
                         RowDefinitions="Auto,*">
-                        <ProgressBar
-                            Grid.Row="0"
-                            VerticalAlignment="Bottom"
-                            IsVisible="False" />
                         <Button
                             Grid.Row="1"
+                            Margin="4,0"
+                            Padding="12,8"
+                            HorizontalAlignment="Left"
+                            icons:Attached.Icon="fa-solid fa-magnifying-glass-plus"
+                            Classes="transparent"
+                            Command="{Binding GenerateImageCommand}"
+                            ToolTip.Tip="Generate with Hires Scaling" />
+
+                        <!--  Main Generate Button  -->
+                        <Button
+                            x:Name="GenerateButton"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Width="130"
                             HorizontalAlignment="Stretch"
                             Classes="accent"
                             Command="{Binding GenerateImageCommand}"
-                            Content="Generate Image" />
+                            IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}">
+                            <Panel>
+                                <TextBlock IsVisible="{Binding #GenerateButton.IsEnabled}" Text="Generate Image" />
+                                <controls:ProgressRing IsIndeterminate="True" IsVisible="{Binding !#GenerateButton.IsEnabled}" />
+                            </Panel>
+                        </Button>
+                        <!--  Cancel Button  -->
+                        <Button
+                            x:Name="CancelButton"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Width="130"
+                            HorizontalAlignment="Stretch"
+                            icons:Attached.Icon="fa-solid fa-stop"
+                            Command="{Binding GenerateImageCancelCommand}"
+                            IsVisible="{Binding GenerateImageCommand.CanBeCanceled}" />
+
+                        <Button
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Margin="4,0"
+                            Padding="12,8"
+                            HorizontalAlignment="Left"
+                            icons:Attached.Icon="fa-solid fa-repeat"
+                            Classes="transparent"
+                            Command="{Binding GenerateImageCommand}"
+                            ToolTip.Tip="Generate with current seed" />
                     </Grid>
-                </Grid>
-            </controls:Card>
+                </controls:Card>
+            </StackPanel>
         </Grid>
-
-
-        <GridSplitter
-            Grid.Row="0"
-            Grid.Column="3"
-            Background="{DynamicResource ScrollBarTrackStroke}" />
+        
+        <GridSplitter Grid.Row="0" Grid.Column="3"/>
 
         <!--  Image Viewer  -->
         <Grid
@@ -145,69 +252,17 @@
             RowDefinitions="Auto,*"
             Margin="8,8,8,16"
             HorizontalAlignment="Stretch"
-            VerticalAlignment="Top">
+            VerticalAlignment="Stretch">
             <ProgressBar
+                BorderThickness="8"
                 DataContext="{Binding OutputProgress}"
-                IsVisible="{Binding IsProgressVisible}"
+                IsVisible="True"
                 Maximum="{Binding Maximum}"
                 Value="{Binding Value}" />
             <controls:ImageGalleryCard
                 Grid.Row="1"
-                VerticalAlignment="Stretch"
                 DataContext="{Binding ImageGalleryCardViewModel}" />
         </Grid>
-        <!--<controls:Card
-            Grid.Row="0"
-            Grid.Column="4"
-            Margin="8,8,8,16"
-            Padding="8"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Top">
-            <Grid RowDefinitions="0.2*,0.7*">
-                <StackPanel
-                    Grid.Row="0"
-                    VerticalAlignment="Top"
-                    Orientation="Vertical">
-                    <TextBlock
-                        Margin="2"
-                        FontSize="14"
-                        Text="Image" />
-                    ~1~<ProgressBar
-                            Maximum="100"
-                            Value="{Binding ProgressValue, FallbackValue=10}"
-                            Visibility="{Binding ProgressBarVisibility, FallbackValue=Visible}"
-                            Width="500" />@1@
-                </StackPanel>
-                <Grid
-                    Grid.Row="1"
-                    MinHeight="512"
-                    VerticalAlignment="Stretch"
-                    Background="{DynamicResource ApplicationBackgroundBrush}"
-                    RowDefinitions="Auto,*">
-                    <ProgressBar
-                        DataContext="{Binding OutputProgress}"
-                        IsVisible="{Binding IsProgressVisible}"
-                        Maximum="{Binding Maximum}"
-                        Value="{Binding Value}" />
-                    <controls:BetterAdvancedImage
-                        Grid.Row="1"
-                        Margin="8"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        CornerRadius="8"
-                        Source="{Binding OutputImageSource}"
-                        Stretch="Uniform" />
-                </Grid>
-            </Grid>
-        </controls:Card>-->
-
-        <!--<Button
-                Classes="accent"
-                Command="{Binding TextToImageGenerateCommand}"
-                Content="Generate Image"
-                Grid.Row="1"
-                HorizontalAlignment="Center"
-                Name="TextToImageButton" />-->
 
     </Grid>
 </controls:UserControlBase>

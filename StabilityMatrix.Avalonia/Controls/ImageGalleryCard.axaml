@@ -29,20 +29,15 @@
                     VerticalAlignment="{TemplateBinding VerticalAlignment}">
                     <Grid RowDefinitions="*,Auto">
                         <!-- Main image view -->
-                        <Grid Margin="4" ColumnDefinitions="Auto,*,Auto">
-                            <Button
-                                Grid.Column="0"
-                                Margin="4"
-                                Padding="10,20"
-                                VerticalAlignment="Center"
-                                Command="{Binding #ImageCarousel.Previous}">
-                                <Path Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" Fill="Black" />
-                            </Button>
-                            <Panel Grid.Column="1">
+                        <Grid Margin="4">
+                            <Panel>
                                 <Carousel
                                     x:Name="ImageCarousel"
+                                    MinHeight="400"
+                                    AutoScrollToSelectedItem="True"
                                     IsVisible="{Binding !IsPreviewOverlayEnabled}"
                                     SelectedItem="{Binding SelectedImage}"
+                                    SelectedIndex="{Binding SelectedImageIndex}"
                                     ItemsSource="{Binding ImageSources}">
                                     
                                     <Carousel.PageTransition>
@@ -92,14 +87,37 @@
                                         StretchDirection="Both" />
                                 </Border>
                             </Panel>
-                            <Button
-                                Grid.Column="2"
+                            
+                            <!-- Left button -->
+                            <Border
                                 Margin="4"
-                                Padding="10,20"
                                 VerticalAlignment="Center"
-                                Command="{Binding #ImageCarousel.Next}">
-                                <Path Data="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" Fill="Black" />
-                            </Button>
+                                HorizontalAlignment="Left"
+                                Grid.Column="0">
+                                <Button
+                                    IsEnabled="{Binding #ImageCarousel.Sele}"
+                                    Classes="transparent"
+                                    Padding="10,20"
+                                    Command="{Binding #ImageCarousel.Previous}">
+                                    <Path Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" 
+                                          Fill="{DynamicResource ButtonForeground}" />
+                                </Button>
+                            </Border>
+                            
+                            <!-- Right button -->
+                            <Border
+                                Margin="4"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Right">
+                                <Button
+                                    Classes="transparent"
+                                    Padding="10,20"
+                                    Command="{Binding #ImageCarousel.Next}">
+                                    <Path Data="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" 
+                                          Fill="{DynamicResource ButtonForeground}" />
+                                </Button>
+                            </Border>
+                            
                         </Grid>
                         <!-- Thumbnails -->
                         <ListBox

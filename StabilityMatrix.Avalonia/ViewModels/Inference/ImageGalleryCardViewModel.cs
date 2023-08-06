@@ -17,27 +17,46 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public partial class ImageGalleryCardViewModel : ViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
-    [ObservableProperty] private bool isPreviewOverlayEnabled;
 
-    [ObservableProperty] private IImage? previewImage;
+    [ObservableProperty]
+    private bool isPreviewOverlayEnabled;
 
-    [ObservableProperty] private AvaloniaList<string> imageSources = new();
-    [ObservableProperty] private string? selectedImage;
+    [ObservableProperty]
+    private IImage? previewImage;
+
+    [ObservableProperty]
+    private AvaloniaList<string> imageSources = new();
+
+    [ObservableProperty]
+    private string? selectedImage;
+
+    [
+        ObservableProperty,
+        NotifyPropertyChangedFor(nameof(CanNavigateBack), nameof(CanNavigateForward))
+    ]
+    private int selectedImageIndex;
+
+    public bool CanNavigateBack => SelectedImageIndex > 0;
+    public bool CanNavigateForward => SelectedImageIndex < ImageSources.Count - 1;
 
     [RelayCommand]
-    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
     // ReSharper disable once UnusedMember.Local
     private async Task FlyoutCopy(IImage? image)
     {
-        if (!Compat.IsWindows) return;
-        
         if (image is null)
         {
             Logger.Trace("FlyoutCopy: image is null");
             return;
         }
+
         Logger.Trace($"FlyoutCopy is copying {image}");
-        await Task.Run(() => WindowsClipboard.SetBitmap((Bitmap) image));
+
+        await Task.Run(() =>
+        {
+            if (Compat.IsWindows)
+            {
+                WindowsClipboard.SetBitmap((Bitmap)image);
+            }
+        });
     }
 }

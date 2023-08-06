@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia.Collections;
 using Avalonia.Controls.Notifications;
@@ -122,7 +123,9 @@ public partial class InferenceViewModel : PageViewModelBase
             return;
         }
         // TODO: make address configurable
-        await ClientManager.ConnectAsync();
+
+        await notificationService.TryAsync(ClientManager.ConnectAsync(),
+            "Could not connect to ComfyUI backend");
     }
 
     /// <summary>
@@ -137,7 +140,8 @@ public partial class InferenceViewModel : PageViewModelBase
             return;
         }
 
-        await ClientManager.CloseAsync();
+        await notificationService.TryAsync(ClientManager.CloseAsync(),
+            "Could not disconnect from ComfyUI backend");
     }
 
     /// <summary>

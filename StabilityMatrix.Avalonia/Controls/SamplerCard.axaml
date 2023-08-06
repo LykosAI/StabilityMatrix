@@ -7,7 +7,15 @@
         xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData">
     <Design.PreviewWith>
         <Grid MinWidth="300">
-            <controls:SamplerCard DataContext="{x:Static mocks:DesignData.SamplerCardViewModel}"/>
+            <StackPanel Spacing="16">
+                <controls:Card>
+                    <controls:SamplerCard DataContext="{x:Static mocks:DesignData.SamplerCardViewModel}"/>
+                </controls:Card>
+                
+                <controls:Card>
+                    <controls:SamplerCard DataContext="{x:Static mocks:DesignData.SamplerCardViewModelScaleMode}"/>
+                </controls:Card>
+            </StackPanel>
         </Grid>
     </Design.PreviewWith>
 
@@ -15,19 +23,25 @@
         <Setter Property="HorizontalAlignment" Value="Stretch"/>
         <Setter Property="Template">
             <ControlTemplate>
-                <controls:Card Padding="8" HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
-                    <StackPanel Margin="8" Spacing="16">
+                <Panel
+                    HorizontalAlignment="{TemplateBinding HorizontalAlignment}" >
+                    <StackPanel 
+                        Margin="8" 
+                        HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                        Spacing="16">
                         <Grid ColumnDefinitions="Auto,*" RowDefinitions="*,*,*">
                             <!-- Sampler -->
                             <TextBlock
                                 Grid.Row="0"
                                 Grid.Column="0"
+                                IsVisible="{Binding IsSamplerSelectionEnabled}"
                                 Margin="0,0,0,8"
                                 VerticalAlignment="Center"
                                 Text="Sampler" />
                             <ui:FAComboBox
                                 Grid.Row="0"
                                 Grid.Column="1"
+                                IsVisible="{Binding IsSamplerSelectionEnabled}"
                                 ItemsSource="{Binding ClientManager.Samplers}"
                                 SelectedItem="{Binding SelectedSampler}"
                                 Margin="8,0,0,8"
@@ -51,11 +65,13 @@
                             <TextBlock
                                 Grid.Row="2"
                                 Grid.Column="0"
+                                IsVisible="{Binding IsCfgScaleEnabled}"
                                 VerticalAlignment="Center"
                                 Text="CFG Scale" />
                             <ui:NumberBox
                                 Grid.Row="2"
                                 Grid.Column="1"
+                                IsVisible="{Binding IsCfgScaleEnabled}"
                                 SelectionHighlightColor="Transparent"
                                 Value="{Binding CfgScale}"
                                 Margin="8,0,0,0"
@@ -66,8 +82,37 @@
                         </Grid>
                         
                         <StackPanel>
-                            <!-- Dimensions -->
-                            <Grid ColumnDefinitions="*,Auto,*" RowDefinitions="Auto,*">
+                            <!-- Denoise Strength -->
+                            <Grid IsVisible="{Binding IsScaleSizeMode}">
+                                <StackPanel>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock 
+                                            VerticalAlignment="Center"
+                                            Text="Denoising Strength"/>
+                                        <ui:NumberBox
+                                            Grid.Column="1"
+                                            Margin="4,0,0,0"
+                                            ValidationMode="InvalidInputOverwritten"
+                                            SmallChange="0.01"
+                                            SimpleNumberFormat="F2"
+                                            Value="{Binding DenoiseStrength}"
+                                            HorizontalAlignment="Stretch"
+                                            SpinButtonPlacementMode="Compact"/>
+                                    </Grid>
+                                    <Slider 
+                                        Minimum="0"
+                                        Maximum="1"
+                                        Value="{Binding DenoiseStrength}"
+                                        TickFrequency="1"
+                                        TickPlacement="BottomRight"/>
+                                </StackPanel>
+                            </Grid>
+                            
+                            <!-- Dimensions (Absolute mode) -->
+                            <Grid 
+                                IsVisible="{Binding !IsScaleSizeMode}"
+                                ColumnDefinitions="*,Auto,*" 
+                                RowDefinitions="Auto,*">
                                 <TextBlock
                                     Grid.Row="0"
                                     Grid.Column="0"
@@ -99,9 +144,36 @@
                                     HorizontalAlignment="Stretch"
                                     SpinButtonPlacementMode="Compact"/>
                             </Grid>
+                            
+                            <!-- Dimensions (Scale mode) -->
+                            <Grid IsVisible="{Binding IsScaleSizeMode}">
+                                <StackPanel>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock 
+                                            VerticalAlignment="Center"
+                                            Text="Upscale by"/>
+                                        <ui:NumberBox
+                                            Grid.Column="1"
+                                            Margin="4,0,0,0"
+                                            ValidationMode="InvalidInputOverwritten"
+                                            SmallChange="0.5"
+                                            SimpleNumberFormat="F2"
+                                            Value="{Binding Scale}"
+                                            HorizontalAlignment="Stretch"
+                                            SpinButtonPlacementMode="Compact"/>
+                                    </Grid>
+                                    <Slider 
+                                        Minimum="1"
+                                        Maximum="4"
+                                        Value="{Binding Scale}"
+                                        IsSnapToTickEnabled="True" 
+                                        TickFrequency="0.5"
+                                        TickPlacement="BottomRight"/>
+                                </StackPanel>
+                            </Grid>
                         </StackPanel>
                     </StackPanel>
-                </controls:Card>
+                </Panel>
             </ControlTemplate>
         </Setter>
     </Style>

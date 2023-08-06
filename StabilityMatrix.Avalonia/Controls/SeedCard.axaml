@@ -29,6 +29,7 @@
                             <NumericUpDown
                                 Grid.Column="1"
                                 Name="SeedNumberBox"
+                                ShowButtonSpinner="False"
                                 IsReadOnly="{Binding !#RandomizeToggleButton.IsChecked}"
                                 FormatString="F0"
                                 ParsingNumberStyle="Integer"

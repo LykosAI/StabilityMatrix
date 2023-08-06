@@ -294,6 +294,11 @@ public sealed class App : Application
         // Inference tabs
         services.AddTransient<InferenceTextToImageView>();
         
+        // Inference controls
+        services.AddTransient<ImageGalleryCard>();
+        services.AddTransient<SeedCard>();
+        services.AddTransient<SamplerCard>();
+        
         // Dialogs
         services.AddTransient<SelectDataDirectoryDialog>();
         services.AddTransient<LaunchOptionsDialog>();

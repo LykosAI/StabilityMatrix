@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<SyntaxDefinition name="ImagePrompt" extensions=".prompt" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+    <!-- Colors -->
+    <Color name="punctuation" foreground="DarkGreen"/>
+    <Color name="comment" foreground="#008000"/>
+    <Color name="keyword" foreground="#0000FF" fontWeight="bold"/>
+    <Color name="string" foreground="#A31515"/>
+    <Color name="charescape" foreground="#6A8759"/>
+    <Color name="invalid" foreground="#FF0000" background="#FFD0D0"/>
+    <Color name="number" foreground="#FF0000"/>
+    <Color name="operator" foreground="#808080"/>
+    <Color name="extranetwork" foreground="#2B91AF"/>
+    <Color name="promptstep" foreground="#2B91AF"/>
+    <Color name="promptweight" foreground="#2B91AF"/>
+    <Color name="promptvariable" foreground="#2B91AF"/>
+    <Color name="dynamicselection" foreground="#2B91AF"/>
+    <Color name="wildcard" foreground="#2B91AF"/>
+    <Color name="whitespace" foreground="#808080"/>
+    <Color name="qualitytag" foreground="#2B91AF"/>
+    <Color name="split" foreground="#808080"/>
+    <Color name="csscolor" foreground="#FF00FF"/>
+    <Color name="promptkeyword" foreground="#2B91AF"/>
+    <Color name="supercmd" foreground="#2B91AF"/>
+
+    <!-- Rules -->
+    <RuleSet ignoreCase="false">
+        <Rule color="punctuation">
+            [?,.()\[\]{}+\-/%*&lt;&gt;^!|]+
+        </Rule>
+        <Span color="comment" begin="#"/>
+<!--        <Span color="string" multiline="true" begin="&quot;" end="&quot;"/>-->
+        <Span color="charescape" begin="\\u" end=".*"/>
+<!--        <Span color="invalid" begin=">"/>
+        <Span color="invalid" begin="\\)"/>
+        <Span color="invalid" begin="\\]"/>
+        <Span color="invalid" begin="\\}"/>-->
+        
+<!--        <MarkFollowing color="operator" bold="true" begin=":"/>
+        <MarkPrevious color="operator" bold="true" begin=","/>-->
+        
+<!--        <Span color="extranetwork" begin="&lt;" end="&gt;"/>
+        <Span color="promptstep">
+            <Begin>\[</Begin>
+            <End>\]</End>
+        </Span>
+        <Span color="promptweight">
+            <Begin>\(</Begin>
+            <End>\)</End>
+        </Span>-->
+        
+<!--    <Span color="promptvariable" begin="\\$\\{" end="\\}"/>
+        <Span color="dynamicselection" begin="\\{" end="\\}"/>-->
+<!--        <Span color="wildcard" begin="__" end="__"/>
+        <Span color="whitespace" begin="\\s+"/>-->
+<!--        <Span color="qualitytag" begin="\\{\\{" end="\\}\\}"/>-->
+<!--        <Span color="split" begin="|"/>-->
+
+<!--        <MarkPrevious color="csscolor" begin="#"/>-->
+
+        <Keywords color="keyword" ignoreCase="false">
+            <Word>AND</Word>
+            <Word>BREAK</Word>
+        </Keywords>
+
+        <Keywords color="promptkeyword">
+            <Word>PROMPT</Word>
+            <Word>WEIGHT</Word>
+        </Keywords>
+
+        <Keywords color="supercmd">
+            <Word>SELECT</Word>
+            <Word>DYNAMIC</Word>
+        </Keywords>
+
+        <Rule color="number">\b0[xX][0-9a-fA-F]+|(\b\d+(\.[0-9]+)?|\.[0-9]+)([eE][+-]?[0-9]+)?</Rule>
+
+<!--        <Rule color="invalid">\b\d+[a-zA-Z_]+\b</Rule>
+
+        <Rule color="invalid">[a-zA-Z_]+\d+\b</Rule>-->
+    </RuleSet>
+</SyntaxDefinition>

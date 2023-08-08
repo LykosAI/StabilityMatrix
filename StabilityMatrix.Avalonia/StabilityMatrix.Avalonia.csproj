@@ -52,6 +52,10 @@
     <ItemGroup>
         <AvaloniaResource Include="Assets\Icon.ico" />
         <AvaloniaResource Include="Assets\Icon.png" />
+        <None Remove="Assets\ImagePrompt.tmLanguage.json" />
+        <AvaloniaResource Include="Assets\ImagePrompt.tmLanguage.json" />
+        <None Remove="Assets\ThemeMatrixDark.json" />
+        <AvaloniaResource Include="Assets\ThemeMatrixDark.json" />
     </ItemGroup>
     
     <ItemGroup>

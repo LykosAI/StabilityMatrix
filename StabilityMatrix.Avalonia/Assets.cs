@@ -24,6 +24,12 @@ internal static class Assets
     
     public static AvaloniaResource LicensesJson => new(
         "avares://StabilityMatrix.Avalonia/Assets/licenses.json");
+    
+    public static AvaloniaResource ImagePromptLanguageJson => new(
+        "avares://StabilityMatrix.Avalonia/Assets/ImagePrompt.tmLanguage.json");
+    
+    public static AvaloniaResource ThemeMatrixDarkJson => 
+        new("avares://StabilityMatrix.Avalonia/Assets/ThemeMatrixDark.json");
 
     [SupportedOSPlatform("windows")]
     [SupportedOSPlatform("linux")]

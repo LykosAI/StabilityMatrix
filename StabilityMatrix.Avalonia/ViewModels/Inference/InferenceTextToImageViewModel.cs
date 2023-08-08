@@ -18,7 +18,6 @@ using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 
@@ -40,11 +39,7 @@ public partial class InferenceTextToImageViewModel
     public SamplerCardViewModel SamplerCardViewModel { get; }
     public SamplerCardViewModel HiresFixSamplerCardViewModel { get; }
     public ImageGalleryCardViewModel ImageGalleryCardViewModel { get; }
-
-    public InferenceViewModel? Parent { get; set; }
-
-    public TextDocument PromptDocument { get; } = new();
-    public TextDocument NegativePromptDocument { get; } = new();
+    public PromptCardViewModel PromptCardViewModel { get; }
 
     [ObservableProperty]
     private string? selectedModelName;
@@ -81,6 +76,7 @@ public partial class InferenceTextToImageViewModel
             vm.IsDenoiseStrengthEnabled = true;
         });
         ImageGalleryCardViewModel = vmFactory.Get<ImageGalleryCardViewModel>();
+        PromptCardViewModel = vmFactory.Get<PromptCardViewModel>();
 
         SeedCardViewModel.GenerateNewSeed();
     }
@@ -127,7 +123,7 @@ public partial class InferenceTextToImageViewModel
                 Inputs = new Dictionary<string, object?>
                 {
                     ["clip"] = new object[] { "4", 1 },
-                    ["text"] = PromptDocument.Text,
+                    ["text"] = PromptCardViewModel.PromptDocument.Text,
                 }
             },
             ["7"] = new()
@@ -136,7 +132,7 @@ public partial class InferenceTextToImageViewModel
                 Inputs = new Dictionary<string, object?>
                 {
                     ["clip"] = new object[] { "4", 1 },
-                    ["text"] = NegativePromptDocument.Text,
+                    ["text"] = PromptCardViewModel.NegativePromptDocument.Text,
                 }
             },
             ["8"] = new()
@@ -198,7 +194,6 @@ public partial class InferenceTextToImageViewModel
         var nodes = GetCurrentPrompt();
 
         // Connect progress handler
-        OutputProgress.IsIndeterminate = true;
         client.ProgressUpdateReceived += OnProgressUpdateReceived;
         client.PreviewImageReceived += OnPreviewImageReceived;
 
@@ -265,6 +260,7 @@ public partial class InferenceTextToImageViewModel
         {
             // Disconnect progress handler
             OutputProgress.Value = 0;
+            ImageGalleryCardViewModel.PreviewImage?.Dispose();
             ImageGalleryCardViewModel.PreviewImage = null;
             ImageGalleryCardViewModel.IsPreviewOverlayEnabled = false;
             client.ProgressUpdateReceived -= OnProgressUpdateReceived;
@@ -288,8 +284,6 @@ public partial class InferenceTextToImageViewModel
     /// <inheritdoc />
     public void LoadState(InferenceTextToImageModel state)
     {
-        PromptDocument.Text = state.Prompt;
-        NegativePromptDocument.Text = state.NegativePrompt;
         SelectedModelName = state.SelectedModelName;
 
         if (state.SeedCardState != null)
@@ -300,6 +294,10 @@ public partial class InferenceTextToImageViewModel
         {
             SamplerCardViewModel.LoadState(state.SamplerCardState);
         }
+        if (state.PromptCardState != null)
+        {
+            PromptCardViewModel.LoadState(state.PromptCardState);
+        }
     }
 
     /// <inheritdoc />
@@ -307,11 +305,10 @@ public partial class InferenceTextToImageViewModel
     {
         return new InferenceTextToImageModel
         {
-            Prompt = PromptDocument.Text,
-            NegativePrompt = NegativePromptDocument.Text,
             SelectedModelName = SelectedModelName,
             SeedCardState = SeedCardViewModel.SaveState(),
-            SamplerCardState = SamplerCardViewModel.SaveState()
+            SamplerCardState = SamplerCardViewModel.SaveState(),
+            PromptCardState = PromptCardViewModel.SaveState(),
         };
     }
 }

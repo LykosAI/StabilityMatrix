@@ -1,0 +1,59 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+        xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+        xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+        x:DataType="vmInference:PromptCardViewModel">
+    <Design.PreviewWith>
+        <Grid Height="600" Width="600">
+            <controls:PromptCard DataContext="{x:Static mocks:DesignData.PromptCardViewModel}"/>
+        </Grid>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|PromptCard">
+        <!-- Set Defaults -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card Padding="8" HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
+                    <controls:Card.Styles>
+                        <Style Selector="avaloniaEdit|TextEditor">
+                            <Setter Property="Margin" Value="0,8,0,8"/>
+                            <Setter Property="CornerRadius" Value="8" />
+                            <Setter Property="LineNumbersForeground" Value="DarkSlateGray"/>
+                            <Setter Property="ShowLineNumbers" Value="True"/>
+                            <Setter Property="WordWrap" Value="True"/>
+                            <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+                            <Setter Property="Background" Value="{DynamicResource ScrollBarTrackStroke}" />
+                        </Style>
+                    </controls:Card.Styles>
+                    
+                    <Grid Margin="4,8" RowDefinitions="Auto,*,Auto,*">
+                        <!-- Prompt -->
+                        <TextBlock
+                            Grid.Row="0"
+                            Margin="4"
+                            FontSize="14"
+                            Text="Prompt" />
+                        <avaloniaEdit:TextEditor
+                            x:Name="PromptEditor"
+                            Grid.Row="1"
+                            Document="{Binding PromptDocument}"
+                            FontFamily="Cascadia Code,Consolas,Menlo,Monospace"/>
+                        <!-- Negative Prompt -->
+                        <TextBlock
+                            Grid.Row="2"
+                            Margin="4"
+                            FontSize="14"
+                            Text="Negative Prompt" />
+                        <avaloniaEdit:TextEditor
+                            x:Name="NegativePromptEditor"
+                            Grid.Row="3"
+                            Document="{Binding NegativePromptDocument}"
+                            FontFamily="Cascadia Code,Consolas,Menlo,Monospace"/>
+                    </Grid>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

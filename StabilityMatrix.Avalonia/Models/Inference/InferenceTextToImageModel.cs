@@ -5,9 +5,10 @@ namespace StabilityMatrix.Avalonia.Models.Inference;
 [JsonSerializable(typeof(InferenceTextToImageModel))]
 public class InferenceTextToImageModel
 {
-    public string? Prompt { get; set; }
-    public string? NegativePrompt { get; set; }
-    public string? SelectedModelName { get; set; }
-    public SeedCardModel? SeedCardState { get; set; }
-    public SamplerCardModel? SamplerCardState { get; set; }
+    public string? Prompt { get; init; }
+    public string? NegativePrompt { get; init; }
+    public string? SelectedModelName { get; init; }
+    public SeedCardModel? SeedCardState { get; init; }
+    public SamplerCardModel? SamplerCardState { get; init; }
+    public PromptCardModel? PromptCardState { get; init; }
 }

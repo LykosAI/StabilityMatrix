@@ -31,5 +31,6 @@
         <StyleInclude Source="Controls/SeedCard.axaml"/>
         <StyleInclude Source="Controls/SamplerCard.axaml"/>
         <StyleInclude Source="Controls/ImageGalleryCard.axaml"/>
+        <StyleInclude Source="Controls/PromptCard.axaml"/>
     </Application.Styles>
 </Application>

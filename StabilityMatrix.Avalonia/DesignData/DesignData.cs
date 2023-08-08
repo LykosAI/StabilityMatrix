@@ -392,8 +392,11 @@ public static class DesignData
             });
         });
 
-public static Indexer Types => new();
-    
+    public static PromptCardViewModel PromptCardViewModel =>
+        DialogFactory.Get<PromptCardViewModel>();
+
+    public static Indexer Types => new();
+
     public class Indexer
     {
         public object? this[string typeName]

@@ -80,19 +80,11 @@ public partial class InferenceViewModel : PageViewModelBase
         };
     }
 
-    private InferenceTextToImageViewModel CreateTextToImageViewModel()
-    {
-        return vmFactory.Get<InferenceTextToImageViewModel>(vm =>
-        {
-            vm.Parent = this;
-        });
-    }
-
     public override void OnLoaded()
     {
         if (Tabs.Count == 0)
         {
-            Tabs.Add(CreateTextToImageViewModel());
+            AddTab();
         }
 
         // Select first tab if none is selected
@@ -110,7 +102,7 @@ public partial class InferenceViewModel : PageViewModelBase
     [RelayCommand]
     private void AddTab()
     {
-        Tabs.Add(CreateTextToImageViewModel());
+        Tabs.Add(vmFactory.Get<InferenceTextToImageViewModel>());
     }
 
     /// <summary>
@@ -276,7 +268,7 @@ public partial class InferenceViewModel : PageViewModelBase
         ViewModelBase? vm = null;
         if (document.ProjectType is InferenceProjectType.TextToImage)
         {
-            var textToImage = CreateTextToImageViewModel();
+            var textToImage = vmFactory.Get<InferenceTextToImageViewModel>();
             textToImage.LoadState(document.State.Deserialize<InferenceTextToImageModel>()!);
             vm = textToImage;
         }

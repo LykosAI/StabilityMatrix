@@ -248,15 +248,18 @@ public sealed class App : Application
         services.AddTransient<CheckpointFolder>();
         services.AddTransient<CheckpointFile>();
         services.AddTransient<InferenceTextToImageViewModel>();
-        services.AddTransient<SeedCardViewModel>();
-        services.AddTransient<SamplerCardViewModel>();
-        services.AddTransient<ImageGalleryCardViewModel>();
         
         // Global progress
         services.AddSingleton<ProgressManagerViewModel>();
         
         // Controls
         services.AddTransient<RefreshBadgeViewModel>();
+
+        // Inference controls
+        services.AddTransient<SeedCardViewModel>();
+        services.AddTransient<SamplerCardViewModel>();
+        services.AddTransient<ImageGalleryCardViewModel>();
+        services.AddTransient<PromptCardViewModel>();
         
         // Dialog factory
         services.AddSingleton<ServiceManager<ViewModelBase>>(provider =>
@@ -277,6 +280,7 @@ public sealed class App : Application
                 .Register(provider.GetRequiredService<SeedCardViewModel>)
                 .Register(provider.GetRequiredService<SamplerCardViewModel>)
                 .Register(provider.GetRequiredService<ImageGalleryCardViewModel>)
+                .Register(provider.GetRequiredService<PromptCardViewModel>)
                 .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>));
     }
 
@@ -298,6 +302,7 @@ public sealed class App : Application
         services.AddTransient<ImageGalleryCard>();
         services.AddTransient<SeedCard>();
         services.AddTransient<SamplerCard>();
+        services.AddTransient<PromptCard>();
         
         // Dialogs
         services.AddTransient<SelectDataDirectoryDialog>();

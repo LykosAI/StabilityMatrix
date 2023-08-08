@@ -140,47 +140,10 @@
             Grid.Row="0"
             Grid.Column="2"
             Margin="8,8,8,16"
-            Grid.RowDefinitions="*,Auto">
+            RowDefinitions="*,Auto">
             <!--  Prompt card  -->
-            <controls:Card
-                Margin="0,0,0,4"
-                Padding="4"
-                DockPanel.Dock="Top">
-                <Grid Margin="4,8" RowDefinitions="Auto,*,Auto,*">
-                    <TextBlock
-                        Grid.Row="0"
-                        Margin="4"
-                        FontSize="14"
-                        Text="Prompt" />
-                    <avaloniaEdit:TextEditor
-                        x:Name="PromptEditor"
-                        Grid.Row="1"
-                        Margin="0,8,0,8"
-                        CornerRadius="8"
-                        Document="{Binding PromptDocument}"
-                        FontFamily="Jetbrains Mono,Cascadia Code,Consolas,Menlo,Monospace"
-                        LineNumbersForeground="DarkSlateGray"
-                        ShowLineNumbers="True"
-                        VerticalScrollBarVisibility="Auto"
-                        WordWrap="True" />
-
-                    <TextBlock
-                        Grid.Row="2"
-                        Margin="4"
-                        FontSize="14"
-                        Text="Negative Prompt" />
-                    <avaloniaEdit:TextEditor
-                        x:Name="NegativePromptEditor"
-                        Grid.Row="3"
-                        Margin="0,8,0,8"
-                        Document="{Binding NegativePromptDocument}"
-                        FontFamily="Jetbrains Mono,Cascadia Code,Consolas,Menlo,Monospace"
-                        LineNumbersForeground="DarkSlateGray"
-                        ShowLineNumbers="True"
-                        VerticalScrollBarVisibility="Auto"
-                        WordWrap="True" />
-                </Grid>
-            </controls:Card>
+            <controls:PromptCard 
+                DataContext="{Binding PromptCardViewModel}"/>
 
             <StackPanel Grid.Row="1">
                 <!--  Generate Buttons  -->

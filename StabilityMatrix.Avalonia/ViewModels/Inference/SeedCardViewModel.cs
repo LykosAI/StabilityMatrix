@@ -18,8 +18,8 @@ public partial class SeedCardViewModel : ViewModelBase, ILoadableState<SeedCardM
     private long seed;
 
     public string RandomizeButtonToolTip => IsRandomizeEnabled 
-        ? "Seed is locked" 
-        : "Randomizing Seed on each run";
+        ? "Randomizing Seed on each run"
+        : "Seed is locked";
     
     [RelayCommand]
     public void GenerateNewSeed()

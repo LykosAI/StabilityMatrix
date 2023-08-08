@@ -126,7 +126,7 @@
                             Minimum="1"
                             Increment="1"
                             ParsingNumberStyle="Integer"
-                            Value="{Binding BatchSize}"
+                            Value="{Binding BatchCount}"
                             ClipValueToMinMax="True"/>
                     </Grid>
                 </controls:Card>
@@ -144,12 +144,12 @@
             <!--  Prompt card  -->
             <controls:Card
                 Margin="0,0,0,4"
-                Padding="8"
+                Padding="4"
                 DockPanel.Dock="Top">
                 <Grid Margin="4,8" RowDefinitions="Auto,*,Auto,*">
                     <TextBlock
                         Grid.Row="0"
-                        Margin="2"
+                        Margin="4"
                         FontSize="14"
                         Text="Prompt" />
                     <avaloniaEdit:TextEditor
@@ -158,7 +158,7 @@
                         Margin="0,8,0,8"
                         CornerRadius="8"
                         Document="{Binding PromptDocument}"
-                        FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                        FontFamily="Jetbrains Mono,Cascadia Code,Consolas,Menlo,Monospace"
                         LineNumbersForeground="DarkSlateGray"
                         ShowLineNumbers="True"
                         VerticalScrollBarVisibility="Auto"
@@ -166,7 +166,7 @@
 
                     <TextBlock
                         Grid.Row="2"
-                        Margin="2"
+                        Margin="4"
                         FontSize="14"
                         Text="Negative Prompt" />
                     <avaloniaEdit:TextEditor
@@ -174,7 +174,7 @@
                         Grid.Row="3"
                         Margin="0,8,0,8"
                         Document="{Binding NegativePromptDocument}"
-                        FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                        FontFamily="Jetbrains Mono,Cascadia Code,Consolas,Menlo,Monospace"
                         LineNumbersForeground="DarkSlateGray"
                         ShowLineNumbers="True"
                         VerticalScrollBarVisibility="Auto"
@@ -249,18 +249,18 @@
         <Grid
             Grid.Row="0"
             Grid.Column="4"
-            RowDefinitions="Auto,*"
             Margin="8,8,8,16"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch">
             <ProgressBar
-                BorderThickness="8"
+                Margin="2,1,2,4"
+                VerticalAlignment="Top"
                 DataContext="{Binding OutputProgress}"
-                IsVisible="True"
+                IsVisible="{Binding IsProgressVisible}"
                 Maximum="{Binding Maximum}"
                 Value="{Binding Value}" />
             <controls:ImageGalleryCard
-                Grid.Row="1"
+                Grid.Row="0"
                 DataContext="{Binding ImageGalleryCardViewModel}" />
         </Grid>
 

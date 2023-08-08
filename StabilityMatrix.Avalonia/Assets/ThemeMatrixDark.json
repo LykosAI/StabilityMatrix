@@ -208,7 +208,7 @@
       "name": "Keyword",
       "scope": "keyword",
       "settings": {
-        "fontStyle": "italic",
+        "fontStyle": "",
         "foreground": "#676867"
       }
     },

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -10,78 +11,80 @@ using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
+using SkiaSharp;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceTextToImageView))]
-public partial class InferenceTextToImageViewModel : ViewModelBase, ILoadableState<InferenceTextToImageModel>
+public partial class InferenceTextToImageViewModel
+    : ViewModelBase,
+        ILoadableState<InferenceTextToImageModel>
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
+
     private readonly INotificationService notificationService;
     private readonly ServiceManager<ViewModelBase> vmFactory;
 
     public IInferenceClientManager ClientManager { get; }
 
-    // These are set in OnLoaded due to needing the vmFactory
-    [NotNull] public SeedCardViewModel? SeedCardViewModel { get; private set; }
-    [NotNull] public SamplerCardViewModel? SamplerCardViewModel { get; private set; }
-    [NotNull] public SamplerCardViewModel? HiresFixSamplerCardViewModel { get; private set; }
-    [NotNull] public ImageGalleryCardViewModel? ImageGalleryCardViewModel { get; private set; }
-    
+    public SeedCardViewModel SeedCardViewModel { get; }
+    public SamplerCardViewModel SamplerCardViewModel { get; }
+    public SamplerCardViewModel HiresFixSamplerCardViewModel { get; }
+    public ImageGalleryCardViewModel ImageGalleryCardViewModel { get; }
+
     public InferenceViewModel? Parent { get; set; }
-    
+
     public TextDocument PromptDocument { get; } = new();
     public TextDocument NegativePromptDocument { get; } = new();
 
     [ObservableProperty]
     private string? selectedModelName;
 
-    [ObservableProperty]
+    [ObservableProperty] 
     private int batchSize = 1;
-    
+
+    [ObservableProperty]
+    private int batchCount = 1;
+
     public ProgressViewModel OutputProgress { get; } = new();
-    
+
     [ObservableProperty]
     private string? outputImageSource;
 
     public InferenceTextToImageViewModel(
-        INotificationService notificationService, 
+        INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
-        ServiceManager<ViewModelBase> vmFactory)
+        ServiceManager<ViewModelBase> vmFactory
+    )
     {
         this.notificationService = notificationService;
         this.vmFactory = vmFactory;
+        ClientManager = inferenceClientManager;
 
-        // ReSharper disable twice NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
-        SeedCardViewModel ??= vmFactory.Get<SeedCardViewModel>();
-        // OnPropertyChanged(nameof(SeedCardViewModel));
-        SamplerCardViewModel ??= vmFactory.Get<SamplerCardViewModel>();
-        // OnPropertyChanged(nameof(SamplerCardViewModel));
-        HiresFixSamplerCardViewModel ??= vmFactory.Get<SamplerCardViewModel>(vm =>
+        // Get sub view models from service manager
+        SeedCardViewModel = vmFactory.Get<SeedCardViewModel>();
+        SamplerCardViewModel = vmFactory.Get<SamplerCardViewModel>();
+        HiresFixSamplerCardViewModel = vmFactory.Get<SamplerCardViewModel>(vm =>
         {
             vm.IsScaleSizeMode = true;
             vm.IsCfgScaleEnabled = false;
             vm.IsSamplerSelectionEnabled = false;
             vm.IsDenoiseStrengthEnabled = true;
         });
-        // OnPropertyChanged(nameof(HiresFixSamplerCardViewModel));
-        // ImageGalleryCardViewModel ??= vmFactory.Get<ImageGalleryCardViewModel>();
-        ImageGalleryCardViewModel = new ImageGalleryCardViewModel();
-        // OnPropertyChanged(nameof(ImageGalleryCardViewModel));
-        
+        ImageGalleryCardViewModel = vmFactory.Get<ImageGalleryCardViewModel>();
+
         SeedCardViewModel.GenerateNewSeed();
-        
-        ClientManager = inferenceClientManager;
     }
-    
+
     private Dictionary<string, ComfyNode> GetCurrentPrompt()
     {
         var prompt = new Dictionary<string, ComfyNode>
@@ -93,27 +96,11 @@ public partial class InferenceTextToImageViewModel : ViewModelBase, ILoadableSta
                 {
                     ["cfg"] = SamplerCardViewModel.CfgScale,
                     ["denoise"] = 1,
-                    ["latent_image"] = new object[]
-                    {
-                        "5",
-                        0
-                    },
-                    ["model"] = new object[]
-                    {
-                        "4",
-                        0
-                    },
-                    ["negative"] = new object[]
-                    {
-                        "7",
-                        0
-                    },
-                    ["positive"] = new object[]
-                    {
-                        "6",
-                        0
-                    },
-                    ["sampler_name"] = SamplerCardViewModel.SelectedSampler,
+                    ["latent_image"] = new object[] { "5", 0 },
+                    ["model"] = new object[] { "4", 0 },
+                    ["negative"] = new object[] { "7", 0 },
+                    ["positive"] = new object[] { "6", 0 },
+                    ["sampler_name"] = SamplerCardViewModel.SelectedSampler?.Name,
                     ["scheduler"] = "normal",
                     ["seed"] = SeedCardViewModel.Seed,
                     ["steps"] = SamplerCardViewModel.Steps
@@ -122,10 +109,7 @@ public partial class InferenceTextToImageViewModel : ViewModelBase, ILoadableSta
             ["4"] = new()
             {
                 ClassType = "CheckpointLoaderSimple",
-                Inputs = new Dictionary<string, object?>
-                {
-                    ["ckpt_name"] = SelectedModelName
-                }
+                Inputs = new Dictionary<string, object?> { ["ckpt_name"] = SelectedModelName }
             },
             ["5"] = new()
             {
@@ -142,11 +126,7 @@ public partial class InferenceTextToImageViewModel : ViewModelBase, ILoadableSta
                 ClassType = "CLIPTextEncode",
                 Inputs = new Dictionary<string, object?>
                 {
-                    ["clip"] = new object[]
-                    {
-                        "4",
-                        1
-                    },
+                    ["clip"] = new object[] { "4", 1 },
                     ["text"] = PromptDocument.Text,
                 }
             },
@@ -155,11 +135,7 @@ public partial class InferenceTextToImageViewModel : ViewModelBase, ILoadableSta
                 ClassType = "CLIPTextEncode",
                 Inputs = new Dictionary<string, object?>
                 {
-                    ["clip"] = new object[]
-                    {
-                        "4",
-                        1
-                    },
+                    ["clip"] = new object[] { "4", 1 },
                     ["text"] = NegativePromptDocument.Text,
                 }
             },
@@ -168,16 +144,8 @@ public partial class InferenceTextToImageViewModel : ViewModelBase, ILoadableSta
                 ClassType = "VAEDecode",
                 Inputs = new Dictionary<string, object?>
                 {
-                    ["samples"] = new object[]
-                    {
-                        "3",
-                        0
-                    },
-                    ["vae"] = new object[]
-                    {
-                        "4",
-                        2
-                    }
+                    ["samples"] = new object[] { "3", 0 },
+                    ["vae"] = new object[] { "4", 2 }
                 }
             },
             ["9"] = new()
@@ -186,11 +154,7 @@ public partial class InferenceTextToImageViewModel : ViewModelBase, ILoadableSta
                 Inputs = new Dictionary<string, object?>
                 {
                     ["filename_prefix"] = "SM-Inference",
-                    ["images"] = new object[]
-                    {
-                        "8",
-                        0
-                    }
+                    ["images"] = new object[] { "8", 0 }
                 }
             }
         };
@@ -203,12 +167,14 @@ public partial class InferenceTextToImageViewModel : ViewModelBase, ILoadableSta
         OutputProgress.Maximum = args.Max;
         OutputProgress.IsIndeterminate = false;
     }
-    
+
     private void OnPreviewImageReceived(object? sender, ComfyWebSocketImageData args)
     {
         // Decode to bitmap
         using var stream = new MemoryStream(args.ImageBytes);
         var bitmap = new Bitmap(stream);
+
+        ImageGalleryCardViewModel.PreviewImage?.Dispose();
         ImageGalleryCardViewModel.PreviewImage = bitmap;
         ImageGalleryCardViewModel.IsPreviewOverlayEnabled = true;
     }
@@ -226,16 +192,16 @@ public partial class InferenceTextToImageViewModel : ViewModelBase, ILoadableSta
         {
             SeedCardViewModel.GenerateNewSeed();
         }
-        
+
         var client = ClientManager.Client;
-        
+
         var nodes = GetCurrentPrompt();
 
         // Connect progress handler
         OutputProgress.IsIndeterminate = true;
         client.ProgressUpdateReceived += OnProgressUpdateReceived;
         client.PreviewImageReceived += OnPreviewImageReceived;
-        
+
         try
         {
             var (response, promptTask) = await client.QueuePromptAsync(nodes, cancellationToken);
@@ -246,16 +212,54 @@ public partial class InferenceTextToImageViewModel : ViewModelBase, ILoadableSta
             Logger.Trace($"Prompt task {response.PromptId} finished");
 
             // Get output images
-            var outputs = await client
-                .GetImagesForExecutedPromptAsync(response.PromptId, cancellationToken);
+            var outputs = await client.GetImagesForExecutedPromptAsync(
+                response.PromptId,
+                cancellationToken
+            );
+
+            ImageGalleryCardViewModel.ImageSources.Clear();
             
-            // Only get the SaveImage from node 9
+            // Only get the SaveImage images from node 9
             var images = outputs["9"];
             if (images is null) return;
 
-            ImageGalleryCardViewModel.ImageSources.Clear();
-            ImageGalleryCardViewModel.ImageSources.AddRange(
-                images.Select(i => i.ToUri(client.BaseAddress).ToString()));
+            List<ImageSource> outputImages;
+            // Use local file path if available, otherwise use remote URL
+            if (client.OutputImagesDir is { } outputPath)
+            {
+                outputImages = images
+                    .Select(i => new ImageSource(i.ToFilePath(outputPath)))
+                    .ToList();
+            }
+            else
+            {
+                outputImages = images
+                    .Select(i => new ImageSource(i.ToUri(client.BaseAddress)))
+                    .ToList();
+            }
+            
+            // Download all images to make grid, if multiple
+            if (outputImages.Count > 1)
+            {
+                var loadedImages = outputImages.Select(i =>
+                    SKImage.FromEncodedData(i.LocalFile?.Info.OpenRead())).ToImmutableArray();
+
+                var grid = ImageProcessor.CreateImageGrid(loadedImages);
+                
+                // Save to disk
+                var lastName = outputImages.Last().LocalFile?.Info.Name;
+                var gridPath = client.OutputImagesDir!.JoinFile($"grid-{lastName}");
+
+                await using var fileStream = gridPath.Info.OpenWrite();
+                await fileStream.WriteAsync(grid.Encode().ToArray(), cancellationToken);
+                
+                // Insert to start of gallery
+                ImageGalleryCardViewModel.ImageSources.Add(new ImageSource(gridPath));
+                // var bitmaps = (await outputImages.SelectAsync(async i => await i.GetBitmapAsync())).ToImmutableArray();
+            }
+            
+            // Insert rest of images
+            ImageGalleryCardViewModel.ImageSources.AddRange(outputImages);
         }
         finally
         {
@@ -267,7 +271,7 @@ public partial class InferenceTextToImageViewModel : ViewModelBase, ILoadableSta
             client.PreviewImageReceived -= OnPreviewImageReceived;
         }
     }
-    
+
     [RelayCommand(IncludeCancelCommand = true)]
     private async Task GenerateImage(CancellationToken cancellationToken = default)
     {
@@ -287,7 +291,7 @@ public partial class InferenceTextToImageViewModel : ViewModelBase, ILoadableSta
         PromptDocument.Text = state.Prompt;
         NegativePromptDocument.Text = state.NegativePrompt;
         SelectedModelName = state.SelectedModelName;
-        
+
         if (state.SeedCardState != null)
         {
             SeedCardViewModel.LoadState(state.SeedCardState);

@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy;
 
 namespace StabilityMatrix.Avalonia.Services;
 
@@ -16,7 +17,7 @@ public interface IInferenceClientManager : IDisposable,  INotifyPropertyChanged,
     bool IsConnected { get; }
     
     IReadOnlyCollection<string>? ModelNames { get; set; }
-    IReadOnlyCollection<string>? Samplers { get; set; }
+    IReadOnlyCollection<ComfySampler>? Samplers { get; set; }
     
     Task ConnectAsync();
 

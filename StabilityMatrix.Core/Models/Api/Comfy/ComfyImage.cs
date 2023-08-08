@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using System.Web;
+using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Core.Models.Api.Comfy;
 
@@ -26,5 +27,10 @@ public class ComfyImage
             Path = "/view",
             Query = query.ToString()
         }.Uri;
+    }
+    
+    public FilePath ToFilePath(DirectoryPath outputDir)
+    {
+        return new FilePath(outputDir, SubFolder, FileName);
     }
 }

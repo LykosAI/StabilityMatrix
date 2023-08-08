@@ -5,6 +5,7 @@ using NLog;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using Websocket.Client;
 
 namespace StabilityMatrix.Core.Inference;
@@ -18,9 +19,14 @@ public class ComfyClient : InferenceClientBase
     private bool isDisposed;
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public string ClientId { get; private set; } = Guid.NewGuid().ToString();
+    public string ClientId { get; } = Guid.NewGuid().ToString();
     
     public Uri BaseAddress { get; }
+    
+    /// <summary>
+    /// Optional local path to output images.
+    /// </summary>
+    public DirectoryPath? OutputImagesDir { get; set; }
 
     /// <summary>
     /// Dictionary of ongoing prompt execution tasks
@@ -63,12 +69,12 @@ public class ComfyClient : InferenceClientBase
         {
             ReconnectTimeout = TimeSpan.FromSeconds(30),
         };
-
+        
         webSocketClient.DisconnectionHappened.Subscribe(
-            info => Logger.Info($"Websocket Disconnected, type: {info.Type}")
+            info => Logger.Info("Websocket Disconnected, ({Type})", info.Type)
         );
         webSocketClient.ReconnectionHappened.Subscribe(
-            info => Logger.Info($"Websocket Reconnected, type: {info.Type}")
+            info => Logger.Info("Websocket Reconnected, ({Type})", info.Type)
         );
 
         webSocketClient.MessageReceived.Subscribe(OnMessageReceived);
@@ -85,10 +91,10 @@ public class ComfyClient : InferenceClientBase
                 HandleBinaryMessage(message.Binary);
                 break;
             case WebSocketMessageType.Close:
-                Logger.Trace($"Received ws close message: {message.Text}");
+                Logger.Trace("Received ws close message: {Text}", message.Text);
                 break;
             default:
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(message));
         }
     }
 

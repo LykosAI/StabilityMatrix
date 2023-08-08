@@ -6,6 +6,7 @@
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
     x:DataType="vmInference:ImageGalleryCardViewModel">
 
     <Design.PreviewWith>
@@ -55,7 +56,7 @@
                                     </Carousel.PageTransition>
                                     
                                     <Carousel.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type system:String}">
+                                        <DataTemplate DataType="{x:Type models:ImageSource}">
                                             <controls:BetterAdvancedImage
                                                 x:Name="ImageView"
                                                 CornerRadius="4"
@@ -95,7 +96,7 @@
                                 HorizontalAlignment="Left"
                                 Grid.Column="0">
                                 <Button
-                                    IsEnabled="{Binding #ImageCarousel.Sele}"
+                                    IsEnabled="{Binding CanNavigateBack}"
                                     Classes="transparent"
                                     Padding="10,20"
                                     Command="{Binding #ImageCarousel.Previous}">
@@ -110,6 +111,7 @@
                                 VerticalAlignment="Center"
                                 HorizontalAlignment="Right">
                                 <Button
+                                    IsEnabled="{Binding CanNavigateForward}"
                                     Classes="transparent"
                                     Padding="10,20"
                                     Command="{Binding #ImageCarousel.Next}">
@@ -138,7 +140,7 @@
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>-->
                             <ListBox.ItemTemplate>
-                                <DataTemplate DataType="{x:Type system:String}">
+                                <DataTemplate DataType="{x:Type models:ImageSource}">
                                     <controls:BetterAdvancedImage
                                         MaxHeight="60"
                                         CornerRadius="4"

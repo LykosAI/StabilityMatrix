@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 
@@ -22,13 +23,13 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
     private bool isPreviewOverlayEnabled;
 
     [ObservableProperty]
-    private IImage? previewImage;
+    private Bitmap? previewImage;
 
     [ObservableProperty]
-    private AvaloniaList<string> imageSources = new();
+    private AvaloniaList<ImageSource> imageSources = new();
 
     [ObservableProperty]
-    private string? selectedImage;
+    private ImageSource? selectedImage;
 
     [
         ObservableProperty,

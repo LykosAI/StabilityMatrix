@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia.Collections;
+using Avalonia.Controls.Documents;
 using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -15,6 +16,7 @@ using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -37,14 +39,15 @@ public partial class InferenceViewModel : PageViewModelBase
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.AppGeneric, IsFilled = true };
 
-    public RefreshBadgeViewModel ConnectionBadge { get; } = new()
-    {
-        State = ProgressState.Failed,
-        FailToolTipText = "Not connected",
-        FailIcon = FluentAvalonia.UI.Controls.Symbol.Refresh,
-        SuccessToolTipText = "Connected",
-    };
-    
+    public RefreshBadgeViewModel ConnectionBadge { get; } =
+        new()
+        {
+            State = ProgressState.Failed,
+            FailToolTipText = "Not connected",
+            FailIcon = FluentAvalonia.UI.Controls.Symbol.Refresh,
+            SuccessToolTipText = "Connected",
+        };
+
     public IInferenceClientManager ClientManager { get; }
 
     public AvaloniaList<ViewModelBase> Tabs { get; } = new();
@@ -52,19 +55,29 @@ public partial class InferenceViewModel : PageViewModelBase
     [ObservableProperty]
     private ViewModelBase? selectedTab;
 
+    [ObservableProperty]
+    private PackagePair? runningPackage;
+    
     public InferenceViewModel(
         ServiceManager<ViewModelBase> vmFactory,
         IApiFactory apiFactory,
         INotificationService notificationService,
-        IInferenceClientManager inferenceClientManager, 
-        ISettingsManager settingsManager)
+        IInferenceClientManager inferenceClientManager,
+        ISettingsManager settingsManager
+    )
     {
         this.vmFactory = vmFactory;
         this.apiFactory = apiFactory;
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
-        
+
         ClientManager = inferenceClientManager;
+        
+        // Keep RunningPackage updated with the current package pair
+        EventManager.Instance.RunningPackageStatusChanged += (_, args) =>
+        {
+            RunningPackage = args.CurrentPackagePair;
+        };
     }
 
     private InferenceTextToImageViewModel CreateTextToImageViewModel()
@@ -99,7 +112,7 @@ public partial class InferenceViewModel : PageViewModelBase
     {
         Tabs.Add(CreateTextToImageViewModel());
     }
-    
+
     /// <summary>
     /// When the close button on the tab is clicked, remove the tab.
     /// </summary>
@@ -122,10 +135,16 @@ public partial class InferenceViewModel : PageViewModelBase
             notificationService.Show("Already connected", "ComfyUI backend is already connected");
             return;
         }
-        // TODO: make address configurable
 
-        await notificationService.TryAsync(ClientManager.ConnectAsync(),
-            "Could not connect to ComfyUI backend");
+        // TODO: make address configurable
+        
+        if (RunningPackage is not null)
+        {
+            await notificationService.TryAsync(
+                ClientManager.ConnectAsync(RunningPackage),
+                "Could not connect to backend"
+            );
+        }
     }
 
     /// <summary>
@@ -140,8 +159,10 @@ public partial class InferenceViewModel : PageViewModelBase
             return;
         }
 
-        await notificationService.TryAsync(ClientManager.CloseAsync(),
-            "Could not disconnect from ComfyUI backend");
+        await notificationService.TryAsync(
+            ClientManager.CloseAsync(),
+            "Could not disconnect from ComfyUI backend"
+        );
     }
 
     /// <summary>
@@ -156,47 +177,54 @@ public partial class InferenceViewModel : PageViewModelBase
             Logger.Trace("MenuSaveAs: currentTab is null");
             return;
         }
-        
+
         var document = InferenceProjectDocument.FromLoadable(currentTab);
-        
+
         // Prompt for save file dialog
         var provider = App.StorageProvider;
 
         var projectDir = new DirectoryPath(settingsManager.LibraryDir, "Projects");
         projectDir.Create();
         var startDir = await provider.TryGetFolderFromPathAsync(projectDir);
-        
-        var result = await provider.SaveFilePickerAsync(new FilePickerSaveOptions
-        {
-            Title = "Save As",
-            SuggestedFileName = "Untitled",
-            FileTypeChoices = new FilePickerFileType[]
+
+        var result = await provider.SaveFilePickerAsync(
+            new FilePickerSaveOptions
             {
-                new("StabilityMatrix Project")
+                Title = "Save As",
+                SuggestedFileName = "Untitled",
+                FileTypeChoices = new FilePickerFileType[]
                 {
-                    Patterns = new[] { "*.smproj" },
-                    MimeTypes = new[] { "application/json" },
-                }
-            },
-            SuggestedStartLocation = startDir,
-            DefaultExtension = ".smproj",
-            ShowOverwritePrompt = true,
-        });
-        
+                    new("StabilityMatrix Project")
+                    {
+                        Patterns = new[] { "*.smproj" },
+                        MimeTypes = new[] { "application/json" },
+                    }
+                },
+                SuggestedStartLocation = startDir,
+                DefaultExtension = ".smproj",
+                ShowOverwritePrompt = true,
+            }
+        );
+
         if (result is null)
         {
             Logger.Trace("MenuSaveAs: user cancelled");
             return;
         }
-        
+
         // Save to file
         await using var stream = await result.OpenWriteAsync();
-        await JsonSerializer.SerializeAsync(stream, document, new JsonSerializerOptions
-        {
-            WriteIndented = true,
-        });
-        
-        notificationService.Show("Saved", $"Saved project to {result.Name}", NotificationType.Success);
+        await JsonSerializer.SerializeAsync(
+            stream,
+            document,
+            new JsonSerializerOptions { WriteIndented = true, }
+        );
+
+        notificationService.Show(
+            "Saved",
+            $"Saved project to {result.Name}",
+            NotificationType.Success
+        );
     }
 
     /// <summary>
@@ -211,31 +239,33 @@ public partial class InferenceViewModel : PageViewModelBase
         var projectDir = new DirectoryPath(settingsManager.LibraryDir, "Projects");
         projectDir.Create();
         var startDir = await provider.TryGetFolderFromPathAsync(projectDir);
-        
-        var results = await provider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            Title = "Open Project File",
-            FileTypeFilter = new FilePickerFileType[]
+
+        var results = await provider.OpenFilePickerAsync(
+            new FilePickerOpenOptions
             {
-                new("StabilityMatrix Project")
+                Title = "Open Project File",
+                FileTypeFilter = new FilePickerFileType[]
                 {
-                    Patterns = new[] { "*.smproj" },
-                    MimeTypes = new[] { "application/json" },
-                }
-            },
-            SuggestedStartLocation = startDir,
-        });
-        
+                    new("StabilityMatrix Project")
+                    {
+                        Patterns = new[] { "*.smproj" },
+                        MimeTypes = new[] { "application/json" },
+                    }
+                },
+                SuggestedStartLocation = startDir,
+            }
+        );
+
         if (results.Count == 0)
         {
             Logger.Trace("MenuOpenProject: No files selected");
             return;
         }
-        
+
         // Load from file
         var file = results[0];
         await using var stream = await file.OpenReadAsync();
-        
+
         var document = await JsonSerializer.DeserializeAsync<InferenceProjectDocument>(stream);
         if (document == null)
         {
@@ -250,13 +280,13 @@ public partial class InferenceViewModel : PageViewModelBase
             textToImage.LoadState(document.State.Deserialize<InferenceTextToImageModel>()!);
             vm = textToImage;
         }
-        
+
         if (vm == null)
         {
             Logger.Warn("MenuOpenProject: Unknown project type");
             return;
         }
-        
+
         Tabs.Add(vm);
     }
 }

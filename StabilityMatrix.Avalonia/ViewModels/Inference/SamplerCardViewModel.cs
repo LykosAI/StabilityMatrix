@@ -5,6 +5,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Models.Api.Comfy;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -32,7 +33,7 @@ public partial class SamplerCardViewModel : ViewModelBase, ILoadableState<Sample
     [ObservableProperty] private bool isSamplerSelectionEnabled = true;
     
     [ObservableProperty, Required]
-    private string? selectedSampler;
+    private ComfySampler? selectedSampler;
     
     public IInferenceClientManager ClientManager { get; }
 
@@ -54,7 +55,8 @@ public partial class SamplerCardViewModel : ViewModelBase, ILoadableState<Sample
         Height = state.Height;
         Scale = state.Scale;
         IsSamplerSelectionEnabled = state.IsSamplerSelectionEnabled;
-        SelectedSampler = state.SelectedSampler;
+        SelectedSampler = state.SelectedSampler is null ? null 
+            : new ComfySampler(state.SelectedSampler);
     }
 
     /// <inheritdoc />
@@ -72,7 +74,7 @@ public partial class SamplerCardViewModel : ViewModelBase, ILoadableState<Sample
             Height = Height,
             Scale = Scale,
             IsSamplerSelectionEnabled = IsSamplerSelectionEnabled,
-            SelectedSampler = SelectedSampler
+            SelectedSampler = SelectedSampler?.Name
         };
     }
 }

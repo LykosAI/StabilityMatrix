@@ -18,6 +18,7 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
@@ -366,14 +367,14 @@ public static class DesignData
     {
         vm.Steps = 20;
         vm.CfgScale = 7;
-        vm.SelectedSampler = "Euler a";
+        vm.SelectedSampler = new ComfySampler("euler");
     });
     
     public static SamplerCardViewModel SamplerCardViewModelScaleMode => DialogFactory.Get<SamplerCardViewModel>(vm =>
     {
         vm.Steps = 20;
         vm.CfgScale = 7;
-        vm.SelectedSampler = "Euler a";
+        vm.SelectedSampler = new ComfySampler("euler");
         vm.IsScaleSizeMode = true;
         vm.IsCfgScaleEnabled = false;
         vm.IsSamplerSelectionEnabled = false;
@@ -383,11 +384,11 @@ public static class DesignData
     public static ImageGalleryCardViewModel ImageGalleryCardViewModel =>
         DialogFactory.Get<ImageGalleryCardViewModel>(vm =>
         {
-            vm.ImageSources.AddRange(new []
+            vm.ImageSources.AddRange(new ImageSource[]
             {
-                "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/4a7e00a7-6f18-42d4-87c0-10e792df2640/width=1152",
-                "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1024",
-                "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/16588c94-6595-4be9-8806-d7e6e22d198c/width=1152",
+                new(new Uri("https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/4a7e00a7-6f18-42d4-87c0-10e792df2640/width=1152")),
+                new(new Uri("https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1024")),
+                new(new Uri("https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/16588c94-6595-4be9-8806-d7e6e22d198c/width=1152")),
             });
         });
 

@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
@@ -13,15 +14,14 @@ public class MockInferenceClientManager : ObservableObject, IInferenceClientMana
     public ComfyClient? Client { get; set; }
     
     public IReadOnlyCollection<string>? ModelNames { get; set; }
-    public IReadOnlyCollection<string>? Samplers { get; set; } = new[]
+    public IReadOnlyCollection<ComfySampler>? Samplers { get; set; } = new ComfySampler[]
     {
-        "Euler a",
-        "Euler",
-        "LMS",
-        "Heun",
-        "DPM2",
-        "DPM2 a",
-        "DPM++ 2S a",
+        new("euler_ancestral"),
+        new("euler"),
+        new("lms"),
+        new("heun"),
+        new("dpm_2"),
+        new("dpm_2_ancestral")
     };
     
     public bool IsConnected { get; set; }

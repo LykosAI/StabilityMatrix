@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Sentry;
 using StabilityMatrix.Core.Api;
-using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
 
@@ -33,7 +34,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     private IReadOnlyCollection<string>? modelNames;
 
     [ObservableProperty]
-    private IReadOnlyCollection<string>? samplers;
+    private IReadOnlyCollection<ComfySampler>? samplers;
     
     public InferenceClientManager(IApiFactory apiFactory)
     {
@@ -45,7 +46,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         if (!IsConnected) throw new InvalidOperationException("Client is not connected");
         
         ModelNames = await Client.GetModelNamesAsync();
-        Samplers = await Client.GetSamplerNamesAsync();
+        
+        var samplerNames = await Client.GetSamplerNamesAsync();
+        Samplers = samplerNames?
+            .Select(name => new ComfySampler(name))
+            .ToImmutableArray();
     }
     
     protected void ClearSharedProperties()

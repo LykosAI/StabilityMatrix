@@ -7,27 +7,40 @@
         xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
         xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
         xmlns:local="clr-namespace:StabilityMatrix.Avalonia"
-        x:DataType="vmInference:InferenceConfigCardViewModel">
+        x:DataType="vmInference:StackCardViewModel">
     
     <Design.PreviewWith>
         <Grid Width="600" Height="800">
-            <controls:InferenceConfigCard
-                DataContext="{x:Static mocks:DesignData.InferenceConfigCardViewModel}"/>
+            <controls:StackCard
+                DataContext="{x:Static mocks:DesignData.StackCardViewModel}"/>
         </Grid>
     </Design.PreviewWith>
     
-    <Style Selector="controls|InferenceConfigCard">
+    <Style Selector="controls|StackCard">
         <!-- Set Defaults -->
         <Setter Property="Template">
             <ControlTemplate>
                 <controls:Card
+                    VerticalContentAlignment="Top"
                     HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
                     VerticalAlignment="{TemplateBinding VerticalAlignment}">
                     
-                    <ItemsControl ItemsSource="{Binding ConfigCards}">
+                    <ItemsControl 
+                        VerticalAlignment="Top"
+                        ItemsSource="{Binding ConfigCards}">
+                        
                         <ItemsControl.DataTemplates>
                             <local:ViewLocator/>
                         </ItemsControl.DataTemplates>
+                        
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel 
+                                    VerticalAlignment="Top"
+                                    Spacing="{TemplateBinding Spacing}"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        
                     </ItemsControl>
                     
                 </controls:Card>

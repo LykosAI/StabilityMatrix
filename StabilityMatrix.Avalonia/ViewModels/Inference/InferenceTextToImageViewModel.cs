@@ -40,6 +40,7 @@ public partial class InferenceTextToImageViewModel
     public SamplerCardViewModel HiresFixSamplerCardViewModel { get; }
     public ImageGalleryCardViewModel ImageGalleryCardViewModel { get; }
     public PromptCardViewModel PromptCardViewModel { get; }
+    public StackCardViewModel ConfigCardViewModel { get; }
 
     [ObservableProperty]
     private string? selectedModelName;
@@ -66,8 +67,10 @@ public partial class InferenceTextToImageViewModel
         ClientManager = inferenceClientManager;
 
         // Get sub view models from service manager
-        SeedCardViewModel = vmFactory.Get<SeedCardViewModel>();
-        SamplerCardViewModel = vmFactory.Get<SamplerCardViewModel>();
+        
+        SeedCardViewModel = vmFactory.Get<SeedCardViewModel>();        
+        SeedCardViewModel.GenerateNewSeed();
+        // SamplerCardViewModel = vmFactory.Get<SamplerCardViewModel>();
         HiresFixSamplerCardViewModel = vmFactory.Get<SamplerCardViewModel>(vm =>
         {
             vm.IsScaleSizeMode = true;
@@ -78,7 +81,10 @@ public partial class InferenceTextToImageViewModel
         ImageGalleryCardViewModel = vmFactory.Get<ImageGalleryCardViewModel>();
         PromptCardViewModel = vmFactory.Get<PromptCardViewModel>();
 
-        SeedCardViewModel.GenerateNewSeed();
+        ConfigCardViewModel = vmFactory.Get<StackCardViewModel>().WithCards(new ViewModelBase[]
+            {
+                vmFactory.Get<SamplerCardViewModel>()
+            });
     }
 
     private Dictionary<string, ComfyNode> GetCurrentPrompt()

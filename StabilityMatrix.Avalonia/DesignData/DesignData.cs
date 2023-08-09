@@ -399,9 +399,20 @@ public static class DesignData
             vm.NegativePromptDocument.Text = "blurry, jpeg artifacts";
         });
 
-    public static InferenceConfigCardViewModel InferenceConfigCardViewModel =>
-        DialogFactory.Get<InferenceConfigCardViewModel>(vm =>
+    public static StackCardViewModel StackCardViewModel =>
+        DialogFactory.Get<StackCardViewModel>(vm =>
         {
+            vm.AddCards(new ViewModelBase[]
+            {
+                SamplerCardViewModel,
+                SeedCardViewModel,
+            });
+        });
+
+    public static StackExpanderViewModel StackExpanderViewModel =>
+        DialogFactory.Get<StackExpanderViewModel>(vm =>
+        {
+            vm.Title = "Hires Fix";
             vm.AddCards(new ViewModelBase[]
             {
                 SamplerCardViewModel,

@@ -1,0 +1,61 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+        xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+        xmlns:local="clr-namespace:StabilityMatrix.Avalonia"
+        x:DataType="vmInference:StackExpanderViewModel">
+    
+    <Design.PreviewWith>
+        <Grid Width="600" Height="800">
+            <controls:StackExpander
+                DataContext="{x:Static mocks:DesignData.StackExpanderViewModel}"/>
+        </Grid>
+    </Design.PreviewWith>
+    
+    <Style Selector="controls|StackExpander">
+        <!-- Set Defaults -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Expander
+                    VerticalContentAlignment="Top"
+                    HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                    VerticalAlignment="{TemplateBinding VerticalAlignment}">
+                    
+                    <Expander.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <ToggleSwitch
+                                Margin="2,0,0,2"
+                                VerticalContentAlignment="Center"
+                                OnContent="" 
+                                OffContent=""/>     
+                            <TextBlock 
+                                VerticalAlignment="Center"
+                                Text="{Binding Title}"/>
+                        </StackPanel>
+
+                    </Expander.Header>
+                    
+                    <ItemsControl 
+                        VerticalAlignment="Top"
+                        ItemsSource="{Binding ConfigCards}">
+                        
+                        <ItemsControl.DataTemplates>
+                            <local:ViewLocator/>
+                        </ItemsControl.DataTemplates>
+                        
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel 
+                                    VerticalAlignment="Top"
+                                    Spacing="{TemplateBinding Spacing}"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        
+                    </ItemsControl>
+                    
+                </Expander>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

@@ -86,8 +86,9 @@
                             x:Name="ConfigTool"
                             Title="Config"
                             x:DataType="Tool"
-                            Id="SolutionExplorer">
-                            <TextBlock Text="{Binding Title}" />
+                            Id="ConfigTool">
+                            <controls:StackCard 
+                                DataContext="{ReflectionBinding ElementName=Dock, Path=DataContext.ConfigCardViewModel}"/>
                         </Tool>
                     </ToolDock>
 

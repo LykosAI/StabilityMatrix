@@ -23,6 +23,12 @@ public class MockInferenceClientManager : ObservableObject, IInferenceClientMana
         new("dpm_2"),
         new("dpm_2_ancestral")
     };
+
+    public IReadOnlyCollection<ComfyUpscaler>? Upscalers { get; set; } = new ComfyUpscaler[]
+    {
+        new("nearest-exact", ComfyUpscalerType.Latent),
+        new("bicubic", ComfyUpscalerType.Latent)
+    };
     
     public bool IsConnected { get; set; }
     

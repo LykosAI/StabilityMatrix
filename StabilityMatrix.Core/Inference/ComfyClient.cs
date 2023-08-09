@@ -262,25 +262,31 @@ public class ComfyClient : InferenceClientBase
     /// <summary>
     /// Get a list of strings representing available model names
     /// </summary>
-    public async Task<List<string>?> GetModelNamesAsync(CancellationToken cancellationToken = default)
+    public Task<List<string>?> GetModelNamesAsync(CancellationToken cancellationToken = default)
     {
-        const string modelLoaderType = "CheckpointLoaderSimple";
-        var response = await comfyApi.GetObjectInfo(modelLoaderType, cancellationToken).ConfigureAwait(false);
-
-        var info = response[modelLoaderType];
-        return info.Input.GetRequiredValueAsNestedList("ckpt_name");
+        return GetNodeOptionNamesAsync("CheckpointLoaderSimple", "ckpt_name", cancellationToken);
     }
     
     /// <summary>
     /// Get a list of strings representing available sampler names
     /// </summary>
-    public async Task<List<string>?> GetSamplerNamesAsync(CancellationToken cancellationToken = default)
+    public Task<List<string>?> GetSamplerNamesAsync(CancellationToken cancellationToken = default)
     {
-        const string samplerType = "KSampler";
-        var response = await comfyApi.GetObjectInfo(samplerType, cancellationToken).ConfigureAwait(false);
+        return GetNodeOptionNamesAsync("KSampler", "sampler_name", cancellationToken);
+    }
 
-        var info = response[samplerType];
-        return info.Input.GetRequiredValueAsNestedList("sampler_name");
+    /// <summary>
+    /// Get a list of strings representing available options of a given node
+    /// </summary>
+    public async Task<List<string>?> GetNodeOptionNamesAsync(
+        string nodeName,
+        string optionName,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await comfyApi.GetObjectInfo(nodeName, cancellationToken).ConfigureAwait(false);
+
+        var info = response[nodeName];
+        return info.Input.GetRequiredValueAsNestedList(optionName);
     }
 
     protected override void Dispose(bool disposing)

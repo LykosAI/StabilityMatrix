@@ -261,7 +261,8 @@ public sealed class App : Application
         services.AddTransient<UpscalerCardViewModel>();
         services.AddTransient<ImageGalleryCardViewModel>();
         services.AddTransient<PromptCardViewModel>();
-        services.AddTransient<InferenceConfigCardViewModel>();
+        services.AddTransient<StackCardViewModel>();
+        services.AddTransient<StackExpanderViewModel>();
         
         // Dialog factory
         services.AddSingleton<ServiceManager<ViewModelBase>>(provider =>
@@ -283,7 +284,8 @@ public sealed class App : Application
                 .Register(provider.GetRequiredService<SamplerCardViewModel>)
                 .Register(provider.GetRequiredService<ImageGalleryCardViewModel>)
                 .Register(provider.GetRequiredService<PromptCardViewModel>)
-                .Register(provider.GetRequiredService<InferenceConfigCardViewModel>)
+                .Register(provider.GetRequiredService<StackCardViewModel>)
+                .Register(provider.GetRequiredService<StackExpanderViewModel>)
                 .Register(provider.GetRequiredService<UpscalerCardViewModel>)
                 .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>));
     }
@@ -307,7 +309,8 @@ public sealed class App : Application
         services.AddTransient<SeedCard>();
         services.AddTransient<SamplerCard>();
         services.AddTransient<PromptCard>();
-        services.AddTransient<InferenceConfigCard>();
+        services.AddTransient<StackCard>();
+        services.AddTransient<StackExpander>();
         services.AddTransient<UpscalerCard>();
         
         // Dialogs

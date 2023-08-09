@@ -20,15 +20,9 @@ public partial class SamplerCardViewModel : ViewModelBase, ILoadableState<Sample
     [ObservableProperty] private bool isCfgScaleEnabled = true;
     [ObservableProperty] private double cfgScale = 7;
     
-    // Switch between the 2 size modes
-    [ObservableProperty] private bool isScaleSizeMode;
-    
-    // Absolute size mode
+    [ObservableProperty] private bool isDimensionsEnabled;
     [ObservableProperty] private int width = 512;
     [ObservableProperty] private int height = 512;
-    
-    // Scale size mode
-    [ObservableProperty] private double scale = 1;
     
     [ObservableProperty] private bool isSamplerSelectionEnabled = true;
     
@@ -50,10 +44,9 @@ public partial class SamplerCardViewModel : ViewModelBase, ILoadableState<Sample
         DenoiseStrength = state.DenoiseStrength;
         IsCfgScaleEnabled = state.IsCfgScaleEnabled;
         CfgScale = state.CfgScale;
-        IsScaleSizeMode = state.IsScaleSizeMode;
+        IsDimensionsEnabled = state.IsDimensionsEnabled;
         Width = state.Width;
         Height = state.Height;
-        Scale = state.Scale;
         IsSamplerSelectionEnabled = state.IsSamplerSelectionEnabled;
         SelectedSampler = state.SelectedSampler is null ? null 
             : new ComfySampler(state.SelectedSampler);
@@ -69,10 +62,9 @@ public partial class SamplerCardViewModel : ViewModelBase, ILoadableState<Sample
             DenoiseStrength = DenoiseStrength,
             IsCfgScaleEnabled = IsCfgScaleEnabled,
             CfgScale = CfgScale,
-            IsScaleSizeMode = IsScaleSizeMode,
+            IsDimensionsEnabled = IsDimensionsEnabled,
             Width = Width,
             Height = Height,
-            Scale = Scale,
             IsSamplerSelectionEnabled = IsSamplerSelectionEnabled,
             SelectedSampler = SelectedSampler?.Name
         };

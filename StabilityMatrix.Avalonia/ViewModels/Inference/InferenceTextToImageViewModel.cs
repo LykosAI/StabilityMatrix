@@ -83,7 +83,18 @@ public partial class InferenceTextToImageViewModel
 
         ConfigCardViewModel = vmFactory.Get<StackCardViewModel>().WithCards(new ViewModelBase[]
             {
-                vmFactory.Get<SamplerCardViewModel>()
+                vmFactory.Get<SamplerCardViewModel>(),
+                vmFactory.Get<StackExpanderViewModel>().WithCards(new ViewModelBase[]
+                {
+                    vmFactory.Get<UpscalerCardViewModel>(),
+                    vmFactory.Get<SamplerCardViewModel>(vm =>
+                    {
+                        vm.IsScaleSizeMode = true;
+                        vm.IsCfgScaleEnabled = false;
+                        vm.IsSamplerSelectionEnabled = false;
+                        vm.IsDenoiseStrengthEnabled = true;
+                    }),
+                })
             });
     }
 

@@ -393,7 +393,24 @@ public static class DesignData
         });
 
     public static PromptCardViewModel PromptCardViewModel =>
-        DialogFactory.Get<PromptCardViewModel>();
+        DialogFactory.Get<PromptCardViewModel>(vm =>
+        {
+            vm.PromptDocument.Text = "house, (high quality), [example], BREAK\n\n<lora:details:0.8>";
+            vm.NegativePromptDocument.Text = "blurry, jpeg artifacts";
+        });
+
+    public static InferenceConfigCardViewModel InferenceConfigCardViewModel =>
+        DialogFactory.Get<InferenceConfigCardViewModel>(vm =>
+        {
+            vm.ConfigCards.AddRange(new ViewModelBase[]
+            {
+                SamplerCardViewModel,
+                SeedCardViewModel,
+            });
+        });
+
+    public static UpscalerCardViewModel UpscalerCardViewModel =>
+        DialogFactory.Get<UpscalerCardViewModel>();
 
     public static Indexer Types => new();
 

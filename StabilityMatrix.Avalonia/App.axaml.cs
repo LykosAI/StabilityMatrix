@@ -258,8 +258,10 @@ public sealed class App : Application
         // Inference controls
         services.AddTransient<SeedCardViewModel>();
         services.AddTransient<SamplerCardViewModel>();
+        services.AddTransient<UpscalerCardViewModel>();
         services.AddTransient<ImageGalleryCardViewModel>();
         services.AddTransient<PromptCardViewModel>();
+        services.AddTransient<InferenceConfigCardViewModel>();
         
         // Dialog factory
         services.AddSingleton<ServiceManager<ViewModelBase>>(provider =>
@@ -281,6 +283,8 @@ public sealed class App : Application
                 .Register(provider.GetRequiredService<SamplerCardViewModel>)
                 .Register(provider.GetRequiredService<ImageGalleryCardViewModel>)
                 .Register(provider.GetRequiredService<PromptCardViewModel>)
+                .Register(provider.GetRequiredService<InferenceConfigCardViewModel>)
+                .Register(provider.GetRequiredService<UpscalerCardViewModel>)
                 .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>));
     }
 
@@ -303,6 +307,8 @@ public sealed class App : Application
         services.AddTransient<SeedCard>();
         services.AddTransient<SamplerCard>();
         services.AddTransient<PromptCard>();
+        services.AddTransient<InferenceConfigCard>();
+        services.AddTransient<UpscalerCard>();
         
         // Dialogs
         services.AddTransient<SelectDataDirectoryDialog>();

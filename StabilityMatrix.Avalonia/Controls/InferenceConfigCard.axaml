@@ -1,0 +1,37 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+        xmlns:system="clr-namespace:System;assembly=System.Runtime"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+        xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
+        xmlns:local="clr-namespace:StabilityMatrix.Avalonia"
+        x:DataType="vmInference:InferenceConfigCardViewModel">
+    
+    <Design.PreviewWith>
+        <Grid Width="600" Height="800">
+            <controls:InferenceConfigCard
+                DataContext="{x:Static mocks:DesignData.InferenceConfigCardViewModel}"/>
+        </Grid>
+    </Design.PreviewWith>
+    
+    <Style Selector="controls|InferenceConfigCard">
+        <!-- Set Defaults -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card
+                    HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                    VerticalAlignment="{TemplateBinding VerticalAlignment}">
+                    
+                    <ItemsControl ItemsSource="{Binding ConfigCards}">
+                        <ItemsControl.DataTemplates>
+                            <local:ViewLocator/>
+                        </ItemsControl.DataTemplates>
+                    </ItemsControl>
+                    
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

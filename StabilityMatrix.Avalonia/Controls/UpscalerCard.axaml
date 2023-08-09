@@ -1,0 +1,69 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+        xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
+        xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+        x:DataType="vmInference:UpscalerCardViewModel">
+    <Design.PreviewWith>
+        <Grid MinWidth="300">
+            <StackPanel Spacing="16">
+                <controls:UpscalerCard DataContext="{x:Static mocks:DesignData.UpscalerCardViewModel}" />
+            </StackPanel>
+        </Grid>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|UpscalerCard">
+        <!-- Set Defaults -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card>
+                    <StackPanel>
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="*,*,*">
+                            <!-- Sampler -->
+                            <TextBlock
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Margin="0,0,0,8"
+                                VerticalAlignment="Center"
+                                Text="Sampler" />
+                            <ui:FAComboBox
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                ItemsSource="{Binding ClientManager.Upscalers}"
+                                SelectedItem="{Binding SelectedSampler}"
+                                DisplayMemberBinding="{Binding DisplayName}"
+                                Margin="8,0,0,8"
+                                HorizontalAlignment="Stretch"/>
+                        </Grid>
+                        <!-- Dimensions (Scale) -->
+                        <StackPanel>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock 
+                                    VerticalAlignment="Center"
+                                    Text="Upscale by"/>
+                                <ui:NumberBox
+                                    Grid.Column="1"
+                                    Margin="4,0,0,0"
+                                    ValidationMode="InvalidInputOverwritten"
+                                    SmallChange="0.5"
+                                    SimpleNumberFormat="F2"
+                                    Value="{Binding Scale}"
+                                    HorizontalAlignment="Stretch"
+                                    SpinButtonPlacementMode="Compact"/>
+                            </Grid>
+                            <Slider 
+                                Minimum="1"
+                                Maximum="4"
+                                Value="{Binding Scale}"
+                                IsSnapToTickEnabled="True" 
+                                TickFrequency="0.5"
+                                TickPlacement="BottomRight"/>
+                        </StackPanel>
+                        
+                    </StackPanel>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

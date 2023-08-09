@@ -6,24 +6,17 @@
         x:DataType="vmInference:SamplerCardViewModel"
         xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData">
     <Design.PreviewWith>
-        <Grid MinWidth="300">
-            <StackPanel Spacing="16">
-                <controls:Card>
-                    <controls:SamplerCard DataContext="{x:Static mocks:DesignData.SamplerCardViewModel}"/>
-                </controls:Card>
-                
-                <controls:Card>
-                    <controls:SamplerCard DataContext="{x:Static mocks:DesignData.SamplerCardViewModelScaleMode}"/>
-                </controls:Card>
-            </StackPanel>
-        </Grid>
+        <StackPanel MinWidth="300" Spacing="16">
+            <controls:SamplerCard DataContext="{x:Static mocks:DesignData.SamplerCardViewModel}"/>
+            <controls:SamplerCard DataContext="{x:Static mocks:DesignData.SamplerCardViewModelScaleMode}"/>
+        </StackPanel>
     </Design.PreviewWith>
 
     <Style Selector="controls|SamplerCard">
         <Setter Property="HorizontalAlignment" Value="Stretch"/>
         <Setter Property="Template">
             <ControlTemplate>
-                <Panel
+                <controls:Card
                     HorizontalAlignment="{TemplateBinding HorizontalAlignment}" >
                     <StackPanel 
                         Margin="8" 
@@ -109,7 +102,7 @@
                                 </StackPanel>
                             </Grid>
                             
-                            <!-- Dimensions (Absolute mode) -->
+                            <!-- Dimensions (Absolute) -->
                             <Grid 
                                 IsVisible="{Binding !IsScaleSizeMode}"
                                 ColumnDefinitions="*,Auto,*" 
@@ -145,36 +138,9 @@
                                     HorizontalAlignment="Stretch"
                                     SpinButtonPlacementMode="Compact"/>
                             </Grid>
-                            
-                            <!-- Dimensions (Scale mode) -->
-                            <Grid IsVisible="{Binding IsScaleSizeMode}">
-                                <StackPanel>
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <TextBlock 
-                                            VerticalAlignment="Center"
-                                            Text="Upscale by"/>
-                                        <ui:NumberBox
-                                            Grid.Column="1"
-                                            Margin="4,0,0,0"
-                                            ValidationMode="InvalidInputOverwritten"
-                                            SmallChange="0.5"
-                                            SimpleNumberFormat="F2"
-                                            Value="{Binding Scale}"
-                                            HorizontalAlignment="Stretch"
-                                            SpinButtonPlacementMode="Compact"/>
-                                    </Grid>
-                                    <Slider 
-                                        Minimum="1"
-                                        Maximum="4"
-                                        Value="{Binding Scale}"
-                                        IsSnapToTickEnabled="True" 
-                                        TickFrequency="0.5"
-                                        TickPlacement="BottomRight"/>
-                                </StackPanel>
-                            </Grid>
                         </StackPanel>
                     </StackPanel>
-                </Panel>
+                </controls:Card>
             </ControlTemplate>
         </Setter>
     </Style>

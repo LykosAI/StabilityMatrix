@@ -18,6 +18,7 @@ public interface IInferenceClientManager : IDisposable,  INotifyPropertyChanged,
     
     IReadOnlyCollection<string>? ModelNames { get; set; }
     IReadOnlyCollection<ComfySampler>? Samplers { get; set; }
+    IReadOnlyCollection<ComfyUpscaler>? Upscalers { get; set; }
     
     Task ConnectAsync();
 

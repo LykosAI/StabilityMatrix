@@ -1,5 +1,4 @@
 ﻿<controls:UserControlBase
-    x:Name="RootControl"
     x:Class="StabilityMatrix.Avalonia.Views.InferenceTextToImageView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -12,220 +11,123 @@
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
-    Focusable="True"
+    x:Name="RootControl"
     d:DataContext="{x:Static mocks:DesignData.InferenceTextToImageViewModel}"
     d:DesignHeight="800"
     d:DesignWidth="1000"
     x:DataType="vmInference:InferenceTextToImageViewModel"
+    Focusable="True"
     mc:Ignorable="d">
-    
+
     <controls:UserControlBase.Styles>
-        
-        <!-- Default grid splitter style -->
+
+        <!--  Default grid splitter style  -->
         <Style Selector="GridSplitter">
-            <Setter Property="Opacity" Value="0.6"/>
+            <Setter Property="Opacity" Value="0.6" />
             <Setter Property="Background" Value="{DynamicResource ScrollBarTrackStroke}" />
             <!--<Setter Property="Background" Value="{DynamicResource ScrollBarTrackStroke}" />-->
             <Setter Property="BorderThickness" Value="6" />
             <Setter Property="CornerRadius" Value="4" />
         </Style>
-        
+
     </controls:UserControlBase.Styles>
-    
-    <Grid
-        Margin="16,8,16,32"
-        ColumnDefinitions="*,Auto,*,Auto,*"
-        RowDefinitions="*,Auto">
 
-        <!--  Controls  -->
-        <ScrollViewer
-            Margin="8,8,8,16"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch">
-            <StackPanel Spacing="8">
-                <!--  Checkpoint  -->
-                <controls:Card Padding="8">
-                    <Grid Margin="8" ColumnDefinitions="Auto,*,Auto">
-                        <TextBlock
-                            Grid.Column="0"
-                            Margin="0,0,8,0"
-                            VerticalAlignment="Center"
-                            Text="Model" />
-                        <ui:FAComboBox
-                            Grid.Column="1"
-                            HorizontalAlignment="Stretch"
-                            ItemsSource="{Binding ClientManager.ModelNames}"
-                            SelectedItem="{Binding SelectedModelName, Mode=TwoWay}" />
-                        <Button Grid.Column="2" Margin="8,0,0,0">
-                            <ui:SymbolIcon FontSize="16" Symbol="Settings" />
-                        </Button>
-                    </Grid>
-                </controls:Card>
-                <!--  Main Sampler  -->
-                <controls:Card>
-                    <controls:SamplerCard DataContext="{Binding SamplerCardViewModel}" />
-                </controls:Card>
+    <Grid>
+        <DockControl
+            x:Name="Dock"
+            InitializeFactory="True"
+            InitializeLayout="True">
+            <DockControl.Factory>
+                <Factory />
+            </DockControl.Factory>
 
-                <!--  Hires Fix Sampler  -->
-                <Expander Padding="12,8">
-                    <Expander.Header>
-                        <ToggleSwitch
-                            VerticalContentAlignment="Center"
-                            OnContent="Hires Fix" 
-                            OffContent="Hires Fix"/>
-                    </Expander.Header>
-                    <controls:SamplerCard 
-                        HorizontalAlignment="Stretch" 
-                        DataContext="{Binding HiresFixSamplerCardViewModel}" />
-                </Expander>
+            <RootDock
+                x:Name="Root"
+                DefaultDockable="{Binding #MainLayout}"
+                Id="Root"
+                IsCollapsable="False">
 
-                <!--  Seed  -->
-                <controls:SeedCard 
-                    Margin="0,4"
-                    DataContext="{Binding SeedCardViewModel}" />
-                
-                <!--  Batch Size  -->
-                <controls:Card Padding="8">
-                    <Grid Margin="8" RowDefinitions="Auto,*" ColumnDefinitions="*,*">
-                        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" >
-                            <TextBlock 
-                                VerticalAlignment="Center"
-                                Margin="0,0,8,0"
-                                Text="Batch Size"/>
-                            <icons:Icon
-                                FontSize="12"
-                                Value="fa-solid fa-table-cells-large"/>
-                        </StackPanel>
-                        <NumericUpDown 
-                            Grid.Row="1" 
-                            Grid.Column="0"
-                            HorizontalAlignment="Left"
-                            Margin="0,4,0,0"
-                            MinWidth="120"
-                            Minimum="1"
-                            Increment="1"
-                            ParsingNumberStyle="Integer"
-                            Value="{Binding BatchSize}"
-                            ClipValueToMinMax="True"/>
-                        
-                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" >
-                            <TextBlock 
-                                VerticalAlignment="Center"
-                                Margin="0,0,8,0"
-                                Text="Batches"/>
-                            <icons:Icon
-                                FontSize="14"
-                                Value="fa-regular fa-images"/>
-                        </StackPanel>
-                        <NumericUpDown 
-                            Grid.Row="1" 
-                            Grid.Column="1"
-                            HorizontalAlignment="Left"
-                            Margin="0,4,0,0"
-                            MinWidth="120"
-                            Minimum="1"
-                            Increment="1"
-                            ParsingNumberStyle="Integer"
-                            Value="{Binding BatchCount}"
-                            ClipValueToMinMax="True"/>
-                    </Grid>
-                </controls:Card>
-            </StackPanel>
-        </ScrollViewer>
+                <!--  Windows  -->
+                <!--<RootDock.Windows>
+                    <DockWindow
+                        x:Name="DockWindow"
+                        Width="250"
+                        Height="400"
+                        Id="DockWindow"
+                        Topmost="True"
+                        X="281"
+                        Y="233">
+                        <RootDock ActiveDockable="{Binding #ToolDock}" Window="{Binding #DockWindow}">
+                            <ToolDock x:Name="ToolDock">
+                                <Tool
+                                    x:Name="ToolWindow"
+                                    Title="Tool Window"
+                                    x:DataType="Tool"
+                                    Id="ToolWindow">
+                                    <TextBlock Text="{Binding Title}" />
+                                </Tool>
+                            </ToolDock>
+                        </RootDock>
+                    </DockWindow>
+                </RootDock.Windows>-->
 
-        <GridSplitter Grid.Row="0" Grid.Column="1"/>
+                <ProportionalDock
+                    x:Name="MainLayout"
+                    Id="MainLayout"
+                    Orientation="Horizontal">
 
-        <!--  Center Panel  -->
-        <Grid
-            Grid.Row="0"
-            Grid.Column="2"
-            Margin="8,8,8,16"
-            RowDefinitions="*,Auto">
-            <!--  Prompt card  -->
-            <controls:PromptCard 
-                DataContext="{Binding PromptCardViewModel}"/>
+                    <!--  Left Pane  -->
+                    <ToolDock
+                        x:Name="ConfigPane"
+                        Alignment="Left"
+                        Id="ConfigPane"
+                        Proportion="0.25">
+                        <Tool
+                            x:Name="ConfigTool"
+                            Title="Config"
+                            x:DataType="Tool"
+                            Id="SolutionExplorer">
+                            <TextBlock Text="{Binding Title}" />
+                        </Tool>
+                    </ToolDock>
 
-            <StackPanel Grid.Row="1">
-                <!--  Generate Buttons  -->
-                <controls:Card
-                    Margin="0,4"
-                    Padding="8">
-                    <Grid
-                        Grid.Row="4"
-                        HorizontalAlignment="Center"
-                        ColumnDefinitions="Auto,*,Auto"
-                        RowDefinitions="Auto,*">
-                        <Button
-                            Grid.Row="1"
-                            Margin="4,0"
-                            Padding="12,8"
-                            HorizontalAlignment="Left"
-                            icons:Attached.Icon="fa-solid fa-magnifying-glass-plus"
-                            Classes="transparent"
-                            Command="{Binding GenerateImageCommand}"
-                            ToolTip.Tip="Generate with Hires Scaling" />
+                    <ProportionalDockSplitter x:Name="LeftSplitter" Id="LeftSplitter" />
 
-                        <!--  Main Generate Button  -->
-                        <Button
-                            x:Name="GenerateButton"
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            Width="130"
-                            HorizontalAlignment="Stretch"
-                            Classes="accent"
-                            Command="{Binding GenerateImageCommand}"
-                            IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}">
-                            <Panel>
-                                <TextBlock IsVisible="{Binding #GenerateButton.IsEnabled}" Text="Generate Image" />
-                                <controls:ProgressRing IsIndeterminate="True" IsVisible="{Binding !#GenerateButton.IsEnabled}" />
-                            </Panel>
-                        </Button>
-                        <!--  Cancel Button  -->
-                        <Button
-                            x:Name="CancelButton"
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            Width="130"
-                            HorizontalAlignment="Stretch"
-                            icons:Attached.Icon="fa-solid fa-stop"
-                            Command="{Binding GenerateImageCancelCommand}"
-                            IsVisible="{Binding GenerateImageCommand.CanBeCanceled}" />
+                    <!--  Prompt Pane  -->
+                    <ToolDock
+                        x:Name="PromptPane"
+                        Alignment="Right"
+                        Id="PromptPane"
+                        Proportion="0.3">
+                        <Tool
+                            x:Name="PromptTool"
+                            Title="Prompt"
+                            x:DataType="Tool"
+                            Id="PromptTool">
+                            <controls:PromptCard DataContext="{ReflectionBinding ElementName=Dock, Path=DataContext.PromptCardViewModel}" />
+                        </Tool>
+                    </ToolDock>
 
-                        <Button
-                            Grid.Row="1"
-                            Grid.Column="2"
-                            Margin="4,0"
-                            Padding="12,8"
-                            HorizontalAlignment="Left"
-                            icons:Attached.Icon="fa-solid fa-repeat"
-                            Classes="transparent"
-                            Command="{Binding GenerateImageCommand}"
-                            ToolTip.Tip="Generate with current seed" />
-                    </Grid>
-                </controls:Card>
-            </StackPanel>
-        </Grid>
-        
-        <GridSplitter Grid.Row="0" Grid.Column="3"/>
+                    <ProportionalDockSplitter x:Name="RightSplitter" Id="RightSplitter" />
 
-        <!--  Image Viewer  -->
-        <Grid
-            Grid.Row="0"
-            Grid.Column="4"
-            Margin="8,8,8,16"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch">
-            <ProgressBar
-                Margin="2,1,2,4"
-                VerticalAlignment="Top"
-                DataContext="{Binding OutputProgress}"
-                IsVisible="{Binding IsProgressVisible}"
-                Maximum="{Binding Maximum}"
-                Value="{Binding Value}" />
-            <controls:ImageGalleryCard
-                Grid.Row="0"
-                DataContext="{Binding ImageGalleryCardViewModel}" />
-        </Grid>
+                    <!--  Right Pane  -->
+                    <ToolDock
+                        x:Name="ImageGalleryPane"
+                        Alignment="Right"
+                        Id="ImageGalleryPane"
+                        Proportion="0.3">
+                        <Tool
+                            x:Name="ImageGalleryTool"
+                            Title="Image Output"
+                            x:DataType="Tool"
+                            Id="ImageGalleryTool">
+                            <controls:ImageGalleryCard DataContext="{ReflectionBinding ElementName=Dock, Path=DataContext.ImageGalleryCardViewModel}" />
+                        </Tool>
+                    </ToolDock>
 
+                </ProportionalDock>
+            </RootDock>
+
+        </DockControl>
     </Grid>
 </controls:UserControlBase>

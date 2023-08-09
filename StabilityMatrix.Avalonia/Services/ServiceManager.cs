@@ -16,8 +16,10 @@ public class ServiceManager<T>
     /// <summary>
     /// Register a new dialog view model (singleton instance)
     /// </summary>
-    public ServiceManager<T> Register<TService>(TService instance) where TService : T
+    public ServiceManager<T> Register<TService>(TService instance) where TService : T 
     {
+        if (instance is null) throw new ArgumentNullException(nameof(instance));
+        
         lock (instances)
         {
             if (instances.ContainsKey(typeof(TService)) || providers.ContainsKey(typeof(TService)))
@@ -26,7 +28,7 @@ public class ServiceManager<T>
                     $"Service of type {typeof(TService)} is already registered for {typeof(T)}");
             }
 
-            instances[typeof(TService)] = instance;
+            instances[instance.GetType()] = instance;
         }
         
         return this;

@@ -402,7 +402,7 @@ public static class DesignData
     public static InferenceConfigCardViewModel InferenceConfigCardViewModel =>
         DialogFactory.Get<InferenceConfigCardViewModel>(vm =>
         {
-            vm.ConfigCards.AddRange(new ViewModelBase[]
+            vm.AddCards(new ViewModelBase[]
             {
                 SamplerCardViewModel,
                 SeedCardViewModel,

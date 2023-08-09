@@ -4,16 +4,23 @@ using System.Text.Json.Nodes;
 
 namespace StabilityMatrix.Avalonia.Models;
 
-public interface ILoadableState<T>
+public interface ILoadableState<T> : IJsonLoadableState
 {
-    public Type LoadableStateType => typeof(T);
+    new Type LoadableStateType => typeof(T);
     
-    public void LoadState(T state);
+    void LoadState(T state);
 
-    public void LoadStateFromJsonObject(JsonObject state)
+    new void LoadStateFromJsonObject(JsonObject state)
     {
         state.Deserialize(LoadableStateType);
     }
     
-    public T SaveState();
+    T SaveState();
+    
+    new JsonObject SaveStateToJsonObject()
+    {
+        var node = JsonSerializer.SerializeToNode(SaveState());
+        return node?.AsObject() ?? throw new 
+            InvalidOperationException("Failed to serialize state to JSON object.");
+    }
 }

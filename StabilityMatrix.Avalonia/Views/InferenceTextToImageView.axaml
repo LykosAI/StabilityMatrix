@@ -88,7 +88,7 @@
                             x:DataType="Tool"
                             Id="ConfigTool">
                             <controls:StackCard 
-                                DataContext="{ReflectionBinding ElementName=Dock, Path=DataContext.ConfigCardViewModel}"/>
+                                DataContext="{ReflectionBinding ElementName=Dock, Path=DataContext.StackCardViewModel}"/>
                         </Tool>
                     </ToolDock>
 
@@ -122,7 +122,17 @@
                             Title="Image Output"
                             x:DataType="Tool"
                             Id="ImageGalleryTool">
-                            <controls:ImageGalleryCard DataContext="{ReflectionBinding ElementName=Dock, Path=DataContext.ImageGalleryCardViewModel}" />
+                            <ExperimentalAcrylicBorder>
+                                <ExperimentalAcrylicBorder.Material>
+                                    <ExperimentalAcrylicMaterial
+                                        FallbackColor="{DynamicResource ThemeBackgroundColor}"
+                                        TintColor="Black"
+                                        TintOpacity="0.6"
+                                        MaterialOpacity="0.8"
+                                        BackgroundSource="Digger" />
+                                </ExperimentalAcrylicBorder.Material>
+                                <controls:ImageGalleryCard DataContext="{ReflectionBinding ElementName=Dock, Path=DataContext.ImageGalleryCardViewModel}" />
+                            </ExperimentalAcrylicBorder>
                         </Tool>
                     </ToolDock>
 

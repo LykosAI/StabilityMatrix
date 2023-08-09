@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
@@ -24,9 +25,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceTextToImageView))]
-public partial class InferenceTextToImageViewModel
-    : ViewModelBase,
-        ILoadableState<InferenceTextToImageModel>
+public partial class InferenceTextToImageViewModel : LoadableViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -36,11 +35,10 @@ public partial class InferenceTextToImageViewModel
     public IInferenceClientManager ClientManager { get; }
 
     public SeedCardViewModel SeedCardViewModel { get; }
-    public SamplerCardViewModel SamplerCardViewModel { get; }
-    public SamplerCardViewModel HiresFixSamplerCardViewModel { get; }
+
     public ImageGalleryCardViewModel ImageGalleryCardViewModel { get; }
     public PromptCardViewModel PromptCardViewModel { get; }
-    public StackCardViewModel ConfigCardViewModel { get; }
+    public StackCardViewModel StackCardViewModel { get; }
 
     [ObservableProperty]
     private string? selectedModelName;
@@ -70,36 +68,41 @@ public partial class InferenceTextToImageViewModel
         
         SeedCardViewModel = vmFactory.Get<SeedCardViewModel>();        
         SeedCardViewModel.GenerateNewSeed();
-        // SamplerCardViewModel = vmFactory.Get<SamplerCardViewModel>();
-        HiresFixSamplerCardViewModel = vmFactory.Get<SamplerCardViewModel>(vm =>
-        {
-            vm.IsScaleSizeMode = true;
-            vm.IsCfgScaleEnabled = false;
-            vm.IsSamplerSelectionEnabled = false;
-            vm.IsDenoiseStrengthEnabled = true;
-        });
+
         ImageGalleryCardViewModel = vmFactory.Get<ImageGalleryCardViewModel>();
         PromptCardViewModel = vmFactory.Get<PromptCardViewModel>();
 
-        ConfigCardViewModel = vmFactory.Get<StackCardViewModel>().WithCards(new ViewModelBase[]
+        StackCardViewModel = vmFactory.Get<StackCardViewModel>();
+            
+        StackCardViewModel.AddCards(new LoadableViewModelBase[]
+        {
+            // Sampler
+            vmFactory.Get<SamplerCardViewModel>(),
+            // Hires Fix
+            vmFactory.Get<StackExpanderViewModel>(stackExpander =>
             {
-                vmFactory.Get<SamplerCardViewModel>(),
-                vmFactory.Get<StackExpanderViewModel>().WithCards(new ViewModelBase[]
+                stackExpander.Title = "Hires Fix";
+                stackExpander.AddCards(new LoadableViewModelBase[]
                 {
+                    // Hires Fix Upscaler
                     vmFactory.Get<UpscalerCardViewModel>(),
-                    vmFactory.Get<SamplerCardViewModel>(vm =>
+                    // Hires Fix Sampler
+                    vmFactory.Get<SamplerCardViewModel>(samplerCard =>
                     {
-                        vm.IsScaleSizeMode = true;
-                        vm.IsCfgScaleEnabled = false;
-                        vm.IsSamplerSelectionEnabled = false;
-                        vm.IsDenoiseStrengthEnabled = true;
-                    }),
-                })
-            });
+                        samplerCard.IsDimensionsEnabled = false;
+                        samplerCard.IsCfgScaleEnabled = false;
+                        samplerCard.IsSamplerSelectionEnabled = false;
+                        samplerCard.IsDenoiseStrengthEnabled = true;
+                    })
+                });
+            })
+        });
     }
 
     private Dictionary<string, ComfyNode> GetCurrentPrompt()
     {
+        var sampler = StackCardViewModel.GetCard<SamplerCardViewModel>();
+        
         var prompt = new Dictionary<string, ComfyNode>
         {
             ["3"] = new()
@@ -107,16 +110,16 @@ public partial class InferenceTextToImageViewModel
                 ClassType = "KSampler",
                 Inputs = new Dictionary<string, object?>
                 {
-                    ["cfg"] = SamplerCardViewModel.CfgScale,
+                    ["cfg"] = sampler.CfgScale,
                     ["denoise"] = 1,
                     ["latent_image"] = new object[] { "5", 0 },
                     ["model"] = new object[] { "4", 0 },
                     ["negative"] = new object[] { "7", 0 },
                     ["positive"] = new object[] { "6", 0 },
-                    ["sampler_name"] = SamplerCardViewModel.SelectedSampler?.Name,
+                    ["sampler_name"] = sampler.SelectedSampler?.Name,
                     ["scheduler"] = "normal",
                     ["seed"] = SeedCardViewModel.Seed,
-                    ["steps"] = SamplerCardViewModel.Steps
+                    ["steps"] = sampler.Steps
                 }
             },
             ["4"] = new()
@@ -130,8 +133,8 @@ public partial class InferenceTextToImageViewModel
                 Inputs = new Dictionary<string, object?>
                 {
                     ["batch_size"] = BatchSize,
-                    ["height"] = SamplerCardViewModel.Height,
-                    ["width"] = SamplerCardViewModel.Width,
+                    ["height"] = sampler.Height,
+                    ["width"] = sampler.Width,
                 }
             },
             ["6"] = new()
@@ -299,33 +302,35 @@ public partial class InferenceTextToImageViewModel
     }
 
     /// <inheritdoc />
-    public void LoadState(InferenceTextToImageModel state)
+    public override void LoadStateFromJsonObject(JsonObject state)
     {
-        SelectedModelName = state.SelectedModelName;
+        var model = DeserializeModel<InferenceTextToImageModel>(state);
+        
+        SelectedModelName = model.SelectedModelName;
 
-        if (state.SeedCardState != null)
+        if (model.StackCardState != null)
         {
-            SeedCardViewModel.LoadState(state.SeedCardState);
+            StackCardViewModel.LoadStateFromJsonObject(model.StackCardState);
         }
-        if (state.SamplerCardState != null)
+        if (model.SeedCardState != null)
         {
-            SamplerCardViewModel.LoadState(state.SamplerCardState);
+            SeedCardViewModel.LoadStateFromJsonObject(model.SeedCardState);
         }
-        if (state.PromptCardState != null)
+        if (model.PromptCardState != null)
         {
-            PromptCardViewModel.LoadState(state.PromptCardState);
+            PromptCardViewModel.LoadStateFromJsonObject(model.PromptCardState);
         }
     }
 
     /// <inheritdoc />
-    public InferenceTextToImageModel SaveState()
+    public override JsonObject SaveStateToJsonObject()
     {
-        return new InferenceTextToImageModel
+        return SerializeModel(new InferenceTextToImageModel
         {
             SelectedModelName = SelectedModelName,
-            SeedCardState = SeedCardViewModel.SaveState(),
-            SamplerCardState = SamplerCardViewModel.SaveState(),
-            PromptCardState = PromptCardViewModel.SaveState(),
-        };
+            StackCardState = StackCardViewModel.SaveStateToJsonObject(),
+            SeedCardState = SeedCardViewModel.SaveStateToJsonObject(),
+            PromptCardState = PromptCardViewModel.SaveStateToJsonObject()
+        });
     }
 }

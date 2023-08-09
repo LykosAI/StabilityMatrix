@@ -26,23 +26,19 @@ public class InferenceProjectDocument
     
     public JsonObject? State { get; set; }
 
-    public static InferenceProjectDocument FromLoadable(object loadableModel)
+    public static InferenceProjectDocument FromLoadable(IJsonLoadableState loadableModel)
     {
-        var document = new InferenceProjectDocument();
-
-        if (loadableModel is InferenceTextToImageViewModel model)
+        return new InferenceProjectDocument
         {
-            document.ProjectType = InferenceProjectType.TextToImage;
-            document.State = JsonSerializer.SerializeToNode(model.SaveState(), SerializerOptions)?.AsObject();
-        }
-        else
-        {
-            throw new InvalidOperationException(
-                $"Unknown loadable model type: {loadableModel.GetType()}"
-            );
-        }
-
-        return document;
+            ProjectType = loadableModel switch
+            {
+                InferenceTextToImageViewModel => InferenceProjectType.TextToImage,
+                _ => throw new InvalidOperationException(
+                    $"Unknown loadable model type: {loadableModel.GetType()}"
+                )
+            },
+            State = loadableModel.SaveStateToJsonObject()
+        };
     }
 
     public Type GetViewModelType()

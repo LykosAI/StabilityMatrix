@@ -7,6 +7,7 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Dock.Model.Mvvm.Controls;
 using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Avalonia.Models;
@@ -50,10 +51,10 @@ public partial class InferenceViewModel : PageViewModelBase
 
     public IInferenceClientManager ClientManager { get; }
 
-    public AvaloniaList<ViewModelBase> Tabs { get; } = new();
+    public AvaloniaList<LoadableViewModelBase> Tabs { get; } = new();
 
     [ObservableProperty]
-    private ViewModelBase? selectedTab;
+    private LoadableViewModelBase? selectedTab;
 
     [ObservableProperty]
     private PackagePair? runningPackage;
@@ -110,7 +111,7 @@ public partial class InferenceViewModel : PageViewModelBase
     /// </summary>
     public void OnTabCloseRequested(TabViewTabCloseRequestedEventArgs e)
     {
-        if (e.Item is ViewModelBase vm)
+        if (e.Item is LoadableViewModelBase vm)
         {
             Tabs.Remove(vm);
         }
@@ -259,17 +260,17 @@ public partial class InferenceViewModel : PageViewModelBase
         await using var stream = await file.OpenReadAsync();
 
         var document = await JsonSerializer.DeserializeAsync<InferenceProjectDocument>(stream);
-        if (document == null)
+        if (document is null)
         {
             Logger.Warn("MenuOpenProject: Deserialize project file returned null");
             return;
         }
 
-        ViewModelBase? vm = null;
-        if (document.ProjectType is InferenceProjectType.TextToImage)
+        LoadableViewModelBase? vm = null;
+        if (document.ProjectType is InferenceProjectType.TextToImage && document.State is not null)
         {
             var textToImage = vmFactory.Get<InferenceTextToImageViewModel>();
-            textToImage.LoadState(document.State.Deserialize<InferenceTextToImageModel>()!);
+            textToImage.LoadStateFromJsonObject(document.State);
             vm = textToImage;
         }
 

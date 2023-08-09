@@ -1,46 +1,37 @@
-﻿using System;
-using System.Collections.Generic;
-using Avalonia.Collections;
+﻿using System.Linq;
+using System.Text.Json.Nodes;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(StackCard))]
-public class StackCardViewModel : ViewModelBase
+public class StackCardViewModel : StackViewModelBase
 {
-    private readonly Dictionary<Type, List<ViewModelBase>> viewModelManager = new();
-    
-    public AvaloniaList<ViewModelBase> ConfigCards { get; } = new();
-    
-    /// <summary>
-    /// Register new cards
-    /// </summary>
-    public void AddCards(IEnumerable<ViewModelBase> cards)
+    /// <inheritdoc />
+    public override void LoadStateFromJsonObject(JsonObject state)
     {
-        foreach (var card in cards)
+        var model = DeserializeModel<StackCardModel>(state);
+        
+        if (model.Cards is null) return;
+        
+        foreach (var (i, card) in model.Cards.Enumerate())
         {
-            var list = viewModelManager.GetOrAdd(card.GetType());
-            list.Add(card);
-            ConfigCards.Add(card);
+            // Ignore if more than cards than we have
+            if (i > Cards.Count - 1) break;
+            
+            Cards[i].LoadStateFromJsonObject(card);
         }
     }
-    
-    /// <summary>
-    /// Registers new cards and returns self
-    /// </summary>
-    public StackCardViewModel WithCards(IEnumerable<ViewModelBase> cards)
+
+    /// <inheritdoc />
+    public override JsonObject SaveStateToJsonObject()
     {
-        AddCards(cards);
-        return this;
-    }
-    
-    /// <summary>
-    /// Gets a card by type at specified index
-    /// </summary>
-    public T GetCard<T>(int index = 0) where T : ViewModelBase
-    {
-        return (T) viewModelManager[typeof(T)][index];
+        return SerializeModel(new StackCardModel
+        {
+            Cards = Cards.Select(x => x.SaveStateToJsonObject()).ToList()
+        });
     }
 }

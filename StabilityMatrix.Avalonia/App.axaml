@@ -3,7 +3,6 @@
              x:Class="StabilityMatrix.Avalonia.App"
              xmlns:local="using:StabilityMatrix.Avalonia"
              xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
-             
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
@@ -23,6 +22,7 @@
   
     <Application.Styles>
         <styling:FluentAvaloniaTheme PreferUserAccentColor="True" UseSystemFontOnWindows="True" />
+        <StyleInclude Source="avares://Dock.Avalonia/Themes/DockFluentTheme.axaml" />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
         <StyleInclude Source="Styles/ProgressRing.axaml"/>
@@ -32,5 +32,8 @@
         <StyleInclude Source="Controls/SamplerCard.axaml"/>
         <StyleInclude Source="Controls/ImageGalleryCard.axaml"/>
         <StyleInclude Source="Controls/PromptCard.axaml"/>
+        <StyleInclude Source="Controls/StackCard.axaml"/>
+        <StyleInclude Source="Controls/UpscalerCard.axaml"/>
+        <StyleInclude Source="Controls/StackExpander.axaml"/>
     </Application.Styles>
 </Application>

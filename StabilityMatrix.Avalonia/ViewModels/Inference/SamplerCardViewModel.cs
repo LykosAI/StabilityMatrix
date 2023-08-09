@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Nodes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
@@ -10,7 +11,7 @@ using StabilityMatrix.Core.Models.Api.Comfy;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(SamplerCard))]
-public partial class SamplerCardViewModel : ViewModelBase, ILoadableState<SamplerCardModel>
+public partial class SamplerCardViewModel : LoadableViewModelBase
 {
     [ObservableProperty] private int steps = 20;
 
@@ -37,25 +38,27 @@ public partial class SamplerCardViewModel : ViewModelBase, ILoadableState<Sample
     }
 
     /// <inheritdoc />
-    public void LoadState(SamplerCardModel state)
+    public override void LoadStateFromJsonObject(JsonObject state)
     {
-        Steps = state.Steps;
-        IsDenoiseStrengthEnabled = state.IsDenoiseStrengthEnabled;
-        DenoiseStrength = state.DenoiseStrength;
-        IsCfgScaleEnabled = state.IsCfgScaleEnabled;
-        CfgScale = state.CfgScale;
-        IsDimensionsEnabled = state.IsDimensionsEnabled;
-        Width = state.Width;
-        Height = state.Height;
-        IsSamplerSelectionEnabled = state.IsSamplerSelectionEnabled;
-        SelectedSampler = state.SelectedSampler is null ? null 
-            : new ComfySampler(state.SelectedSampler);
+        var model = DeserializeModel<SamplerCardModel>(state);
+        
+        Steps = model.Steps;
+        IsDenoiseStrengthEnabled = model.IsDenoiseStrengthEnabled;
+        DenoiseStrength = model.DenoiseStrength;
+        IsCfgScaleEnabled = model.IsCfgScaleEnabled;
+        CfgScale = model.CfgScale;
+        IsDimensionsEnabled = model.IsDimensionsEnabled;
+        Width = model.Width;
+        Height = model.Height;
+        IsSamplerSelectionEnabled = model.IsSamplerSelectionEnabled;
+        SelectedSampler = model.SelectedSampler is null ? null 
+            : new ComfySampler(model.SelectedSampler);
     }
 
     /// <inheritdoc />
-    public SamplerCardModel SaveState()
+    public override JsonObject SaveStateToJsonObject()
     {
-        return new SamplerCardModel
+        return SerializeModel(new SamplerCardModel
         {
             Steps = Steps,
             IsDenoiseStrengthEnabled = IsDenoiseStrengthEnabled,
@@ -67,6 +70,6 @@ public partial class SamplerCardViewModel : ViewModelBase, ILoadableState<Sample
             Height = Height,
             IsSamplerSelectionEnabled = IsSamplerSelectionEnabled,
             SelectedSampler = SelectedSampler?.Name
-        };
+        });
     }
 }

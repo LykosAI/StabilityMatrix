@@ -38,7 +38,7 @@
                     
                     <ItemsControl 
                         VerticalAlignment="Top"
-                        ItemsSource="{Binding ConfigCards}">
+                        ItemsSource="{Binding Cards}">
                         
                         <ItemsControl.DataTemplates>
                             <local:ViewLocator/>

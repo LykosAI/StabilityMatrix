@@ -367,6 +367,8 @@ public static class DesignData
     {
         vm.Steps = 20;
         vm.CfgScale = 7;
+        vm.IsDenoiseStrengthEnabled = false;
+        vm.IsDimensionsEnabled = true;
         vm.SelectedSampler = new ComfySampler("euler");
     });
     
@@ -375,7 +377,7 @@ public static class DesignData
         vm.Steps = 20;
         vm.CfgScale = 7;
         vm.SelectedSampler = new ComfySampler("euler");
-        vm.IsScaleSizeMode = true;
+        vm.IsDimensionsEnabled = false;
         vm.IsCfgScaleEnabled = false;
         vm.IsSamplerSelectionEnabled = false;
         vm.IsDenoiseStrengthEnabled = true;
@@ -402,7 +404,7 @@ public static class DesignData
     public static StackCardViewModel StackCardViewModel =>
         DialogFactory.Get<StackCardViewModel>(vm =>
         {
-            vm.AddCards(new ViewModelBase[]
+            vm.AddCards(new LoadableViewModelBase[]
             {
                 SamplerCardViewModel,
                 SeedCardViewModel,
@@ -413,7 +415,7 @@ public static class DesignData
         DialogFactory.Get<StackExpanderViewModel>(vm =>
         {
             vm.Title = "Hires Fix";
-            vm.AddCards(new ViewModelBase[]
+            vm.AddCards(new LoadableViewModelBase[]
             {
                 SamplerCardViewModel,
                 SeedCardViewModel,

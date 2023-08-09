@@ -77,7 +77,7 @@
                         
                         <StackPanel>
                             <!-- Denoise Strength -->
-                            <Grid IsVisible="{Binding IsScaleSizeMode}">
+                            <Grid IsVisible="{Binding IsDenoiseStrengthEnabled}">
                                 <StackPanel>
                                     <Grid ColumnDefinitions="*,Auto">
                                         <TextBlock 
@@ -104,7 +104,7 @@
                             
                             <!-- Dimensions (Absolute) -->
                             <Grid 
-                                IsVisible="{Binding !IsScaleSizeMode}"
+                                IsVisible="{Binding IsDimensionsEnabled}"
                                 ColumnDefinitions="*,Auto,*" 
                                 RowDefinitions="Auto,*">
                                 <TextBlock

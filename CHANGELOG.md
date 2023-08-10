@@ -5,6 +5,11 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.1.2
+
+### Changed
+- SD.Next install now uses ROCm PyTorch backend on Linux AMD GPU machines for better performance over DirectML
+
 ## v2.1.1
 
 ### Added

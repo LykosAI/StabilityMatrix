@@ -25,23 +25,25 @@
                     HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
                     VerticalAlignment="{TemplateBinding VerticalAlignment}">
                     
-                    <ItemsControl 
-                        VerticalAlignment="Top"
-                        ItemsSource="{Binding Cards}">
+                    <ScrollViewer>
+                        <ItemsControl 
+                            VerticalAlignment="Top"
+                            ItemsSource="{Binding Cards}">
                         
-                        <ItemsControl.DataTemplates>
-                            <local:ViewLocator/>
-                        </ItemsControl.DataTemplates>
+                            <ItemsControl.DataTemplates>
+                                <local:ViewLocator/>
+                            </ItemsControl.DataTemplates>
                         
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel 
-                                    VerticalAlignment="Top"
-                                    Spacing="{TemplateBinding Spacing}"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel 
+                                        VerticalAlignment="Top"
+                                        Spacing="{TemplateBinding Spacing}"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
                         
-                    </ItemsControl>
+                        </ItemsControl>
+                    </ScrollViewer>
                     
                 </controls:Card>
             </ControlTemplate>

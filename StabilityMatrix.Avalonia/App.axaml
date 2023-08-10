@@ -35,5 +35,6 @@
         <StyleInclude Source="Controls/StackCard.axaml"/>
         <StyleInclude Source="Controls/UpscalerCard.axaml"/>
         <StyleInclude Source="Controls/StackExpander.axaml"/>
+        <StyleInclude Source="Controls/ModelCard.axaml"/>
     </Application.Styles>
 </Application>

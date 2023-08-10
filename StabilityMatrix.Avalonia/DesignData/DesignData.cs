@@ -382,6 +382,8 @@ public static class DesignData
         vm.IsSamplerSelectionEnabled = false;
         vm.IsDenoiseStrengthEnabled = true;
     });
+
+    public static ModelCardViewModel ModelCardViewModel => DialogFactory.Get<ModelCardViewModel>();
     
     public static ImageGalleryCardViewModel ImageGalleryCardViewModel =>
         DialogFactory.Get<ImageGalleryCardViewModel>(vm =>

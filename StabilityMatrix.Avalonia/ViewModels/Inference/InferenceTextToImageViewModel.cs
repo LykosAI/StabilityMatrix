@@ -76,6 +76,8 @@ public partial class InferenceTextToImageViewModel : LoadableViewModelBase
             
         StackCardViewModel.AddCards(new LoadableViewModelBase[]
         {
+            // Model Card
+            vmFactory.Get<ModelCardViewModel>(),
             // Sampler
             vmFactory.Get<SamplerCardViewModel>(),
             // Hires Fix

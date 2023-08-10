@@ -1,0 +1,36 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+        xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+        xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+        x:DataType="inference:ModelCardViewModel">
+    <Design.PreviewWith>
+        <controls:ModelCard DataContext="{x:Static mocks:DesignData.ModelCardViewModel}"/>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|ModelCard">
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card Padding="8">
+                    <Grid Margin="8" ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock
+                            Grid.Column="0"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            Text="Model" />
+                        <ui:FAComboBox
+                            Grid.Column="1"
+                            HorizontalAlignment="Stretch"
+                            ItemsSource="{Binding ClientManager.ModelNames}"
+                            SelectedItem="{Binding SelectedModelName, Mode=TwoWay}" />
+                        <Button Grid.Column="2" Margin="8,0,0,0">
+                            <ui:SymbolIcon FontSize="16" Symbol="Refresh" />
+                        </Button>
+                    </Grid>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

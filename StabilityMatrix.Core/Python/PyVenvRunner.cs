@@ -218,6 +218,40 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
             );
         }
     }
+    
+    /// <summary>
+    /// Run a custom install command. Waits for the process to exit.
+    /// workingDirectory defaults to RootPath.
+    /// </summary>
+    public async Task CustomInstall(string args, Action<ProcessOutput>? outputDataReceived = null)
+    {
+        // Record output for errors
+        var output = new StringBuilder();
+
+        var outputAction =
+            outputDataReceived == null
+                ? null
+                : new Action<ProcessOutput>(s =>
+                {
+                    Logger.Debug($"Install output: {s.Text}");
+                    // Record to output
+                    output.Append(s.Text);
+                    // Forward to callback
+                    outputDataReceived(s);
+                });
+
+        SetPyvenvCfg(PyRunner.PythonDir);
+        RunDetached(args, outputAction);
+        await Process.WaitForExitAsync().ConfigureAwait(false);
+
+        // Check return code
+        if (Process.ExitCode != 0)
+        {
+            throw new ProcessException(
+                $"install script failed with code {Process.ExitCode}: {output.ToString().ToRepr()}"
+            );
+        }
+    }
 
     /// <summary>
     /// Run a command using the venv Python executable and return the result.

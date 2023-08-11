@@ -15,13 +15,13 @@ public partial class SamplerCardViewModel : LoadableViewModelBase
 {
     [ObservableProperty] private int steps = 20;
 
-    [ObservableProperty] private bool isDenoiseStrengthEnabled = true;
+    [ObservableProperty] private bool isDenoiseStrengthEnabled;
     [ObservableProperty] private double denoiseStrength = 1;
     
     [ObservableProperty] private bool isCfgScaleEnabled = true;
     [ObservableProperty] private double cfgScale = 7;
-    
-    [ObservableProperty] private bool isDimensionsEnabled;
+
+    [ObservableProperty] private bool isDimensionsEnabled = true;
     [ObservableProperty] private int width = 512;
     [ObservableProperty] private int height = 512;
     

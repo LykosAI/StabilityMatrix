@@ -26,6 +26,7 @@
                         <StackPanel Orientation="Horizontal">
                             <ToggleSwitch
                                 Margin="2,0,0,2"
+                                IsChecked="{Binding IsEnabled}"
                                 VerticalContentAlignment="Center"
                                 OnContent="" 
                                 OffContent=""/>     

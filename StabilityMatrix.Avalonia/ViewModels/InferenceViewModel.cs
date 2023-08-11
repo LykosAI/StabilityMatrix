@@ -277,5 +277,8 @@ public partial class InferenceViewModel : PageViewModelBase
         }
 
         Tabs.Add(vm);
+        
+        // Set the selected tab to the newly opened tab
+        SelectedTab = vm;
     }
 }

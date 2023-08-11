@@ -40,6 +40,18 @@ public partial class InferenceTextToImageViewModel : LoadableViewModelBase
     public PromptCardViewModel PromptCardViewModel { get; }
     public StackCardViewModel StackCardViewModel { get; }
 
+    public UpscalerCardViewModel UpscalerCardViewModel => 
+        StackCardViewModel
+        .GetCard<StackExpanderViewModel>()
+        .GetCard<UpscalerCardViewModel>();
+
+    public SamplerCardViewModel HiresSamplerCardViewModel =>
+        StackCardViewModel
+            .GetCard<StackExpanderViewModel>()
+            .GetCard<SamplerCardViewModel>();
+
+    public bool IsHiresFixEnabled => StackCardViewModel.GetCard<StackExpanderViewModel>().IsEnabled;
+    
     [JsonIgnore]
     public ProgressViewModel OutputProgress { get; } = new();
 
@@ -107,24 +119,7 @@ public partial class InferenceTextToImageViewModel : LoadableViewModelBase
         
         var prompt = new Dictionary<string, ComfyNode>
         {
-            ["3"] = new()
-            {
-                ClassType = "KSampler",
-                Inputs = new Dictionary<string, object?>
-                {
-                    ["cfg"] = sampler.CfgScale,
-                    ["denoise"] = 1,
-                    ["latent_image"] = new object[] { "5", 0 },
-                    ["model"] = new object[] { "4", 0 },
-                    ["negative"] = new object[] { "7", 0 },
-                    ["positive"] = new object[] { "6", 0 },
-                    ["sampler_name"] = sampler.SelectedSampler?.Name,
-                    ["scheduler"] = "normal",
-                    ["seed"] = seedCard.Seed,
-                    ["steps"] = sampler.Steps
-                }
-            },
-            ["4"] = new()
+            ["CheckpointLoader"] = new()
             {
                 ClassType = "CheckpointLoaderSimple",
                 Inputs = new Dictionary<string, object?>
@@ -132,7 +127,7 @@ public partial class InferenceTextToImageViewModel : LoadableViewModelBase
                     ["ckpt_name"] = modelCard.SelectedModelName
                 }
             },
-            ["5"] = new()
+            ["EmptyLatentImage"] = new()
             {
                 ClassType = "EmptyLatentImage",
                 Inputs = new Dictionary<string, object?>
@@ -142,43 +137,103 @@ public partial class InferenceTextToImageViewModel : LoadableViewModelBase
                     ["width"] = sampler.Width,
                 }
             },
-            ["6"] = new()
+            ["Sampler"] = new()
+            {
+                ClassType = "KSampler",
+                Inputs = new Dictionary<string, object?>
+                {
+                    ["cfg"] = sampler.CfgScale,
+                    ["denoise"] = 1,
+                    ["latent_image"] = new object[] { "EmptyLatentImage", 0 },
+                    ["model"] = new object[] { "CheckpointLoader", 0 },
+                    ["negative"] = new object[] { "NegativeCLIP", 0 },
+                    ["positive"] = new object[] { "PositiveCLIP", 0 },
+                    ["sampler_name"] = sampler.SelectedSampler?.Name,
+                    ["scheduler"] = "normal",
+                    ["seed"] = seedCard.Seed,
+                    ["steps"] = sampler.Steps
+                }
+            },
+            ["PositiveCLIP"] = new()
             {
                 ClassType = "CLIPTextEncode",
                 Inputs = new Dictionary<string, object?>
                 {
-                    ["clip"] = new object[] { "4", 1 },
+                    ["clip"] = new object[] { "CheckpointLoader", 1 },
                     ["text"] = PromptCardViewModel.PromptDocument.Text,
                 }
             },
-            ["7"] = new()
+            ["NegativeCLIP"] = new()
             {
                 ClassType = "CLIPTextEncode",
                 Inputs = new Dictionary<string, object?>
                 {
-                    ["clip"] = new object[] { "4", 1 },
+                    ["clip"] = new object[] { "CheckpointLoader", 1 },
                     ["text"] = PromptCardViewModel.NegativePromptDocument.Text,
                 }
             },
-            ["8"] = new()
+            ["VAEDecoder"] = new()
             {
                 ClassType = "VAEDecode",
                 Inputs = new Dictionary<string, object?>
                 {
-                    ["samples"] = new object[] { "3", 0 },
-                    ["vae"] = new object[] { "4", 2 }
+                    ["samples"] = new object[] { "Sampler", 0 },
+                    ["vae"] = new object[] { "CheckpointLoader", 2 }
                 }
             },
-            ["9"] = new()
+            ["SaveImage"] = new()
             {
                 ClassType = "SaveImage",
                 Inputs = new Dictionary<string, object?>
                 {
                     ["filename_prefix"] = "SM-Inference",
-                    ["images"] = new object[] { "8", 0 }
+                    ["images"] = new object[] { "VAEDecoder", 0 }
                 }
             }
         };
+        
+        // If hi-res fix is enabled, add the LatentUpscale node and another KSampler node
+        if (IsHiresFixEnabled)
+        {
+            var hiresUpscalerCard = UpscalerCardViewModel;
+            var hiresSamplerCard = HiresSamplerCardViewModel;
+            
+            prompt["LatentUpscale"] = new ComfyNode
+            {
+                ClassType = "LatentUpscale",
+                Inputs = new Dictionary<string, object?>
+                {
+                    ["upscale_method"] = hiresUpscalerCard.SelectedUpscaler,
+                    ["width"] = sampler.Width * hiresUpscalerCard.Scale,
+                    ["height"] = sampler.Height * hiresUpscalerCard.Scale,
+                    ["crop"] = "disabled",
+                    ["samples"] = new object[] { "VAEDecoder", 0 }
+                }
+            };
+
+            prompt["Sampler2"] = new ComfyNode
+            {
+                ClassType = "KSampler",
+                Inputs = new Dictionary<string, object?>()
+                {
+                    ["cfg"] = hiresSamplerCard.CfgScale,
+                    ["denoise"] = hiresSamplerCard.DenoiseStrength,
+                    ["latent_image"] = new object[] { "Sampler", 0 },
+                    ["model"] = new object[] { "CheckpointLoader", 0 },
+                    ["negative"] = new object[] { "NegativeCLIP", 0 },
+                    ["positive"] = new object[] { "PositiveCLIP", 0 },
+                    // Use hires sampler name if not null, otherwise use the normal sampler name
+                    ["sampler_name"] = hiresSamplerCard.SelectedSampler?.Name ?? sampler.SelectedSampler?.Name,
+                    ["scheduler"] = "normal",
+                    ["seed"] = seedCard.Seed,
+                    ["steps"] = hiresSamplerCard.Steps
+                }
+            };
+            
+            // Reroute the VAEDecoder's input to be from Sampler2
+            prompt["VAEDecoder"].Inputs["samples"] = new object[] { "Sampler2", 0 };
+        }
+        
         return prompt;
     }
 
@@ -240,8 +295,7 @@ public partial class InferenceTextToImageViewModel : LoadableViewModelBase
 
             ImageGalleryCardViewModel.ImageSources.Clear();
             
-            // Only get the SaveImage images from node 9
-            var images = outputs["9"];
+            var images = outputs["SaveImage"];
             if (images is null) return;
 
             List<ImageSource> outputImages;

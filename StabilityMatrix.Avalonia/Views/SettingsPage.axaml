@@ -226,9 +226,21 @@
                                 
                                 <ui:SettingsExpanderItem Content="Exceptions" IconSource="Flag">
                                     <ui:SettingsExpanderItem.Footer>
-                                        <Button
+                                        <SplitButton
                                             Command="{Binding DebugThrowExceptionCommand}"
-                                            Content="Unhandled Exception"/>
+                                            Content="Command Exception">
+                                            
+                                            <SplitButton.Flyout>
+                                                <ui:FAMenuFlyout>
+                                                    
+                                                    <ui:MenuFlyoutItem 
+                                                        Text="Async Command Exception"
+                                                        Command="{Binding DebugThrowAsyncExceptionCommand}"/>
+                                                    
+                                                </ui:FAMenuFlyout>
+                                            </SplitButton.Flyout>
+                                            
+                                        </SplitButton>
                                     </ui:SettingsExpanderItem.Footer>
                                 </ui:SettingsExpanderItem>
                                 

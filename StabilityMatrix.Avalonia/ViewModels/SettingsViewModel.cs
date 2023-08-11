@@ -21,6 +21,7 @@ using FluentAvalonia.UI.Controls;
 using NLog;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
@@ -112,6 +113,8 @@ public partial class SettingsViewModel : PageViewModelBase
         settingsManager.RelayPropertyFor(this,
             vm => vm.IsDiscordRichPresenceEnabled,
             settings => settings.IsDiscordRichPresenceEnabled);
+        
+        DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
     }
     
     partial void OnSelectedThemeChanged(string? value)
@@ -387,8 +390,15 @@ public partial class SettingsViewModel : PageViewModelBase
     [RelayCommand]
     private void DebugThrowException()
     {
-        // Use try-catch to generate traceback information
         throw new OperationCanceledException("Example Message");
+    }
+    
+    [RelayCommand(FlowExceptionsToTaskScheduler = true)]
+    private async Task DebugThrowAsyncException()
+    {
+        await Task.Yield();
+
+        throw new ApplicationException("Example Message");
     }
 
     [RelayCommand]

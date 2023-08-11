@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Avalonia.Collections;
 using Avalonia.Controls.Notifications;
@@ -7,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -28,6 +31,7 @@ public partial class InferenceViewModel : PageViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly INotificationService notificationService;
+    // private readonly IRelayCommandFactory commandFactory;
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> vmFactory;
     private readonly IApiFactory apiFactory;
@@ -47,7 +51,7 @@ public partial class InferenceViewModel : PageViewModelBase
 
     public IInferenceClientManager ClientManager { get; }
 
-    public AvaloniaList<LoadableViewModelBase> Tabs { get; } = new();
+    public AvaloniaList<InferenceTabViewModelBase> Tabs { get; } = new();
 
     [ObservableProperty]
     private LoadableViewModelBase? selectedTab;
@@ -59,6 +63,7 @@ public partial class InferenceViewModel : PageViewModelBase
         ServiceManager<ViewModelBase> vmFactory,
         IApiFactory apiFactory,
         INotificationService notificationService,
+//         IRelayCommandFactory commandFactory,
         IInferenceClientManager inferenceClientManager,
         ISettingsManager settingsManager
     )
@@ -66,6 +71,7 @@ public partial class InferenceViewModel : PageViewModelBase
         this.vmFactory = vmFactory;
         this.apiFactory = apiFactory;
         this.notificationService = notificationService;
+//         this.commandFactory = commandFactory;
         this.settingsManager = settingsManager;
 
         ClientManager = inferenceClientManager;
@@ -75,6 +81,8 @@ public partial class InferenceViewModel : PageViewModelBase
         {
             RunningPackage = args.CurrentPackagePair;
         };
+
+        MenuSaveAsCommand.WithNotificationErrorHandler(notificationService);
     }
 
     public override void OnLoaded()
@@ -107,10 +115,14 @@ public partial class InferenceViewModel : PageViewModelBase
     /// </summary>
     public void OnTabCloseRequested(TabViewTabCloseRequestedEventArgs e)
     {
-        if (e.Item is LoadableViewModelBase vm)
+        if (e.Item is not InferenceTabViewModelBase vm)
         {
-            Tabs.Remove(vm);
+            Logger.Warn("Tab close requested for unknown item {@Item}", e);
+            return;
         }
+        
+        Logger.Trace("Closing tab {Title}", vm.TabTitle);
+        Tabs.Remove(vm);
     }
 
     /// <summary>
@@ -157,17 +169,15 @@ public partial class InferenceViewModel : PageViewModelBase
     /// <summary>
     /// Menu "Save As" command.
     /// </summary>
-    [RelayCommand]
+    [RelayCommand(FlowExceptionsToTaskScheduler = true)]
     private async Task MenuSaveAs()
     {
         var currentTab = SelectedTab;
         if (currentTab == null)
         {
-            Logger.Trace("MenuSaveAs: currentTab is null");
+            Logger.Warn("MenuSaveAs: currentTab is null");
             return;
         }
-
-        var document = InferenceProjectDocument.FromLoadable(currentTab);
 
         // Prompt for save file dialog
         var provider = App.StorageProvider;
@@ -200,26 +210,42 @@ public partial class InferenceViewModel : PageViewModelBase
             Logger.Trace("MenuSaveAs: user cancelled");
             return;
         }
+        
+        var document = InferenceProjectDocument.FromLoadable(currentTab);
 
         // Save to file
-        await using var stream = await result.OpenWriteAsync();
-        await JsonSerializer.SerializeAsync(
-            stream,
-            document,
-            new JsonSerializerOptions { WriteIndented = true, }
-        );
-
+        try
+        {
+            await using var stream = await result.OpenWriteAsync();
+            await JsonSerializer.SerializeAsync(
+                stream,
+                document,
+                new JsonSerializerOptions { WriteIndented = true }
+            );
+        }
+        catch (Exception e)
+        {
+            notificationService.ShowPersistent(
+                "Could not save to file", 
+                $"[{e.GetType().Name}] {e.Message}", 
+                NotificationType.Error);
+            return;
+        }
+        
         notificationService.Show(
             "Saved",
             $"Saved project to {result.Name}",
             NotificationType.Success
         );
     }
-
+    
+    /*public AsyncRelayCommand MenuOpenProjectCommand =>
+        commandFactory.CreateWithNotificationErrorHandling(MenuOpenProject);*/
+    
     /// <summary>
     /// Menu "Open Project" command.
     /// </summary>
-    [RelayCommand]
+    [RelayCommand(FlowExceptionsToTaskScheduler = true)]
     private async Task MenuOpenProject()
     {
         // Prompt for open file dialog
@@ -262,7 +288,7 @@ public partial class InferenceViewModel : PageViewModelBase
             return;
         }
 
-        LoadableViewModelBase? vm = null;
+        InferenceTabViewModelBase? vm = null;
         if (document.ProjectType is InferenceProjectType.TextToImage && document.State is not null)
         {
             var textToImage = vmFactory.Get<InferenceTextToImageViewModel>();

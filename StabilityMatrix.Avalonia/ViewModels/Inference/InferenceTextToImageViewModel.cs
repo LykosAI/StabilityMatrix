@@ -16,7 +16,6 @@ using NLog;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
-using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
@@ -27,7 +26,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceTextToImageView))]
-public partial class InferenceTextToImageViewModel : LoadableViewModelBase
+public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

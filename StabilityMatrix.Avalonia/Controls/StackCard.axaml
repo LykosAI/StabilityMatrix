@@ -20,7 +20,7 @@
         <!-- Set Defaults -->
         <Setter Property="Template">
             <ControlTemplate>
-                <ScrollViewer Padding="8,0,8,0" IsScrollInertiaEnabled="True">
+                <ScrollViewer Padding="8,0,8,0">
                     <ItemsControl 
                         VerticalAlignment="Top"
                         ItemsSource="{Binding Cards}">

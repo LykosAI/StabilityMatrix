@@ -203,22 +203,22 @@ public partial class InferenceTextToImageViewModel : LoadableViewModelBase
                 ClassType = "LatentUpscale",
                 Inputs = new Dictionary<string, object?>
                 {
-                    ["upscale_method"] = hiresUpscalerCard.SelectedUpscaler,
+                    ["upscale_method"] = hiresUpscalerCard.SelectedUpscaler?.Name,
                     ["width"] = sampler.Width * hiresUpscalerCard.Scale,
                     ["height"] = sampler.Height * hiresUpscalerCard.Scale,
                     ["crop"] = "disabled",
-                    ["samples"] = new object[] { "VAEDecoder", 0 }
+                    ["samples"] = new object[] { "Sampler", 0 }
                 }
             };
 
             prompt["Sampler2"] = new ComfyNode
             {
                 ClassType = "KSampler",
-                Inputs = new Dictionary<string, object?>()
+                Inputs = new Dictionary<string, object?>
                 {
                     ["cfg"] = hiresSamplerCard.CfgScale,
                     ["denoise"] = hiresSamplerCard.DenoiseStrength,
-                    ["latent_image"] = new object[] { "Sampler", 0 },
+                    ["latent_image"] = new object[] { "LatentUpscale", 0 },
                     ["model"] = new object[] { "CheckpointLoader", 0 },
                     ["negative"] = new object[] { "NegativeCLIP", 0 },
                     ["positive"] = new object[] { "PositiveCLIP", 0 },

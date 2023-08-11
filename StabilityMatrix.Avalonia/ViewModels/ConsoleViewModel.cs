@@ -161,7 +161,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
                 }
 
                 var outputType = output.IsStdErr ? "stderr" : "stdout";
-                Debug.WriteLine($"Processing: [{outputType}] (Text = {output.Text.ToRepr()}, " +
+                Logger.Trace($"Processing: [{outputType}] (Text = {output.Text.ToRepr()}, " +
                                 $"Raw = {output.RawText?.ToRepr()}, " +
                                 $"CarriageReturn = {output.CarriageReturn}, " +
                                 $"CursorUp = {output.CursorUp}, " +
@@ -222,7 +222,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
             // See if we need to move the cursor
             if (lineStartOffset == writeCursor)
             {
-                Debug.WriteLine($"Cursor already at start for carriage return " +
+                Logger.Trace($"Cursor already at start for carriage return " +
                                 $"(offset = {lineStartOffset}, line = {currentLine.LineNumber})");
             }
             else
@@ -233,7 +233,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
                 var lineLength = lineEndOffset - lineStartOffset;
                 Document.Remove(lineStartOffset, lineLength);
                 
-                Debug.WriteLine($"Moving cursor to start for carriage return " +
+                Logger.Trace($"Moving cursor to start for carriage return " +
                                 $"({writeCursor} -> {lineStartOffset})");
                 writeCursor = lineStartOffset;
             }
@@ -254,7 +254,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
             if (currentLocation.Line == 1)
             {
                 // We are already on the first line, ignore
-                Debug.WriteLine($"Cursor up: Already on first line");
+                Logger.Trace("Cursor up: Already on first line");
             }
             else
             {
@@ -263,7 +263,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
                 var targetOffset = Document.GetOffset(targetLocation);
 
                 // Update cursor to target offset
-                Debug.WriteLine($"Cursor up: Moving (line {currentLocation.Line}, {writeCursor})" +
+                Logger.Trace($"Cursor up: Moving (line {currentLocation.Line}, {writeCursor})" +
                                 $" -> (line {targetLocation.Line}, {targetOffset})");
 
                 writeCursor = targetOffset;
@@ -280,7 +280,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
             var spaces = new string(' ', currentLine.Length);
             
             // Insert the text
-            Debug.WriteLine($"Erasing line {currentLine.LineNumber}: (length = {currentLine.Length})");
+            Logger.Trace($"Erasing line {currentLine.LineNumber}: (length = {currentLine.Length})");
             using (Document.RunUpdate())
             {
                 Document.Replace(currentLine.Offset, currentLine.Length, spaces);
@@ -322,7 +322,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
             if (currentLine.LineNumber < Document.LineCount)
             {
                 var nextLine = Document.GetLineByNumber(currentLine.LineNumber + 1);
-                Debug.WriteLine($"Moving cursor to start of next line " +
+                Logger.Trace($"Moving cursor to start of next line " +
                                 $"({writeCursor} -> {nextLine.Offset})");
                 writeCursor = nextLine.Offset;
             }
@@ -330,7 +330,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
             {
                 // Otherwise move to end of current line, and direct insert a newline
                 var lineEndOffset = currentLine.EndOffset;
-                Debug.WriteLine($"Moving cursor to end of current line " +
+                Logger.Trace($"Moving cursor to end of current line " +
                                 $"({writeCursor} -> {lineEndOffset})");
                 writeCursor = lineEndOffset;
                 DirectWriteToConsole(Environment.NewLine);
@@ -352,7 +352,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
             if (replaceLength > 0)
             {
                 var newText = text[..replaceLength];
-                Debug.WriteLine(
+                Logger.Trace(
                     $"Replacing: (cursor = {writeCursor}, length = {replaceLength}, " +
                     $"text = {Document.GetText(writeCursor, replaceLength).ToRepr()} " +
                     $"-> {newText.ToRepr()})");
@@ -366,7 +366,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
             if (remainingLength > 0)
             {
                 var textToInsert = text[replaceLength..];
-                Debug.WriteLine($"Inserting: (cursor = {writeCursor}, " +
+                Logger.Trace($"Inserting: (cursor = {writeCursor}, " +
                                 $"text = {textToInsert.ToRepr()})");
 
                 Document.Insert(writeCursor, textToInsert);
@@ -382,6 +382,8 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
     [Conditional("DEBUG")]
     private void DebugPrintDocument()
     {
+        if (!Logger.IsTraceEnabled) return;
+        
         var text = Document.Text;
         // Add a number for each line
         // Add an arrow line for where the cursor is, for example (cursor on offset 3):

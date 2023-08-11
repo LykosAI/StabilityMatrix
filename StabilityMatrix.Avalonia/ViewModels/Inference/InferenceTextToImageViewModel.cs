@@ -35,8 +35,7 @@ public partial class InferenceTextToImageViewModel : LoadableViewModelBase
     private readonly ServiceManager<ViewModelBase> vmFactory;
 
     public IInferenceClientManager ClientManager { get; }
-
-    public SeedCardViewModel SeedCardViewModel { get; }
+    
     public ImageGalleryCardViewModel ImageGalleryCardViewModel { get; }
     public PromptCardViewModel PromptCardViewModel { get; }
     public StackCardViewModel StackCardViewModel { get; }
@@ -60,8 +59,8 @@ public partial class InferenceTextToImageViewModel : LoadableViewModelBase
 
         // Get sub view models from service manager
         
-        SeedCardViewModel = vmFactory.Get<SeedCardViewModel>();        
-        SeedCardViewModel.GenerateNewSeed();
+        var seedCard = vmFactory.Get<SeedCardViewModel>();        
+        seedCard.GenerateNewSeed();
 
         ImageGalleryCardViewModel = vmFactory.Get<ImageGalleryCardViewModel>();
         PromptCardViewModel = vmFactory.Get<PromptCardViewModel>();
@@ -92,6 +91,8 @@ public partial class InferenceTextToImageViewModel : LoadableViewModelBase
                     })
                 });
             }),
+            // Seed
+            seedCard,
             // Batch Size
             vmFactory.Get<BatchSizeCardViewModel>(),
         });
@@ -102,6 +103,7 @@ public partial class InferenceTextToImageViewModel : LoadableViewModelBase
         var sampler = StackCardViewModel.GetCard<SamplerCardViewModel>();
         var batchCard = StackCardViewModel.GetCard<BatchSizeCardViewModel>();
         var modelCard = StackCardViewModel.GetCard<ModelCardViewModel>();
+        var seedCard = StackCardViewModel.GetCard<SeedCardViewModel>();
         
         var prompt = new Dictionary<string, ComfyNode>
         {
@@ -118,7 +120,7 @@ public partial class InferenceTextToImageViewModel : LoadableViewModelBase
                     ["positive"] = new object[] { "6", 0 },
                     ["sampler_name"] = sampler.SelectedSampler?.Name,
                     ["scheduler"] = "normal",
-                    ["seed"] = SeedCardViewModel.Seed,
+                    ["seed"] = seedCard.Seed,
                     ["steps"] = sampler.Steps
                 }
             },
@@ -207,9 +209,10 @@ public partial class InferenceTextToImageViewModel : LoadableViewModelBase
         }
 
         // If enabled, randomize the seed
-        if (SeedCardViewModel.IsRandomizeEnabled)
+        var seedCard = StackCardViewModel.GetCard<SeedCardViewModel>();
+        if (seedCard.IsRandomizeEnabled)
         {
-            SeedCardViewModel.GenerateNewSeed();
+            seedCard.GenerateNewSeed();
         }
 
         var client = ClientManager.Client;

@@ -33,6 +33,7 @@
       <PackageReference Include="pythonnet" Version="3.0.1" />
       <PackageReference Include="Refit" Version="7.0.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="7.0.0" />
+      <PackageReference Include="RockLib.Reflection.Optimized" Version="2.0.0" />
       <PackageReference Include="Salaros.ConfigParser" Version="0.3.8" />
       <PackageReference Include="Semver" Version="3.0.0-beta.0" />
       <PackageReference Include="Sentry.NLog" Version="3.33.1" />

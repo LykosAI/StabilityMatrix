@@ -264,6 +264,7 @@ public sealed class App : Application
         services.AddTransient<StackCardViewModel>();
         services.AddTransient<StackExpanderViewModel>();
         services.AddTransient<ModelCardViewModel>();
+        services.AddTransient<BatchSizeCardViewModel>();
         
         // Dialog factory
         services.AddSingleton<ServiceManager<ViewModelBase>>(provider =>
@@ -289,6 +290,7 @@ public sealed class App : Application
                 .Register(provider.GetRequiredService<StackExpanderViewModel>)
                 .Register(provider.GetRequiredService<UpscalerCardViewModel>)
                 .Register(provider.GetRequiredService<ModelCardViewModel>)
+                .Register(provider.GetRequiredService<BatchSizeCardViewModel>)
                 .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>));
     }
 
@@ -315,6 +317,7 @@ public sealed class App : Application
         services.AddTransient<StackExpander>();
         services.AddTransient<UpscalerCard>();
         services.AddTransient<ModelCard>();
+        services.AddTransient<BatchSizeCard>();
         
         // Dialogs
         services.AddTransient<SelectDataDirectoryDialog>();

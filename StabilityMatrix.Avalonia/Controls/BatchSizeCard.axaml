@@ -1,0 +1,72 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+        xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
+        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+        xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+        x:DataType="vmInference:BatchSizeCardViewModel">
+    
+    <Design.PreviewWith>
+        <StackPanel Spacing="8">
+            <controls:BatchSizeCard 
+                DataContext="{x:Static mocks:DesignData.BatchSizeCardViewModel}"/>
+            <controls:BatchSizeCard 
+                Width="280"
+                DataContext="{x:Static mocks:DesignData.BatchSizeCardViewModel}"/>
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|BatchSizeCard">
+        <!-- Set Defaults -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card Padding="8">
+                    <Grid Margin="8" ColumnDefinitions="*,*">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" >
+                                <TextBlock 
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,4,0"
+                                    Text="Batch Size"/>
+                                <icons:Icon
+                                    FontSize="12"
+                                    Value="fa-solid fa-table-cells-large"/>
+                            </StackPanel>
+                            <NumericUpDown 
+                                HorizontalAlignment="Stretch"
+                                Margin="0,4,4,0"
+                                MinWidth="120"
+                                Minimum="1"
+                                Increment="1"
+                                ParsingNumberStyle="Integer"
+                                Value="{Binding BatchSize}"
+                                ClipValueToMinMax="True"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1">
+                            <StackPanel Orientation="Horizontal" >
+                                <TextBlock 
+                                    VerticalAlignment="Center"
+                                    Margin="4,0,8,0"
+                                    Text="Batches"/>
+                                <icons:Icon
+                                    FontSize="14"
+                                    Value="fa-regular fa-images"/>
+                            </StackPanel>
+                            <NumericUpDown 
+                                HorizontalAlignment="Stretch"
+                                Margin="4,4,0,0"
+                                MinWidth="120"
+                                Minimum="1"
+                                Increment="1"
+                                ParsingNumberStyle="Integer"
+                                Value="{Binding BatchCount}"
+                                ClipValueToMinMax="True"/>
+                        </StackPanel>
+
+                    </Grid>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

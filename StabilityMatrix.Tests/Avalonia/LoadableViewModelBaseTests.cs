@@ -24,11 +24,16 @@ public class TestLoadableViewModel : LoadableViewModelBase
 public class TestLoadableViewModelReadOnly : LoadableViewModelBase
 {
     public int ReadOnly { get; }
-    
+
     public TestLoadableViewModelReadOnly(int readOnly)
     {
         ReadOnly = readOnly;
     }
+}
+
+public class TestLoadableViewModelReadOnlyLoadable : LoadableViewModelBase
+{
+    public TestLoadableViewModel ReadOnlyLoadable { get; } = new();
 }
 
 public partial class TestLoadableViewModelObservable : LoadableViewModelBase
@@ -227,5 +232,23 @@ public class LoadableViewModelBaseTests
         
         // Read only property should have been ignored
         Assert.AreEqual(123, vm2.ReadOnly);
+    }
+    
+    [TestMethod]
+    public void TestLoadStateFromJsonObject_ReadOnlyLoadable()
+    {
+        var vm = new TestLoadableViewModelReadOnlyLoadable
+        {
+            ReadOnlyLoadable =
+            {
+                Included = "abc-123"
+            }
+        };
+
+        var state = vm.SaveStateToJsonObject();
+        
+        // Check readonly loadable property was serialized
+        Assert.AreEqual(1, state.Count);
+        Assert.AreEqual("abc-123", state["ReadOnlyLoadable"].Deserialize<TestLoadableViewModel>()!.Included);
     }
 }

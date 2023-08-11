@@ -27,11 +27,16 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
     {
         nameof(HasErrors),
     };
+    
+    protected static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        IgnoreReadOnlyProperties = true,
+    };
 
     private static bool ShouldIgnoreProperty(PropertyInfo property)
     {
-        // Check not read-only
-        if (property.SetMethod is null)
+        // Skip if read-only and not IJsonLoadableState
+        if (property.SetMethod is null && !typeof(IJsonLoadableState).IsAssignableFrom(property.PropertyType))
         {
             Logger.Trace("Skipping {Property} - read-only", property.Name);
             return true;
@@ -123,7 +128,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
             {
                 Logger.Trace("Loading {Property} ({Type})", property.Name, property.PropertyType);
                 
-                var propertyValue = value.Deserialize(property.PropertyType);
+                var propertyValue = value.Deserialize(property.PropertyType, SerializerOptions);
                 property.SetValue(this, propertyValue);
             }
         }
@@ -176,7 +181,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
                 var value = property.GetValue(this);
                 if (value is not null)
                 {
-                    state.Add(property.Name, JsonSerializer.SerializeToNode(value));
+                    state.Add(property.Name, JsonSerializer.SerializeToNode(value, SerializerOptions));
                 }
             }
         }

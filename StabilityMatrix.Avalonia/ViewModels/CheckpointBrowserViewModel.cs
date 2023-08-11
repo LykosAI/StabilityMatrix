@@ -228,13 +228,18 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
                         return cachedViewModel;
                     }
 
-                    var newCard = new CheckpointBrowserCardViewModel(model,
-                        downloadService, settingsManager, dialogFactory, notificationService,
-                        viewModel =>
+                    var newCard = dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
+                    {
+                        vm.CivitModel = model;
+                        vm.OnDownloadStart = viewModel =>
                         {
                             if (cache.Get(viewModel.CivitModel.Id) != null) return;
                             cache.Add(viewModel.CivitModel.Id, viewModel);
-                        });
+                        };
+
+                        return vm;
+                    });
+                    
                     return newCard;
                 }).ToList();
             

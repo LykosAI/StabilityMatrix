@@ -7,6 +7,8 @@
                           xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
                           xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
                           xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                          xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
+                          xmlns:faicon="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                           x:DataType="viewModels:PackageManagerViewModel"
                           x:CompileBindings="True"
@@ -14,121 +16,151 @@
                           x:Class="StabilityMatrix.Avalonia.Views.PackageManagerPage">
 
     <Grid Margin="16" RowDefinitions="Auto,*">
-        <StackPanel
-            Grid.Row="0"
-            Orientation="Vertical"
-            IsVisible="{Binding ProgressBarVisibility, FallbackValue=True}">
+        <ItemsRepeater
+            ItemsSource="{Binding Packages}">
+            <ItemsRepeater.Layout>
+                <UniformGridLayout MinColumnSpacing="12" MinRowSpacing="12" />
+            </ItemsRepeater.Layout>
+            <ItemsRepeater.ItemTemplate>
+                <DataTemplate DataType="{x:Type packageManager:PackageCardViewModel}">
+                    <controls:Card Padding="8">
+                        <Grid RowDefinitions="Auto, Auto, Auto, Auto"
+                              ColumnDefinitions="Auto">
 
-            <ProgressBar
-                IsIndeterminate="{Binding IsIndeterminate, FallbackValue=False}"
-                Maximum="100"
-                Value="{Binding ProgressValue, FallbackValue=10}"
-                Width="500" />
-            <TextBlock
-                HorizontalAlignment="Center"
-                Padding="8"
-                Text="{Binding ProgressText, FallbackValue=Installing...}" />
-        </StackPanel>
+                            <TextBlock Grid.Row="0"
+                                       Grid.Column="0"
+                                       Margin="0,4,4,4"
+                                       Text="{Binding Package.DisplayName}"
+                                       TextAlignment="Left" />
+                            <Button
+                                Grid.Row="0"
+                                HorizontalContentAlignment="Right"
+                                HorizontalAlignment="Right"
+                                Margin="8,4,0,4"
+                                Classes="transparent"
+                                BorderThickness="0">
+                                <ui:SymbolIcon FontSize="18" Symbol="MoreVertical" />
+                                <Button.Flyout>
+                                    <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                        <MenuItem Header="Check for Update">
+                                            <MenuItem.Icon>
+                                                <ui:SymbolIcon Symbol="Refresh" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <Separator />
+                                        <MenuItem Header="Uninstall"
+                                                  Command="{Binding Uninstall}">
+                                            <MenuItem.Icon>
+                                                <ui:SymbolIcon Symbol="Delete" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </MenuFlyout>
+                                </Button.Flyout>
+                            </Button>
 
-        <StackPanel
-            Grid.Row="1"
-            HorizontalAlignment="Left"
-            Margin="16"
-            Orientation="Horizontal">
-            <StackPanel Orientation="Vertical">
-                <Button
-                    Command="{Binding ShowInstallDialogCommand}"
-                    Height="40"
-                    HorizontalAlignment="Stretch"
-                    Margin="0,0,0,16"
-                    Classes="success"
-                    VerticalContentAlignment="Center">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="Add" />
-                        <Label
-                            Content="Add Package"
-                            Margin="8,0,0,0"
-                            VerticalContentAlignment="Center" />
-                    </StackPanel>
-                </Button>
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="0"
+                                       Margin="2,-8,0,0"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding Package.DisplayVersion}" />
 
-                <ListBox
-                    ItemsSource="{Binding Packages}"
-                    SelectedItem="{Binding SelectedPackage, Mode=TwoWay}"
-                    IsVisible="{Binding !!Packages.Count}">
+                            <controls:BetterAdvancedImage
+                                Grid.Row="2"
+                                Grid.Column="0"
+                                Margin="0,8,0,8"
+                                Height="160"
+                                Width="200"
+                                CornerRadius="4"
+                                HorizontalAlignment="Center"
+                                VerticalContentAlignment="Top"
+                                HorizontalContentAlignment="Center"
+                                Source="{Binding CardImage}"
+                                Stretch="UniformToFill" />
 
-                    <ListBox.Template>
-                        <ControlTemplate>
-                            <Border
-                                BorderBrush="#FFCCCCCC"
-                                BorderThickness="1"
-                                CornerRadius="5">
-                                <ItemsPresenter />
-                            </Border>
-                        </ControlTemplate>
-                    </ListBox.Template>
-
-                    <ListBox.ItemTemplate>
-                        <DataTemplate DataType="{x:Type models:InstalledPackage}">
-                            <StackPanel Margin="8" VerticalAlignment="Top">
-                                <TextBlock Margin="0,5,0,5" Text="{Binding DisplayName}" />
-                                <TextBlock Margin="0,0,0,5" Text="{Binding DisplayVersion}" />
+                            <Grid Grid.Row="3" Grid.Column="0"
+                                  IsVisible="{Binding IsUpdateAvailable}"
+                                  ColumnDefinitions="*, *">
+                                <Button Grid.Column="0" Classes="accent"
+                                        VerticalAlignment="Bottom"
+                                        HorizontalAlignment="Stretch"
+                                        Command="{Binding Launch}">
+                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
+                                        <faicon:Icon Value="fa-solid fa-rocket"
+                                                     Margin="0,0,8,0"
+                                                     FontSize="14" />
+                                        <TextBlock Text="Launch" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="1" Classes="accent"
+                                        VerticalAlignment="Bottom"
+                                        HorizontalAlignment="Stretch">
+                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
+                                        <faicon:Icon Value="fa-solid fa-download"
+                                                     Margin="0,0,8,0"
+                                                     FontSize="14" />
+                                        <TextBlock Text="Update" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                            
+                            <!-- Big launch button -->
+                            <Button Grid.Row="3" Grid.Column="0" Classes="accent"
+                                    VerticalAlignment="Bottom"
+                                    IsVisible="{Binding !IsUpdateAvailable}"
+                                    Command="{Binding Launch}"
+                                    HorizontalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
+                                    <faicon:Icon Value="fa-solid fa-rocket"
+                                                 Margin="0,0,8,0"
+                                                 FontSize="14" />
+                                    <TextBlock Text="Launch" />
+                                </StackPanel>
+                            </Button>
+                            
+                            <!-- Update overlay -->
+                            <Rectangle
+                                Grid.Row="0" Grid.RowSpan="4"
+                                Grid.Column="0"
+                                Fill="#DD000000"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                IsVisible="{Binding IsProgressVisible}" />
+                            <StackPanel Grid.Row="0" Grid.RowSpan="4"
+                                        Grid.Column="0"
+                                        HorizontalAlignment="Stretch"
+                                        Orientation="Vertical"
+                                        VerticalAlignment="Center"
+                                        IsVisible="{Binding IsProgressVisible}">
+                                <controls:ProgressRing
+                                    HorizontalAlignment="Center"
+                                    IsIndeterminate="{Binding IsIndeterminate}"
+                                    Width="120"
+                                    Height="120"
+                                    StartAngle="90"
+                                    EndAngle="450"
+                                    Value="{Binding Value}"
+                                    VerticalAlignment="Center" />
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    Margin="0,8,0,0"
+                                    Text="{Binding Text, TargetNullValue=Updating...}"
+                                    VerticalAlignment="Center" />
                             </StackPanel>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                        </Grid>
+                    </controls:Card>
+                </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+        </ItemsRepeater>
+        <Button Grid.Row="1"
+                Classes="transparent"
+                VerticalAlignment="Bottom"
+                Margin="0, 8, 0, 0"
+                HorizontalAlignment="Stretch"
+                Command="{Binding ShowInstallDialog}">
+            <StackPanel Orientation="Horizontal" Margin="8">
+                <ui:SymbolIcon FontSize="18" Symbol="Add" />
+                <TextBlock Margin="4,0,0,0" Text="Add Package" />
             </StackPanel>
-
-            <StackPanel Margin="32,0,0,0" Orientation="Vertical">
-                <TextBlock
-                    FontSize="24"
-                    FontWeight="Bold"
-                    Text="{Binding SelectedPackage.DisplayName,
-                    FallbackValue='Click &quot;Add Package&quot; to install a package'}" />
-                <TextBlock FontSize="12" Margin="0,5,0,5">
-                    <Run Text="{Binding SelectedPackage.PackageName, FallbackValue=''}" />
-                    <Run Text="{Binding SelectedPackage.DisplayVersion, FallbackValue=''}" />
-                </TextBlock>
-                <TextBlock
-                    FontSize="12"
-                    Margin="0,5,0,5"
-                    Text="{Binding SelectedPackage.FullPath, FallbackValue=''}" />
-                
-                <UniformGrid 
-                    Margin="0,16,0,0" 
-                    Columns="2" 
-                    MinHeight="48" 
-                    MinWidth="208"
-                    HorizontalAlignment="Left">
-                    <Button
-                        Command="{Binding Launch}"
-                        Content="{Binding InstallButtonText}"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        Margin="0,0,8,0"
-                        IsEnabled="{Binding InstallButtonEnabled}"
-                        IsVisible="{Binding InstallButtonEnabled}"
-                        Classes="success"/>
-                    <Button
-                        Command="{Binding Uninstall}"
-                        Content="Uninstall"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        Margin="8,0,0,0"
-                        Classes="danger"
-                        IsEnabled="{Binding !IsUninstalling}"
-                        IsVisible="{Binding InstallButtonEnabled}"/>
-                </UniformGrid>
-                
-                <StackPanel Orientation="Horizontal" IsVisible="{Binding IsUninstalling}">
-                    <controls:ProgressRing Height="24" Width="24"
-                                           Margin="8, 16, 8, 8"
-                                           VerticalAlignment="Center"
-                                           BorderThickness="4"
-                                           IsIndeterminate="True" HorizontalAlignment="Left" />
-                    <TextBlock Text="Uninstalling..." VerticalAlignment="Center" Margin="0,8,0,0" />
-                </StackPanel>
-            </StackPanel>
-        </StackPanel>
+        </Button>
     </Grid>
 </controls:UserControlBase>

@@ -5,7 +5,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 /// <summary>
 /// Generic view model for progress reporting.
 /// </summary>
-public partial class ProgressViewModel : ObservableObject
+public partial class ProgressViewModel : ViewModelBase
 {
     [ObservableProperty, NotifyPropertyChangedFor(nameof(IsTextVisible))]
     private string? text;

@@ -31,6 +31,9 @@ namespace StabilityMatrix.Avalonia;
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class Program
 {
+    private static Logger? _logger;
+    private static Logger Logger => _logger ??= LogManager.GetCurrentClassLogger();
+    
     public static AppArgs Args { get; } = new();
     
     public static bool IsDebugBuild { get; private set; }
@@ -60,6 +63,8 @@ public class Program
         {
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         }
+        
+        TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
         
         // Configure Sentry
         if (!Args.NoSentry && (!Debugger.IsAttached || Args.DebugSentry))
@@ -157,13 +162,21 @@ public class Program
 #endif
         });
     }
-    
+
+    private static void TaskScheduler_UnobservedTaskException(object? sender,
+        UnobservedTaskExceptionEventArgs e)
+    {
+        if (e.Exception is Exception ex)
+        {
+            Logger.Error(ex, "Unobserved task exception");
+        }
+    }
+
     private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
         if (e.ExceptionObject is not Exception ex) return;
         
-        var logger = LogManager.GetCurrentClassLogger();
-        logger.Fatal(ex, "Unhandled {Type}: {Message}", ex.GetType().Name, ex.Message);
+        Logger.Fatal(ex, "Unhandled {Type}: {Message}", ex.GetType().Name, ex.Message);
         
         if (SentrySdk.IsEnabled)
         {

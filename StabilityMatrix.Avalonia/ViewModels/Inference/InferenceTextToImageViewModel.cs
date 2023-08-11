@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
@@ -21,6 +22,7 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
+#pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -35,23 +37,15 @@ public partial class InferenceTextToImageViewModel : LoadableViewModelBase
     public IInferenceClientManager ClientManager { get; }
 
     public SeedCardViewModel SeedCardViewModel { get; }
-
     public ImageGalleryCardViewModel ImageGalleryCardViewModel { get; }
     public PromptCardViewModel PromptCardViewModel { get; }
     public StackCardViewModel StackCardViewModel { get; }
 
-    [ObservableProperty]
-    private string? selectedModelName;
-
-    [ObservableProperty] 
-    private int batchSize = 1;
-
-    [ObservableProperty]
-    private int batchCount = 1;
-
+    [JsonIgnore]
     public ProgressViewModel OutputProgress { get; } = new();
 
     [ObservableProperty]
+    [property: JsonIgnore]
     private string? outputImageSource;
 
     public InferenceTextToImageViewModel(
@@ -97,13 +91,17 @@ public partial class InferenceTextToImageViewModel : LoadableViewModelBase
                         samplerCard.IsDenoiseStrengthEnabled = true;
                     })
                 });
-            })
+            }),
+            // Batch Size
+            vmFactory.Get<BatchSizeCardViewModel>(),
         });
     }
 
     private Dictionary<string, ComfyNode> GetCurrentPrompt()
     {
         var sampler = StackCardViewModel.GetCard<SamplerCardViewModel>();
+        var batchCard = StackCardViewModel.GetCard<BatchSizeCardViewModel>();
+        var modelCard = StackCardViewModel.GetCard<ModelCardViewModel>();
         
         var prompt = new Dictionary<string, ComfyNode>
         {
@@ -127,14 +125,17 @@ public partial class InferenceTextToImageViewModel : LoadableViewModelBase
             ["4"] = new()
             {
                 ClassType = "CheckpointLoaderSimple",
-                Inputs = new Dictionary<string, object?> { ["ckpt_name"] = SelectedModelName }
+                Inputs = new Dictionary<string, object?>
+                {
+                    ["ckpt_name"] = modelCard.SelectedModelName
+                }
             },
             ["5"] = new()
             {
                 ClassType = "EmptyLatentImage",
                 Inputs = new Dictionary<string, object?>
                 {
-                    ["batch_size"] = BatchSize,
+                    ["batch_size"] = batchCard.BatchSize,
                     ["height"] = sampler.Height,
                     ["width"] = sampler.Width,
                 }
@@ -301,38 +302,5 @@ public partial class InferenceTextToImageViewModel : LoadableViewModelBase
         {
             Logger.Debug($"[Image Generation Canceled] {e.Message}");
         }
-    }
-
-    /// <inheritdoc />
-    public override void LoadStateFromJsonObject(JsonObject state)
-    {
-        var model = DeserializeModel<InferenceTextToImageModel>(state);
-        
-        SelectedModelName = model.SelectedModelName;
-
-        if (model.StackCardState != null)
-        {
-            StackCardViewModel.LoadStateFromJsonObject(model.StackCardState);
-        }
-        if (model.SeedCardState != null)
-        {
-            SeedCardViewModel.LoadStateFromJsonObject(model.SeedCardState);
-        }
-        if (model.PromptCardState != null)
-        {
-            PromptCardViewModel.LoadStateFromJsonObject(model.PromptCardState);
-        }
-    }
-
-    /// <inheritdoc />
-    public override JsonObject SaveStateToJsonObject()
-    {
-        return SerializeModel(new InferenceTextToImageModel
-        {
-            SelectedModelName = SelectedModelName,
-            StackCardState = StackCardViewModel.SaveStateToJsonObject(),
-            SeedCardState = SeedCardViewModel.SaveStateToJsonObject(),
-            PromptCardState = PromptCardViewModel.SaveStateToJsonObject()
-        });
     }
 }

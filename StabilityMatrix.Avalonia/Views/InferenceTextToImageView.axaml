@@ -34,7 +34,7 @@
 
     </controls:UserControlBase.Styles>
 
-    <Grid>
+    <Grid Margin="2,0,2,8">
         <DockControl
             x:Name="Dock"
             InitializeFactory="True"
@@ -120,12 +120,6 @@
                                 <!--  Prompt card  -->
                                 <controls:PromptCard
                                     DataContext="{Binding PromptCardViewModel}" />
-
-                                <!-- Seed Card -->
-                                <controls:SeedCard 
-                                    Grid.Row="1"
-                                    Margin="0,6,0,0"
-                                    DataContext="{Binding SeedCardViewModel}"/>
                                 
                                 <!--  Generate Buttons  -->
                                 <StackPanel Grid.Row="2" Margin="0,6,0,0">
@@ -203,9 +197,21 @@
                             x:DataType="Tool"
                             Id="ImageGalleryTool"
                             CanClose="False">
-                            <controls:ImageGalleryCard
-                                Opacity="1"
-                                DataContext="{ReflectionBinding ElementName=Dock, Path=DataContext.ImageGalleryCardViewModel}" />
+                            
+                            <Grid
+                                x:CompileBindings="False"
+                                DataContext="{Binding ElementName=Dock, Path=DataContext}">
+                                <ProgressBar
+                                    Margin="2,1,2,4"
+                                    VerticalAlignment="Top"
+                                    DataContext="{Binding OutputProgress}"
+                                    IsVisible="{Binding IsProgressVisible}"
+                                    Maximum="{Binding Maximum}"
+                                    Value="{Binding Value}" />
+                                <controls:ImageGalleryCard
+                                    Grid.Row="0"
+                                    DataContext="{Binding ImageGalleryCardViewModel}" />
+                            </Grid>
                         </Tool>
                     </ToolDock>
 

@@ -30,6 +30,12 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 
     private static bool ShouldIgnoreProperty(PropertyInfo property)
     {
+        // Check not read-only
+        if (property.SetMethod is null)
+        {
+            Logger.Trace("Skipping {Property} - read-only", property.Name);
+            return true;
+        }
         // Check not JsonIgnore
         if (property.GetCustomAttributes(typeof(JsonIgnoreAttribute), true).Length > 0)
         {
@@ -58,6 +64,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
     /// For the following properties on this class, we will try to set from the JSON object:
     /// <list type="bullet">
     /// <item>Public</item>
+    /// <item>Not read-only</item>
     /// <item>Not marked with [JsonIgnore]</item>
     /// <item>Not a type within the SerializerIgnoredTypes</item>
     /// <item>Not a name within the SerializerIgnoredNames</item>
@@ -128,6 +135,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
     /// save all properties that are:
     /// <list type="bullet">
     /// <item>Public</item>
+    /// <item>Not read-only</item>
     /// <item>Not marked with [JsonIgnore]</item>
     /// <item>Not a type within the SerializerIgnoredTypes</item>
     /// <item>Not a name within the SerializerIgnoredNames</item>

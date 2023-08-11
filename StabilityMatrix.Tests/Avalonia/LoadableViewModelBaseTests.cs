@@ -21,6 +21,16 @@ public class TestLoadableViewModel : LoadableViewModelBase
     public int Ignored { get; set; }
 }
 
+public class TestLoadableViewModelReadOnly : LoadableViewModelBase
+{
+    public int ReadOnly { get; }
+    
+    public TestLoadableViewModelReadOnly(int readOnly)
+    {
+        ReadOnly = readOnly;
+    }
+}
+
 public partial class TestLoadableViewModelObservable : LoadableViewModelBase
 {
     [ObservableProperty]
@@ -199,5 +209,23 @@ public class LoadableViewModelBaseTests
         Assert.AreEqual("abc", loadedNested.Included);
         Assert.AreEqual(123, loadedNested.Id);
         Assert.AreEqual(0, loadedNested.Ignored);
+    }
+    
+    [TestMethod]
+    public void TestLoadStateFromJsonObject_ReadOnly()
+    {
+        var vm = new TestLoadableViewModelReadOnly(456);
+        
+        var state = vm.SaveStateToJsonObject();
+        
+        // Check no properties were serialized
+        Assert.AreEqual(0, state.Count);
+        
+        // Create a new instance and load the state
+        var vm2 = new TestLoadableViewModelReadOnly(123);
+        vm2.LoadStateFromJsonObject(state);
+        
+        // Read only property should have been ignored
+        Assert.AreEqual(123, vm2.ReadOnly);
     }
 }

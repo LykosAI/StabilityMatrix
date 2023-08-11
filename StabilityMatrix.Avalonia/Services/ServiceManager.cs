@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace StabilityMatrix.Avalonia.Services;
@@ -128,5 +129,14 @@ public class ServiceManager<T>
         var instance = Get<TService>();
         initializer(instance);
         return instance;
+    }
+    
+    /// <summary>
+    /// Get a view model instance with an initializer parameter, but asynchronously 
+    /// </summary>
+    public async Task<TService> GetAsync<TService>(Func<TService, Task<TService>> initializer) where TService : T
+    {
+        var instance = Get<TService>();
+        return await initializer(instance);
     }
 }

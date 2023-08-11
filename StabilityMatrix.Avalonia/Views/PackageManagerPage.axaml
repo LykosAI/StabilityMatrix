@@ -29,15 +29,16 @@
 
                             <TextBlock Grid.Row="0"
                                        Grid.Column="0"
-                                       Margin="0,4,4,4"
                                        Text="{Binding Package.DisplayName}"
                                        TextAlignment="Left" />
                             <Button
                                 Grid.Row="0"
+                                Grid.RowSpan="2"
                                 HorizontalContentAlignment="Right"
                                 HorizontalAlignment="Right"
-                                Margin="8,4,0,4"
+                                Margin="8,-8,0,4"
                                 Classes="transparent"
+                                Width="24"
                                 BorderThickness="0">
                                 <ui:SymbolIcon FontSize="18" Symbol="MoreVertical" />
                                 <Button.Flyout>
@@ -60,9 +61,9 @@
 
                             <TextBlock Grid.Row="1"
                                        Grid.Column="0"
-                                       Margin="2,-8,0,0"
+                                       Margin="2,0,0,0"
                                        VerticalAlignment="Center"
-                                       Text="{Binding Package.DisplayVersion}" />
+                                       Text="{Binding InstalledVersion}" />
 
                             <controls:BetterAdvancedImage
                                 Grid.Row="2"
@@ -93,7 +94,8 @@
                                 </Button>
                                 <Button Grid.Column="1" Classes="accent"
                                         VerticalAlignment="Bottom"
-                                        HorizontalAlignment="Stretch">
+                                        HorizontalAlignment="Stretch"
+                                        Command="{Binding Update}">
                                     <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
                                         <faicon:Icon Value="fa-solid fa-download"
                                                      Margin="0,0,8,0"
@@ -125,11 +127,11 @@
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
                                 IsVisible="{Binding IsProgressVisible}" />
-                            <StackPanel Grid.Row="0" Grid.RowSpan="4"
+                            <Grid Grid.Row="0" Grid.RowSpan="4"
                                         Grid.Column="0"
                                         HorizontalAlignment="Stretch"
-                                        Orientation="Vertical"
                                         VerticalAlignment="Center"
+                                        RowDefinitions="Auto, *"
                                         IsVisible="{Binding IsProgressVisible}">
                                 <controls:ProgressRing
                                     HorizontalAlignment="Center"
@@ -140,12 +142,15 @@
                                     EndAngle="450"
                                     Value="{Binding Value}"
                                     VerticalAlignment="Center" />
-                                <TextBlock
+                                <TextBlock Grid.Row="1"
                                     HorizontalAlignment="Center"
-                                    Margin="0,8,0,0"
-                                    Text="{Binding Text, TargetNullValue=Updating...}"
+                                    Margin="8,8,8,0"
+                                    TextAlignment="Center"
+                                    Width="180"
+                                    Text="{Binding Text, TargetNullValue=Updating so and so to the latest version... 5%}"
+                                    TextWrapping="Wrap"
                                     VerticalAlignment="Center" />
-                            </StackPanel>
+                            </Grid>
                         </Grid>
                     </controls:Card>
                 </DataTemplate>

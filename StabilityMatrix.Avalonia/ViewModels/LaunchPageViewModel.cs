@@ -135,10 +135,8 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
                 NotificationType.Error);
             return;
         }
-        
-        OnLoaded();
-        if (SelectedPackage is null) return;
-        
+
+        SelectedPackage = InstalledPackages.FirstOrDefault(x => x.Id == e);
         LaunchAsync().SafeFireAndForget();
     }
 

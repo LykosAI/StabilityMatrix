@@ -1,7 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using NLog;
@@ -25,6 +28,7 @@ public partial class PackageCardViewModel : ProgressViewModel
     [ObservableProperty] private InstalledPackage? package;
     [ObservableProperty] private Uri cardImage;
     [ObservableProperty] private bool isUpdateAvailable;
+    [ObservableProperty] private string installedVersion;
 
     public PackageCardViewModel(IPackageFactory packageFactory,
         INotificationService notificationService, ISettingsManager settingsManager)
@@ -41,6 +45,12 @@ public partial class PackageCardViewModel : ProgressViewModel
 
         var basePackage = packageFactory[value.PackageName];
         CardImage = basePackage?.PreviewImageUri ?? Assets.NoImage;
+        InstalledVersion = value.DisplayVersion ?? "Unknown";
+    }
+
+    public override async Task OnLoadedAsync()
+    {
+        IsUpdateAvailable = await HasUpdate();
     }
 
     public void Launch()
@@ -49,7 +59,6 @@ public partial class PackageCardViewModel : ProgressViewModel
             return;
         
         settingsManager.Transaction(s => s.ActiveInstalledPackageId = Package.Id);
-            
         EventManager.Instance.RequestPageChange(typeof(LaunchPageViewModel));
         EventManager.Instance.OnPackageLaunchRequested(Package.Id);
     }
@@ -100,7 +109,7 @@ public partial class PackageCardViewModel : ProgressViewModel
     public async Task Update()
     {
         if (Package == null) return;
-        var basePackage = packageFactory.FindPackageByName(Package.PackageName);
+        var basePackage = packageFactory[Package.PackageName!];
         if (basePackage == null)
         {
             logger.Error("Could not find package {SelectedPackagePackageName}", 
@@ -108,7 +117,7 @@ public partial class PackageCardViewModel : ProgressViewModel
             return;
         }
 
-        Text = $"Updating {Package.DisplayName} to latest version...";
+        Text = $"Updating {Package.DisplayName}";
         basePackage.InstallLocation = Package.FullPath!;
         var progress = new Progress<ProgressReport>(progress =>
         {
@@ -116,7 +125,7 @@ public partial class PackageCardViewModel : ProgressViewModel
             
             Value = percent;
             IsIndeterminate = progress.IsIndeterminate;
-            Text = $"Updating {Package.DisplayName} to latest version... {percent:N0}%";
+            Text = $"Updating {Package.DisplayName}";
             
             EventManager.Instance.OnGlobalProgressChanged(percent);
         });
@@ -146,6 +155,10 @@ public partial class PackageCardViewModel : ProgressViewModel
         
         Package.UpdateAvailable = false;
         IsUpdateAvailable = false;
+        IsIndeterminate = false;
+        InstalledVersion = settingsManager.Settings.InstalledPackages
+            .First(x => x.Id == Package.Id).DisplayVersion ?? "Unknown";
+        Value = 0;
     }
     
     /// <summary>
@@ -232,19 +245,23 @@ public partial class PackageCardViewModel : ProgressViewModel
 
         var basePackage = packageFactory[Package.PackageName!];
         if (basePackage == null) return false;
-        
-        var canCheckUpdate = Package.LastUpdateCheck == null || 
+
+        var canCheckUpdate = Package.LastUpdateCheck == null ||
                              Package.LastUpdateCheck < DateTime.Now.AddMinutes(-15);
-        
+
         if (!canCheckUpdate) return false;
-        
-        var hasUpdate = await basePackage.CheckForUpdates(Package);
-        Package.UpdateAvailable = hasUpdate;
-        Package.LastUpdateCheck = DateTimeOffset.Now;
-        IsUpdateAvailable = true;
-        settingsManager.SetLastUpdateCheck(Package);
+        try
+        {
 
-        return hasUpdate;
-
+            var hasUpdate = await basePackage.CheckForUpdates(Package);
+            Package.UpdateAvailable = hasUpdate;
+            Package.LastUpdateCheck = DateTimeOffset.Now;
+            settingsManager.SetLastUpdateCheck(Package);
+            return hasUpdate;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
     }
 }

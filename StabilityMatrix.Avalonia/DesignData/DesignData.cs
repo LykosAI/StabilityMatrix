@@ -11,6 +11,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Helper;
@@ -254,7 +255,11 @@ public static class DesignData
     {
         get
         {
+            var settings = Services.GetRequiredService<ISettingsManager>();
             var vm = Services.GetRequiredService<PackageManagerViewModel>();
+            vm.Packages = new ObservableCollection<PackageCardViewModel>(
+                settings.Settings.InstalledPackages.Select(p =>
+                    DialogFactory.Get<PackageCardViewModel>(viewModel => viewModel.Package = p)));
             vm.Packages.First().IsUpdateAvailable = true;
             return vm;
         }

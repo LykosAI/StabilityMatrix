@@ -4,6 +4,7 @@
         xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
         xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
         xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+        xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
         x:DataType="vmInference:PromptCardViewModel">
     <Design.PreviewWith>
         <Grid Height="600" Width="600">
@@ -11,46 +12,91 @@
         </Grid>
     </Design.PreviewWith>
 
+    <Styles.Resources>
+        <ExperimentalAcrylicMaterial
+            x:Key="AcrylicMaterial"
+            FallbackColor="{DynamicResource ThemeBackgroundColor}"
+            TintColor="Black"
+            TintOpacity="0.78"
+            MaterialOpacity="0.9"
+            BackgroundSource="Digger" />
+    </Styles.Resources>
+    
     <Style Selector="controls|PromptCard">
         <!-- Set Defaults -->
         <Setter Property="Template">
             <ControlTemplate>
-                <controls:Card Padding="8" HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
+                <controls:Card Padding="12" HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
                     <controls:Card.Styles>
                         <Style Selector="avaloniaEdit|TextEditor">
                             <Setter Property="Margin" Value="0,8,0,8"/>
                             <Setter Property="CornerRadius" Value="8" />
+                            <Setter Property="BorderThickness" Value="4"/>
                             <Setter Property="LineNumbersForeground" Value="DarkSlateGray"/>
                             <Setter Property="ShowLineNumbers" Value="True"/>
                             <Setter Property="WordWrap" Value="True"/>
                             <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
-                            <Setter Property="Background" Value="{DynamicResource ScrollBarTrackStroke}" />
+                            <!--<Setter Property="Background" Value="{DynamicResource ScrollBarTrackStroke}" />-->
                         </Style>
                     </controls:Card.Styles>
                     
-                    <Grid Margin="4,8" RowDefinitions="Auto,*,Auto,*">
+                    <Grid RowDefinitions="*,16,*">
                         <!-- Prompt -->
-                        <TextBlock
-                            Grid.Row="0"
-                            Margin="4"
-                            FontSize="14"
-                            Text="Prompt" />
-                        <avaloniaEdit:TextEditor
-                            x:Name="PromptEditor"
-                            Grid.Row="1"
-                            Document="{Binding PromptDocument}"
-                            FontFamily="Cascadia Code,Consolas,Menlo,Monospace"/>
+                        <Grid RowDefinitions="Auto,*" ColumnDefinitions="*,Auto">
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Margin="4,0,4,8" 
+                                Orientation="Horizontal">
+                                <TextBlock FontSize="14" Text="Prompt"/>
+                                <icons:Icon Value="fa-solid fa-caret-up" Margin="8,0" FontSize="10" />
+                            </StackPanel>
+                            
+                            <ExperimentalAcrylicBorder
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                VerticalAlignment="Stretch"
+                                Material="{StaticResource AcrylicMaterial}"
+                                CornerRadius="4">
+                            
+                                <avaloniaEdit:TextEditor
+                                    x:Name="PromptEditor"
+                                    Document="{Binding PromptDocument}"
+                                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace"/>
+                            
+                            </ExperimentalAcrylicBorder>
+                        </Grid>
+                        
+                        <GridSplitter 
+                            Grid.Row="1" 
+                            BorderThickness="1" 
+                            VerticalAlignment="Center"
+                            Opacity="0.3"
+                            MaxWidth="45"
+                            CornerRadius="4"/>
+                        
                         <!-- Negative Prompt -->
-                        <TextBlock
-                            Grid.Row="2"
-                            Margin="4"
-                            FontSize="14"
-                            Text="Negative Prompt" />
-                        <avaloniaEdit:TextEditor
-                            x:Name="NegativePromptEditor"
-                            Grid.Row="3"
-                            Document="{Binding NegativePromptDocument}"
-                            FontFamily="Cascadia Code,Consolas,Menlo,Monospace"/>
+                        <Grid Grid.Row="2" RowDefinitions="Auto,*">
+                            <StackPanel Margin="4,0,4,8" Orientation="Horizontal">
+                                <TextBlock FontSize="14" Text="Negative Prompt"/>
+                                <icons:Icon Value="fa-solid fa-caret-down" Margin="8,0" FontSize="10" />
+                            </StackPanel>
+                        
+                            <ExperimentalAcrylicBorder
+                                Grid.Row="1"
+                                VerticalAlignment="Stretch"
+                                Material="{StaticResource AcrylicMaterial}"
+                                CornerRadius="4">
+                            
+                                <avaloniaEdit:TextEditor
+                                    x:Name="NegativePromptEditor"
+                                    Document="{Binding NegativePromptDocument}"
+                                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace"/>
+                            
+                            </ExperimentalAcrylicBorder>
+                        </Grid>
                     </Grid>
                 </controls:Card>
             </ControlTemplate>

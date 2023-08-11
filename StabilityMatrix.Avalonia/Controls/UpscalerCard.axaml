@@ -24,9 +24,9 @@
                             <TextBlock
                                 Grid.Row="0"
                                 Grid.Column="0"
-                                Margin="0,0,0,8"
+                                Margin="0,0,4,8"
                                 VerticalAlignment="Center"
-                                Text="Sampler" />
+                                Text="Upscaler" />
                             <ui:FAComboBox
                                 Grid.Row="0"
                                 Grid.Column="1"

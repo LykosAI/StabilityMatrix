@@ -426,6 +426,9 @@ public static class DesignData
 
     public static UpscalerCardViewModel UpscalerCardViewModel =>
         DialogFactory.Get<UpscalerCardViewModel>();
+    
+    public static BatchSizeCardViewModel BatchSizeCardViewModel =>
+        DialogFactory.Get<BatchSizeCardViewModel>();
 
     public static Indexer Types => new();
 

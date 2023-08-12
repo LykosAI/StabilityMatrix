@@ -12,6 +12,9 @@ public interface IComfyApi
         CancellationToken cancellationToken = default
     );
 
+    [Post("/interrupt")]
+    Task PostInterrupt(CancellationToken cancellationToken = default);
+    
     [Get("/history/{promptId}")]
     Task<Dictionary<string, ComfyHistoryResponse>> GetHistory(
         string promptId,

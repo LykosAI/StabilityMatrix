@@ -418,14 +418,16 @@ public partial class SettingsViewModel : PageViewModelBase
         var grid = ImageProcessor.CreateImageGrid(images.ToImmutableArray());
         
         // Show preview
-        var image = new Image();
 
         using var peekPixels = grid.PeekPixels();
         using var data = peekPixels.Encode(SKEncodedImageFormat.Jpeg, 100);
         await using var stream = data.AsStream();
 
-        image.Source = WriteableBitmap.Decode(stream);
-        
+        var image = new Image
+        {
+            Source = WriteableBitmap.Decode(stream)
+        };
+
         var dialog = new BetterContentDialog
         {
             Content = image,

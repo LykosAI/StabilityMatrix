@@ -331,11 +331,12 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         // Disable pip caching - uses significant memory for large packages like torch
         env["PIP_NO_CACHE_DIR"] = "true";
 
-        // On windows, add portable git
+        // On windows, add portable git to PATH and binary as GIT
         if (Compat.IsWindows)
         {
-            var portableGit = GlobalConfig.LibraryDir.JoinDir("PortableGit", "bin");
-            env["PATH"] = Compat.GetEnvPathWithExtensions(portableGit);
+            var portableGitBin = GlobalConfig.LibraryDir.JoinDir("PortableGit", "bin");
+            env["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin);
+            env["GIT"] = portableGitBin.JoinFile("git.exe");
         }
 
         if (unbuffered)

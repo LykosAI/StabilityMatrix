@@ -4,15 +4,23 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Media;
 using Avalonia.Threading;
+using AvaloniaEdit;
+using AvaloniaEdit.TextMate;
+using CommunityToolkit.Mvvm.ComponentModel.__Internals;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Markdown.Avalonia;
+using Markdown.Avalonia.SyntaxHigh.Extensions;
+using Refit;
 using StabilityMatrix.Avalonia.Controls;
+using TextMateSharp.Grammars;
 
 namespace StabilityMatrix.Avalonia;
 
@@ -133,6 +141,80 @@ public static class DialogHelper
             CloseButtonText = "Close",
             IsPrimaryButtonEnabled = false,
         };
+    }
+    
+    /// <summary>
+    /// Create a dialog for displaying an ApiException
+    /// </summary>
+    public static BetterContentDialog CreateApiExceptionDialog(ApiException exception, string? title = null)
+    {
+        Dispatcher.UIThread.VerifyAccess();
+        
+        // Setup text editor
+        var textEditor = new TextEditor
+        {
+            IsReadOnly = true,
+            WordWrap = true,
+            Options =
+            {
+                ShowColumnRulers = false,
+                AllowScrollBelowDocument = false
+            }
+        };
+        var registryOptions = new RegistryOptions(ThemeName.DarkPlus);
+        textEditor.InstallTextMate(registryOptions).SetGrammar(registryOptions.GetScopeByLanguageId("json"));
+        
+        var mainGrid = new StackPanel
+        {
+            Spacing = 8,
+            Margin = new Thickness(16),
+            Children =
+            {
+                new TextBlock
+                {
+                    Text = $"{(int) exception.StatusCode} - {exception.ReasonPhrase}",
+                    FontSize = 18,
+                    FontWeight = FontWeight.Medium,
+                    Margin = new Thickness(0,8),
+                },
+                textEditor
+            }
+        };
+        
+        var dialog = new BetterContentDialog
+        {
+            Title = title,
+            Content = mainGrid,
+            CloseButtonText = "Close",
+            IsPrimaryButtonEnabled = false,
+        };
+
+        // Try to deserialize to json element
+        if (exception.Content != null)
+        {
+            try
+            {
+                // Deserialize to json element then re-serialize to ensure indentation
+                var jsonElement = JsonSerializer.Deserialize<JsonElement>(exception.Content, new JsonSerializerOptions
+                {
+                    AllowTrailingCommas = true,
+                    ReadCommentHandling = JsonCommentHandling.Skip
+                });
+                var formatted = JsonSerializer.Serialize(jsonElement, new JsonSerializerOptions()
+                {
+                    WriteIndented = true
+                });
+
+                textEditor.Document.Text = formatted;
+            }
+            catch (JsonException)
+            {
+                // Otherwise just add the content as a code block
+                textEditor.Document.Text = exception.Content;
+            }
+        }
+
+        return dialog;
     }
     
     /// <summary>

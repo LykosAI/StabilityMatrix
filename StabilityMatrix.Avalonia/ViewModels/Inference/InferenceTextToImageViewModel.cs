@@ -8,17 +8,22 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Media.Imaging;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
+using Refit;
 using SkiaSharp;
+using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
@@ -107,6 +112,8 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             // Batch Size
             vmFactory.Get<BatchSizeCardViewModel>(),
         });
+
+        GenerateImageCommand.WithNotificationErrorHandler(notificationService);
     }
 
     private Dictionary<string, ComfyNode> GetCurrentPrompt()
@@ -236,11 +243,14 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         return prompt;
     }
 
-    private void OnProgressUpdateReceived(object? sender, ComfyWebSocketProgressData args)
+    private void OnProgressUpdateReceived(object? sender, ComfyProgressUpdateEventArgs args)
     {
         OutputProgress.Value = args.Value;
-        OutputProgress.Maximum = args.Max;
+        OutputProgress.Maximum = args.Maximum;
         OutputProgress.IsIndeterminate = false;
+
+        OutputProgress.Text = $"({args.Value} / {args.Maximum})" 
+                              + (args.RunningNode != null ? $" {args.RunningNode}" : "");
     }
 
     private void OnPreviewImageReceived(object? sender, ComfyWebSocketImageData args)
@@ -274,21 +284,40 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         var nodes = GetCurrentPrompt();
 
         // Connect progress handler
-        client.ProgressUpdateReceived += OnProgressUpdateReceived;
+        // client.ProgressUpdateReceived += OnProgressUpdateReceived;
         client.PreviewImageReceived += OnPreviewImageReceived;
 
+        ComfyTask? promptTask = null;
         try
         {
-            var (response, promptTask) = await client.QueuePromptAsync(nodes, cancellationToken);
-            Logger.Info(response);
+            // Register to interrupt if user cancels
+            cancellationToken.Register(() =>
+            {
+                Logger.Info("Cancelling prompt");
+                client.InterruptPromptAsync(new CancellationTokenSource(5000).Token).SafeFireAndForget();
+            });
+            
+            try
+            {
+                promptTask = await client.QueuePromptAsync(nodes, cancellationToken);
+            }
+            catch (ApiException e)
+            {
+                Logger.Warn(e, "Api exception while queuing prompt");
+                await DialogHelper.CreateApiExceptionDialog(e, "Api Error").ShowAsync();
+                return;
+            }
+            
+            // Register progress handler
+            promptTask.ProgressUpdate += OnProgressUpdateReceived;
 
             // Wait for prompt to finish
-            await promptTask.WaitAsync(cancellationToken);
-            Logger.Trace($"Prompt task {response.PromptId} finished");
+            await promptTask.Task.WaitAsync(cancellationToken);
+            Logger.Trace($"Prompt task {promptTask.Id} finished");
 
             // Get output images
             var outputs = await client.GetImagesForExecutedPromptAsync(
-                response.PromptId,
+                promptTask.Id,
                 cancellationToken
             );
 
@@ -339,15 +368,18 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         {
             // Disconnect progress handler
             OutputProgress.Value = 0;
+            OutputProgress.Text = "";
             ImageGalleryCardViewModel.PreviewImage?.Dispose();
             ImageGalleryCardViewModel.PreviewImage = null;
             ImageGalleryCardViewModel.IsPreviewOverlayEnabled = false;
-            client.ProgressUpdateReceived -= OnProgressUpdateReceived;
+            
+            // client.ProgressUpdateReceived -= OnProgressUpdateReceived;
+            promptTask?.Dispose();
             client.PreviewImageReceived -= OnPreviewImageReceived;
         }
     }
 
-    [RelayCommand(IncludeCancelCommand = true)]
+    [RelayCommand(IncludeCancelCommand = true, FlowExceptionsToTaskScheduler = true)]
     private async Task GenerateImage(CancellationToken cancellationToken = default)
     {
         try

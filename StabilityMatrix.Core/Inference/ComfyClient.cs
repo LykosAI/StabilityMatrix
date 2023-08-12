@@ -31,7 +31,12 @@ public class ComfyClient : InferenceClientBase
     /// <summary>
     /// Dictionary of ongoing prompt execution tasks
     /// </summary>
-    public ConcurrentDictionary<string, TaskCompletionSource> PromptTasks { get; } = new();
+    public ConcurrentDictionary<string, ComfyTask> PromptTasks { get; } = new();
+    
+    /// <summary>
+    /// Current running prompt task
+    /// </summary>
+    private ComfyTask? currentPromptTask;
     
     /// <summary>
     /// Event raised when a progress update is received from the server
@@ -138,11 +143,21 @@ public class ComfyClient : InferenceClientBase
             {
                 if (PromptTasks.TryRemove(executingData.PromptId, out var task))
                 {
+                    task.RunningNode = null;
                     task.SetResult();
+                    currentPromptTask = null;
                 }
                 else
                 {
                     Logger.Warn($"Could not find task for prompt {executingData.PromptId}, skipping");
+                }
+            }
+            // Otherwise set the task's active node to the one received
+            else
+            {
+                if (PromptTasks.TryGetValue(executingData.PromptId, out var task))
+                {
+                    task.RunningNode = executingData.Node;
                 }
             }
             
@@ -167,7 +182,10 @@ public class ComfyClient : InferenceClientBase
                 Logger.Warn($"Could not parse progress data {json.Data}, skipping");
                 return;
             }
-
+            
+            // Set for the current prompt task
+            currentPromptTask?.OnProgressUpdate(progressData);
+            
             ProgressUpdateReceived?.Invoke(this, progressData);
         }
         else
@@ -221,7 +239,7 @@ public class ComfyClient : InferenceClientBase
             .ConfigureAwait(false);
     }
 
-    public async Task<(ComfyPromptResponse, Task)> QueuePromptAsync(
+    public async Task<ComfyTask> QueuePromptAsync(
         Dictionary<string, ComfyNode> nodes,
         CancellationToken cancellationToken = default
     )
@@ -229,11 +247,26 @@ public class ComfyClient : InferenceClientBase
         var request = new ComfyPromptRequest { ClientId = ClientId, Prompt = nodes };
         var result = await comfyApi.PostPrompt(request, cancellationToken).ConfigureAwait(false);
         
-        // Add task to dictionary
-        var tcs = new TaskCompletionSource();
-        PromptTasks[result.PromptId] = tcs;
+        // Add task to dictionary and set it as the current task
+        var task = new ComfyTask(result.PromptId);
+        PromptTasks[result.PromptId] = task;
+        currentPromptTask = task;
 
-        return (result, tcs.Task);
+        return task;
+    }
+    
+    public async Task InterruptPromptAsync(CancellationToken cancellationToken = default)
+    {
+        await comfyApi.PostInterrupt(cancellationToken).ConfigureAwait(false);
+        
+        // Set the current task to null, and remove it from the dictionary
+        if (currentPromptTask is { } task)
+        {
+            PromptTasks.TryRemove(task.Id, out _);
+            task.TrySetCanceled(cancellationToken);
+            task.Dispose();
+            currentPromptTask = null;
+        }
     }
 
     public async Task<Dictionary<string, List<ComfyImage>?>> GetImagesForExecutedPromptAsync(

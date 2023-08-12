@@ -201,13 +201,21 @@
                             <Grid
                                 x:CompileBindings="False"
                                 DataContext="{Binding ElementName=Dock, Path=DataContext}">
-                                <ProgressBar
-                                    Margin="2,1,2,4"
-                                    VerticalAlignment="Top"
+                                <StackPanel 
                                     DataContext="{Binding OutputProgress}"
-                                    IsVisible="{Binding IsProgressVisible}"
-                                    Maximum="{Binding Maximum}"
-                                    Value="{Binding Value}" />
+                                    Margin="2,1,2,4" 
+                                    Spacing="4"
+                                    VerticalAlignment="Top">
+                                    <ProgressBar
+                                        IsVisible="{Binding IsProgressVisible}"
+                                        Maximum="{Binding Maximum}"
+                                        Value="{Binding Value}" />
+                                    <TextBlock 
+                                        IsVisible="{Binding IsTextVisible}"
+                                        TextAlignment="Center"
+                                        Text="{Binding Text}"/>
+                                </StackPanel>
+
                                 <controls:ImageGalleryCard
                                     Grid.Row="0"
                                     DataContext="{Binding ImageGalleryCardViewModel}" />

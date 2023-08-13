@@ -14,6 +14,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
@@ -152,13 +153,60 @@ public partial class PackageCardViewModel : ProgressViewModel
         notificationService.Show("Update complete",
             $"{Package.DisplayName} has been updated to the latest version.",
             NotificationType.Success);
+
         
-        Package.UpdateAvailable = false;
-        IsUpdateAvailable = false;
-        IsIndeterminate = false;
-        InstalledVersion = settingsManager.Settings.InstalledPackages
-            .First(x => x.Id == Package.Id).DisplayVersion ?? "Unknown";
-        Value = 0;
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            using (settingsManager.BeginTransaction())
+            {
+                Package.UpdateAvailable = false;
+            }
+            IsUpdateAvailable = false;
+            IsIndeterminate = false;
+            InstalledVersion = settingsManager.Settings.InstalledPackages
+                .First(x => x.Id == Package.Id).DisplayVersion ?? "Unknown";
+            Value = 0;
+        });
+    }
+    
+    public async Task OpenFolder()
+    {
+        if (string.IsNullOrWhiteSpace(Package?.FullPath))
+            return;
+        
+        await ProcessRunner.OpenFolderBrowser(Package.FullPath);
+    }
+    
+    private async Task<bool> HasUpdate()
+    {
+        if (Package == null)
+            return false;
+
+        var basePackage = packageFactory[Package.PackageName!];
+        if (basePackage == null)
+            return false;
+
+        var canCheckUpdate = Package.LastUpdateCheck == null ||
+                             Package.LastUpdateCheck < DateTime.Now.AddMinutes(-15);
+
+        if (!canCheckUpdate)
+        {
+            return Package.UpdateAvailable;
+        }
+
+        try
+        {
+            var hasUpdate = await basePackage.CheckForUpdates(Package);
+            Package.UpdateAvailable = hasUpdate;
+            Package.LastUpdateCheck = DateTimeOffset.Now;
+            settingsManager.SetLastUpdateCheck(Package);
+            return hasUpdate;
+        }
+        catch (Exception e)
+        {
+            logger.Error(e, $"Error checking {Package.PackageName} for updates");
+            return false;
+        }
     }
     
     /// <summary>
@@ -236,32 +284,6 @@ public partial class PackageCardViewModel : ProgressViewModel
         catch (IOException ex)
         {
             throw new IOException($"Failed to delete directory {targetDirectory}", ex);
-        }
-    }
-
-    private async Task<bool> HasUpdate()
-    {
-        if (Package == null) return false;
-
-        var basePackage = packageFactory[Package.PackageName!];
-        if (basePackage == null) return false;
-
-        var canCheckUpdate = Package.LastUpdateCheck == null ||
-                             Package.LastUpdateCheck < DateTime.Now.AddMinutes(-15);
-
-        if (!canCheckUpdate) return false;
-        try
-        {
-
-            var hasUpdate = await basePackage.CheckForUpdates(Package);
-            Package.UpdateAvailable = hasUpdate;
-            Package.LastUpdateCheck = DateTimeOffset.Now;
-            settingsManager.SetLastUpdateCheck(Package);
-            return hasUpdate;
-        }
-        catch (Exception e)
-        {
-            return false;
         }
     }
 }

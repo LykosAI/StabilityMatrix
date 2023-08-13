@@ -92,5 +92,6 @@ public partial class PackageManagerViewModel : PageViewModelBase
         await OnLoadedAsync();
     }
 
-    private void OnInstalledPackagesChanged(object? sender, EventArgs e) =>OnLoaded();
+    private void OnInstalledPackagesChanged(object? sender, EventArgs e) =>
+        OnLoadedAsync().SafeFireAndForget();
 }

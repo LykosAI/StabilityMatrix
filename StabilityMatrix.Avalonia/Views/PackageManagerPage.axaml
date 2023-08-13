@@ -15,8 +15,15 @@
                           d:DataContext="{x:Static designData:DesignData.PackageManagerViewModel}"
                           x:Class="StabilityMatrix.Avalonia.Views.PackageManagerPage">
 
-    <Grid Margin="16" RowDefinitions="Auto,*">
-        <ItemsRepeater
+    <Grid Margin="16" RowDefinitions="Auto,*,Auto">
+        <!-- Title -->
+        <TextBlock Grid.Row="0" Text="{Binding Title}" 
+                   Margin="0,0,0,16"
+                   FontSize="24"/>
+        
+        <!-- Cards -->
+        <ScrollViewer Grid.Row="1">
+            <ItemsRepeater
             ItemsSource="{Binding Packages}">
             <ItemsRepeater.Layout>
                 <UniformGridLayout MinColumnSpacing="12" MinRowSpacing="12" />
@@ -43,9 +50,16 @@
                                 <ui:SymbolIcon FontSize="18" Symbol="MoreVertical" />
                                 <Button.Flyout>
                                     <MenuFlyout Placement="BottomEdgeAlignedLeft">
-                                        <MenuItem Header="Check for Update">
+                                        <MenuItem Header="Check for Update"
+                                                  Command="{Binding OnLoadedAsync}">
                                             <MenuItem.Icon>
                                                 <ui:SymbolIcon Symbol="Refresh" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Header="Open in Explorer"
+                                                  Command="{Binding OpenFolder}">
+                                            <MenuItem.Icon>
+                                                <ui:SymbolIcon Symbol="OpenFolder" />
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <Separator />
@@ -156,9 +170,20 @@
                 </DataTemplate>
             </ItemsRepeater.ItemTemplate>
         </ItemsRepeater>
-        <Button Grid.Row="1"
+        </ScrollViewer>
+        
+        <!-- Teaching Tip -->
+        <ui:TeachingTip Grid.Row="0" Name="TeachingTip1"
+                        Target="{Binding #AddPackagesButton}"
+                        Title="Add a package to get started!"
+                        PreferredPlacement="Top"
+                        IsOpen="{Binding !Packages.Count}"/>
+        
+        <!-- Add Packages Button -->
+        <Button Grid.Row="2"
                 Classes="transparent"
                 VerticalAlignment="Bottom"
+                Name="AddPackagesButton"
                 Margin="0, 8, 0, 0"
                 HorizontalAlignment="Stretch"
                 Command="{Binding ShowInstallDialog}">

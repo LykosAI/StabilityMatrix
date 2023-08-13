@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Python.Runtime;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
@@ -14,7 +13,6 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
-using Dispatcher = Avalonia.Threading.Dispatcher;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 

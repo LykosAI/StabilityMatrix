@@ -130,13 +130,4 @@ public class ServiceManager<T>
         initializer(instance);
         return instance;
     }
-    
-    /// <summary>
-    /// Get a view model instance with an initializer parameter, but asynchronously 
-    /// </summary>
-    public async Task<TService> GetAsync<TService>(Func<TService, Task<TService>> initializer) where TService : T
-    {
-        var instance = Get<TService>();
-        return await initializer(instance);
-    }
 }

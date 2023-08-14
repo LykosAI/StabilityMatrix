@@ -134,10 +134,11 @@
                             </Button>
                             
                             <!-- Update overlay -->
-                            <Rectangle
+                            <Border
                                 Grid.Row="0" Grid.RowSpan="4"
                                 Grid.Column="0"
-                                Fill="#DD000000"
+                                Background="#DD000000"
+                                CornerRadius="4"
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
                                 IsVisible="{Binding IsProgressVisible}" />

@@ -119,6 +119,8 @@ public partial class PackageCardViewModel : ProgressViewModel
         }
 
         Text = $"Updating {Package.DisplayName}";
+        IsIndeterminate = true;
+        
         basePackage.InstallLocation = Package.FullPath!;
         var progress = new Progress<ProgressReport>(progress =>
         {

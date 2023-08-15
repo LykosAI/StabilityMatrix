@@ -225,6 +225,9 @@ public class ComfyUI : BaseGitPackage
     public override Task UpdateModelFolders(DirectoryPath installDirectory) =>
         SetupModelFolders(installDirectory);
 
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory) =>
+        Task.CompletedTask;
+
     public class ComfyModelPathsYaml
     {
         public class SmData

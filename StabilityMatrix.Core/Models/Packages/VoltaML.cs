@@ -191,4 +191,10 @@ public class VoltaML : BaseGitPackage
         await StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(this,
             SettingsManager.ModelsDirectory, installDirectory).ConfigureAwait(false);
     }
+
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory)
+    {
+        StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(this, installDirectory);
+        return Task.CompletedTask;
+    }
 }

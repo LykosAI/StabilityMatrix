@@ -1,4 +1,5 @@
-﻿using NLog;
+﻿using AsyncAwaitBestPractices;
+using NLog;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
@@ -147,7 +148,7 @@ public class SharedFolders : ISharedFolders
         }
     }
 
-    private static void RemoveLinksForPackage(BasePackage package, DirectoryPath installPath)
+    public static void RemoveLinksForPackage(BasePackage package, DirectoryPath installPath)
     {
         var sharedFolders = package.SharedFolders;
         if (sharedFolders == null)
@@ -171,7 +172,6 @@ public class SharedFolders : ISharedFolders
 
     public void RemoveLinksForAllPackages()
     {
-        var libraryDir = settingsManager.LibraryDir;
         var packages = settingsManager.Settings.InstalledPackages;
         foreach (var package in packages)
         {
@@ -182,11 +182,11 @@ public class SharedFolders : ISharedFolders
  
             try
             {
-                RemoveLinksForPackage(basePackage, Path.Combine(libraryDir, package.LibraryPath));
+                basePackage.RemoveModelFolderLinks(package.FullPath).GetAwaiter().GetResult();
             }
             catch (Exception e)
             {
-                Logger.Warn("Failed to remove junction links for package {Package} " +
+                Logger.Warn("Failed to remove links for package {Package} " +
                             "({DisplayName}): {Message}", package.PackageName, package.DisplayName, e.Message);
             }
         }

@@ -286,7 +286,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         // Connect progress handler
         // client.ProgressUpdateReceived += OnProgressUpdateReceived;
         client.PreviewImageReceived += OnPreviewImageReceived;
-
+        
         ComfyTask? promptTask = null;
         try
         {
@@ -356,12 +356,11 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
                 await using var fileStream = gridPath.Info.OpenWrite();
                 await fileStream.WriteAsync(grid.Encode().ToArray(), cancellationToken);
                 
-                // Insert to start of gallery
+                // Insert to start of images
                 ImageGalleryCardViewModel.ImageSources.Add(new ImageSource(gridPath));
-                // var bitmaps = (await outputImages.SelectAsync(async i => await i.GetBitmapAsync())).ToImmutableArray();
             }
             
-            // Insert rest of images
+            // Add rest of images
             ImageGalleryCardViewModel.ImageSources.AddRange(outputImages);
         }
         finally

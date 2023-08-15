@@ -4,6 +4,8 @@
         xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
         xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
         xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+        xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+        xmlns:behaviors="clr-namespace:StabilityMatrix.Avalonia.Behaviors"
         xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
         x:DataType="vmInference:PromptCardViewModel">
     <Design.PreviewWith>
@@ -64,8 +66,12 @@
                                 <avaloniaEdit:TextEditor
                                     x:Name="PromptEditor"
                                     Document="{Binding PromptDocument}"
-                                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace"/>
-                            
+                                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace">
+                                    <i:Interaction.Behaviors>
+                                        <behaviors:TextEditorCompletionBehavior/>
+                                    </i:Interaction.Behaviors>
+                                </avaloniaEdit:TextEditor>
+
                             </ExperimentalAcrylicBorder>
                         </Grid>
                         
@@ -93,8 +99,12 @@
                                 <avaloniaEdit:TextEditor
                                     x:Name="NegativePromptEditor"
                                     Document="{Binding NegativePromptDocument}"
-                                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace"/>
-                            
+                                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace">
+                                    <i:Interaction.Behaviors>
+                                        <behaviors:TextEditorCompletionBehavior/>
+                                    </i:Interaction.Behaviors>
+                                </avaloniaEdit:TextEditor>
+
                             </ExperimentalAcrylicBorder>
                         </Grid>
                     </Grid>

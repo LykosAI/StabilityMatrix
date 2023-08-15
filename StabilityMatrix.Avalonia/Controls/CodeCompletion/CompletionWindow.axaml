@@ -1,0 +1,55 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:StabilityMatrix.Avalonia.Controls.CodeCompletion"
+        xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
+    
+    <!-- Style used for tooltip next to completion list box.  -->
+    <!--<Style Selector="ContentControl.ToolTip">
+        <Setter Property="BorderThickness" Value="{DynamicResource CompletionToolTipBorderThickness}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CompletionToolTipBorderBrush}" />
+        <Setter Property="Background" Value="{DynamicResource CompletionToolTipBackground}" />
+        <Setter Property="Foreground" Value="{DynamicResource CompletionToolTipForeground}" />
+        <Setter Property="Padding" Value="4,2" />
+    </Style>-->
+
+    
+    <!--<Style Selector="controls|CompletionWindow">
+        ~1~<Style Selector="^ /template/ ContentControl.ToolTip">
+            <Setter Property="BorderThickness" Value="{DynamicResource CompletionToolTipBorderThickness}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CompletionToolTipBorderBrush}" />
+            <Setter Property="Background" Value="{DynamicResource CompletionToolTipBackground}" />
+            <Setter Property="Foreground" Value="{DynamicResource CompletionToolTipForeground}" />
+            <Setter Property="Padding" Value="4,2" />
+
+        </Style>@1@
+        ~1~<Setter Property="Template">
+            <ControlTemplate>
+                <TextBlock Text="Templated Control" />
+            </ControlTemplate>
+        </Setter>@1@
+    </Style>-->
+    
+    <!--<Style Selector="controls|CompletionWindow">
+        <Setter Property="TransparencyLevelHint" Value="Transparent" />
+        <Setter Property="Background" Value="{x:Null}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource OverlayCornerRadius}" />
+        <Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
+        <Setter Property="FontFamily" Value="{DynamicResource ContentControlThemeFontFamily}" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <LayoutTransformControl LayoutTransform="{TemplateBinding Transform}">
+                    <Panel>
+                        <Border Name="PART_TransparencyFallback" IsHitTestVisible="False" />
+                        <VisualLayerManager IsPopup="True">
+                            <ContentPresenter Name="PART_ContentPresenter"
+                                              Background="{TemplateBinding Background}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              Content="{TemplateBinding Content}"
+                                              Padding="{TemplateBinding Padding}" />
+                        </VisualLayerManager>
+                    </Panel>
+                </LayoutTransformControl>
+            </ControlTemplate>
+        </Setter>
+    </Style>-->
+</Styles>

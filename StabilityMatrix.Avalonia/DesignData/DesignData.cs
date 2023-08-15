@@ -5,8 +5,11 @@ using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Http;
+using AvaloniaEdit.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -429,6 +432,26 @@ public static class DesignData
     
     public static BatchSizeCardViewModel BatchSizeCardViewModel =>
         DialogFactory.Get<BatchSizeCardViewModel>();
+
+    public static IList<ICompletionData> SampleCompletionData => new List<ICompletionData>
+    {
+        new TagCompletionData("test1", TagType.General),
+        new TagCompletionData("test2", TagType.Artist),
+        new TagCompletionData("test3", TagType.Character),
+        new TagCompletionData("test4", TagType.Copyright),
+        new TagCompletionData("test5", TagType.Species),
+        new TagCompletionData("test_unknown", TagType.Invalid),
+    };
+    
+    public static CompletionList SampleCompletionList
+    {
+        get
+        {
+            var list = new CompletionList();
+            list.CompletionData.AddRange(SampleCompletionData);
+            return list;
+        }
+    }
 
     public static Indexer Types => new();
 

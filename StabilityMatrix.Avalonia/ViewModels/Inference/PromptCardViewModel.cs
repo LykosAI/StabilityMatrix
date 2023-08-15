@@ -1,21 +1,25 @@
 ﻿using System.Text.Json.Nodes;
 using AvaloniaEdit.Document;
-using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models.Inference;
+using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(PromptCard))]
-public partial class PromptCardViewModel : LoadableViewModelBase
+public class PromptCardViewModel : LoadableViewModelBase
 {
+    public ICompletionProvider CompletionProvider { get; }
+    
     public TextDocument PromptDocument { get; } = new();
     public TextDocument NegativePromptDocument { get; } = new();
 
-    [ObservableProperty] private int editorFontSize = 14;
-    
-    [ObservableProperty] private string editorFontFamily = "Consolas";
+    /// <inheritdoc />
+    public PromptCardViewModel(ICompletionProvider completionProvider)
+    {
+        CompletionProvider = completionProvider;
+    }
 
     /// <inheritdoc />
     public override JsonObject SaveStateToJsonObject()

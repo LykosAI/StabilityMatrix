@@ -25,6 +25,8 @@ using Avalonia.Input;
 using Avalonia.Media;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
+using AvaloniaEdit.Utils;
+using StabilityMatrix.Avalonia.Models.TagCompletion;
 
 namespace StabilityMatrix.Avalonia.Controls.CodeCompletion;
 
@@ -35,7 +37,8 @@ public class CompletionWindow : CompletionWindowBase
 {
     private PopupWithCustomPosition _toolTip;
     private ContentControl _toolTipContent;
-    
+
+    private ICompletionProvider completionProvider;
     
     /// <summary>
     /// Gets the completion list used in this completion window.
@@ -45,9 +48,15 @@ public class CompletionWindow : CompletionWindowBase
     /// <summary>
     /// Creates a new code completion window.
     /// </summary>
-    public CompletionWindow(TextArea textArea) : base(textArea)
+    public CompletionWindow(TextArea textArea, ICompletionProvider completionProvider) : base(textArea)
     {
+        this.completionProvider = completionProvider;
+        
         CompletionList = new CompletionList();
+        
+        // For using our own UpdateQuery
+        CompletionList.IsFiltering = false;
+        
         // keep height automatic
         CloseAutomatically = true;
         MaxHeight = 225;
@@ -249,10 +258,22 @@ public class CompletionWindow : CompletionWindowBase
             {
                 var newText = document.GetText(StartOffset, offset - StartOffset);
                 Debug.WriteLine("CaretPositionChanged newText: " + newText);
-                CompletionList.SelectItem(newText);
-
+                // CompletionList.SelectItem(newText);
+                UpdateQuery(newText);
+                
                 IsVisible = CompletionList.ListBox.ItemCount != 0;
             }
         }
+    }
+
+    /// <summary>
+    /// Update the completion window's current search term.
+    /// </summary>
+    public void UpdateQuery(string searchTerm)
+    {
+        var results = completionProvider.GetCompletions(searchTerm, 30, false);
+        CompletionList.CompletionData.Clear();
+        CompletionList.CompletionData.AddRange(results);
+        CompletionList.SelectItem(searchTerm);
     }
 }

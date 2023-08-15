@@ -24,6 +24,7 @@ using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
@@ -50,6 +51,7 @@ public partial class SettingsViewModel : PageViewModelBase
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly IPyRunner pyRunner;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
+    private readonly ICompletionProvider completionProvider;
     
     public SharedState SharedState { get; }
     
@@ -93,13 +95,15 @@ public partial class SettingsViewModel : PageViewModelBase
         IPrerequisiteHelper prerequisiteHelper,
         IPyRunner pyRunner,
         ServiceManager<ViewModelBase> dialogFactory,
-        SharedState sharedState)
+        SharedState sharedState, 
+        ICompletionProvider completionProvider)
     {
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
         this.prerequisiteHelper = prerequisiteHelper;
         this.pyRunner = pyRunner;
         this.dialogFactory = dialogFactory;
+        this.completionProvider = completionProvider;
         
         SharedState = sharedState;
         
@@ -435,6 +439,19 @@ public partial class SettingsViewModel : PageViewModelBase
         };
 
         await dialog.ShowAsync();
+    }
+    
+    [RelayCommand]
+    private async Task DebugLoadCompletionCsv()
+    {
+        var provider = App.StorageProvider;
+        var files = await provider.OpenFilePickerAsync(new FilePickerOpenOptions());
+        
+        if (files.Count == 0) return;
+        
+        await completionProvider.LoadFromFile(files[0].TryGetLocalPath()!, true);
+        
+        notificationService.Show("Loaded completion file", "");
     }
     #endregion
 

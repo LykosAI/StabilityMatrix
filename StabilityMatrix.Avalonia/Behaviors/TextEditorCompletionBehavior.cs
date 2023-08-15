@@ -9,6 +9,7 @@ using AvaloniaEdit.Editing;
 using NLog;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.TagCompletion;
 using CompletionWindow = StabilityMatrix.Avalonia.Controls.CodeCompletion.CompletionWindow;
 
 namespace StabilityMatrix.Avalonia.Behaviors;
@@ -22,13 +23,13 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
     private CompletionWindow? completionWindow;
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public static readonly StyledProperty<string> TextProperty =
-        AvaloniaProperty.Register<TextEditorCompletionBehavior, string>(nameof(Text));
+    public static readonly StyledProperty<ICompletionProvider> CompletionProviderProperty =
+        AvaloniaProperty.Register<TextEditorCompletionBehavior, ICompletionProvider>(nameof(CompletionProvider));
 
-    public string Text
+    public ICompletionProvider CompletionProvider
     {
-        get => GetValue(TextProperty);
-        set => SetValue(TextProperty, value);
+        get => GetValue(CompletionProviderProperty);
+        set => SetValue(CompletionProviderProperty, value);
     }
     
     protected override void OnAttached()
@@ -55,7 +56,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
 
     private CompletionWindow CreateCompletionWindow(TextArea textArea)
     {
-        var window = new CompletionWindow(textArea)
+        var window = new CompletionWindow(textArea, CompletionProvider)
         {
             WindowManagerAddShadowHint = false,
             CloseWhenCaretAtBeginning = true,
@@ -66,13 +67,6 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
                 IsFiltering = true
             }
         };
-        
-        var completionList = window.CompletionList;
-            
-        completionList.CompletionData.Add(new CompletionData("item1"));
-        completionList.CompletionData.Add(new CompletionData("item2"));
-        completionList.CompletionData.Add(new CompletionData("item3"));
-        
         return window;
     }
 
@@ -98,8 +92,8 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
                 completionWindow = CreateCompletionWindow(textEditor.TextArea);
                 completionWindow.StartOffset = tokenSegment.Offset;
                 completionWindow.EndOffset = tokenSegment.EndOffset;
-                
-                completionWindow.CompletionList.SelectItem(token);
+
+                completionWindow.UpdateQuery(token);
                 
                 completionWindow.Closed += delegate
                 {

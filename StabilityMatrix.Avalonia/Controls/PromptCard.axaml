@@ -68,7 +68,8 @@
                                     Document="{Binding PromptDocument}"
                                     FontFamily="Cascadia Code,Consolas,Menlo,Monospace">
                                     <i:Interaction.Behaviors>
-                                        <behaviors:TextEditorCompletionBehavior/>
+                                        <behaviors:TextEditorCompletionBehavior
+                                            CompletionProvider="{Binding CompletionProvider}"/>
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>
 
@@ -101,7 +102,8 @@
                                     Document="{Binding NegativePromptDocument}"
                                     FontFamily="Cascadia Code,Consolas,Menlo,Monospace">
                                     <i:Interaction.Behaviors>
-                                        <behaviors:TextEditorCompletionBehavior/>
+                                        <behaviors:TextEditorCompletionBehavior
+                                            CompletionProvider="{Binding CompletionProvider}"/>
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>
 

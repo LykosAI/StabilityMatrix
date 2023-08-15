@@ -284,14 +284,15 @@ public class CompletionList : TemplatedControl
     private void SelectItemFiltering(string query)
     {
         // if the user just typed one more character, don't filter all data but just filter what we are already displaying
-        var listToFilter =
+        /*var listToFilter =
             _currentList != null
             && !string.IsNullOrEmpty(_currentText)
             && !string.IsNullOrEmpty(query)
             && query.StartsWith(_currentText, StringComparison.Ordinal)
                 ? _currentList
-                : _completionData;
-
+                : _completionData;*/
+        var listToFilter = _completionData;
+        
         var matchingItems =
             from item in listToFilter
             let quality = GetMatchQuality(item.Text, query)

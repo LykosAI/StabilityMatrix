@@ -32,9 +32,11 @@ using Polly.Timeout;
 using Refit;
 using Sentry;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -365,6 +367,7 @@ public sealed class App : Application
         services.AddSingleton<IPyRunner, PyRunner>();
         services.AddSingleton<IUpdateHelper, UpdateHelper>();
         services.AddSingleton<IInferenceClientManager, InferenceClientManager>();
+        services.AddSingleton<ICompletionProvider, CompletionProvider>();
         
         // Rich presence
         services.AddSingleton<IDiscordRichPresenceService, DiscordRichPresenceService>();

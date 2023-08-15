@@ -79,6 +79,7 @@ public static class DesignData
         services.AddLogging()
             .AddSingleton<IPackageFactory, PackageFactory>()
             .AddSingleton<IUpdateHelper, UpdateHelper>()
+            .AddSingleton<ICompletionProvider, CompletionProvider>()
             .AddSingleton<ModelFinder>()
             .AddSingleton<SharedState>();
 

@@ -252,6 +252,14 @@
                                     </ui:SettingsExpanderItem.Footer>
                                 </ui:SettingsExpanderItem>
                                 
+                                <ui:SettingsExpanderItem Content="Load Completion Source" IconSource="ImageCopy">
+                                    <ui:SettingsExpanderItem.Footer>
+                                        <Button
+                                            Command="{Binding DebugLoadCompletionCsvCommand}"
+                                            Content="Load CSV File"/>
+                                    </ui:SettingsExpanderItem.Footer>
+                                </ui:SettingsExpanderItem>
+                                
                             </ui:SettingsExpander>
                     </Grid>
                     

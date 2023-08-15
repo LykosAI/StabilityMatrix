@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.2.0
 ### Added
 - Added option to search by Base Model in the Model Browser
+- Animated page transitions
 
 ### Fixed
 - Fixed [#59](https://github.com/LykosAI/StabilityMatrix/issues/61) - `GIT` environment variable is now set for the embedded portable git on Windows as A1111 uses it instead of default `PATH` resolution

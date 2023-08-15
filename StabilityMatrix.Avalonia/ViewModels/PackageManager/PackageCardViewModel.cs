@@ -23,6 +23,7 @@ public partial class PackageCardViewModel : Base.ProgressViewModel
     private readonly IPackageFactory packageFactory;
     private readonly INotificationService notificationService;
     private readonly ISettingsManager settingsManager;
+    private readonly INavigationService navigationService;
     private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
     [ObservableProperty] private InstalledPackage? package;
@@ -30,12 +31,16 @@ public partial class PackageCardViewModel : Base.ProgressViewModel
     [ObservableProperty] private bool isUpdateAvailable;
     [ObservableProperty] private string installedVersion;
 
-    public PackageCardViewModel(IPackageFactory packageFactory,
-        INotificationService notificationService, ISettingsManager settingsManager)
+    public PackageCardViewModel(
+        IPackageFactory packageFactory,
+        INotificationService notificationService, 
+        ISettingsManager settingsManager, 
+        INavigationService navigationService)
     {
         this.packageFactory = packageFactory;
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
+        this.navigationService = navigationService;
     }
 
     partial void OnPackageChanged(InstalledPackage? value)
@@ -59,7 +64,9 @@ public partial class PackageCardViewModel : Base.ProgressViewModel
             return;
         
         settingsManager.Transaction(s => s.ActiveInstalledPackageId = Package.Id);
-        EventManager.Instance.RequestPageChange(typeof(LaunchPageViewModel));
+        
+        navigationService.NavigateTo<LaunchPageViewModel>();
+        
         EventManager.Instance.OnPackageLaunchRequested(Package.Id);
     }
     

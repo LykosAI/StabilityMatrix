@@ -15,8 +15,12 @@
              <ResourceDictionary.MergedDictionaries>
                  <ResourceInclude Source="Styles/ThemeColors.axaml"/>
                  <ResourceInclude Source="Styles/Card.axaml"/>
+                 <ResourceInclude Source="Controls/CodeCompletion/CompletionListThemes.axaml"/>
              </ResourceDictionary.MergedDictionaries>
              <x:Double x:Key="ContentDialogMaxWidth">700</x:Double>
+             
+             <SolidColorBrush x:Key="ToolTipBackground" Color="#1E1F22"/>
+             <SolidColorBrush x:Key="ToolTipForeground" Color="#9FBDC3"/>
          </ResourceDictionary>
      </Application.Resources>
   
@@ -37,5 +41,6 @@
         <StyleInclude Source="Controls/StackExpander.axaml"/>
         <StyleInclude Source="Controls/ModelCard.axaml"/>
         <StyleInclude Source="Controls/BatchSizeCard.axaml"/>
+        <StyleInclude Source="Controls/CodeCompletion/CompletionWindow.axaml"/>
     </Application.Styles>
 </Application>

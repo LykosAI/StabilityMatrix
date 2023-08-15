@@ -16,6 +16,7 @@ using NLog;
 using Octokit;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Extensions;
@@ -28,9 +29,9 @@ using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using Notification = Avalonia.Controls.Notifications.Notification;
 
-namespace StabilityMatrix.Avalonia.ViewModels;
+namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
-public partial class CheckpointBrowserCardViewModel : ProgressViewModel
+public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
 
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

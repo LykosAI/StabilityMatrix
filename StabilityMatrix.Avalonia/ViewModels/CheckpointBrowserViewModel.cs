@@ -15,6 +15,8 @@ using FluentAvalonia.UI.Controls;
 using NLog;
 using Refit;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
@@ -61,6 +63,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     [ObservableProperty] private bool isIndeterminate;
     [ObservableProperty] private bool noResultsFound;
     [ObservableProperty] private string noResultsText = string.Empty;
+    [ObservableProperty] private string selectedBaseModelType = "All";    
     
     private List<CheckpointBrowserCardViewModel> allModelCards = new();
     
@@ -71,6 +74,8 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         .Cast<CivitModelType>()
         .Where(t => t == CivitModelType.All || t.ConvertTo<SharedFolderType>() > 0)
         .OrderBy(t => t.ToString());
+
+    public List<string> BaseModelOptions => new() {"All", "SD 1.5", "SD 2.1", "SDXL 0.9", "SDXL 1.0"};
 
     public CheckpointBrowserViewModel(
         ICivitApi civitApi, 
@@ -100,6 +105,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         SelectedPeriod = searchOptions?.SelectedPeriod ?? CivitPeriod.Month;
         SortMode = searchOptions?.SortMode ?? CivitSortMode.HighestRated;
         SelectedModelType = searchOptions?.SelectedModelType ?? CivitModelType.Checkpoint;
+        SelectedBaseModelType = searchOptions?.SelectedBaseModelType ?? "All";
         
         ShowNsfw = settingsManager.Settings.ModelBrowserNsfwEnabled;
         
@@ -298,6 +304,11 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         {
             modelRequest.Types = new[] {SelectedModelType};
         }
+
+        if (SelectedBaseModelType != "All")
+        {
+            modelRequest.BaseModel = SelectedBaseModelType;
+        }
         
         // See if query is cached
         var cachedQuery = await liteDbContext.CivitModelQueryCache
@@ -366,21 +377,28 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     {
         TrySearchAgain().SafeFireAndForget();
         settingsManager.Transaction(s => s.ModelSearchOptions = new ModelSearchOptions(
-                value, SortMode, SelectedModelType));
+                value, SortMode, SelectedModelType, SelectedBaseModelType));
     }
 
     partial void OnSortModeChanged(CivitSortMode value)
     {
         TrySearchAgain().SafeFireAndForget();
         settingsManager.Transaction(s => s.ModelSearchOptions = new ModelSearchOptions(
-                SelectedPeriod, value, SelectedModelType));
+                SelectedPeriod, value, SelectedModelType, SelectedBaseModelType));
     }
     
     partial void OnSelectedModelTypeChanged(CivitModelType value)
     {
         TrySearchAgain().SafeFireAndForget();
         settingsManager.Transaction(s => s.ModelSearchOptions = new ModelSearchOptions(
-            SelectedPeriod, SortMode, value));
+            SelectedPeriod, SortMode, value, SelectedBaseModelType));
+    }
+
+    partial void OnSelectedBaseModelTypeChanged(string value)
+    {
+        TrySearchAgain().SafeFireAndForget();
+        settingsManager.Transaction(s => s.ModelSearchOptions = new ModelSearchOptions(
+            SelectedPeriod, SortMode, SelectedModelType, value));
     }
 
     private async Task TrySearchAgain(bool shouldUpdatePageNumber = true)

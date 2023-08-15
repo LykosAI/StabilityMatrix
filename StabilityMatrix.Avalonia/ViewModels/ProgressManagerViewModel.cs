@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;

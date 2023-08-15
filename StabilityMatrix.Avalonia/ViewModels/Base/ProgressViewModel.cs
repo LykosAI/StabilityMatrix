@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace StabilityMatrix.Avalonia.ViewModels;
+namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
 /// <summary>
 /// Generic view model for progress reporting.

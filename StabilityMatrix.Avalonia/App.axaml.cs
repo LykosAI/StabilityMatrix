@@ -37,6 +37,8 @@ using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.Views;
@@ -55,6 +57,8 @@ using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
 using Application = Avalonia.Application;
+using CheckpointFile = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFile;
+using CheckpointFolder = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFolder;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace StabilityMatrix.Avalonia;

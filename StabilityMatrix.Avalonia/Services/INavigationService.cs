@@ -1,6 +1,6 @@
 ﻿using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
-using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 
 namespace StabilityMatrix.Avalonia.Services;
 

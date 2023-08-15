@@ -2,8 +2,7 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using FluentAvalonia.UI.Controls;
-using StabilityMatrix.Avalonia.ViewModels;
-using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Base; 
 using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia;

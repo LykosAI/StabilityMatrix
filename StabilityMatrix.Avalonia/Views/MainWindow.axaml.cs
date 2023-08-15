@@ -23,6 +23,7 @@ using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.Views;

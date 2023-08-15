@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Semver;
-using Sentry.Protocol;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Core.Helper;

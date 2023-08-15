@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.2.0
+### Added
+- Added option to search by Base Model in the Model Browser
+
 ### Changed
 - Revamped Package Manager UI
 - InvokeAI installations can now use checkpoints from the Shared Models folder

@@ -75,7 +75,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     
     [ObservableProperty] private string? installName;
     
-    public ProgressViewModel InstallProgress { get; } = new();
+    public Base.ProgressViewModel InstallProgress { get; } = new();
 
     public InstallerViewModel(
         ISettingsManager settingsManager,

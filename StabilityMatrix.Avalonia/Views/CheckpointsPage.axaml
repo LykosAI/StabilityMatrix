@@ -7,6 +7,7 @@
              xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
              xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             xmlns:checkpointManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointManager"
              d:DataContext="{x:Static mocks:DesignData.CheckpointsPageViewModel}"
              x:CompileBindings="True"
              x:DataType="vm:CheckpointsPageViewModel"
@@ -40,7 +41,7 @@
         </DataTemplate>
         
         <!-- Checkpoint File Card -->
-        <DataTemplate DataType="{x:Type vm:CheckpointFile}" x:Key="CheckpointFileDataTemplate">
+        <DataTemplate DataType="{x:Type checkpointManager:CheckpointFile}" x:Key="CheckpointFileDataTemplate">
             <Border
                 DragDrop.AllowDrop="False"
                 Background="Transparent"
@@ -203,7 +204,7 @@
         </DataTemplate>
         
         <!-- Checkpoint Folder Expander -->
-        <DataTemplate DataType="{x:Type vm:CheckpointFolder}" x:Key="CheckpointFolderGridDataTemplate">
+        <DataTemplate DataType="{x:Type checkpointManager:CheckpointFolder}" x:Key="CheckpointFolderGridDataTemplate">
             <Expander
                 IsExpanded="{Binding IsExpanded}"
                 Margin="8"
@@ -399,7 +400,7 @@
                     <ui:FAMenuFlyout 
                         ItemsSource="{Binding CheckpointFolders}">
                         <ui:FAMenuFlyout.ItemTemplate>
-                            <DataTemplate DataType="{x:Type vm:CheckpointFolder}">
+                            <DataTemplate DataType="{x:Type checkpointManager:CheckpointFolder}">
                                 <ui:ToggleMenuFlyoutItem 
                                     Text="{Binding TitleWithFilesCount}" 
                                     IsChecked="{Binding IsCategoryEnabled, Mode=TwoWay}"/>

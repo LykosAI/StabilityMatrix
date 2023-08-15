@@ -10,13 +10,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 
-namespace StabilityMatrix.Avalonia.ViewModels;
+namespace StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 
 public partial class CheckpointFile : ViewModelBase
 {
@@ -46,7 +47,7 @@ public partial class CheckpointFile : ViewModelBase
 
     [ObservableProperty] private bool isLoading;
     
-    public string FileName => Path.GetFileName(FilePath);
+    public string FileName => Path.GetFileName((string?) FilePath);
 
     public ObservableCollection<string> Badges { get; set; } = new();
 
@@ -78,8 +79,8 @@ public partial class CheckpointFile : ViewModelBase
             throw new InvalidOperationException(
                 "Cannot get connected model info file path when FilePath is empty");
         }
-        var modelNameNoExt = Path.GetFileNameWithoutExtension(FilePath);
-        var modelDir = Path.GetDirectoryName(FilePath) ?? "";
+        var modelNameNoExt = Path.GetFileNameWithoutExtension((string?) FilePath);
+        var modelDir = Path.GetDirectoryName((string?) FilePath) ?? "";
         return Path.Combine(modelDir, $"{modelNameNoExt}.cm-info.json");
     }
 
@@ -123,7 +124,7 @@ public partial class CheckpointFile : ViewModelBase
     private async Task RenameAsync()
     {
         // Parent folder path
-        var parentPath = Path.GetDirectoryName(FilePath) ?? "";
+        var parentPath = Path.GetDirectoryName((string?) FilePath) ?? "";
 
         var textFields = new TextBoxField[]
         {
@@ -158,7 +159,7 @@ public partial class CheckpointFile : ViewModelBase
                 // If preview image exists, rename it too
                 if (PreviewImagePath != null && File.Exists(PreviewImagePath))
                 {
-                    var newPreviewImagePath = Path.Combine(parentPath, $"{nameNoExt}.preview{Path.GetExtension(PreviewImagePath)}");
+                    var newPreviewImagePath = Path.Combine(parentPath, $"{nameNoExt}.preview{Path.GetExtension((string?) PreviewImagePath)}");
                     File.Move(PreviewImagePath, newPreviewImagePath);
                     PreviewImagePath = newPreviewImagePath;
                 }

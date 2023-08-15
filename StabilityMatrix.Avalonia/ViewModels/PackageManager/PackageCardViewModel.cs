@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -19,7 +18,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
-public partial class PackageCardViewModel : ProgressViewModel
+public partial class PackageCardViewModel : Base.ProgressViewModel
 {
     private readonly IPackageFactory packageFactory;
     private readonly INotificationService notificationService;

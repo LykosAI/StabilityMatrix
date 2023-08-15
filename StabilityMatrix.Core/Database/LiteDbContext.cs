@@ -115,7 +115,6 @@ public class LiteDbContext : ILiteDbContext
 
     public void Dispose()
     {
-        database?.UnderlyingDatabase.Dispose();
         database?.Dispose();
         GC.SuppressFinalize(this);
     }

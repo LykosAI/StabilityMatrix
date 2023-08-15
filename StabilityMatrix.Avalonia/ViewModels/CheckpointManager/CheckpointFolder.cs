@@ -12,6 +12,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -20,7 +21,7 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
-namespace StabilityMatrix.Avalonia.ViewModels;
+namespace StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 
 public partial class CheckpointFolder : ViewModelBase
 {
@@ -73,7 +74,7 @@ public partial class CheckpointFolder : ViewModelBase
             ? $"{Title} ({CheckpointFiles.Count + SubFolders.Sum(folder => folder.CheckpointFiles.Count)})"
             : Title;
     
-    public ProgressViewModel Progress { get; } = new();
+    public Base.ProgressViewModel Progress { get; } = new();
 
     public CheckpointFolder? ParentFolder { get; init; }
     public AdvancedObservableList<CheckpointFolder> SubFolders { get; init; } = new();

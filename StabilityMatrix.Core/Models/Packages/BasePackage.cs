@@ -39,6 +39,7 @@ public abstract class BasePackage
     public abstract Task RunPackage(string installedPackagePath, string command, string arguments);
     public abstract Task SetupModelFolders(DirectoryPath installDirectory);
     public abstract Task UpdateModelFolders(DirectoryPath installDirectory);
+    public abstract Task RemoveModelFolderLinks(DirectoryPath installDirectory);
     
     /// <summary>
     /// Shuts down the subprocess, canceling any pending streams.

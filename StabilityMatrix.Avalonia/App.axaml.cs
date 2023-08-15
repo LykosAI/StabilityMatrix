@@ -37,7 +37,10 @@ using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Api;
@@ -54,6 +57,8 @@ using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
 using Application = Avalonia.Application;
+using CheckpointFile = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFile;
+using CheckpointFolder = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFolder;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace StabilityMatrix.Avalonia;
@@ -200,7 +205,6 @@ public sealed class App : Application
         services.AddSingleton<PackageManagerViewModel>()
             .AddSingleton<SettingsViewModel>()
             .AddSingleton<CheckpointBrowserViewModel>()
-            .AddSingleton<CheckpointBrowserCardViewModel>()
             .AddSingleton<CheckpointsPageViewModel>()
             .AddSingleton<LaunchPageViewModel>()
             .AddSingleton<ProgressManagerViewModel>();
@@ -242,8 +246,11 @@ public sealed class App : Application
         services.AddSingleton<UpdateViewModel>();
         
         // Other transients (usually sub view models)
-        services.AddTransient<CheckpointFolder>();
-        services.AddTransient<CheckpointFile>();
+        services.AddTransient<CheckpointFolder>()
+            .AddTransient<CheckpointFile>()
+            .AddTransient<CheckpointBrowserCardViewModel>();
+        
+        services.AddTransient<PackageCardViewModel>();
         
         // Global progress
         services.AddSingleton<ProgressManagerViewModel>();
@@ -260,8 +267,10 @@ public sealed class App : Application
                 .Register(provider.GetRequiredService<SelectDataDirectoryViewModel>)
                 .Register(provider.GetRequiredService<LaunchOptionsViewModel>)
                 .Register(provider.GetRequiredService<UpdateViewModel>)
+                .Register(provider.GetRequiredService<CheckpointBrowserCardViewModel>)
                 .Register(provider.GetRequiredService<CheckpointFolder>)
                 .Register(provider.GetRequiredService<CheckpointFile>)
+                .Register(provider.GetRequiredService<PackageCardViewModel>)
                 .Register(provider.GetRequiredService<RefreshBadgeViewModel>)
                 .Register(provider.GetRequiredService<ExceptionViewModel>)
                 .Register(provider.GetRequiredService<EnvVarsViewModel>)

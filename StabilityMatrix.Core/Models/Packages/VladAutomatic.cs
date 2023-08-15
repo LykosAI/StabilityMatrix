@@ -294,10 +294,11 @@ public class VladAutomatic : BaseGitPackage
         return Task.CompletedTask;
     }
 
-    public override Task UpdateModelFolders(DirectoryPath installDirectory)
-    {
-        return SetupModelFolders(installDirectory);
-    }
+    public override Task UpdateModelFolders(DirectoryPath installDirectory) =>
+        SetupModelFolders(installDirectory);
+
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory) =>
+        Task.CompletedTask;
 
     public override async Task<string> Update(InstalledPackage installedPackage,
         IProgress<ProgressReport>? progress = null, bool includePrerelease = false)

@@ -1,6 +1,6 @@
 ﻿using FluentAvalonia.UI.Controls;
 
-namespace StabilityMatrix.Avalonia.ViewModels;
+namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
 /// <summary>
 /// An abstract class for enabling page navigation.

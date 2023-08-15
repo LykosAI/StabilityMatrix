@@ -5,11 +5,17 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
-## v2.1.3
+## v2.2.0
+### Added
+- Added option to search by Base Model in the Model Browser
 
 ### Fixed
 - Fixed [#59](https://github.com/LykosAI/StabilityMatrix/issues/61) - `GIT` environment variable is now set for the embedded portable git on Windows as A1111 uses it instead of default `PATH` resolution
 - Fixed embedded Python install check on Linux when an incompatible windows DLL is in the Python install directory
+
+### Changed
+- Revamped Package Manager UI
+- InvokeAI installations can now use checkpoints from the Shared Models folder
 
 ## v2.1.2
 

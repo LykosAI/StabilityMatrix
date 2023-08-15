@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoComplete.Builders;
 using AutoComplete.Clients.IndexSearchers;
@@ -76,9 +78,46 @@ public class CompletionProvider : ICompletionProvider
         searcher = new InMemoryIndexSearcher(headerFile, indexFile, tailFile);
         searcher.Init();
     }
-    
-    /// <inheritdoc />
+
     public IEnumerable<ICompletionData> GetCompletions(string searchTerm, int itemsCount, bool suggest)
+    {
+        return GetCompletionsImpl_Index(searchTerm, itemsCount, suggest);
+    }
+
+    private IEnumerable<ICompletionData> GetCompletionsImpl_Fuzzy(string searchTerm, int itemsCount, bool suggest)
+    {
+        var extracted = FuzzySharp.Process
+            .ExtractTop(searchTerm, entries.Keys);
+        
+        var results = extracted
+            .Where(r => r.Score > 40)
+            .Select(r => r.Value)
+            .ToImmutableArray();
+        
+        // No results
+        if (results.IsEmpty)
+        {
+            Logger.Trace("No results for {Term}", searchTerm);
+            return Array.Empty<ICompletionData>();
+        }
+        
+        Logger.Trace("Got {Count} results for {Term}", results.Length, searchTerm);
+        
+        // Get entry for each result
+        var completions = new List<ICompletionData>();
+        foreach (var item in results)
+        {
+            if (entries.TryGetValue(item, out var entry))
+            {
+                var entryType = TagTypeExtensions.FromE621(entry.Type.GetValueOrDefault(-1));
+                completions.Add(new TagCompletionData(entry.Name!, entryType));
+            }
+        }
+        
+        return completions;
+    }
+    
+    private IEnumerable<ICompletionData> GetCompletionsImpl_Index(string searchTerm, int itemsCount, bool suggest)
     {
         if (searcher is null)
         {
@@ -91,13 +130,20 @@ public class CompletionProvider : ICompletionProvider
             MaxItemCount = itemsCount,
             SuggestWhenFoundStartsWith = suggest
         };
-
+        
         var result = searcher.Search(searchOptions);
 
         // No results
         if (result.ResultType == TrieNodeSearchResultType.NotFound)
         {
             Logger.Trace("No results for {Term}", searchTerm);
+            return Array.Empty<ICompletionData>();
+        }
+        
+        // Is null for some reason?
+        if (result.Items is null)
+        {
+            Logger.Warn("Got null results for {Term}", searchTerm);
             return Array.Empty<ICompletionData>();
         }
         

@@ -142,11 +142,9 @@ public sealed class App : Application
         if (DesktopLifetime is null) return;
         
         var mainViewModel = Services.GetRequiredService<MainWindowViewModel>();
-        var notificationService = Services.GetRequiredService<INotificationService>();
         
         var mainWindow = Services.GetRequiredService<MainWindow>();
         mainWindow.DataContext = mainViewModel;
-        mainWindow.NotificationService = notificationService;
         
         mainWindow.ExtendClientAreaChromeHints = Program.Args.NoWindowChromeEffects ?
             ExtendClientAreaChromeHints.NoChrome : ExtendClientAreaChromeHints.PreferSystemChrome;
@@ -208,7 +206,8 @@ public sealed class App : Application
         services.AddSingleton<MainWindowViewModel>(provider =>
             new MainWindowViewModel(provider.GetRequiredService<ISettingsManager>(),
                 provider.GetRequiredService<IDiscordRichPresenceService>(),
-                provider.GetRequiredService<ServiceManager<ViewModelBase>>())
+                provider.GetRequiredService<ServiceManager<ViewModelBase>>(), 
+                provider.GetRequiredService<INavigationService>())
             {
                 Pages =
                 {
@@ -329,6 +328,7 @@ public sealed class App : Application
         services.AddSingleton<INotificationService, NotificationService>();
         services.AddSingleton<IPyRunner, PyRunner>();
         services.AddSingleton<IUpdateHelper, UpdateHelper>();
+        services.AddSingleton<INavigationService, NavigationService>();
         
         // Rich presence
         services.AddSingleton<IDiscordRichPresenceService, DiscordRichPresenceService>();

@@ -75,6 +75,7 @@ public static class DesignData
 
         // General services
         services.AddLogging()
+            .AddSingleton<INavigationService, NavigationService>()
             .AddSingleton<IPackageFactory, PackageFactory>()
             .AddSingleton<IUpdateHelper, UpdateHelper>()
             .AddSingleton<ModelFinder>()

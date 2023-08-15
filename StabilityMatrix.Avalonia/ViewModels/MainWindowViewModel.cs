@@ -24,6 +24,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly IDiscordRichPresenceService discordRichPresenceService;
+    private readonly INavigationService navigationService;
     public string Greeting => "Welcome to Avalonia!";
     
     [ObservableProperty]
@@ -44,11 +45,13 @@ public partial class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel(
         ISettingsManager settingsManager, 
         IDiscordRichPresenceService discordRichPresenceService,
-        ServiceManager<ViewModelBase> dialogFactory)
+        ServiceManager<ViewModelBase> dialogFactory,
+        INavigationService navigationService)
     {
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
         this.discordRichPresenceService = discordRichPresenceService;
+        this.navigationService = navigationService;
         
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
@@ -205,7 +208,8 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (value is PageViewModelBase page)
         {
-            CurrentPage = page;
+            // CurrentPage = page;
+            // navigationService.NavigateTo(page);
         }
     }
 }

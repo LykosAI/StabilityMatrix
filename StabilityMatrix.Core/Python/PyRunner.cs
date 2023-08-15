@@ -26,6 +26,13 @@ public class PyRunner : IPyRunner
     
     public static string PythonDir => Path.Combine(GlobalConfig.LibraryDir, "Assets", PythonDirName);
 
+    /// <summary>
+    /// Path to the Python Linked library relative from the Python directory.
+    /// </summary>
+    public static string RelativePythonDllPath => Compat.Switch(
+        (PlatformKind.Windows, "python310.dll"),
+        (PlatformKind.Linux, Path.Combine("lib", "libpython3.10.so")));
+    
     public static string PythonDllPath => Compat.Switch(
         (PlatformKind.Windows, Path.Combine(PythonDir, "python310.dll")),
         (PlatformKind.Linux, Path.Combine(PythonDir, "lib", "libpython3.10.so")));

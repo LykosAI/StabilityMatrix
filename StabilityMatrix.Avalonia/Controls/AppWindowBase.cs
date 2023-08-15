@@ -6,7 +6,7 @@ using AsyncAwaitBestPractices;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using FluentAvalonia.UI.Windowing;
-using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 
 namespace StabilityMatrix.Avalonia.Controls;
 

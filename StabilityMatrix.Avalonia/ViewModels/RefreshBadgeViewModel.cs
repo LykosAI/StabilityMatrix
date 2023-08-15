@@ -8,6 +8,7 @@ using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Styles;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Progress;
 

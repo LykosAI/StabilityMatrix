@@ -7,6 +7,7 @@
                         xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                         xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                        xmlns:base="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="550"
                         d:DataContext="{x:Static mocks:DesignData.MainWindowViewModel}"
                         x:DataType="vm:MainWindowViewModel"
@@ -65,7 +66,7 @@
             SelectedItem="{Binding SelectedCategory}">
 
             <ui:NavigationView.MenuItemTemplate>
-                <DataTemplate DataType="{x:Type vm:PageViewModelBase}">
+                <DataTemplate DataType="{x:Type base:PageViewModelBase}">
                     <ui:NavigationViewItem
                         Margin="0,0,0,0"
                         Tag="{Binding Mode=OneTime}"

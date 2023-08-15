@@ -10,6 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Core.Api;
@@ -23,6 +25,8 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
+using CheckpointFile = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFile;
+using CheckpointFolder = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFolder;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
@@ -285,6 +289,7 @@ public static class DesignData
                 {
                     Name = "BB95 Furry Mix",
                     Description = "v1.0.0",
+                    BaseModel = "SD 1.5",
                     Files = new List<CivitFile>
                     {
                         new()

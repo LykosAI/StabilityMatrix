@@ -1,5 +1,4 @@
-﻿using System.Data;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Extensions;

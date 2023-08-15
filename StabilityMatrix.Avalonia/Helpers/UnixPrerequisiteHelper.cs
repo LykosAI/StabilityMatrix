@@ -27,11 +27,10 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
     private readonly IPyRunner pyRunner;
     
     private DirectoryPath HomeDir => settingsManager.LibraryDir;
-    private DirectoryPath AssetsDir => HomeDir + "Assets";
+    private DirectoryPath AssetsDir => HomeDir.JoinDir("Assets");
 
-    private DirectoryPath PythonDir => AssetsDir + "Python310";
-    private FilePath PythonDllPath => PythonDir + "python310.dll";
-    public bool IsPythonInstalled => PythonDllPath.Exists;
+    private DirectoryPath PythonDir => AssetsDir.JoinDir("Python310");
+    public bool IsPythonInstalled => PythonDir.JoinFile(PyRunner.RelativePythonDllPath).Exists;
     
     private DirectoryPath PortableGitInstallDir => HomeDir + "PortableGit";
     public string GitBinPath => PortableGitInstallDir + "bin";

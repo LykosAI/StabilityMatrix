@@ -1,9 +1,11 @@
 ﻿using System.Data;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -27,9 +29,6 @@ public class InvokeAI : BaseGitPackage
 
     public override string Blurb => "Professional Creative Tools for Stable Diffusion";
     public override string LaunchCommand => "invokeai-web";
-
-    public override string Disclaimer =>
-        "Note: InvokeAI support is currently experimental, and checkpoints in the shared models folder will not be available with InvokeAI.";
 
     public override IReadOnlyList<string> ExtraLaunchCommands => new[]
     {
@@ -293,10 +292,12 @@ public class InvokeAI : BaseGitPackage
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
-        if (command.Equals("invokeai-configure"))
+        arguments = command switch
         {
-            arguments = "--yes --skip-sd-weights";
-        }
+            "invokeai-configure" => "--yes --skip-sd-weights",
+            "invokeai-model-install" => "--yes",
+            _ => arguments
+        };
 
         VenvRunner.EnvironmentVariables = GetEnvVars(installedPackagePath);
 
@@ -355,11 +356,92 @@ public class InvokeAI : BaseGitPackage
 
     public override Task SetupModelFolders(DirectoryPath installDirectory)
     {
+        var modelsFolder = SettingsManager.ModelsDirectory;
+        if (!Directory.Exists(modelsFolder)) 
+            return Task.CompletedTask;
+
+        var connectedModelJsons =
+            Directory.GetFiles(modelsFolder, "*.cm-info.json", SearchOption.AllDirectories);
+        
+        var connectedModelDict = new Dictionary<string, ConnectedModelInfo>();
+
+        foreach (var jsonFile in connectedModelJsons)
+        {
+            var json = File.ReadAllText(jsonFile);
+            var connectedModelInfo = JsonSerializer.Deserialize<ConnectedModelInfo>(json);
+            var extension = connectedModelInfo?.FileMetadata.Format switch
+            {
+                CivitModelFormat.SafeTensor => ".safetensors",
+                CivitModelFormat.PickleTensor => ".pt",
+                _ => string.Empty
+            };
+            
+            if (string.IsNullOrWhiteSpace(extension) || connectedModelInfo == null)
+                continue;
+
+            var modelFilePath = jsonFile.Replace(".cm-info.json", extension);
+            if (File.Exists(modelFilePath))
+            {
+                connectedModelDict[modelFilePath] = connectedModelInfo;
+            }
+        }
+        
+        foreach (var modelFilePath in connectedModelDict.Keys)
+        {
+            var model = connectedModelDict[modelFilePath];
+            var modelType = model.ModelType switch
+            {
+                CivitModelType.Checkpoint => "main",
+                CivitModelType.LORA => "lora",
+                CivitModelType.TextualInversion => "embedding",
+                CivitModelType.Controlnet => "controlnet",
+                _ => string.Empty
+            };
+
+            if (string.IsNullOrWhiteSpace(modelType))
+                continue;
+
+            var sourcePath = modelFilePath;
+            var destinationPath = Path.Combine(installDirectory, RelativeRootPath, "autoimport",
+                modelType, Path.GetFileName(modelFilePath));
+
+            try
+            {
+                File.CreateSymbolicLink(destinationPath, sourcePath);
+            }
+            catch (IOException e)
+            {
+                // File already exists
+                Logger.Warn(e,
+                    $"Could not create symlink for {sourcePath} to {destinationPath} - file already exists");
+            }
+        }
+
         return Task.CompletedTask;
     }
 
-    public override Task UpdateModelFolders(DirectoryPath installDirectory)
+    public override Task UpdateModelFolders(DirectoryPath installDirectory) =>
+        SetupModelFolders(installDirectory);
+
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory)
     {
+        var autoImportDir = Path.Combine(installDirectory, RelativeRootPath, "autoimport");
+        var allSymlinks =
+            Directory.GetFiles(autoImportDir, "*.*", SearchOption.AllDirectories)
+                .Select(path => new FileInfo(path)).Where(file => file.LinkTarget != null);
+
+        foreach (var link in allSymlinks)
+        {
+            try
+            {
+                link.Delete();
+            }
+            catch (IOException e)
+            {
+                Logger.Warn(e, $"Could not delete symlink {link.FullName}");
+            }
+        }
+
         return Task.CompletedTask;
     }
 

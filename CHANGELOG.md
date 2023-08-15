@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.2.0
 ### Changed
 - Revamped Package Manager UI
+- InvokeAI installations can now use checkpoints from the Shared Models folder
 
 ## v2.1.2
 

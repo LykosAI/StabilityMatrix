@@ -69,7 +69,7 @@
                 <DataTemplate DataType="{x:Type base:PageViewModelBase}">
                     <ui:NavigationViewItem
                         Margin="0,0,0,0"
-                        Tag="{Binding Mode=OneTime}"
+                        Tag="{Binding}"
                         IconSource="{Binding IconSource}"
                         Content="{Binding Title}"/>
                 </DataTemplate>

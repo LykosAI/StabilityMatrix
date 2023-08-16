@@ -170,6 +170,7 @@ public partial class PackageCardViewModel : ProgressViewModel
         finally
         {
             IsIndeterminate = false;
+            Value = 0;
             Text = "";
         }
     }

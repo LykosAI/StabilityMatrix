@@ -49,7 +49,18 @@ public class ViewLocator : IDataTemplate, INavigationPageFactory
     }
 
     /// <inheritdoc />
-    public Control? GetPage(Type srcType) => null;
+    public Control? GetPage(Type srcType)
+    {
+        if (Attribute.GetCustomAttribute(srcType, typeof(ViewAttribute)) is ViewAttribute viewAttr)
+        {
+            var viewType = viewAttr.GetViewType();
+            var view = GetView(viewType);
+            view.DataContext ??= App.Services.GetService(srcType);
+            return view;
+        }
+        
+        throw new InvalidOperationException("View not found for " + srcType.FullName);
+    }
 
     /// <inheritdoc />
     public Control GetPageFromObject(object target)

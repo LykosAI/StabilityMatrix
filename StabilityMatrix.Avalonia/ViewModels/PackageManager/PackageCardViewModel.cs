@@ -1,17 +1,17 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
-using FluentAvalonia.UI.Media.Animation;
 using NLog;
 using Polly;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
@@ -21,7 +21,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
-public partial class PackageCardViewModel : Base.ProgressViewModel
+public partial class PackageCardViewModel : ProgressViewModel
 {
     private readonly IPackageFactory packageFactory;
     private readonly INotificationService notificationService;
@@ -118,65 +118,61 @@ public partial class PackageCardViewModel : Base.ProgressViewModel
     public async Task Update()
     {
         if (Package == null) return;
+        
         var basePackage = packageFactory[Package.PackageName!];
         if (basePackage == null)
         {
-            logger.Error("Could not find package {SelectedPackagePackageName}", 
+            logger.Warn("Could not find package {SelectedPackagePackageName}", 
                 Package.PackageName);
+            notificationService.Show("Invalid Package type",
+                $"Package {Package.PackageName.ToRepr()} is not a valid package type",
+                NotificationType.Error);
             return;
         }
-
+        
         Text = $"Updating {Package.DisplayName}";
         IsIndeterminate = true;
-        
-        basePackage.InstallLocation = Package.FullPath!;
-        var progress = new Progress<ProgressReport>(progress =>
-        {
-            var percent = Convert.ToInt32(progress.Percentage);
-            
-            Value = percent;
-            IsIndeterminate = progress.IsIndeterminate;
-            Text = $"Updating {Package.DisplayName}";
-            
-            EventManager.Instance.OnGlobalProgressChanged(percent);
-        });
-        
-        var updateResult = await basePackage.Update(Package, progress);
 
-        if (string.IsNullOrWhiteSpace(updateResult))
+        try
         {
-            var errorMsg =
-                $"There was an error updating {Package.DisplayName}. Please try again later.";
-
-            if (Package.PackageName == "automatic")
+            basePackage.InstallLocation = Package.FullPath!;
+            var progress = new Progress<ProgressReport>(progress =>
             {
-                errorMsg = errorMsg.Replace("Please try again later.",
-                    "Please stash any changes before updating, or manually update the package.");
-            }
+                var percent = Convert.ToInt32(progress.Percentage);
             
-            // there was an error
-            notificationService.Show(new Notification("Error updating package",
-                errorMsg, NotificationType.Error));
-        }
+                Value = percent;
+                IsIndeterminate = progress.IsIndeterminate;
+                Text = $"Updating {Package.DisplayName}";
+            
+                EventManager.Instance.OnGlobalProgressChanged(percent);
+            });
         
-        settingsManager.UpdatePackageVersionNumber(Package.Id, updateResult);
-        notificationService.Show("Update complete",
-            $"{Package.DisplayName} has been updated to the latest version.",
-            NotificationType.Success);
-
+            var updateResult = await basePackage.Update(Package, progress);
         
-        Dispatcher.UIThread.Invoke(() =>
-        {
-            using (settingsManager.BeginTransaction())
+            settingsManager.UpdatePackageVersionNumber(Package.Id, updateResult);
+            notificationService.Show("Update complete",
+                $"{Package.DisplayName} has been updated to the latest version.",
+                NotificationType.Success);
+        
+            await using (settingsManager.BeginTransaction())
             {
                 Package.UpdateAvailable = false;
             }
             IsUpdateAvailable = false;
+
+            InstalledVersion = Package.DisplayVersion ?? "Unknown";
+        }
+        catch (Exception e)
+        {
+            logger.Error(e, "Error Updating Package ({PackageName})", basePackage.Name);
+            notificationService.ShowPersistent($"Error Updating {Package.DisplayName}", e.Message, NotificationType.Error);
+        }
+        finally
+        {
             IsIndeterminate = false;
-            InstalledVersion = settingsManager.Settings.InstalledPackages
-                .First(x => x.Id == Package.Id).DisplayVersion ?? "Unknown";
             Value = 0;
-        });
+            Text = "";
+        }
     }
     
     public async Task OpenFolder()

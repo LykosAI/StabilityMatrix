@@ -92,7 +92,7 @@ public class ComfyUI : BaseGitPackage
 
     public override async Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true)
     {
-        var allBranches = await GetAllBranches();
+        var allBranches = await GetAllBranches().ConfigureAwait(false);
         return allBranches.Select(b => new PackageVersion
         {
             TagName = $"{b.Name}", 

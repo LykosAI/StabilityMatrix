@@ -38,7 +38,6 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     private readonly IPyRunner pyRunner;
     private readonly IDownloadService downloadService;
     private readonly INotificationService notificationService;
-    private readonly ISharedFolders sharedFolders;
     private readonly IPrerequisiteHelper prerequisiteHelper;
     
     [ObservableProperty] private BasePackage selectedPackage;
@@ -82,14 +81,12 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         IPackageFactory packageFactory,
         IPyRunner pyRunner,
         IDownloadService downloadService, INotificationService notificationService,
-        ISharedFolders sharedFolders,
         IPrerequisiteHelper prerequisiteHelper)
     {
         this.settingsManager = settingsManager;
         this.pyRunner = pyRunner;
         this.downloadService = downloadService;
         this.notificationService = notificationService;
-        this.sharedFolders = sharedFolders;
         this.prerequisiteHelper = prerequisiteHelper;
 
         // AvailablePackages and SelectedPackage

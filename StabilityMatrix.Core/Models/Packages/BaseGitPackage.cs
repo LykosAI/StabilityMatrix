@@ -240,6 +240,7 @@ public abstract class BaseGitPackage : BasePackage
     public override async Task<string> Update(InstalledPackage installedPackage,
         IProgress<ProgressReport>? progress = null, bool includePrerelease = false)
     {
+        // Release mode
         if (string.IsNullOrWhiteSpace(installedPackage.InstalledBranch))
         {
             var releases = await GetAllReleases().ConfigureAwait(false);
@@ -248,15 +249,20 @@ public abstract class BaseGitPackage : BasePackage
             await InstallPackage(progress).ConfigureAwait(false);
             return latestRelease.TagName;
         }
-        else
+
+        // Commit mode
+        var allCommits = await GetAllCommits(
+            installedPackage.InstalledBranch).ConfigureAwait(false);
+        var latestCommit = allCommits?.First();
+
+        if (latestCommit is null || string.IsNullOrEmpty(latestCommit.Sha))
         {
-            var allCommits = await GetAllCommits(
-                    installedPackage.InstalledBranch).ConfigureAwait(false);
-            var latestCommit = allCommits.First();
-            await DownloadPackage(latestCommit.Sha, true, progress);
-            await InstallPackage(progress).ConfigureAwait(false);
-            return latestCommit.Sha;
+            throw new Exception("No commits found for branch");
         }
+            
+        await DownloadPackage(latestCommit.Sha, true, progress).ConfigureAwait(false);
+        await InstallPackage(progress).ConfigureAwait(false);
+        return latestCommit.Sha;
     }
     
     // Send input to the running process.

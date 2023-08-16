@@ -62,8 +62,6 @@ public partial class MainWindowViewModel : ViewModelBase
         // Set only if null, since this may be called again when content dialogs open
         CurrentPage ??= Pages.FirstOrDefault();
         SelectedCategory ??= Pages.FirstOrDefault();
-        
-        EventManager.Instance.PageChangeRequested += OnPageChangeRequested;
     }
 
     public override async Task OnLoadedAsync()
@@ -194,19 +192,5 @@ public partial class MainWindowViewModel : ViewModelBase
         };
 
         await dialog.ShowAsync();
-    }
-
-    private void OnPageChangeRequested(object? sender, Type e)
-    {
-        CurrentPage = Pages.FirstOrDefault(p => p.GetType() == e);
-        SelectedCategory = Pages.FirstOrDefault(p => p.GetType() == e);
-    }
-
-    partial void OnSelectedCategoryChanged(object? value)
-    {
-        if (value is PageViewModelBase page)
-        {
-            CurrentPage = page;
-        }
     }
 }

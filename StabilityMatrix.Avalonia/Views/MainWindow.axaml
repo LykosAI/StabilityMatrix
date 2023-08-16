@@ -2,6 +2,7 @@
                         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                         xmlns:vm="using:StabilityMatrix.Avalonia.ViewModels"
                         xmlns:ui="using:FluentAvalonia.UI.Controls"
+                        xmlns:local="using:StabilityMatrix.Avalonia"
                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                         xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -54,11 +55,12 @@
         <ui:NavigationView
             Grid.Row="1"
             Grid.RowSpan="2"
+            Name="NavigationView"
+            ItemInvoked="NavigationView_OnItemInvoked"
             PaneDisplayMode="Left"
             IsPaneOpen="False"
             OpenPaneLength="200"
             IsSettingsVisible="False"
-            Content="{Binding CurrentPage}"
             MenuItemsSource="{Binding Pages, Mode=OneWay}"
             FooterMenuItemsSource="{Binding FooterPages, Mode=OneWay}"
             SelectedItem="{Binding SelectedCategory}">
@@ -67,6 +69,7 @@
                 <DataTemplate DataType="{x:Type base:PageViewModelBase}">
                     <ui:NavigationViewItem
                         Margin="0,0,0,0"
+                        Tag="{Binding}"
                         IconSource="{Binding IconSource}"
                         Content="{Binding Title}"/>
                 </DataTemplate>
@@ -124,6 +127,13 @@
                     </ui:NavigationViewItem>
                 </StackPanel>
             </ui:NavigationView.PaneFooter>
+
+            <!-- Since the data context is set dynamically, cannot use compiled bindings -->
+            <ui:Frame Name="FrameView">
+                <ui:Frame.NavigationPageFactory>
+                    <local:ViewLocator/>
+                </ui:Frame.NavigationPageFactory>
+            </ui:Frame>
 
         </ui:NavigationView>
     </Grid>

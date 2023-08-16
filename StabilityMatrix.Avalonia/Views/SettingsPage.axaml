@@ -112,7 +112,7 @@
                             Margin="0,0,0,8" />
                         <ui:SettingsExpander  Grid.Row="1"
                             Header="Discord Rich Presence" 
-                            Margin="8,0,0,4">
+                            Margin="8,0,8,4">
                             <ui:SettingsExpander.IconSource>
                                 <controls:FASymbolIconSource Symbol="fa-brands fa-discord"/>
                             </ui:SettingsExpander.IconSource>
@@ -135,7 +135,7 @@
                             Header="Add Stability Matrix to the Start Menu"
                             Description="Uses the current app location, you can run this again if you move the app"
                             IconSource="StarAdd"
-                            Margin="8,0,0,4">
+                            Margin="8,0,8,4">
                             <ui:SettingsExpander.Footer>
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <controls:ProgressRing 
@@ -171,7 +171,7 @@
                     <!-- Debug Options -->
                     <Grid Grid.Row="5" RowDefinitions="auto,*" 
                           Margin="0,8,0,0"
-                          IsVisible="{Binding !SharedState.IsDebugMode}" >
+                          IsVisible="{Binding SharedState.IsDebugMode}" >
                         <TextBlock 
                             FontWeight="Medium"
                             Text="Debug Options" 
@@ -181,7 +181,7 @@
                                 IconSource="Code"
                                 Command="{Binding LoadDebugInfo}"
                                 Header="Debug Options"
-                                Margin="8, 0,0,4">
+                                Margin="8, 0,8,4">
                                 
                                 <ui:SettingsExpanderItem Description="Paths" IconSource="Folder"
                                                          Margin="4">

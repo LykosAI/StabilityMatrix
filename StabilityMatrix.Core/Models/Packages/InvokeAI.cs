@@ -53,44 +53,13 @@ public class InvokeAI : BaseGitPackage
         base(githubApi, settingsManager, downloadService, prerequisiteHelper)
     {
     }
-
+    
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders => new()
     {
-        [SharedFolderType.StableDiffusion] = new[]
-        {
-            RelativeRootPath + "/models/sd-1/main",
-            RelativeRootPath + "/models/sd-2/main",
-            RelativeRootPath + "/models/sdxl/main",
-            RelativeRootPath + "/models/sdxl-refiner/main",
-        },
-        [SharedFolderType.Lora] = new[]
-        {
-            RelativeRootPath + "/models/sd-1/lora",
-            RelativeRootPath + "/models/sd-2/lora",
-            RelativeRootPath + "/models/sdxl/lora",
-            RelativeRootPath + "/models/sdxl-refiner/lora",
-        },
-        [SharedFolderType.TextualInversion] = new[]
-        {
-            RelativeRootPath + "/models/sd-1/embedding",
-            RelativeRootPath + "/models/sd-2/embedding",
-            RelativeRootPath + "/models/sdxl/embedding",
-            RelativeRootPath + "/models/sdxl-refiner/embedding",
-        },
-        [SharedFolderType.VAE] = new[]
-        {
-            RelativeRootPath + "/models/sd-1/vae",
-            RelativeRootPath + "/models/sd-2/vae",
-            RelativeRootPath + "/models/sdxl/vae",
-            RelativeRootPath + "/models/sdxl-refiner/vae",
-        },
-        [SharedFolderType.ControlNet] = new[]
-        {
-            RelativeRootPath + "/models/sd-1/controlnet",
-            RelativeRootPath + "/models/sd-2/controlnet",
-            RelativeRootPath + "/models/sdxl/controlnet",
-            RelativeRootPath + "/models/sdxl-refiner/controlnet",
-        },
+        [SharedFolderType.StableDiffusion] = new[] { RelativeRootPath + "/autoimport/main" },
+        [SharedFolderType.Lora] = new[] { RelativeRootPath + "/autoimport/lora" },
+        [SharedFolderType.TextualInversion] = new[] { RelativeRootPath + "/autoimport/embedding" },
+        [SharedFolderType.ControlNet] = new[] { RelativeRootPath + "/autoimport/controlnet" },
     };
 
     // https://github.com/invoke-ai/InvokeAI/blob/main/docs/features/CONFIGURATION.md
@@ -360,92 +329,20 @@ public class InvokeAI : BaseGitPackage
 
     public override Task SetupModelFolders(DirectoryPath installDirectory)
     {
-        var modelsFolder = SettingsManager.ModelsDirectory;
-        if (!Directory.Exists(modelsFolder)) 
-            return Task.CompletedTask;
-
-        var connectedModelJsons =
-            Directory.GetFiles(modelsFolder, "*.cm-info.json", SearchOption.AllDirectories);
-        
-        var connectedModelDict = new Dictionary<string, ConnectedModelInfo>();
-
-        foreach (var jsonFile in connectedModelJsons)
-        {
-            var json = File.ReadAllText(jsonFile);
-            var connectedModelInfo = JsonSerializer.Deserialize<ConnectedModelInfo>(json);
-            var extension = connectedModelInfo?.FileMetadata.Format switch
-            {
-                CivitModelFormat.SafeTensor => ".safetensors",
-                CivitModelFormat.PickleTensor => ".pt",
-                _ => string.Empty
-            };
-            
-            if (string.IsNullOrWhiteSpace(extension) || connectedModelInfo == null)
-                continue;
-
-            var modelFilePath = jsonFile.Replace(".cm-info.json", extension);
-            if (File.Exists(modelFilePath))
-            {
-                connectedModelDict[modelFilePath] = connectedModelInfo;
-            }
-        }
-        
-        foreach (var modelFilePath in connectedModelDict.Keys)
-        {
-            var model = connectedModelDict[modelFilePath];
-            var modelType = model.ModelType switch
-            {
-                CivitModelType.Checkpoint => "main",
-                CivitModelType.LORA => "lora",
-                CivitModelType.TextualInversion => "embedding",
-                CivitModelType.Controlnet => "controlnet",
-                _ => string.Empty
-            };
-
-            if (string.IsNullOrWhiteSpace(modelType))
-                continue;
-
-            var sourcePath = modelFilePath;
-            var destinationPath = Path.Combine(installDirectory, RelativeRootPath, "autoimport",
-                modelType, Path.GetFileName(modelFilePath));
-
-            try
-            {
-                File.CreateSymbolicLink(destinationPath, sourcePath);
-            }
-            catch (IOException e)
-            {
-                // File already exists
-                Logger.Warn(e,
-                    $"Could not create symlink for {sourcePath} to {destinationPath} - file already exists");
-            }
-        }
-
+        StabilityMatrix.Core.Helper.SharedFolders
+            .SetupLinks(SharedFolders, SettingsManager.ModelsDirectory, installDirectory);
         return Task.CompletedTask;
     }
 
-    public override Task UpdateModelFolders(DirectoryPath installDirectory) =>
-        SetupModelFolders(installDirectory);
+    public override async Task UpdateModelFolders(DirectoryPath installDirectory)
+    {
+        await StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(this,
+            SettingsManager.ModelsDirectory, installDirectory).ConfigureAwait(false);
+    }
 
     public override Task RemoveModelFolderLinks(DirectoryPath installDirectory)
     {
-        var autoImportDir = Path.Combine(installDirectory, RelativeRootPath, "autoimport");
-        var allSymlinks =
-            Directory.GetFiles(autoImportDir, "*.*", SearchOption.AllDirectories)
-                .Select(path => new FileInfo(path)).Where(file => file.LinkTarget != null);
-
-        foreach (var link in allSymlinks)
-        {
-            try
-            {
-                link.Delete();
-            }
-            catch (IOException e)
-            {
-                Logger.Warn(e, $"Could not delete symlink {link.FullName}");
-            }
-        }
-
+        StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(this, installDirectory);
         return Task.CompletedTask;
     }
 

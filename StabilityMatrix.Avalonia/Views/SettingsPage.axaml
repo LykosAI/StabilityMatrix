@@ -204,6 +204,24 @@
                                                          TextWrapping="WrapWithOverflow" />
                                 </ui:SettingsExpanderItem>
 
+                                <ui:SettingsExpanderItem Content="Animation Scale" IconSource="Clock"
+                                                         Description="Lower values = faster animations. 0x means animations are instant."
+                                                         Margin="4,0,4,4">
+                                    <ui:SettingsExpanderItem.Footer>
+                                        <ComboBox Margin="0, 8"
+                                                  ItemsSource="{Binding AnimationScaleOptions}"
+                                                  SelectedItem="{Binding SelectedAnimationScale}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock>
+                                                        <Run Text="{Binding }"/><Run Text="x"/>
+                                                    </TextBlock>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                    </ui:SettingsExpanderItem.Footer>
+                                </ui:SettingsExpanderItem>
+                                
                                 <ui:SettingsExpanderItem Content="Notification" IconSource="CommentAdd"
                                                          Margin="4,0,4,4">
                                     <ui:SettingsExpanderItem.Footer>

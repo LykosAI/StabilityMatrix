@@ -20,6 +20,7 @@ using FluentAvalonia.UI.Media;
 using FluentAvalonia.UI.Media.Animation;
 using FluentAvalonia.UI.Windowing;
 using Microsoft.Extensions.DependencyInjection;
+using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
@@ -141,7 +142,7 @@ public partial class MainWindow : AppWindowBase
             {
                 throw new InvalidOperationException($"NavigationViewItem Tag must be of type ViewModelBase, not {nvi.Tag?.GetType()}");
             }
-            navigationService.NavigateTo(vm, e.RecommendedNavigationTransitionInfo);
+            navigationService.NavigateTo(vm, new BetterEntranceNavigationTransition());
         }
     }
     

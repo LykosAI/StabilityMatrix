@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
+using FluentAvalonia.UI.Media.Animation;
 using NLog;
 using Polly;
 using StabilityMatrix.Avalonia.Services;
@@ -64,9 +66,8 @@ public partial class PackageCardViewModel : Base.ProgressViewModel
             return;
         
         settingsManager.Transaction(s => s.ActiveInstalledPackageId = Package.Id);
-        
-        navigationService.NavigateTo<LaunchPageViewModel>();
-        
+
+        navigationService.NavigateTo<LaunchPageViewModel>(new EntranceNavigationTransitionInfo());
         EventManager.Instance.OnPackageLaunchRequested(Package.Id);
     }
     

@@ -38,7 +38,7 @@ public class InstalledPackage
     public List<LaunchOption>? LaunchArgs { get; set; }
     public DateTimeOffset? LastUpdateCheck { get; set; }
 
-    [JsonIgnore] public bool UpdateAvailable { get; set; }
+    public bool UpdateAvailable { get; set; }
 
     /// <summary>
     /// Get the path as a relative sub-path of the relative path.

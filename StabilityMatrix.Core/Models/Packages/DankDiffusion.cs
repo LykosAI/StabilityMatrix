@@ -44,6 +44,11 @@ public class DankDiffusion : BaseGitPackage
         throw new NotImplementedException();
     }
 
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory)
+    {
+        throw new NotImplementedException();
+    }
+
     public override List<LaunchOptionDefinition> LaunchOptions { get; }
     public override Task<string> GetLatestVersion()
     {

@@ -4,7 +4,7 @@ using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Models;
 
-namespace StabilityMatrix.Avalonia.ViewModels;
+namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
 public class ViewModelBase : ObservableValidator, IRemovableListItem
 {

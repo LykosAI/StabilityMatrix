@@ -19,6 +19,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
@@ -135,10 +136,8 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
                 NotificationType.Error);
             return;
         }
-        
-        OnLoaded();
-        if (SelectedPackage is null) return;
-        
+
+        SelectedPackage = InstalledPackages.FirstOrDefault(x => x.Id == e);
         LaunchAsync().SafeFireAndForget();
     }
 

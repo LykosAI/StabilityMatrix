@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using AvaloniaEdit.Utils;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +13,10 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Database;
@@ -26,6 +30,8 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
+using CheckpointFile = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFile;
+using CheckpointFolder = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFolder;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
@@ -56,6 +62,7 @@ public static class DesignData
                     {
                         Id = activePackageId,
                         DisplayName = "My Installed Package",
+                        DisplayVersion = "v1.0.0",
                         PackageName = "stable-diffusion-webui",
                         PackageVersion = "v1.0.0",
                         LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
@@ -65,8 +72,8 @@ public static class DesignData
                     {
                         Id = Guid.NewGuid(),
                         DisplayName = "Dank Diffusion",
-                        PackageName = "dank-diffusion",
-                        PackageVersion = "v2.0.0",
+                        PackageName = "ComfyUI",
+                        DisplayVersion = "main@ab73d4a",
                         LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
                         LastUpdateCheck = DateTimeOffset.Now
                     }
@@ -77,6 +84,7 @@ public static class DesignData
 
         // General services
         services.AddLogging()
+            .AddSingleton<INavigationService, NavigationService>()
             .AddSingleton<IPackageFactory, PackageFactory>()
             .AddSingleton<IUpdateHelper, UpdateHelper>()
             .AddSingleton<ICompletionProvider, CompletionProvider>()
@@ -92,7 +100,7 @@ public static class DesignData
             .AddSingleton<IApiFactory, MockApiFactory>()
             .AddSingleton<IInferenceClientManager, MockInferenceClientManager>()
             .AddSingleton<IDiscordRichPresenceService, MockDiscordRichPresenceService>();
-        
+
         // Placeholder services that nobody should need during design time
         services
             .AddSingleton<IPyRunner>(_ => null!)
@@ -213,12 +221,14 @@ public static class DesignData
         CheckpointBrowserViewModel.ModelCards = new
             ObservableCollection<CheckpointBrowserCardViewModel>
             {
-                new(new CivitModel
+                dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
+                {
+                    vm.CivitModel = new CivitModel
                     {
                         Name = "BB95 Furry Mix",
                         Description = "A furry mix of BB95",
-                    }, downloadService, settingsManager,
-                    dialogFactory, notificationService)
+                    };
+                })
             };
 
         ProgressManagerViewModel.ProgressItems = new ObservableCollection<ProgressItemViewModel>
@@ -254,8 +264,19 @@ public static class DesignData
     public static LaunchPageViewModel LaunchPageViewModel =>
         Services.GetRequiredService<LaunchPageViewModel>();
 
-    public static PackageManagerViewModel PackageManagerViewModel =>
-        Services.GetRequiredService<PackageManagerViewModel>();
+    public static PackageManagerViewModel PackageManagerViewModel
+    {
+        get
+        {
+            var settings = Services.GetRequiredService<ISettingsManager>();
+            var vm = Services.GetRequiredService<PackageManagerViewModel>();
+            vm.Packages = new ObservableCollection<PackageCardViewModel>(
+                settings.Settings.InstalledPackages.Select(p =>
+                    DialogFactory.Get<PackageCardViewModel>(viewModel => viewModel.Package = p)));
+            vm.Packages.First().IsUpdateAvailable = true;
+            return vm;
+        }
+    }
 
     public static CheckpointsPageViewModel CheckpointsPageViewModel =>
         Services.GetRequiredService<CheckpointsPageViewModel>();
@@ -276,6 +297,7 @@ public static class DesignData
                 {
                     Name = "BB95 Furry Mix",
                     Description = "v1.0.0",
+                    BaseModel = "SD 1.5",
                     Files = new List<CivitFile>
                     {
                         new()
@@ -317,7 +339,7 @@ public static class DesignData
 
     public static OneClickInstallViewModel OneClickInstallViewModel =>
         Services.GetRequiredService<OneClickInstallViewModel>();
-
+    
     public static InferenceViewModel InferenceViewModel =>
         Services.GetRequiredService<InferenceViewModel>();
 

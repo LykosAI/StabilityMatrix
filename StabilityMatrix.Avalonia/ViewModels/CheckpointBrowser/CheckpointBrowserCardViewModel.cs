@@ -16,6 +16,7 @@ using NLog;
 using Octokit;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Extensions;
@@ -28,9 +29,9 @@ using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using Notification = Avalonia.Controls.Notifications.Notification;
 
-namespace StabilityMatrix.Avalonia.ViewModels;
+namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
-public partial class CheckpointBrowserCardViewModel : ProgressViewModel
+public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
 
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -38,33 +39,38 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly INotificationService notificationService;
-    private readonly Action<CheckpointBrowserCardViewModel>? onDownloadStart;
-    public CivitModel CivitModel { get; init; }
+    
+    public Action<CheckpointBrowserCardViewModel>? OnDownloadStart { get; set; }
+
+    public CivitModel CivitModel
+    {
+        get => civitModel;
+        set
+        {
+            civitModel = value;
+            UpdateImage();
+            CheckIfInstalled();
+        }
+    }
+
     public override bool IsTextVisible => Value > 0;
     
     [ObservableProperty] private Uri? cardImage;
     [ObservableProperty] private bool isImporting;
     [ObservableProperty] private string updateCardText = string.Empty;
     [ObservableProperty] private bool showUpdateCard;
+    private CivitModel civitModel;
 
     public CheckpointBrowserCardViewModel(
-        CivitModel civitModel,
         IDownloadService downloadService,
         ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> dialogFactory,
-        INotificationService notificationService,
-        Action<CheckpointBrowserCardViewModel>? onDownloadStart = null)
+        INotificationService notificationService)
     {
         this.downloadService = downloadService;
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
         this.notificationService = notificationService;
-        this.onDownloadStart = onDownloadStart;
-        CivitModel = civitModel;
-
-        UpdateImage();
-
-        CheckIfInstalled();
 
         // Update image when nsfw setting changes
         settingsManager.RegisterPropertyChangedHandler(
@@ -197,7 +203,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         IsImporting = true;
         Text = "Downloading...";
 
-        onDownloadStart?.Invoke(this);
+        OnDownloadStart?.Invoke(this);
 
         // Holds files to be deleted on errors
         var filesForCleanup = new HashSet<FilePath>();

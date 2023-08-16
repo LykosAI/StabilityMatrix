@@ -33,18 +33,27 @@
                   SelectedItem="{Binding SelectedVersionViewModel}">
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type dialogs:ModelVersionViewModel}">
-                    <StackPanel Orientation="Horizontal"
+                    <Grid ColumnDefinitions="Auto, Auto"
+                          RowDefinitions="Auto, Auto"
                                 MinWidth="128"
                                 Margin="0,4,0,4">
-                        <fluentAvalonia:SymbolIcon Symbol="Checkmark"
+                        <fluentAvalonia:SymbolIcon Grid.Row="0"
+                                                   Grid.Column="0"
+                                                   Grid.RowSpan="2"
+                                                   Symbol="Checkmark"
                                                    Foreground="Lime"
                                                    IsVisible="{Binding IsInstalled}"
                                                    VerticalAlignment="Center" />
-                        <TextBlock Margin="4, 0"
+                        <TextBlock Grid.Row="0" Grid.Column="1" 
+                                   Margin="4, 0"
                                    Padding="4"
                                    Text="{Binding ModelVersion.Name}" />
-
-                    </StackPanel>
+                        <TextBlock Grid.Row="1" Grid.Column="1" 
+                                   Margin="6, 0, 0, 0"
+                                   FontSize="11"
+                                   Padding="4, 0, 4, 4"
+                                   Text="{Binding ModelVersion.BaseModel}" />
+                    </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
             <ListBox.Template>

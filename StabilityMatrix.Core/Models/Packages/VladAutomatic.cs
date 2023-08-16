@@ -98,19 +98,21 @@ public class VladAutomatic : BaseGitPackage
         {
             Name = "Use DirectML if no compatible GPU is detected",
             Type = LaunchOptionType.Bool,
-            InitialValue = !HardwareHelper.HasNvidiaGpu() && HardwareHelper.HasAmdGpu(),
+            InitialValue = PreferDirectML(),
             Options = new() { "--use-directml" }
         },
         new()
         {
             Name = "Force use of Nvidia CUDA backend",
             Type = LaunchOptionType.Bool,
+            InitialValue = HardwareHelper.HasNvidiaGpu(),
             Options = new() { "--use-cuda" }
         },
         new()
         {
             Name = "Force use of AMD ROCm backend",
             Type = LaunchOptionType.Bool,
+            InitialValue = PreferRocm(),
             Options = new() { "--use-rocm" }
         },
         new()
@@ -136,6 +138,16 @@ public class VladAutomatic : BaseGitPackage
 
     public override string ExtraLaunchArguments => "";
 
+    // Set ROCm for default if AMD and Linux
+    private static bool PreferRocm() => !HardwareHelper.HasNvidiaGpu()
+                                     && HardwareHelper.HasAmdGpu()
+                                     && Compat.IsLinux;
+    
+    // Set DirectML for default if AMD and Windows
+    private static bool PreferDirectML() => !HardwareHelper.HasNvidiaGpu()
+                                            && HardwareHelper.HasAmdGpu()
+                                            && Compat.IsWindows;
+    
     public override Task<string> GetLatestVersion() => Task.FromResult("master");
 
     public override async Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true)
@@ -150,42 +162,38 @@ public class VladAutomatic : BaseGitPackage
     
     public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
     {
-        progress?.Report(new ProgressReport(-1f, "Installing dependencies...", isIndeterminate: true));
+        progress?.Report(new ProgressReport(-1f, "Installing package...", isIndeterminate: true));
         // Setup venv
         var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
         venvRunner.WorkingDirectory = InstallLocation;
-        if (!venvRunner.Exists())
-        {
-            await venvRunner.Setup().ConfigureAwait(false);
-        }
+        venvRunner.EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables;
+        
+        await venvRunner.Setup().ConfigureAwait(false);
 
-        // Install torch / xformers based on gpu info
-        var gpus = HardwareHelper.IterGpuInfo().ToList();
-        if (gpus.Any(g => g.IsNvidia))
+        // Run initial install
+        if (HardwareHelper.HasNvidiaGpu())
         {
-            Logger.Info("Starting torch install (CUDA)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, OnConsoleOutput)
+            // CUDA
+            await venvRunner.CustomInstall("launch.py --use-cuda --debug --test", OnConsoleOutput)
                 .ConfigureAwait(false);
-            
-            Logger.Info("Installing xformers...");
-            await venvRunner.PipInstall("xformers", OnConsoleOutput).ConfigureAwait(false);
         }
-        else if (gpus.Any(g => g.IsAmd))
+        else if (PreferRocm())
         {
-            Logger.Info("Starting torch install (DirectML)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, OnConsoleOutput)
+            // ROCm
+            await venvRunner.CustomInstall("launch.py --use-rocm --debug --test", OnConsoleOutput)
+                .ConfigureAwait(false);
+        }
+        else if (PreferDirectML())
+        {
+            // DirectML
+            await venvRunner.CustomInstall("launch.py --use-directml --debug --test", OnConsoleOutput)
                 .ConfigureAwait(false);
         }
         else
         {
-            Logger.Info("Starting torch install (CPU)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, OnConsoleOutput)
+            await venvRunner.CustomInstall("launch.py --debug --test", OnConsoleOutput)
                 .ConfigureAwait(false);
         }
-
-        // Install requirements file
-        Logger.Info("Installing requirements.txt");
-        await venvRunner.PipInstall($"-r requirements.txt", OnConsoleOutput).ConfigureAwait(false);
         
         progress?.Report(new ProgressReport(1, isIndeterminate: false));
     }
@@ -286,10 +294,11 @@ public class VladAutomatic : BaseGitPackage
         return Task.CompletedTask;
     }
 
-    public override Task UpdateModelFolders(DirectoryPath installDirectory)
-    {
-        return SetupModelFolders(installDirectory);
-    }
+    public override Task UpdateModelFolders(DirectoryPath installDirectory) =>
+        SetupModelFolders(installDirectory);
+
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory) =>
+        Task.CompletedTask;
 
     public override async Task<string> Update(InstalledPackage installedPackage,
         IProgress<ProgressReport>? progress = null, bool includePrerelease = false)

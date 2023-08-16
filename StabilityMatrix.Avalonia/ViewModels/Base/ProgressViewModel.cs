@@ -1,11 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace StabilityMatrix.Avalonia.ViewModels;
+namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
 /// <summary>
 /// Generic view model for progress reporting.
 /// </summary>
-public partial class ProgressViewModel : ObservableObject
+public partial class ProgressViewModel : ViewModelBase
 {
     [ObservableProperty, NotifyPropertyChangedFor(nameof(IsTextVisible))]
     private string? text;

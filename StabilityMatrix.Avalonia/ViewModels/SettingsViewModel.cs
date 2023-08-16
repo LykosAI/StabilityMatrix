@@ -72,6 +72,21 @@ public partial class SettingsViewModel : PageViewModelBase
         "Dark",
         "System",
     };
+
+    public IReadOnlyList<float> AnimationScaleOptions { get; } = new[]
+    {
+        0f,
+        0.25f,
+        0.5f,
+        0.75f,
+        1f,
+        1.25f,
+        1.5f,
+        1.75f,
+        2f,
+    };
+    
+    [ObservableProperty] private float selectedAnimationScale;
     
     // Shared folder options
     [ObservableProperty] private bool removeSymlinksOnShutdown;
@@ -110,6 +125,7 @@ public partial class SettingsViewModel : PageViewModelBase
         
         SelectedTheme = settingsManager.Settings.Theme ?? AvailableThemes[1];
         RemoveSymlinksOnShutdown = settingsManager.Settings.RemoveFolderLinksOnShutdown;
+        SelectedAnimationScale = settingsManager.Settings.AnimationScale;
         
         settingsManager.RelayPropertyFor(this, 
             vm => vm.SelectedTheme, 
@@ -120,6 +136,9 @@ public partial class SettingsViewModel : PageViewModelBase
             settings => settings.IsDiscordRichPresenceEnabled);
         
         DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
+        settingsManager.RelayPropertyFor(this,
+            vm => vm.SelectedAnimationScale,
+            settings => settings.AnimationScale);
     }
     
     partial void OnSelectedThemeChanged(string? value)

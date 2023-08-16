@@ -162,7 +162,7 @@
                                     Margin="8,8,8,0"
                                     TextAlignment="Center"
                                     Width="180"
-                                    Text="{Binding Text, TargetNullValue=Updating so and so to the latest version... 5%}"
+                                    Text="{Binding Text}"
                                     TextWrapping="Wrap"
                                     VerticalAlignment="Center" />
                             </Grid>

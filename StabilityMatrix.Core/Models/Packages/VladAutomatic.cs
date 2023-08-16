@@ -303,44 +303,41 @@ public class VladAutomatic : BaseGitPackage
     public override async Task<string> Update(InstalledPackage installedPackage,
         IProgress<ProgressReport>? progress = null, bool includePrerelease = false)
     {
+        if (installedPackage.InstalledBranch is null)
+        {
+            throw new Exception("Installed branch is null");
+        }
+        
         progress?.Report(new ProgressReport(0.1f, message: "Downloading package update...",
             isIndeterminate: true, type: ProgressType.Download));
 
-        var version = await GithubApi.GetAllCommits(Author, Name, installedPackage.InstalledBranch);
+        var version = await GithubApi.GetAllCommits(Author, Name, installedPackage.InstalledBranch).ConfigureAwait(false);
         var latest = version?.FirstOrDefault();
 
-        if (latest == null)
+        if (latest?.Sha is null)
         {
-            Logger.Warn("No latest version found for vlad");
-            return string.Empty;
+            throw new Exception("Could not get latest version");
         }
 
         try
         {
             var output =
-                await PrerequisiteHelper.GetGitOutput(workingDirectory: installedPackage.FullPath,
-                    "rev-parse", "HEAD");
+                await PrerequisiteHelper
+                    .GetGitOutput(installedPackage.FullPath, "rev-parse", "HEAD")
+                    .ConfigureAwait(false);
 
-            if (output?.Replace("\n", "") == latest.Sha)
+            if (output.Replace(Environment.NewLine, "") == latest.Sha)
             {
                 return latest.Sha;
             }
         }
-        catch (Exception)
-        {
-            // ignored
-        }
-
-        try
-        {
-            await PrerequisiteHelper.RunGit(workingDirectory: installedPackage.FullPath, "pull",
-                "origin", installedPackage.InstalledBranch);
-        }
         catch (Exception e)
         {
-            Logger.Log(LogLevel.Error, e);
-            return string.Empty;
+            Logger.Warn(e, "Could not get current git hash, continuing with update");
         }
+
+        await PrerequisiteHelper.RunGit(installedPackage.FullPath, "pull",
+            "origin", installedPackage.InstalledBranch).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(1f, message: "Update Complete", isIndeterminate: false,
             type: ProgressType.Generic));

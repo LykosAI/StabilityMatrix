@@ -216,6 +216,11 @@ public class InvokeAI : BaseGitPackage
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
+        if (installedPackage.FullPath is null)
+        {
+            throw new NullReferenceException("Installed package path is null");
+        }
+        
         await using var venvRunner = new PyVenvRunner(Path.Combine(installedPackage.FullPath, "venv"));
         venvRunner.WorkingDirectory = installedPackage.FullPath;
         venvRunner.EnvironmentVariables = GetEnvVars(installedPackage.FullPath);

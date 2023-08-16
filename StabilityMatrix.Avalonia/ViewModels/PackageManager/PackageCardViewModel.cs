@@ -10,6 +10,7 @@ using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
 using NLog;
 using Polly;
+using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
@@ -66,8 +67,8 @@ public partial class PackageCardViewModel : Base.ProgressViewModel
             return;
         
         settingsManager.Transaction(s => s.ActiveInstalledPackageId = Package.Id);
-
-        navigationService.NavigateTo<LaunchPageViewModel>(new EntranceNavigationTransitionInfo());
+        
+        navigationService.NavigateTo<LaunchPageViewModel>(new BetterDrillInNavigationTransition());
         EventManager.Instance.OnPackageLaunchRequested(Package.Id);
     }
     

@@ -118,9 +118,9 @@ public class FilePath : FileSystemPath, IPathObject
     /// <summary>
     /// Move the file to a directory.
     /// </summary>
-    public async Task<FilePath> MoveToAsync(DirectoryPath directory)
+    public async Task<FilePath> MoveToDirectoryAsync(DirectoryPath directory)
     {
-        await Task.Run(() => Info.MoveTo(directory.FullPath));
+        await Task.Run(() => Info.MoveTo(directory.FullPath)).ConfigureAwait(false);
         // Return the new path
         return directory.JoinFile(this);
     }
@@ -130,7 +130,7 @@ public class FilePath : FileSystemPath, IPathObject
     /// </summary>
     public async Task<FilePath> MoveToAsync(FilePath destinationFile)
     {
-        await Task.Run(() => Info.MoveTo(destinationFile.FullPath));
+        await Task.Run(() => Info.MoveTo(destinationFile.FullPath)).ConfigureAwait(false);
         // Return the new path
         return destinationFile;
     }
@@ -141,6 +141,20 @@ public class FilePath : FileSystemPath, IPathObject
     public FilePath CopyTo(FilePath destinationFile, bool overwrite = false)
     {
         Info.CopyTo(destinationFile.FullPath, overwrite);
+        // Return the new path
+        return destinationFile;
+    }
+    
+    /// <summary>
+    /// Copy the file to a target path asynchronously.
+    /// </summary>
+    public async Task<FilePath> CopyToAsync(FilePath destinationFile, bool overwrite = false)
+    {
+        await using var sourceStream = Info.OpenRead();
+        await using var destinationStream = destinationFile.Info.OpenWrite();
+        
+        await sourceStream.CopyToAsync(destinationStream).ConfigureAwait(false);
+        
         // Return the new path
         return destinationFile;
     }

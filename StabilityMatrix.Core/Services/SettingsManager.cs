@@ -54,8 +54,8 @@ public class SettingsManager : ISettingsManager
     public Settings Settings { get; private set; } = new();
     
     public event EventHandler<string>? LibraryDirChanged; 
-    public event EventHandler<PropertyChangedEventArgs>? SettingsPropertyChanged;
-
+    public event EventHandler<RelayPropertyChangedEventArgs>? SettingsPropertyChanged;
+    
     /// <inheritdoc />
     public SettingsTransaction BeginTransaction()
     {
@@ -106,7 +106,7 @@ public class SettingsManager : ISettingsManager
         propertyInfo.SetValue(transaction.Settings, value);
         
         // Invoke property changed event
-        SettingsPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        SettingsPropertyChanged?.Invoke(this, new RelayPropertyChangedEventArgs(name));
     }
 
     /// <inheritdoc />
@@ -128,7 +128,8 @@ public class SettingsManager : ISettingsManager
         // Update source when settings change
         SettingsPropertyChanged += (_, args) =>
         {
-            if (args.PropertyName != propertyName) return;
+            // Skip if event is relay, to avoid double setting
+            if (args.IsRelay || args.PropertyName != propertyName) return;
             
             Logger.Trace(
                 "[RelayPropertyFor] " +
@@ -149,10 +150,12 @@ public class SettingsManager : ISettingsManager
                 sourceTypeName, propertyName, targetPropertyName);
             
             settingsSetter(Settings, sourceGetter(source));
+            
+            // Save settings to file
             SaveSettingsAsync().SafeFireAndForget();
             
             // Invoke property changed event
-            SettingsPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            SettingsPropertyChanged?.Invoke(this, new RelayPropertyChangedEventArgs(propertyName, true));
         };
     }
     

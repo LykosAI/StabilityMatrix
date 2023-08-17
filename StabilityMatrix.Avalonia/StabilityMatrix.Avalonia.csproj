@@ -30,7 +30,7 @@
         <PackageReference Include="DiscordRichPresence" Version="1.2.1.24" />
         <PackageReference Include="Dock.Avalonia" Version="11.0.0" />
         <PackageReference Include="Dock.Model.Avalonia" Version="11.0.0" />
-        <PackageReference Include="FluentAvaloniaUI" Version="2.0.0" />
+        <PackageReference Include="FluentAvaloniaUI" Version="2.0.1" />
         <PackageReference Include="FluentIcons.Avalonia" Version="1.1.207" />
         <PackageReference Include="FluentIcons.FluentAvalonia" Version="1.1.207" />
         <PackageReference Include="FuzzySharp" Version="2.0.2" />

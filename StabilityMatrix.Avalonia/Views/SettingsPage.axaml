@@ -133,17 +133,20 @@
                                                      IsEnabled="{Binding IsPromptCompletionEnabled}"
                                                      Description="Tags to use for completion in .csv format (Compatible with a1111-sd-webui-tagcomplete)">
                                 <ui:SettingsExpanderItem.Footer>
-                                    <UniformGrid Columns="2">
-                                        <ui:FAComboBox 
-                                            ItemsSource="{Binding AvailableTagCompletionCsvs}"
-                                            SelectedItem="{Binding SelectedTagCompletionCsv}"/>
-                                        <Button
-                                            Margin="8,0,0,0"
-                                            Padding="12,8"
-                                            Command="{Binding ImportTagCsvCommand}"
-                                            ToolTip.Tip="Import a .csv file"
-                                            icons:Attached.Icon="fa-solid fa-file-import"/>
-                                    </UniformGrid>
+                                    <ui:FAComboBox 
+                                        ItemsSource="{Binding AvailableTagCompletionCsvs}"
+                                        SelectedItem="{Binding SelectedTagCompletionCsv}"/>
+                                </ui:SettingsExpanderItem.Footer>
+                            </ui:SettingsExpanderItem>
+                            
+                            <!-- Tag csv import -->
+                            <ui:SettingsExpanderItem Content="Import Tag Source .csv"
+                                                     IconSource="Add"
+                                                     IsEnabled="{Binding IsPromptCompletionEnabled}">
+                                <ui:SettingsExpanderItem.Footer>
+                                    <Button
+                                        Command="{Binding ImportTagCsvCommand}"
+                                        Content="Import"/>
                                 </ui:SettingsExpanderItem.Footer>
                             </ui:SettingsExpanderItem>
                         </ui:SettingsExpander>

@@ -57,8 +57,9 @@ public interface ISettingsManager
     void RelayPropertyFor<T, TValue>(
         T source, 
         Expression<Func<T, TValue>> sourceProperty,
-        Expression<Func<Settings, TValue>> settingsProperty) where T : INotifyPropertyChanged;
-
+        Expression<Func<Settings, TValue>> settingsProperty,
+        bool setInitial = false) where T : INotifyPropertyChanged;
+    
     /// <summary>
     /// Register an Action to be called on change of the settings property.
     /// </summary>

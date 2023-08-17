@@ -126,7 +126,8 @@ public class SettingsManager : ISettingsManager
     public void RelayPropertyFor<T, TValue>(
         T source, 
         Expression<Func<T, TValue>> sourceProperty,
-        Expression<Func<Settings, TValue>> settingsProperty) where T : INotifyPropertyChanged
+        Expression<Func<Settings, TValue>> settingsProperty,
+        bool setInitial = false) where T : INotifyPropertyChanged
     {
         var sourceGetter = sourceProperty.Compile();
         var (propertyName, assigner) = Expressions.GetAssigner(sourceProperty);
@@ -139,10 +140,12 @@ public class SettingsManager : ISettingsManager
         var sourceTypeName = source.GetType().Name;
         
         // Update source when settings change
-        SettingsPropertyChanged += (_, args) =>
+        SettingsPropertyChanged += (sender, args) =>
         {
-            // Skip if event is relay, to avoid double setting
-            if (args.IsRelay || args.PropertyName != propertyName) return;
+            if (args.PropertyName != propertyName) return;
+            
+            // Skip if event is relay and the sender is the source, to prevent duplicate
+            if (args.IsRelay && ReferenceEquals(sender, source)) return;
             
             Logger.Trace(
                 "[RelayPropertyFor] " +
@@ -153,7 +156,7 @@ public class SettingsManager : ISettingsManager
         };
         
         // Set and Save settings when source changes
-        source.PropertyChanged += (_, args) =>
+        source.PropertyChanged += (sender, args) =>
         {
             if (args.PropertyName != propertyName) return;
             
@@ -167,11 +170,17 @@ public class SettingsManager : ISettingsManager
             // Save settings to file
             SaveSettingsAsync().SafeFireAndForget();
             
-            // Invoke property changed event
-            SettingsPropertyChanged?.Invoke(this, new RelayPropertyChangedEventArgs(targetPropertyName, true));
+            // Invoke property changed event, passing along sender
+            SettingsPropertyChanged?.Invoke(sender, new RelayPropertyChangedEventArgs(targetPropertyName, true));
         };
+        
+        // Set initial value if requested
+        if (setInitial)
+        {
+            sourceSetter(source, settingsGetter(Settings));
+        }
     }
-    
+
     /// <inheritdoc />
     public void RegisterPropertyChangedHandler<T>(
         Expression<Func<Settings, T>> settingsProperty,

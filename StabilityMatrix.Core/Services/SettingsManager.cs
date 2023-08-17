@@ -49,6 +49,7 @@ public class SettingsManager : ISettingsManager
     public string DatabasePath => Path.Combine(LibraryDir, "StabilityMatrix.db");
     private string SettingsPath => Path.Combine(LibraryDir, "settings.json");
     public string ModelsDirectory => Path.Combine(LibraryDir, "Models");
+    public DirectoryPath TagsDirectory => new(LibraryDir, "Tags");
 
     public Settings Settings { get; private set; } = new();
     

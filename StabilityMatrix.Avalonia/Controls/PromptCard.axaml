@@ -69,6 +69,7 @@
                                     FontFamily="Cascadia Code,Consolas,Menlo,Monospace">
                                     <i:Interaction.Behaviors>
                                         <behaviors:TextEditorCompletionBehavior
+                                            IsEnabled="{Binding CompletionProvider.IsLoaded}"
                                             CompletionProvider="{Binding CompletionProvider}"/>
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>
@@ -103,6 +104,7 @@
                                     FontFamily="Cascadia Code,Consolas,Menlo,Monospace">
                                     <i:Interaction.Behaviors>
                                         <behaviors:TextEditorCompletionBehavior
+                                            IsEnabled="{Binding CompletionProvider.IsLoaded}"
                                             CompletionProvider="{Binding CompletionProvider}"/>
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>

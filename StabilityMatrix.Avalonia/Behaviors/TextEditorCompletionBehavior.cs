@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Avalonia;
 using Avalonia.Input;
@@ -14,6 +15,7 @@ using CompletionWindow = StabilityMatrix.Avalonia.Controls.CodeCompletion.Comple
 
 namespace StabilityMatrix.Avalonia.Behaviors;
 
+[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class TextEditorCompletionBehavior : Behavior<TextEditor>
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -21,8 +23,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
     private TextEditor textEditor = null!;
     
     private CompletionWindow? completionWindow;
-
-    // ReSharper disable once MemberCanBePrivate.Global
+    
     public static readonly StyledProperty<ICompletionProvider> CompletionProviderProperty =
         AvaloniaProperty.Register<TextEditorCompletionBehavior, ICompletionProvider>(nameof(CompletionProvider));
 
@@ -30,6 +31,15 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
     {
         get => GetValue(CompletionProviderProperty);
         set => SetValue(CompletionProviderProperty, value);
+    }
+
+    public static readonly StyledProperty<bool> IsEnabledProperty = AvaloniaProperty.Register<TextEditorCompletionBehavior, bool>(
+        "IsEnabled", true);
+
+    public bool IsEnabled
+    {
+        get => GetValue(IsEnabledProperty);
+        set => SetValue(IsEnabledProperty, value);
     }
     
     protected override void OnAttached()
@@ -72,7 +82,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
 
     private void TextArea_TextEntered(object? sender, TextInputEventArgs e)
     {
-        if (e.Text is not { } triggerText) return;
+        if (!IsEnabled || e.Text is not { } triggerText) return;
         
         if (triggerText.All(char.IsLetterOrDigit))
         {

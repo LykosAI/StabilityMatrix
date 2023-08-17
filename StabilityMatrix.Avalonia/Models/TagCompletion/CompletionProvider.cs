@@ -1,18 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using AutoComplete.Builders;
 using AutoComplete.Clients.IndexSearchers;
 using AutoComplete.DataStructure;
 using AutoComplete.Domain;
+using Avalonia.Controls.Notifications;
+using Nito.AsyncEx;
 using NLog;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Settings;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Models.TagCompletion;
 
@@ -20,14 +27,67 @@ public class CompletionProvider : ICompletionProvider
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private readonly INotificationService notificationService;
+    
+    private readonly AsyncLock loadLock = new();
     private readonly Dictionary<string, TagCsvEntry> entries = new();
     
     private InMemoryIndexSearcher? searcher;
     
     public bool IsLoaded => searcher is not null;
+
+    public CompletionProvider(ISettingsManager settingsManager, INotificationService notificationService)
+    {
+        this.notificationService = notificationService;
+
+        // Attach to load from set file on initial settings load
+        settingsManager.Loaded += (_, _) => UpdateTagCompletionCsv();
+        
+        // Also load when TagCompletionCsv property changes
+        settingsManager.SettingsPropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(Settings.TagCompletionCsv))
+            {
+                UpdateTagCompletionCsv();
+            }
+        };
+        
+        // If library already loaded, start a background load
+        if (settingsManager.IsLibraryDirSet)
+        {
+            UpdateTagCompletionCsv();
+        }
+        
+        return;
+
+        void UpdateTagCompletionCsv()
+        {
+            var csvPath = settingsManager.Settings.TagCompletionCsv;
+            if (csvPath is null) return;
+
+            var fullPath = settingsManager.TagsDirectory.JoinFile(csvPath);
+            BackgroundLoadFromFile(fullPath);
+        }
+    }
+
+    /// <inheritdoc />
+    public void BackgroundLoadFromFile(FilePath path, bool recreate = false)
+    {
+        LoadFromFile(path, recreate).SafeFireAndForget(onException: exception =>
+        {
+            const string title = "Failed to load tag completion file";
+            Debug.Fail(title);
+            Logger.Warn(exception, title);
+            notificationService.Show(title + $" {path.Name}", 
+                exception.Message, NotificationType.Error);
+        }, true);
+    }
     
+    /// <inheritdoc />
     public async Task LoadFromFile(FilePath path, bool recreate = false)
     {
+        using var _ = await loadLock.LockAsync();
+        
         // Get Blake3 hash of file
         var hash = await FileHash.GetBlake3Async(path);
         
@@ -35,8 +95,8 @@ public class CompletionProvider : ICompletionProvider
         
         // Check for AppData/StabilityMatrix/Temp/Tags/<hash>/*.bin
         var tempTagsDir = GlobalConfig.HomeDir.JoinDir("Temp", "Tags");
-        tempTagsDir.Create();
         var hashDir = tempTagsDir.JoinDir(hash);
+        hashDir.Create();
         
         var headerFile = hashDir.JoinFile("header.bin");
         var indexFile = hashDir.JoinFile("index.bin");
@@ -44,11 +104,12 @@ public class CompletionProvider : ICompletionProvider
 
         entries.Clear();
         
+        var timer = Stopwatch.StartNew();
+        
         // If directory or any file is missing, rebuild the index
         if (recreate || !(hashDir.Exists && headerFile.Exists && indexFile.Exists && tailFile.Exists))
         {
-            Logger.Trace("Creating new index for {Path}", hashDir);
-            hashDir.Create();
+            Logger.Debug("Creating new index for {Path}", hashDir);
             
             await using var headerStream = headerFile.Info.OpenWrite();
             await using var indexStream = indexFile.Info.OpenWrite();
@@ -57,28 +118,47 @@ public class CompletionProvider : ICompletionProvider
             var builder = new IndexBuilder(headerStream, indexStream, tailStream);
             
             // Parse csv
-            var csvStream = path.Info.OpenRead();
+            await using var csvStream = path.Info.OpenRead();
             var parser = new TagCsvParser(csvStream);
 
             await foreach (var entry in parser.ParseAsync())
             {
-                if (string.IsNullOrWhiteSpace(entry.Name))
-                {
-                    continue;
-                }
+                if (string.IsNullOrWhiteSpace(entry.Name)) continue;
+                
                 // Add to index
                 builder.Add(entry.Name);
                 // Add to local dictionary
                 entries.Add(entry.Name, entry);
             }
             
-            builder.Build();
+            await Task.Run(builder.Build);
+        }
+        else
+        {
+            // Otherwise just load the dictionary
+            Logger.Debug("Loading existing index for {Path}", hashDir);
+
+            await using var csvStream = path.Info.OpenRead();
+            var parser = new TagCsvParser(csvStream);
+            
+            await foreach (var entry in parser.ParseAsync())
+            {
+                if (string.IsNullOrWhiteSpace(entry.Name)) continue;
+                
+                // Add to local dictionary
+                entries.Add(entry.Name, entry);
+            }
         }
         
         searcher = new InMemoryIndexSearcher(headerFile, indexFile, tailFile);
         searcher.Init();
+        
+        var elapsed = timer.Elapsed;
+        
+        Logger.Info("Loaded {Count} tags for {Path} in {Time:F2}s", entries.Count, path.Name, elapsed.TotalSeconds);
     }
 
+    /// <inheritdoc />
     public IEnumerable<ICompletionData> GetCompletions(string searchTerm, int itemsCount, bool suggest)
     {
         return GetCompletionsImpl_Index(searchTerm, itemsCount, suggest);

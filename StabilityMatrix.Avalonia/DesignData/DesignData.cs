@@ -18,6 +18,7 @@ using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Helper;
@@ -87,7 +88,6 @@ public static class DesignData
             .AddSingleton<INavigationService, NavigationService>()
             .AddSingleton<IPackageFactory, PackageFactory>()
             .AddSingleton<IUpdateHelper, UpdateHelper>()
-            .AddSingleton<ICompletionProvider, CompletionProvider>()
             .AddSingleton<ModelFinder>()
             .AddSingleton<SharedState>();
 
@@ -99,7 +99,8 @@ public static class DesignData
             .AddSingleton<IHttpClientFactory, MockHttpClientFactory>()
             .AddSingleton<IApiFactory, MockApiFactory>()
             .AddSingleton<IInferenceClientManager, MockInferenceClientManager>()
-            .AddSingleton<IDiscordRichPresenceService, MockDiscordRichPresenceService>();
+            .AddSingleton<IDiscordRichPresenceService, MockDiscordRichPresenceService>()
+            .AddSingleton<ICompletionProvider, MockCompletionProvider>();
 
         // Placeholder services that nobody should need during design time
         services
@@ -283,7 +284,10 @@ public static class DesignData
 
     public static SettingsViewModel SettingsViewModel =>
         Services.GetRequiredService<SettingsViewModel>();
-
+    
+    public static InferenceSettingsViewModel InferenceSettingsViewModel =>
+        Services.GetRequiredService<InferenceSettingsViewModel>();
+    
     public static CheckpointBrowserViewModel CheckpointBrowserViewModel =>
         Services.GetRequiredService<CheckpointBrowserViewModel>();
 

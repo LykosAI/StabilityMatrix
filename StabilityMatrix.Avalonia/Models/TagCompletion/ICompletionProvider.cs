@@ -16,6 +16,11 @@ public interface ICompletionProvider
     /// Load the completion provider from a file.
     /// </summary>
     Task LoadFromFile(FilePath path, bool recreate = false);
+
+    /// <summary>
+    /// Load the completion provider from a file in the background.
+    /// </summary>
+    void BackgroundLoadFromFile(FilePath path, bool recreate = false);
     
     /// <summary>
     /// Returns a list of completion items for the given text.

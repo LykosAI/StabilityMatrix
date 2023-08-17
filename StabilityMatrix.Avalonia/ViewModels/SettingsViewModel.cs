@@ -264,6 +264,8 @@ public partial class SettingsViewModel : PageViewModelBase
     
     private void UpdateAvailableTagCompletionCsvs()
     {
+        if (!settingsManager.IsLibraryDirSet) return;
+        
         var tagsDir = settingsManager.TagsDirectory;
         if (!tagsDir.Exists) return;
         

@@ -45,6 +45,11 @@ public class Settings
     public ModelSearchOptions? ModelSearchOptions { get; set; }
     
     /// <summary>
+    /// Whether prompt auto completion is enabled
+    /// </summary>
+    public bool IsPromptCompletionEnabled { get; set; }
+    
+    /// <summary>
     /// Relative path to the tag completion CSV file from 'LibraryDir/Tags'
     /// </summary>
     public string? TagCompletionCsv { get; set; }

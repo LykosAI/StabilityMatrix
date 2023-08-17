@@ -28,6 +28,11 @@ public interface ISettingsManager
     event EventHandler<RelayPropertyChangedEventArgs>? SettingsPropertyChanged;
 
     /// <summary>
+    /// Event fired when Settings are loaded from disk
+    /// </summary>
+    event EventHandler? Loaded;
+    
+    /// <summary>
     /// Return a SettingsTransaction that can be used to modify Settings
     /// Saves on Dispose.
     /// </summary>
@@ -65,7 +70,8 @@ public interface ISettingsManager
     /// Attempts to locate and set the library path
     /// Return true if found, false otherwise
     /// </summary>
-    bool TryFindLibrary();
+    /// <param name="forceReload">Force reload even if library is already set</param>
+    bool TryFindLibrary(bool forceReload = false);
 
     /// <summary>
     /// Save a new library path to %APPDATA%/StabilityMatrix/library.json

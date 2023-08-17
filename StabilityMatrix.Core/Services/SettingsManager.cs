@@ -39,8 +39,15 @@ public class SettingsManager : ISettingsManager
         }
         private set
         {
+            var isChanged = libraryDir != value;
+            
             libraryDir = value;
-            LibraryDirChanged?.Invoke(this, value);
+            
+            // Only invoke if different
+            if (isChanged)
+            {
+                LibraryDirChanged?.Invoke(this, value);
+            }
         }
     }
     public bool IsLibraryDirSet => !string.IsNullOrWhiteSpace(libraryDir);
@@ -53,8 +60,14 @@ public class SettingsManager : ISettingsManager
 
     public Settings Settings { get; private set; } = new();
     
-    public event EventHandler<string>? LibraryDirChanged; 
+    /// <inheritdoc />
+    public event EventHandler<string>? LibraryDirChanged;
+    
+    /// <inheritdoc />
     public event EventHandler<RelayPropertyChangedEventArgs>? SettingsPropertyChanged;
+    
+    /// <inheritdoc />
+    public event EventHandler? Loaded;
     
     /// <inheritdoc />
     public SettingsTransaction BeginTransaction()
@@ -155,7 +168,7 @@ public class SettingsManager : ISettingsManager
             SaveSettingsAsync().SafeFireAndForget();
             
             // Invoke property changed event
-            SettingsPropertyChanged?.Invoke(this, new RelayPropertyChangedEventArgs(propertyName, true));
+            SettingsPropertyChanged?.Invoke(this, new RelayPropertyChangedEventArgs(targetPropertyName, true));
         };
     }
     
@@ -180,8 +193,10 @@ public class SettingsManager : ISettingsManager
     /// Attempts to locate and set the library path
     /// Return true if found, false otherwise
     /// </summary>
-    public bool TryFindLibrary()
+    public bool TryFindLibrary(bool forceReload = false)
     {
+        if (IsLibraryDirSet && !forceReload) return true;
+        
         // 1. Check portable mode
         var appDir = Compat.AppCurrentDir;
         IsPortableMode = File.Exists(Path.Combine(appDir, "Data", ".sm-portable"));
@@ -503,6 +518,8 @@ public class SettingsManager : ISettingsManager
             Settings =
                 JsonSerializer.Deserialize<Settings>(settingsContent,
                     modifiedDefaultSerializerOptions)!;
+
+            Loaded?.Invoke(this, EventArgs.Empty);
         }
         finally
         {

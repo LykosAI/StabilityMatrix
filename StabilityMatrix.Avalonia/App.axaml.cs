@@ -44,8 +44,10 @@ using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
+using StabilityMatrix.Avalonia.Views.Settings;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Database;
@@ -205,6 +207,7 @@ public sealed class App : Application
     {
         services.AddSingleton<PackageManagerViewModel>()
             .AddSingleton<SettingsViewModel>()
+            .AddSingleton<InferenceSettingsViewModel>()
             .AddSingleton<CheckpointBrowserViewModel>()
             .AddSingleton<CheckpointsPageViewModel>()
             .AddSingleton<LaunchPageViewModel>()
@@ -310,6 +313,7 @@ public sealed class App : Application
         services.AddSingleton<LaunchPageView>();
         services.AddSingleton<PackageManagerPage>();
         services.AddSingleton<SettingsPage>();
+        services.AddSingleton<InferenceSettingsPage>();
         services.AddSingleton<CheckpointBrowserPage>();
         services.AddSingleton<ProgressManagerPage>();
         services.AddSingleton<InferencePage>();

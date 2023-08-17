@@ -41,6 +41,7 @@
         <StyleInclude Source="Controls/StackExpander.axaml"/>
         <StyleInclude Source="Controls/ModelCard.axaml"/>
         <StyleInclude Source="Controls/BatchSizeCard.axaml"/>
+        <StyleInclude Source="Controls/AdvancedImageBox.axaml"/>
         <StyleInclude Source="Controls/CodeCompletion/CompletionWindow.axaml"/>
     </Application.Styles>
 </Application>

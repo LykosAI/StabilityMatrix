@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Controls.Primitives;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
@@ -447,15 +448,21 @@ public partial class SettingsViewModel : PageViewModelBase
         using var data = peekPixels.Encode(SKEncodedImageFormat.Jpeg, 100);
         await using var stream = data.AsStream();
 
-        var image = new Image
+        var image = new AdvancedImageBox
         {
-            Source = WriteableBitmap.Decode(stream)
+            Image = WriteableBitmap.Decode(stream),
+            Width = 600,
+            Height = 800,
+            PixelGridZoomThreshold = 10,
+            ConstrainZoomOutToFitLevel = true,
+            MaxZoom = 6400 * 2,
         };
 
         var dialog = new BetterContentDialog
         {
             Content = image,
-            CloseButtonText = "Close"
+            CloseButtonText = "Close",
+            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
         };
 
         await dialog.ShowAsync();

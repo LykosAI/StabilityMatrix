@@ -111,6 +111,7 @@
                             FontWeight="Medium"
                             Text="Inference UI" 
                             Margin="0,0,0,8" />
+                        <!-- Auto Completion -->
                         <ui:SettingsExpander  Grid.Row="1"
                                               Header="Prompt Auto Completion" 
                                               Margin="8,0,8,4">
@@ -118,9 +119,18 @@
                                 <controls:FASymbolIconSource Symbol="fa-solid fa-wand-magic-sparkles"/>
                             </ui:SettingsExpander.IconSource>
                             
+                            <!-- Enable toggle -->
+                            <ui:SettingsExpanderItem Content="Enable">
+                                <ui:SettingsExpanderItem.Footer>
+                                    <ToggleSwitch
+                                        IsChecked="{Binding IsPromptCompletionEnabled}" />
+                                </ui:SettingsExpanderItem.Footer>
+                            </ui:SettingsExpanderItem>
+                            
+                            <!-- Tag csv selection -->
                             <ui:SettingsExpanderItem Content="Tag Source"
                                                      IconSource="Tag"
-                                                     Margin="4,0,4,0"
+                                                     IsEnabled="{Binding IsPromptCompletionEnabled}"
                                                      Description="Tags to use for completion in .csv format (Compatible with a1111-sd-webui-tagcomplete)">
                                 <ui:SettingsExpanderItem.Footer>
                                     <UniformGrid Columns="2">

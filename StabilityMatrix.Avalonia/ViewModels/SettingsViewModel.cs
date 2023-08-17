@@ -95,6 +95,7 @@ public partial class SettingsViewModel : PageViewModelBase
     [ObservableProperty] private bool removeSymlinksOnShutdown;
     
     // Inference UI section
+    [ObservableProperty] private bool isPromptCompletionEnabled;
     [ObservableProperty]
     private IReadOnlyList<string> availableTagCompletionCsvs = Array.Empty<string>();
     
@@ -143,7 +144,8 @@ public partial class SettingsViewModel : PageViewModelBase
         
         settingsManager.RelayPropertyFor(this,
             vm => vm.IsDiscordRichPresenceEnabled,
-            settings => settings.IsDiscordRichPresenceEnabled);
+            settings => settings.IsDiscordRichPresenceEnabled,
+            true);
         
         settingsManager.RelayPropertyFor(this,
             vm => vm.SelectedAnimationScale,
@@ -152,6 +154,11 @@ public partial class SettingsViewModel : PageViewModelBase
         settingsManager.RelayPropertyFor(this,
             vm => vm.SelectedTagCompletionCsv,
             settings => settings.TagCompletionCsv);
+        
+        settingsManager.RelayPropertyFor(this,
+            vm => vm.IsPromptCompletionEnabled,
+            settings => settings.IsPromptCompletionEnabled,
+            true);
         
         DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
         ImportTagCsvCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);

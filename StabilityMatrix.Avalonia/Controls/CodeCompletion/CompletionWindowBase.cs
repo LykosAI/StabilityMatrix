@@ -38,13 +38,9 @@ namespace StabilityMatrix.Avalonia.Controls.CodeCompletion;
 /// <summary>
 /// Base class for completion windows. Handles positioning the window at the caret.
 /// </summary>
+[SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
 public class CompletionWindowBase : Popup
 {
-    static CompletionWindowBase()
-    {
-        //BackgroundProperty.OverrideDefaultValue(typeof(CompletionWindowBase), Brushes.White);           
-    }
-
     protected override Type StyleKeyOverride => typeof(PopupRoot);
 
     /// <summary>
@@ -52,8 +48,8 @@ public class CompletionWindowBase : Popup
     /// </summary>
     public TextArea TextArea { get; }
 
-    private readonly Window _parentWindow;
-    private TextDocument _document;
+    private readonly Window? _parentWindow;
+    private TextDocument? _document;
 
     /// <summary>
     /// Gets/Sets the start of the text range in which the completion window stays open.
@@ -75,11 +71,11 @@ public class CompletionWindowBase : Popup
     /// <summary>
     /// Creates a new CompletionWindowBase.
     /// </summary>
-    public CompletionWindowBase(TextArea textArea) : base()
+    public CompletionWindowBase(TextArea textArea)
     {
         TextArea = textArea ?? throw new ArgumentNullException(nameof(textArea));
-        _parentWindow = textArea.GetVisualRoot() as Window;
-
+        _parentWindow = textArea.GetVisualRoot() as Window ?? 
+                        throw new InvalidOperationException("CompletionWindow requires a visual root.");
 
         AddHandler(PointerReleasedEvent, OnMouseUp, handledEventsToo: true);
 
@@ -92,7 +88,7 @@ public class CompletionWindowBase : Popup
 
         //Deactivated += OnDeactivated; //Not needed?
 
-        Closed += (sender, args) => DetachEvents();
+        Closed += (_, _) => DetachEvents();
 
         AttachEvents();
 
@@ -188,7 +184,7 @@ public class CompletionWindowBase : Popup
 
     #region InputHandler
 
-    private InputHandler _myInputHandler;
+    private InputHandler? _myInputHandler;
 
     /// <summary>
     /// A dummy input handler (that justs invokes the default input handler).
@@ -231,7 +227,7 @@ public class CompletionWindowBase : Popup
     }
     #endregion
 
-    private void TextViewScrollOffsetChanged(object sender, EventArgs e)
+    private void TextViewScrollOffsetChanged(object? sender, EventArgs e)
     {
         ILogicalScrollable textView = TextArea;
         var visibleRect = new Rect(textView.Offset.X, textView.Offset.Y, textView.Viewport.Width, textView.Viewport.Height);
@@ -246,31 +242,31 @@ public class CompletionWindowBase : Popup
         }
     }
 
-    private void TextAreaDocumentChanged(object sender, EventArgs e)
+    private void TextAreaDocumentChanged(object? sender, EventArgs e)
     {
         Hide();
     }
 
-    private void TextAreaLostFocus(object sender, RoutedEventArgs e)
+    private void TextAreaLostFocus(object? sender, RoutedEventArgs e)
     {
         Dispatcher.UIThread.Post(CloseIfFocusLost, DispatcherPriority.Background);
     }
 
-    private void ParentWindow_Deactivated(object sender, EventArgs e)
+    private void ParentWindow_Deactivated(object? sender, EventArgs e)
     {
         Hide();
     }
 
-    private void ParentWindow_LocationChanged(object sender, EventArgs e)
+    private void ParentWindow_LocationChanged(object? sender, EventArgs e)
     {
         UpdatePosition();
     }
 
-    /// <inheritdoc/>
+    /*
     private void OnDeactivated(object sender, EventArgs e)
     {
         Dispatcher.UIThread.Post(CloseIfFocusLost, DispatcherPriority.Background);
-    }
+    }*/
 
     #endregion
 
@@ -282,8 +278,7 @@ public class CompletionWindowBase : Popup
     /// <param name="event">The bubbling event.</param>
     /// <param name="args">The event args to use.</param>
     /// <returns>The <see cref="RoutedEventArgs.Handled"/> value of the event args.</returns>
-    [SuppressMessage("Microsoft.Design", "CA1030:UseEventsWhereAppropriate")]
-    protected static bool RaiseEventPair(Control target, RoutedEvent previewEvent, RoutedEvent @event, RoutedEventArgs args)
+    protected static bool RaiseEventPair(Control target, RoutedEvent? previewEvent, RoutedEvent @event, RoutedEventArgs args)
     {
         if (target == null)
             throw new ArgumentNullException(nameof(target));
@@ -300,7 +295,7 @@ public class CompletionWindowBase : Popup
     }
 
     // Special handler: handledEventsToo
-    private void OnMouseUp(object sender, PointerReleasedEventArgs e)
+    private void OnMouseUp(object? sender, PointerReleasedEventArgs e)
     {
         ActivateParentWindow();
     }

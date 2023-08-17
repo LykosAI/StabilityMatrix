@@ -6,6 +6,7 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
              xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+             xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="700"
              x:DataType="vm:SettingsViewModel"
              x:CompileBindings="True"
@@ -14,7 +15,7 @@
     
     <Grid>
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto"
+            <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto"
                   Margin="8, 16">
                     <!-- Theme -->
                     <Grid Grid.Row="0" RowDefinitions="auto,*">
@@ -104,8 +105,42 @@
                             </ui:SettingsExpander>
                     </Grid>
                     
-                    <!-- Integrations -->
+                    <!-- Inference UI -->
                     <Grid Grid.Row="3" Margin="0,8,0,0" RowDefinitions="auto,*">
+                        <TextBlock 
+                            FontWeight="Medium"
+                            Text="Inference UI" 
+                            Margin="0,0,0,8" />
+                        <ui:SettingsExpander  Grid.Row="1"
+                                              Header="Prompt Auto Completion" 
+                                              Margin="8,0,8,4">
+                            <ui:SettingsExpander.IconSource>
+                                <controls:FASymbolIconSource Symbol="fa-solid fa-wand-magic-sparkles"/>
+                            </ui:SettingsExpander.IconSource>
+                            
+                            <ui:SettingsExpanderItem Content="Tag Source"
+                                                     IconSource="Tag"
+                                                     Margin="4,0,4,0"
+                                                     Description="Tags to use for completion in .csv format (Compatible with a1111-sd-webui-tagcomplete)">
+                                <ui:SettingsExpanderItem.Footer>
+                                    <UniformGrid Columns="2">
+                                        <ui:FAComboBox 
+                                            ItemsSource="{Binding AvailableTagCompletionCsvs}"
+                                            SelectedItem="{Binding SelectedTagCompletionCsv}"/>
+                                        <Button
+                                            Margin="8,0,0,0"
+                                            Padding="12,8"
+                                            Command="{Binding ImportTagCsvCommand}"
+                                            ToolTip.Tip="Import a .csv file"
+                                            icons:Attached.Icon="fa-solid fa-file-import"/>
+                                    </UniformGrid>
+                                </ui:SettingsExpanderItem.Footer>
+                            </ui:SettingsExpanderItem>
+                        </ui:SettingsExpander>
+                    </Grid>
+                    
+                    <!-- Integrations -->
+                    <Grid Grid.Row="4" Margin="0,8,0,0" RowDefinitions="auto,*">
                         <TextBlock 
                             FontWeight="Medium"
                             Text="Integrations" 
@@ -124,7 +159,7 @@
                     </Grid>
                     
                     <!-- System Options -->
-                    <Grid Grid.Row="4" Margin="0,8,0,0" RowDefinitions="auto,*">
+                    <Grid Grid.Row="5" Margin="0,8,0,0" RowDefinitions="auto,*">
                         <TextBlock 
                             FontWeight="Medium"
                             Text="System" 
@@ -169,7 +204,7 @@
                     </Grid>
                     
                     <!-- Debug Options -->
-                    <Grid Grid.Row="5" RowDefinitions="auto,*" 
+                    <Grid Grid.Row="6" RowDefinitions="auto,*" 
                           Margin="0,8,0,0"
                           IsVisible="{Binding SharedState.IsDebugMode}" >
                         <TextBlock 
@@ -184,14 +219,14 @@
                                 Margin="8, 0,8,4">
                                 
                                 <ui:SettingsExpanderItem Description="Paths" IconSource="Folder"
-                                                         Margin="4">
+                                                         Margin="4,0,4,0">
                                     <SelectableTextBlock Text="{Binding DebugPaths}"
                                                          Foreground="{DynamicResource TextControlPlaceholderForeground}"
                                                          TextWrapping="WrapWithOverflow" />
                                 </ui:SettingsExpanderItem>
 
                                 <ui:SettingsExpanderItem Description="Compat Info" IconSource="StarFilled"
-                                                         Margin="4,0,4,4">
+                                                         Margin="4,0,4,0">
                                     <SelectableTextBlock Text="{Binding DebugCompatInfo}"
                                                          Foreground="{DynamicResource TextControlPlaceholderForeground}"
                                                          TextWrapping="WrapWithOverflow" />
@@ -289,7 +324,7 @@
                     
                     <!-- TODO: Directories card -->
                     
-                    <Grid Grid.Row="6" RowDefinitions="auto,*" Margin="0,4,0,0">
+                    <Grid Grid.Row="7" RowDefinitions="auto,*" Margin="0,4,0,0">
                         <StackPanel 
                             Grid.Row="1" 
                             HorizontalAlignment="Left" 
@@ -336,7 +371,7 @@
                     </Grid>
                     
                     <!-- Extra space at the bottom -->
-                    <Panel Grid.Row="7" Margin="0,0,0,16" />
+                    <Panel Grid.Row="8" Margin="0,0,0,16" />
             </Grid>
         </ScrollViewer>
     </Grid>

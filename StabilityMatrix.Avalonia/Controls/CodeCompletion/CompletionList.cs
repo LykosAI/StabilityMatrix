@@ -263,9 +263,14 @@ public class CompletionList : TemplatedControl
     public void SelectItem(string text)
     {
         if (text == _currentText)
+        {
             return;
+        }
+
         if (_listBox == null)
+        {
             ApplyTemplate();
+        }
 
         if (IsFiltering)
         {
@@ -275,6 +280,7 @@ public class CompletionList : TemplatedControl
         {
             SelectItemWithStart(text);
         }
+        
         _currentText = text;
     }
 

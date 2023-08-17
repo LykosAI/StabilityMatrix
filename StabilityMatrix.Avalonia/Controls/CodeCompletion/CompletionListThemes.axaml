@@ -16,6 +16,10 @@
 
     </Design.PreviewWith>
 
+    <models:IconData 
+        x:Key="PlaceHolderIcon" 
+        FAIcon="fa-solid fa-question"/>
+
     <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
     <ControlTheme
         x:Key="{x:Type cc:CompletionListBox}"
@@ -166,16 +170,14 @@
                                             Source="{Binding Image}" />
 
                                         <!--  Icon  -->
-                                        <Panel Grid.Column="0" 
-                                               IsVisible="{Binding Converter={x:Static ObjectConverters.IsNotNull}}"
-                                               DataContext="{Binding Icon}">
-                                            <icons:Icon
-                                                Margin="0,0,4,0"
-                                                FontSize="{Binding FontSize, TargetNullValue=12}"
-                                                Foreground="{Binding Foreground, TargetNullValue=Red, FallbackValue=Red}"
-                                                IsVisible="{Binding FAIcon, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                                Value="{Binding FAIcon}" />
-                                        </Panel>
+                                        <icons:Icon
+                                            Grid.Column="0"
+                                            Margin="0,0,4,0"
+                                            DataContext="{Binding Icon, TargetNullValue={StaticResource PlaceHolderIcon}}"
+                                            FontSize="{Binding FontSize, TargetNullValue=12}"
+                                            Foreground="{Binding Foreground, TargetNullValue=Red, FallbackValue=Red}"
+                                            IsVisible="{Binding FAIcon, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                            Value="{Binding FAIcon}" />
 
                                         <!--  Main text  -->
                                         <TextBlock

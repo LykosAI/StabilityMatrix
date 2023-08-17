@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -92,6 +94,13 @@ public partial class SettingsViewModel : PageViewModelBase
     // Shared folder options
     [ObservableProperty] private bool removeSymlinksOnShutdown;
     
+    // Inference UI section
+    [ObservableProperty]
+    private IReadOnlyList<string> availableTagCompletionCsvs = Array.Empty<string>();
+    
+    [ObservableProperty]
+    private string? selectedTagCompletionCsv;
+    
     // Integrations section
     [ObservableProperty] private bool isDiscordRichPresenceEnabled;
     
@@ -136,12 +145,26 @@ public partial class SettingsViewModel : PageViewModelBase
             vm => vm.IsDiscordRichPresenceEnabled,
             settings => settings.IsDiscordRichPresenceEnabled);
         
-        DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
         settingsManager.RelayPropertyFor(this,
             vm => vm.SelectedAnimationScale,
             settings => settings.AnimationScale);
+        
+        settingsManager.RelayPropertyFor(this,
+            vm => vm.SelectedTagCompletionCsv,
+            settings => settings.TagCompletionCsv);
+        
+        DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
+        ImportTagCsvCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
     }
-    
+
+    /// <inheritdoc />
+    public override void OnLoaded()
+    {
+        base.OnLoaded();
+
+        UpdateAvailableTagCompletionCsvs();
+    }
+
     partial void OnSelectedThemeChanged(string? value)
     {
         // In case design / tests
@@ -237,6 +260,58 @@ public partial class SettingsViewModel : PageViewModelBase
     
     #endregion
 
+    #region Inference UI
+    
+    private void UpdateAvailableTagCompletionCsvs()
+    {
+        var tagsDir = settingsManager.TagsDirectory;
+        if (!tagsDir.Exists) return;
+        
+        var csvFiles = tagsDir.Info.EnumerateFiles("*.csv");
+        AvailableTagCompletionCsvs = csvFiles.Select(f => f.Name).ToImmutableArray();
+        
+        // Set selected to current if exists
+        var settingsCsv = settingsManager.Settings.TagCompletionCsv;
+        if (settingsCsv is not null && AvailableTagCompletionCsvs.Contains(settingsCsv))
+        {
+            SelectedTagCompletionCsv = settingsCsv;
+        }
+    }
+    
+    [RelayCommand(FlowExceptionsToTaskScheduler = true)]
+    private async Task ImportTagCsv()
+    {
+        var storage = App.StorageProvider;
+        var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            FileTypeFilter =  new List<FilePickerFileType>
+            {
+                new("CSV")
+                {
+                    Patterns = new[] {"*.csv"},
+                }
+            }
+        });
+        
+        if (files.Count == 0) return;
+
+        var sourceFile = new FilePath(files[0].TryGetLocalPath()!);
+        
+        var tagsDir = settingsManager.TagsDirectory;
+        tagsDir.Create();
+        
+        // Copy to tags directory
+        await sourceFile.CopyToAsync(tagsDir.JoinFile(sourceFile.Name));
+        
+        // Update index
+        UpdateAvailableTagCompletionCsvs();
+        
+        notificationService.Show($"Imported {sourceFile.Name}", 
+            $"The {sourceFile.Name} file has been imported.", NotificationType.Success);
+    }
+
+    #endregion
+    
     #region System
 
     /// <summary>

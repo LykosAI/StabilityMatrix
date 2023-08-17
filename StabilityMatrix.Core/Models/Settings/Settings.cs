@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace StabilityMatrix.Core.Models.Settings;
 
@@ -42,6 +43,11 @@ public class Settings
     public WindowSettings? WindowSettings { get; set; }
 
     public ModelSearchOptions? ModelSearchOptions { get; set; }
+    
+    /// <summary>
+    /// Relative path to the tag completion CSV file from 'LibraryDir/Tags'
+    /// </summary>
+    public string? TagCompletionCsv { get; set; }
     
     public bool RemoveFolderLinksOnShutdown { get; set; }
     

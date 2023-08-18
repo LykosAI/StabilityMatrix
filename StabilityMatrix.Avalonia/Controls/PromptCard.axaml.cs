@@ -6,6 +6,7 @@ using Avalonia.Media;
 using AvaloniaEdit;
 using AvaloniaEdit.TextMate;
 using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Styles;
 using TextMateSharp.Grammars;
 using TextMateSharp.Internal.Themes.Reader;
 using TextMateSharp.Registry;
@@ -64,6 +65,7 @@ public class PromptCard : TemplatedControl
                 editorOptions.EnableHyperlinks = true;
                 editorOptions.RequireControlModifierForHyperlinkClick = true;
                 editor.TextArea.TextView.LinkTextForegroundBrush = Brushes.Coral;
+                editor.TextArea.SelectionBrush = ThemeColors.EditorSelectionBrush;
                 
                 var installation = editor.InstallTextMate(registryOptions);
                 

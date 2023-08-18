@@ -44,6 +44,11 @@ public class CompletionWindow : CompletionWindowBase
     private ContentControl? _toolTipContent;
     
     /// <summary>
+    /// Max number of items in the completion list.
+    /// </summary>
+    public int MaxListLength { get; set; } = 40;
+    
+    /// <summary>
     /// Gets the completion list used in this completion window.
     /// </summary>
     public CompletionList CompletionList { get; }
@@ -254,22 +259,41 @@ public class CompletionWindow : CompletionWindowBase
                 Debug.WriteLine("CaretPositionChanged newText: " + newText);
                 
                 // CompletionList.SelectItem(newText);
-
                 Dispatcher.UIThread.Post(() => UpdateQuery(newText));
+                // UpdateQuery(newText);
                 
                 IsVisible = CompletionList.ListBox!.ItemCount != 0;
             }
         }
     }
 
+    private string? lastSearchTerm;
+    private int lastCompletionLength;
+    
     /// <summary>
     /// Update the completion window's current search term.
     /// </summary>
     public void UpdateQuery(string searchTerm)
     {
-        var results = completionProvider.GetCompletions(searchTerm, 30, true);
+        // Fast path if the search term starts with the last search term
+        // and the last completion count was less than the max list length
+        // (such we won't get new results by searching again)
+        if (lastSearchTerm is not null 
+            && searchTerm.StartsWith(lastSearchTerm) 
+            && lastCompletionLength < MaxListLength)
+        {
+            CompletionList.SelectItem(searchTerm);
+            lastSearchTerm = searchTerm;
+            return;
+        }
+        
+        var results = completionProvider.GetCompletions(searchTerm, MaxListLength, true);
         CompletionList.CompletionData.Clear();
         CompletionList.CompletionData.AddRange(results);
+        
         CompletionList.SelectItem(searchTerm, true);
+        
+        lastSearchTerm = searchTerm;
+        lastCompletionLength = CompletionList.CompletionData.Count;
     }
 }

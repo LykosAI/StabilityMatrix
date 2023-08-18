@@ -122,7 +122,7 @@ public class CompletionList : TemplatedControl
     }
 
     /// <summary>
-    /// Gets or sets the array of keys that are supposed to request insertation of the completion
+    /// Gets or sets the array of keys that request insertion of the completion
     /// </summary>
     public Key[] CompletionAcceptKeys { get; set; }
 
@@ -187,7 +187,8 @@ public class CompletionList : TemplatedControl
                 _listBox.SelectIndex(_listBox.ItemCount - 1);
                 break;
             default:
-                if (CompletionAcceptKeys.Contains(e.Key) && CurrentList.Count > 0)
+                // Check insertion keys
+                if (CompletionAcceptKeys.Contains(e.Key) && CurrentList?.Count > 0)
                 {
                     e.Handled = true;
                     RequestInsertion(e);

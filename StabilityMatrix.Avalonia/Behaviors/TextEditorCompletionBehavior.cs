@@ -123,7 +123,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
     {
         if (completionWindow is null) return;
         
-        Dispatcher.UIThread.Post(() =>
+        /*Dispatcher.UIThread.Post(() =>
         {
             // When completion window is open, parse and update token offsets
             if (GetCaretToken(textEditor) is not { } tokenSegment)
@@ -134,7 +134,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
 
             completionWindow.StartOffset = tokenSegment.Offset;
             completionWindow.EndOffset = tokenSegment.EndOffset;
-        });
+        });*/
 
         /*if (e.Text?.Length > 0) {
             if (!char.IsLetterOrDigit(e.Text[0])) {
@@ -147,6 +147,11 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         // We still want to insert the character that was typed.
     }
 
+    private static bool IsCompletionChar(char c)
+    {
+        return char.IsLetterOrDigit(c) || c == '_' || c == '-';
+    }
+    
     /// <summary>
     /// Gets a segment of the token the caret is currently in.
     /// </summary>
@@ -157,13 +162,13 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         // Search for the start and end of a token
         // A token is defined as either alphanumeric chars or a space
         var start = caret;
-        while (start > 0 && char.IsLetterOrDigit(textEditor.Document.GetCharAt(start - 1)))
+        while (start > 0 && IsCompletionChar(textEditor.Document.GetCharAt(start - 1)))
         {
             start--;
         }
         
         var end = caret;
-        while (end < textEditor.Document.TextLength && char.IsLetterOrDigit(textEditor.Document.GetCharAt(end)))
+        while (end < textEditor.Document.TextLength && IsCompletionChar(textEditor.Document.GetCharAt(end)))
         {
             end++;
         }

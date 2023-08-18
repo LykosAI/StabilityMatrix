@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using NLog;
@@ -206,5 +205,11 @@ public class A3WebUI : BaseGitPackage
     {
         await StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(this,
             SettingsManager.ModelsDirectory, installDirectory).ConfigureAwait(false);
+    }
+
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory)
+    {
+        StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(this, installDirectory);
+        return Task.CompletedTask;
     }
 }

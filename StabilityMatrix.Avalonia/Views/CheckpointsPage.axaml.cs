@@ -2,7 +2,7 @@
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Avalonia.ViewModels;
+using CheckpointFolder = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFolder;
 
 namespace StabilityMatrix.Avalonia.Views;
 

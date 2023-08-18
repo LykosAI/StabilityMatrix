@@ -59,4 +59,8 @@ public class CivitModel
     public string LatestModelVersionName => ModelVersions != null && ModelVersions.Any()
         ? ModelVersions[0].Name
         : string.Empty;
+
+    public string? BaseModelType => ModelVersions != null && ModelVersions.Any()
+        ? ModelVersions[0].BaseModel?.Replace("SD", "").Trim()
+        : string.Empty;
 }

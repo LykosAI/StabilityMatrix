@@ -148,7 +148,7 @@
 
                 <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
                     <StackPanel Orientation="Vertical">
-                        <Label Content="{Binding ReleaseLabelText, FallbackValue=Version}" />
+                        <Label Content="{Binding ReleaseLabelText}" />
                         <ComboBox
                             ItemsSource="{Binding AvailableVersions}"
                             MinWidth="200"

@@ -339,7 +339,6 @@ public class SettingsManager : ISettingsManager
         }
 
         package.PackageVersion = newVersion;
-
         package.DisplayVersion = string.IsNullOrWhiteSpace(package.InstalledBranch)
             ? newVersion
             : $"{package.InstalledBranch}@{newVersion[..7]}";
@@ -349,7 +348,9 @@ public class SettingsManager : ISettingsManager
     
     public void SetLastUpdateCheck(InstalledPackage package)
     {
-        Settings.InstalledPackages.First(p => p.DisplayName == package.DisplayName).LastUpdateCheck = package.LastUpdateCheck;
+        var installedPackage = Settings.InstalledPackages.First(p => p.DisplayName == package.DisplayName);
+        installedPackage.LastUpdateCheck = package.LastUpdateCheck;
+        installedPackage.UpdateAvailable = package.UpdateAvailable;
         SaveSettings();
     }
     

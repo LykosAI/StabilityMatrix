@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using AsyncAwaitBestPractices;
@@ -6,6 +7,7 @@ using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -15,11 +17,14 @@ using Avalonia.Threading;
 using FluentAvalonia.Styling;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media;
+using FluentAvalonia.UI.Media.Animation;
 using FluentAvalonia.UI.Windowing;
 using Microsoft.Extensions.DependencyInjection;
+using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.Views;
@@ -27,10 +32,22 @@ namespace StabilityMatrix.Avalonia.Views;
 [SuppressMessage("ReSharper", "UnusedParameter.Local")]
 public partial class MainWindow : AppWindowBase
 {
-    public INotificationService? NotificationService { get; set; }
-    
+    private readonly INotificationService notificationService;
+    private readonly INavigationService navigationService;
+
+    [DesignOnly(true)]
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public MainWindow()
     {
+        notificationService = null!;
+        navigationService = null!;
+    }
+    
+    public MainWindow(INotificationService notificationService, INavigationService navigationService)
+    {
+        this.notificationService = notificationService;
+        this.navigationService = navigationService;
+        
         InitializeComponent();
         
 #if DEBUG
@@ -39,6 +56,22 @@ public partial class MainWindow : AppWindowBase
         
         TitleBar.ExtendsContentIntoTitleBar = true;
         TitleBar.TitleBarHitTestType = TitleBarHitTestType.Complex;
+    }
+
+    /// <inheritdoc />
+    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+    {
+        base.OnApplyTemplate(e);
+        
+        navigationService.SetFrame(FrameView ?? throw new NullReferenceException("Frame not found"));
+        
+        // Navigate to first page
+        if (DataContext is not MainWindowViewModel vm)
+        {
+            throw new NullReferenceException("DataContext is not MainWindowViewModel");
+        }
+        
+        navigationService.NavigateTo(vm.Pages[0], new DrillInNavigationTransitionInfo());
     }
 
     protected override void OnOpened(EventArgs e)
@@ -70,7 +103,7 @@ public partial class MainWindow : AppWindowBase
     {
         base.OnLoaded(e);
         // Initialize notification service using this window as the visual root
-        NotificationService?.Initialize(this);
+        notificationService.Initialize(this);
         
         // Attach error notification handler for image loader
         if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
@@ -90,6 +123,29 @@ public partial class MainWindow : AppWindowBase
         }
     }
 
+    private void NavigationView_OnItemInvoked(object sender, NavigationViewItemInvokedEventArgs e)
+    {
+        if (e.InvokedItemContainer is NavigationViewItem nvi)
+        {
+            // Skip if this is the currently selected item
+            if (nvi.IsSelected)
+            {
+                return;
+            }
+            
+            if (nvi.Tag is null)
+            {
+                throw new InvalidOperationException("NavigationViewItem Tag is null");
+            }
+            
+            if (nvi.Tag is not ViewModelBase vm)
+            {
+                throw new InvalidOperationException($"NavigationViewItem Tag must be of type ViewModelBase, not {nvi.Tag?.GetType()}");
+            }
+            navigationService.NavigateTo(vm, new BetterEntranceNavigationTransition());
+        }
+    }
+    
     private void OnActualThemeVariantChanged(object? sender, EventArgs e)
     {
         if (IsWindows11)
@@ -112,7 +168,7 @@ public partial class MainWindow : AppWindowBase
         {
             var fileName = Path.GetFileName(e.Url);
             var displayName = string.IsNullOrEmpty(fileName) ? e.Url : fileName;
-            NotificationService?.ShowPersistent(
+            notificationService.ShowPersistent(
                 "Failed to load image",
                 $"Could not load '{displayName}'\n({e.Exception.Message})",
                 NotificationType.Warning);

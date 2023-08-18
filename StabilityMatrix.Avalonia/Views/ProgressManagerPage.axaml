@@ -39,6 +39,7 @@
                                 <TextBlock Text="{Binding Name, Mode=OneWay}"
                                            Margin="0, 4" />
                                 <ProgressBar Value="{Binding Progress.Percentage, Mode=OneWay}"
+                                             IsIndeterminate="{Binding Progress.IsIndeterminate}"
                                              Margin="0, 4">
                                     <ProgressBar.Transitions>
                                         <Transitions>
@@ -50,10 +51,18 @@
                                         </Transitions>
                                     </ProgressBar.Transitions>
                                 </ProgressBar>
-                                <TextBlock Margin="0, 4">
+                                
+                                <!-- non-indeterminate progress -->
+                                <TextBlock Margin="0, 4"
+                                           IsVisible="{Binding !Progress.IsIndeterminate}">
                                     <Run Text="{Binding ProgressText, Mode=OneWay}" />
                                     <Run Text="{Binding Progress.Percentage, Mode=OneWay}" /><Run Text="%" />
                                 </TextBlock>
+                                
+                                <!-- indeterminate progress -->
+                                <TextBlock Margin="0, 4" 
+                                           IsVisible="{Binding Progress.IsIndeterminate}"
+                                           Text="{Binding ProgressText, Mode=OneWay}" />
                             </StackPanel>
                         </Border>
                     </DataTemplate>

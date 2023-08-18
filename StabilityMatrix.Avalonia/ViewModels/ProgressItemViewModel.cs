@@ -1,5 +1,6 @@
 ﻿using System;
 using CommunityToolkit.Mvvm.ComponentModel;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Progress;
 
@@ -44,6 +45,8 @@ public partial class ProgressItemViewModel : ViewModelBase
                 return Failed ? "Download Failed" : "Downloading...";
             case ProgressType.Extract:
                 return Failed ? "Extraction Failed" : "Extracting...";
+            case ProgressType.Update:
+                return Failed ? "Update Failed" : "Updating...";
         }
 
         if (Failed)

@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
@@ -51,10 +52,10 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     }
 
     [ObservableProperty]
-    private ObservableCollection<CheckpointFolder> checkpointFolders = new();
+    private ObservableCollection<CheckpointManager.CheckpointFolder> checkpointFolders = new();
 
     [ObservableProperty]
-    private ObservableCollection<CheckpointFolder> displayedCheckpointFolders = new();
+    private ObservableCollection<CheckpointManager.CheckpointFolder> displayedCheckpointFolders = new();
 
     public CheckpointsPageViewModel(
         ISharedFolders sharedFolders,
@@ -105,10 +106,10 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             folder.SearchFilter = SearchFilter;
         }
 
-        DisplayedCheckpointFolders = new ObservableCollection<CheckpointFolder>(filteredFolders);
+        DisplayedCheckpointFolders = new ObservableCollection<CheckpointManager.CheckpointFolder>(filteredFolders);
     }
     
-    private bool ContainsSearchFilter(CheckpointFolder folder)
+    private bool ContainsSearchFilter(CheckpointManager.CheckpointFolder folder)
     {
         if (folder == null)
             throw new ArgumentNullException(nameof(folder));
@@ -139,7 +140,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         var indexTasks = folders.Select(f => Task.Run(async () =>
         {
             var checkpointFolder =
-                new CheckpointFolder(settingsManager, downloadService, modelFinder)
+                new CheckpointManager.CheckpointFolder(settingsManager, downloadService, modelFinder)
                 {
                     Title = Path.GetFileName(f),
                     DirectoryPath = f,
@@ -153,13 +154,13 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
         // Set new observable collection, ordered by alphabetical order
         CheckpointFolders =
-            new ObservableCollection<CheckpointFolder>(indexTasks
+            new ObservableCollection<CheckpointManager.CheckpointFolder>(indexTasks
                 .Select(t => t.Result)
                 .OrderBy(f => f.Title));
 
         if (!string.IsNullOrWhiteSpace(SearchFilter))
         {
-            DisplayedCheckpointFolders = new ObservableCollection<CheckpointFolder>(
+            DisplayedCheckpointFolders = new ObservableCollection<CheckpointManager.CheckpointFolder>(
                 CheckpointFolders
                     .Where(x => x.CheckpointFiles.Any(y => y.FileName.Contains(SearchFilter))));
         }

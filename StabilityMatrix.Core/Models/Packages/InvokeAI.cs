@@ -1,9 +1,10 @@
-﻿using System.Data;
+﻿using System.Text.Json;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -27,9 +28,6 @@ public class InvokeAI : BaseGitPackage
 
     public override string Blurb => "Professional Creative Tools for Stable Diffusion";
     public override string LaunchCommand => "invokeai-web";
-
-    public override string Disclaimer =>
-        "Note: InvokeAI support is currently experimental, and checkpoints in the shared models folder will not be available with InvokeAI.";
 
     public override IReadOnlyList<string> ExtraLaunchCommands => new[]
     {
@@ -55,44 +53,13 @@ public class InvokeAI : BaseGitPackage
         base(githubApi, settingsManager, downloadService, prerequisiteHelper)
     {
     }
-
+    
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders => new()
     {
-        [SharedFolderType.StableDiffusion] = new[]
-        {
-            RelativeRootPath + "/models/sd-1/main",
-            RelativeRootPath + "/models/sd-2/main",
-            RelativeRootPath + "/models/sdxl/main",
-            RelativeRootPath + "/models/sdxl-refiner/main",
-        },
-        [SharedFolderType.Lora] = new[]
-        {
-            RelativeRootPath + "/models/sd-1/lora",
-            RelativeRootPath + "/models/sd-2/lora",
-            RelativeRootPath + "/models/sdxl/lora",
-            RelativeRootPath + "/models/sdxl-refiner/lora",
-        },
-        [SharedFolderType.TextualInversion] = new[]
-        {
-            RelativeRootPath + "/models/sd-1/embedding",
-            RelativeRootPath + "/models/sd-2/embedding",
-            RelativeRootPath + "/models/sdxl/embedding",
-            RelativeRootPath + "/models/sdxl-refiner/embedding",
-        },
-        [SharedFolderType.VAE] = new[]
-        {
-            RelativeRootPath + "/models/sd-1/vae",
-            RelativeRootPath + "/models/sd-2/vae",
-            RelativeRootPath + "/models/sdxl/vae",
-            RelativeRootPath + "/models/sdxl-refiner/vae",
-        },
-        [SharedFolderType.ControlNet] = new[]
-        {
-            RelativeRootPath + "/models/sd-1/controlnet",
-            RelativeRootPath + "/models/sd-2/controlnet",
-            RelativeRootPath + "/models/sdxl/controlnet",
-            RelativeRootPath + "/models/sdxl-refiner/controlnet",
-        },
+        [SharedFolderType.StableDiffusion] = new[] { RelativeRootPath + "/autoimport/main" },
+        [SharedFolderType.Lora] = new[] { RelativeRootPath + "/autoimport/lora" },
+        [SharedFolderType.TextualInversion] = new[] { RelativeRootPath + "/autoimport/embedding" },
+        [SharedFolderType.ControlNet] = new[] { RelativeRootPath + "/autoimport/controlnet" },
     };
 
     // https://github.com/invoke-ai/InvokeAI/blob/main/docs/features/CONFIGURATION.md
@@ -218,6 +185,11 @@ public class InvokeAI : BaseGitPackage
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
+        if (installedPackage.FullPath is null)
+        {
+            throw new NullReferenceException("Installed package path is null");
+        }
+        
         await using var venvRunner = new PyVenvRunner(Path.Combine(installedPackage.FullPath, "venv"));
         venvRunner.WorkingDirectory = installedPackage.FullPath;
         venvRunner.EnvironmentVariables = GetEnvVars(installedPackage.FullPath);
@@ -293,10 +265,12 @@ public class InvokeAI : BaseGitPackage
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
-        if (command.Equals("invokeai-configure"))
+        arguments = command switch
         {
-            arguments = "--yes --skip-sd-weights";
-        }
+            "invokeai-configure" => "--yes --skip-sd-weights",
+            "invokeai-model-install" => "--yes",
+            _ => arguments
+        };
 
         VenvRunner.EnvironmentVariables = GetEnvVars(installedPackagePath);
 
@@ -355,11 +329,20 @@ public class InvokeAI : BaseGitPackage
 
     public override Task SetupModelFolders(DirectoryPath installDirectory)
     {
+        StabilityMatrix.Core.Helper.SharedFolders
+            .SetupLinks(SharedFolders, SettingsManager.ModelsDirectory, installDirectory);
         return Task.CompletedTask;
     }
 
-    public override Task UpdateModelFolders(DirectoryPath installDirectory)
+    public override async Task UpdateModelFolders(DirectoryPath installDirectory)
     {
+        await StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(this,
+            SettingsManager.ModelsDirectory, installDirectory).ConfigureAwait(false);
+    }
+
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory)
+    {
+        StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(this, installDirectory);
         return Task.CompletedTask;
     }
 

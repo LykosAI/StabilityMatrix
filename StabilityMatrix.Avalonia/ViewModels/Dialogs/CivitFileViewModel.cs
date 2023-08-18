@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Core.Models.Api;
 

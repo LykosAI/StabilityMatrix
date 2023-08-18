@@ -5,4 +5,5 @@ public enum ProgressType
     Generic,
     Download,
     Extract,
+    Update,
 }

@@ -7,14 +7,29 @@
 [download-win-x64]: https://github.com/LykosAI/StabilityMatrix/releases/latest/download/StabilityMatrix-win-x64.zip
 [download-linux-x64]: https://github.com/LykosAI/StabilityMatrix/releases/latest/download/StabilityMatrix-linux-x64.zip
 [download-macos]: https://github.com/LykosAI/StabilityMatrix/issues/45 
+
 [auto1111]: https://github.com/AUTOMATIC1111/stable-diffusion-webui
 [comfy]: https://github.com/comfyanonymous/ComfyUI
 [sdnext]: https://github.com/vladmandic/automatic
+[voltaml]: https://github.com/VoltaML/voltaML-fast-stable-diffusion
+[invokeai]: https://github.com/invoke-ai/InvokeAI
+
+[civitai]: https://civitai.com/
 
 Multi-Platform Package Manager for Stable Diffusion
-- One click install and update for Stable Diffusion Web UIs
-  - Currently supports [Automatic 1111][auto1111], [Comfy UI][comfy], [SD.Next (Vladmandic)][sdnext], with more planned
-- Shared checkpoint manager with browsable imports from CivitAI
+
+### 🖱️ One click install and update for Stable Diffusion Web UI Packages
+- Supports [Automatic 1111][auto1111], [Comfy UI][comfy], [SD.Next (Vladmandic)][sdnext], [VoltaML][voltaml], [InvokeAI][invokeai]
+- Embedded Git and Python dependencies, with no need for either to be globally installed
+- Fully Portable, move Stability Matrix's Data Directory to a new drive or computer at any time
+### 🚀 Launcher with syntax highlighted terminal emulator, routed GUI input prompts
+- Launch arguments editor with predefined or custom options for each Package install
+- Package environment variables
+### 🗃️ Checkpoint Manager, configured to be shared by all Package installs
+- Option to find CivitAI metadata and preview thumbnails for new local imports
+### ☁️ Model Browser to import from [CivitAI][civitai]
+- Automatically imports to the associated model folder depending on the model type
+- Also downloads relavent metadata files and preview image
 
 ![header](https://github.com/LykosAI/StabilityMatrix/assets/13956642/a9c5f925-8561-49ba-855b-1b7bf57d7c0d)
 
@@ -26,22 +41,17 @@ Multi-Platform Package Manager for Stable Diffusion
 
 > macOS builds are currently pending: [#45][download-macos]
 
-## Features
-- Launcher with syntax highlighted terminal emulator, launch arguments support
-- Portable embedded dependencies and frameworks (like Git and Python) with no required changes to global installs.
-- Virtual environment management using [Python.NET](https://github.com/pythonnet/pythonnet)
-
 ### Searchable launch options
 <p align="center">
-  <img style="width: 80%; height: 80%" src="https://raw.githubusercontent.com/LykosAI/lykosai.github.io/main/assets/images/screenshots/launchoptions.png" alt=""/>
+  <img style="width: 80%; height: 80%" src="https://github.com/LykosAI/StabilityMatrix/assets/13956642/75456866-9d95-47c6-8c0a-fdc19443ee02" alt=""/>
 </p>
 
-### Model browser powered by [Civit AI](https://civitai.com/)
-
+### Model browser powered by [Civit AI][civitai]
 - Downloads new models, automatically uses the appropriate shared model directory
 - Available immediately to all installed packages
+
 <p align="center">
-  <img style="width: 80%; height: 80%" src="https://raw.githubusercontent.com/LykosAI/lykosai.github.io/main/assets/images/screenshots/ckptbrowser.png" alt=""/>
+  <img style="width: 80%; height: 80%" src="https://github.com/LykosAI/StabilityMatrix/assets/13956642/30b9f610-6033-4307-8d92-7d72b93cd73e" alt=""/>
 </p>
 
 ### Shared model directory for all your packages
@@ -50,7 +60,7 @@ Multi-Platform Package Manager for Stable Diffusion
 - Toggle visibility of categories like LoRA, VAE, CLIP, etc.
 - For models imported from Civit AI, shows additional information like version, fp precision, and preview thumbnail on hover
 <p align="center">
-  <img style="width: 80%; height: 80%" src="https://raw.githubusercontent.com/LykosAI/lykosai.github.io/main/assets/images/screenshots/dragdropimport.gif" alt=""/>
+  <img style="width: 80%; height: 80%" src="https://github.com/LykosAI/StabilityMatrix/assets/13956642/d42d1c53-67a4-45a0-b009-21400d44e17e" alt=""/>
 </p>
 
 

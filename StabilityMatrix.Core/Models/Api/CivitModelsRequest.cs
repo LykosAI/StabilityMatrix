@@ -102,4 +102,19 @@ public class CivitModelsRequest
     /// </summary>
     [AliasAs("nsfw")]
     public string? Nsfw { get; set; }
+    
+    /// <summary>
+    /// options: <br/>
+    /// SD 1.4 <br/>
+    /// SD 1.5 <br/>
+    /// SD 2.0 <br/>
+    /// SD 2.0 768 <br/>
+    /// SD 2.1 <br/>
+    /// SD 2.1 768 <br/>
+    /// SD 2.1 Unclip <br/>
+    /// SDXL 0.9 <br/>
+    /// SDXL 1.0
+    /// </summary>
+    [AliasAs("baseModels")]
+    public string? BaseModel { get; set; }
 }

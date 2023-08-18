@@ -18,9 +18,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -28,6 +31,8 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml.Templates;
 using AvaloniaEdit.Utils;
+using StabilityMatrix.Avalonia.Models.TagCompletion;
+using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Avalonia.Controls.CodeCompletion;
 
@@ -104,7 +109,8 @@ public class CompletionList : TemplatedControl
         _listBox = e.NameScope.Find("PART_ListBox") as CompletionListBox;
         if (_listBox is not null)
         {
-            _listBox.ItemsSource = _completionData;
+            // _listBox.ItemsSource = _completionData;
+            _listBox.ItemsSource = FilteredCompletionData;
         }
     }
 
@@ -137,6 +143,8 @@ public class CompletionList : TemplatedControl
     /// Gets the list to which completion data can be added.
     /// </summary>
     public IList<ICompletionData> CompletionData => _completionData;
+    
+    public ObservableCollection<ICompletionData> FilteredCompletionData { get; } = new();
 
     /// <inheritdoc/>
     protected override void OnKeyDown(KeyEventArgs e)
@@ -272,9 +280,12 @@ public class CompletionList : TemplatedControl
         {
             ApplyTemplate();
         }
-
+        
+        var timer = Stopwatch.StartNew();
+        
         if (IsFiltering)
         {
+            // SelectItemFilteringLive(text, fullUpdate);
             SelectItemFiltering(text, fullUpdate);
         }
         else
@@ -282,14 +293,85 @@ public class CompletionList : TemplatedControl
             SelectItemWithStart(text);
         }
         
+        Debug.WriteLine($"SelectItem for '{text}' took {timer.Elapsed.TotalMilliseconds:F2} ms");
+        
         _currentText = text;
     }
 
     /// <summary>
     /// Filters CompletionList items to show only those matching given query, and selects the best match.
     /// </summary>
+    private void SelectItemFilteringLive(string query, bool fullUpdate = false)
+    {
+        if (_listBox is null) throw new NullReferenceException("ListBox not set");
+        
+        var listToFilter = _completionData;
+        
+        // if the user just typed one more character, don't filter all data but just filter what we are already displaying
+        if (!fullUpdate 
+            && FilteredCompletionData.Count > 0
+            && !string.IsNullOrEmpty(_currentText)
+            && !string.IsNullOrEmpty(query)
+            && query.StartsWith(_currentText, StringComparison.Ordinal))
+        {
+            listToFilter = FilteredCompletionData;
+        }
+
+        var matchingItems = listToFilter
+            .Select(item => new {Item = item, Quality = GetMatchQuality(item.Text, query)})
+            .Where(x => x.Quality > 0)
+            .ToImmutableArray();
+        
+        /*var matchingItems =
+            from item in listToFilter
+            let quality = GetMatchQuality(item.Text, query)
+            where quality > 0
+            select new { Item = item, Quality = quality };*/
+
+        // e.g. "DateTimeKind k = (*cc here suggests DateTimeKind*)"
+        var suggestedItem =
+            _listBox.SelectedIndex != -1 ? (ICompletionData)_listBox.SelectedItem! : null;
+        
+        // Clear current items
+        FilteredCompletionData.Clear();
+        
+        var bestIndex = -1;
+        var bestQuality = -1;
+        double bestPriority = 0;
+        var i = 0;
+        foreach (var matchingItem in matchingItems)
+        {
+            var priority =
+                matchingItem.Item == suggestedItem
+                    ? double.PositiveInfinity
+                    : matchingItem.Item.Priority;
+            var quality = matchingItem.Quality;
+            if (quality > bestQuality || quality == bestQuality && priority > bestPriority)
+            {
+                bestIndex = i;
+                bestPriority = priority;
+                bestQuality = quality;
+            }
+            
+            // Add to filtered list
+            FilteredCompletionData.Add(matchingItem.Item);
+            
+            // Update the character highlighting
+            matchingItem.Item.UpdateCharHighlighting(query);
+            
+            i++;
+        }
+        
+        SelectIndex(bestIndex);
+    }
+    
+    /// <summary>
+    /// Filters CompletionList items to show only those matching given query, and selects the best match.
+    /// </summary>
     private void SelectItemFiltering(string query, bool fullUpdate = false)
     {
+        if (_listBox is null) throw new NullReferenceException("ListBox not set");
+        
         var listToFilter = _completionData;
         
         // if the user just typed one more character, don't filter all data but just filter what we are already displaying
@@ -302,16 +384,24 @@ public class CompletionList : TemplatedControl
             listToFilter = _currentList;
         }
 
+        // Order first by quality, then by
+        var matchingItems = listToFilter
+            .Select(item => new { Item = item, Quality = GetMatchQuality(item.Text, query) })
+            .Where(x => x.Quality > 0)
+            .OrderByDescending(x => x.Quality)
+            .ThenByDescending(x => x.Item.Priority)
+            .ToImmutableArray();
         
-        var matchingItems =
+        /*var matchingItems =
             from item in listToFilter
             let quality = GetMatchQuality(item.Text, query)
             where quality > 0
-            select new { Item = item, Quality = quality };
+            orderby quality
+            select new { Item = item, Quality = quality };*/
 
         // e.g. "DateTimeKind k = (*cc here suggests DateTimeKind*)"
         var suggestedItem =
-            _listBox.SelectedIndex != -1 ? (ICompletionData)_listBox.SelectedItem : null;
+            _listBox.SelectedIndex != -1 ? (ICompletionData)_listBox.SelectedItem! : null;
 
         var listBoxItems = new ObservableCollection<ICompletionData>();
         var bestIndex = -1;
@@ -331,17 +421,20 @@ public class CompletionList : TemplatedControl
                 bestPriority = priority;
                 bestQuality = quality;
             }
+            
             // Add to listbox
             listBoxItems.Add(matchingItem.Item);
+            
             // Update the character highlighting
             matchingItem.Item.UpdateCharHighlighting(query);
+            
             i++;
         }
 
         _currentList = listBoxItems;
         //_listBox.Items = null; Makes no sense? Tooltip disappeared because of this
         _listBox.ItemsSource = listBoxItems;
-        SelectIndexCentered(bestIndex);
+        SelectIndex(bestIndex);
     }
 
     /// <summary>
@@ -395,28 +488,50 @@ public class CompletionList : TemplatedControl
         SelectIndexCentered(bestIndex);
     }
 
-    private void SelectIndexCentered(int bestIndex)
+    private void SelectIndexCentered(int index)
     {
-        if (bestIndex < 0)
+        if (_listBox is null)
+        {
+            throw new NullReferenceException("ListBox not set");
+        }
+        
+        if (index < 0)
         {
             _listBox.ClearSelection();
         }
         else
         {
             var firstItem = _listBox.FirstVisibleItem;
-            if (bestIndex < firstItem || firstItem + _listBox.VisibleItemCount <= bestIndex)
+            if (index < firstItem || firstItem + _listBox.VisibleItemCount <= index)
             {
                 // CenterViewOn does nothing as CompletionListBox.ScrollViewer is null
-                _listBox.CenterViewOn(bestIndex);
-                _listBox.SelectIndex(bestIndex);
+                _listBox.CenterViewOn(index);
+                _listBox.SelectIndex(index);
             }
             else
             {
-                _listBox.SelectIndex(bestIndex);
+                _listBox.SelectIndex(index);
             }
         }
     }
-
+    
+    private void SelectIndex(int index)
+    {
+        if (_listBox is null)
+        {
+            throw new NullReferenceException("ListBox not set");
+        }
+        
+        if (index < 0)
+        {
+            _listBox.ClearSelection();
+        }
+        else
+        {
+            _listBox.SelectedIndex = index;
+        }
+    }
+    
     private int GetMatchQuality(string itemText, string query)
     {
         if (itemText == null)
@@ -466,7 +581,7 @@ public class CompletionList : TemplatedControl
 
         return -1;
     }
-
+    
     private static bool CamelCaseMatch(string text, string query)
     {
         // We take the first letter of the text regardless of whether or not it's upper case so we match

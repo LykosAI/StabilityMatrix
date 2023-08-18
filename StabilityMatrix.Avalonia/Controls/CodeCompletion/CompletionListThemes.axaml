@@ -162,12 +162,12 @@
                             <cc:CompletionListBox.ItemTemplate>
                                 <DataTemplate x:DataType="cc:ICompletionData">
                                     <Grid ColumnDefinitions="20,Auto,*">
-                                        <Image
+                                        <!--<Image
                                             Width="16"
                                             Height="16"
                                             Margin="0,0,2,0"
                                             IsVisible="{Binding Image, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                            Source="{Binding Image}" />
+                                            Source="{Binding Image}" />-->
 
                                         <!--  Icon  -->
                                         <icons:Icon
@@ -184,8 +184,8 @@
                                             Grid.Column="1"
                                             VerticalAlignment="Center"
                                             FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
-                                            FontSize="13"
-                                            Inlines="{Binding TextInlines}" />
+                                            Inlines="{Binding TextInlines}"
+                                            FontSize="13"/>
 
                                         <!--  Description Text  -->
                                         <TextBlock

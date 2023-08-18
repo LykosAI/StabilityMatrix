@@ -36,7 +36,7 @@ public class CompletionData : ICompletionData
     public InlineCollection TextInlines => _textInlines ??= CreateInlines();
 
     /// <inheritdoc />
-    public double Priority { get; }
+    public double Priority { get; init; }
 
     public CompletionData(string text)
     {
@@ -74,8 +74,6 @@ public class CompletionData : ICompletionData
         {
             throw new NullReferenceException("TextContent is null");
         }
-        
-        Debug.WriteLine($"Updating char highlighting for {Text} with search text {searchText}");
         
         var defaultColor = ThemeColors.CompletionForegroundBrush;
         var highlightColor = ThemeColors.CompletionSelectionForegroundBrush;

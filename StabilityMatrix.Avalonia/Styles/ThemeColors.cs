@@ -21,4 +21,7 @@ public static class ThemeColors
         SolidColorBrush.Parse("#5389F4");
     public static readonly SolidColorBrush CompletionForegroundBrush =
         SolidColorBrush.Parse("#B4B8BF");
+    
+    public static readonly SolidColorBrush EditorSelectionBrush = 
+        SolidColorBrush.Parse("#214283");
 }

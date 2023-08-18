@@ -188,7 +188,10 @@ public class CompletionProvider : ICompletionProvider
             if (entries.TryGetValue(item, out var entry))
             {
                 var entryType = TagTypeExtensions.FromE621(entry.Type.GetValueOrDefault(-1));
-                completions.Add(new TagCompletionData(entry.Name!, entryType));
+                completions.Add(new TagCompletionData(entry.Name!, entryType)
+                {
+                    Priority = entry.Count ?? 0
+                });
             }
         }
         

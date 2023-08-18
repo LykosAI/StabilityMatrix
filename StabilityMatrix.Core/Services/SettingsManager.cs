@@ -142,7 +142,7 @@ public class SettingsManager : ISettingsManager
         // Update source when settings change
         SettingsPropertyChanged += (sender, args) =>
         {
-            if (args.PropertyName != propertyName) return;
+            if (args.PropertyName != targetPropertyName) return;
             
             // Skip if event is relay and the sender is the source, to prevent duplicate
             if (args.IsRelay && ReferenceEquals(sender, source)) return;

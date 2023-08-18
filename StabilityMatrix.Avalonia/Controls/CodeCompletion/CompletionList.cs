@@ -260,7 +260,7 @@ public class CompletionList : TemplatedControl
     /// <summary>
     /// Selects the best match, and filter the items if turned on using <see cref="IsFiltering" />.
     /// </summary>
-    public void SelectItem(string text)
+    public void SelectItem(string text, bool fullUpdate = false)
     {
         if (text == _currentText)
         {
@@ -274,7 +274,7 @@ public class CompletionList : TemplatedControl
 
         if (IsFiltering)
         {
-            SelectItemFiltering(text);
+            SelectItemFiltering(text, fullUpdate);
         }
         else
         {
@@ -287,17 +287,20 @@ public class CompletionList : TemplatedControl
     /// <summary>
     /// Filters CompletionList items to show only those matching given query, and selects the best match.
     /// </summary>
-    private void SelectItemFiltering(string query)
+    private void SelectItemFiltering(string query, bool fullUpdate = false)
     {
+        var listToFilter = _completionData;
+        
         // if the user just typed one more character, don't filter all data but just filter what we are already displaying
-        /*var listToFilter =
-            _currentList != null
+        if (!fullUpdate 
+            && _currentList != null
             && !string.IsNullOrEmpty(_currentText)
             && !string.IsNullOrEmpty(query)
-            && query.StartsWith(_currentText, StringComparison.Ordinal)
-                ? _currentList
-                : _completionData;*/
-        var listToFilter = _completionData;
+            && query.StartsWith(_currentText, StringComparison.Ordinal))
+        {
+            listToFilter = _currentList;
+        }
+
         
         var matchingItems =
             from item in listToFilter

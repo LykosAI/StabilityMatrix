@@ -26,23 +26,14 @@ public class CompletionData : ICompletionData
     public IImage? Image { get; set; }
 
     /// <inheritdoc />
-    public IconData? Icon { get; init; } 
+    public IconData? Icon { get; init; }
     
-    /// <summary>
-    /// Cached <see cref="TextBlock"/> instance.
-    /// </summary>
-    private object? _content;
-    
-    /// <inheritdoc />
-    public object Content => _content ??= new TextBlock
-    {
-        Inlines = CreateInlines()
-    };
-    
+    private InlineCollection? _textInlines;
+
     /// <summary>
     /// Get the current inlines
     /// </summary>
-    public InlineCollection TextInlines => ((TextBlock) Content).Inlines!;
+    public InlineCollection TextInlines => _textInlines ??= CreateInlines();
 
     /// <inheritdoc />
     public double Priority { get; }

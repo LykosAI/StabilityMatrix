@@ -18,11 +18,14 @@
 
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Utils;
@@ -54,8 +57,7 @@ public class CompletionWindow : CompletionWindowBase
         
         CompletionList = new CompletionList
         {
-            // For using our own UpdateQuery
-            IsFiltering = false
+            IsFiltering = true
         };
 
         // keep height automatic
@@ -250,8 +252,10 @@ public class CompletionWindow : CompletionWindowBase
             {
                 var newText = document.GetText(StartOffset, offset - StartOffset);
                 Debug.WriteLine("CaretPositionChanged newText: " + newText);
+                
                 // CompletionList.SelectItem(newText);
-                UpdateQuery(newText);
+
+                Dispatcher.UIThread.Post(() => UpdateQuery(newText));
                 
                 IsVisible = CompletionList.ListBox!.ItemCount != 0;
             }
@@ -263,9 +267,9 @@ public class CompletionWindow : CompletionWindowBase
     /// </summary>
     public void UpdateQuery(string searchTerm)
     {
-        var results = completionProvider.GetCompletions(searchTerm, 30, false);
+        var results = completionProvider.GetCompletions(searchTerm, 30, true);
         CompletionList.CompletionData.Clear();
         CompletionList.CompletionData.AddRange(results);
-        CompletionList.SelectItem(searchTerm);
+        CompletionList.SelectItem(searchTerm, true);
     }
 }

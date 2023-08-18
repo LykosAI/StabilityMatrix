@@ -39,6 +39,7 @@ namespace StabilityMatrix.Avalonia.Controls.CodeCompletion;
 /// Base class for completion windows. Handles positioning the window at the caret.
 /// </summary>
 [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class CompletionWindowBase : Popup
 {
     protected override Type StyleKeyOverride => typeof(PopupRoot);
@@ -377,7 +378,6 @@ public class CompletionWindowBase : Popup
     }
 
     // TODO: check if needed
-    ///// <inheritdoc/>
     //protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
     //{
     //    base.OnRenderSizeChanged(sizeInfo);

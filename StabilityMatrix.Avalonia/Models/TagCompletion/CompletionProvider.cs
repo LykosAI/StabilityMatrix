@@ -100,22 +100,20 @@ public class CompletionProvider : ICompletionProvider
         
         var headerFile = hashDir.JoinFile("header.bin");
         var indexFile = hashDir.JoinFile("index.bin");
-        var tailFile = hashDir.JoinFile("tail.bin");
 
         entries.Clear();
         
         var timer = Stopwatch.StartNew();
         
         // If directory or any file is missing, rebuild the index
-        if (recreate || !(hashDir.Exists && headerFile.Exists && indexFile.Exists && tailFile.Exists))
+        if (recreate || !(hashDir.Exists && headerFile.Exists && indexFile.Exists))
         {
             Logger.Debug("Creating new index for {Path}", hashDir);
             
             await using var headerStream = headerFile.Info.OpenWrite();
             await using var indexStream = indexFile.Info.OpenWrite();
-            await using var tailStream = tailFile.Info.OpenWrite();
             
-            var builder = new IndexBuilder(headerStream, indexStream, tailStream);
+            var builder = new IndexBuilder(headerStream, indexStream);
             
             // Parse csv
             await using var csvStream = path.Info.OpenRead();
@@ -150,7 +148,7 @@ public class CompletionProvider : ICompletionProvider
             }
         }
         
-        searcher = new InMemoryIndexSearcher(headerFile, indexFile, tailFile);
+        searcher = new InMemoryIndexSearcher(headerFile, indexFile);
         searcher.Init();
         
         var elapsed = timer.Elapsed;
@@ -204,6 +202,8 @@ public class CompletionProvider : ICompletionProvider
             throw new InvalidOperationException("Index is not loaded");
         }
         
+        var timer = Stopwatch.StartNew();
+        
         var searchOptions = new SearchOptions
         {
             Term = searchTerm,
@@ -239,6 +239,9 @@ public class CompletionProvider : ICompletionProvider
                 completions.Add(new TagCompletionData(entry.Name!, entryType));
             }
         }
+        
+        timer.Stop();
+        Logger.Trace("Completions for {Term} took {Time:F2}ms", searchTerm, timer.Elapsed.TotalMilliseconds);
         
         return completions;
     }

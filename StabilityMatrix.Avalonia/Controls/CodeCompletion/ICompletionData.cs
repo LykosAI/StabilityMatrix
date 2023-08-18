@@ -56,12 +56,6 @@ public interface ICompletionData
 	IconData? Icon { get; }
 		
 	/// <summary>
-	/// The displayed content. This can be the same as 'Text', or a control if
-	/// you want to display rich content.
-	/// </summary>
-	object Content { get; }
-		
-	/// <summary>
 	/// Gets inline text fragments.
 	/// </summary>
 	InlineCollection TextInlines { get; }

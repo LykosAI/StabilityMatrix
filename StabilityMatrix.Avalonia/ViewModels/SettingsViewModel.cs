@@ -310,10 +310,14 @@ public partial class SettingsViewModel : PageViewModelBase
         tagsDir.Create();
         
         // Copy to tags directory
-        await sourceFile.CopyToAsync(tagsDir.JoinFile(sourceFile.Name));
+        var targetFile = tagsDir.JoinFile(sourceFile.Name);
+        await sourceFile.CopyToAsync(targetFile);
         
         // Update index
         UpdateAvailableTagCompletionCsvs();
+        
+        // Trigger load
+        completionProvider.BackgroundLoadFromFile(targetFile, true);
         
         notificationService.Show($"Imported {sourceFile.Name}", 
             $"The {sourceFile.Name} file has been imported.", NotificationType.Success);

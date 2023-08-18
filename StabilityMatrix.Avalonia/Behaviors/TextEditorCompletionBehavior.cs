@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Avalonia;
 using Avalonia.Input;
+using Avalonia.Threading;
 using Avalonia.Xaml.Interactivity;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
@@ -89,28 +90,31 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
             // Create completion window if its not already created
             if (completionWindow == null)
             {
-                // Get the segment of the token the caret is currently in
-                if (GetCaretToken(textEditor) is not { } tokenSegment)
+                Dispatcher.UIThread.Post(() =>
                 {
-                    Logger.Trace("Token segment not found");
-                    return;
-                }
+                    // Get the segment of the token the caret is currently in
+                    if (GetCaretToken(textEditor) is not { } tokenSegment)
+                    {
+                        Logger.Trace("Token segment not found");
+                        return;
+                    }
 
-                var token = textEditor.Document.GetText(tokenSegment);
-                Logger.Trace("Using token {Token} ({@Segment})", token, tokenSegment);
+                    var token = textEditor.Document.GetText(tokenSegment);
+                    Logger.Trace("Using token {Token} ({@Segment})", token, tokenSegment);
                 
-                completionWindow = CreateCompletionWindow(textEditor.TextArea);
-                completionWindow.StartOffset = tokenSegment.Offset;
-                completionWindow.EndOffset = tokenSegment.EndOffset;
+                    completionWindow = CreateCompletionWindow(textEditor.TextArea);
+                    completionWindow.StartOffset = tokenSegment.Offset;
+                    completionWindow.EndOffset = tokenSegment.EndOffset;
 
-                completionWindow.UpdateQuery(token);
+                    completionWindow.UpdateQuery(token);
                 
-                completionWindow.Closed += delegate
-                {
-                    completionWindow = null;
-                };
+                    completionWindow.Closed += delegate
+                    {
+                        completionWindow = null;
+                    };
             
-                completionWindow.Show();
+                    completionWindow.Show();
+                });
             }
         }
     }
@@ -119,15 +123,18 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
     {
         if (completionWindow is null) return;
         
-        // When completion window is open, parse and update token offsets
-        if (GetCaretToken(textEditor) is not { } tokenSegment)
+        Dispatcher.UIThread.Post(() =>
         {
-            Logger.Trace("Token segment not found");
-            return;
-        }
+            // When completion window is open, parse and update token offsets
+            if (GetCaretToken(textEditor) is not { } tokenSegment)
+            {
+                Logger.Trace("Token segment not found");
+                return;
+            }
 
-        completionWindow.StartOffset = tokenSegment.Offset;
-        completionWindow.EndOffset = tokenSegment.EndOffset;
+            completionWindow.StartOffset = tokenSegment.Offset;
+            completionWindow.EndOffset = tokenSegment.EndOffset;
+        });
 
         /*if (e.Text?.Length > 0) {
             if (!char.IsLetterOrDigit(e.Text[0])) {

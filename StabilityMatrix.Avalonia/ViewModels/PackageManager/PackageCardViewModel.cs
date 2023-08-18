@@ -132,10 +132,16 @@ public partial class PackageCardViewModel : ProgressViewModel
         
         Text = $"Updating {Package.DisplayName}";
         IsIndeterminate = true;
+        
+        var progressId = Guid.NewGuid();
+        EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
+            Package.DisplayName,
+            new ProgressReport(0f, isIndeterminate: true, type: ProgressType.Update)));
 
         try
         {
             basePackage.InstallLocation = Package.FullPath!;
+            
             var progress = new Progress<ProgressReport>(progress =>
             {
                 var percent = Convert.ToInt32(progress.Percentage);
@@ -145,6 +151,8 @@ public partial class PackageCardViewModel : ProgressViewModel
                 Text = $"Updating {Package.DisplayName}";
             
                 EventManager.Instance.OnGlobalProgressChanged(percent);
+                EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
+                    Package.DisplayName, progress));
             });
         
             var updateResult = await basePackage.Update(Package, progress);
@@ -159,13 +167,19 @@ public partial class PackageCardViewModel : ProgressViewModel
                 Package.UpdateAvailable = false;
             }
             IsUpdateAvailable = false;
-
             InstalledVersion = Package.DisplayVersion ?? "Unknown";
+
+            EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
+                Package.DisplayName,
+                new ProgressReport(1f, "Update complete", type: ProgressType.Update)));
         }
         catch (Exception e)
         {
             logger.Error(e, "Error Updating Package ({PackageName})", basePackage.Name);
             notificationService.ShowPersistent($"Error Updating {Package.DisplayName}", e.Message, NotificationType.Error);
+            EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
+                Package.DisplayName,
+                new ProgressReport(0f, "Update failed", type: ProgressType.Update), Failed: true));
         }
         finally
         {

@@ -70,7 +70,8 @@
                                     <i:Interaction.Behaviors>
                                         <behaviors:TextEditorCompletionBehavior
                                             IsEnabled="{Binding IsAutoCompletionEnabled}"
-                                            CompletionProvider="{Binding CompletionProvider}"/>
+                                            CompletionProvider="{Binding CompletionProvider}"
+                                            TokenizerProvider="{Binding TokenizerProvider}"/>
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>
 
@@ -105,7 +106,8 @@
                                     <i:Interaction.Behaviors>
                                         <behaviors:TextEditorCompletionBehavior
                                             IsEnabled="{Binding IsAutoCompletionEnabled}"
-                                            CompletionProvider="{Binding CompletionProvider}"/>
+                                            CompletionProvider="{Binding CompletionProvider}"
+                                            TokenizerProvider="{Binding TokenizerProvider}"/>
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>
 

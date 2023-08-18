@@ -34,6 +34,15 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         set => SetValue(CompletionProviderProperty, value);
     }
 
+    public static readonly StyledProperty<ITokenizerProvider> TokenizerProviderProperty = AvaloniaProperty.Register<TextEditorCompletionBehavior, ITokenizerProvider>(
+        "TokenizerProvider");
+
+    public ITokenizerProvider TokenizerProvider
+    {
+        get => GetValue(TokenizerProviderProperty);
+        set => SetValue(TokenizerProviderProperty, value);
+    }
+
     public static readonly StyledProperty<bool> IsEnabledProperty = AvaloniaProperty.Register<TextEditorCompletionBehavior, bool>(
         "IsEnabled", true);
 
@@ -67,7 +76,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
 
     private CompletionWindow CreateCompletionWindow(TextArea textArea)
     {
-        var window = new CompletionWindow(textArea, CompletionProvider)
+        var window = new CompletionWindow(textArea, CompletionProvider, TokenizerProvider)
         {
             WindowManagerAddShadowHint = false,
             CloseWhenCaretAtBeginning = true,

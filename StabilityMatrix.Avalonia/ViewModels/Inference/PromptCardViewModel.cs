@@ -14,6 +14,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public partial class PromptCardViewModel : LoadableViewModelBase
 {
     public ICompletionProvider CompletionProvider { get; }
+    public ITokenizerProvider TokenizerProvider { get; }
     
     public TextDocument PromptDocument { get; } = new();
     public TextDocument NegativePromptDocument { get; } = new();
@@ -22,9 +23,13 @@ public partial class PromptCardViewModel : LoadableViewModelBase
     private bool isAutoCompletionEnabled;
     
     /// <inheritdoc />
-    public PromptCardViewModel(ICompletionProvider completionProvider, ISettingsManager settingsManager)
+    public PromptCardViewModel(
+        ICompletionProvider completionProvider, 
+        ITokenizerProvider tokenizerProvider,
+        ISettingsManager settingsManager)
     {
         CompletionProvider = completionProvider;
+        TokenizerProvider = tokenizerProvider;
         
         settingsManager.RelayPropertyFor(this,
             vm => vm.IsAutoCompletionEnabled,

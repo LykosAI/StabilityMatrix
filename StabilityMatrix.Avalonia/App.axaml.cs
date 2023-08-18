@@ -380,6 +380,7 @@ public sealed class App : Application
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IInferenceClientManager, InferenceClientManager>();
         services.AddSingleton<ICompletionProvider, CompletionProvider>();
+        services.AddSingleton<ITokenizerProvider, TokenizerProvider>();
         
         // Rich presence
         services.AddSingleton<IDiscordRichPresenceService, DiscordRichPresenceService>();

@@ -285,8 +285,8 @@ public class CompletionList : TemplatedControl
         
         if (IsFiltering)
         {
-            // SelectItemFilteringLive(text, fullUpdate);
-            SelectItemFiltering(text, fullUpdate);
+            SelectItemFilteringLive(text, fullUpdate);
+            // SelectItemFiltering(text, fullUpdate);
         }
         else
         {
@@ -317,52 +317,57 @@ public class CompletionList : TemplatedControl
             listToFilter = FilteredCompletionData;
         }
 
+        // Order first by quality, then by priority
         var matchingItems = listToFilter
-            .Select(item => new {Item = item, Quality = GetMatchQuality(item.Text, query)})
+            .Select(item => new { Item = item, Quality = GetMatchQuality(item.Text, query) })
             .Where(x => x.Quality > 0)
-            .ToImmutableArray();
+            .OrderByDescending(x => x.Quality)
+            .ThenByDescending(x => x.Item.Priority)
+            .ToList();
         
-        /*var matchingItems =
-            from item in listToFilter
-            let quality = GetMatchQuality(item.Text, query)
-            where quality > 0
-            select new { Item = item, Quality = quality };*/
-
-        // e.g. "DateTimeKind k = (*cc here suggests DateTimeKind*)"
         var suggestedItem =
             _listBox.SelectedIndex != -1 ? (ICompletionData)_listBox.SelectedItem! : null;
         
-        // Clear current items
-        FilteredCompletionData.Clear();
-        
-        var bestIndex = -1;
-        var bestQuality = -1;
-        double bestPriority = 0;
-        var i = 0;
-        foreach (var matchingItem in matchingItems)
+        // Fast path if both only 1 item
+        if (FilteredCompletionData.Count == 1 && matchingItems.Count == 1)
         {
-            var priority =
-                matchingItem.Item == suggestedItem
-                    ? double.PositiveInfinity
-                    : matchingItem.Item.Priority;
-            var quality = matchingItem.Quality;
-            if (quality > bestQuality || quality == bestQuality && priority > bestPriority)
-            {
-                bestIndex = i;
-                bestPriority = priority;
-                bestQuality = quality;
-            }
-            
-            // Add to filtered list
-            FilteredCompletionData.Add(matchingItem.Item);
-            
-            // Update the character highlighting
-            matchingItem.Item.UpdateCharHighlighting(query);
-            
-            i++;
+            // Just update the character highlighting
+            matchingItems[0].Item.UpdateCharHighlighting(query);
         }
+        else
+        {
+            // Clear current items
+            FilteredCompletionData.Clear();
         
-        SelectIndex(bestIndex);
+            var bestIndex = -1;
+            var bestQuality = -1;
+            double bestPriority = 0;
+            var i = 0;
+            foreach (var matchingItem in matchingItems)
+            {
+                var priority =
+                    matchingItem.Item == suggestedItem
+                        ? double.PositiveInfinity
+                        : matchingItem.Item.Priority;
+                var quality = matchingItem.Quality;
+                if (quality > bestQuality || quality == bestQuality && priority > bestPriority)
+                {
+                    bestIndex = i;
+                    bestPriority = priority;
+                    bestQuality = quality;
+                }
+            
+                // Add to filtered list
+                FilteredCompletionData.Add(matchingItem.Item);
+            
+                // Update the character highlighting
+                matchingItem.Item.UpdateCharHighlighting(query);
+            
+                i++;
+            }
+        
+            SelectIndex(bestIndex);
+        }
     }
     
     /// <summary>
@@ -384,7 +389,7 @@ public class CompletionList : TemplatedControl
             listToFilter = _currentList;
         }
 
-        // Order first by quality, then by
+        // Order first by quality, then by priority
         var matchingItems = listToFilter
             .Select(item => new { Item = item, Quality = GetMatchQuality(item.Text, query) })
             .Where(x => x.Quality > 0)
@@ -398,8 +403,7 @@ public class CompletionList : TemplatedControl
             where quality > 0
             orderby quality
             select new { Item = item, Quality = quality };*/
-
-        // e.g. "DateTimeKind k = (*cc here suggests DateTimeKind*)"
+        
         var suggestedItem =
             _listBox.SelectedIndex != -1 ? (ICompletionData)_listBox.SelectedItem! : null;
 
@@ -521,6 +525,8 @@ public class CompletionList : TemplatedControl
         {
             throw new NullReferenceException("ListBox not set");
         }
+
+        if (index == _listBox.SelectedIndex) return;
         
         if (index < 0)
         {

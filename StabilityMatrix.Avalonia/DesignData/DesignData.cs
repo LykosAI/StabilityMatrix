@@ -88,6 +88,7 @@ public static class DesignData
             .AddSingleton<INavigationService, NavigationService>()
             .AddSingleton<IPackageFactory, PackageFactory>()
             .AddSingleton<IUpdateHelper, UpdateHelper>()
+            .AddSingleton<ITokenizerProvider, TokenizerProvider>()
             .AddSingleton<ModelFinder>()
             .AddSingleton<SharedState>();
 
@@ -474,8 +475,12 @@ public static class DesignData
     {
         get
         {
-            var list = new CompletionList();
+            var list = new CompletionList
+            {
+                IsFiltering = true
+            };
             list.CompletionData.AddRange(SampleCompletionData);
+            list.SelectItem("te", true);
             return list;
         }
     }

@@ -39,6 +39,7 @@ namespace StabilityMatrix.Avalonia.Controls.CodeCompletion;
 public class CompletionWindow : CompletionWindowBase
 {
     private readonly ICompletionProvider completionProvider;
+    private readonly ITokenizerProvider tokenizerProvider;
     
     private PopupWithCustomPosition? _toolTip;
     private ContentControl? _toolTipContent;
@@ -47,28 +48,30 @@ public class CompletionWindow : CompletionWindowBase
     /// Max number of items in the completion list.
     /// </summary>
     public int MaxListLength { get; set; } = 40;
-    
+
     /// <summary>
     /// Gets the completion list used in this completion window.
     /// </summary>
-    public CompletionList CompletionList { get; }
+    public CompletionList CompletionList { get; } = new();
+    
+    /// <summary>
+    /// Whether selection tooltips are shown.
+    /// </summary>
+    public bool IsSelectionTooltipEnabled { get; set; }
 
     /// <summary>
     /// Creates a new code completion window.
     /// </summary>
-    public CompletionWindow(TextArea textArea, ICompletionProvider completionProvider) : base(textArea)
+    public CompletionWindow(
+        TextArea textArea, 
+        ICompletionProvider completionProvider,
+        ITokenizerProvider tokenizerProvider) : base(textArea)
     {
         this.completionProvider = completionProvider;
+        this.tokenizerProvider = tokenizerProvider;
         
-        CompletionList = new CompletionList
-        {
-            IsFiltering = true
-        };
-
-        // keep height automatic
         CloseAutomatically = true;
         MaxHeight = 225;
-        // Width = 175;
         Width = 350;
         Child = CompletionList;
         // prevent user from resizing window to 0x0
@@ -83,7 +86,6 @@ public class CompletionWindow : CompletionWindowBase
             IsLightDismissEnabled = true,
             PlacementTarget = this,
             Placement = PlacementMode.RightEdgeAlignedTop,
-            // Placement = PlacementMode.LeftEdgeAlignedBottom,
             Child = _toolTipContent,
         };
 
@@ -110,6 +112,9 @@ public class CompletionWindow : CompletionWindowBase
 
     private void CompletionList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
+        // Skip if tooltip not enabled
+        if (!IsSelectionTooltipEnabled) return;
+        
         if (_toolTipContent == null || _toolTip == null) return;
 
         var item = CompletionList.SelectedItem;

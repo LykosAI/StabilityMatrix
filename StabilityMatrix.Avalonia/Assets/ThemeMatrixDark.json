@@ -117,6 +117,22 @@
       }
     },
     {
+      "name": "Escape character",
+      "scope": "constant.character.escape",
+      "settings": {
+          "fontStyle": "",
+          "foreground": "#408080"
+      }
+    },
+    {
+      "name": "Escape sequence target",
+      "scope": "constant.character.escape.target",
+      "settings": {
+        "fontStyle": "",
+        "foreground": "#C5C8C6"
+      }
+    },
+    {
       "name": "User-defined constant",
       "scope": "constant.character, constant.other",
       "settings": {

@@ -16,6 +16,27 @@
       "match": "(#).*$\\n?",
       "name": "comment.line.number-sign.prompt"
     },
+    "escape": {
+      "begin": "\\\\",
+      "beginCaptures": {
+        "0": {
+          "name": "constant.character.escape.prompt"
+        }
+      },
+      "end": "[-+.!(){}\\[\\]<\\>]",
+      "endCaptures": {
+        "0": {
+          "name": "constant.character.escape.target.prompt"
+        }
+      },
+      "name": "meta.structure.escape.prompt",
+      "patterns": [
+        {
+          "match": "[^-+.!(){}\\[\\]<\\>]",
+          "name": "invalid.illegal.escape.prompt"
+        }
+      ]
+    },
     "parenthesized": {
       "begin": "\\(",
       "beginCaptures": {
@@ -121,13 +142,16 @@
       "name": "meta.embedded.whitespace"
     },
     "text": {
-      "match": "[^,:\\[\\]\\(\\) ]+",
+      "match": "[^,:\\[\\]\\(\\) \\\\]+",
       "name": "meta.embedded"
     },
     "value": {
       "patterns": [
         {
           "include": "#comment"
+        },
+        {
+          "include": "#escape"
         },
         {
           "include": "#parenthesized"

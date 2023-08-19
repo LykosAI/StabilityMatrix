@@ -116,8 +116,12 @@
       "match": "\\b(?:BREAK|AND)\\b",
       "name": "keyword.control"
     },
+    "whitespace": {
+      "match": "\\s+",
+      "name": "meta.embedded.whitespace"
+    },
     "text": {
-      "match": "[^,:\\[\\]\\(\\)]+",
+      "match": "[^,:\\[\\]\\(\\) ]+",
       "name": "meta.embedded"
     },
     "value": {
@@ -139,6 +143,9 @@
         },
         {
           "include": "#keyword"
+        },
+        {
+          "include": "#whitespace"
         },
         {
           "include": "#text"

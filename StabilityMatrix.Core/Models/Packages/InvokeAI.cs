@@ -327,25 +327,6 @@ public class InvokeAI : BaseGitPackage
         }
     }
 
-    public override Task SetupModelFolders(DirectoryPath installDirectory)
-    {
-        StabilityMatrix.Core.Helper.SharedFolders
-            .SetupLinks(SharedFolders, SettingsManager.ModelsDirectory, installDirectory);
-        return Task.CompletedTask;
-    }
-
-    public override async Task UpdateModelFolders(DirectoryPath installDirectory)
-    {
-        await StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(this,
-            SettingsManager.ModelsDirectory, installDirectory).ConfigureAwait(false);
-    }
-
-    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory)
-    {
-        StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(this, installDirectory);
-        return Task.CompletedTask;
-    }
-
     private Dictionary<string, string> GetEnvVars(DirectoryPath installPath)
     {
         // Set additional required environment variables

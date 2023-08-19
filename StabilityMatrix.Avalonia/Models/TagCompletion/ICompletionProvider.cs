@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -11,6 +12,11 @@ public interface ICompletionProvider
     /// Whether the completion provider is loaded.
     /// </summary>
     bool IsLoaded { get; }
+
+    /// <summary>
+    /// Optional function to transform the text to be inserted
+    /// </summary>
+    Func<string, string>? PrepareInsertionText => null;
     
     /// <summary>
     /// Load the completion provider from a file.

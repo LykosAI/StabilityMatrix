@@ -54,6 +54,11 @@ public class Settings
     /// </summary>
     public string? TagCompletionCsv { get; set; }
     
+    /// <summary>
+    /// Whether to remove underscores from completions
+    /// </summary>
+    public bool IsCompletionRemoveUnderscoresEnabled { get; set; }
+    
     public bool RemoveFolderLinksOnShutdown { get; set; }
     
     public bool IsDiscordRichPresenceEnabled { get; set; }

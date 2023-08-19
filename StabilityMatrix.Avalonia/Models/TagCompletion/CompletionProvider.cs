@@ -27,6 +27,7 @@ public class CompletionProvider : ICompletionProvider
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private readonly ISettingsManager settingsManager;
     private readonly INotificationService notificationService;
     
     private readonly AsyncLock loadLock = new();
@@ -36,8 +37,13 @@ public class CompletionProvider : ICompletionProvider
     
     public bool IsLoaded => searcher is not null;
 
+    public Func<string, string>? PrepareInsertionText 
+        => settingsManager.Settings.IsCompletionRemoveUnderscoresEnabled 
+            ? PrepareInsertionText_RemoveUnderscores : null;
+    
     public CompletionProvider(ISettingsManager settingsManager, INotificationService notificationService)
     {
+        this.settingsManager = settingsManager;
         this.notificationService = notificationService;
 
         // Attach to load from set file on initial settings load
@@ -68,6 +74,11 @@ public class CompletionProvider : ICompletionProvider
             var fullPath = settingsManager.TagsDirectory.JoinFile(csvPath);
             BackgroundLoadFromFile(fullPath);
         }
+    }
+    
+    private static string PrepareInsertionText_RemoveUnderscores(string text)
+    {
+        return text.Replace("_", " ");
     }
 
     /// <inheritdoc />

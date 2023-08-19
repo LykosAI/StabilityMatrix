@@ -149,6 +149,17 @@
                                         Content="Import"/>
                                 </ui:SettingsExpanderItem.Footer>
                             </ui:SettingsExpanderItem>
+                            
+                            <!-- Remove underscores -->
+                            <ui:SettingsExpanderItem 
+                                Content="Replace underscores with spaces when inserting completions"
+                                IconSource="Underline"
+                                IsEnabled="{Binding IsPromptCompletionEnabled}">
+                                <ui:SettingsExpanderItem.Footer>
+                                    <CheckBox Margin="8"
+                                              IsChecked="{Binding IsCompletionRemoveUnderscoresEnabled}"/>
+                                </ui:SettingsExpanderItem.Footer>
+                            </ui:SettingsExpanderItem>
                         </ui:SettingsExpander>
                     </Grid>
                     

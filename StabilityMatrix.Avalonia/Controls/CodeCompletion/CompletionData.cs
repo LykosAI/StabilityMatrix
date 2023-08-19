@@ -62,9 +62,25 @@ public class CompletionData : ICompletionData
     }
     
     /// <inheritdoc />
-    public void Complete(TextArea textArea, ISegment completionSegment, EventArgs insertionRequestEventArgs)
+    public void Complete(TextArea textArea, ISegment completionSegment, InsertionRequestEventArgs eventArgs, Func<string, string>? prepareText = null)
     {
-        textArea.Document.Replace(completionSegment, Text);
+        var text = Text;
+        
+        if (prepareText is not null)
+        {
+            text = prepareText(text);
+        }
+        
+        // Replace text
+        textArea.Document.Replace(completionSegment, text);
+        
+        // Append text if requested
+        if (eventArgs.AppendText is { } appendText)
+        {
+            var end = completionSegment.Offset + text.Length;
+            textArea.Document.Insert(end, appendText);
+            textArea.Caret.Offset = end + appendText.Length;
+        }
     }
 
     /// <inheritdoc />

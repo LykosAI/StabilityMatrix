@@ -162,15 +162,11 @@ public class CompletionWindow : CompletionWindowBase
         // The window must close before Complete() is called.
         // If the Complete callback pushes stacked input handlers, we don't want to pop those when the CC window closes.
         var length = EndOffset - StartOffset;
-        e.Item.Complete(TextArea, new AnchorSegment(TextArea.Document, StartOffset, length), e);
-        
-        // Append text if requested
-        if (e.AppendText is { } appendText)
-        {
-            var end = StartOffset + e.Item.Text.Length;
-            TextArea.Document.Insert(end, appendText);
-            TextArea.Caret.Offset = end + appendText.Length;
-        }
+        e.Item.Complete(
+            TextArea, 
+            new AnchorSegment(TextArea.Document, StartOffset, length), 
+            e,
+            completionProvider.PrepareInsertionText);
     }
     
     private void CompletionList_CloseRequested(object? sender, EventArgs e)

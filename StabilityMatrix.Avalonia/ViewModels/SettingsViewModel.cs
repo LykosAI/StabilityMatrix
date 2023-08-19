@@ -98,9 +98,10 @@ public partial class SettingsViewModel : PageViewModelBase
     [ObservableProperty] private bool isPromptCompletionEnabled;
     [ObservableProperty]
     private IReadOnlyList<string> availableTagCompletionCsvs = Array.Empty<string>();
-    
     [ObservableProperty]
     private string? selectedTagCompletionCsv;
+    [ObservableProperty]
+    private bool isCompletionRemoveUnderscoresEnabled;
     
     // Integrations section
     [ObservableProperty] private bool isDiscordRichPresenceEnabled;
@@ -158,6 +159,11 @@ public partial class SettingsViewModel : PageViewModelBase
         settingsManager.RelayPropertyFor(this,
             vm => vm.IsPromptCompletionEnabled,
             settings => settings.IsPromptCompletionEnabled,
+            true);
+        
+        settingsManager.RelayPropertyFor(this,
+            vm => vm.IsCompletionRemoveUnderscoresEnabled,
+            settings => settings.IsCompletionRemoveUnderscoresEnabled,
             true);
         
         DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);

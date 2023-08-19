@@ -13,6 +13,9 @@ public class MockCompletionProvider : ICompletionProvider
     public bool IsLoaded => false;
 
     /// <inheritdoc />
+    public Func<string, string>? PrepareInsertionText => null;
+
+    /// <inheritdoc />
     public Task LoadFromFile(FilePath path, bool recreate = false)
     {
         return Task.CompletedTask;

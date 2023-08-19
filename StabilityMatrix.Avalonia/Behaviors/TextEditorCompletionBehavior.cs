@@ -186,6 +186,8 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         var line = textEditor.Document.GetLineByOffset(caret);
         var lineText = textEditor.Document.GetText(line.Offset, line.Length);
         
+        var caretAbsoluteOffset = caret - line.Offset;
+        
         // Tokenize
         var result = TokenizerProvider.TokenizeLine(lineText);
 
@@ -203,7 +205,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
             }
             
             // Find match
-            if (caret >= token.StartIndex && caret <= token.EndIndex)
+            if (caretAbsoluteOffset >= token.StartIndex && caretAbsoluteOffset <= token.EndIndex)
             {
                 currentTokenIndex = i;
                 currentToken = token;
@@ -214,15 +216,19 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         // Still not found
         if (currentToken is null || currentTokenIndex == -1)
         {
-            Logger.Info($"Could not find token at caret offset {caret} for line {lineText.ToRepr}");
+            Logger.Info($"Could not find token at caret offset {caret} for line {lineText.ToRepr()}");
             return null;
         }
+        
+
+        var startOffset = currentToken.StartIndex + line.Offset;
+        var endOffset = currentToken.EndIndex + line.EndOffset;
         
         // Cap the offsets by the line offsets
         return new TextSegment
         {
-            StartOffset = Math.Max(currentToken.StartIndex, line.Offset),
-            EndOffset = Math.Min(currentToken.EndIndex, line.EndOffset)
+            StartOffset = Math.Max(startOffset, line.Offset),
+            EndOffset = Math.Min(endOffset, line.EndOffset)
         };
 
         // Search for the start and end of a token

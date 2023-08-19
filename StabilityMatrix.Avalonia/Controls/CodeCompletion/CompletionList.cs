@@ -33,6 +33,7 @@ using Avalonia.Markup.Xaml.Templates;
 using AvaloniaEdit.Utils;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Avalonia.Controls.CodeCompletion;
 
@@ -276,35 +277,46 @@ public class CompletionList : TemplatedControl
             return;
         }
 
+        using var _ = new CodeTimer();
+        
         if (_listBox == null)
         {
             ApplyTemplate();
         }
         
-        var timer = Stopwatch.StartNew();
-        
         if (IsFiltering)
         {
             SelectItemFilteringLive(text, fullUpdate);
-            // SelectItemFiltering(text, fullUpdate);
         }
         else
         {
             SelectItemWithStart(text);
         }
         
-        Debug.WriteLine($"SelectItem for '{text}' took {timer.Elapsed.TotalMilliseconds:F2} ms");
-        
         _currentText = text;
     }
 
+    private IReadOnlyList<ICompletionData> FilterItems(IEnumerable<ICompletionData> items, string query)
+    {
+        using var _ = new CodeTimer();
+        
+        // Order first by quality, then by priority
+        var matchingItems = items
+            .Select(item => new { Item = item, Quality = GetMatchQuality(item.Text, query) })
+            .Where(x => x.Quality > 0)
+            .OrderByDescending(x => x.Quality)
+            .ThenByDescending(x => x.Item.Priority)
+            .Select(x => x.Item)
+            .ToList();
+
+        return matchingItems;
+    }
+    
     /// <summary>
     /// Filters CompletionList items to show only those matching given query, and selects the best match.
     /// </summary>
     private void SelectItemFilteringLive(string query, bool fullUpdate = false)
     {
-        if (_listBox is null) throw new NullReferenceException("ListBox not set");
-        
         var listToFilter = _completionData;
         
         // if the user just typed one more character, don't filter all data but just filter what we are already displaying
@@ -316,57 +328,33 @@ public class CompletionList : TemplatedControl
         {
             listToFilter = FilteredCompletionData;
         }
-
-        // Order first by quality, then by priority
-        var matchingItems = listToFilter
-            .Select(item => new { Item = item, Quality = GetMatchQuality(item.Text, query) })
-            .Where(x => x.Quality > 0)
-            .OrderByDescending(x => x.Quality)
-            .ThenByDescending(x => x.Item.Priority)
-            .ToList();
         
-        var suggestedItem =
-            _listBox.SelectedIndex != -1 ? (ICompletionData)_listBox.SelectedItem! : null;
+        var matchingItems = FilterItems(listToFilter, query);
         
-        // Fast path if both only 1 item
-        if (FilteredCompletionData.Count == 1 && matchingItems.Count == 1)
+        // Fast path if both only 1 item, and item is the same
+        if (FilteredCompletionData.Count == 1 
+            && matchingItems.Count == 1
+            && FilteredCompletionData[0] == matchingItems[0])
         {
             // Just update the character highlighting
-            matchingItems[0].Item.UpdateCharHighlighting(query);
+            matchingItems[0].UpdateCharHighlighting(query);
         }
         else
         {
-            // Clear current items
+            // Clear current items and set new ones
             FilteredCompletionData.Clear();
-        
-            var bestIndex = -1;
-            var bestQuality = -1;
-            double bestPriority = 0;
-            var i = 0;
-            foreach (var matchingItem in matchingItems)
+
+            foreach (var item in matchingItems)
             {
-                var priority =
-                    matchingItem.Item == suggestedItem
-                        ? double.PositiveInfinity
-                        : matchingItem.Item.Priority;
-                var quality = matchingItem.Quality;
-                if (quality > bestQuality || quality == bestQuality && priority > bestPriority)
-                {
-                    bestIndex = i;
-                    bestPriority = priority;
-                    bestQuality = quality;
-                }
-            
-                // Add to filtered list
-                FilteredCompletionData.Add(matchingItem.Item);
-            
-                // Update the character highlighting
-                matchingItem.Item.UpdateCharHighlighting(query);
-            
-                i++;
+                item.UpdateCharHighlighting(query);
+                FilteredCompletionData.Add(item);
             }
-        
-            SelectIndex(bestIndex);
+            
+            // Set index to 0 if not already
+            if (_listBox != null && _listBox.SelectedIndex != 0)
+            {
+                _listBox.SelectedIndex = 0;
+            }
         }
     }
     
@@ -574,9 +562,9 @@ public class CompletionList : TemplatedControl
         // search by substring, if filtering (i.e. new behavior) turned on
         if (IsFiltering)
         {
-            if (itemText.IndexOf(query, StringComparison.CurrentCulture) >= 0)
+            if (itemText.Contains(query, StringComparison.CurrentCulture))
                 return 3;
-            if (itemText.IndexOf(query, StringComparison.CurrentCultureIgnoreCase) >= 0)
+            if (itemText.Contains(query, StringComparison.CurrentCultureIgnoreCase))
                 return 2;
         }
 

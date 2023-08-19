@@ -203,7 +203,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
             }
             
             // Find match
-            if (caret >= token.StartIndex && caret < token.EndIndex)
+            if (caret >= token.StartIndex && caret <= token.EndIndex)
             {
                 currentTokenIndex = i;
                 currentToken = token;

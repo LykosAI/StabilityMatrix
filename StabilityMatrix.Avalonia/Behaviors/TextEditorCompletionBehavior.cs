@@ -12,6 +12,8 @@ using NLog;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
+using StabilityMatrix.Core.Extensions;
+using TextMateSharp.Grammars;
 using CompletionWindow = StabilityMatrix.Avalonia.Controls.CodeCompletion.CompletionWindow;
 
 namespace StabilityMatrix.Avalonia.Behaviors;
@@ -94,38 +96,49 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
     {
         if (!IsEnabled || e.Text is not { } triggerText) return;
         
-        if (triggerText.All(char.IsLetterOrDigit))
+        if (triggerText.All(IsCompletionChar))
         {
             // Create completion window if its not already created
             if (completionWindow == null)
             {
-                Dispatcher.UIThread.Post(() =>
+                // Get the segment of the token the caret is currently in
+                if (GetCaretCompletionToken() is not { } tokenSegment)
                 {
-                    // Get the segment of the token the caret is currently in
-                    if (GetCaretToken(textEditor) is not { } tokenSegment)
-                    {
-                        Logger.Trace("Token segment not found");
-                        return;
-                    }
+                    Logger.Trace("Token segment not found");
+                    return;
+                }
 
-                    var token = textEditor.Document.GetText(tokenSegment);
-                    Logger.Trace("Using token {Token} ({@Segment})", token, tokenSegment);
+                var token = textEditor.Document.GetText(tokenSegment);
+                Logger.Trace("Using token {Token} ({@Segment})", token, tokenSegment);
                 
-                    completionWindow = CreateCompletionWindow(textEditor.TextArea);
-                    completionWindow.StartOffset = tokenSegment.Offset;
-                    completionWindow.EndOffset = tokenSegment.EndOffset;
+                completionWindow = CreateCompletionWindow(textEditor.TextArea);
+                completionWindow.StartOffset = tokenSegment.Offset;
+                completionWindow.EndOffset = tokenSegment.EndOffset;
 
-                    completionWindow.UpdateQuery(token);
+                completionWindow.UpdateQuery(token);
                 
-                    completionWindow.Closed += delegate
-                    {
-                        completionWindow = null;
-                    };
+                completionWindow.Closed += delegate
+                {
+                    completionWindow = null;
+                };
             
-                    completionWindow.Show();
-                });
+                completionWindow.Show();
             }
         }
+        else
+        {
+            // Disallowed chars, close completion window if its open
+            Logger.Trace($"Closing completion window: '{triggerText}' not a valid completion char");
+            completionWindow?.Close();
+        }
+    }
+
+    /// <summary>
+    /// Highlights the text segment in the text editor
+    /// </summary>
+    private void HighlightTextSegment(ISegment segment)
+    {
+        textEditor.TextArea.Selection = Selection.Create(textEditor.TextArea, segment);
     }
 
     private void TextArea_TextEntering(object? sender, TextInputEventArgs e)
@@ -162,26 +175,70 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
     }
     
     /// <summary>
-    /// Gets a segment of the token the caret is currently in.
+    /// Gets a segment of the token the caret is currently in for completions.
+    /// Returns null if caret is not on a valid completion token (i.e. comments)
     /// </summary>
-    private static ISegment? GetCaretToken(TextEditor textEditor)
+    private ISegment? GetCaretCompletionToken()
     {
         var caret = textEditor.CaretOffset;
+        
+        // Get the line the caret is on
+        var line = textEditor.Document.GetLineByOffset(caret);
+        var lineText = textEditor.Document.GetText(line.Offset, line.Length);
+        
+        // Tokenize
+        var result = TokenizerProvider.TokenizeLine(lineText);
+
+        var currentTokenIndex = -1;
+        IToken? currentToken = null;
+        // Get the token the caret is after
+        foreach (var (i, token) in result.Tokens.Enumerate())
+        {
+            // If we see a line comment token anywhere, return null
+            var isComment = token.Scopes.Any(s => s.Contains("comment.line"));
+            if (isComment)
+            {
+                Logger.Trace("Caret is in a comment");
+                return null;
+            }
+            
+            // Find match
+            if (caret >= token.StartIndex && caret < token.EndIndex)
+            {
+                currentTokenIndex = i;
+                currentToken = token;
+                break;
+            }
+        }
+        
+        // Still not found
+        if (currentToken is null || currentTokenIndex == -1)
+        {
+            Logger.Info($"Could not find token at caret offset {caret} for line {lineText.ToRepr}");
+            return null;
+        }
+        
+        // Cap the offsets by the line offsets
+        return new TextSegment
+        {
+            StartOffset = Math.Max(currentToken.StartIndex, line.Offset),
+            EndOffset = Math.Min(currentToken.EndIndex, line.EndOffset)
+        };
 
         // Search for the start and end of a token
         // A token is defined as either alphanumeric chars or a space
-        var start = caret;
+        /*var start = caret;
         while (start > 0 && IsCompletionChar(textEditor.Document.GetCharAt(start - 1)))
         {
             start--;
         }
-        
+
         var end = caret;
         while (end < textEditor.Document.TextLength && IsCompletionChar(textEditor.Document.GetCharAt(end)))
         {
             end++;
         }
-        
-        return start < end ? new TextSegment { StartOffset = start, EndOffset = end } : null;
+
+        return start < end ? new TextSegment { StartOffset = start, EndOffset = end } : null;*/
     }
 }

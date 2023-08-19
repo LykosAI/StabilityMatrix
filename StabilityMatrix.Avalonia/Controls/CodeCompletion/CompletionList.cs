@@ -43,11 +43,11 @@ namespace StabilityMatrix.Avalonia.Controls.CodeCompletion;
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class CompletionList : TemplatedControl
 {
+    private CompletionListBox? _listBox;
+    
     public CompletionList()
     {
         DoubleTapped += OnDoubleTapped;
-
-        CompletionAcceptKeys = new[] { Key.Enter, Key.Tab, };
     }
 
     /// <summary>
@@ -91,17 +91,33 @@ public class CompletionList : TemplatedControl
     /// Is raised when the completion list indicates that the user has chosen
     /// an entry to be completed.
     /// </summary>
-    public event EventHandler? InsertionRequested;
+    public event EventHandler<InsertionRequestEventArgs>? InsertionRequested;
+    
+    /// <summary>
+    /// Raised when the completion list indicates that it should be closed.
+    /// </summary>
+    public event EventHandler? CloseRequested;
 
     /// <summary>
     /// Raises the InsertionRequested event.
     /// </summary>
-    public void RequestInsertion(EventArgs e)
+    public void RequestInsertion(ICompletionData item, RoutedEventArgs triggeringEvent, string? appendText = null)
     {
-        InsertionRequested?.Invoke(this, e);
+        InsertionRequested?.Invoke(this, new InsertionRequestEventArgs
+        {
+            Item = item,
+            TriggeringEvent = triggeringEvent,
+            AppendText = appendText
+        });
     }
-
-    private CompletionListBox? _listBox;
+    
+    /// <summary>
+    /// Raises the CloseRequested event.
+    /// </summary>
+    public void RequestClose()
+    {
+        CloseRequested?.Invoke(this, EventArgs.Empty);
+    }
 
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
@@ -129,9 +145,16 @@ public class CompletionList : TemplatedControl
     }
 
     /// <summary>
-    /// Gets or sets the array of keys that request insertion of the completion
+    /// Dictionary of keys that request insertion of the completion
+    /// mapped to strings that will be appended to the completion when selected.
+    /// The string may be empty.
     /// </summary>
-    public Key[] CompletionAcceptKeys { get; set; }
+    public Dictionary<Key, string> CompletionAcceptKeys { get; init; } = new()
+    {
+        [Key.Enter] = "",
+        [Key.Tab] = "",
+        [Key.OemComma] = ",",
+    };
 
     /// <summary>
     /// Gets the scroll viewer used in this list box.
@@ -161,6 +184,7 @@ public class CompletionList : TemplatedControl
     /// Handles a key press. Used to let the completion list handle key presses while the
     /// focus is still on the text editor.
     /// </summary>
+    [SuppressMessage("ReSharper", "SwitchStatementHandlesSomeKnownEnumValuesWithDefault")]
     public void HandleKey(KeyEventArgs e)
     {
         if (_listBox == null)
@@ -197,10 +221,19 @@ public class CompletionList : TemplatedControl
                 break;
             default:
                 // Check insertion keys
-                if (CompletionAcceptKeys.Contains(e.Key) && CurrentList?.Count > 0)
+                if (CompletionAcceptKeys.TryGetValue(e.Key, out var appendText) 
+                    && CurrentList?.Count > 0)
                 {
                     e.Handled = true;
-                    RequestInsertion(e);
+                    
+                    if (SelectedItem is { } item)
+                    {
+                        RequestInsertion(item, e, appendText);
+                    }
+                    else
+                    {
+                        RequestClose();
+                    }
                 }
 
                 break;
@@ -218,7 +251,15 @@ public class CompletionList : TemplatedControl
         )
         {
             e.Handled = true;
-            RequestInsertion(e);
+
+            if (SelectedItem is { } item)
+            {
+                RequestInsertion(item, e);
+            }
+            else
+            {
+                RequestClose();
+            }
         }
     }
 
@@ -330,6 +371,13 @@ public class CompletionList : TemplatedControl
         }
         
         var matchingItems = FilterItems(listToFilter, query);
+        
+        // Close if no items match
+        if (matchingItems.Count == 0)
+        {
+            RequestClose();
+            return;
+        }
         
         // Fast path if both only 1 item, and item is the same
         if (FilteredCompletionData.Count == 1 

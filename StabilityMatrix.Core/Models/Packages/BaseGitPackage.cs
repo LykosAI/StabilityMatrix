@@ -5,6 +5,7 @@ using Octokit;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
@@ -265,6 +266,34 @@ public abstract class BaseGitPackage : BasePackage
         return latestCommit.Sha;
     }
     
+    public override Task SetupModelFolders(DirectoryPath installDirectory)
+    {
+        if (SharedFolders is { } folders)
+        {
+            StabilityMatrix.Core.Helper.SharedFolders
+                .SetupLinks(folders, SettingsManager.ModelsDirectory, installDirectory);
+        }
+        return Task.CompletedTask;
+    }
+
+    public override async Task UpdateModelFolders(DirectoryPath installDirectory)
+    {
+        if (SharedFolders is not null)
+        {
+            await StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(this,
+                SettingsManager.ModelsDirectory, installDirectory).ConfigureAwait(false);
+        }
+    }
+
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory)
+    {
+        if (SharedFolders is not null)
+        {
+            StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(this, installDirectory);
+        }
+        return Task.CompletedTask;
+    }
+
     // Send input to the running process.
     public virtual void SendInput(string input)
     {

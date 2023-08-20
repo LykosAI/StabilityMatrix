@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ### Fixed
 - Fixed SD.Next shared folders config not working with new config format, reverted to Junctions / Symlinks
+- Fixed issue where model version wouldn't be selected in the "All Versions" section of the Model Browser
 
 ## v2.2.0
 ### Added

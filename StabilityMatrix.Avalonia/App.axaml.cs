@@ -248,6 +248,7 @@ public sealed class App : Application
         services.AddTransient<LaunchOptionsViewModel>();
         services.AddTransient<ExceptionViewModel>();
         services.AddTransient<EnvVarsViewModel>();
+        services.AddTransient<ImageViewerViewModel>();
         services.AddSingleton<FirstLaunchSetupViewModel>();
         services.AddSingleton<UpdateViewModel>();
         
@@ -303,6 +304,7 @@ public sealed class App : Application
                 .Register(provider.GetRequiredService<UpscalerCardViewModel>)
                 .Register(provider.GetRequiredService<ModelCardViewModel>)
                 .Register(provider.GetRequiredService<BatchSizeCardViewModel>)
+                .Register(provider.GetRequiredService<ImageViewerViewModel>)
                 .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>));
     }
 
@@ -338,6 +340,7 @@ public sealed class App : Application
         services.AddTransient<UpdateDialog>();
         services.AddTransient<ExceptionDialog>();
         services.AddTransient<EnvVarsDialog>();
+        services.AddTransient<ImageViewerDialog>();
         
         // Controls
         services.AddTransient<RefreshBadge>();

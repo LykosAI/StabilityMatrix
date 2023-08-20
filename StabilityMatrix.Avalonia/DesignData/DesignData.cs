@@ -480,11 +480,15 @@ public static class DesignData
                 IsFiltering = true
             };
             list.CompletionData.AddRange(SampleCompletionData);
+            list.FilteredCompletionData.AddRange(list.CompletionData);
             list.SelectItem("te", true);
             return list;
         }
     }
 
+    public static ImageViewerViewModel ImageViewerViewModel 
+        => DialogFactory.Get<ImageViewerViewModel>();
+    
     public static Indexer Types => new();
 
     public class Indexer

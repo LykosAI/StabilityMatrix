@@ -115,7 +115,19 @@ public class LiteDbContext : ILiteDbContext
 
     public void Dispose()
     {
-        database?.Dispose();
+        if (database is not null)
+        {
+            try
+            {
+                database.Dispose();
+            }
+            catch (ObjectDisposedException)
+            {
+            }
+
+            database = null;
+        }
+
         GC.SuppressFinalize(this);
     }
 }

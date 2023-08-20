@@ -245,61 +245,6 @@ public class VladAutomatic : BaseGitPackage
         VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
     }
 
-    public override Task SetupModelFolders(DirectoryPath installDirectory)
-    {
-        var configJsonPath = installDirectory + "config.json";
-        var exists = File.Exists(configJsonPath);
-        JsonObject? configRoot;
-        if (exists)
-        {
-            var configJson = File.ReadAllText(configJsonPath);
-            try
-            {
-                configRoot = JsonSerializer.Deserialize<JsonObject>(configJson) ?? new JsonObject();
-            }
-            catch (JsonException)
-            {
-                configRoot = new JsonObject();
-            }
-        }
-        else
-        {
-            configRoot = new JsonObject();
-        }
-
-        configRoot["ckpt_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "StableDiffusion");
-        configRoot["diffusers_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "Diffusers");
-        configRoot["vae_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "VAE");
-        configRoot["lora_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "Lora");
-        configRoot["lyco_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "LyCORIS");
-        configRoot["embeddings_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "TextualInversion");
-        configRoot["hypernetwork_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "Hypernetwork");
-        configRoot["codeformer_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "Codeformer");
-        configRoot["gfpgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "GFPGAN");
-        configRoot["bsrgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "BSRGAN");
-        configRoot["esrgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "ESRGAN");
-        configRoot["realesrgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "RealESRGAN");
-        configRoot["scunet_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "ScuNET");
-        configRoot["swinir_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "SwinIR");
-        configRoot["ldsr_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "LDSR");
-        configRoot["clip_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "CLIP");
-        configRoot["control_net_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "ControlNet");
-        
-        var configJsonStr = JsonSerializer.Serialize(configRoot, new JsonSerializerOptions
-        {
-            WriteIndented = true
-        });
-        File.WriteAllText(configJsonPath, configJsonStr);
-
-        return Task.CompletedTask;
-    }
-
-    public override Task UpdateModelFolders(DirectoryPath installDirectory) =>
-        SetupModelFolders(installDirectory);
-
-    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory) =>
-        Task.CompletedTask;
-
     public override async Task<string> Update(InstalledPackage installedPackage,
         IProgress<ProgressReport>? progress = null, bool includePrerelease = false)
     {

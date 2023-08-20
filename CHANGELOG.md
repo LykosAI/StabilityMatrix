@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.2.1
+### Fixed
+- Fixed SD.Next shared folders config not working with new config format, reverted to Junctions / Symlinks
+
 ## v2.2.0
 ### Added
 - Added option to search by Base Model in the Model Browser
@@ -13,6 +17,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed [#59](https://github.com/LykosAI/StabilityMatrix/issues/61) - `GIT` environment variable is now set for the embedded portable git on Windows as A1111 uses it instead of default `PATH` resolution
 - Fixed embedded Python install check on Linux when an incompatible windows DLL is in the Python install directory
+- Fixed "ObjectDisposed" database errors that sometimes appeared when closing the app
 
 ### Changed
 - Revamped Package Manager UI

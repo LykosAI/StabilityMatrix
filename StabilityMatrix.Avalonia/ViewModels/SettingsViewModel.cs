@@ -329,6 +329,42 @@ public partial class SettingsViewModel : PageViewModelBase
             "Stability Matrix has been added to the Start Menu for all users.", NotificationType.Success);
     }
 
+    public async Task PickNewDataDirectory()
+    {
+        var viewModel = dialogFactory.Get<SelectDataDirectoryViewModel>();
+        var dialog = new BetterContentDialog
+        {
+            IsPrimaryButtonEnabled = false,
+            IsSecondaryButtonEnabled = false,
+            IsFooterVisible = false,
+            Content = new SelectDataDirectoryDialog
+            {
+                DataContext = viewModel
+            }
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            // 1. For portable mode, call settings.SetPortableMode()
+            if (viewModel.IsPortableMode)
+            {
+                settingsManager.SetPortableMode();
+            }
+            // 2. For custom path, call settings.SetLibraryPath(path)
+            else
+            {
+                settingsManager.SetLibraryPath(viewModel.DataDirectory);
+            }
+            
+            // Try to find library again, should be found now
+            if (!settingsManager.TryFindLibrary())
+            {
+                throw new Exception("Could not find library after setting path");
+            }            
+        }
+    }
+
     #endregion
     
     #region Debug Section

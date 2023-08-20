@@ -42,8 +42,11 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
         var firstImageUrl = value?.ModelVersion?.Images?.FirstOrDefault(
             img => nsfwEnabled || img.Nsfw == "None")?.Url;
 
-        Dispatcher.UIThread.InvokeAsync(async
-            () => await UpdateImage(firstImageUrl));
+        Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            SelectedFile = value?.CivitFileViewModels.FirstOrDefault();
+            await UpdateImage(firstImageUrl);
+        });
     }
 
     partial void OnSelectedFileChanged(CivitFileViewModel? value)

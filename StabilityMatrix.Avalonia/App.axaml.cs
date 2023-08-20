@@ -308,6 +308,7 @@ public sealed class App : Application
         services.AddSingleton<BasePackage, ComfyUI>();
         services.AddSingleton<BasePackage, VoltaML>();
         services.AddSingleton<BasePackage, InvokeAI>();
+        services.AddSingleton<BasePackage, Fooocus>();
     }
 
     private static IServiceCollection ConfigureServices()

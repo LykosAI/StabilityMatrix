@@ -66,15 +66,13 @@ public class Fooocus : BaseGitPackage
         var torchVersion = "cpu";
         var gpus = HardwareHelper.IterGpuInfo().ToList();
         
-        // If has Nvidia Gpu, install CUDA version
         if (gpus.Any(g => g.IsNvidia))
         {
             torchVersion = "cu118";
         }
-        // For AMD, Install ROCm version
-        else if (gpus.Any(g => g.IsAmd))
+        else if (HardwareHelper.PreferRocm())
         {
-            torchVersion= "rocm5.4.2";
+            torchVersion = "rocm5.4.2";
         }
 
         await venvRunner

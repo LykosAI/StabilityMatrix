@@ -222,7 +222,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         
 
         var startOffset = currentToken.StartIndex + line.Offset;
-        var endOffset = currentToken.EndIndex + line.EndOffset;
+        var endOffset = currentToken.EndIndex + line.Offset;
         
         // Cap the offsets by the line offsets
         return new TextSegment

@@ -40,13 +40,6 @@ namespace StabilityMatrix.Avalonia.Controls;
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class AdvancedImageBox : TemplatedControl
 {
-    private static readonly Rect EmptyRect = new();
-    
-    private static bool IsRectEmpty(Rect rect)
-    {
-        return rect == EmptyRect;
-    }
-    
     #region Bindable Base
     /// <summary>
     ///     Multicast event for property change notifications.
@@ -1893,6 +1886,19 @@ public class AdvancedImageBox : TemplatedControl
     #endregion
 
     #region Utility methods
+    /// <summary>
+    /// Determines whether the specified rectangle is empty
+    /// </summary>
+    private static bool IsRectEmpty(Rect rect)
+    {
+        return rect == EmptyRect;
+    }
+    
+    /// <summary>
+    /// Static empty rectangle
+    /// </summary>
+    private static readonly Rect EmptyRect = new();
+    
     /// <summary>
     ///   Determines whether the specified point is located within the image view port
     /// </summary>

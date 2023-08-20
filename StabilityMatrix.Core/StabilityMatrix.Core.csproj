@@ -40,6 +40,10 @@
       <PackageReference Include="SharpCompress" Version="0.33.0" />
       <PackageReference Include="Websocket.Client" Version="4.6.1" />
       <PackageReference Include="YamlDotNet" Version="13.1.1" />
+      <PackageReference Include="Yoh.Text.Json.NamingPolicies" Version="1.0.0" />
     </ItemGroup>
+
+
+
 
 </Project>

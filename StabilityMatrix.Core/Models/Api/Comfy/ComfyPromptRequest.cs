@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
 namespace StabilityMatrix.Core.Models.Api.Comfy;
 

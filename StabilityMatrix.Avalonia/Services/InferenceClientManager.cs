@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
@@ -20,6 +21,7 @@ namespace StabilityMatrix.Avalonia.Services;
 /// </summary>
 public partial class InferenceClientManager : ObservableObject, IInferenceClientManager
 {
+    private readonly ILogger<InferenceClientManager> logger;
     private readonly IApiFactory apiFactory;
 
     [ObservableProperty, NotifyPropertyChangedFor(nameof(IsConnected))]
@@ -37,8 +39,9 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     [ObservableProperty]
     private IReadOnlyCollection<ComfyUpscaler>? upscalers;
 
-    public InferenceClientManager(IApiFactory apiFactory)
+    public InferenceClientManager(ILogger<InferenceClientManager> logger, IApiFactory apiFactory)
     {
+        this.logger = logger;
         this.apiFactory = apiFactory;
     }
 
@@ -65,6 +68,18 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             upscalerBuilder.AddRange(latentUpscalerNames.Select(
                 s => new ComfyUpscaler(s, ComfyUpscalerType.Latent)));
         }
+        logger.LogTrace("Loaded latent upscale methods: {@Upscalers}", latentUpscalerNames);
+        
+        // Add Model upscale methods
+        var modelUpscalerNames = await Client.GetNodeOptionNamesAsync(
+            "UpscaleModelLoader", 
+            "model_name");
+        if (modelUpscalerNames is not null)
+        {
+            upscalerBuilder.AddRange(modelUpscalerNames.Select(
+                s => new ComfyUpscaler(s, ComfyUpscalerType.ESRGAN)));
+        }
+        logger.LogTrace("Loaded model upscale methods: {@Upscalers}", modelUpscalerNames);
         
         Upscalers = upscalerBuilder.ToImmutable();
     }

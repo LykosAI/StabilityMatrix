@@ -27,7 +27,8 @@ public class MockInferenceClientManager : ObservableObject, IInferenceClientMana
     public IReadOnlyCollection<ComfyUpscaler>? Upscalers { get; set; } = new ComfyUpscaler[]
     {
         new("nearest-exact", ComfyUpscalerType.Latent),
-        new("bicubic", ComfyUpscalerType.Latent)
+        new("bicubic", ComfyUpscalerType.Latent),
+        new("ESRGAN-4x", ComfyUpscalerType.ESRGAN)
     };
     
     public bool IsConnected { get; set; }

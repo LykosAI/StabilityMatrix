@@ -4,6 +4,7 @@ using System.Text.Json;
 using NLog;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Models.Api.Comfy;
+using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using Websocket.Client;

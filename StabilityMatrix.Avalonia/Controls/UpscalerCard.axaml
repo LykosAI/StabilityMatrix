@@ -4,6 +4,8 @@
         xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
         xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
         xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+        xmlns:data="clr-namespace:FluentAvalonia.UI.Data;assembly=FluentAvalonia"
+        xmlns:comfy="clr-namespace:StabilityMatrix.Core.Models.Api.Comfy;assembly=StabilityMatrix.Core"
         x:DataType="vmInference:UpscalerCardViewModel">
     <Design.PreviewWith>
         <Grid MinWidth="300">
@@ -20,7 +22,7 @@
                 <controls:Card>
                     <StackPanel Spacing="8">
                         <Grid ColumnDefinitions="Auto,*" RowDefinitions="*,*,*">
-                            <!-- Sampler -->
+                            <!-- Upscaler -->
                             <TextBlock
                                 Grid.Row="0"
                                 Grid.Column="0"

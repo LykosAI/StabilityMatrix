@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -357,11 +358,19 @@ public partial class SettingsViewModel : PageViewModelBase
                 settingsManager.SetLibraryPath(viewModel.DataDirectory);
             }
             
-            // Try to find library again, should be found now
-            if (!settingsManager.TryFindLibrary())
+            // Restart
+            var restartDialog = new BetterContentDialog
             {
-                throw new Exception("Could not find library after setting path");
-            }            
+                Title = "Restart required",
+                Content = "Stability Matrix must be restarted for the changes to take effect.",
+                PrimaryButtonText = "Restart",
+                DefaultButton = ContentDialogButton.Primary,
+                IsSecondaryButtonEnabled = false,
+            };
+            await restartDialog.ShowAsync();
+            
+            Process.Start(Compat.AppCurrentPath);
+            Environment.Exit(0);
         }
     }
 

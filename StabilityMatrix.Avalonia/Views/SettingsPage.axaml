@@ -6,6 +6,7 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
              xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+             xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="700"
              x:DataType="vm:SettingsViewModel"
              x:CompileBindings="True"
@@ -124,7 +125,7 @@
                     </Grid>
                     
                     <!-- System Options -->
-                    <Grid Grid.Row="4" Margin="0,8,0,0" RowDefinitions="auto,*">
+                    <Grid Grid.Row="4" Margin="0,8,0,0" RowDefinitions="auto, auto, auto">
                         <TextBlock 
                             FontWeight="Medium"
                             Text="System" 
@@ -166,6 +167,24 @@
                                 </StackPanel>
                             </ui:SettingsExpander.Footer>
                         </ui:SettingsExpander>
+                        <ui:SettingsExpander Grid.Row="2"
+                                             Header="Select New Data Directory"
+                                             Description="Does not move existing data"
+                                             IconSource="MoveToFolder"
+                                             Margin="8,0">
+                            <ui:SettingsExpander.Footer>
+                                <Button Command="{Binding PickNewDataDirectory}">
+                                    <Grid ColumnDefinitions="Auto, Auto">
+                                        <avalonia:Icon Grid.Row="0" Value="fa-solid fa-folder-open"
+                                                     Margin="0,0,8,0"
+                                                     VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1"
+                                                   VerticalAlignment="Center"
+                                                   Text="Select Directory"/>
+                                    </Grid>
+                                </Button>
+                            </ui:SettingsExpander.Footer>
+                        </ui:SettingsExpander>
                     </Grid>
                     
                     <!-- Debug Options -->
@@ -181,24 +200,24 @@
                                 IconSource="Code"
                                 Command="{Binding LoadDebugInfo}"
                                 Header="Debug Options"
-                                Margin="8, 0,8,4">
+                                Margin="8, 0,8,0">
                                 
                                 <ui:SettingsExpanderItem Description="Paths" IconSource="Folder"
-                                                         Margin="4">
+                                                         Margin="4, 0">
                                     <SelectableTextBlock Text="{Binding DebugPaths}"
                                                          Foreground="{DynamicResource TextControlPlaceholderForeground}"
                                                          TextWrapping="WrapWithOverflow" />
                                 </ui:SettingsExpanderItem>
 
                                 <ui:SettingsExpanderItem Description="Compat Info" IconSource="StarFilled"
-                                                         Margin="4,0,4,4">
+                                                         Margin="4,0">
                                     <SelectableTextBlock Text="{Binding DebugCompatInfo}"
                                                          Foreground="{DynamicResource TextControlPlaceholderForeground}"
                                                          TextWrapping="WrapWithOverflow" />
                                 </ui:SettingsExpanderItem>
                                 
                                 <ui:SettingsExpanderItem Description="GPU Info" IconSource="FullScreenMaximize"
-                                                         Margin="4,0,4,4">
+                                                         Margin="4,0">
                                     <SelectableTextBlock Text="{Binding DebugGpuInfo}"
                                                          Foreground="{DynamicResource TextControlPlaceholderForeground}"
                                                          TextWrapping="WrapWithOverflow" />
@@ -206,10 +225,9 @@
 
                                 <ui:SettingsExpanderItem Content="Animation Scale" IconSource="Clock"
                                                          Description="Lower values = faster animations. 0x means animations are instant."
-                                                         Margin="4,0,4,4">
+                                                         Margin="4,0">
                                     <ui:SettingsExpanderItem.Footer>
-                                        <ComboBox Margin="0, 8"
-                                                  ItemsSource="{Binding AnimationScaleOptions}"
+                                        <ComboBox ItemsSource="{Binding AnimationScaleOptions}"
                                                   SelectedItem="{Binding SelectedAnimationScale}">
                                             <ComboBox.ItemTemplate>
                                                 <DataTemplate>
@@ -223,30 +241,27 @@
                                 </ui:SettingsExpanderItem>
                                 
                                 <ui:SettingsExpanderItem Content="Notification" IconSource="CommentAdd"
-                                                         Margin="4,0,4,4">
+                                                         Margin="4,0">
                                     <ui:SettingsExpanderItem.Footer>
                                         <Button
-                                            Margin="0, 8"
                                             Command="{Binding DebugNotificationCommand}"
                                             Content="New Notification"/>
                                     </ui:SettingsExpanderItem.Footer>
                                 </ui:SettingsExpanderItem>
                                 
                                 <ui:SettingsExpanderItem Content="Content Dialog" IconSource="NewWindow"
-                                                         Margin="4,0,4,4">
+                                                         Margin="4,0">
                                     <ui:SettingsExpanderItem.Footer>
                                         <Button
-                                            Margin="0, 8"
                                             Command="{Binding DebugContentDialogCommand}"
                                             Content="Show Dialog"/>
                                     </ui:SettingsExpanderItem.Footer>
                                 </ui:SettingsExpanderItem>
                                 
                                 <ui:SettingsExpanderItem Content="Exceptions" IconSource="Flag"
-                                                         Margin="4,0,4,4">
+                                                         Margin="4,0">
                                     <ui:SettingsExpanderItem.Footer>
                                         <Button
-                                            Margin="0, 8"
                                             Command="{Binding DebugThrowExceptionCommand}"
                                             Content="Unhandled Exception"/>
                                     </ui:SettingsExpanderItem.Footer>

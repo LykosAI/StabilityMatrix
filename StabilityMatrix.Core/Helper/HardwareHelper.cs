@@ -123,6 +123,16 @@ public static partial class HardwareHelper
     {
         return IterGpuInfo().Any(gpu => gpu.IsAmd);
     }
+    
+    // Set ROCm for default if AMD and Linux
+    public static bool PreferRocm() => !HardwareHelper.HasNvidiaGpu()
+                                       && HardwareHelper.HasAmdGpu()
+                                       && Compat.IsLinux;
+    
+    // Set DirectML for default if AMD and Windows
+    public static bool PreferDirectML() => !HardwareHelper.HasNvidiaGpu()
+                                           && HardwareHelper.HasAmdGpu()
+                                           && Compat.IsWindows;
 }
 
 public enum Level

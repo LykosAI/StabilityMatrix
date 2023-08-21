@@ -196,43 +196,33 @@ public partial class CheckpointFile : ViewModelBase
     /// </summary>
     public static IEnumerable<CheckpointFile> FromDirectoryIndex(string directory, SearchOption searchOption = SearchOption.TopDirectoryOnly)
     {
-        // Get all files with supported extensions
-        var allExtensions = SupportedCheckpointExtensions
-            .Concat(SupportedImageExtensions)
-            .Concat(SupportedMetadataExtensions);
-
-        var files = allExtensions.AsParallel()
-            .SelectMany(pattern => Directory.EnumerateFiles(directory, $"*{pattern}", searchOption)).ToDictionary<string, string>(Path.GetFileName);
-
-        foreach (var file in files.Keys.Where(k => SupportedCheckpointExtensions.Contains(Path.GetExtension(k))))
+        foreach (var file in Directory.EnumerateFiles(directory, "*.*", searchOption))
         {
-            var checkpointFile = new CheckpointFile()
+            if (!SupportedCheckpointExtensions.Any(ext => file.Contains(ext)))
+                continue;
+            
+            var checkpointFile = new CheckpointFile
             {
                 Title = Path.GetFileNameWithoutExtension(file),
                 FilePath = Path.Combine(directory, file),
             };
             
-            // Check for connected model info
-            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
-            var cmInfoPath = $"{fileNameWithoutExtension}.cm-info.json";
-            if (files.TryGetValue(cmInfoPath, out var jsonPath))
+            var jsonPath = Path.Combine(directory, $"{Path.GetFileNameWithoutExtension(file)}.cm-info.json");
+            if (File.Exists(jsonPath)) 
             {
-                try
-                {
-                    var jsonData = File.ReadAllText(jsonPath);
-                    checkpointFile.ConnectedModel = ConnectedModelInfo.FromJson(jsonData);
-                }
-                catch (IOException e)
-                {
-                    Debug.WriteLine($"Failed to parse {cmInfoPath}: {e}");
-                }
+                var json = File.ReadAllText(jsonPath);
+                var connectedModelInfo = ConnectedModelInfo.FromJson(json);
+                checkpointFile.ConnectedModel = connectedModelInfo;
             }
 
-            // Check for preview image
-            var previewImage = SupportedImageExtensions.Select(ext => $"{fileNameWithoutExtension}.preview{ext}").FirstOrDefault(files.ContainsKey);
-            if (previewImage != null)
+            var possibleImagePaths = SupportedImageExtensions.Select(ext =>
+                    Path.Combine(directory,
+                        $"{Path.GetFileNameWithoutExtension(file)}.preview{ext}"))
+                .Where(File.Exists).ToList();
+
+            if (possibleImagePaths.Any())
             {
-                checkpointFile.PreviewImagePath = files[previewImage];
+                checkpointFile.PreviewImagePath = possibleImagePaths.First();
             }
 
             yield return checkpointFile;

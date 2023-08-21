@@ -215,15 +215,10 @@ public partial class CheckpointFile : ViewModelBase
                 checkpointFile.ConnectedModel = connectedModelInfo;
             }
 
-            var possibleImagePaths = SupportedImageExtensions.Select(ext =>
-                    Path.Combine(directory,
-                        $"{Path.GetFileNameWithoutExtension(file)}.preview{ext}"))
-                .Where(File.Exists).ToList();
-
-            if (possibleImagePaths.Any())
-            {
-                checkpointFile.PreviewImagePath = possibleImagePaths.First();
-            }
+            checkpointFile.PreviewImagePath = SupportedImageExtensions
+                .Select(ext => Path.Combine(directory,
+                    $"{Path.GetFileNameWithoutExtension(file)}.preview{ext}")).Where(File.Exists)
+                .FirstOrDefault();
 
             yield return checkpointFile;
         }

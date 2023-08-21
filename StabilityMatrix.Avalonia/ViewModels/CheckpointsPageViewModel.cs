@@ -70,7 +70,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         this.downloadService = downloadService;
         this.modelFinder = modelFinder;
     }
-
+    
     public override async Task OnLoadedAsync()
     {
         DisplayedCheckpointFolders = CheckpointFolders;
@@ -147,7 +147,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         var indexTasks = folders.Select(async f =>
         {
             var checkpointFolder =
-                new CheckpointManager.CheckpointFolder(settingsManager, downloadService, modelFinder)
+                new CheckpointFolder(settingsManager, downloadService, modelFinder)
                 {
                     Title = Path.GetFileName(f),
                     DirectoryPath = f,

@@ -117,4 +117,7 @@ public class CivitModelsRequest
     /// </summary>
     [AliasAs("baseModels")]
     public string? BaseModel { get; set; }
+    
+    [AliasAs("ids")]
+    public string CommaSeparatedModelIds { get; set; }
 }

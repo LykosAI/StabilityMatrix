@@ -143,8 +143,6 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
         var folders = Directory.GetDirectories(modelsDirectory);
 
-        var sw = new Stopwatch();
-        sw.Start();
         // Index all folders
         var indexTasks = folders.Select(async f =>
         {
@@ -160,9 +158,6 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         }).ToList();
 
         await Task.WhenAll(indexTasks);
-
-        sw.Stop();
-        Logger.Debug("Indexed {Count} folders in {Elapsed} ms", indexTasks.Count, sw.ElapsedMilliseconds);
 
         // Set new observable collection, ordered by alphabetical order
         CheckpointFolders =

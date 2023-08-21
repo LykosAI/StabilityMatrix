@@ -370,7 +370,7 @@ public partial class SettingsViewModel : PageViewModelBase
             await restartDialog.ShowAsync();
             
             Process.Start(Compat.AppCurrentPath);
-            Environment.Exit(0);
+            App.Shutdown();
         }
     }
 

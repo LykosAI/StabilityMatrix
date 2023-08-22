@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Improved Checkpoints page indexing performance
 - Fixed issue where Checkpoints page may not show all checkpoints after clearing search filter
 - Fixed issue where Checkpoints page may show incorrect checkpoints for the given filter after changing pages
+### Changed
+- Changed update method for SD.Next to use the built-in upgrade functionality
 
 ## v2.2.1
 ### Fixed

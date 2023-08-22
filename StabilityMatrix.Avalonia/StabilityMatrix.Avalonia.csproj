@@ -90,6 +90,5 @@
         <AutoGen>True</AutoGen>
         <DependentUpon>Resources.resx</DependentUpon>
       </Compile>
-      <Compile Remove="Languages\LocalizationExtension.cs" />
     </ItemGroup>
 </Project>

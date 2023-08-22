@@ -198,7 +198,27 @@ public class TrackedDownload
         }
         
         Logger.Debug("Cancelling download {Download}", FileName);
-        downloadCancellationTokenSource?.Cancel();
+
+        // Cancel token if it exists
+        if (downloadCancellationTokenSource is { } token)
+        {
+            token.Cancel();
+        }
+        // Otherwise handle it manually
+        else
+        {
+            // Delete the temp file
+            try
+            {
+                DownloadDirectory.JoinFile(TempFileName).Delete();
+            }
+            catch (IOException)
+            {
+            }
+            
+            ProgressState = ProgressState.Cancelled;
+            OnProgressStateChanged(ProgressState);
+        }
     }
     
     /// <summary>
@@ -229,15 +249,6 @@ public class TrackedDownload
         {
             // Set the exception
             Exception = task.Exception;
-            
-            // Delete the temp file
-            try
-            {
-                DownloadDirectory.JoinFile(TempFileName).Delete();
-            }
-            catch (IOException)
-            {
-            }
 
             ProgressState = ProgressState.Failed;
         }
@@ -270,10 +281,9 @@ public class TrackedDownload
         OnProgressStateChanged(ProgressState);
         
         // Dispose of the task and cancellation token
-        /*downloadTask?.Dispose();
         downloadTask = null;
-        downloadCancellationTokenSource?.Dispose();
-        downloadCancellationTokenSource = null;*/
+        downloadCancellationTokenSource = null;
+        downloadPauseTokenSource = null;
     }
     
     public void SetDownloadService(IDownloadService service)

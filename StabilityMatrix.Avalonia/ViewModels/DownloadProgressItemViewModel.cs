@@ -30,7 +30,6 @@ public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
         {
             Progress.Value = e.Percentage;
             Progress.IsIndeterminate = e.IsIndeterminate;
-            Progress.Text = e.Title;
         };
         
         download.ProgressStateChanged += (s, e) =>

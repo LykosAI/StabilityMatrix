@@ -71,7 +71,7 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
         downloads.TryAdd(download.Id, (download, jsonFileStream));
         
         // Connect to state changed event to update json file
-        download.ProgressStateChanged += TrackedDownload_OnProgressStateChanged;
+        AttachHandlers(download);
         
         logger.LogDebug("Added download {Download}", download.FileName);
         OnDownloadAdded(download);
@@ -91,6 +91,11 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
         fs.Seek(0, SeekOrigin.Begin);
         fs.Write(jsonBytes);
         fs.Flush();
+    }
+    
+    private void AttachHandlers(TrackedDownload download)
+    {
+        download.ProgressStateChanged += TrackedDownload_OnProgressStateChanged;
     }
     
     /// <summary>
@@ -117,6 +122,16 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
                 logger.LogDebug("Removed download {Download}", download.FileName);
             }
         }
+        
+        // On successes, run the continuation action
+        if (e == ProgressState.Success)
+        {
+            if (download.ContextAction is CivitPostDownloadContextAction action)
+            {
+                logger.LogDebug("Running context action for {Download}", download.FileName);
+                action.Invoke(settingsManager);
+            }
+        }
     }
     
     private void LoadInProgressDownloads(DirectoryPath downloadsDir)
@@ -139,8 +154,7 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
                 
                 downloads.TryAdd(download.Id, (download, fileStream));
                 
-                // Connect to state changed event to update json file
-                download.ProgressStateChanged += TrackedDownload_OnProgressStateChanged;
+                AttachHandlers(download);
                 
                 OnDownloadAdded(download);
                 
@@ -163,7 +177,6 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
             FileName = downloadPath.Name,
             TempFileName = NewTempFileName(downloadPath.Directory!),
         };
-        download.SetDownloadService(downloadService);
 
         AddDownload(download);
         

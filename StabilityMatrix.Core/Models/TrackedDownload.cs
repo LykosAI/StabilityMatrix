@@ -44,9 +44,9 @@ public class TrackedDownload
     
     public required string TempFileName { get; init; }
     
-    public string? ExpectedHashSha256 { get; init; }
+    public string? ExpectedHashSha256 { get; set; }
     
-    public bool ValidateHash { get; init; }
+    public bool ValidateHash { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public ProgressState ProgressState { get; set; } = ProgressState.Inactive;
@@ -56,6 +56,11 @@ public class TrackedDownload
     // Used for restoring progress on load
     public long DownloadedBytes { get; set; }
     public long TotalBytes { get; set; }
+    
+    /// <summary>
+    /// Optional context action to be invoked on completion
+    /// </summary>
+    public IContextAction? ContextAction { get; set; }
     
     [JsonIgnore]
     public Exception? Exception { get; private set; }
@@ -123,8 +128,9 @@ public class TrackedDownload
         // If hash validation is enabled, validate the hash
         if (ValidateHash)
         {
+            OnProgressUpdate(new ProgressReport(0, isIndeterminate: true, type: ProgressType.Hashing));
             var hash = await FileHash.GetSha256Async(DownloadDirectory.JoinFile(TempFileName), progress).ConfigureAwait(false);
-            if (hash != ExpectedHashSha256)
+            if (hash != ExpectedHashSha256?.ToLowerInvariant())
             {
                 throw new Exception($"Hash validation for {FileName} failed, expected {ExpectedHashSha256} but got {hash}");
             }

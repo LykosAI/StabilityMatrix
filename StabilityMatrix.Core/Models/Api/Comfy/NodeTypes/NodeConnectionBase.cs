@@ -1,9 +1,5 @@
-﻿using System.Text.Json.Serialization;
-using StabilityMatrix.Core.Converters.Json;
+﻿namespace StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 
-namespace StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
-
-[JsonConverter(typeof(NodeConnectionBaseJsonConverter))]
 public abstract class NodeConnectionBase
 {
     public object[]? Data { get; set; }

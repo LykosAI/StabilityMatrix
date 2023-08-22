@@ -48,8 +48,11 @@ public class TrackedDownload
     
     public bool ValidateHash { get; init; }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public ProgressState ProgressState { get; set; } = ProgressState.Inactive;
 
+    public List<string> ExtraCleanupFileNames { get; init; } = new();
+    
     // Used for restoring progress on load
     public long DownloadedBytes { get; set; }
     public long TotalBytes { get; set; }
@@ -207,17 +210,37 @@ public class TrackedDownload
         // Otherwise handle it manually
         else
         {
-            // Delete the temp file
-            try
-            {
-                DownloadDirectory.JoinFile(TempFileName).Delete();
-            }
-            catch (IOException)
-            {
-            }
+            DoCleanup();
             
             ProgressState = ProgressState.Cancelled;
             OnProgressStateChanged(ProgressState);
+        }
+    }
+
+    /// <summary>
+    /// Deletes the temp file and any extra cleanup files
+    /// </summary>
+    private void DoCleanup()
+    {
+        try
+        {
+            DownloadDirectory.JoinFile(TempFileName).Delete();
+        }
+        catch (IOException)
+        {
+            Logger.Warn("Failed to delete temp file {TempFile}", TempFileName);
+        }
+        
+        foreach (var extraFile in ExtraCleanupFileNames)
+        {
+            try
+            {
+                DownloadDirectory.JoinFile(extraFile).Delete();
+            }
+            catch (IOException)
+            {
+                Logger.Warn("Failed to delete extra cleanup file {ExtraFile}", extraFile);
+            }
         }
     }
     
@@ -258,17 +281,10 @@ public class TrackedDownload
             ProgressState = ProgressState.Success;
         }
 
-        // For failed or cancelled, delete the temp file
+        // For failed or cancelled, delete the temp files
         if (ProgressState is ProgressState.Failed or ProgressState.Cancelled)
         {
-            // Delete the temp file
-            try
-            {
-                DownloadDirectory.JoinFile(TempFileName).Delete();
-            }
-            catch (IOException)
-            {
-            }
+            DoCleanup();
         } 
         else if (ProgressState == ProgressState.Success)
         {

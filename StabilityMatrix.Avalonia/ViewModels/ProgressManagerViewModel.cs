@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Avalonia.Collections;
+using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
+using Polly;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -22,13 +24,19 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 [View(typeof(ProgressManagerPage))]
 public partial class ProgressManagerViewModel : PageViewModelBase
 {
+    private readonly INotificationService notificationService;
+    
     public override string Title => "Download Manager";
     public override IconSource IconSource => new SymbolIconSource {Symbol = Symbol.ArrowCircleDown, IsFilled = true};
 
     public AvaloniaList<ProgressItemViewModelBase> ProgressItems { get; } = new();
 
-    public ProgressManagerViewModel(ITrackedDownloadService trackedDownloadService)
+    public ProgressManagerViewModel(
+        ITrackedDownloadService trackedDownloadService,
+        INotificationService notificationService)
     {
+        this.notificationService = notificationService;
+        
         // Attach to the event
         trackedDownloadService.DownloadAdded += TrackedDownloadService_OnDownloadAdded;
     }
@@ -36,6 +44,31 @@ public partial class ProgressManagerViewModel : PageViewModelBase
     private void TrackedDownloadService_OnDownloadAdded(object? sender, TrackedDownload e)
     {
         var vm = new DownloadProgressItemViewModel(e);
+        
+        // Attach notification handlers
+        e.ProgressStateChanged += (s, state) =>
+        {
+            var download = s as TrackedDownload;
+            
+            switch (state)
+            {
+                case ProgressState.Success:
+                    notificationService.Show("Download Completed", $"Download of {e.FileName} completed successfully.", NotificationType.Success);
+                    break;
+                case ProgressState.Failed:
+                    var msg = "";
+                    if (download?.Exception is { } exception)
+                    {
+                        msg = $"({exception.GetType().Name}) {exception.Message}";
+                    }
+                    notificationService.ShowPersistent("Download Failed", $"Download of {e.FileName} failed: {msg}", NotificationType.Error);
+                    break;
+                case ProgressState.Cancelled:
+                    notificationService.Show("Download Cancelled", $"Download of {e.FileName} was cancelled.", NotificationType.Warning);
+                    break;
+            }
+        };
+        
         ProgressItems.Add(vm);
     }
 
@@ -50,6 +83,11 @@ public partial class ProgressManagerViewModel : PageViewModelBase
             var vm = new DownloadProgressItemViewModel(download);
             ProgressItems.Add(vm);
         }
+    }
+    
+    private void ShowFailedNotification(string title, string message)
+    {
+        notificationService.ShowPersistent(title, message, NotificationType.Error);
     }
     
     public void StartEventListener()

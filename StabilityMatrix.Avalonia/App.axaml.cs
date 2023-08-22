@@ -210,7 +210,8 @@ public sealed class App : Application
         services.AddSingleton<MainWindowViewModel>(provider =>
             new MainWindowViewModel(provider.GetRequiredService<ISettingsManager>(),
                 provider.GetRequiredService<IDiscordRichPresenceService>(),
-                provider.GetRequiredService<ServiceManager<ViewModelBase>>())
+                provider.GetRequiredService<ServiceManager<ViewModelBase>>(),
+                provider.GetRequiredService<ITrackedDownloadService>())
             {
                 Pages =
                 {
@@ -333,6 +334,10 @@ public sealed class App : Application
         services.AddSingleton<IPyRunner, PyRunner>();
         services.AddSingleton<IUpdateHelper, UpdateHelper>();
         services.AddSingleton<INavigationService, NavigationService>();
+        
+        services.AddSingleton<ITrackedDownloadService, TrackedDownloadService>();
+        services.AddSingleton<IDisposable>(provider => 
+            (IDisposable) provider.GetRequiredService<ITrackedDownloadService>());
         
         // Rich presence
         services.AddSingleton<IDiscordRichPresenceService, DiscordRichPresenceService>();

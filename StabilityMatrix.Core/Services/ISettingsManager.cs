@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Linq.Expressions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
 
 namespace StabilityMatrix.Core.Services;
@@ -12,10 +13,17 @@ public interface ISettingsManager
     bool IsLibraryDirSet { get; }
     string DatabasePath { get; }
     string ModelsDirectory { get; }
+    string DownloadsDirectory { get; }
     Settings Settings { get; }
     event EventHandler<string>? LibraryDirChanged;
     event EventHandler<PropertyChangedEventArgs>? SettingsPropertyChanged;
 
+    /// <summary>
+    /// Register a handler that fires once when LibraryDir is first set.
+    /// Will fire instantly if it is already set.
+    /// </summary>
+    void RegisterOnLibraryDirSet(Action<string> handler);
+    
     /// <inheritdoc />
     SettingsTransaction BeginTransaction();
 

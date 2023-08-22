@@ -1,46 +1,108 @@
-﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
-                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                          xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
-                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                          d:DataContext="{x:Static mocks:DesignData.ProgressManagerViewModel}"
-                          x:DataType="vm:ProgressManagerViewModel"
-                          MaxHeight="250"
-                          mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="250"
-                          x:Class="StabilityMatrix.Avalonia.Views.ProgressManagerPage">
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.ProgressManagerPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluentAvalonia="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+    xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    xmlns:vmBase="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
+    MaxHeight="250"
+    d:DataContext="{x:Static mocks:DesignData.ProgressManagerViewModel}"
+    d:DesignHeight="250"
+    d:DesignWidth="300"
+    x:DataType="vm:ProgressManagerViewModel"
+    mc:Ignorable="d">
     <ScrollViewer>
         <Grid RowDefinitions="Auto, *">
-            <TextBlock Grid.Row="0" Text="Downloads"
-                       VerticalAlignment="Center"
-                       TextDecorations="Underline"
-                       FontSize="16"
-                       TextAlignment="Left" />
-            <Button Grid.Row="0"
-                    Content="Clear Finished"
-                    Padding="4"
-                    Classes="transparent"
-                    Margin="0,0,8,0"
-                    IsVisible="{Binding !!ProgressItems.Count}"
-                    Command="{Binding ClearDownloads}"
-                    HorizontalAlignment="Right" />
+            <TextBlock
+                Grid.Row="0"
+                VerticalAlignment="Center"
+                FontSize="16"
+                Text="Downloads"
+                TextAlignment="Left"
+                TextDecorations="Underline" />
+            <Button
+                Grid.Row="0"
+                Margin="0,0,8,0"
+                Padding="4"
+                HorizontalAlignment="Right"
+                Classes="transparent"
+                Command="{Binding ClearDownloads}"
+                Content="Clear Finished"
+                IsVisible="{Binding !!ProgressItems.Count}" />
 
-            <ItemsRepeater Margin="0,4,0,0" Grid.Row="1" ItemsSource="{Binding ProgressItems, Mode=OneWay}">
-                <ItemsRepeater.ItemTemplate>
-                    <DataTemplate DataType="{x:Type vm:ProgressItemViewModel}">
-                        <Border BorderBrush="#33000000"
-                                Background="#22000000"
-                                BorderThickness="2"
-                                CornerRadius="8"
-                                Padding="8"
-                                Margin="4">
-                            <StackPanel>
-                                <TextBlock Text="{Binding Name, Mode=OneWay}"
-                                           Margin="0, 4" />
-                                <ProgressBar Value="{Binding Progress.Percentage, Mode=OneWay}"
-                                             IsIndeterminate="{Binding Progress.IsIndeterminate}"
-                                             Margin="0, 4">
+            <ItemsControl
+                Grid.Row="1"
+                Margin="0,4,0,0"
+                ItemsSource="{Binding ProgressItems, Mode=OneWay}">
+                <ItemsControl.DataTemplates>
+
+                    <DataTemplate DataType="{x:Type vmBase:PausableProgressItemViewModelBase}">
+                        <Border
+                            Margin="4"
+                            Padding="8"
+                            Background="#22000000"
+                            BorderBrush="#33000000"
+                            BorderThickness="2"
+                            CornerRadius="8">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="*,Auto">
+
+                                <StackPanel Grid.Row="0" Grid.Column="0">
+                                    <TextBlock Margin="0,0" Text="{Binding Name, Mode=OneWay}" />
+                                    
+                                    <!--  non-indeterminate progress  -->
+                                    <TextBlock
+                                        Margin="0,0"
+                                        IsVisible="{Binding !Progress.IsIndeterminate}">
+                                        <Run Text="{Binding Progress.Text, Mode=OneWay}" />
+                                        <Run Text="{Binding Progress.Value, Mode=OneWay}" /><Run Text="%" />
+                                    </TextBlock>
+
+                                    <!--  indeterminate progress  -->
+                                    <TextBlock
+                                        Margin="0,4"
+                                        IsVisible="{Binding Progress.IsIndeterminate}"
+                                        Text="{Binding Progress.Text, Mode=OneWay}" />
+                                </StackPanel>
+
+
+                                <!--  Buttons  -->
+                                <UniformGrid
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    Columns="2">
+                                    <ToggleButton 
+                                        Name="PauseResumeToggleButton" 
+                                        Classes="transparent-full"
+                                        Command="{Binding TogglePauseResumeCommand}"
+                                        IsChecked="{Binding IsPaused}"
+                                        IsVisible="{Binding CanPauseResume}">
+                                        <Panel>
+                                            <ui:SymbolIcon IsVisible="{Binding ElementName=PauseResumeToggleButton, Path=!IsChecked}" Symbol="Pause" />
+                                            <ui:SymbolIcon IsVisible="{Binding ElementName=PauseResumeToggleButton, Path=IsChecked}" Symbol="Play" />
+                                        </Panel>
+                                    </ToggleButton>
+                                    
+                                    <Button 
+                                        Command="{Binding CancelCommand}"
+                                        IsVisible="{Binding CanCancel}"
+                                        Classes="transparent-full">
+                                        <ui:SymbolIcon Symbol="Cancel" />
+                                    </Button>
+                                </UniformGrid>
+
+                                <ProgressBar
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Margin="0,8,0,4"
+                                    IsIndeterminate="{Binding Progress.IsIndeterminate}"
+                                    Value="{Binding Progress.Value, Mode=OneWay}">
                                     <ProgressBar.Transitions>
                                         <Transitions>
                                             <DoubleTransition Property="Value" Duration="00:00:00.150">
@@ -51,23 +113,59 @@
                                         </Transitions>
                                     </ProgressBar.Transitions>
                                 </ProgressBar>
-                                
-                                <!-- non-indeterminate progress -->
-                                <TextBlock Margin="0, 4"
-                                           IsVisible="{Binding !Progress.IsIndeterminate}">
-                                    <Run Text="{Binding ProgressText, Mode=OneWay}" />
-                                    <Run Text="{Binding Progress.Percentage, Mode=OneWay}" /><Run Text="%" />
-                                </TextBlock>
-                                
-                                <!-- indeterminate progress -->
-                                <TextBlock Margin="0, 4" 
-                                           IsVisible="{Binding Progress.IsIndeterminate}"
-                                           Text="{Binding ProgressText, Mode=OneWay}" />
-                            </StackPanel>
+                            </Grid>
                         </Border>
                     </DataTemplate>
-                </ItemsRepeater.ItemTemplate>
-            </ItemsRepeater>
+
+                    <DataTemplate DataType="{x:Type vm:ProgressItemViewModel}">
+                        <Border
+                            Margin="4"
+                            Padding="8"
+                            Background="#22000000"
+                            BorderBrush="#33000000"
+                            BorderThickness="2"
+                            CornerRadius="8">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="*,Auto">
+                                <StackPanel Grid.Row="0" Grid.Column="0">
+                                    <TextBlock Margin="0,0" Text="{Binding Name, Mode=OneWay}" />
+                                    
+                                    <!--  non-indeterminate progress  -->
+                                    <TextBlock
+                                        Margin="0,0"
+                                        IsVisible="{Binding !Progress.IsIndeterminate}">
+                                        <Run Text="{Binding Progress.Text, Mode=OneWay}" />
+                                        <Run Text="{Binding Progress.Value, Mode=OneWay}" /><Run Text="%" />
+                                    </TextBlock>
+
+                                    <!--  indeterminate progress  -->
+                                    <TextBlock
+                                        Margin="0,4"
+                                        IsVisible="{Binding Progress.IsIndeterminate}"
+                                        Text="{Binding Progress.Text, Mode=OneWay}" />
+                                </StackPanel>
+
+                                <ProgressBar
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Margin="0,8,0,4"
+                                    IsIndeterminate="{Binding Progress.IsIndeterminate}"
+                                    Value="{Binding Progress.Value, Mode=OneWay}">
+                                    <ProgressBar.Transitions>
+                                        <Transitions>
+                                            <DoubleTransition Property="Value" Duration="00:00:00.150">
+                                                <DoubleTransition.Easing>
+                                                    <SineEaseInOut />
+                                                </DoubleTransition.Easing>
+                                            </DoubleTransition>
+                                        </Transitions>
+                                    </ProgressBar.Transitions>
+                                </ProgressBar>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.DataTemplates>
+            </ItemsControl>
         </Grid>
     </ScrollViewer>
 </controls:UserControlBase>

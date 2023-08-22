@@ -46,6 +46,7 @@ public partial class SettingsViewModel : PageViewModelBase
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly IPyRunner pyRunner;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
+    private readonly ITrackedDownloadService trackedDownloadService;
     
     public SharedState SharedState { get; }
     
@@ -104,13 +105,15 @@ public partial class SettingsViewModel : PageViewModelBase
         IPrerequisiteHelper prerequisiteHelper,
         IPyRunner pyRunner,
         ServiceManager<ViewModelBase> dialogFactory,
-        SharedState sharedState)
+        SharedState sharedState,
+        ITrackedDownloadService trackedDownloadService)
     {
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
         this.prerequisiteHelper = prerequisiteHelper;
         this.pyRunner = pyRunner;
         this.dialogFactory = dialogFactory;
+        this.trackedDownloadService = trackedDownloadService;
         
         SharedState = sharedState;
         
@@ -450,6 +453,32 @@ public partial class SettingsViewModel : PageViewModelBase
     {
         // Use try-catch to generate traceback information
         throw new OperationCanceledException("Example Message");
+    }
+
+    [RelayCommand]
+    private async Task DebugTrackedDownload()
+    {
+        var textFields = new TextBoxField[]
+        {
+            new()
+            {
+                Label = "Url",
+            },
+            new()
+            {
+                Label = "File path"
+            }
+        };
+
+        var dialog = DialogHelper.CreateTextEntryDialog("Add download", "", textFields);
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            var url = textFields[0].Text;
+            var filePath = textFields[1].Text;
+            var download = trackedDownloadService.NewDownload(new Uri(url), new FilePath(filePath));
+            download.Start();
+        }
     }
     #endregion
 

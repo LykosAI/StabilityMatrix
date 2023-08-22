@@ -210,7 +210,8 @@ public sealed class App : Application
         services.AddSingleton<MainWindowViewModel>(provider =>
             new MainWindowViewModel(provider.GetRequiredService<ISettingsManager>(),
                 provider.GetRequiredService<IDiscordRichPresenceService>(),
-                provider.GetRequiredService<ServiceManager<ViewModelBase>>())
+                provider.GetRequiredService<ServiceManager<ViewModelBase>>(),
+                provider.GetRequiredService<ITrackedDownloadService>())
             {
                 Pages =
                 {

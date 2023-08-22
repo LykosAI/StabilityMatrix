@@ -46,8 +46,8 @@ public partial class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel(
         ISettingsManager settingsManager, 
         IDiscordRichPresenceService discordRichPresenceService,
-        ITrackedDownloadService trackedDownloadService,
-        ServiceManager<ViewModelBase> dialogFactory)
+        ServiceManager<ViewModelBase> dialogFactory,
+        ITrackedDownloadService trackedDownloadService)
     {
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;

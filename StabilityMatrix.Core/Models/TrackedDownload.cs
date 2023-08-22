@@ -9,12 +9,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models;
 
-public class TrackedDownloadProgressEventArgs : EventArgs
-{
-    public ProgressReport Progress { get; init; }
-    public ProgressState State { get; init; }
-}
-
+[JsonSerializable(typeof(TrackedDownload))]
 public class TrackedDownload
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -53,8 +48,12 @@ public class TrackedDownload
     
     public bool ValidateHash { get; init; }
 
-    public ProgressState ProgressState { get; private set; } = ProgressState.Inactive;
+    public ProgressState ProgressState { get; set; } = ProgressState.Inactive;
 
+    // Used for restoring progress on load
+    public long DownloadedBytes { get; set; }
+    public long TotalBytes { get; set; }
+    
     [JsonIgnore]
     public Exception? Exception { get; private set; }
     
@@ -73,6 +72,10 @@ public class TrackedDownload
     
     protected void OnProgressUpdate(ProgressReport e)
     {
+        // Update downloaded and total bytes
+        DownloadedBytes = Convert.ToInt64(e.Current);
+        TotalBytes = Convert.ToInt64(e.Total);
+        
         progressUpdateEventManager?.RaiseEvent(this, e, nameof(ProgressUpdate));
     }
     

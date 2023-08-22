@@ -199,14 +199,14 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                 version = SelectedVersion?.TagName ?? 
                           throw new NullReferenceException("Selected version is null");
                 
-                await DownloadPackage(version, false);
+                await DownloadPackage(version, false, null);
             }
             else
             {
                 version = SelectedCommit?.Sha ?? 
                           throw new NullReferenceException("Selected commit is null");
                 
-                await DownloadPackage(version, true);
+                await DownloadPackage(version, true, SelectedVersion!.TagName);
             }
             
             await InstallPackage();
@@ -271,7 +271,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         return branch == null ? version : $"{branch}@{version[..7]}";
     }
     
-    private Task<string> DownloadPackage(string version, bool isCommitHash)
+    private Task<string> DownloadPackage(string version, bool isCommitHash, string? branch)
     {
         InstallProgress.Text = "Downloading package...";
         
@@ -282,7 +282,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             EventManager.Instance.OnGlobalProgressChanged((int) progress.Percentage);
         });
         
-        return SelectedPackage.DownloadPackage(version, isCommitHash, progress);
+        return SelectedPackage.DownloadPackage(version, isCommitHash, branch, progress);
     }
 
     private async Task InstallPackage()

@@ -204,6 +204,7 @@ public sealed class App : Application
             .AddSingleton<SettingsViewModel>()
             .AddSingleton<CheckpointBrowserViewModel>()
             .AddSingleton<CheckpointsPageViewModel>()
+            .AddSingleton<NewCheckpointsPageViewModel>()
             .AddSingleton<LaunchPageViewModel>()
             .AddSingleton<ProgressManagerViewModel>();
         
@@ -286,6 +287,7 @@ public sealed class App : Application
         services.AddSingleton<SettingsPage>();
         services.AddSingleton<CheckpointBrowserPage>();
         services.AddSingleton<ProgressManagerPage>();
+        services.AddSingleton<NewCheckpointsPage>();
         
         // Dialogs
         services.AddTransient<SelectDataDirectoryDialog>();

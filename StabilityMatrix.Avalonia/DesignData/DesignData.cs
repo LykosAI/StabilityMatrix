@@ -193,6 +193,11 @@ public static class DesignData
                     {
                         Title = "StableDiffusion",
                         DirectoryPath = "Packages/Lora/Subfolder",
+                    },
+                    new(settingsManager, downloadService, modelFinder)
+                    {
+                        Title = "Lora",
+                        DirectoryPath = "Packages/StableDiffusion/Subfolder",
                     }
                 },
                 CheckpointFiles = new AdvancedObservableList<CheckpointFile>
@@ -223,6 +228,35 @@ public static class DesignData
                     };
                 })
             };
+
+        NewCheckpointsPageViewModel.AllCheckpoints = new ObservableCollection<CheckpointFile>
+        {
+            new()
+            {
+                FilePath = "~/Models/StableDiffusion/electricity-light.safetensors",
+                Title = "Auroral Background",
+                PreviewImagePath = "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/" +
+                                   "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
+                ConnectedModel = new ConnectedModelInfo
+                {
+                    VersionName = "Lightning Auroral",
+                    BaseModel = "SD 1.5",
+                    ModelName = "Auroral Background",
+                    ModelType = CivitModelType.Model,
+                    FileMetadata = new CivitFileMetadata
+                    {
+                        Format = CivitModelFormat.SafeTensor,
+                        Fp = CivitModelFpType.fp16,
+                        Size = CivitModelSize.pruned,
+                    }
+                }
+            },
+            new()
+            {
+                FilePath = "~/Models/Lora/model.safetensors",
+                Title = "Some model"
+            }
+        };
 
         ProgressManagerViewModel.ProgressItems.AddRange(new ProgressItemViewModelBase[]
         {
@@ -272,6 +306,9 @@ public static class DesignData
 
     public static CheckpointsPageViewModel CheckpointsPageViewModel =>
         Services.GetRequiredService<CheckpointsPageViewModel>();
+
+    public static NewCheckpointsPageViewModel NewCheckpointsPageViewModel =>
+        Services.GetRequiredService<NewCheckpointsPageViewModel>();
 
     public static SettingsViewModel SettingsViewModel =>
         Services.GetRequiredService<SettingsViewModel>();

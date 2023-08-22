@@ -1,0 +1,105 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                          xmlns:checkpointManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointManager"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                          x:Class="StabilityMatrix.Avalonia.Views.NewCheckpointsPage"
+                          d:DataContext="{x:Static mocks:DesignData.NewCheckpointsPageViewModel}"
+                          x:CompileBindings="True"
+                          x:Name="ControlBase"
+                          x:DataType="viewModels:NewCheckpointsPageViewModel">
+    <ScrollViewer>
+        <Grid RowDefinitions="Auto, Auto" Margin="8">
+            <TextBlock Text="Installed Checkpoints"
+                       FontSize="24"
+                       Margin="8"/>
+            
+            <ItemsRepeater Grid.Row="1" ItemsSource="{Binding ConnectedCheckpoints}">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="{x:Type checkpointManager:CheckpointFile}">
+                        <controls:Card
+                            Margin="8"
+                            MaxHeight="450"
+                            Width="300"
+                            CornerRadius="8">
+                            <Grid RowDefinitions="Auto, Auto, Auto, Auto">
+                                <TextBlock Grid.Row="0"
+                                           Margin="0,0,0,8"
+                                           Text="{Binding ConnectedModel.ModelName}" />
+
+                                <controls:BetterAdvancedImage
+                                    Grid.Row="1"
+                                    Height="250"
+                                    Stretch="UniformToFill"
+                                    CornerRadius="8"
+                                    Source="{Binding PreviewImagePath}" />
+
+                                <Grid Grid.Row="1"
+                                      Margin="8,8,0,0"
+                                      ColumnDefinitions="Auto, Auto">
+                                    <controls:Card
+                                        Grid.Column="0"
+                                        Classes="info"
+                                        Height="24"
+                                        HorizontalAlignment="Left"
+                                        Padding="4"
+                                        Margin="0,0,4,0"
+                                        VerticalAlignment="Top">
+
+                                        <TextBlock
+                                            FontSize="11"
+                                            FontWeight="Medium"
+                                            HorizontalAlignment="Center"
+                                            Text="{Binding ModelType}"
+                                            VerticalAlignment="Center" />
+                                    </controls:Card>
+                                    <controls:Card
+                                        Grid.Column="1"
+                                        Classes="info"
+                                        Height="24"
+                                        Margin="4,0"
+                                        HorizontalAlignment="Left"
+                                        Padding="4"
+                                        VerticalAlignment="Top">
+
+                                        <TextBlock
+                                            FontSize="11"
+                                            FontWeight="Medium"
+                                            HorizontalAlignment="Center"
+                                            Text="{Binding ConnectedModel.BaseModel}"
+                                            VerticalAlignment="Center" />
+                                    </controls:Card>
+                                </Grid>
+
+                                <Grid Grid.Row="2"
+                                      Margin="0,16,0,0"
+                                      ColumnDefinitions="*, *">
+                                    <Button Grid.Column="0"
+                                            Content="Update"
+                                            Classes="accent"
+                                            Margin="0,0,4,0"
+                                            HorizontalAlignment="Stretch" />
+                                    <Button Grid.Column="1"
+                                            Margin="4,0,0,0"
+                                            Content="All Versions"
+                                            Classes="accent"
+                                            Command="{Binding $parent[ItemsRepeater].((viewModels:NewCheckpointsPageViewModel)DataContext).ShowVersionDialog}"
+                                            CommandParameter="{Binding ConnectedModel.ModelId}"
+                                            HorizontalAlignment="Stretch" />
+                                </Grid>
+
+                            </Grid>
+                        </controls:Card>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </Grid>
+    </ScrollViewer>
+</controls:UserControlBase>

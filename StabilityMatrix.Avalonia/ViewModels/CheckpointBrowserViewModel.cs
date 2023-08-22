@@ -17,6 +17,7 @@ using Refit;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
@@ -63,7 +64,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     [ObservableProperty] private bool isIndeterminate;
     [ObservableProperty] private bool noResultsFound;
     [ObservableProperty] private string noResultsText = string.Empty;
-    [ObservableProperty] private string selectedBaseModelType = "All";    
+    [ObservableProperty] private string selectedBaseModelType = "All";
     
     private List<CheckpointBrowserCardViewModel> allModelCards = new();
     
@@ -250,9 +251,15 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
                 }).ToList();
             
             allModelCards = updateCards;
-            ModelCards =
-                new ObservableCollection<CheckpointBrowserCardViewModel>(
-                    updateCards.Where(FilterModelCardsPredicate));
+
+            var filteredCards = updateCards.Where(FilterModelCardsPredicate);
+            if (SortMode == CivitSortMode.Installed)
+            {
+                filteredCards =
+                    filteredCards.OrderByDescending(x => x.UpdateCardText == "Update Available");
+            }
+            
+            ModelCards =new ObservableCollection<CheckpointBrowserCardViewModel>(filteredCards);
         }
         TotalPages = metadata?.TotalPages ?? 1;
         CanGoToPreviousPage = CurrentPageNumber > 1;
@@ -308,6 +315,26 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         if (SelectedBaseModelType != "All")
         {
             modelRequest.BaseModel = SelectedBaseModelType;
+        }
+
+        if (SortMode == CivitSortMode.Installed)
+        {
+            var connectedModels =
+                CheckpointFile.GetAllCheckpointFiles(settingsManager.ModelsDirectory)
+                    .Where(c => c.IsConnectedModel);
+
+            if (SelectedModelType != CivitModelType.All)
+            {
+                connectedModels = connectedModels.Where(c => c.ModelType == SelectedModelType);
+            }
+
+            modelRequest = new CivitModelsRequest
+            {
+                CommaSeparatedModelIds = string.Join(",",
+                    connectedModels.Select(c => c.ConnectedModel!.ModelId).GroupBy(m => m)
+                        .Select(g => g.First())),
+                Types = SelectedModelType == CivitModelType.All ? null : new[] {SelectedModelType}
+            };
         }
         
         // See if query is cached

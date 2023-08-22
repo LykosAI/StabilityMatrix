@@ -40,7 +40,7 @@
                             Margin="0,8,0,8"
                             Height="300"
                             StretchDirection="Both"
-                            CornerRadius="4"
+                            CornerRadius="8"
                             VerticalContentAlignment="Top"
                             HorizontalContentAlignment="Center"
                             Source="{Binding CardImage}"

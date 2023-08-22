@@ -1,10 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json.Serialization;
+using StabilityMatrix.Core.Converters.Json;
 
 namespace StabilityMatrix.Core.Models.FileInterfaces;
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+[JsonConverter(typeof(StringJsonConverter<FilePath>))]
 public class FilePath : FileSystemPath, IPathObject
 {
     private FileInfo? _info;

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace StabilityMatrix.Core.Models.FileInterfaces;
 
@@ -8,8 +9,10 @@ public class FilePath : FileSystemPath, IPathObject
 {
     private FileInfo? _info;
     // ReSharper disable once MemberCanBePrivate.Global
+    [JsonIgnore]
     public FileInfo Info => _info ??= new FileInfo(FullPath);
 
+    [JsonIgnore]
     public bool IsSymbolicLink
     {
         get
@@ -19,13 +22,16 @@ public class FilePath : FileSystemPath, IPathObject
         }
     }
     
+    [JsonIgnore]
     public bool Exists => Info.Exists;
     
+    [JsonIgnore]
     public string Name => Info.Name;
 
     /// <summary>
     /// Get the directory of the file.
     /// </summary>
+    [JsonIgnore]
     public DirectoryPath? Directory
     {
         get

@@ -218,7 +218,6 @@ public sealed class App : Application
                     provider.GetRequiredService<LaunchPageViewModel>(),
                     provider.GetRequiredService<PackageManagerViewModel>(),
                     provider.GetRequiredService<CheckpointsPageViewModel>(),
-                    provider.GetRequiredService<NewCheckpointsPageViewModel>(),
                     provider.GetRequiredService<CheckpointBrowserViewModel>(),
                 },
                 FooterPages =

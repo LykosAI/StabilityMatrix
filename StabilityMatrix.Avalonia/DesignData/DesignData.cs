@@ -192,6 +192,11 @@ public static class DesignData
                     {
                         Title = "StableDiffusion",
                         DirectoryPath = "Packages/Lora/Subfolder",
+                    },
+                    new(settingsManager, downloadService, modelFinder)
+                    {
+                        Title = "Lora",
+                        DirectoryPath = "Packages/StableDiffusion/Subfolder",
                     }
                 },
                 CheckpointFiles = new AdvancedObservableList<CheckpointFile>

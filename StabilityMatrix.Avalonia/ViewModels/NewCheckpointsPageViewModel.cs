@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -11,6 +12,8 @@ using Avalonia.Controls.Notifications;
 using AvaloniaEdit.Utils;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
+using Microsoft.Extensions.Logging;
+using Refit;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -34,6 +37,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 [View(typeof(NewCheckpointsPage))]
 public partial class NewCheckpointsPageViewModel : PageViewModelBase
 {
+    private readonly ILogger<NewCheckpointsPageViewModel> logger;
     private readonly ISettingsManager settingsManager;
     private readonly ILiteDbContext liteDbContext;
     private readonly ICivitApi civitApi;
@@ -43,9 +47,11 @@ public partial class NewCheckpointsPageViewModel : PageViewModelBase
     public override IconSource IconSource => new SymbolIconSource
         {Symbol = Symbol.Cellular5g, IsFilled = true};
 
-    public NewCheckpointsPageViewModel(ISettingsManager settingsManager, ILiteDbContext liteDbContext,
-        ICivitApi civitApi, ServiceManager<ViewModelBase> dialogFactory, INotificationService notificationService)
+    public NewCheckpointsPageViewModel(ILogger<NewCheckpointsPageViewModel> logger,
+        ISettingsManager settingsManager, ILiteDbContext liteDbContext, ICivitApi civitApi,
+        ServiceManager<ViewModelBase> dialogFactory, INotificationService notificationService)
     {
+        this.logger = logger;
         this.settingsManager = settingsManager;
         this.liteDbContext = liteDbContext;
         this.civitApi = civitApi;
@@ -160,28 +166,56 @@ public partial class NewCheckpointsPageViewModel : PageViewModelBase
 
     private async Task CivitQuery(CivitModelsRequest request)
     {
-        var modelResponse = await civitApi.GetModels(request);
-        var models = modelResponse.Items;
-        // Filter out unknown model types and archived/taken-down models
-        models = models.Where(m => m.Type.ConvertTo<SharedFolderType>() > 0)
-            .Where(m => m.Mode == null).ToList();
-
-        // Database update calls will invoke `OnModelsUpdated`
-        // Add to database
-        await liteDbContext.UpsertCivitModelAsync(models);
-        // Add as cache entry
-        var cacheNew = await liteDbContext.UpsertCivitModelQueryCacheEntryAsync(new CivitModelQueryCacheEntry
+        try
         {
-            Id = ObjectHash.GetMd5Guid(request),
-            InsertedAt = DateTimeOffset.UtcNow,
-            Request = request,
-            Items = models,
-            Metadata = modelResponse.Metadata
-        });
+            var modelResponse = await civitApi.GetModels(request);
+            var models = modelResponse.Items;
+            // Filter out unknown model types and archived/taken-down models
+            models = models.Where(m => m.Type.ConvertTo<SharedFolderType>() > 0)
+                .Where(m => m.Mode == null).ToList();
 
-        if (cacheNew)
+            // Database update calls will invoke `OnModelsUpdated`
+            // Add to database
+            await liteDbContext.UpsertCivitModelAsync(models);
+            // Add as cache entry
+            var cacheNew = await liteDbContext.UpsertCivitModelQueryCacheEntryAsync(
+                new CivitModelQueryCacheEntry
+                {
+                    Id = ObjectHash.GetMd5Guid(request),
+                    InsertedAt = DateTimeOffset.UtcNow,
+                    Request = request,
+                    Items = models,
+                    Metadata = modelResponse.Metadata
+                });
+
+            if (cacheNew)
+            {
+                CivitModels = new ObservableCollection<CivitModel>(models);
+            }
+        }
+        catch (OperationCanceledException)
         {
-            CivitModels = new ObservableCollection<CivitModel>(models);
+            notificationService.Show(new Notification("Request to CivitAI timed out",
+                "Could not check for checkpoint updates. Please try again later."));
+            logger.LogWarning($"CivitAI query timed out ({request})");
+        }
+        catch (HttpRequestException e)
+        {
+            notificationService.Show(new Notification("CivitAI can't be reached right now",
+                "Could not check for checkpoint updates. Please try again later."));
+            logger.LogWarning(e, $"CivitAI query HttpRequestException ({request})");
+        }
+        catch (ApiException e)
+        {
+            notificationService.Show(new Notification("CivitAI can't be reached right now",
+                "Could not check for checkpoint updates. Please try again later."));
+            logger.LogWarning(e, $"CivitAI query ApiException ({request})");
+        }
+        catch (Exception e)
+        {
+            notificationService.Show(new Notification("CivitAI can't be reached right now",
+                $"Unknown exception during CivitAI query: {e.GetType().Name}"));
+            logger.LogError(e, $"CivitAI query unknown exception ({request})");
         }
     }
 }

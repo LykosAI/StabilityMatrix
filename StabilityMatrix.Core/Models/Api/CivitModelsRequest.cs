@@ -120,4 +120,19 @@ public class CivitModelsRequest
     
     [AliasAs("ids")]
     public string CommaSeparatedModelIds { get; set; }
+
+    public override string ToString()
+    {
+        return $"Page: {Page}, " +
+               $"Query: {Query}, " +
+               $"Tag: {Tag}, " +
+               $"Username: {Username}, " +
+               $"Types: {Types}, " +
+               $"Sort: {Sort}, " +
+               $"Period: {Period}, " +
+               $"Rating: {Rating}, " +
+               $"Nsfw: {Nsfw}, " +
+               $"BaseModel: {BaseModel}, " +
+               $"CommaSeparatedModelIds: {CommaSeparatedModelIds}";
+    }
 }

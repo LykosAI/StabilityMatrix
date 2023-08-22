@@ -239,17 +239,19 @@
                     </Grid>
                 </Expander.Header>
                 
-                <StackPanel Orientation="Vertical">
+                <Grid RowDefinitions="Auto, Auto">
                     <!-- Subfolders -->
-                    <StackPanel Orientation="Vertical">
-                        <ItemsControl
-                            HorizontalAlignment="Stretch"
-                            ItemTemplate="{DynamicResource CheckpointFolderGridDataTemplate}"
-                            ItemsSource="{Binding SubFolders, Mode=OneWay}"
-                            Margin="8,0,8,8" />
-                    </StackPanel>
+                    <ItemsRepeater Grid.Row="0"
+                        HorizontalAlignment="Stretch"
+                        ItemTemplate="{DynamicResource CheckpointFolderGridDataTemplate}"
+                        ItemsSource="{Binding SubFolders, Mode=OneWay}"
+                        Margin="8,0,8,8" >
+                        <ItemsRepeater.Layout>
+                            <StackLayout Orientation="Vertical"/>
+                        </ItemsRepeater.Layout>
+                    </ItemsRepeater>
                     <!-- Files Grid -->
-                    <Grid Name="FilesGrid" 
+                    <Grid Grid.Row="1" Name="FilesGrid" 
                           Background="Transparent"
                           DragDrop.AllowDrop="True">
                         <ItemsRepeater
@@ -265,11 +267,8 @@
                                    TextAlignment="Center"
                                    HorizontalAlignment="Center"
                                    Margin="8"
-                                   IsVisible="{Binding !CheckpointFiles.Count}">
-                            <Run Text="Drag &amp; drop"/>
-                            <Run Text="{Binding FolderType}"/>
-                            <Run Text="checkpoints here to import"/>
-                        </TextBlock>
+                                   Text="Drag &amp; drop checkpoints here to import"
+                                   IsVisible="{Binding !CheckpointFiles.Count}"/>
                         <!-- Blurred background for drag and drop -->
                         <Border
                             CornerRadius="8"
@@ -291,27 +290,26 @@
                         <StackPanel
                             Margin="0,8"
                             Orientation="Vertical"
-                            DataContext="{Binding Progress}"
                             VerticalAlignment="Center">
                             <!-- Import progress -->
                             <TextBlock
                                 Effect="{StaticResource TextDropShadowEffect}"
                                 FontSize="18"
                                 HorizontalAlignment="Center"
-                                Text="{Binding Text}"
+                                Text="{Binding Progress.Text}"
                                 VerticalAlignment="Center"
-                                IsVisible="{Binding IsTextVisible}" />
+                                IsVisible="{Binding Progress.IsTextVisible}" />
                             <ProgressBar
                                 Effect="{StaticResource TextDropShadowEffect}"
                                 HorizontalAlignment="Stretch"
-                                IsIndeterminate="{Binding IsIndeterminate, FallbackValue=False}"
+                                IsIndeterminate="{Binding Progress.IsIndeterminate, FallbackValue=False}"
                                 Margin="64,8"
                                 VerticalAlignment="Center"
-                                IsVisible="{Binding IsProgressVisible}"
-                                Value="{Binding Value, FallbackValue=20}" />
+                                IsVisible="{Binding Progress.IsProgressVisible}"
+                                Value="{Binding Progress.Value, FallbackValue=20}" />
                         </StackPanel>
                     </Grid>
-                </StackPanel>
+                </Grid>
             </Expander>
         </DataTemplate>
         

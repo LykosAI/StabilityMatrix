@@ -49,12 +49,33 @@ public class SettingsManager : ISettingsManager
     public string DatabasePath => Path.Combine(LibraryDir, "StabilityMatrix.db");
     private string SettingsPath => Path.Combine(LibraryDir, "settings.json");
     public string ModelsDirectory => Path.Combine(LibraryDir, "Models");
-
+    public string DownloadsDirectory => Path.Combine(LibraryDir, ".downloads");
+    
     public Settings Settings { get; private set; } = new();
     
     public event EventHandler<string>? LibraryDirChanged; 
     public event EventHandler<PropertyChangedEventArgs>? SettingsPropertyChanged;
 
+    /// <inheritdoc />
+    public void RegisterOnLibraryDirSet(Action<string> handler)
+    {
+        if (IsLibraryDirSet)
+        {
+            handler(LibraryDir);
+            return;
+        }
+
+        LibraryDirChanged += Handler;
+        
+        return;
+
+        void Handler(object? sender, string dir)
+        {
+            LibraryDirChanged -= Handler;
+            handler(dir);
+        }
+    }
+    
     /// <inheritdoc />
     public SettingsTransaction BeginTransaction()
     {

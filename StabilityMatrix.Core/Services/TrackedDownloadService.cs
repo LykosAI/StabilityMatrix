@@ -209,8 +209,20 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
-        foreach (var (_, fs) in downloads.Values)
+        foreach (var (download, fs) in downloads.Values)
         {
+            if (download.ProgressState == ProgressState.Working)
+            {
+                try
+                {
+                    download.Pause();
+                }
+                catch (Exception e)
+                {
+                    logger.LogWarning(e, "Failed to pause download {Download}", download.FileName);
+                }
+            }
+
             fs.Dispose();
         }
         

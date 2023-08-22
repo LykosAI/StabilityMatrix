@@ -267,6 +267,16 @@
                                     </ui:SettingsExpanderItem.Footer>
                                 </ui:SettingsExpanderItem>
                                 
+                                <ui:SettingsExpanderItem Content="Download Manager tests" IconSource="Flag"
+                                                         Margin="4,0,4,4">
+                                    <ui:SettingsExpanderItem.Footer>
+                                        <Button
+                                            Margin="0, 8"
+                                            Command="{Binding DebugTrackedDownloadCommand}"
+                                            Content="Add Tracked Download"/>
+                                    </ui:SettingsExpanderItem.Footer>
+                                </ui:SettingsExpanderItem>
+                                
                             </ui:SettingsExpander>
                     </Grid>
                     

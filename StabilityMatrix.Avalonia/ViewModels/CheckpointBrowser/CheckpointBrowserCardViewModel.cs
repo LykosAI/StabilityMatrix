@@ -32,10 +32,10 @@ using Notification = Avalonia.Controls.Notifications.Notification;
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
-
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly IDownloadService downloadService;
+    private readonly ITrackedDownloadService trackedDownloadService;
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly INotificationService notificationService;
@@ -63,11 +63,13 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
 
     public CheckpointBrowserCardViewModel(
         IDownloadService downloadService,
+        ITrackedDownloadService trackedDownloadService,
         ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> dialogFactory,
         INotificationService notificationService)
     {
         this.downloadService = downloadService;
+        this.trackedDownloadService = trackedDownloadService;
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
         this.notificationService = notificationService;
@@ -197,6 +199,53 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         await DoImport(model, selectedVersion, selectedFile);
     }
 
+    private static async Task<FilePath> SaveCmInfo(
+        CivitModel model, 
+        CivitModelVersion modelVersion,
+        CivitFile modelFile,
+        DirectoryPath downloadDirectory)
+    {
+        var modelFileName = Path.GetFileNameWithoutExtension(modelFile.Name);
+        var modelInfo =
+            new ConnectedModelInfo(model, modelVersion, modelFile, DateTime.UtcNow);
+        
+        await modelInfo.SaveJsonToDirectory(downloadDirectory, modelFileName);
+        
+        var jsonName = $"{modelFileName}.cm-info.json";
+        return downloadDirectory.JoinFile(jsonName);
+    }
+
+    /// <summary>
+    /// Saves the preview image to the same directory as the model file
+    /// </summary>
+    /// <param name="modelVersion"></param>
+    /// <param name="modelFilePath"></param>
+    /// <returns>The file path of the saved preview image</returns>
+    private async Task<FilePath?> SavePreviewImage(CivitModelVersion modelVersion, FilePath modelFilePath)
+    {
+        // Skip if model has no images
+        if (modelVersion.Images == null || modelVersion.Images.Count == 0)
+        {
+            return null;
+        }
+        
+        var image = modelVersion.Images[0];
+        var imageExtension = Path.GetExtension(image.Url).TrimStart('.');
+        if (imageExtension is "jpg" or "jpeg" or "png")
+        {
+            var imageDownloadPath =
+                modelFilePath.Directory!.JoinFile($"{modelFilePath.Name}.preview.{imageExtension}");
+
+            var imageTask =
+                downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
+            await notificationService.TryAsync(imageTask, "Could not download preview image");
+            
+            return imageDownloadPath;
+        }
+        
+        return null;
+    }
+    
     private async Task DoImport(CivitModel model, CivitModelVersion? selectedVersion = null,
         CivitFile? selectedFile = null)
     {
@@ -204,164 +253,96 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         Text = "Downloading...";
 
         OnDownloadStart?.Invoke(this);
-
-        // Holds files to be deleted on errors
-        var filesForCleanup = new HashSet<FilePath>();
-
-        // Set Text when exiting, finally block will set 100 and delay clear progress
-        try
+        
+        // Get latest version
+        var modelVersion = selectedVersion ?? model.ModelVersions?.FirstOrDefault();
+        if (modelVersion is null)
         {
-            // Get latest version
-            var modelVersion = selectedVersion ?? model.ModelVersions?.FirstOrDefault();
-            if (modelVersion is null)
+            notificationService.Show(new Notification("Model has no versions available",
+                "This model has no versions available for download", NotificationType.Warning));
+            Text = "Unable to Download";
+            return;
+        }
+
+        // Get latest version file
+        var modelFile = selectedFile ??
+                        modelVersion.Files?.FirstOrDefault(x => x.Type == CivitFileType.Model);
+        if (modelFile is null)
+        {
+            notificationService.Show(new Notification("Model has no files available",
+                "This model has no files available for download", NotificationType.Warning));
+            Text = "Unable to Download";
+            return;
+        }
+
+        var rootModelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
+        
+        var downloadDirectory =
+            rootModelsDirectory.JoinDir(model.Type.ConvertTo<SharedFolderType>()
+                .GetStringValue());
+        // Folders might be missing if user didn't install any packages yet
+        downloadDirectory.Create();
+        
+        var downloadPath = downloadDirectory.JoinFile(modelFile.Name);
+
+        // Download model info and preview first
+        var cmInfoPath = await SaveCmInfo(model, modelVersion, modelFile, downloadDirectory);
+        var previewImagePath = await SavePreviewImage(modelVersion, downloadPath);
+        
+        // Create tracked download
+        var download = trackedDownloadService.NewDownload(modelFile.DownloadUrl, downloadPath);
+        
+        // Add hash info
+        download.ExpectedHashSha256 = modelFile.Hashes.SHA256;
+        
+        // Add files to cleanup list
+        download.ExtraCleanupFileNames.Add(cmInfoPath);
+        if (previewImagePath is not null)
+        {
+            download.ExtraCleanupFileNames.Add(previewImagePath);
+        }
+        
+        // Attach for progress updates
+        download.ProgressUpdate += (s, e) =>
+        {
+            Value = e.Percentage;
+            if (e.Type == ProgressType.Hashing)
             {
-                notificationService.Show(new Notification("Model has no versions available",
-                    "This model has no versions available for download", NotificationType.Warning));
-                Text = "Unable to Download";
-                return;
+                Text = $"Validating... {e.Percentage}%";
             }
-
-            // Get latest version file
-            var modelFile = selectedFile ??
-                            modelVersion.Files?.FirstOrDefault(x => x.Type == CivitFileType.Model);
-            if (modelFile is null)
+            else
             {
-                notificationService.Show(new Notification("Model has no files available",
-                    "This model has no files available for download", NotificationType.Warning));
-                Text = "Unable to Download";
-                return;
+                Text = $"Downloading... {e.Percentage}%";
             }
+        };
 
-            var downloadFolder = Path.Combine(settingsManager.ModelsDirectory,
-                model.Type.ConvertTo<SharedFolderType>().GetStringValue());
-            // Folders might be missing if user didn't install any packages yet
-            Directory.CreateDirectory(downloadFolder);
-            var downloadPath = Path.GetFullPath(Path.Combine(downloadFolder, modelFile.Name));
-            filesForCleanup.Add(downloadPath);
-
-            // Do the download
-            var progressId = Guid.NewGuid();
-            var downloadTask = downloadService.DownloadToFileAsync(modelFile.DownloadUrl,
-                downloadPath,
-                new Progress<ProgressReport>(report =>
-                {
-                    if (Math.Abs(report.Percentage - Value) > 0.1)
-                    {
-                        Dispatcher.UIThread.Post(() =>
-                        {
-                            Value = report.Percentage;
-                            Text = $"Downloading... {report.Percentage}%";
-                        });
-                        EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
-                            modelFile.Name, report));
-                    }
-                }));
-
-            var downloadResult =
-                await notificationService.TryAsync(downloadTask, "Could not download file");
-
-            // Failed download handling
-            if (downloadResult.Exception is not null)
+        download.ProgressStateChanged += (s, e) =>
+        {
+            if (e == ProgressState.Success)
             {
-                // For exceptions other than ApiException or TaskCanceledException, log error
-                var logLevel = downloadResult.Exception switch
-                {
-                    HttpRequestException or ApiException or TaskCanceledException => LogLevel.Warn,
-                    _ => LogLevel.Error
-                };
-                Logger.Log(logLevel, downloadResult.Exception, "Error during model download");
-
+                Text = "Import Complete";
+                
+                IsIndeterminate = false;
+                Value = 100;
+                CheckIfInstalled();
+                DelayedClearProgress(TimeSpan.FromMilliseconds(800));
+            }
+            else if (e == ProgressState.Cancelled)
+            {
+                Text = "Cancelled";
+                DelayedClearProgress(TimeSpan.FromMilliseconds(500));
+            }
+            else if (e == ProgressState.Failed)
+            {
                 Text = "Download Failed";
-                EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
-                    modelFile.Name, new ProgressReport(0f), true));
-                return;
+                DelayedClearProgress(TimeSpan.FromMilliseconds(800));
             }
-
-            // When sha256 is available, validate the downloaded file
-            var fileExpectedSha256 = modelFile.Hashes.SHA256;
-            if (!string.IsNullOrEmpty(fileExpectedSha256))
-            {
-                var hashProgress = new Progress<ProgressReport>(progress =>
-                {
-                    Value = progress.Percentage;
-                    Text = $"Validating... {progress.Percentage}%";
-                    EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
-                        modelFile.Name, progress));
-                });
-                var sha256 = await FileHash.GetSha256Async(downloadPath, hashProgress);
-                if (sha256 != fileExpectedSha256.ToLowerInvariant())
-                {
-                    Text = "Import Failed!";
-                    DelayedClearProgress(TimeSpan.FromMilliseconds(800));
-                    notificationService.Show(new Notification("Download failed hash validation",
-                        "This may be caused by network or server issues from CivitAI, please try again in a few minutes.",
-                        NotificationType.Error));
-                    Text = "Download Failed";
-                    
-                    EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
-                        modelFile.Name, new ProgressReport(0f), true));
-                    return;
-                }
-
-                settingsManager.Transaction(
-                    s => s.InstalledModelHashes.Add(modelFile.Hashes.BLAKE3));
-
-                notificationService.Show(new Notification("Import complete",
-                    $"{model.Type} {model.Name} imported successfully!", NotificationType.Success));
-            }
-
-            IsIndeterminate = true;
-
-            // Save connected model info
-            var modelFileName = Path.GetFileNameWithoutExtension(modelFile.Name);
-            var modelInfo =
-                new ConnectedModelInfo(CivitModel, modelVersion, modelFile, DateTime.UtcNow);
-            var modelInfoPath = Path.GetFullPath(Path.Combine(
-                downloadFolder, modelFileName + ConnectedModelInfo.FileExtension));
-            filesForCleanup.Add(modelInfoPath);
-            await modelInfo.SaveJsonToDirectory(downloadFolder, modelFileName);
-
-            // If available, save a model image
-            if (modelVersion.Images != null && modelVersion.Images.Any())
-            {
-                var image = modelVersion.Images[0];
-                var imageExtension = Path.GetExtension(image.Url).TrimStart('.');
-                if (imageExtension is "jpg" or "jpeg" or "png")
-                {
-                    var imageDownloadPath = Path.GetFullPath(Path.Combine(downloadFolder,
-                        $"{modelFileName}.preview.{imageExtension}"));
-                    filesForCleanup.Add(imageDownloadPath);
-                    var imageTask =
-                        downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
-                    await notificationService.TryAsync(imageTask, "Could not download preview image");
-                }
-            }
-
-            // Successful - clear cleanup list
-            filesForCleanup.Clear();
-            
-            EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
-                modelFile.Name, new ProgressReport(1f, "Import complete")));
-
-            Text = "Import complete!";
-        }
-        catch (Exception e)
-        {
-            Debug.WriteLine(e);
-        }
-        finally
-        {
-            foreach (var file in filesForCleanup.Where(file => file.Exists))
-            {
-                file.Delete();
-                Logger.Info($"Download cleanup: Deleted file {file}");
-            }
-
-            IsIndeterminate = false;
-            Value = 100;
-            CheckIfInstalled();
-            DelayedClearProgress(TimeSpan.FromMilliseconds(800));
-        }
+        };
+        
+        // Add hash context action
+        download.ContextAction = CivitPostDownloadContextAction.FromCivitFile(modelFile);
+        
+        download.Start();
     }
 
     private void DelayedClearProgress(TimeSpan delay)

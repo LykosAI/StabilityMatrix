@@ -5,5 +5,6 @@ public enum ProgressState
     Inactive,
     Working,
     Success,
-    Failed
+    Failed,
+    Cancelled
 }

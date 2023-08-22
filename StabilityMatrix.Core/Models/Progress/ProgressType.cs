@@ -6,4 +6,5 @@ public enum ProgressType
     Download,
     Extract,
     Update,
+    Hashing,
 }

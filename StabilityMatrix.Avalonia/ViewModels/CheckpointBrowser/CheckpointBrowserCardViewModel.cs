@@ -245,7 +245,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
             var download = trackedDownloadService.NewDownload(modelFile.DownloadUrl, downloadPath);
             download.Start();
             
-            /*var progressId = Guid.NewGuid();
+            var progressId = Guid.NewGuid();
             var downloadTask = downloadService.DownloadToFileAsync(modelFile.DownloadUrl,
                 downloadPath,
                 new Progress<ProgressReport>(report =>
@@ -263,7 +263,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
                 }));
 
             var downloadResult =
-                await notificationService.TryAsync(downloadTask, "Could not download file");*/
+                await notificationService.TryAsync(downloadTask, "Could not download file");
 
             // Failed download handling
             if (downloadResult.Exception is not null)

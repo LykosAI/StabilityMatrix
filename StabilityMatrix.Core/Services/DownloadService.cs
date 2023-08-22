@@ -133,8 +133,11 @@ public class DownloadService : IDownloadService
             FileShare.None
         );
 
-        long contentLength = 0;
-
+        // Remaining content length
+        long remainingContentLength = 0;
+        // Total of the original content
+        long originalContentLength = 0;
+        
         using var request = new HttpRequestMessage();
         request.Method = HttpMethod.Get;
         request.RequestUri = new Uri(downloadUrl);
@@ -148,9 +151,10 @@ public class DownloadService : IDownloadService
         {
             response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead,
                 cancellationToken).ConfigureAwait(false);
-            contentLength = response.Content.Headers.ContentLength ?? 0;
+            remainingContentLength = response.Content.Headers.ContentLength ?? 0;
+            originalContentLength = response.Content.Headers.ContentRange?.Length.GetValueOrDefault() ?? 0;
             
-            if (contentLength > 0)
+            if (remainingContentLength > 0)
                 break;
             
             logger.LogDebug("Retrying get-headers for content-length");
@@ -162,7 +166,7 @@ public class DownloadService : IDownloadService
             throw new ApplicationException("Response is null");
         }
         
-        var isIndeterminate = contentLength == 0;
+        var isIndeterminate = remainingContentLength == 0;
 
         await using var stream = await response.Content
             .ReadAsStreamAsync(cancellationToken)
@@ -189,8 +193,10 @@ public class DownloadService : IDownloadService
             {
                 progress?.Report(
                     new ProgressReport(
-                        current: Convert.ToUInt64(totalBytesRead),
-                        total: Convert.ToUInt64(contentLength),
+                        // Report the current as session current + original start size
+                        current: Convert.ToUInt64(totalBytesRead + existingFileSize),
+                        // Total as the original total
+                        total: Convert.ToUInt64(originalContentLength),
                         message: "Downloading..."
                     )
                 );

@@ -171,6 +171,8 @@ public class DownloadService : IDownloadService
         var buffer = new byte[BufferSize];
         while (true)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            
             var bytesRead = await stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
             if (bytesRead == 0)
                 break;

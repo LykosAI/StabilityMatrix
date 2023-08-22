@@ -28,6 +28,7 @@ public class TrackedDownload
     [JsonIgnore]
     private CancellationTokenSource? downloadPauseTokenSource;
     
+    [JsonIgnore]
     private CancellationTokenSource AggregateCancellationTokenSource =>
         CancellationTokenSource.CreateLinkedTokenSource(
             downloadCancellationTokenSource?.Token ?? CancellationToken.None,
@@ -51,6 +52,7 @@ public class TrackedDownload
 
     public ProgressState ProgressState { get; private set; } = ProgressState.Inactive;
 
+    [JsonIgnore]
     public Exception? Exception { get; private set; }
     
     #region Events
@@ -134,6 +136,8 @@ public class TrackedDownload
         
         downloadTask = StartDownloadTask(0, AggregateCancellationTokenSource.Token)
             .ContinueWith(OnDownloadTaskCompleted);
+        
+        ProgressState = ProgressState.Working;
     }
 
     public void Resume()
@@ -147,6 +151,8 @@ public class TrackedDownload
         
         downloadTask = StartDownloadTask(0, AggregateCancellationTokenSource.Token)
             .ContinueWith(OnDownloadTaskCompleted);
+        
+        ProgressState = ProgressState.Working;
     }
 
     public void Pause()
@@ -232,10 +238,10 @@ public class TrackedDownload
         OnProgressStateChanged(ProgressState);
         
         // Dispose of the task and cancellation token
-        downloadTask?.Dispose();
+        /*downloadTask?.Dispose();
         downloadTask = null;
         downloadCancellationTokenSource?.Dispose();
-        downloadCancellationTokenSource = null;
+        downloadCancellationTokenSource = null;*/
     }
     
     public void SetDownloadService(IDownloadService service)

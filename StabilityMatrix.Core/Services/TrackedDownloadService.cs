@@ -63,6 +63,7 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
         // Serialize to json
         var json = JsonSerializer.Serialize(download);
         jsonFileStream.Write(Encoding.UTF8.GetBytes(json));
+        jsonFileStream.Flush();
         
         // Add to dictionary
         downloads.TryAdd(download.Id, (download, jsonFileStream));
@@ -87,6 +88,7 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
         var (_, fs) = downloads[download.Id];
         fs.Seek(0, SeekOrigin.Begin);
         fs.Write(jsonBytes);
+        fs.Flush();
     }
     
     /// <summary>

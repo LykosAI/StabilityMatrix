@@ -9,14 +9,12 @@ public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
 {
     private readonly TrackedDownload download;
     
-    /// <inheritdoc />
-    public override bool SupportsPauseResume => true;
-    
     public DownloadProgressItemViewModel(TrackedDownload download)
     {
         this.download = download;
 
         Name = download.FileName;
+        State = download.ProgressState;
         
         download.ProgressUpdate += (s, e) =>
         {

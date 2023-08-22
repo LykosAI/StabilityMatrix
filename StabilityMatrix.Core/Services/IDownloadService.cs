@@ -11,6 +11,15 @@ public interface IDownloadService
         string? httpClientName = null,
         CancellationToken cancellationToken = default
     );
+    
+    Task ResumeDownloadToFileAsync(
+        string downloadUrl,
+        string downloadPath,
+        long existingFileSize,
+        IProgress<ProgressReport>? progress = null,
+        string? httpClientName = null,
+        CancellationToken cancellationToken = default
+    );
 
     Task<Stream> GetImageStreamFromUrl(string url);
 }

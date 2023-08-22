@@ -16,6 +16,8 @@ public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
     {
         this.download = download;
 
+        Name = download.FileName;
+        
         download.ProgressUpdate += (s, e) =>
         {
             Progress.Value = e.Percentage;

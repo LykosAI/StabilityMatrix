@@ -5,6 +5,8 @@ namespace StabilityMatrix.Core.Services;
 
 public interface ITrackedDownloadService
 {
+    IEnumerable<TrackedDownload> Downloads { get; }
+    
     event EventHandler<TrackedDownload>? DownloadAdded;
     
     TrackedDownload NewDownload(Uri downloadUrl, FilePath downloadPath);

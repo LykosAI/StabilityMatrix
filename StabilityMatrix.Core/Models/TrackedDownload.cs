@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using AsyncAwaitBestPractices;
+using NLog;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -16,6 +17,8 @@ public class TrackedDownloadProgressEventArgs : EventArgs
 
 public class TrackedDownload
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    
     [JsonIgnore]
     private IDownloadService? downloadService;
     
@@ -128,6 +131,7 @@ public class TrackedDownload
         {
             throw new InvalidOperationException($"Download state must be inactive to start, not {ProgressState}");
         }
+        Logger.Debug("Starting download {Download}", FileName);
         
         EnsureDownloadService();
         
@@ -138,34 +142,59 @@ public class TrackedDownload
             .ContinueWith(OnDownloadTaskCompleted);
         
         ProgressState = ProgressState.Working;
+        OnProgressStateChanged(ProgressState);
     }
 
     public void Resume()
     {
-        if (ProgressState != ProgressState.Inactive) return;
-
+        if (ProgressState != ProgressState.Inactive)
+        {
+            Logger.Warn("Attempted to resume download {Download} but it is not paused ({State})", FileName, ProgressState);
+        }
+        Logger.Debug("Resuming download {Download}", FileName);
+        
+        // Read the temp file to get the current size
+        var tempSize = 0L;
+        
+        var tempFile = DownloadDirectory.JoinFile(TempFileName);
+        if (tempFile.Exists)
+        {
+            tempSize = tempFile.Info.Length;
+        }
+        
         EnsureDownloadService();
         
         downloadCancellationTokenSource = new CancellationTokenSource();
         downloadPauseTokenSource = new CancellationTokenSource();
         
-        downloadTask = StartDownloadTask(0, AggregateCancellationTokenSource.Token)
+        downloadTask = StartDownloadTask(tempSize, AggregateCancellationTokenSource.Token)
             .ContinueWith(OnDownloadTaskCompleted);
         
         ProgressState = ProgressState.Working;
+        OnProgressStateChanged(ProgressState);
     }
 
     public void Pause()
     {
-        if (ProgressState != ProgressState.Working) return;
+        if (ProgressState != ProgressState.Working)
+        {
+            Logger.Warn("Attempted to pause download {Download} but it is not in progress ({State})", FileName, ProgressState);
+            return;
+        }
         
+        Logger.Debug("Pausing download {Download}", FileName);
         downloadPauseTokenSource?.Cancel();
     }
     
     public void Cancel()
     {
-        if (ProgressState is not (ProgressState.Working or ProgressState.Inactive)) return;
+        if (ProgressState is not (ProgressState.Working or ProgressState.Inactive))
+        {
+            Logger.Warn("Attempted to cancel download {Download} but it is not in progress ({State})", FileName, ProgressState);
+            return;
+        }
         
+        Logger.Debug("Cancelling download {Download}", FileName);
         downloadCancellationTokenSource?.Cancel();
     }
     

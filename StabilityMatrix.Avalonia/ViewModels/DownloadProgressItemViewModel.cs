@@ -13,6 +13,7 @@ public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
     {
         this.download = download;
 
+        Id = download.Id;
         Name = download.FileName;
         State = download.ProgressState;
         

@@ -17,6 +17,8 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
     
     private readonly ConcurrentDictionary<Guid, (TrackedDownload, FileStream)> downloads = new();
 
+    public IEnumerable<TrackedDownload> Downloads => downloads.Values.Select(x => x.Item1);
+    
     /// <inheritdoc />
     public event EventHandler<TrackedDownload>? DownloadAdded;
     
@@ -136,6 +138,10 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
                 download.SetDownloadService(downloadService);
                 
                 downloads.TryAdd(download.Id, (download, fileStream));
+                
+                // Connect to state changed event to update json file
+                download.ProgressStateChanged += TrackedDownload_OnProgressStateChanged;
+                
                 OnDownloadAdded(download);
                 
                 logger.LogDebug("Loaded in-progress download {Download}", download.FileName);

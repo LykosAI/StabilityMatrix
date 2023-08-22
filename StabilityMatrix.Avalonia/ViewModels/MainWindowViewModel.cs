@@ -24,6 +24,7 @@ public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
+    private readonly ITrackedDownloadService trackedDownloadService;
     private readonly IDiscordRichPresenceService discordRichPresenceService;
     public string Greeting => "Welcome to Avalonia!";
     
@@ -45,11 +46,13 @@ public partial class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel(
         ISettingsManager settingsManager, 
         IDiscordRichPresenceService discordRichPresenceService,
+        ITrackedDownloadService trackedDownloadService,
         ServiceManager<ViewModelBase> dialogFactory)
     {
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
         this.discordRichPresenceService = discordRichPresenceService;
+        this.trackedDownloadService = trackedDownloadService;
         
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
@@ -80,6 +83,9 @@ public partial class MainWindowViewModel : ViewModelBase
         
         // Initialize Discord Rich Presence (this needs LibraryDir so is set here)
         discordRichPresenceService.UpdateState();
+        
+        // Load in-progress downloads
+        ProgressManagerViewModel.AddDownloads(trackedDownloadService.Downloads);
         
         // Index checkpoints if we dont have
         Task.Run(() => settingsManager.IndexCheckpoints()).SafeFireAndForget();

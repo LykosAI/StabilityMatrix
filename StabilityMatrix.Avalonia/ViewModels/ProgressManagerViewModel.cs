@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Avalonia.Collections;
@@ -36,6 +37,19 @@ public partial class ProgressManagerViewModel : PageViewModelBase
     {
         var vm = new DownloadProgressItemViewModel(e);
         ProgressItems.Add(vm);
+    }
+
+    public void AddDownloads(IEnumerable<TrackedDownload> downloads)
+    {
+        foreach (var download in downloads)
+        {
+            if (ProgressItems.Any(vm => vm.Id == download.Id))
+            {
+                continue;
+            }
+            var vm = new DownloadProgressItemViewModel(download);
+            ProgressItems.Add(vm);
+        }
     }
     
     public void StartEventListener()

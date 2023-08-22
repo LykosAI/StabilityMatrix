@@ -217,7 +217,8 @@ public sealed class App : Application
         services.AddSingleton<MainWindowViewModel>(provider =>
             new MainWindowViewModel(provider.GetRequiredService<ISettingsManager>(),
                 provider.GetRequiredService<IDiscordRichPresenceService>(),
-                provider.GetRequiredService<ServiceManager<ViewModelBase>>())
+                provider.GetRequiredService<ServiceManager<ViewModelBase>>(),
+                provider.GetRequiredService<ITrackedDownloadService>())
             {
                 Pages =
                 {
@@ -357,6 +358,7 @@ public sealed class App : Application
         services.AddSingleton<BasePackage, ComfyUI>();
         services.AddSingleton<BasePackage, VoltaML>();
         services.AddSingleton<BasePackage, InvokeAI>();
+        services.AddSingleton<BasePackage, Fooocus>();
     }
 
     private static IServiceCollection ConfigureServices()
@@ -384,6 +386,10 @@ public sealed class App : Application
         services.AddSingleton<IInferenceClientManager, InferenceClientManager>();
         services.AddSingleton<ICompletionProvider, CompletionProvider>();
         services.AddSingleton<ITokenizerProvider, TokenizerProvider>();
+        
+        services.AddSingleton<ITrackedDownloadService, TrackedDownloadService>();
+        services.AddSingleton<IDisposable>(provider => 
+            (IDisposable) provider.GetRequiredService<ITrackedDownloadService>());
         
         // Rich presence
         services.AddSingleton<IDiscordRichPresenceService, DiscordRichPresenceService>();

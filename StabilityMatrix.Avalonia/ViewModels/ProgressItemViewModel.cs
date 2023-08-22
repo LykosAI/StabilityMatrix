@@ -6,21 +6,19 @@ using StabilityMatrix.Core.Models.Progress;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
-public partial class ProgressItemViewModel : ViewModelBase
+public partial class ProgressItemViewModel : ProgressItemViewModelBase
 {
     [ObservableProperty] private Guid id;
     [ObservableProperty] private string name;
-    [ObservableProperty] private ProgressReport progress;
     [ObservableProperty] private bool failed;
-    [ObservableProperty] private string? progressText;
 
     public ProgressItemViewModel(ProgressItem progressItem)
     {
         Id = progressItem.ProgressId;
         Name = progressItem.Name;
-        Progress = progressItem.Progress;
+        Progress.Value = progressItem.Progress.Percentage;
         Failed = progressItem.Failed;
-        ProgressText = GetProgressText(Progress);
+        Progress.Text = GetProgressText(progressItem.Progress);
         
         EventManager.Instance.ProgressChanged += OnProgressChanged;
     }
@@ -30,9 +28,9 @@ public partial class ProgressItemViewModel : ViewModelBase
         if (e.ProgressId != Id)
             return;
         
-        Progress = e.Progress;
+        Progress.Value = e.Progress.Percentage;
         Failed = e.Failed;
-        ProgressText = GetProgressText(Progress);
+        Progress.Text = GetProgressText(e.Progress);
     }
 
     private string GetProgressText(ProgressReport report)

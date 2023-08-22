@@ -1,15 +1,20 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using System.Text.Json.Serialization;
+using StabilityMatrix.Core.Converters.Json;
 
 namespace StabilityMatrix.Core.Models.FileInterfaces;
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+[JsonConverter(typeof(StringJsonConverter<FilePath>))]
 public class FilePath : FileSystemPath, IPathObject
 {
     private FileInfo? _info;
     // ReSharper disable once MemberCanBePrivate.Global
+    [JsonIgnore]
     public FileInfo Info => _info ??= new FileInfo(FullPath);
 
+    [JsonIgnore]
     public bool IsSymbolicLink
     {
         get
@@ -19,13 +24,16 @@ public class FilePath : FileSystemPath, IPathObject
         }
     }
     
+    [JsonIgnore]
     public bool Exists => Info.Exists;
     
+    [JsonIgnore]
     public string Name => Info.Name;
 
     /// <summary>
     /// Get the directory of the file.
     /// </summary>
+    [JsonIgnore]
     public DirectoryPath? Directory
     {
         get
@@ -113,6 +121,16 @@ public class FilePath : FileSystemPath, IPathObject
     public Task WriteAllBytesAsync(byte[] bytes, CancellationToken ct = default)
     {
         return File.WriteAllBytesAsync(FullPath, bytes, ct);
+    }
+    
+    /// <summary>
+    /// Move the file to a directory.
+    /// </summary>
+    public FilePath MoveTo(FilePath destinationFile)
+    {
+        Info.MoveTo(destinationFile.FullPath, true);
+        // Return the new path
+        return destinationFile;
     }
     
     /// <summary>

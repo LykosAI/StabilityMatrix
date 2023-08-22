@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
@@ -95,7 +97,12 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     {
         if (string.IsNullOrWhiteSpace(SearchFilter))
         {
-            DisplayedCheckpointFolders = CheckpointFolders;
+            DisplayedCheckpointFolders = new ObservableCollection<CheckpointFolder>(
+                CheckpointFolders.Select(x =>
+                {
+                    x.SearchFilter = SearchFilter;
+                    return x;
+                }));
             return;
         }
         
@@ -106,7 +113,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             folder.SearchFilter = SearchFilter;
         }
 
-        DisplayedCheckpointFolders = new ObservableCollection<CheckpointManager.CheckpointFolder>(filteredFolders);
+        DisplayedCheckpointFolders = new ObservableCollection<CheckpointFolder>(filteredFolders);
     }
     
     private bool ContainsSearchFilter(CheckpointManager.CheckpointFolder folder)
@@ -137,7 +144,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         var folders = Directory.GetDirectories(modelsDirectory);
 
         // Index all folders
-        var indexTasks = folders.Select(f => Task.Run(async () =>
+        var indexTasks = folders.Select(async f =>
         {
             var checkpointFolder =
                 new CheckpointManager.CheckpointFolder(settingsManager, downloadService, modelFinder)
@@ -148,21 +155,26 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
                 };
             await checkpointFolder.IndexAsync();
             return checkpointFolder;
-        })).ToList();
+        }).ToList();
 
         await Task.WhenAll(indexTasks);
 
         // Set new observable collection, ordered by alphabetical order
         CheckpointFolders =
-            new ObservableCollection<CheckpointManager.CheckpointFolder>(indexTasks
+            new ObservableCollection<CheckpointFolder>(indexTasks
                 .Select(t => t.Result)
                 .OrderBy(f => f.Title));
 
         if (!string.IsNullOrWhiteSpace(SearchFilter))
         {
-            DisplayedCheckpointFolders = new ObservableCollection<CheckpointManager.CheckpointFolder>(
-                CheckpointFolders
-                    .Where(x => x.CheckpointFiles.Any(y => y.FileName.Contains(SearchFilter))));
+            var filtered = CheckpointFolders
+                .Where(x => x.CheckpointFiles.Any(y => y.FileName.Contains(SearchFilter))).Select(
+                    f =>
+                    {
+                        f.SearchFilter = SearchFilter;
+                        return f;
+                    });
+            DisplayedCheckpointFolders = new ObservableCollection<CheckpointFolder>(filtered);
         }
         else
         {

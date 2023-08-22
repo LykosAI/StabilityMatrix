@@ -56,6 +56,8 @@ public class SettingsManager : ISettingsManager
     public string DatabasePath => Path.Combine(LibraryDir, "StabilityMatrix.db");
     private string SettingsPath => Path.Combine(LibraryDir, "settings.json");
     public string ModelsDirectory => Path.Combine(LibraryDir, "Models");
+    public string DownloadsDirectory => Path.Combine(LibraryDir, ".downloads");
+    
     public DirectoryPath TagsDirectory => new(LibraryDir, "Tags");
 
     public Settings Settings { get; private set; } = new();
@@ -68,6 +70,26 @@ public class SettingsManager : ISettingsManager
     
     /// <inheritdoc />
     public event EventHandler? Loaded;
+    
+    /// <inheritdoc />
+    public void RegisterOnLibraryDirSet(Action<string> handler)
+    {
+        if (IsLibraryDirSet)
+        {
+            handler(LibraryDir);
+            return;
+        }
+
+        LibraryDirChanged += Handler;
+        
+        return;
+
+        void Handler(object? sender, string dir)
+        {
+            LibraryDirChanged -= Handler;
+            handler(dir);
+        }
+    }
     
     /// <inheritdoc />
     public SettingsTransaction BeginTransaction()

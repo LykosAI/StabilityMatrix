@@ -57,6 +57,7 @@ public partial class SettingsViewModel : PageViewModelBase
     private readonly IPyRunner pyRunner;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly ICompletionProvider completionProvider;
+    private readonly ITrackedDownloadService trackedDownloadService;
     
     public SharedState SharedState { get; }
     
@@ -124,6 +125,7 @@ public partial class SettingsViewModel : PageViewModelBase
         IPrerequisiteHelper prerequisiteHelper,
         IPyRunner pyRunner,
         ServiceManager<ViewModelBase> dialogFactory,
+        ITrackedDownloadService trackedDownloadService,
         SharedState sharedState, 
         ICompletionProvider completionProvider)
     {
@@ -132,6 +134,7 @@ public partial class SettingsViewModel : PageViewModelBase
         this.prerequisiteHelper = prerequisiteHelper;
         this.pyRunner = pyRunner;
         this.dialogFactory = dialogFactory;
+        this.trackedDownloadService = trackedDownloadService;
         this.completionProvider = completionProvider;
         
         SharedState = sharedState;
@@ -436,6 +439,50 @@ public partial class SettingsViewModel : PageViewModelBase
             "Stability Matrix has been added to the Start Menu for all users.", NotificationType.Success);
     }
 
+    public async Task PickNewDataDirectory()
+    {
+        var viewModel = dialogFactory.Get<SelectDataDirectoryViewModel>();
+        var dialog = new BetterContentDialog
+        {
+            IsPrimaryButtonEnabled = false,
+            IsSecondaryButtonEnabled = false,
+            IsFooterVisible = false,
+            Content = new SelectDataDirectoryDialog
+            {
+                DataContext = viewModel
+            }
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            // 1. For portable mode, call settings.SetPortableMode()
+            if (viewModel.IsPortableMode)
+            {
+                settingsManager.SetPortableMode();
+            }
+            // 2. For custom path, call settings.SetLibraryPath(path)
+            else
+            {
+                settingsManager.SetLibraryPath(viewModel.DataDirectory);
+            }
+            
+            // Restart
+            var restartDialog = new BetterContentDialog
+            {
+                Title = "Restart required",
+                Content = "Stability Matrix must be restarted for the changes to take effect.",
+                PrimaryButtonText = "Restart",
+                DefaultButton = ContentDialogButton.Primary,
+                IsSecondaryButtonEnabled = false,
+            };
+            await restartDialog.ShowAsync();
+            
+            Process.Start(Compat.AppCurrentPath);
+            App.Shutdown();
+        }
+    }
+
     #endregion
     
     #region Debug Section
@@ -588,6 +635,32 @@ public partial class SettingsViewModel : PageViewModelBase
         await completionProvider.LoadFromFile(files[0].TryGetLocalPath()!, true);
         
         notificationService.Show("Loaded completion file", "");
+    }
+    
+    [RelayCommand]
+    private async Task DebugTrackedDownload()
+    {
+        var textFields = new TextBoxField[]
+        {
+            new()
+            {
+                Label = "Url",
+            },
+            new()
+            {
+                Label = "File path"
+            }
+        };
+
+        var dialog = DialogHelper.CreateTextEntryDialog("Add download", "", textFields);
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            var url = textFields[0].Text;
+            var filePath = textFields[1].Text;
+            var download = trackedDownloadService.NewDownload(new Uri(url), new FilePath(filePath));
+            download.Start();
+        }
     }
     #endregion
 

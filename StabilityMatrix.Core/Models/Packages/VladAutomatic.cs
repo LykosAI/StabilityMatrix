@@ -98,7 +98,7 @@ public class VladAutomatic : BaseGitPackage
         {
             Name = "Use DirectML if no compatible GPU is detected",
             Type = LaunchOptionType.Bool,
-            InitialValue = PreferDirectML(),
+            InitialValue = HardwareHelper.PreferDirectML(),
             Options = new() { "--use-directml" }
         },
         new()
@@ -112,7 +112,7 @@ public class VladAutomatic : BaseGitPackage
         {
             Name = "Force use of AMD ROCm backend",
             Type = LaunchOptionType.Bool,
-            InitialValue = PreferRocm(),
+            InitialValue = HardwareHelper.PreferRocm(),
             Options = new() { "--use-rocm" }
         },
         new()
@@ -137,16 +137,6 @@ public class VladAutomatic : BaseGitPackage
     };
 
     public override string ExtraLaunchArguments => "";
-
-    // Set ROCm for default if AMD and Linux
-    private static bool PreferRocm() => !HardwareHelper.HasNvidiaGpu()
-                                     && HardwareHelper.HasAmdGpu()
-                                     && Compat.IsLinux;
-    
-    // Set DirectML for default if AMD and Windows
-    private static bool PreferDirectML() => !HardwareHelper.HasNvidiaGpu()
-                                            && HardwareHelper.HasAmdGpu()
-                                            && Compat.IsWindows;
     
     public override Task<string> GetLatestVersion() => Task.FromResult("master");
 
@@ -177,13 +167,13 @@ public class VladAutomatic : BaseGitPackage
             await venvRunner.CustomInstall("launch.py --use-cuda --debug --test", OnConsoleOutput)
                 .ConfigureAwait(false);
         }
-        else if (PreferRocm())
+        else if (HardwareHelper.PreferRocm())
         {
             // ROCm
             await venvRunner.CustomInstall("launch.py --use-rocm --debug --test", OnConsoleOutput)
                 .ConfigureAwait(false);
         }
-        else if (PreferDirectML())
+        else if (HardwareHelper.PreferDirectML())
         {
             // DirectML
             await venvRunner.CustomInstall("launch.py --use-directml --debug --test", OnConsoleOutput)

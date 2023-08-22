@@ -13,6 +13,7 @@ public interface ISettingsManager
     bool IsLibraryDirSet { get; }
     string DatabasePath { get; }
     string ModelsDirectory { get; }
+    string DownloadsDirectory { get; }
     DirectoryPath TagsDirectory { get; }
     
     Settings Settings { get; }
@@ -27,6 +28,12 @@ public interface ISettingsManager
     /// </summary>
     event EventHandler<RelayPropertyChangedEventArgs>? SettingsPropertyChanged;
 
+    /// <summary>
+    /// Register a handler that fires once when LibraryDir is first set.
+    /// Will fire instantly if it is already set.
+    /// </summary>
+    void RegisterOnLibraryDirSet(Action<string> handler);
+    
     /// <summary>
     /// Event fired when Settings are loaded from disk
     /// </summary>

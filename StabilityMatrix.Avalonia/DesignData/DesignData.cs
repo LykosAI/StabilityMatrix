@@ -101,7 +101,8 @@ public static class DesignData
             .AddSingleton<IApiFactory, MockApiFactory>()
             .AddSingleton<IInferenceClientManager, MockInferenceClientManager>()
             .AddSingleton<IDiscordRichPresenceService, MockDiscordRichPresenceService>()
-            .AddSingleton<ICompletionProvider, MockCompletionProvider>();
+            .AddSingleton<ICompletionProvider, MockCompletionProvider>()
+            .AddSingleton<ITrackedDownloadService, MockTrackedDownloadService>();
 
         // Placeholder services that nobody should need during design time
         services
@@ -233,13 +234,12 @@ public static class DesignData
                 })
             };
 
-        ProgressManagerViewModel.ProgressItems = new ObservableCollection<ProgressItemViewModel>
+        ProgressManagerViewModel.ProgressItems.AddRange(new ProgressItemViewModelBase[]
         {
-            new(new ProgressItem(Guid.NewGuid(), "Test File.exe",
+            new ProgressItemViewModel(new ProgressItem(Guid.NewGuid(), "Test File.exe",
                 new ProgressReport(0.5f, "Downloading..."))),
-            new(new ProgressItem(Guid.NewGuid(), "Test File 2.uwu",
-                new ProgressReport(0.25f, "Extracting...")))
-        };
+            new MockDownloadProgressItemViewModel("Test File 2.exe"),
+        });
 
         UpdateViewModel = Services.GetRequiredService<UpdateViewModel>();
         UpdateViewModel.UpdateText =

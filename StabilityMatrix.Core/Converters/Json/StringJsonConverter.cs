@@ -23,7 +23,7 @@ public class StringJsonConverter<T> : JsonConverter<T>
             throw new JsonException();
         }
 
-        return (T) Activator.CreateInstance(typeToConvert, value);
+        return (T?) Activator.CreateInstance(typeToConvert, value);
     }
 
     /// <inheritdoc />

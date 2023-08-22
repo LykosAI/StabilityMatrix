@@ -327,11 +327,12 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
             {
                 connectedModels = connectedModels.Where(c => c.ModelType == SelectedModelType);
             }
-            
+
             modelRequest = new CivitModelsRequest
             {
                 CommaSeparatedModelIds = string.Join(",",
-                    connectedModels.Select(c => c.ConnectedModel!.ModelId)),
+                    connectedModels.Select(c => c.ConnectedModel!.ModelId).GroupBy(m => m)
+                        .Select(g => g.First())),
                 Types = SelectedModelType == CivitModelType.All ? null : new[] {SelectedModelType}
             };
         }

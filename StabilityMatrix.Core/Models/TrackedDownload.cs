@@ -46,7 +46,9 @@ public class TrackedDownload
     
     public string? ExpectedHashSha256 { get; set; }
     
-    public bool ValidateHash { get; set; }
+    [JsonIgnore]
+    [MemberNotNullWhen(true, nameof(ExpectedHashSha256))]
+    public bool ValidateHash => ExpectedHashSha256 is not null;
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public ProgressState ProgressState { get; set; } = ProgressState.Inactive;

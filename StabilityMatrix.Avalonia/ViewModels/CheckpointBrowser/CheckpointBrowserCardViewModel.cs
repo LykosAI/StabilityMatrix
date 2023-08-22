@@ -294,7 +294,6 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         
         // Add hash info
         download.ExpectedHashSha256 = modelFile.Hashes.SHA256;
-        download.ValidateHash = download.ExpectedHashSha256 is not null;
         
         // Add files to cleanup list
         download.ExtraCleanupFileNames.Add(cmInfoPath);

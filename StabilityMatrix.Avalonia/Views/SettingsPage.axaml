@@ -16,7 +16,7 @@
     
     <Grid>
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto"
+            <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto"
                   Margin="8, 16">
                     <!-- Theme -->
                     <Grid Grid.Row="0" RowDefinitions="auto,*">
@@ -184,8 +184,7 @@
                     </Grid>
                     
                     <!-- System Options -->
-                    <Grid Grid.Row="4" Margin="0,8,0,0" RowDefinitions="auto, auto, auto">
-                    <Grid Grid.Row="5" Margin="0,8,0,0" RowDefinitions="auto,*">
+                    <Grid Grid.Row="5" Margin="0,8,0,0" RowDefinitions="auto,*,*">
                         <TextBlock 
                             FontWeight="Medium"
                             Text="System" 

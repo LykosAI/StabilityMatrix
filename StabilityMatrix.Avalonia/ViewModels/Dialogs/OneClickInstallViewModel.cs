@@ -157,7 +157,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
             EventManager.Instance.OnGlobalProgressChanged(OneClickInstallProgress);
         });
         
-        await SelectedPackage.DownloadPackage(version, false, progress);
+        await SelectedPackage.DownloadPackage(version, false, version, progress);
         SubHeaderText = "Download Complete";
         OneClickInstallProgress = 100;
     }

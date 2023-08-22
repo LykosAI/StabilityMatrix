@@ -6,8 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.2.1
+### Added
+- New installable Package - [Fooocus](https://github.com/lllyasviel/Fooocus)
+- Added "Select New Data Directory" button to Settings
+
 ### Fixed
 - Fixed SD.Next shared folders config not working with new config format, reverted to Junctions / Symlinks
+- Fixed issue where model version wouldn't be selected in the "All Versions" section of the Model Browser
+- Improved Checkpoints page indexing performance
+- Fixed issue where Checkpoints page may not show all checkpoints after clearing search filter
+- Fixed issue where Checkpoints page may show incorrect checkpoints for the given filter after changing pages
 
 ## v2.2.0
 ### Added

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -330,6 +331,50 @@ public partial class SettingsViewModel : PageViewModelBase
         
         notificationService.Show("Added to Start Menu", 
             "Stability Matrix has been added to the Start Menu for all users.", NotificationType.Success);
+    }
+
+    public async Task PickNewDataDirectory()
+    {
+        var viewModel = dialogFactory.Get<SelectDataDirectoryViewModel>();
+        var dialog = new BetterContentDialog
+        {
+            IsPrimaryButtonEnabled = false,
+            IsSecondaryButtonEnabled = false,
+            IsFooterVisible = false,
+            Content = new SelectDataDirectoryDialog
+            {
+                DataContext = viewModel
+            }
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            // 1. For portable mode, call settings.SetPortableMode()
+            if (viewModel.IsPortableMode)
+            {
+                settingsManager.SetPortableMode();
+            }
+            // 2. For custom path, call settings.SetLibraryPath(path)
+            else
+            {
+                settingsManager.SetLibraryPath(viewModel.DataDirectory);
+            }
+            
+            // Restart
+            var restartDialog = new BetterContentDialog
+            {
+                Title = "Restart required",
+                Content = "Stability Matrix must be restarted for the changes to take effect.",
+                PrimaryButtonText = "Restart",
+                DefaultButton = ContentDialogButton.Primary,
+                IsSecondaryButtonEnabled = false,
+            };
+            await restartDialog.ShowAsync();
+            
+            Process.Start(Compat.AppCurrentPath);
+            App.Shutdown();
+        }
     }
 
     #endregion

@@ -56,6 +56,7 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
         
         // Create json file
         var downloadsDir = new DirectoryPath(settingsManager.DownloadsDirectory);
+        downloadsDir.Create();
         var jsonFile = downloadsDir.JoinFile($"{download.Id}.json");
         var jsonFileStream = jsonFile.Info.Open(FileMode.CreateNew, FileAccess.ReadWrite, FileShare.Read);
         

@@ -150,6 +150,24 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
                 
                 // Deserialize json and add to dictionary
                 var download = JsonSerializer.Deserialize<TrackedDownload>(fileStream)!;
+                
+                // If the download is marked as working, pause it
+                if (download.ProgressState == ProgressState.Working)
+                {
+                    download.ProgressState = ProgressState.Inactive;
+                }
+                else if (download.ProgressState != ProgressState.Inactive)
+                {
+                    // If the download is not inactive, skip it
+                    logger.LogWarning("Skipping download {Download} with state {State}", download.FileName, download.ProgressState);
+                    fileStream.Dispose();
+                    
+                    // Delete json file
+                    logger.LogDebug("Deleting json file for {Download} with unsupported state", download.FileName);
+                    file.Delete();
+                    continue;
+                }
+                
                 download.SetDownloadService(downloadService);
                 
                 downloads.TryAdd(download.Id, (download, fileStream));
@@ -222,8 +240,6 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
                     logger.LogWarning(e, "Failed to pause download {Download}", download.FileName);
                 }
             }
-
-            fs.Dispose();
         }
         
         GC.SuppressFinalize(this);

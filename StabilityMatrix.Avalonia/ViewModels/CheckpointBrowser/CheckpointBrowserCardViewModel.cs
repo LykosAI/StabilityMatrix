@@ -32,10 +32,10 @@ using Notification = Avalonia.Controls.Notifications.Notification;
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
-
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly IDownloadService downloadService;
+    private readonly ITrackedDownloadService trackedDownloadService;
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly INotificationService notificationService;
@@ -63,11 +63,13 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
 
     public CheckpointBrowserCardViewModel(
         IDownloadService downloadService,
+        ITrackedDownloadService trackedDownloadService,
         ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> dialogFactory,
         INotificationService notificationService)
     {
         this.downloadService = downloadService;
+        this.trackedDownloadService = trackedDownloadService;
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
         this.notificationService = notificationService;
@@ -240,7 +242,10 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
             filesForCleanup.Add(downloadPath);
 
             // Do the download
-            var progressId = Guid.NewGuid();
+            var download = trackedDownloadService.NewDownload(modelFile.DownloadUrl, downloadPath);
+            download.Start();
+            
+            /*var progressId = Guid.NewGuid();
             var downloadTask = downloadService.DownloadToFileAsync(modelFile.DownloadUrl,
                 downloadPath,
                 new Progress<ProgressReport>(report =>
@@ -258,7 +263,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
                 }));
 
             var downloadResult =
-                await notificationService.TryAsync(downloadTask, "Could not download file");
+                await notificationService.TryAsync(downloadTask, "Could not download file");*/
 
             // Failed download handling
             if (downloadResult.Exception is not null)

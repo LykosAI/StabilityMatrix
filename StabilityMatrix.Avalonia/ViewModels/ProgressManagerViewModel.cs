@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Avalonia.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
+using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
@@ -19,14 +24,20 @@ public partial class ProgressManagerViewModel : PageViewModelBase
     public override string Title => "Download Manager";
     public override IconSource IconSource => new SymbolIconSource {Symbol = Symbol.ArrowCircleDown, IsFilled = true};
 
-    [ObservableProperty]
-    private ObservableCollection<ProgressItemViewModel> progressItems;
-    
-    public ProgressManagerViewModel()
-    {
-        ProgressItems = new ObservableCollection<ProgressItemViewModel>();
-    }
+    public AvaloniaList<ProgressItemViewModelBase> ProgressItems { get; } = new();
 
+    public ProgressManagerViewModel(ITrackedDownloadService trackedDownloadService)
+    {
+        // Attach to the event
+        trackedDownloadService.DownloadAdded += TrackedDownloadService_OnDownloadAdded;
+    }
+    
+    private void TrackedDownloadService_OnDownloadAdded(object? sender, TrackedDownload e)
+    {
+        var vm = new DownloadProgressItemViewModel(e);
+        ProgressItems.Add(vm);
+    }
+    
     public void StartEventListener()
     {
         EventManager.Instance.ProgressChanged += OnProgressChanged;
@@ -34,12 +45,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
 
     public void ClearDownloads()
     {
-        if (!ProgressItems.Any(p => Math.Abs(p.Progress.Percentage - 100) < 0.01f || p.Failed))
-            return;
-        
-        var itemsInProgress = ProgressItems
-            .Where(p => p.Progress.Percentage < 100 && !p.Failed).ToList();
-        ProgressItems = new ObservableCollection<ProgressItemViewModel>(itemsInProgress);
+        ProgressItems.RemoveAll(ProgressItems.Where(x => x.IsCompleted));
     }
 
     private void OnProgressChanged(object? sender, ProgressItem e)

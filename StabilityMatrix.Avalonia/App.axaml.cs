@@ -332,6 +332,7 @@ public sealed class App : Application
         services.AddSingleton<IPyRunner, PyRunner>();
         services.AddSingleton<IUpdateHelper, UpdateHelper>();
         services.AddSingleton<INavigationService, NavigationService>();
+        services.AddSingleton<ITrackedDownloadService, TrackedDownloadService>();
         
         // Rich presence
         services.AddSingleton<IDiscordRichPresenceService, DiscordRichPresenceService>();

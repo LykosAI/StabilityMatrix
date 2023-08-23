@@ -88,7 +88,6 @@ public static class DesignData
             .AddSingleton<INavigationService, NavigationService>()
             .AddSingleton<IPackageFactory, PackageFactory>()
             .AddSingleton<IUpdateHelper, UpdateHelper>()
-            .AddSingleton<ITokenizerProvider, TokenizerProvider>()
             .AddSingleton<ModelFinder>()
             .AddSingleton<SharedState>();
 
@@ -110,6 +109,7 @@ public static class DesignData
             .AddSingleton<ILiteDbContext>(_ => null!)
             .AddSingleton<ICivitApi>(_ => null!)
             .AddSingleton<IGithubApiCache>(_ => null!)
+            .AddSingleton<ITokenizerProvider>(_ => null!)
             .AddSingleton<IPrerequisiteHelper>(_ => null!);
 
         // Using some default service implementations from App

@@ -27,37 +27,64 @@
                 <controls:Card
                     Padding="8"
                     HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
-                    VerticalAlignment="{TemplateBinding VerticalAlignment}">
+                    VerticalAlignment="{TemplateBinding VerticalAlignment}"
+                    VerticalContentAlignment="{TemplateBinding VerticalAlignment}"
+                    HorizontalContentAlignment="{TemplateBinding HorizontalAlignment}">
+                    
                     <Grid RowDefinitions="*,Auto">
                         <!-- Main image view -->
                         <Grid Margin="4">
-                            <Panel>
-                                <Carousel
-                                    x:Name="ImageCarousel"
-                                    MinHeight="400"
-                                    AutoScrollToSelectedItem="True"
-                                    IsVisible="{Binding !IsPreviewOverlayEnabled}"
-                                    SelectedItem="{Binding SelectedImage}"
-                                    SelectedIndex="{Binding SelectedImageIndex}"
-                                    ItemsSource="{Binding ImageSources}">
+                            <Carousel
+                                x:Name="ImageCarousel"
+                                MinHeight="400"
+                                AutoScrollToSelectedItem="True"
+                                IsVisible="{Binding !IsPreviewOverlayEnabled}"
+                                SelectedItem="{Binding SelectedImage}"
+                                SelectedIndex="{Binding SelectedImageIndex}"
+                                ItemsSource="{Binding ImageSources}">
                                     
-                                    <Carousel.PageTransition>
-                                        <CompositePageTransition>
-                                            <PageSlide Orientation="Horizontal" Duration="0.167">
-                                                <PageSlide.SlideInEasing>
-                                                    <QuadraticEaseIn />
-                                                </PageSlide.SlideInEasing>
-                                                <PageSlide.SlideOutEasing>
-                                                    <SineEaseInOut />
-                                                </PageSlide.SlideOutEasing>
-                                            </PageSlide>
-                                            <CrossFade Duration="0.1" />
-                                        </CompositePageTransition>
-                                    </Carousel.PageTransition>
+                                <Carousel.PageTransition>
+                                    <CompositePageTransition>
+                                        <PageSlide Orientation="Horizontal" Duration="0.167">
+                                            <PageSlide.SlideInEasing>
+                                                <QuadraticEaseIn />
+                                            </PageSlide.SlideInEasing>
+                                            <PageSlide.SlideOutEasing>
+                                                <SineEaseInOut />
+                                            </PageSlide.SlideOutEasing>
+                                        </PageSlide>
+                                        <CrossFade Duration="0.1" />
+                                    </CompositePageTransition>
+                                </Carousel.PageTransition>
                                     
-                                    <Carousel.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type models:ImageSource}">
-                                            <controls:BetterAdvancedImage
+                                <Carousel.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type models:ImageSource}">
+                                        <controls:AdvancedImageBox
+                                            x:Name="ImageView"
+                                            CornerRadius="4"
+                                            SizeMode="Fit"
+                                            Image="{Binding BitmapAsync^}">
+                                            <controls:AdvancedImageBox.ContextFlyout>
+                                                <ui:FAMenuFlyout>
+                                                    <ui:MenuFlyoutItem 
+                                                        Command="{ReflectionBinding #ImageCarousel.DataContext.FlyoutPreviewCommand}" 
+                                                        CommandParameter="{Binding #ImageView.Image}"
+                                                        Text="Expanded Preview"
+                                                        HotKey="Space"
+                                                        IconSource="ZoomInFilled" />
+                                                    <ui:MenuFlyoutSeparator/>
+                                                    <ui:MenuFlyoutItem 
+                                                        IsEnabled="{OnPlatform Windows=True, Default=False}"
+                                                        Command="{ReflectionBinding #ImageCarousel.DataContext.FlyoutCopyCommand}" 
+                                                        CommandParameter="{Binding #ImageView.Image}"
+                                                        Text="Copy"
+                                                        HotKey="Ctrl+C"
+                                                        IconSource="Copy" />
+                                                </ui:FAMenuFlyout>
+                                            </controls:AdvancedImageBox.ContextFlyout>
+                                        </controls:AdvancedImageBox>
+
+                                        <!--<controls:BetterAdvancedImage
                                                 x:Name="ImageView"
                                                 CornerRadius="4"
                                                 Source="{Binding}"
@@ -81,22 +108,22 @@
                                                             IconSource="Copy" />
                                                     </ui:FAMenuFlyout>
                                                 </controls:BetterAdvancedImage.ContextFlyout>
-                                            </controls:BetterAdvancedImage>
-                                        </DataTemplate>
-                                    </Carousel.ItemTemplate>
+                                            </controls:BetterAdvancedImage>-->
+                                    </DataTemplate>
+                                </Carousel.ItemTemplate>
                                     
-                                </Carousel>
-                                <Border
-                                    ClipToBounds="True"
-                                    CornerRadius="4"
-                                    IsVisible="{Binding IsPreviewOverlayEnabled}">
-                                    <Image
-                                        Source="{Binding PreviewImage}"
-                                        Stretch="Uniform"
-                                        StretchDirection="Both" />
-                                </Border>
-                            </Panel>
-                            
+                            </Carousel>
+                            <Border
+                                ClipToBounds="True"
+                                CornerRadius="4"
+                                IsVisible="{Binding IsPreviewOverlayEnabled}">
+                                <Image
+                                    IsVisible="{Binding IsPreviewOverlayEnabled}"
+                                    Source="{Binding PreviewImage}"
+                                    Stretch="Uniform"
+                                    StretchDirection="Both" />
+                            </Border>
+
                             <!-- Left button -->
                             <Border
                                 Margin="4"

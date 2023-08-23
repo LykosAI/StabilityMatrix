@@ -19,8 +19,8 @@
         <controls:AdvancedImageBox
             Name="MainImageBox"
             RenderOptions.BitmapInterpolationMode="None"
-            Image="{Binding Image}"
-            Source="{Binding Source}"/>
+            SizeMode="Fit"
+            Image="{Binding Image}"/>
         
         <!-- The preview tracker -->
         <!--<Image 

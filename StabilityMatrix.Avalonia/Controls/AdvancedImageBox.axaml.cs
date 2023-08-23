@@ -13,6 +13,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Runtime.CompilerServices;
@@ -23,6 +24,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -538,7 +540,7 @@ public class AdvancedImageBox : TemplatedControl
     public static readonly StyledProperty<ISolidColorBrush> GridColorProperty =
         AvaloniaProperty.Register<AdvancedImageBox, ISolidColorBrush>(
             nameof(GridColor),
-            Brushes.Gainsboro
+            SolidColorBrush.Parse("#181818")
         );
 
     /// <summary>
@@ -553,7 +555,7 @@ public class AdvancedImageBox : TemplatedControl
     public static readonly StyledProperty<ISolidColorBrush> GridColorAlternateProperty =
         AvaloniaProperty.Register<AdvancedImageBox, ISolidColorBrush>(
             nameof(GridColorAlternate),
-            Brushes.White
+            SolidColorBrush.Parse("#252525")
         );
 
     /// <summary>
@@ -1213,10 +1215,10 @@ public class AdvancedImageBox : TemplatedControl
 
         HorizontalScrollBar.Scroll += ScrollBarOnScroll;
         VerticalScrollBar.Scroll += ScrollBarOnScroll;
-        ViewPort.PointerPressed += ViewPortOnPointerPressed;
-        ViewPort.PointerExited += ViewPortOnPointerExited;
-        ViewPort.PointerMoved += ViewPortOnPointerMoved;
-        ViewPort.PointerWheelChanged += ViewPortOnPointerWheelChanged;
+        // ViewPort.PointerPressed += ViewPortOnPointerPressed;
+        // ViewPort.PointerExited += ViewPortOnPointerExited;
+        // ViewPort.PointerMoved += ViewPortOnPointerMoved;
+        // ViewPort.PointerWheelChanged += ViewPortOnPointerWheelChanged;
     }
 
     /*private void InitializeComponent()
@@ -1239,6 +1241,17 @@ public class AdvancedImageBox : TemplatedControl
     {
         //Debug.WriteLine($"Render: {DateTime.Now.Ticks}");
         base.Render(context);
+
+        var zoomFactor = ZoomFactor;
+        var shouldDrawPixelGrid =
+            zoomFactor > PixelGridZoomThreshold && SizeMode == SizeModes.Normal;
+        
+        // If we're in pixel grid mode, switch off bitmap interpolation mode
+        // Otherwise use high quality
+        RenderOptions.SetBitmapInterpolationMode(this,
+            shouldDrawPixelGrid
+                ? BitmapInterpolationMode.None
+                : BitmapInterpolationMode.HighQuality);
 
         var viewPortSize = ViewPortSize;
         // Draw Grid
@@ -1276,8 +1289,6 @@ public class AdvancedImageBox : TemplatedControl
         // Draw iamge
         context.DrawImage(image, GetSourceImageRegion(), imageViewPort);
 
-        var zoomFactor = ZoomFactor;
-
         if (HaveTrackerImage && _pointerPosition is { X: >= 0, Y: >= 0 })
         {
             var destSize = TrackerImageAutoZoom
@@ -1296,7 +1307,7 @@ public class AdvancedImageBox : TemplatedControl
 
         //SkiaContext.SkCanvas.dr
         // Draw pixel grid
-        if (zoomFactor > PixelGridZoomThreshold && SizeMode == SizeModes.Normal)
+        if (shouldDrawPixelGrid)
         {
             var offsetX = Offset.X % zoomFactor;
             var offsetY = Offset.Y % zoomFactor;
@@ -1411,8 +1422,11 @@ public class AdvancedImageBox : TemplatedControl
         base.OnScrollChanged(e);
     }*/
 
-    private void ViewPortOnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
+    /// <inheritdoc />
+    protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
+        base.OnPointerWheelChanged(e);
+        
         e.Handled = true;
         if (Image is null)
             return;
@@ -1427,6 +1441,77 @@ public class AdvancedImageBox : TemplatedControl
             ProcessMouseZoom(e.Delta.Y > 0, e.GetPosition(ViewPort));
             //}
         }
+    }
+
+    /*private void ViewPortOnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
+    {
+        e.Handled = true;
+        if (Image is null)
+            return;
+        if (AllowZoom && SizeMode == SizeModes.Normal)
+        {
+            // The MouseWheel event can contain multiple "spins" of the wheel so we need to adjust accordingly
+            //double spins = Math.Abs(e.Delta.Y);
+            //Debug.WriteLine(e.GetPosition(this));
+            // TODO: Really should update the source method to handle multiple increments rather than calling it multiple times
+            /*for (int i = 0; i < spins; i++)
+            {#1#
+            ProcessMouseZoom(e.Delta.Y > 0, e.GetPosition(ViewPort));
+            //}
+        }
+    }*/
+
+    /// <inheritdoc />
+    protected override void OnPointerPressed(PointerPressedEventArgs e)
+    {
+        base.OnPointerPressed(e);
+        
+        if (e.Handled || _isPanning || _isSelecting || Image is null)
+            return;
+
+        var pointer = e.GetCurrentPoint(this);
+
+        if (SelectionMode != SelectionModes.None)
+        {
+            if (
+                !(
+                    pointer.Properties.IsLeftButtonPressed
+                    && (SelectWithMouseButtons & MouseButtons.LeftButton) != 0
+                    || pointer.Properties.IsMiddleButtonPressed
+                    && (SelectWithMouseButtons & MouseButtons.MiddleButton) != 0
+                    || pointer.Properties.IsRightButtonPressed
+                    && (SelectWithMouseButtons & MouseButtons.RightButton) != 0
+                )
+            )
+                return;
+            IsSelecting = true;
+        }
+        else
+        {
+            if (
+                !(
+                    pointer.Properties.IsLeftButtonPressed
+                    && (PanWithMouseButtons & MouseButtons.LeftButton) != 0
+                    || pointer.Properties.IsMiddleButtonPressed
+                    && (PanWithMouseButtons & MouseButtons.MiddleButton) != 0
+                    || pointer.Properties.IsRightButtonPressed
+                    && (PanWithMouseButtons & MouseButtons.RightButton) != 0
+                )
+                || !AutoPan
+                || SizeMode != SizeModes.Normal
+            )
+                return;
+
+            IsPanning = true;
+        }
+
+        var location = pointer.Position;
+
+        if (location.X > ViewPortSize.Width)
+            return;
+        if (location.Y > ViewPortSize.Height)
+            return;
+        _startMousePosition = location;
     }
 
     private void ViewPortOnPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -1532,12 +1617,22 @@ public class AdvancedImageBox : TemplatedControl
         IsSelecting = false;
     }
 
-    private void ViewPortOnPointerExited(object? sender, PointerEventArgs e)
+    /// <inheritdoc />
+    protected override void OnPointerExited(PointerEventArgs e)
     {
+        base.OnPointerExited(e);
+        
         PointerPosition = new Point(-1, -1);
         TriggerRender(true);
         e.Handled = true;
     }
+
+    /*private void ViewPortOnPointerExited(object? sender, PointerEventArgs e)
+    {
+        PointerPosition = new Point(-1, -1);
+        TriggerRender(true);
+        e.Handled = true;
+    }*/
 
     /*protected override void OnPointerLeave(PointerEventArgs e)
     {
@@ -1546,9 +1641,12 @@ public class AdvancedImageBox : TemplatedControl
         TriggerRender(true);
         e.Handled = true;
     }*/
-
-    private void ViewPortOnPointerMoved(object? sender, PointerEventArgs e)
+    
+    /// <inheritdoc />
+    protected override void OnPointerMoved(PointerEventArgs e)
     {
+        base.OnPointerMoved(e);
+        
         if (e.Handled)
             return;
 
@@ -1714,6 +1812,34 @@ public class AdvancedImageBox : TemplatedControl
 
         e.Handled = true;
     }*/
+
+    /// <inheritdoc />
+    protected override void OnLoaded(RoutedEventArgs e)
+    {
+        base.OnLoaded(e);
+
+        if (SizeMode == SizeModes.Fit)
+        {
+            try
+            {
+                ZoomToFit();
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(exception);
+            }
+            
+            try
+            {
+                RestoreSizeMode();
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(exception);
+            }
+        }
+    }
+
     #endregion
 
     #region Zoom and Size modes

@@ -33,6 +33,8 @@ public record ImageSource : IDisposable
     {
         RemoteUrl = remoteUrl;
     }
+
+    public Task<Bitmap?> BitmapAsync => GetBitmapAsync();
     
     /// <summary>
     /// Get the bitmap

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -170,10 +171,15 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
             IsSecondaryButtonEnabled = false,
             IsFooterVisible = false,
             MaxDialogWidth = 750,
+            MaxDialogHeight = 850,
         };
-        
+
+        var prunedDescription = PruneDescription(model);
+
         var viewModel = dialogFactory.Get<SelectModelVersionViewModel>();
         viewModel.Dialog = dialog;
+        viewModel.Title = model.Name;
+        viewModel.Description = prunedDescription;
         viewModel.Versions = versions.Select(version =>
                 new ModelVersionViewModel(
                     settingsManager.Settings.InstalledModelHashes ?? new HashSet<string>(), version))
@@ -197,6 +203,23 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
 
         await Task.Delay(100);
         await DoImport(model, selectedVersion, selectedFile);
+    }
+
+    private static string PruneDescription(CivitModel model)
+    {
+        var prunedDescription =
+            model.Description
+                .Replace("<br/>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("<br />", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</p>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</h1>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</h2>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</h3>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</h4>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</h5>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</h6>", $"{Environment.NewLine}{Environment.NewLine}");
+        prunedDescription = HtmlRegex().Replace(prunedDescription, string.Empty);
+        return prunedDescription;
     }
 
     private static async Task<FilePath> SaveCmInfo(
@@ -354,4 +377,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
             IsImporting = false;
         });
     }
+
+    [GeneratedRegex("<[^>]+>")]
+    private static partial Regex HtmlRegex();
 }

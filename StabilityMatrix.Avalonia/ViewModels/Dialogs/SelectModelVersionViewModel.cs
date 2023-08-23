@@ -18,6 +18,8 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
 
     public required ContentDialog Dialog { get; set; }
     public required IReadOnlyList<ModelVersionViewModel> Versions { get; set; }
+    public required string Description { get; set; }
+    public required string Title { get; set; }
 
     [ObservableProperty] private Bitmap? previewImage;
     [ObservableProperty] private ModelVersionViewModel? selectedVersionViewModel;

@@ -21,6 +21,7 @@
         <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.2" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.2" />
+        <PackageReference Include="Avalonia.HtmlRenderer" Version="11.0.0" />
         <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.0.0.1" />
         <PackageReference Include="AvaloniaEdit.TextMate" Version="11.0.0" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />

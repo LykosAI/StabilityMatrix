@@ -6,7 +6,7 @@
              xmlns:api="clr-namespace:StabilityMatrix.Core.Models.Api;assembly=StabilityMatrix.Core"
              xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
              xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="850"
              x:DataType="dialogs:SelectModelVersionViewModel"
              xmlns:icons="https://github.com/projektanker/icons.avalonia"
              xmlns:fluentAvalonia="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
@@ -19,16 +19,29 @@
         RowDefinitions="*,Auto"
         ColumnDefinitions="*,Auto,*">
 
-        <controls:BetterImage Grid.Column="0" Grid.Row="0" Margin="8"
-                              VerticalAlignment="Top"
-                              MaxHeight="400"
-                              HorizontalAlignment="Left"
-                              Source="{Binding PreviewImage}" />
-
+        <Grid Grid.Row="0" 
+              Grid.Column="0"
+              RowDefinitions="Auto, Auto">
+            <controls:BetterImage 
+                                  Margin="8"
+                                  VerticalAlignment="Top"
+                                  MaxHeight="400"
+                                  HorizontalAlignment="Left"
+                                  Source="{Binding PreviewImage}" />
+            <Expander Grid.Row="1"
+                      Header="Model Description"
+                      ExpandDirection="Up"
+                      Margin="16, 8">
+                <TextBlock Text="{Binding Description}"
+                           TextWrapping="Wrap"
+                           Margin="8"/>
+            </Expander>
+        </Grid>
 
         <ListBox Grid.Row="0" Grid.Column="1"
                   Margin="8"
-                  MaxHeight="450"
+                  MaxHeight="400"
+                  VerticalAlignment="Top"
                   ItemsSource="{Binding Versions}"
                   SelectedItem="{Binding SelectedVersionViewModel}">
             <ListBox.ItemTemplate>
@@ -78,7 +91,7 @@
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type dialogs:CivitFileViewModel}">
                     <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="Auto, *"
-                          Margin="-4,0,0,0">
+                          Margin="0,4,0,4">
                         <fluentAvalonia:SymbolIcon Grid.Row="0" Grid.RowSpan="2"
                                                    Grid.Column="0"
                                                    Margin="0, 0, 8, 0"

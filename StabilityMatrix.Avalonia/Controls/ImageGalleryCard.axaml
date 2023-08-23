@@ -66,10 +66,18 @@
                                                 <controls:BetterAdvancedImage.ContextFlyout>
                                                     <ui:FAMenuFlyout>
                                                         <ui:MenuFlyoutItem 
+                                                            Command="{ReflectionBinding #ImageCarousel.DataContext.FlyoutPreviewCommand}" 
+                                                            CommandParameter="{Binding #ImageView.CurrentImage}"
+                                                            Text="Expanded Preview"
+                                                            HotKey="Space"
+                                                            IconSource="ZoomInFilled" />
+                                                        <ui:MenuFlyoutSeparator/>
+                                                        <ui:MenuFlyoutItem 
                                                             IsEnabled="{OnPlatform Windows=True, Default=False}"
                                                             Command="{ReflectionBinding #ImageCarousel.DataContext.FlyoutCopyCommand}" 
                                                             CommandParameter="{Binding #ImageView.CurrentImage}"
                                                             Text="Copy"
+                                                            HotKey="Ctrl+C"
                                                             IconSource="Copy" />
                                                     </ui:FAMenuFlyout>
                                                 </controls:BetterAdvancedImage.ContextFlyout>

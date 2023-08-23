@@ -43,22 +43,20 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
     private readonly ServiceManager<ViewModelBase> vmFactory;
 
     public IInferenceClientManager ClientManager { get; }
-    
+
     public ImageGalleryCardViewModel ImageGalleryCardViewModel { get; }
     public PromptCardViewModel PromptCardViewModel { get; }
     public StackCardViewModel StackCardViewModel { get; }
 
-    public UpscalerCardViewModel UpscalerCardViewModel => 
-        StackCardViewModel
-        .GetCard<StackExpanderViewModel>()
-        .GetCard<UpscalerCardViewModel>();
+    public UpscalerCardViewModel UpscalerCardViewModel =>
+        StackCardViewModel.GetCard<StackExpanderViewModel>().GetCard<UpscalerCardViewModel>();
 
     public SamplerCardViewModel HiresSamplerCardViewModel =>
-        StackCardViewModel
-            .GetCard<StackExpanderViewModel>()
-            .GetCard<SamplerCardViewModel>();
+        StackCardViewModel.GetCard<StackExpanderViewModel>().GetCard<SamplerCardViewModel>();
 
     public bool IsHiresFixEnabled => StackCardViewModel.GetCard<StackExpanderViewModel>().IsEnabled;
+
+    public bool IsUpscaleEnabled => StackCardViewModel.GetCard<StackExpanderViewModel>(1).IsEnabled;
     
     [JsonIgnore]
     public ProgressViewModel OutputProgress { get; } = new();
@@ -78,44 +76,58 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         ClientManager = inferenceClientManager;
 
         // Get sub view models from service manager
-        
-        var seedCard = vmFactory.Get<SeedCardViewModel>();        
+
+        var seedCard = vmFactory.Get<SeedCardViewModel>();
         seedCard.GenerateNewSeed();
 
         ImageGalleryCardViewModel = vmFactory.Get<ImageGalleryCardViewModel>();
         PromptCardViewModel = vmFactory.Get<PromptCardViewModel>();
 
         StackCardViewModel = vmFactory.Get<StackCardViewModel>();
-            
-        StackCardViewModel.AddCards(new LoadableViewModelBase[]
-        {
-            // Model Card
-            vmFactory.Get<ModelCardViewModel>(),
-            // Sampler
-            vmFactory.Get<SamplerCardViewModel>(),
-            // Hires Fix
-            vmFactory.Get<StackExpanderViewModel>(stackExpander =>
+
+        StackCardViewModel.AddCards(
+            new LoadableViewModelBase[]
             {
-                stackExpander.Title = "Hires Fix";
-                stackExpander.AddCards(new LoadableViewModelBase[]
+                // Model Card
+                vmFactory.Get<ModelCardViewModel>(),
+                // Sampler
+                vmFactory.Get<SamplerCardViewModel>(),
+                // Hires Fix
+                vmFactory.Get<StackExpanderViewModel>(stackExpander =>
                 {
-                    // Hires Fix Upscaler
-                    vmFactory.Get<UpscalerCardViewModel>(),
-                    // Hires Fix Sampler
-                    vmFactory.Get<SamplerCardViewModel>(samplerCard =>
-                    {
-                        samplerCard.IsDimensionsEnabled = false;
-                        samplerCard.IsCfgScaleEnabled = false;
-                        samplerCard.IsSamplerSelectionEnabled = false;
-                        samplerCard.IsDenoiseStrengthEnabled = true;
-                    })
-                });
-            }),
-            // Seed
-            seedCard,
-            // Batch Size
-            vmFactory.Get<BatchSizeCardViewModel>(),
-        });
+                    stackExpander.Title = "Hires Fix";
+                    stackExpander.AddCards(
+                        new LoadableViewModelBase[]
+                        {
+                            // Hires Fix Upscaler
+                            vmFactory.Get<UpscalerCardViewModel>(),
+                            // Hires Fix Sampler
+                            vmFactory.Get<SamplerCardViewModel>(samplerCard =>
+                            {
+                                samplerCard.IsDimensionsEnabled = false;
+                                samplerCard.IsCfgScaleEnabled = false;
+                                samplerCard.IsSamplerSelectionEnabled = false;
+                                samplerCard.IsDenoiseStrengthEnabled = true;
+                            })
+                        }
+                    );
+                }),
+                vmFactory.Get<StackExpanderViewModel>(stackExpander =>
+                {
+                    stackExpander.Title = "Upscale";
+                    stackExpander.AddCards(
+                        new LoadableViewModelBase[]
+                        {
+                            // Post processing upscaler
+                            vmFactory.Get<UpscalerCardViewModel>(),
+                        });
+                }),
+                // Seed
+                seedCard,
+                // Batch Size
+                vmFactory.Get<BatchSizeCardViewModel>(),
+            }
+        );
 
         GenerateImageCommand.WithNotificationErrorHandler(notificationService);
     }
@@ -123,7 +135,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
     private (NodeDictionary prompt, string[] outputs) BuildPrompt()
     {
         using var _ = new CodeTimer();
-        
+
         var samplerCard = StackCardViewModel.GetCard<SamplerCardViewModel>();
         var batchCard = StackCardViewModel.GetCard<BatchSizeCardViewModel>();
         var modelCard = StackCardViewModel.GetCard<ModelCardViewModel>();
@@ -131,144 +143,179 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
 
         var prompt = new NodeDictionary();
         var builder = new ComfyNodeBuilder(prompt);
-        
-        var checkpointLoader = prompt.AddNamedNode(new NamedComfyNode("CheckpointLoader")
-        {
-            ClassType = "CheckpointLoaderSimple",
-            Inputs = new Dictionary<string, object?>
+
+        var checkpointLoader = prompt.AddNamedNode(
+            new NamedComfyNode("CheckpointLoader")
             {
-                ["ckpt_name"] = modelCard.SelectedModelName
+                ClassType = "CheckpointLoaderSimple",
+                Inputs = new Dictionary<string, object?>
+                {
+                    ["ckpt_name"] = modelCard.SelectedModelName
+                }
             }
-        });
+        );
 
         var checkpointVae = checkpointLoader.GetOutput<VAENodeConnection>(2);
-        
-        var emptyLatentImage = prompt.AddNamedNode(new NamedComfyNode("EmptyLatentImage")
-        {
-            ClassType = "EmptyLatentImage",
-            Inputs = new Dictionary<string, object?>
-            {
-                ["batch_size"] = batchCard.BatchSize,
-                ["height"] = samplerCard.Height,
-                ["width"] = samplerCard.Width,
-            }
-        });
-        
-        var positiveClip = prompt.AddNamedNode(new NamedComfyNode("PositiveCLIP")
-        {
-            ClassType = "CLIPTextEncode",
-            Inputs = new Dictionary<string, object?>
-            {
-                ["clip"] = checkpointLoader.GetOutput(1),
-                ["text"] = PromptCardViewModel.PromptDocument.Text,
-            }
-        });
-        
-        var negativeClip = prompt.AddNamedNode(new NamedComfyNode("NegativeCLIP")
-        {
-            ClassType = "CLIPTextEncode",
-            Inputs = new Dictionary<string, object?>
-            {
-                ["clip"] = checkpointLoader.GetOutput(1),
-                ["text"] = PromptCardViewModel.NegativePromptDocument.Text,
-            }
-        });
 
-        var sampler = prompt.AddNamedNode(ComfyNodeBuilder.KSampler(
-            "Sampler",
-            checkpointLoader.GetOutput<ModelNodeConnection>(0),
-            Convert.ToUInt64(seedCard.Seed),
-            samplerCard.Steps,
-            samplerCard.CfgScale,
-            samplerCard.SelectedSampler?.Name ?? throw new InvalidOperationException("Sampler not selected"),
-            "normal",
-            positiveClip.GetOutput<ConditioningNodeConnection>(0),
-            negativeClip.GetOutput<ConditioningNodeConnection>(0),
-            emptyLatentImage.GetOutput<LatentNodeConnection>(0),
-            samplerCard.DenoiseStrength));
-        
-        var vaeDecoder = prompt.AddNamedNode(new NamedComfyNode("VAEDecoder")
-        {
-            ClassType = "VAEDecode",
-            Inputs = new Dictionary<string, object?>
+        var emptyLatentImage = prompt.AddNamedNode(
+            new NamedComfyNode("EmptyLatentImage")
             {
-                ["samples"] = sampler.GetOutput(0),
-                ["vae"] = checkpointLoader.GetOutput(2)
+                ClassType = "EmptyLatentImage",
+                Inputs = new Dictionary<string, object?>
+                {
+                    ["batch_size"] = batchCard.BatchSize,
+                    ["height"] = samplerCard.Height,
+                    ["width"] = samplerCard.Width,
+                }
             }
-        });
-        
-        var saveImage = prompt.AddNamedNode(new NamedComfyNode("SaveImage")
-        {
-            ClassType = "SaveImage",
-            Inputs = new Dictionary<string, object?>
+        );
+
+        var positiveClip = prompt.AddNamedNode(
+            new NamedComfyNode("PositiveCLIP")
             {
-                ["filename_prefix"] = "SM-Inference",
-                ["images"] = vaeDecoder.GetOutput(0)
+                ClassType = "CLIPTextEncode",
+                Inputs = new Dictionary<string, object?>
+                {
+                    ["clip"] = checkpointLoader.GetOutput(1),
+                    ["text"] = PromptCardViewModel.PromptDocument.Text,
+                }
             }
-        });
+        );
+
+        var negativeClip = prompt.AddNamedNode(
+            new NamedComfyNode("NegativeCLIP")
+            {
+                ClassType = "CLIPTextEncode",
+                Inputs = new Dictionary<string, object?>
+                {
+                    ["clip"] = checkpointLoader.GetOutput(1),
+                    ["text"] = PromptCardViewModel.NegativePromptDocument.Text,
+                }
+            }
+        );
+
+        var sampler = prompt.AddNamedNode(
+            ComfyNodeBuilder.KSampler(
+                "Sampler",
+                checkpointLoader.GetOutput<ModelNodeConnection>(0),
+                Convert.ToUInt64(seedCard.Seed),
+                samplerCard.Steps,
+                samplerCard.CfgScale,
+                samplerCard.SelectedSampler?.Name
+                    ?? throw new InvalidOperationException("Sampler not selected"),
+                "normal",
+                positiveClip.GetOutput<ConditioningNodeConnection>(0),
+                negativeClip.GetOutput<ConditioningNodeConnection>(0),
+                emptyLatentImage.GetOutput<LatentNodeConnection>(0),
+                samplerCard.DenoiseStrength
+            )
+        );
+
+        var lastLatent = sampler.Output;
+        var lastLatentWidth = samplerCard.Width;
+        var lastLatentHeight = samplerCard.Height;
+        
+        var vaeDecoder = prompt.AddNamedNode(
+            new NamedComfyNode("VAEDecoder")
+            {
+                ClassType = "VAEDecode",
+                Inputs = new Dictionary<string, object?>
+                {
+                    ["samples"] = lastLatent,
+                    ["vae"] = checkpointLoader.GetOutput(2)
+                }
+            }
+        );
+
+        var saveImage = prompt.AddNamedNode(
+            new NamedComfyNode("SaveImage")
+            {
+                ClassType = "SaveImage",
+                Inputs = new Dictionary<string, object?>
+                {
+                    ["filename_prefix"] = "SM-Inference",
+                    ["images"] = vaeDecoder.GetOutput(0)
+                }
+            }
+        );
         
         // If hi-res fix is enabled, add the LatentUpscale node and another KSampler node
         if (IsHiresFixEnabled)
         {
             var hiresUpscalerCard = UpscalerCardViewModel;
             var hiresSamplerCard = HiresSamplerCardViewModel;
+
+            // Requested upscale to this size
+            var hiresWidth = (int)Math.Floor(lastLatentWidth * hiresUpscalerCard.Scale);
+            var hiresHeight = (int)Math.Floor(lastLatentHeight * hiresUpscalerCard.Scale);
+            
+            LatentNodeConnection hiresLatent;
             
             // Select between latent upscale and normal upscale based on the upscale method
-            var selectedUpscaler = hiresUpscalerCard.SelectedUpscaler;
-
-            LatentNodeConnection hiresOutput;
+            var selectedUpscaler = hiresUpscalerCard.SelectedUpscaler!.Value;
             
-            if (selectedUpscaler?.Type == ComfyUpscalerType.Latent)
+            if (selectedUpscaler.Type == ComfyUpscalerType.None)
             {
-                hiresOutput = prompt.AddNamedNode(new NamedComfyNode("LatentUpscale")
-                {
-                    ClassType = "LatentUpscale",
-                    Inputs = new Dictionary<string, object?>
-                    {
-                        ["upscale_method"] = hiresUpscalerCard.SelectedUpscaler?.Name,
-                        ["width"] = samplerCard.Width * hiresUpscalerCard.Scale,
-                        ["height"] = samplerCard.Height * hiresUpscalerCard.Scale,
-                        ["crop"] = "disabled",
-                        ["samples"] = sampler.Output
-                    }
-                }).GetOutput<LatentNodeConnection>(0);
-            }
-            else if (selectedUpscaler?.Type == ComfyUpscalerType.ESRGAN)
-            {
-                // Convert to image space
-                var samplerImage = builder.Lambda_LatentToImage(sampler.Output, checkpointVae);
-                // Do group upscale
-                var modelUpscaler = builder.Group_UpscaleWithModel("Upscaler",
-                    selectedUpscaler.Value.Name, samplerImage);
-                // Convert back to latent space
-                hiresOutput = builder.Lambda_ImageToLatent(modelUpscaler.Output, checkpointVae);
+                // If no upscaler selected or none, just reroute the latent image
+                hiresLatent = sampler.Output;
             }
             else
             {
-                // If no upscaler selected or none, just reroute the latent image
-                hiresOutput = sampler.Output;
+                // Otherwise upscale the latent image
+                hiresLatent = builder.Group_UpscaleToLatent("HiresFix",
+                    lastLatent, checkpointVae, selectedUpscaler, hiresWidth, hiresHeight).Output;
             }
 
-            var hiresSampler = prompt.AddNamedNode(ComfyNodeBuilder.KSampler(
-                "HiresSampler",
-                checkpointLoader.GetOutput<ModelNodeConnection>(0),
-                Convert.ToUInt64(seedCard.Seed),
-                hiresSamplerCard.Steps,
-                hiresSamplerCard.CfgScale,
-                // Use hires sampler name if not null, otherwise use the normal sampler name
-                hiresSamplerCard.SelectedSampler?.Name ?? samplerCard.SelectedSampler?.Name ?? throw new InvalidOperationException("Sampler not selected"),
-                "normal",
-                positiveClip.GetOutput<ConditioningNodeConnection>(0),
-                negativeClip.GetOutput<ConditioningNodeConnection>(0),
-                hiresOutput,
-                hiresSamplerCard.DenoiseStrength));
-            
+            var hiresSampler = prompt.AddNamedNode(
+                ComfyNodeBuilder.KSampler(
+                    "HiresSampler",
+                    checkpointLoader.GetOutput<ModelNodeConnection>(0),
+                    Convert.ToUInt64(seedCard.Seed),
+                    hiresSamplerCard.Steps,
+                    hiresSamplerCard.CfgScale,
+                    // Use hires sampler name if not null, otherwise use the normal sampler name
+                    hiresSamplerCard.SelectedSampler?.Name
+                        ?? samplerCard.SelectedSampler?.Name
+                        ?? throw new InvalidOperationException("Sampler not selected"),
+                    "normal",
+                    positiveClip.GetOutput<ConditioningNodeConnection>(0),
+                    negativeClip.GetOutput<ConditioningNodeConnection>(0),
+                    hiresLatent,
+                    hiresSamplerCard.DenoiseStrength
+                )
+            );
+
+            // Set as last latent
+            lastLatent = hiresSampler.Output;
+            lastLatentWidth = hiresWidth;
+            lastLatentHeight = hiresHeight;
             // Reroute the VAEDecoder's input to be from the hires sampler
-            vaeDecoder.Inputs["samples"] = hiresSampler.Output;
+            vaeDecoder.Inputs["samples"] = lastLatent;
+        }
+        
+        // If upscale is enabled, add another upscale group
+        if (IsUpscaleEnabled)
+        {
+            var postUpscalerCard = StackCardViewModel.GetCard<StackExpanderViewModel>(1)
+                .GetCard<UpscalerCardViewModel>();
+            
+            var upscaleWidth = (int)Math.Floor(lastLatentWidth * postUpscalerCard.Scale);
+            var upscaleHeight = (int)Math.Floor(lastLatentHeight * postUpscalerCard.Scale);
+            
+            // Build group
+            var postUpscaleGroup = builder.Group_UpscaleToImage("PostUpscale",
+                lastLatent, checkpointVae, postUpscalerCard.SelectedUpscaler!.Value,
+                upscaleWidth, upscaleHeight);
+            
+            // Remove the original vae decoder
+            prompt.Remove(vaeDecoder.Name);
+            
+            // Set as the input for save image
+            saveImage.Inputs["images"] = postUpscaleGroup.Output;
         }
 
         prompt.NormalizeConnectionTypes();
-        
+
         return (prompt, new[] { saveImage.Name });
     }
 
@@ -278,8 +325,9 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         OutputProgress.Maximum = args.Maximum;
         OutputProgress.IsIndeterminate = false;
 
-        OutputProgress.Text = $"({args.Value} / {args.Maximum})" 
-                              + (args.RunningNode != null ? $" {args.RunningNode}" : "");
+        OutputProgress.Text =
+            $"({args.Value} / {args.Maximum})"
+            + (args.RunningNode != null ? $" {args.RunningNode}" : "");
     }
 
     private void OnPreviewImageReceived(object? sender, ComfyWebSocketImageData args)
@@ -315,7 +363,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         // Connect progress handler
         // client.ProgressUpdateReceived += OnProgressUpdateReceived;
         client.PreviewImageReceived += OnPreviewImageReceived;
-        
+
         ComfyTask? promptTask = null;
         try
         {
@@ -323,9 +371,11 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             cancellationToken.Register(() =>
             {
                 Logger.Info("Cancelling prompt");
-                client.InterruptPromptAsync(new CancellationTokenSource(5000).Token).SafeFireAndForget();
+                client
+                    .InterruptPromptAsync(new CancellationTokenSource(5000).Token)
+                    .SafeFireAndForget();
             });
-            
+
             try
             {
                 promptTask = await client.QueuePromptAsync(nodes, cancellationToken);
@@ -336,7 +386,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
                 await DialogHelper.CreateApiExceptionDialog(e, "Api Error").ShowAsync();
                 return;
             }
-            
+
             // Register progress handler
             promptTask.ProgressUpdate += OnProgressUpdateReceived;
 
@@ -351,9 +401,10 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             );
 
             ImageGalleryCardViewModel.ImageSources.Clear();
-            
+
             var images = imageOutputs[outputNodeNames[0]];
-            if (images is null) return;
+            if (images is null)
+                return;
 
             List<ImageSource> outputImages;
             // Use local file path if available, otherwise use remote URL
@@ -369,26 +420,27 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
                     .Select(i => new ImageSource(i.ToUri(client.BaseAddress)))
                     .ToList();
             }
-            
+
             // Download all images to make grid, if multiple
             if (outputImages.Count > 1)
             {
-                var loadedImages = outputImages.Select(i =>
-                    SKImage.FromEncodedData(i.LocalFile?.Info.OpenRead())).ToImmutableArray();
+                var loadedImages = outputImages
+                    .Select(i => SKImage.FromEncodedData(i.LocalFile?.Info.OpenRead()))
+                    .ToImmutableArray();
 
                 var grid = ImageProcessor.CreateImageGrid(loadedImages);
-                
+
                 // Save to disk
                 var lastName = outputImages.Last().LocalFile?.Info.Name;
                 var gridPath = client.OutputImagesDir!.JoinFile($"grid-{lastName}");
 
                 await using var fileStream = gridPath.Info.OpenWrite();
                 await fileStream.WriteAsync(grid.Encode().ToArray(), cancellationToken);
-                
+
                 // Insert to start of images
                 ImageGalleryCardViewModel.ImageSources.Add(new ImageSource(gridPath));
             }
-            
+
             // Add rest of images
             ImageGalleryCardViewModel.ImageSources.AddRange(outputImages);
         }
@@ -400,7 +452,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             ImageGalleryCardViewModel.PreviewImage?.Dispose();
             ImageGalleryCardViewModel.PreviewImage = null;
             ImageGalleryCardViewModel.IsPreviewOverlayEnabled = false;
-            
+
             // client.ProgressUpdateReceived -= OnProgressUpdateReceived;
             promptTask?.Dispose();
             client.PreviewImageReceived -= OnPreviewImageReceived;

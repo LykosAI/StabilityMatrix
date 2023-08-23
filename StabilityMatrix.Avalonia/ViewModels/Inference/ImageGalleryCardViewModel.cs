@@ -11,7 +11,10 @@ using NLog;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 
@@ -21,7 +24,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public partial class ImageGalleryCardViewModel : ViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
+    private readonly ServiceManager<ViewModelBase> vmFactory;
+    
     [ObservableProperty]
     private bool isPreviewOverlayEnabled;
 
@@ -41,8 +45,10 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
     public bool CanNavigateBack => SelectedImageIndex > 0;
     public bool CanNavigateForward => SelectedImageIndex < ImageSources.Count - 1;
 
-    public ImageGalleryCardViewModel()
+    public ImageGalleryCardViewModel(ServiceManager<ViewModelBase> vmFactory)
     {
+        this.vmFactory = vmFactory;
+        
         ImageSources.CollectionChanged += OnImageSourcesItemsChanged;
     }
     
@@ -82,7 +88,7 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
             return;
         }
 
-        Logger.Trace($"FlyoutCopy is copying {image}");
+        Logger.Trace($"FlyoutCopy is copying bitmap...");
 
         await Task.Run(() =>
         {
@@ -91,5 +97,30 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
                 WindowsClipboard.SetBitmap((Bitmap)image);
             }
         });
+    }
+    
+    [RelayCommand]
+    // ReSharper disable once UnusedMember.Local
+    private async Task FlyoutPreview(IImage? image)
+    {
+        if (image is null)
+        {
+            Logger.Trace("FlyoutPreview: image is null");
+            return;
+        }
+
+        Logger.Trace($"FlyoutPreview opening...");
+
+        var viewerVm = vmFactory.Get<ImageViewerViewModel>();
+        viewerVm.Image = (Bitmap) image;
+
+        var dialog = new BetterContentDialog
+        {
+            Content = new ImageViewerDialog
+            {
+                DataContext = viewerVm,
+            }
+        };
+
     }
 }

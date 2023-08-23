@@ -650,8 +650,8 @@ public partial class SettingsViewModel : PageViewModelBase
 
         var imageBox = new ImageViewerDialog()
         {
-            MinWidth = 1500,
-            MinHeight = 900,
+            Width = 1000,
+            Height = 1000,
             DataContext = new ImageViewerViewModel()
             {
                 Image = bitmap
@@ -661,9 +661,10 @@ public partial class SettingsViewModel : PageViewModelBase
         var dialog = new BetterContentDialog
         {
             MaxDialogWidth = 1000,
+            MaxDialogHeight = 1000,
             FullSizeDesired = true,
             Content = imageBox,
-            CloseButtonText = "Close",
+            IsFooterVisible = false,
             ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
         };
 

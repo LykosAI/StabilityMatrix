@@ -8,23 +8,38 @@
                           xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
                           xmlns:system="clr-namespace:System;assembly=System.Runtime"
                           xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+                          xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+                          VerticalContentAlignment="Stretch"
+                          HorizontalContentAlignment="Stretch"
                           d:DataContext="{x:Static mocks:DesignData.ImageViewerViewModel}"
                           x:DataType="vmDialogs:ImageViewerViewModel"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                           x:Class="StabilityMatrix.Avalonia.Views.Dialogs.ImageViewerDialog">
-    <Grid>
+    <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
         <controls:AdvancedImageBox
             Name="MainImageBox"
             RenderOptions.BitmapInterpolationMode="None"
-            Image="{Binding Image}"/>
+            Image="{Binding Image}"
+            Source="{Binding Source}"/>
         
         <!-- The preview tracker -->
-        <Image 
+        <!--<Image 
             MinHeight="100"
             MinWidth="100"
             RenderOptions.BitmapInterpolationMode="HighQuality"
             Source="{Binding #MainImageBox.TrackerImage}"
             HorizontalAlignment="Left"
-            VerticalAlignment="Bottom"/> 
+            VerticalAlignment="Bottom"/> -->
+        
+        <!-- Close button -->
+        <Grid 
+            VerticalAlignment="Top"
+            HorizontalAlignment="Right">
+            <Button
+                Margin="0,8,8,0"
+                Classes="transparent"
+                Command="{Binding OnCloseButtonClick}"
+                icons:Attached.Icon="fa-solid fa-xmark"/>
+        </Grid>
     </Grid>
 </controls:UserControlBase>

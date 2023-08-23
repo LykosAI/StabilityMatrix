@@ -40,7 +40,7 @@ public class ComfyNodeBuilder
         return new NamedComfyNode<ImageNodeConnection>(name)
         {
             ClassType = "VAEDecode",
-            Inputs = new Dictionary<string, object?> { ["latent"] = samples.Data, ["vae"] = vae.Data }
+            Inputs = new Dictionary<string, object?> { ["samples"] = samples.Data, ["vae"] = vae.Data }
         };
     }
     
@@ -105,6 +105,28 @@ public class ComfyNodeBuilder
         };
     }
 
+    public static NamedComfyNode<ImageNodeConnection> ImageScale(
+        string name,
+        ImageNodeConnection image,
+        string method,
+        int height,
+        int width,
+        bool crop)
+    {
+        return new NamedComfyNode<ImageNodeConnection>(name)
+        {
+            ClassType = "ImageScale",
+            Inputs = new Dictionary<string, object?>
+            {
+                ["image"] = image.Data,
+                ["upscale_method"] = method,
+                ["height"] = height,
+                ["width"] = width,
+                ["crop"] = crop ? "center" : "disabled"
+            }
+        };
+    }
+
     public ImageNodeConnection Lambda_LatentToImage(LatentNodeConnection latent, VAENodeConnection vae)
     {
         return nodes.AddNamedNode(VAEDecode($"{GetRandomPrefix()}_VAEDecode", latent, vae)).Output;
@@ -116,7 +138,7 @@ public class ComfyNodeBuilder
     }
     
     /// <summary>
-    /// Create a upscaling node based on a <see cref="ComfyUpscalerType"/>
+    /// Create a group node that upscales a given image with a given model
     /// </summary>
     public NamedComfyNode<ImageNodeConnection> Group_UpscaleWithModel(string name, string modelName, ImageNodeConnection image)
     {
@@ -127,5 +149,147 @@ public class ComfyNodeBuilder
             ImageUpscaleWithModel($"{name}_ImageUpscaleWithModel", modelLoader.Output, image));
         
         return upscaler;
+    }
+
+    /// <summary>
+    /// Create a group node that scales a given image to a given size
+    /// </summary>
+    public NamedComfyNode<LatentNodeConnection> Group_UpscaleToLatent(string name,
+        LatentNodeConnection latent, VAENodeConnection vae,
+        ComfyUpscaler upscaleInfo, int width, int height)
+    {
+        if (upscaleInfo.Type == ComfyUpscalerType.Latent)
+        {
+            return nodes
+                .AddNamedNode(
+                    new NamedComfyNode<LatentNodeConnection>($"{name}_LatentUpscale")
+                    {
+                        ClassType = "LatentUpscale",
+                        Inputs = new Dictionary<string, object?>
+                        {
+                            ["upscale_method"] = upscaleInfo.Name,
+                            ["width"] = width,
+                            ["height"] = height,
+                            ["crop"] = "disabled",
+                            ["samples"] = latent.Data,
+                        }
+                    }
+                );
+        }
+        
+        if (upscaleInfo.Type == ComfyUpscalerType.ESRGAN)
+        {
+            // Convert to image space
+            var samplerImage = nodes.AddNamedNode(
+                VAEDecode(
+                    $"{name}_VAEDecode",
+                    latent,
+                    vae
+                )
+            );
+
+            // Do group upscale
+            var modelUpscaler = Group_UpscaleWithModel(
+                $"{name}_ModelUpscale",
+                upscaleInfo.Name,
+                samplerImage.Output
+            );
+
+            // Since the model upscale is fixed to model (2x/4x), scale it again to the requested size
+            var resizedScaled = nodes.AddNamedNode(
+                ImageScale(
+                    $"{name}_ImageScale",
+                    modelUpscaler.Output,
+                    "bilinear",
+                    height,
+                    width,
+                    false
+                )
+            );
+
+            // Convert back to latent space
+            return nodes
+                .AddNamedNode(
+                    VAEEncode(
+                        $"{name}_VAEEncode",
+                        resizedScaled.Output,
+                        vae
+                    )
+                );
+        }
+        
+        throw new InvalidOperationException($"Unknown upscaler type: {upscaleInfo.Type}");
+    }
+    
+    /// <summary>
+    /// Create a group node that scales a given image to image output
+    /// </summary>
+    public NamedComfyNode<ImageNodeConnection> Group_UpscaleToImage(string name,
+        LatentNodeConnection latent, VAENodeConnection vae,
+        ComfyUpscaler upscaleInfo, int width, int height)
+    {
+        if (upscaleInfo.Type == ComfyUpscalerType.Latent)
+        {
+            var latentUpscale = nodes
+                .AddNamedNode(
+                    new NamedComfyNode<LatentNodeConnection>($"{name}_LatentUpscale")
+                    {
+                        ClassType = "LatentUpscale",
+                        Inputs = new Dictionary<string, object?>
+                        {
+                            ["upscale_method"] = upscaleInfo.Name,
+                            ["width"] = width,
+                            ["height"] = height,
+                            ["crop"] = "disabled",
+                            ["samples"] = latent.Data,
+                        }
+                    }
+                );
+            
+            // Convert to image space
+            return nodes.AddNamedNode(
+                VAEDecode(
+                    $"{name}_VAEDecode",
+                    latentUpscale.Output,
+                    vae
+                )
+            );
+        }
+        
+        if (upscaleInfo.Type == ComfyUpscalerType.ESRGAN)
+        {
+            // Convert to image space
+            var samplerImage = nodes.AddNamedNode(
+                VAEDecode(
+                    $"{name}_VAEDecode",
+                    latent,
+                    vae
+                )
+            );
+
+            // Do group upscale
+            var modelUpscaler = Group_UpscaleWithModel(
+                $"{name}_ModelUpscale",
+                upscaleInfo.Name,
+                samplerImage.Output
+            );
+
+            // Since the model upscale is fixed to model (2x/4x), scale it again to the requested size
+            var resizedScaled = nodes.AddNamedNode(
+                ImageScale(
+                    $"{name}_ImageScale",
+                    modelUpscaler.Output,
+                    "bilinear",
+                    height,
+                    width,
+                    false
+                )
+            );
+
+            // No need to convert back to latent space
+            return resizedScaled;
+        }
+        
+        throw new InvalidOperationException($"Unknown upscaler type: {upscaleInfo.Type}");
     }
 }

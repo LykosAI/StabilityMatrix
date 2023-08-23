@@ -6,7 +6,7 @@
         x:DataType="vmInference:SamplerCardViewModel"
         xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData">
     <Design.PreviewWith>
-        <StackPanel MinWidth="300" Spacing="16">
+        <StackPanel MinWidth="350" Spacing="16">
             <controls:SamplerCard DataContext="{x:Static mocks:DesignData.SamplerCardViewModel}"/>
             <controls:SamplerCard DataContext="{x:Static mocks:DesignData.SamplerCardViewModelScaleMode}"/>
         </StackPanel>
@@ -21,7 +21,7 @@
                     <StackPanel 
                         Margin="8" 
                         HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
-                        Spacing="16">
+                        Spacing="12">
                         <Grid ColumnDefinitions="Auto,*" RowDefinitions="*,*,*">
                             <!-- Sampler -->
                             <TextBlock
@@ -77,34 +77,35 @@
                         
                         <StackPanel>
                             <!-- Denoise Strength -->
-                            <Grid IsVisible="{Binding IsDenoiseStrengthEnabled}">
-                                <StackPanel>
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <TextBlock 
-                                            VerticalAlignment="Center"
-                                            Text="Denoising Strength"/>
-                                        <ui:NumberBox
-                                            Grid.Column="1"
-                                            Margin="4,0,0,0"
-                                            ValidationMode="InvalidInputOverwritten"
-                                            SmallChange="0.01"
-                                            SimpleNumberFormat="F2"
-                                            Value="{Binding DenoiseStrength}"
-                                            HorizontalAlignment="Stretch"
-                                            SpinButtonPlacementMode="Compact"/>
-                                    </Grid>
-                                    <Slider 
-                                        Minimum="0"
-                                        Maximum="1"
+                            <StackPanel IsVisible="{Binding IsDenoiseStrengthEnabled}">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock 
+                                        VerticalAlignment="Center"
+                                        Text="Denoising Strength"/>
+                                    <ui:NumberBox
+                                        Grid.Column="1"
+                                        Margin="4,0,0,0"
+                                        ValidationMode="InvalidInputOverwritten"
+                                        SmallChange="0.01"
+                                        SimpleNumberFormat="F2"
                                         Value="{Binding DenoiseStrength}"
-                                        TickFrequency="1"
-                                        TickPlacement="BottomRight"/>
-                                </StackPanel>
-                            </Grid>
+                                        HorizontalAlignment="Stretch"
+                                        MinWidth="70"
+                                        SpinButtonPlacementMode="Compact"/>
+                                </Grid>
+                                <Slider 
+                                    Minimum="0"
+                                    Maximum="1"
+                                    Value="{Binding DenoiseStrength}"
+                                    TickFrequency="1"
+                                    Margin="0,0,0,-4"
+                                    TickPlacement="BottomRight"/>
+                            </StackPanel>
                             
                             <!-- Dimensions (Absolute) -->
                             <Grid 
                                 IsVisible="{Binding IsDimensionsEnabled}"
+                                Margin="0,4,0,0"
                                 ColumnDefinitions="*,Auto,*" 
                                 RowDefinitions="Auto,*">
                                 <TextBlock

@@ -1,24 +1,29 @@
 ﻿using System.Linq;
 using System.Text.Json.Nodes;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Newtonsoft.Json;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
+#pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(StackExpander))]
 public partial class StackExpanderViewModel : StackViewModelBase
 {
-    [ObservableProperty] private string? title;
-    [ObservableProperty] private bool isEnabled;
+    [ObservableProperty]
+    [property: JsonIgnore]
+    private string? title;
+    
+    [ObservableProperty] 
+    private bool isEnabled;
     
     /// <inheritdoc />
     public override void LoadStateFromJsonObject(JsonObject state)
     {
         var model = DeserializeModel<StackExpanderModel>(state);
-        Title = model.Title;
         IsEnabled = model.IsEnabled;
         
         if (model.Cards is null) return;
@@ -37,7 +42,6 @@ public partial class StackExpanderViewModel : StackViewModelBase
     {
         return SerializeModel(new StackExpanderModel
         {
-            Title = Title,
             IsEnabled = IsEnabled,
             Cards = Cards.Select(x => x.SaveStateToJsonObject()).ToList()
         });

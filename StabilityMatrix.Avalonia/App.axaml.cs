@@ -34,11 +34,13 @@ using Sentry;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.Views;
@@ -57,8 +59,6 @@ using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
 using Application = Avalonia.Application;
-using CheckpointFile = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFile;
-using CheckpointFolder = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFolder;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace StabilityMatrix.Avalonia;
@@ -194,7 +194,12 @@ public sealed class App : Application
         Services = services.BuildServiceProvider();
         
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
-        settingsManager.TryFindLibrary();
+        
+        if (settingsManager.TryFindLibrary())
+        {
+            Cultures.TrySetSupportedCulture(settingsManager.Settings.Language);
+        }
+        
         Services.GetRequiredService<ProgressManagerViewModel>().StartEventListener();
     }
 

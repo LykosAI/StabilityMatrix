@@ -76,4 +76,19 @@
       <!-- Only for linux-64 -->
       <AvaloniaResource Include="Assets\linux-x64\**" Condition="'$(RuntimeIdentifier)' == 'linux-x64'" />
     </ItemGroup>
+    
+    <ItemGroup>
+      <EmbeddedResource Update="Languages\Resources.resx">
+        <Generator>PublicResXFileCodeGenerator</Generator>
+        <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Compile Update="Languages\Resources.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Resources.resx</DependentUpon>
+      </Compile>
+    </ItemGroup>
 </Project>

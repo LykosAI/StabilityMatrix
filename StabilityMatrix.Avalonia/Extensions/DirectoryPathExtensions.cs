@@ -69,7 +69,7 @@ public static class DirectoryPathExtensions
         {
             try
             {
-                filePath.Attributes |= FileAttributes.Normal;
+                filePath.Attributes = FileAttributes.Normal;
                 filePath.Delete();
             }
             catch (IOException ex)

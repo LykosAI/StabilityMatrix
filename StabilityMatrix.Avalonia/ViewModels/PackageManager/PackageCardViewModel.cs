@@ -1,18 +1,22 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
@@ -26,24 +30,28 @@ public partial class PackageCardViewModel : ProgressViewModel
     private readonly INotificationService notificationService;
     private readonly ISettingsManager settingsManager;
     private readonly INavigationService navigationService;
+    private readonly ServiceManager<ViewModelBase> vmFactory;
 
     [ObservableProperty] private InstalledPackage? package;
-    [ObservableProperty] private Uri? cardImage;
+    [ObservableProperty] private string? cardImageSource;
     [ObservableProperty] private bool isUpdateAvailable;
     [ObservableProperty] private string? installedVersion;
-
+    [ObservableProperty] private bool isUnknownPackage;
+    
     public PackageCardViewModel(
         ILogger<PackageCardViewModel> logger,
         IPackageFactory packageFactory,
         INotificationService notificationService, 
         ISettingsManager settingsManager, 
-        INavigationService navigationService)
+        INavigationService navigationService,
+        ServiceManager<ViewModelBase> vmFactory)
     {
         this.logger = logger;
         this.packageFactory = packageFactory;
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
         this.navigationService = navigationService;
+        this.vmFactory = vmFactory;
     }
 
     partial void OnPackageChanged(InstalledPackage? value)
@@ -51,9 +59,21 @@ public partial class PackageCardViewModel : ProgressViewModel
         if (string.IsNullOrWhiteSpace(value?.PackageName))
             return;
 
-        var basePackage = packageFactory[value.PackageName];
-        CardImage = basePackage?.PreviewImageUri ?? Assets.NoImage;
-        InstalledVersion = value.DisplayVersion ?? "Unknown";
+        if (value.PackageName == UnknownPackage.Key)
+        {
+            IsUnknownPackage = true;
+            CardImageSource = "";
+            InstalledVersion = "Unknown";
+        }
+        else
+        {
+            IsUnknownPackage = false;
+            
+            var basePackage = packageFactory[value.PackageName];
+            CardImageSource = basePackage?.PreviewImageUri.ToString() 
+                              ?? Assets.NoImage.ToString();
+            InstalledVersion = value.DisplayVersion ?? "Unknown";
+        }
     }
 
     public override async Task OnLoadedAsync()
@@ -105,11 +125,14 @@ public partial class PackageCardViewModel : ProgressViewModel
                 notificationService.Show(new Notification("Success",
                     $"Package {Package.DisplayName} uninstalled",
                     NotificationType.Success));
-            
-                settingsManager.Transaction(settings =>
+
+                if (!IsUnknownPackage)
                 {
-                    settings.RemoveInstalledPackageAndUpdateActive(Package);
-                });
+                    settingsManager.Transaction(settings =>
+                    {
+                        settings.RemoveInstalledPackageAndUpdateActive(Package);
+                    });
+                }
                 
                 EventManager.Instance.OnInstalledPackagesChanged();
             }
@@ -118,7 +141,7 @@ public partial class PackageCardViewModel : ProgressViewModel
     
     public async Task Update()
     {
-        if (Package == null) return;
+        if (Package is null || IsUnknownPackage) return;
         
         var basePackage = packageFactory[Package.PackageName!];
         if (basePackage == null)
@@ -191,6 +214,29 @@ public partial class PackageCardViewModel : ProgressViewModel
             Text = "";
         }
     }
+
+    public async Task Import()
+    {
+        if (!IsUnknownPackage || Design.IsDesignMode) return;
+
+        PackageImportViewModel viewModel = null!;
+        var dialog = vmFactory.GetDialog<PackageImportViewModel>(vm =>
+        {
+            vm.PackagePath = new DirectoryPath(Package?.FullPath ?? throw new InvalidOperationException());
+            viewModel = vm;
+        });
+
+        dialog.PrimaryButtonText = Resources.Action_Import;
+        dialog.CloseButtonText = Resources.Action_Cancel;
+        dialog.DefaultButton = ContentDialogButton.Primary;
+
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            viewModel.AddPackageWithCurrentInputs();
+            EventManager.Instance.OnInstalledPackagesChanged();
+        }
+    }
     
     public async Task OpenFolder()
     {
@@ -202,7 +248,7 @@ public partial class PackageCardViewModel : ProgressViewModel
     
     private async Task<bool> HasUpdate()
     {
-        if (Package == null)
+        if (Package == null || IsUnknownPackage || Design.IsDesignMode)
             return false;
 
         var basePackage = packageFactory[Package.PackageName!];

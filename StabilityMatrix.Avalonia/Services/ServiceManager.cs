@@ -217,6 +217,8 @@ public class ServiceManager<T>
             throw new NullReferenceException($"Unable to create instance for {instance.GetType().FullName}");
         }
         
+        view.DataContext = instance;
+        
         return new BetterContentDialog { Content = view };
     }
 }

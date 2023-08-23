@@ -7,8 +7,11 @@ using StabilityMatrix.Core.Attributes;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(ImageViewerDialog))]
-public partial class ImageViewerViewModel : ViewModelBase
+public partial class ImageViewerViewModel : ContentDialogViewModelBase
 {
     [ObservableProperty]
     private Bitmap? image;
+
+    [ObservableProperty]
+    private string? source;
 }

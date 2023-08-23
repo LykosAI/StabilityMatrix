@@ -448,7 +448,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     
     private void RunningPackageOnStartupComplete(object? sender, string e)
     {
-        webUiUrl = e;
+        webUiUrl = e.Replace("0.0.0.0", "127.0.0.1");
         ShowWebUiButton = !string.IsNullOrWhiteSpace(webUiUrl);
     }
 

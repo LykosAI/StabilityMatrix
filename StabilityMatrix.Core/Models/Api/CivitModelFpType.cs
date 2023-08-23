@@ -8,6 +8,8 @@ namespace StabilityMatrix.Core.Models.Api;
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 public enum CivitModelFpType
 {
+    bf16,
     fp16,
-    fp32
+    fp32,
+    tf32
 }

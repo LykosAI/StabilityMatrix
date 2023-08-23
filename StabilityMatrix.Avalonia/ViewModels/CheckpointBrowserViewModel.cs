@@ -1,14 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Reactive;
+using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Collections;
 using Avalonia.Controls;
-using Avalonia.Controls.Notifications;
+using AvaloniaEdit.Utils;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -29,6 +34,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
+using Notification = Avalonia.Controls.Notifications.Notification;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
@@ -61,6 +67,8 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     [ObservableProperty] private bool hasSearched;
     [ObservableProperty] private bool canGoToNextPage;
     [ObservableProperty] private bool canGoToPreviousPage;
+    [ObservableProperty] private bool canGoToFirstPage;
+    [ObservableProperty] private bool canGoToLastPage;
     [ObservableProperty] private bool isIndeterminate;
     [ObservableProperty] private bool noResultsFound;
     [ObservableProperty] private string noResultsText = string.Empty;
@@ -95,6 +103,16 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
 
         CurrentPageNumber = 1;
         CanGoToNextPage = true;
+        CanGoToLastPage = true;
+
+        Observable
+            .FromEventPattern<PropertyChangedEventArgs>(this, nameof(PropertyChanged))
+            .Where(x => x.EventArgs.PropertyName == nameof(CurrentPageNumber))
+            .Throttle(TimeSpan.FromMilliseconds(250))
+            .Select(_ => CurrentPageNumber)
+            .Where(page => page <= TotalPages && page > 0)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe(_ => TrySearchAgain(false).SafeFireAndForget(), err => Logger.Error(err));
     }
 
     public override void OnLoaded()
@@ -102,6 +120,14 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         if (Design.IsDesignMode) return;
         
         var searchOptions = settingsManager.Settings.ModelSearchOptions;
+        
+        // Fix SelectedModelType if someone had selected the obsolete "Model" option
+        if (searchOptions is {SelectedModelType: CivitModelType.Model})
+        {
+            settingsManager.Transaction(s => s.ModelSearchOptions = new ModelSearchOptions(
+                SelectedPeriod, SortMode, CivitModelType.Checkpoint, SelectedBaseModelType));
+            searchOptions = settingsManager.Settings.ModelSearchOptions;
+        }
         
         SelectedPeriod = searchOptions?.SelectedPeriod ?? CivitPeriod.Month;
         SortMode = searchOptions?.SortMode ?? CivitSortMode.HighestRated;
@@ -262,8 +288,10 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
             ModelCards =new ObservableCollection<CheckpointBrowserCardViewModel>(filteredCards);
         }
         TotalPages = metadata?.TotalPages ?? 1;
+        CanGoToFirstPage = CurrentPageNumber != 1;
         CanGoToPreviousPage = CurrentPageNumber > 1;
         CanGoToNextPage = CurrentPageNumber < TotalPages;
+        CanGoToLastPage = CurrentPageNumber != TotalPages;
         // Status update
         ShowMainLoadingSpinner = false;
         IsIndeterminate = false;
@@ -371,22 +399,32 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         UpdateResultsText();
     }
 
-    [RelayCommand]
-    private async Task PreviousPage()
+    public void FirstPage()
     {
-        if (CurrentPageNumber == 1) return;
-
-        CurrentPageNumber--;
-        await TrySearchAgain(false);
+        CurrentPageNumber = 1;
     }
 
-    [RelayCommand]
-    private async Task NextPage()
+    public void PreviousPage()
     {
-        CurrentPageNumber++;
-        await TrySearchAgain(false);
+        if (CurrentPageNumber == 1) 
+            return;
+        
+        CurrentPageNumber--;
     }
     
+    public void NextPage()
+    {
+        if (CurrentPageNumber == TotalPages) 
+            return;
+        
+        CurrentPageNumber++;
+    }
+
+    public void LastPage()
+    {
+        CurrentPageNumber = TotalPages;
+    }
+
     partial void OnShowNsfwChanged(bool value)
     {
         settingsManager.Transaction(s => s.ModelBrowserNsfwEnabled, value);

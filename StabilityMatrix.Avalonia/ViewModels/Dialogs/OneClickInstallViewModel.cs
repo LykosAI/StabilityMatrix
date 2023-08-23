@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -55,7 +56,8 @@ public partial class OneClickInstallViewModel : ViewModelBase
         SubHeaderText = "Choose your preferred interface and click Install to get started!";
         ShowInstallButton = true;
         AllPackages =
-            new ObservableCollection<BasePackage>(this.packageFactory.GetAllAvailablePackages());
+            new ObservableCollection<BasePackage>(this.packageFactory.GetAllAvailablePackages()
+                .Where(p => p.OfferInOneClickInstaller));
         SelectedPackage = AllPackages[0];
     }
 

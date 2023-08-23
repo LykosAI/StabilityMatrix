@@ -9,14 +9,18 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - New installable Package - [Fooocus](https://github.com/lllyasviel/Fooocus)
 - Added "Select New Data Directory" button to Settings
+- Added "Skip to First/Last Page" buttons to the Model Browser
+- Added VAE as a checkpoint category in the Model Browser
 - Pause/Resume/Cancel buttons on downloads popup. Paused downloads persists and may be resumed after restarting the app
 ### Fixed
 - Fixed issue where model version wouldn't be selected in the "All Versions" section of the Model Browser
 - Improved Checkpoints page indexing performance
 - Fixed issue where Checkpoints page may not show all checkpoints after clearing search filter
 - Fixed issue where Checkpoints page may show incorrect checkpoints for the given filter after changing pages
+- Fixed issue where Open Web UI button would try to load 0.0.0.0 addresses
 ### Changed
 - Changed update method for SD.Next to use the built-in upgrade functionality
+- Model Browser navigation buttons are no longer disabled while changing pages
 
 ## v2.2.1
 ### Fixed

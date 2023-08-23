@@ -94,7 +94,7 @@ public class Fooocus : BaseGitPackage
         {
             OnConsoleOutput(s);
             
-            if (s.Text.Contains("To see the GUI go to", StringComparison.OrdinalIgnoreCase))
+            if (s.Text.Contains("Use the app with", StringComparison.OrdinalIgnoreCase))
             {
                 var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
                 var match = regex.Match(s.Text);

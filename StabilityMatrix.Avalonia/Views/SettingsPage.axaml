@@ -80,7 +80,65 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
             </Grid>
-
+            
+            <!-- Inference UI -->
+            <Grid Margin="0,8,0,0" RowDefinitions="auto,*">
+                <TextBlock 
+                    FontWeight="Medium"
+                    Text="Inference UI" 
+                    Margin="0,0,0,8" />
+                <!-- Auto Completion -->
+                <ui:SettingsExpander  Grid.Row="1"
+                                      Header="Prompt Auto Completion" 
+                                      Margin="8,0,8,4">
+                    <ui:SettingsExpander.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-wand-magic-sparkles"/>
+                    </ui:SettingsExpander.IconSource>
+                    
+                    <!-- Enable toggle -->
+                    <ui:SettingsExpanderItem Content="Enable">
+                        <ui:SettingsExpanderItem.Footer>
+                            <ToggleSwitch
+                                IsChecked="{Binding IsPromptCompletionEnabled}" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                    
+                    <!-- Tag csv selection -->
+                    <ui:SettingsExpanderItem Content="Tag Source"
+                                             IconSource="Tag"
+                                             IsEnabled="{Binding IsPromptCompletionEnabled}"
+                                             Description="Tags to use for completion in .csv format (Compatible with a1111-sd-webui-tagcomplete)">
+                        <ui:SettingsExpanderItem.Footer>
+                            <ui:FAComboBox 
+                                ItemsSource="{Binding AvailableTagCompletionCsvs}"
+                                SelectedItem="{Binding SelectedTagCompletionCsv}"/>
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                    
+                    <!-- Tag csv import -->
+                    <ui:SettingsExpanderItem Content="Import Tag Source .csv"
+                                             IconSource="Add"
+                                             IsEnabled="{Binding IsPromptCompletionEnabled}">
+                        <ui:SettingsExpanderItem.Footer>
+                            <Button
+                                Command="{Binding ImportTagCsvCommand}"
+                                Content="Import"/>
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                    
+                    <!-- Remove underscores -->
+                    <ui:SettingsExpanderItem 
+                        Content="Replace underscores with spaces when inserting completions"
+                        IconSource="Underline"
+                        IsEnabled="{Binding IsPromptCompletionEnabled}">
+                        <ui:SettingsExpanderItem.Footer>
+                            <CheckBox Margin="8"
+                                      IsChecked="{Binding IsCompletionRemoveUnderscoresEnabled}"/>
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                </ui:SettingsExpander>
+            </Grid>
+            
             <!--  Environment Options  -->
             <Grid RowDefinitions="Auto, Auto, Auto">
                 <TextBlock

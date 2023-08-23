@@ -139,7 +139,7 @@ public abstract class BaseGitPackage : BasePackage
     }
 
     public override async Task<string> DownloadPackage(string version, bool isCommitHash,
-        IProgress<ProgressReport>? progress = null)
+        string? branch, IProgress<ProgressReport>? progress = null)
     {
         var downloadUrl = GetDownloadUrl(version, isCommitHash);
 
@@ -151,7 +151,7 @@ public abstract class BaseGitPackage : BasePackage
         await DownloadService
             .DownloadToFileAsync(downloadUrl, DownloadLocation, progress: progress)
             .ConfigureAwait(false);
-        
+
         progress?.Report(new ProgressReport(100, message: "Download Complete"));
 
         return version;
@@ -246,7 +246,8 @@ public abstract class BaseGitPackage : BasePackage
         {
             var releases = await GetAllReleases().ConfigureAwait(false);
             var latestRelease = releases.First(x => includePrerelease || !x.Prerelease);
-            await DownloadPackage(latestRelease.TagName, false, progress).ConfigureAwait(false);
+            await DownloadPackage(latestRelease.TagName, false, null, progress)
+                .ConfigureAwait(false);
             await InstallPackage(progress).ConfigureAwait(false);
             return latestRelease.TagName;
         }
@@ -260,8 +261,9 @@ public abstract class BaseGitPackage : BasePackage
         {
             throw new Exception("No commits found for branch");
         }
-            
-        await DownloadPackage(latestCommit.Sha, true, progress).ConfigureAwait(false);
+
+        await DownloadPackage(latestCommit.Sha, true, installedPackage.InstalledBranch, progress)
+            .ConfigureAwait(false);
         await InstallPackage(progress).ConfigureAwait(false);
         return latestCommit.Sha;
     }

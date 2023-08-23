@@ -35,12 +35,14 @@ using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -62,8 +64,6 @@ using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
 using Application = Avalonia.Application;
-using CheckpointFile = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFile;
-using CheckpointFolder = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFolder;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace StabilityMatrix.Avalonia;
@@ -199,7 +199,12 @@ public sealed class App : Application
         Services = services.BuildServiceProvider();
         
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
-        settingsManager.TryFindLibrary();
+        
+        if (settingsManager.TryFindLibrary())
+        {
+            Cultures.TrySetSupportedCulture(settingsManager.Settings.Language);
+        }
+        
         Services.GetRequiredService<ProgressManagerViewModel>().StartEventListener();
     }
 
@@ -210,6 +215,7 @@ public sealed class App : Application
             .AddSingleton<InferenceSettingsViewModel>()
             .AddSingleton<CheckpointBrowserViewModel>()
             .AddSingleton<CheckpointsPageViewModel>()
+            .AddSingleton<NewCheckpointsPageViewModel>()
             .AddSingleton<LaunchPageViewModel>()
             .AddSingleton<ProgressManagerViewModel>()
             .AddSingleton<InferenceViewModel>();
@@ -334,6 +340,7 @@ public sealed class App : Application
         services.AddTransient<UpscalerCard>();
         services.AddTransient<ModelCard>();
         services.AddTransient<BatchSizeCard>();
+        services.AddSingleton<NewCheckpointsPage>();
         
         // Dialogs
         services.AddTransient<SelectDataDirectoryDialog>();

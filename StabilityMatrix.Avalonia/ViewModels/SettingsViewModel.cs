@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -19,6 +20,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -27,6 +29,7 @@ using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
@@ -77,6 +80,11 @@ public partial class SettingsViewModel : PageViewModelBase
         "Dark",
         "System",
     };
+
+    [ObservableProperty] private CultureInfo selectedLanguage;
+
+    // ReSharper disable once MemberCanBeMadeStatic.Global
+    public IReadOnlyList<CultureInfo> AvailableLanguages => Cultures.SupportedCultures;
 
     public IReadOnlyList<float> AnimationScaleOptions { get; } = new[]
     {
@@ -140,6 +148,7 @@ public partial class SettingsViewModel : PageViewModelBase
         SharedState = sharedState;
         
         SelectedTheme = settingsManager.Settings.Theme ?? AvailableThemes[1];
+        SelectedLanguage = Cultures.GetSupportedCultureOrDefault(settingsManager.Settings.Language);
         RemoveSymlinksOnShutdown = settingsManager.Settings.RemoveFolderLinksOnShutdown;
         SelectedAnimationScale = settingsManager.Settings.AnimationScale;
         
@@ -193,6 +202,43 @@ public partial class SettingsViewModel : PageViewModelBase
             "Light" => ThemeVariant.Light,
             _ => ThemeVariant.Default
         };
+    }
+
+    partial void OnSelectedLanguageChanged(CultureInfo? oldValue, CultureInfo newValue)
+    {
+        if (oldValue is null || newValue.Name == Cultures.Current.Name) return;
+        // Set locale
+        if (AvailableLanguages.Contains(newValue))
+        {
+            Logger.Info("Changing language from {Old} to {New}", 
+                oldValue, newValue);
+
+            Cultures.TrySetSupportedCulture(newValue);
+            settingsManager.Transaction(s => s.Language = newValue.Name);
+            
+            var dialog = new BetterContentDialog
+            {
+                Title = Resources.Label_RelaunchRequired,
+                Content = Resources.Text_RelaunchRequiredToApplyLanguage,
+                DefaultButton = ContentDialogButton.Primary,
+                PrimaryButtonText = Resources.Action_Relaunch,
+                CloseButtonText = Resources.Action_RelaunchLater
+            };
+
+            Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+                {
+                    Process.Start(Compat.AppCurrentPath);
+                    App.Shutdown();
+                }
+            });
+        }
+        else
+        {
+            Logger.Info("Requested invalid language change from {Old} to {New}", 
+                oldValue, newValue);
+        }
     }
     
     partial void OnRemoveSymlinksOnShutdownChanged(bool value)

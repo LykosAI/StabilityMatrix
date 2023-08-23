@@ -14,6 +14,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 
@@ -46,6 +47,7 @@ public partial class CheckpointFile : ViewModelBase
     public bool IsConnectedModel => ConnectedModel != null;
 
     [ObservableProperty] private bool isLoading;
+    [ObservableProperty] private CivitModelType modelType;
     
     public string FileName => Path.GetFileName((string?) FilePath);
 
@@ -223,6 +225,39 @@ public partial class CheckpointFile : ViewModelBase
             yield return checkpointFile;
         }
     }
+    
+    public static IEnumerable<CheckpointFile> GetAllCheckpointFiles(string modelsDirectory)
+    {
+        foreach (var file in Directory.EnumerateFiles(modelsDirectory, "*.*", SearchOption.AllDirectories))
+        {
+            if (!SupportedCheckpointExtensions.Any(ext => file.Contains(ext)))
+                continue;
+            
+            var checkpointFile = new CheckpointFile
+            {
+                Title = Path.GetFileNameWithoutExtension(file),
+                FilePath = file,
+            };
+
+            var jsonPath = Path.Combine(Path.GetDirectoryName(file),
+                Path.GetFileNameWithoutExtension(file) + ".cm-info.json");
+            
+            if (File.Exists(jsonPath)) 
+            {
+                var json = File.ReadAllText(jsonPath);
+                var connectedModelInfo = ConnectedModelInfo.FromJson(json);
+                checkpointFile.ConnectedModel = connectedModelInfo;
+                checkpointFile.ModelType = GetCivitModelType(file);
+            }
+
+            checkpointFile.PreviewImagePath = SupportedImageExtensions
+                .Select(ext => Path.Combine(Path.GetDirectoryName(file),
+                    $"{Path.GetFileNameWithoutExtension(file)}.preview{ext}")).Where(File.Exists)
+                .FirstOrDefault();
+
+            yield return checkpointFile;
+        }
+    }
 
     /// <summary>
     /// Index with progress reporting.
@@ -237,5 +272,40 @@ public partial class CheckpointFile : ViewModelBase
             progress.Report(new ProgressReport(current, "Indexing", checkpointFile.FileName));
             yield return checkpointFile;
         }
+    }
+
+    private static CivitModelType GetCivitModelType(string filePath)
+    {
+        if (filePath.Contains(SharedFolderType.StableDiffusion.ToString()))
+        {
+            return CivitModelType.Checkpoint;
+        }
+        
+        if (filePath.Contains(SharedFolderType.ControlNet.ToString()))
+        {
+            return CivitModelType.Controlnet;
+        }
+
+        if (filePath.Contains(SharedFolderType.Lora.ToString()))
+        {
+            return CivitModelType.LORA;
+        }
+
+        if (filePath.Contains(SharedFolderType.TextualInversion.ToString()))
+        {
+            return CivitModelType.TextualInversion;
+        }
+
+        if (filePath.Contains(SharedFolderType.Hypernetwork.ToString()))
+        {
+            return CivitModelType.Hypernetwork;
+        }
+
+        if (filePath.Contains(SharedFolderType.LyCORIS.ToString()))
+        {
+            return CivitModelType.LoCon;
+        }
+
+        return CivitModelType.Unknown;
     }
 }

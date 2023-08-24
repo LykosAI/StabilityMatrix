@@ -256,6 +256,9 @@ public sealed class App : Application
         services.AddTransient<ExceptionViewModel>();
         services.AddTransient<EnvVarsViewModel>();
         services.AddTransient<ImageViewerViewModel>();
+        services.AddTransient<PackageImportViewModel>();
+        
+        // Dialog view models (singleton)
         services.AddSingleton<FirstLaunchSetupViewModel>();
         services.AddSingleton<UpdateViewModel>();
         
@@ -264,7 +267,6 @@ public sealed class App : Application
         services.AddTransient<CheckpointFile>();
         services.AddTransient<InferenceTextToImageViewModel>();
         services.AddTransient<CheckpointBrowserCardViewModel>();
-        
         services.AddTransient<PackageCardViewModel>();
         
         // Global progress
@@ -312,7 +314,9 @@ public sealed class App : Application
                 .Register(provider.GetRequiredService<ModelCardViewModel>)
                 .Register(provider.GetRequiredService<BatchSizeCardViewModel>)
                 .Register(provider.GetRequiredService<ImageViewerViewModel>)
-                .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>));
+                .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>)
+                .Register(provider.GetRequiredService<PackageImportViewModel>)
+            );
     }
 
     internal static void ConfigureViews(IServiceCollection services)
@@ -349,6 +353,7 @@ public sealed class App : Application
         services.AddTransient<ExceptionDialog>();
         services.AddTransient<EnvVarsDialog>();
         services.AddTransient<ImageViewerDialog>();
+        services.AddTransient<PackageImportDialog>();
         
         // Controls
         services.AddTransient<RefreshBadge>();

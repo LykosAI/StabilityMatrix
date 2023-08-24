@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Avalonia.Controls;
 using Microsoft.Extensions.DependencyInjection;
+using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Services;
 
+[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class ServiceManager<T>
 {
     // Holds providers
@@ -150,6 +154,48 @@ public class ServiceManager<T>
     }
     
     /// <summary>
+    /// Get a view model instance from runtime type
+    /// </summary>
+    [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
+    public T Get(Type serviceType)
+    {
+        if (!serviceType.IsAssignableFrom(typeof(T)))
+        {
+            throw new ArgumentException(
+                $"Service type {serviceType} is not assignable from {typeof(T)}");
+        }
+        
+        if (instances.TryGetValue(serviceType, out var instance))
+        {
+            if (instance is null)
+            {
+                throw new ArgumentException(
+                    $"Service of type {serviceType} was registered as null");
+            }
+            return (T) instance;
+        }
+
+        if (providers.TryGetValue(serviceType, out var provider))
+        {
+            if (provider is null)
+            {
+                throw new ArgumentException(
+                    $"Service of type {serviceType} was registered as null");
+            }
+            var result = provider();
+            if (result is null)
+            {
+                throw new ArgumentException(
+                    $"Service provider for type {serviceType} returned null");
+            }
+            return (T) result;
+        }
+
+        throw new ArgumentException(
+            $"Service of type {serviceType} is not registered for {typeof(T)}");
+    }
+    
+    /// <summary>
     /// Get a view model instance with an initializer parameter
     /// </summary>
     public TService Get<TService>(Func<TService, TService> initializer) where TService : T
@@ -166,5 +212,51 @@ public class ServiceManager<T>
         var instance = Get<TService>();
         initializer(instance);
         return instance;
+    }
+    
+    /// <summary>
+    /// Get a view model instance, set as DataContext of its View, and return
+    /// a BetterContentDialog with that View as its Content
+    /// </summary>
+    public BetterContentDialog GetDialog<TService>() where TService : T
+    {
+        var instance = Get<TService>()!;
+        
+        if (Attribute.GetCustomAttribute(instance.GetType(), typeof(ViewAttribute)) is not ViewAttribute
+            viewAttr)
+        {
+            throw new InvalidOperationException($"View not found for {instance.GetType().FullName}");
+        }
+
+        if (Activator.CreateInstance(viewAttr.GetViewType()) is not Control view)
+        {
+            throw new NullReferenceException($"Unable to create instance for {instance.GetType().FullName}");
+        }
+        
+        return new BetterContentDialog { Content = view };
+    }
+    
+    /// <summary>
+    /// Get a view model instance with initializer, set as DataContext of its View, and return
+    /// a BetterContentDialog with that View as its Content
+    /// </summary>
+    public BetterContentDialog GetDialog<TService>(Action<TService> initializer) where TService : T
+    {
+        var instance = Get(initializer)!;
+        
+        if (Attribute.GetCustomAttribute(instance.GetType(), typeof(ViewAttribute)) is not ViewAttribute
+            viewAttr)
+        {
+            throw new InvalidOperationException($"View not found for {instance.GetType().FullName}");
+        }
+
+        if (Activator.CreateInstance(viewAttr.GetViewType()) is not Control view)
+        {
+            throw new NullReferenceException($"Unable to create instance for {instance.GetType().FullName}");
+        }
+        
+        view.DataContext = instance;
+        
+        return new BetterContentDialog { Content = view };
     }
 }

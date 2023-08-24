@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using AvaloniaEdit.Utils;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +14,7 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -31,8 +31,6 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
-using CheckpointFile = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFile;
-using CheckpointFolder = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFolder;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
@@ -306,10 +304,15 @@ public static class DesignData
         {
             var settings = Services.GetRequiredService<ISettingsManager>();
             var vm = Services.GetRequiredService<PackageManagerViewModel>();
-            vm.Packages = new ObservableCollection<PackageCardViewModel>(
-                settings.Settings.InstalledPackages.Select(p =>
-                    DialogFactory.Get<PackageCardViewModel>(viewModel => viewModel.Package = p)));
-            vm.Packages.First().IsUpdateAvailable = true;
+
+            vm.SetPackages(settings.Settings.InstalledPackages);
+            vm.SetUnknownPackages(new InstalledPackage[]
+            {
+                UnknownInstalledPackage.FromDirectoryName("sd-unknown"),
+            });
+            
+            vm.PackageCards[0].IsUpdateAvailable = true;
+            
             return vm;
         }
     }
@@ -423,6 +426,9 @@ public static class DesignData
     
     public static InferenceTextToImageViewModel InferenceTextToImageViewModel =>
         DialogFactory.Get<InferenceTextToImageViewModel>();
+
+    public static PackageImportViewModel PackageImportViewModel =>
+        DialogFactory.Get<PackageImportViewModel>();
 
     public static RefreshBadgeViewModel RefreshBadgeViewModel => new()
     {

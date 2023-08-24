@@ -126,11 +126,19 @@ public class ComfyUI : BaseGitPackage
             Logger.Info("Installing xformers...");
             await venvRunner.PipInstall("xformers", OnConsoleOutput).ConfigureAwait(false);
         }
+        else if (HardwareHelper.PreferRocm())
+        {
+            progress?.Report(new ProgressReport(-1, "Installing PyTorch for ROCm", isIndeterminate: true));
+            await venvRunner
+                .PipInstall(PyVenvRunner.TorchPipInstallArgsRocmStable, OnConsoleOutput)
+                .ConfigureAwait(false);
+        }
         else
         {
             progress?.Report(new ProgressReport(-1, "Installing PyTorch for CPU", isIndeterminate: true));
             Logger.Info("Starting torch install (CPU)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, OnConsoleOutput).ConfigureAwait(false);
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, OnConsoleOutput)
+                .ConfigureAwait(false);
         }
 
         // Install requirements file

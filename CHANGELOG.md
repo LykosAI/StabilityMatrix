@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Skip to First/Last Page" buttons to the Model Browser
 - Added VAE as a checkpoint category in the Model Browser
 - Pause/Resume/Cancel buttons on downloads popup. Paused downloads persists and may be resumed after restarting the app
+- Unknown Package installs in the Package directory will now show up with a button to import them
 ### Fixed
 - Fixed issue where model version wouldn't be selected in the "All Versions" section of the Model Browser
 - Improved Checkpoints page indexing performance

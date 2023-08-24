@@ -45,4 +45,25 @@
     <data name="Label_RelaunchRequired" xml:space="preserve">
         <value>Relaunch Required</value>
     </data>
+    <data name="Label_UnknownPackage" xml:space="preserve">
+        <value>Unknown Package</value>
+    </data>
+    <data name="Action_Import" xml:space="preserve">
+        <value>Import</value>
+    </data>
+    <data name="Label_PackageType" xml:space="preserve">
+        <value>Package Type</value>
+    </data>
+    <data name="Label_Version" xml:space="preserve">
+        <value>Version</value>
+    </data>
+    <data name="Label_VersionType" xml:space="preserve">
+        <value>Version Type</value>
+    </data>
+    <data name="Label_Releases" xml:space="preserve">
+        <value>Releases</value>
+    </data>
+    <data name="Label_Branches" xml:space="preserve">
+        <value>Branches</value>
+    </data>
 </root>

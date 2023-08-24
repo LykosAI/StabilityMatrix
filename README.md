@@ -13,13 +13,14 @@
 [sdnext]: https://github.com/vladmandic/automatic
 [voltaml]: https://github.com/VoltaML/voltaML-fast-stable-diffusion
 [invokeai]: https://github.com/invoke-ai/InvokeAI
+[fooocus]: https://github.com/lllyasviel/Fooocus
 
 [civitai]: https://civitai.com/
 
 Multi-Platform Package Manager for Stable Diffusion
 
 ### 🖱️ One click install and update for Stable Diffusion Web UI Packages
-- Supports [Automatic 1111][auto1111], [Comfy UI][comfy], [SD.Next (Vladmandic)][sdnext], [VoltaML][voltaml], [InvokeAI][invokeai]
+- Supports [Automatic 1111][auto1111], [Comfy UI][comfy], [SD.Next (Vladmandic)][sdnext], [VoltaML][voltaml], [InvokeAI][invokeai], [Fooocus][fooocus]
 - Embedded Git and Python dependencies, with no need for either to be globally installed
 - Fully Portable, move Stability Matrix's Data Directory to a new drive or computer at any time
 

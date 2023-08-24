@@ -2,11 +2,8 @@
                           xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                           xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                           xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                          xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
-                          xmlns:ui="using:FluentAvalonia.UI.Controls"
                           xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                           xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
                           xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
                           xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
                           VerticalContentAlignment="Stretch"
@@ -17,10 +14,8 @@
                           x:Class="StabilityMatrix.Avalonia.Views.Dialogs.ImageViewerDialog">
     <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
         <controls:AdvancedImageBox
-            Name="MainImageBox"
-            RenderOptions.BitmapInterpolationMode="None"
             SizeMode="Fit"
-            Image="{Binding Image}"/>
+            Image="{Binding ImageSource.BitmapAsync^}"/>
         
         <!-- The preview tracker -->
         <!--<Image 

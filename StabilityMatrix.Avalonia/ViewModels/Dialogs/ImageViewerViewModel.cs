@@ -1,6 +1,5 @@
-﻿using Avalonia.Media.Imaging;
-using CommunityToolkit.Mvvm.ComponentModel;
-using StabilityMatrix.Avalonia.ViewModels.Base;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 
@@ -10,8 +9,5 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 public partial class ImageViewerViewModel : ContentDialogViewModelBase
 {
     [ObservableProperty]
-    private Bitmap? image;
-
-    [ObservableProperty]
-    private string? source;
+    private ImageSource? imageSource;
 }

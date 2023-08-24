@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Specialized;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Avalonia.Collections;
 using Avalonia.Media;
@@ -112,7 +111,7 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
         Logger.Trace($"FlyoutPreview opening...");
 
         var viewerVm = vmFactory.Get<ImageViewerViewModel>();
-        viewerVm.Image = (Bitmap) image;
+        viewerVm.ImageSource = new ImageSource((Bitmap) image);
 
         var dialog = new BetterContentDialog
         {
@@ -122,5 +121,6 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
             }
         };
 
+        await dialog.ShowAsync();
     }
 }

@@ -11,11 +11,8 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
-using Avalonia.Controls.PanAndZoom;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
@@ -652,9 +649,9 @@ public partial class SettingsViewModel : PageViewModelBase
         {
             Width = 1000,
             Height = 1000,
-            DataContext = new ImageViewerViewModel()
+            DataContext = new ImageViewerViewModel
             {
-                Image = bitmap
+                ImageSource = new ImageSource(bitmap)
             }
         };
 

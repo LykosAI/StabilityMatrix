@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using AsyncImageLoader;
 using Avalonia.Media.Imaging;
-using FluentAvalonia.UI.Data;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Avalonia.Models;
@@ -32,6 +31,11 @@ public record ImageSource : IDisposable
     public ImageSource(Uri remoteUrl)
     {
         RemoteUrl = remoteUrl;
+    }
+
+    public ImageSource(Bitmap bitmap)
+    {
+        Bitmap = bitmap;
     }
 
     public Task<Bitmap?> BitmapAsync => GetBitmapAsync();

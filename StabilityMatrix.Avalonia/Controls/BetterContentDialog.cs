@@ -132,6 +132,15 @@ public class BetterContentDialog : ContentDialog
         get => GetValue(MaxDialogHeightProperty);
         set => SetValue(MaxDialogHeightProperty, value);
     }
+
+    public static readonly StyledProperty<Thickness> ContentMarginProperty = AvaloniaProperty.Register<BetterContentDialog, Thickness>(
+        "ContentMargin");
+
+    public Thickness ContentMargin
+    {
+        get => GetValue(ContentMarginProperty);
+        set => SetValue(ContentMarginProperty, value);
+    }
     
 
     public BetterContentDialog()
@@ -203,6 +212,18 @@ public class BetterContentDialog : ContentDialog
         base.OnDataContextChanged(e);
         
         TryBindButtons();
+    }
+
+    /// <inheritdoc />
+    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+    {
+        base.OnApplyTemplate(e);
+
+        var background = e.NameScope.Find<FABorder>("BackgroundElement");
+        if (background is not null)
+        {
+            background.Margin = ContentMargin;
+        }
     }
 
     private void OnLoaded(object? sender, RoutedEventArgs? e)

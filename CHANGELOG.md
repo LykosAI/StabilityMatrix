@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed issue where Checkpoints page may show incorrect checkpoints for the given filter after changing pages
 - Fixed issue where Open Web UI button would try to load 0.0.0.0 addresses
 - Fixed Dictionary error when launch arguments saved with duplicate arguments
+- Fixed Launch arguments search not working
 ### Changed
 - Changed update method for SD.Next to use the built-in upgrade functionality
 - Model Browser navigation buttons are no longer disabled while changing pages

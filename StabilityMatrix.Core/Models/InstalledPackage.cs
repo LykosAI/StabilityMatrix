@@ -39,7 +39,7 @@ public class InstalledPackage
     public DateTimeOffset? LastUpdateCheck { get; set; }
 
     public bool UpdateAvailable { get; set; }
-
+    
     /// <summary>
     /// Get the path as a relative sub-path of the relative path.
     /// If not a sub-path, return null.
@@ -158,6 +158,9 @@ public class InstalledPackage
         LibraryPath = System.IO.Path.Combine("Packages", packageFolderName);
     }
 
+    public static IEqualityComparer<InstalledPackage> Comparer { get; } =
+        new PropertyComparer<InstalledPackage>(p => p.Id);
+    
     protected bool Equals(InstalledPackage other)
     {
         return Id.Equals(other.Id);

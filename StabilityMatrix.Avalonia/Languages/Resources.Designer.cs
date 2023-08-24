@@ -69,6 +69,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Import.
+        /// </summary>
+        public static string Action_Import {
+            get {
+                return ResourceManager.GetString("Action_Import", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Launch.
         /// </summary>
         public static string Action_Launch {
@@ -114,6 +123,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Branches.
+        /// </summary>
+        public static string Label_Branches {
+            get {
+                return ResourceManager.GetString("Label_Branches", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Language.
         /// </summary>
         public static string Label_Language {
@@ -123,11 +141,56 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Package Type.
+        /// </summary>
+        public static string Label_PackageType {
+            get {
+                return ResourceManager.GetString("Label_PackageType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Relaunch Required.
         /// </summary>
         public static string Label_RelaunchRequired {
             get {
                 return ResourceManager.GetString("Label_RelaunchRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Releases.
+        /// </summary>
+        public static string Label_Releases {
+            get {
+                return ResourceManager.GetString("Label_Releases", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown Package.
+        /// </summary>
+        public static string Label_UnknownPackage {
+            get {
+                return ResourceManager.GetString("Label_UnknownPackage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Version.
+        /// </summary>
+        public static string Label_Version {
+            get {
+                return ResourceManager.GetString("Label_Version", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Version Type.
+        /// </summary>
+        public static string Label_VersionType {
+            get {
+                return ResourceManager.GetString("Label_VersionType", resourceCulture);
             }
         }
         

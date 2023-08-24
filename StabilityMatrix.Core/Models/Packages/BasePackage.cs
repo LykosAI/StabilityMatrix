@@ -73,8 +73,8 @@ public abstract class BasePackage
     public abstract Task<IEnumerable<Branch>> GetAllBranches();
     public abstract Task<IEnumerable<Release>> GetAllReleases();
 
-    public abstract string DownloadLocation { get; }
-    public abstract string InstallLocation { get; set; }
+    public virtual string? DownloadLocation { get; }
+    public virtual string? InstallLocation { get; set; }
 
     public event EventHandler<ProcessOutput>? ConsoleOutput;
     public event EventHandler<int>? Exited;

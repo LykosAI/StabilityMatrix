@@ -22,14 +22,17 @@ Multi-Platform Package Manager for Stable Diffusion
 - Supports [Automatic 1111][auto1111], [Comfy UI][comfy], [SD.Next (Vladmandic)][sdnext], [VoltaML][voltaml], [InvokeAI][invokeai]
 - Embedded Git and Python dependencies, with no need for either to be globally installed
 - Fully Portable, move Stability Matrix's Data Directory to a new drive or computer at any time
+
 ### 🚀 Launcher with syntax highlighted terminal emulator, routed GUI input prompts
 - Launch arguments editor with predefined or custom options for each Package install
-- Package environment variables
+- Configurable Environment variables
+
 ### 🗃️ Checkpoint Manager, configured to be shared by all Package installs
 - Option to find CivitAI metadata and preview thumbnails for new local imports
+
 ### ☁️ Model Browser to import from [CivitAI][civitai]
 - Automatically imports to the associated model folder depending on the model type
-- Also downloads relavent metadata files and preview image
+- Also downloads relevant metadata files and preview image
 
 ![header](https://github.com/LykosAI/StabilityMatrix/assets/13956642/a9c5f925-8561-49ba-855b-1b7bf57d7c0d)
 
@@ -48,17 +51,17 @@ Multi-Platform Package Manager for Stable Diffusion
 
 ### Model browser powered by [Civit AI][civitai]
 - Downloads new models, automatically uses the appropriate shared model directory
-- Available immediately to all installed packages
+- Pause and resume downloads, even after closing the app
 
 <p align="center">
   <img style="width: 80%; height: 80%" src="https://github.com/LykosAI/StabilityMatrix/assets/13956642/30b9f610-6033-4307-8d92-7d72b93cd73e" alt=""/>
 </p>
 
 ### Shared model directory for all your packages
-
 - Import local models by simple drag and drop
+- Option to find CivitAI metadata and preview thumbnails for new local imports
 - Toggle visibility of categories like LoRA, VAE, CLIP, etc.
-- For models imported from Civit AI, shows additional information like version, fp precision, and preview thumbnail on hover
+
 <p align="center">
   <img style="width: 80%; height: 80%" src="https://github.com/LykosAI/StabilityMatrix/assets/13956642/d42d1c53-67a4-45a0-b009-21400d44e17e" alt=""/>
 </p>

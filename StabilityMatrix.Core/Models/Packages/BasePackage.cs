@@ -18,6 +18,7 @@ public abstract class BasePackage
     public abstract string LicenseType { get; }
     public abstract string LicenseUrl { get; }
     public virtual string Disclaimer => string.Empty;
+    public virtual bool OfferInOneClickInstaller => true;
     
     /// <summary>
     /// Primary command to launch the package. 'Launch' buttons uses this.

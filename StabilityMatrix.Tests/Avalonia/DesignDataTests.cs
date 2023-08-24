@@ -9,6 +9,7 @@ public class DesignDataTests
     [ClassInitialize]
     public static void ClassInitialize(TestContext context)
     {
+        SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
         StabilityMatrix.Avalonia.DesignData.DesignData.Initialize();
     }
     

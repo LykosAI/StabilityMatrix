@@ -82,78 +82,6 @@ public class ServiceManager<T>
     }
     
     /// <summary>
-    /// Get a service instance
-    /// </summary>
-    [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
-    public T Get(Type type)
-    {
-        if (instances.TryGetValue(type, out var instance))
-        {
-            if (instance is null)
-            {
-                throw new ArgumentException(
-                    $"Service of type {type} was registered as null");
-            }
-            return instance;
-        }
-
-        if (providers.TryGetValue(type, out var provider))
-        {
-            if (provider is null)
-            {
-                throw new ArgumentException(
-                    $"Service of type {type} was registered as null");
-            }
-            var result = provider();
-            if (result is null)
-            {
-                throw new ArgumentException(
-                    $"Service provider for type {type} returned null");
-            }
-            return result;
-        }
-
-        throw new ArgumentException(
-            $"Service of type {type} is not registered in ServiceManager for {typeof(T)}");
-    }
-    
-    /// <summary>
-    /// Get a view model instance
-    /// </summary>
-    [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
-    public TService Get<TService>() where TService : T
-    {
-        if (instances.TryGetValue(typeof(TService), out var instance))
-        {
-            if (instance is null)
-            {
-                throw new ArgumentException(
-                    $"Service of type {typeof(TService)} was registered as null");
-            }
-            return (TService) instance;
-        }
-
-        if (providers.TryGetValue(typeof(TService), out var provider))
-        {
-            if (provider is null)
-            {
-                throw new ArgumentException(
-                    $"Service of type {typeof(TService)} was registered as null");
-            }
-            var result = provider();
-            if (result is null)
-            {
-                throw new ArgumentException(
-                    $"Service provider for type {typeof(TService)} returned null");
-            }
-            return (TService) result;
-        }
-
-        throw new ArgumentException(
-            $"Service of type {typeof(TService)} is not registered for {typeof(T)}");
-    }
-    
-    /// <summary>
     /// Get a view model instance from runtime type
     /// </summary>
     [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
@@ -193,6 +121,42 @@ public class ServiceManager<T>
 
         throw new ArgumentException(
             $"Service of type {serviceType} is not registered for {typeof(T)}");
+    }
+    
+    /// <summary>
+    /// Get a view model instance
+    /// </summary>
+    [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
+    public TService Get<TService>() where TService : T
+    {
+        if (instances.TryGetValue(typeof(TService), out var instance))
+        {
+            if (instance is null)
+            {
+                throw new ArgumentException(
+                    $"Service of type {typeof(TService)} was registered as null");
+            }
+            return (TService) instance;
+        }
+
+        if (providers.TryGetValue(typeof(TService), out var provider))
+        {
+            if (provider is null)
+            {
+                throw new ArgumentException(
+                    $"Service of type {typeof(TService)} was registered as null");
+            }
+            var result = provider();
+            if (result is null)
+            {
+                throw new ArgumentException(
+                    $"Service provider for type {typeof(TService)} returned null");
+            }
+            return (TService) result;
+        }
+
+        throw new ArgumentException(
+            $"Service of type {typeof(TService)} is not registered for {typeof(T)}");
     }
     
     /// <summary>

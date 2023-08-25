@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Models;
@@ -12,8 +11,8 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
-using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Helper;
@@ -25,8 +24,6 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
-using CheckpointFile = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFile;
-using CheckpointFolder = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFolder;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
@@ -91,7 +88,8 @@ public static class DesignData
             .AddSingleton<ISharedFolders, MockSharedFolders>()
             .AddSingleton<IDownloadService, MockDownloadService>()
             .AddSingleton<IHttpClientFactory, MockHttpClientFactory>()
-            .AddSingleton<IDiscordRichPresenceService, MockDiscordRichPresenceService>();
+            .AddSingleton<IDiscordRichPresenceService, MockDiscordRichPresenceService>()
+            .AddSingleton<ITrackedDownloadService, MockTrackedDownloadService>();
 
         // Placeholder services that nobody should need during design time
         services
@@ -192,6 +190,11 @@ public static class DesignData
                     {
                         Title = "StableDiffusion",
                         DirectoryPath = "Packages/Lora/Subfolder",
+                    },
+                    new(settingsManager, downloadService, modelFinder)
+                    {
+                        Title = "Lora",
+                        DirectoryPath = "Packages/StableDiffusion/Subfolder",
                     }
                 },
                 CheckpointFiles = new AdvancedObservableList<CheckpointFile>
@@ -223,13 +226,41 @@ public static class DesignData
                 })
             };
 
-        ProgressManagerViewModel.ProgressItems = new ObservableCollection<ProgressItemViewModel>
+        NewCheckpointsPageViewModel.AllCheckpoints = new ObservableCollection<CheckpointFile>
         {
-            new(new ProgressItem(Guid.NewGuid(), "Test File.exe",
-                new ProgressReport(0.5f, "Downloading..."))),
-            new(new ProgressItem(Guid.NewGuid(), "Test File 2.uwu",
-                new ProgressReport(0.25f, "Extracting...")))
+            new()
+            {
+                FilePath = "~/Models/StableDiffusion/electricity-light.safetensors",
+                Title = "Auroral Background",
+                PreviewImagePath = "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/" +
+                                   "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
+                ConnectedModel = new ConnectedModelInfo
+                {
+                    VersionName = "Lightning Auroral",
+                    BaseModel = "SD 1.5",
+                    ModelName = "Auroral Background",
+                    ModelType = CivitModelType.Model,
+                    FileMetadata = new CivitFileMetadata
+                    {
+                        Format = CivitModelFormat.SafeTensor,
+                        Fp = CivitModelFpType.fp16,
+                        Size = CivitModelSize.pruned,
+                    }
+                }
+            },
+            new()
+            {
+                FilePath = "~/Models/Lora/model.safetensors",
+                Title = "Some model"
+            }
         };
+
+        ProgressManagerViewModel.ProgressItems.AddRange(new ProgressItemViewModelBase[]
+        {
+            new ProgressItemViewModel(new ProgressItem(Guid.NewGuid(), "Test File.exe",
+                new ProgressReport(0.5f, "Downloading..."))),
+            new MockDownloadProgressItemViewModel("Test File 2.exe"),
+        });
 
         UpdateViewModel = Services.GetRequiredService<UpdateViewModel>();
         UpdateViewModel.UpdateText =
@@ -262,16 +293,24 @@ public static class DesignData
         {
             var settings = Services.GetRequiredService<ISettingsManager>();
             var vm = Services.GetRequiredService<PackageManagerViewModel>();
-            vm.Packages = new ObservableCollection<PackageCardViewModel>(
-                settings.Settings.InstalledPackages.Select(p =>
-                    DialogFactory.Get<PackageCardViewModel>(viewModel => viewModel.Package = p)));
-            vm.Packages.First().IsUpdateAvailable = true;
+
+            vm.SetPackages(settings.Settings.InstalledPackages);
+            vm.SetUnknownPackages(new InstalledPackage[]
+            {
+                UnknownInstalledPackage.FromDirectoryName("sd-unknown"),
+            });
+            
+            vm.PackageCards[0].IsUpdateAvailable = true;
+            
             return vm;
         }
     }
 
     public static CheckpointsPageViewModel CheckpointsPageViewModel =>
         Services.GetRequiredService<CheckpointsPageViewModel>();
+
+    public static NewCheckpointsPageViewModel NewCheckpointsPageViewModel =>
+        Services.GetRequiredService<NewCheckpointsPageViewModel>();
 
     public static SettingsViewModel SettingsViewModel =>
         Services.GetRequiredService<SettingsViewModel>();
@@ -367,6 +406,9 @@ public static class DesignData
                 new("UWU", "TRUE"),
             };
         });
+
+    public static PackageImportViewModel PackageImportViewModel =>
+        DialogFactory.Get<PackageImportViewModel>();
 
     public static RefreshBadgeViewModel RefreshBadgeViewModel => new()
     {

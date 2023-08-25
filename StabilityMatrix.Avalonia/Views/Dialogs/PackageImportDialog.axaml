@@ -1,0 +1,51 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:ui="using:FluentAvalonia.UI.Controls"
+                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+                          d:DataContext="{x:Static mocks:DesignData.PackageImportViewModel}"
+                          x:DataType="vmDialogs:PackageImportViewModel"
+                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.PackageImportDialog">
+    <StackPanel Margin="8" Spacing="8">
+        <ui:SettingsExpander Header="{x:Static lang:Resources.Label_PackageType}">
+            <ui:SettingsExpander.Footer>
+                <ui:FAComboBox 
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding AvailablePackages}"
+                    DisplayMemberBinding="{Binding DisplayName}"
+                    SelectedItem="{Binding SelectedBasePackage}"/>
+            </ui:SettingsExpander.Footer>
+        </ui:SettingsExpander>
+        
+        <ui:SettingsExpander Header="{x:Static lang:Resources.Label_VersionType}">
+            <ui:SettingsExpander.Footer>
+                <ToggleSwitch
+                    IsEnabled="{Binding IsReleaseModeAvailable}"
+                    OnContent="{x:Static lang:Resources.Label_Releases}"
+                    OffContent="{x:Static lang:Resources.Label_Branches}"
+                    IsChecked="{Binding IsReleaseMode}"/>
+            </ui:SettingsExpander.Footer>
+        </ui:SettingsExpander>
+        
+        <ui:SettingsExpander Header="{x:Static lang:Resources.Label_Version}">
+            <ui:SettingsExpander.Footer>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <ui:FAComboBox 
+                        ItemsSource="{Binding AvailableVersions}"
+                        DisplayMemberBinding="{Binding TagName}"
+                        SelectedItem="{Binding SelectedVersion}"/>
+                    <ui:FAComboBox 
+                        IsVisible="{Binding !IsReleaseMode}"
+                        ItemsSource="{Binding AvailableCommits}"
+                        DisplayMemberBinding="{Binding Sha}"
+                        SelectedItem="{Binding SelectedCommit}"/>
+                </StackPanel>
+            </ui:SettingsExpander.Footer>
+        </ui:SettingsExpander>
+    </StackPanel>
+</controls:UserControlBase>

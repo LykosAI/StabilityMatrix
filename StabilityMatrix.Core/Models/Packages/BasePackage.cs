@@ -18,6 +18,7 @@ public abstract class BasePackage
     public abstract string LicenseType { get; }
     public abstract string LicenseUrl { get; }
     public virtual string Disclaimer => string.Empty;
+    public virtual bool OfferInOneClickInstaller => true;
     
     /// <summary>
     /// Primary command to launch the package. 'Launch' buttons uses this.
@@ -33,7 +34,7 @@ public abstract class BasePackage
     public virtual bool ShouldIgnoreReleases => false;
     public virtual bool UpdateAvailable { get; set; }
 
-    public abstract Task<string> DownloadPackage(string version, bool isCommitHash,
+    public abstract Task<string> DownloadPackage(string version, bool isCommitHash, string? branch,
         IProgress<ProgressReport>? progress = null);
     public abstract Task InstallPackage(IProgress<ProgressReport>? progress = null);
     public abstract Task RunPackage(string installedPackagePath, string command, string arguments);
@@ -72,8 +73,8 @@ public abstract class BasePackage
     public abstract Task<IEnumerable<Branch>> GetAllBranches();
     public abstract Task<IEnumerable<Release>> GetAllReleases();
 
-    public abstract string DownloadLocation { get; }
-    public abstract string InstallLocation { get; set; }
+    public virtual string? DownloadLocation { get; }
+    public virtual string? InstallLocation { get; set; }
 
     public event EventHandler<ProcessOutput>? ConsoleOutput;
     public event EventHandler<int>? Exited;

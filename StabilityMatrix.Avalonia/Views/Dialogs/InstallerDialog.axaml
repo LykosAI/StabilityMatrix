@@ -135,7 +135,8 @@
                            TextWrapping="Wrap"
                            IsVisible="{Binding SelectedPackage.Disclaimer, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 
-                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0"
+                            IsVisible="{Binding IsReleaseModeAvailable}">
                     <ToggleButton
                         Content="Releases"
                         IsChecked="{Binding IsReleaseMode}"

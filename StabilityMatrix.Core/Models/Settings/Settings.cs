@@ -7,7 +7,8 @@ public class Settings
     public int? Version { get; set; } = 1;
     public bool FirstLaunchSetupComplete { get; set; }
     public string? Theme { get; set; } = "Dark";
-
+    public string? Language { get; set; } = "en-US";
+    
     public List<InstalledPackage> InstalledPackages { get; set; } = new();
     
     [JsonPropertyName("ActiveInstalledPackage")]

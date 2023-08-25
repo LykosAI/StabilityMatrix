@@ -11,5 +11,7 @@ public enum CivitSortMode
     [EnumMember(Value = "Most Downloaded")]
     MostDownloaded,
     [EnumMember(Value = "Newest")]
-    Newest
+    Newest,
+    [EnumMember(Value = "Installed")]
+    Installed,
 }

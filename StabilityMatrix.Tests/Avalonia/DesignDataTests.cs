@@ -9,12 +9,13 @@ public class DesignDataTests
     [ClassInitialize]
     public static void ClassInitialize(TestContext context)
     {
-        StabilityMatrix.Avalonia.DesignData.DesignData.Initialize();
+        SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
+        DesignData.Initialize();
     }
     
     // Return all properties
     public static IEnumerable<object[]> DesignDataProperties => 
-        typeof(StabilityMatrix.Avalonia.DesignData.DesignData).GetProperties()
+        typeof(DesignData).GetProperties()
             .Select(p => new object[] { p });
     
     [TestMethod]

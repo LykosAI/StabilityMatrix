@@ -105,13 +105,13 @@ public abstract class BaseGitPackage : BasePackage
     /// <summary>
     /// Setup the virtual environment for the package.
     /// </summary>
-    /// <param name="installedPackagePath"></param>
-    /// <param name="venvName"></param>
-    /// <returns></returns>
     [MemberNotNull(nameof(VenvRunner))]
-    protected async Task<PyVenvRunner> SetupVenv(string installedPackagePath, string venvName = "venv")
+    public async Task<PyVenvRunner> SetupVenv(
+        string installedPackagePath, 
+        string venvName = "venv",
+        bool forceRecreate = false)
     {
-        var venvPath = Path.Combine(installedPackagePath, "venv");
+        var venvPath = Path.Combine(installedPackagePath, venvName);
         if (VenvRunner != null)
         {
             await VenvRunner.DisposeAsync().ConfigureAwait(false);
@@ -123,9 +123,9 @@ public abstract class BaseGitPackage : BasePackage
             EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables,
         };
         
-        if (!VenvRunner.Exists())
+        if (!VenvRunner.Exists() || forceRecreate)
         {
-            await VenvRunner.Setup().ConfigureAwait(false);
+            await VenvRunner.Setup(forceRecreate).ConfigureAwait(false);
         }
         return VenvRunner;
     }

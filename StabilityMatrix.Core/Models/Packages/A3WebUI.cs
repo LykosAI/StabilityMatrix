@@ -111,6 +111,14 @@ public class A3WebUI : BaseGitPackage
             InitialValue = true,
             Options = new() {"--skip-python-version-check"}
         },
+        new()
+        {
+            Name = "No Half",
+            Type = LaunchOptionType.Bool,
+            Description = "Do not switch the model to 16-bit floats",
+            InitialValue = HardwareHelper.HasAmdGpu(),
+            Options = new() {"--no-half"}
+        },
         LaunchOptionDefinition.Extras
     };
     
@@ -145,6 +153,16 @@ public class A3WebUI : BaseGitPackage
             
             Logger.Info("Installing xformers...");
             await venvRunner.PipInstall("xformers", OnConsoleOutput).ConfigureAwait(false);
+        }
+        else if (HardwareHelper.PreferRocm())
+        {
+            progress?.Report(new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true));
+
+            await venvRunner.PipInstall("--upgrade pip wheel", OnConsoleOutput)
+                .ConfigureAwait(false);
+            
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsRocm511, OnConsoleOutput)
+                .ConfigureAwait(false);
         }
         else
         {

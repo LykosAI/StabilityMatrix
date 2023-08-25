@@ -3,32 +3,84 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-             xmlns:api="clr-namespace:StabilityMatrix.Core.Models.Api;assembly=StabilityMatrix.Core"
              xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
              xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="850"
              x:DataType="dialogs:SelectModelVersionViewModel"
-             xmlns:icons="https://github.com/projektanker/icons.avalonia"
              xmlns:fluentAvalonia="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+             xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
+             xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
              d:DataContext="{x:Static designData:DesignData.SelectModelVersionViewModel}"
              x:Class="StabilityMatrix.Avalonia.Views.Dialogs.SelectModelVersionDialog">
+    
     <Grid
         Margin="8"
         MinHeight="450"
         MinWidth="700"
-        RowDefinitions="*,Auto"
+        RowDefinitions="Auto, *, Auto"
         ColumnDefinitions="*,Auto,*">
 
-        <controls:BetterImage Grid.Column="0" Grid.Row="0" Margin="8"
-                              VerticalAlignment="Top"
-                              MaxHeight="400"
-                              HorizontalAlignment="Left"
-                              Source="{Binding PreviewImage}" />
-
+        <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="Auto, Auto, Auto">
+           <Carousel Grid.Row="0"
+                      ItemsSource="{Binding ImageUrls}"
+                      SelectedIndex="{Binding SelectedImageIndex}">
+                <Carousel.PageTransition>
+                    <CompositePageTransition>
+                        <PageSlide Orientation="Horizontal" Duration="0.167">
+                            <PageSlide.SlideInEasing>
+                                <SineEaseIn />
+                            </PageSlide.SlideInEasing>
+                            <PageSlide.SlideOutEasing>
+                                <SineEaseOut />
+                            </PageSlide.SlideOutEasing>
+                        </PageSlide>
+                        <CrossFade Duration="0.167" />
+                    </CompositePageTransition>
+                </Carousel.PageTransition>
+                <Carousel.ItemTemplate>
+                    <DataTemplate DataType="{x:Type models:ImageSource}">
+                        <controls:BetterImage Margin="8"
+                                              VerticalAlignment="Top"
+                                              HorizontalAlignment="Center"
+                                              Height="300"
+                                              Stretch="UniformToFill"
+                                              Source="{Binding BitmapAsync^}" />                        
+                    </DataTemplate>
+                </Carousel.ItemTemplate>
+            </Carousel>
+            
+            <StackPanel Grid.Row="1" Orientation="Horizontal"
+                        Margin="0,0,0,8"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Center">
+                <TextBlock Text="{Binding DisplayedPageNumber}"/>
+                <TextBlock Text="/"/>
+                <TextBlock Text="{Binding ImageUrls.Count}"/>
+            </StackPanel>
+            
+            <StackPanel Grid.Row="2" Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Bottom">
+                <Button Command="{Binding PreviousImage}"
+                        Margin="0,0,8,0"
+                        IsEnabled="{Binding CanGoToPreviousImage}"
+                        ToolTip.Tip="Previous Image"
+                        ToolTip.Placement="Top">
+                    <avalonia:Icon Value="fa-solid fa-caret-left"/>
+                </Button>
+                <Button Command="{Binding NextImage}" 
+                        IsEnabled="{Binding CanGoToNextImage}"
+                        ToolTip.Tip="Next Image"
+                        ToolTip.Placement="Top">
+                    <avalonia:Icon Value="fa-solid fa-caret-right"/>
+                </Button>
+            </StackPanel>
+        </Grid>
 
         <ListBox Grid.Row="0" Grid.Column="1"
                   Margin="8"
-                  MaxHeight="450"
+                  MaxHeight="360"
+                  VerticalAlignment="Top"
                   ItemsSource="{Binding Versions}"
                   SelectedItem="{Binding SelectedVersionViewModel}">
             <ListBox.ItemTemplate>
@@ -66,6 +118,8 @@
         </ListBox>
 
         <ListBox Grid.Row="0" Grid.Column="2"
+                 MaxHeight="360"
+                 VerticalAlignment="Top"
                  ItemsSource="{Binding SelectedVersionViewModel.CivitFileViewModels}"
                  SelectedItem="{Binding SelectedFile}">
             <ListBox.Template>
@@ -78,7 +132,7 @@
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type dialogs:CivitFileViewModel}">
                     <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="Auto, *"
-                          Margin="-4,0,0,0">
+                          Margin="0,4,0,4">
                         <fluentAvalonia:SymbolIcon Grid.Row="0" Grid.RowSpan="2"
                                                    Grid.Column="0"
                                                    Margin="0, 0, 8, 0"
@@ -106,9 +160,23 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
+        
+        <Expander Grid.Column="0"
+                  Grid.ColumnSpan="3"
+                  Grid.Row="1"
+                  Header="Model Description"
+                  ExpandDirection="Down"
+                  Margin="8, 16">
+            <ScrollViewer MaxHeight="200">
+                <TextBlock Text="{Binding Description}"
+                           TextWrapping="Wrap"
+                           Margin="4"/>
+            </ScrollViewer>
+        </Expander>
 
-        <StackPanel Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="1"
+        <StackPanel Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="2"
                     Orientation="Horizontal"
+                    Margin="0,8,0,0"
                     HorizontalAlignment="Center">
             <Button
                 Content="Cancel"

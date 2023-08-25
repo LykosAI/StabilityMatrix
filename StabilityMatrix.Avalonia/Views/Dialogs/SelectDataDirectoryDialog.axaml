@@ -55,6 +55,14 @@
                 Foreground="LightGray"
                 FontSize="12"
                 Margin="0,8,0,0" />
+            
+            <TextBlock
+                Text="You may encounter errors when using a FAT32 or exFAT drive. Select a different drive for a smoother experience."
+                TextWrapping="Wrap"
+                Foreground="Yellow"
+                IsVisible="{Binding ShowFatWarning}"
+                FontSize="14"
+                Margin="0,8,0,0" />
 
             <CheckBox
                 Content="Portable Mode"

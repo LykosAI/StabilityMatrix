@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -75,7 +74,7 @@ public partial class CheckpointFolder : ViewModelBase
             ? $"{Title} ({CheckpointFiles.Count + SubFolders.Sum(folder => folder.CheckpointFiles.Count)})"
             : Title;
     
-    public Base.ProgressViewModel Progress { get; } = new();
+    public ProgressViewModel Progress { get; } = new();
 
     public CheckpointFolder? ParentFolder { get; init; }
     public AdvancedObservableList<CheckpointFolder> SubFolders { get; init; } = new();

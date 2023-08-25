@@ -8,6 +8,7 @@
              xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
              xmlns:checkpointManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointManager"
+             xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
              d:DataContext="{x:Static mocks:DesignData.CheckpointsPageViewModel}"
              x:CompileBindings="True"
              x:DataType="vm:CheckpointsPageViewModel"
@@ -255,7 +256,6 @@
                           Background="Transparent"
                           DragDrop.AllowDrop="True">
                         <ItemsRepeater
-                            Classes="ItemsDragAndDrop"
                             ItemTemplate="{StaticResource CheckpointFileDataTemplate}"
                             ItemsSource="{Binding DisplayedCheckpointFiles}">
                             <ItemsRepeater.Layout>
@@ -266,8 +266,8 @@
                         <TextBlock VerticalAlignment="Center"
                                    TextAlignment="Center"
                                    HorizontalAlignment="Center"
-                                   Margin="8"
-                                   Text="Drag &amp; drop checkpoints here to import"
+                                   Margin="8,8,8,16"
+                                   Text="{x:Static lang:Resources.Label_DragAndDropCheckpointsHereToImport}"
                                    IsVisible="{Binding !CheckpointFiles.Count}"/>
                         <!-- Blurred background for drag and drop -->
                         <Border
@@ -284,7 +284,7 @@
                             Effect="{StaticResource TextDropShadowEffect}"
                             FontSize="24"
                             HorizontalAlignment="Center"
-                            Text="Drop a file here to import"
+                            Text="Drop file here to import"
                             VerticalAlignment="Center"
                             IsVisible="{Binding IsCurrentDragTarget}" />
                         <StackPanel

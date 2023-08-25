@@ -6,12 +6,8 @@ using StabilityMatrix.Core.Models.Progress;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
-public partial class ProgressItemViewModel : ProgressItemViewModelBase
+public class ProgressItemViewModel : ProgressItemViewModelBase
 {
-    [ObservableProperty] private Guid id;
-    [ObservableProperty] private string name;
-    [ObservableProperty] private bool failed;
-
     public ProgressItemViewModel(ProgressItem progressItem)
     {
         Id = progressItem.ProgressId;

@@ -20,20 +20,20 @@
 Multi-Platform Package Manager for Stable Diffusion
 
 ### 🖱️ One click install and update for Stable Diffusion Web UI Packages
-- Supports [Automatic 1111][auto1111], [Comfy UI][comfy], [SD.Next (Vladmandic)][sdnext], [VoltaML][voltaml], [InvokeAI][invokeai], [Fooocus][fooocus]
+- Supports [Automatic 1111][auto1111], [Comfy UI][comfy], [SD.Next (Vladmandic)][sdnext], [VoltaML][voltaml], [InvokeAI][invokeai], and [Fooocus][fooocus]
 - Embedded Git and Python dependencies, with no need for either to be globally installed
-- Fully Portable, move Stability Matrix's Data Directory to a new drive or computer at any time
+- Fully portable - move Stability Matrix's Data Directory to a new drive or computer at any time
 
 ### 🚀 Launcher with syntax highlighted terminal emulator, routed GUI input prompts
 - Launch arguments editor with predefined or custom options for each Package install
-- Configurable Environment variables
+- Configurable Environment Variables
 
 ### 🗃️ Checkpoint Manager, configured to be shared by all Package installs
 - Option to find CivitAI metadata and preview thumbnails for new local imports
 
 ### ☁️ Model Browser to import from [CivitAI][civitai]
 - Automatically imports to the associated model folder depending on the model type
-- Also downloads relevant metadata files and preview image
+- Downloads relevant metadata files and preview image
 
 ![header](https://github.com/LykosAI/StabilityMatrix/assets/13956642/a9c5f925-8561-49ba-855b-1b7bf57d7c0d)
 

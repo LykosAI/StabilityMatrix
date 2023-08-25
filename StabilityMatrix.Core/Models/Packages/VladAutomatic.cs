@@ -191,7 +191,7 @@ public class VladAutomatic : BaseGitPackage
     public override async Task<string> DownloadPackage(string version, bool isCommitHash,
         string? branch, IProgress<ProgressReport>? progress = null)
     {
-        progress?.Report(new ProgressReport(0.1f, message: "Downloading package...",
+        progress?.Report(new ProgressReport(-1f, message: "Downloading package...",
             isIndeterminate: true, type: ProgressType.Download));
 
         var installDir = new DirectoryPath(InstallLocation);
@@ -245,7 +245,7 @@ public class VladAutomatic : BaseGitPackage
             throw new Exception("Installed branch is null");
         }
         
-        progress?.Report(new ProgressReport(0.1f, message: "Downloading package update...",
+        progress?.Report(new ProgressReport(-1f, message: "Downloading package update...",
             isIndeterminate: true, type: ProgressType.Update));
 
         await PrerequisiteHelper.RunGit(installedPackage.FullPath, "checkout",

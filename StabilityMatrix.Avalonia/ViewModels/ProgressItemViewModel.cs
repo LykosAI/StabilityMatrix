@@ -15,6 +15,7 @@ public class ProgressItemViewModel : ProgressItemViewModelBase
         Progress.Value = progressItem.Progress.Percentage;
         Failed = progressItem.Failed;
         Progress.Text = GetProgressText(progressItem.Progress);
+        Progress.IsIndeterminate = progressItem.Progress.IsIndeterminate;
         
         EventManager.Instance.ProgressChanged += OnProgressChanged;
     }

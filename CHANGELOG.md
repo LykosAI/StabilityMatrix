@@ -5,6 +5,11 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.3.1
+### Fixed
+- Fixed Auto update not appearing in some regions due to date formatting issues
+- Local package import now migrates venvs and existing models
+
 ## v2.3.0
 ### Added
 - New installable Package - [Fooocus](https://github.com/lllyasviel/Fooocus)
@@ -19,6 +24,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed issue where Checkpoints page may not show all checkpoints after clearing search filter
 - Fixed issue where Checkpoints page may show incorrect checkpoints for the given filter after changing pages
 - Fixed issue where Open Web UI button would try to load 0.0.0.0 addresses
+- Fixed Dictionary error when launch arguments saved with duplicate arguments
+- Fixed Launch arguments search not working
 ### Changed
 - Changed update method for SD.Next to use the built-in upgrade functionality
 - Model Browser navigation buttons are no longer disabled while changing pages

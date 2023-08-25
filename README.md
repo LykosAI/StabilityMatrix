@@ -22,7 +22,7 @@ Multi-Platform Package Manager for Stable Diffusion
 ### 🖱️ One click install and update for Stable Diffusion Web UI Packages
 - Supports [Automatic 1111][auto1111], [Comfy UI][comfy], [SD.Next (Vladmandic)][sdnext], [VoltaML][voltaml], [InvokeAI][invokeai], and [Fooocus][fooocus]
 - Embedded Git and Python dependencies, with no need for either to be globally installed
-- Fully portable; move Stability Matrix's Data Directory to a new drive or computer at any time
+- Fully portable - move Stability Matrix's Data Directory to a new drive or computer at any time
 
 ### 🚀 Launcher with syntax highlighted terminal emulator, routed GUI input prompts
 - Launch arguments editor with predefined or custom options for each Package install

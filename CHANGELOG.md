@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.3.1
 ### Fixed
 - Fixed Auto update not appearing in some regions due to date formatting issues
+- Local package import now migrates venvs and existing models
 
 ## v2.3.0
 ### Added

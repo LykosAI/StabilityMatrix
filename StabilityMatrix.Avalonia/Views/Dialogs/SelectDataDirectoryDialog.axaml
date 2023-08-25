@@ -50,7 +50,7 @@
             </Grid>
             
             <TextBlock
-                Text="This is where the model checkpoints, LORAs, web UIs, settings, etc. will be installed. If you were satisfied with the previous versions, you don't need to change anything here."
+                Text="This is where the model checkpoints, LORAs, web UIs, settings, etc. will be installed."
                 TextWrapping="Wrap"
                 Foreground="LightGray"
                 FontSize="12"
@@ -59,7 +59,7 @@
             <CheckBox
                 Content="Portable Mode"
                 IsChecked="{Binding IsPortableMode, Mode=TwoWay}"
-                Margin="0,16,0,0" />
+                Margin="0,32,0,0" />
 
             <ui:InfoBar
                 IsClosable="False"

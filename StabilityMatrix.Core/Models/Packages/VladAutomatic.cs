@@ -98,7 +98,7 @@ public class VladAutomatic : BaseGitPackage
         {
             Name = "Use DirectML if no compatible GPU is detected",
             Type = LaunchOptionType.Bool,
-            InitialValue = PreferDirectML(),
+            InitialValue = HardwareHelper.PreferDirectML(),
             Options = new() { "--use-directml" }
         },
         new()
@@ -112,7 +112,7 @@ public class VladAutomatic : BaseGitPackage
         {
             Name = "Force use of AMD ROCm backend",
             Type = LaunchOptionType.Bool,
-            InitialValue = PreferRocm(),
+            InitialValue = HardwareHelper.PreferRocm(),
             Options = new() { "--use-rocm" }
         },
         new()
@@ -137,16 +137,6 @@ public class VladAutomatic : BaseGitPackage
     };
 
     public override string ExtraLaunchArguments => "";
-
-    // Set ROCm for default if AMD and Linux
-    private static bool PreferRocm() => !HardwareHelper.HasNvidiaGpu()
-                                     && HardwareHelper.HasAmdGpu()
-                                     && Compat.IsLinux;
-    
-    // Set DirectML for default if AMD and Windows
-    private static bool PreferDirectML() => !HardwareHelper.HasNvidiaGpu()
-                                            && HardwareHelper.HasAmdGpu()
-                                            && Compat.IsWindows;
     
     public override Task<string> GetLatestVersion() => Task.FromResult("master");
 
@@ -177,13 +167,13 @@ public class VladAutomatic : BaseGitPackage
             await venvRunner.CustomInstall("launch.py --use-cuda --debug --test", OnConsoleOutput)
                 .ConfigureAwait(false);
         }
-        else if (PreferRocm())
+        else if (HardwareHelper.PreferRocm())
         {
             // ROCm
             await venvRunner.CustomInstall("launch.py --use-rocm --debug --test", OnConsoleOutput)
                 .ConfigureAwait(false);
         }
-        else if (PreferDirectML())
+        else if (HardwareHelper.PreferDirectML())
         {
             // DirectML
             await venvRunner.CustomInstall("launch.py --use-directml --debug --test", OnConsoleOutput)
@@ -198,20 +188,22 @@ public class VladAutomatic : BaseGitPackage
         progress?.Report(new ProgressReport(1, isIndeterminate: false));
     }
 
-    public override async Task<string> DownloadPackage(string version, bool isCommitHash, IProgress<ProgressReport>? progress = null)
+    public override async Task<string> DownloadPackage(string version, bool isCommitHash,
+        string? branch, IProgress<ProgressReport>? progress = null)
     {
-        progress?.Report(new ProgressReport(0.1f, message: "Downloading package...", isIndeterminate: true, type: ProgressType.Download));
-    
+        progress?.Report(new ProgressReport(-1f, message: "Downloading package...",
+            isIndeterminate: true, type: ProgressType.Download));
+
         var installDir = new DirectoryPath(InstallLocation);
         installDir.Create();
-    
-        await PrerequisiteHelper.RunGit(
-            installDir.Parent ?? "", "clone", "https://github.com/vladmandic/automatic", installDir.Name)
-            .ConfigureAwait(false);
-        
+
+        await PrerequisiteHelper
+            .RunGit(installDir.Parent ?? "", "clone", "https://github.com/vladmandic/automatic",
+                installDir.Name).ConfigureAwait(false);
+
         await PrerequisiteHelper.RunGit(
             InstallLocation, "checkout", version).ConfigureAwait(false);
-        
+
         return version;
     }
 
@@ -253,16 +245,19 @@ public class VladAutomatic : BaseGitPackage
             throw new Exception("Installed branch is null");
         }
         
-        progress?.Report(new ProgressReport(0.1f, message: "Downloading package update...",
-            isIndeterminate: true, type: ProgressType.Download));
+        progress?.Report(new ProgressReport(-1f, message: "Downloading package update...",
+            isIndeterminate: true, type: ProgressType.Update));
 
-        var version = await GithubApi.GetAllCommits(Author, Name, installedPackage.InstalledBranch).ConfigureAwait(false);
-        var latest = version?.FirstOrDefault();
+        await PrerequisiteHelper.RunGit(installedPackage.FullPath, "checkout",
+            installedPackage.InstalledBranch).ConfigureAwait(false);
+        
+        var venvRunner = new PyVenvRunner(Path.Combine(installedPackage.FullPath!, "venv"));
+        venvRunner.WorkingDirectory = InstallLocation;
+        venvRunner.EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables;
+        
+        await venvRunner.CustomInstall("launch.py --upgrade --test", OnConsoleOutput)
+            .ConfigureAwait(false);
 
-        if (latest?.Sha is null)
-        {
-            throw new Exception("Could not get latest version");
-        }
 
         try
         {
@@ -271,22 +266,18 @@ public class VladAutomatic : BaseGitPackage
                     .GetGitOutput(installedPackage.FullPath, "rev-parse", "HEAD")
                     .ConfigureAwait(false);
 
-            if (output.Replace(Environment.NewLine, "") == latest.Sha)
-            {
-                return latest.Sha;
-            }
+            return output.Replace(Environment.NewLine, "").Replace("\n", "");
         }
         catch (Exception e)
         {
             Logger.Warn(e, "Could not get current git hash, continuing with update");
         }
-
-        await PrerequisiteHelper.RunGit(installedPackage.FullPath, "pull",
-            "origin", installedPackage.InstalledBranch).ConfigureAwait(false);
-
-        progress?.Report(new ProgressReport(1f, message: "Update Complete", isIndeterminate: false,
-            type: ProgressType.Generic));
-
-        return latest.Sha;
+        finally
+        {
+            progress?.Report(new ProgressReport(1f, message: "Update Complete", isIndeterminate: false,
+                type: ProgressType.Update));
+        }
+        
+        return installedPackage.InstalledBranch;
     }
 }

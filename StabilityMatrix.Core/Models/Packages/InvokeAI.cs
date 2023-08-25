@@ -116,7 +116,7 @@ public class InvokeAI : BaseGitPackage
 
     public override Task<string> GetLatestVersion() => Task.FromResult("main");
 
-    public override Task<string> DownloadPackage(string version, bool isCommitHash,
+    public override Task<string> DownloadPackage(string version, bool isCommitHash, string? branch,
         IProgress<ProgressReport>? progress = null)
     {
         return Task.FromResult(version);

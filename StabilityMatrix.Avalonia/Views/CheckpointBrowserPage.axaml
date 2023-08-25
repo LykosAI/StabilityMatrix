@@ -8,7 +8,8 @@
              xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
              xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointManager"
              xmlns:checkpointBrowser="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="700"
              x:DataType="viewModels:CheckpointBrowserViewModel"
              d:DataContext="{x:Static designData:DesignData.CheckpointBrowserViewModel}"
              x:CompileBindings="True"
@@ -40,7 +41,7 @@
                             Margin="0,8,0,8"
                             Height="300"
                             StretchDirection="Both"
-                            CornerRadius="4"
+                            CornerRadius="8"
                             VerticalContentAlignment="Top"
                             HorizontalContentAlignment="Center"
                             Source="{Binding CardImage}"
@@ -274,13 +275,30 @@
             </TextBlock>
             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                 <Button
-                    Command="{Binding PreviousPageCommand}"
+                    Command="{Binding FirstPage}"
+                    IsEnabled="{Binding CanGoToFirstPage}"
+                    ToolTip.Tip="First Page"
+                    Margin="0,0,8,0">
+                    <avalonia:Icon Value="fa-solid fa-backward-fast"/>
+                </Button>
+                <Button
+                    Command="{Binding PreviousPage}"
+                    ToolTip.Tip="Previous Page"
                     IsEnabled="{Binding CanGoToPreviousPage}"
                     Margin="0,0,8,0">
-                    <ui:SymbolIcon Symbol="PreviousFilled" />
+                    <avalonia:Icon Value="fa-solid fa-caret-left"/>
                 </Button>
-                <Button Command="{Binding NextPageCommand}" IsEnabled="{Binding CanGoToNextPage}">
-                    <ui:SymbolIcon Symbol="NextFilled" />
+                <Button Command="{Binding NextPage}" 
+                        IsEnabled="{Binding CanGoToNextPage}"
+                        ToolTip.Tip="Next Page"
+                        Margin="0,0,8,0">
+                    <avalonia:Icon Value="fa-solid fa-caret-right"/>
+                </Button>
+                <Button
+                    Command="{Binding LastPage}"
+                    ToolTip.Tip="Last Page"
+                    IsEnabled="{Binding CanGoToLastPage}">
+                    <avalonia:Icon Value="fa-solid fa-forward-fast"/>
                 </Button>
             </StackPanel>
         </StackPanel>

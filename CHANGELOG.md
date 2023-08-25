@@ -5,11 +5,37 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.3.0
+### Added
+- New installable Package - [Fooocus](https://github.com/lllyasviel/Fooocus)
+- Added "Select New Data Directory" button to Settings
+- Added "Skip to First/Last Page" buttons to the Model Browser
+- Added VAE as a checkpoint category in the Model Browser
+- Pause/Resume/Cancel buttons on downloads popup. Paused downloads persists and may be resumed after restarting the app
+- Unknown Package installs in the Package directory will now show up with a button to import them
+### Fixed
+- Fixed issue where model version wouldn't be selected in the "All Versions" section of the Model Browser
+- Improved Checkpoints page indexing performance
+- Fixed issue where Checkpoints page may not show all checkpoints after clearing search filter
+- Fixed issue where Checkpoints page may show incorrect checkpoints for the given filter after changing pages
+- Fixed issue where Open Web UI button would try to load 0.0.0.0 addresses
+- Fixed Dictionary error when launch arguments saved with duplicate arguments
+- Fixed Launch arguments search not working
+### Changed
+- Changed update method for SD.Next to use the built-in upgrade functionality
+- Model Browser navigation buttons are no longer disabled while changing pages
+
 ## v2.2.1
 ### Fixed
 - Fixed SD.Next shared folders config not working with new config format, reverted to Junctions / Symlinks
 
+## v2.2.1
+
+### Fixed
+- Fixed SD.Next shared folders config not working with new config format, reverted to Junctions / Symlinks
+
 ## v2.2.0
+
 ### Added
 - Added option to search by Base Model in the Model Browser
 - Animated page transitions

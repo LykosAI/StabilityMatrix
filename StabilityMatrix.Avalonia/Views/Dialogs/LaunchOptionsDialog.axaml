@@ -23,7 +23,7 @@
                 
     </controls:UserControlBase.Resources>
     
-    <Grid MinWidth="400" RowDefinitions="0.2*,0.8*" Margin="8">
+    <Grid MinWidth="400" RowDefinitions="Auto,*" Margin="8">
         <StackPanel
             HorizontalAlignment="Stretch"
             Spacing="4"
@@ -54,6 +54,7 @@
         <!--  Option Cards  -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <ItemsControl
+                VerticalAlignment="Stretch"
                 HorizontalAlignment="Stretch"
                 Padding="8"
                 ItemsSource="{Binding FilteredCards}">

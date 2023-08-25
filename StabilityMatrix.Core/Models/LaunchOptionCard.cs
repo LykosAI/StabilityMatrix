@@ -45,8 +45,13 @@ public readonly record struct LaunchOptionCard
         // During card creation, store dict of options with initial values
         var initialOptions = new Dictionary<string, object>();
         
-        // Dict of 
-        var launchArgsDict = launchArgs.ToDictionary(launchArg => launchArg.Name);
+        // To dictionary ignoring duplicates
+        var launchArgsDict = launchArgs
+            .ToLookup(launchArg => launchArg.Name)
+            .ToDictionary(
+                group => group.Key, 
+                group => group.First()
+            );
         
         // Create cards
         foreach (var definition in definitions)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -414,8 +415,7 @@ public partial class CheckpointFolder : ViewModelBase
         {
             // Create subfolder
             var subFolder = new CheckpointFolder(settingsManager,
-                downloadService, modelFinder,
-                useCategoryVisibility: false)
+                downloadService, modelFinder, useCategoryVisibility: false)
             {
                 Title = Path.GetFileName(folder),
                 DirectoryPath = folder,

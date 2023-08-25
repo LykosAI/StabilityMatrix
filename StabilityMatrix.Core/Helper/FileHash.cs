@@ -46,8 +46,8 @@ public static class FileHash
 
             var hash = await GetHashAsync(SHA256.Create(), stream, buffer, totalBytesRead =>
             {
-                progress?.Report(new ProgressReport(totalBytesRead, totalBytes));
-            });
+                progress?.Report(new ProgressReport(totalBytesRead, totalBytes, type: ProgressType.Hashing));
+            }).ConfigureAwait(false);
             return hash;
         }
         finally

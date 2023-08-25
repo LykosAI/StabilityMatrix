@@ -1,14 +1,19 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
+using StabilityMatrix.Core.Converters.Json;
 
 namespace StabilityMatrix.Core.Models.FileInterfaces;
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+[JsonConverter(typeof(StringJsonConverter<DirectoryPath>))]
 public class DirectoryPath : FileSystemPath, IPathObject
 {
     private DirectoryInfo? info;
     // ReSharper disable once MemberCanBePrivate.Global
+    [JsonIgnore]
     public DirectoryInfo Info => info ??= new DirectoryInfo(FullPath);
 
+    [JsonIgnore]
     public bool IsSymbolicLink
     {
         get
@@ -21,14 +26,17 @@ public class DirectoryPath : FileSystemPath, IPathObject
     /// <summary>
     /// Gets a value indicating whether the directory exists.
     /// </summary>
+    [JsonIgnore]
     public bool Exists => Info.Exists;
     
     /// <inheritdoc/>
+    [JsonIgnore]
     public string Name => Info.Name;
     
     /// <summary>
     /// Get the parent directory.
     /// </summary>
+    [JsonIgnore]
     public DirectoryPath? Parent => Info.Parent == null 
         ? null : new DirectoryPath(Info.Parent);
 

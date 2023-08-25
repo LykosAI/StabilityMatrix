@@ -1,20 +1,22 @@
 ﻿using System;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
-using NLog;
-using Polly;
+using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
+using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
@@ -23,27 +25,33 @@ namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
 public partial class PackageCardViewModel : ProgressViewModel
 {
+    private readonly ILogger<PackageCardViewModel> logger;
     private readonly IPackageFactory packageFactory;
     private readonly INotificationService notificationService;
     private readonly ISettingsManager settingsManager;
     private readonly INavigationService navigationService;
-    private readonly Logger logger = LogManager.GetCurrentClassLogger();
+    private readonly ServiceManager<ViewModelBase> vmFactory;
 
     [ObservableProperty] private InstalledPackage? package;
-    [ObservableProperty] private Uri cardImage;
+    [ObservableProperty] private string? cardImageSource;
     [ObservableProperty] private bool isUpdateAvailable;
-    [ObservableProperty] private string installedVersion;
-
+    [ObservableProperty] private string? installedVersion;
+    [ObservableProperty] private bool isUnknownPackage;
+    
     public PackageCardViewModel(
+        ILogger<PackageCardViewModel> logger,
         IPackageFactory packageFactory,
         INotificationService notificationService, 
         ISettingsManager settingsManager, 
-        INavigationService navigationService)
+        INavigationService navigationService,
+        ServiceManager<ViewModelBase> vmFactory)
     {
+        this.logger = logger;
         this.packageFactory = packageFactory;
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
         this.navigationService = navigationService;
+        this.vmFactory = vmFactory;
     }
 
     partial void OnPackageChanged(InstalledPackage? value)
@@ -51,9 +59,21 @@ public partial class PackageCardViewModel : ProgressViewModel
         if (string.IsNullOrWhiteSpace(value?.PackageName))
             return;
 
-        var basePackage = packageFactory[value.PackageName];
-        CardImage = basePackage?.PreviewImageUri ?? Assets.NoImage;
-        InstalledVersion = value.DisplayVersion ?? "Unknown";
+        if (value.PackageName == UnknownPackage.Key)
+        {
+            IsUnknownPackage = true;
+            CardImageSource = "";
+            InstalledVersion = "Unknown";
+        }
+        else
+        {
+            IsUnknownPackage = false;
+            
+            var basePackage = packageFactory[value.PackageName];
+            CardImageSource = basePackage?.PreviewImageUri.ToString() 
+                              ?? Assets.NoImage.ToString();
+            InstalledVersion = value.DisplayVersion ?? "Unknown";
+        }
     }
 
     public override async Task OnLoadedAsync()
@@ -94,9 +114,10 @@ public partial class PackageCardViewModel : ProgressViewModel
             Text = "Uninstalling...";
             IsIndeterminate = true;
             Value = -1;
-            
-            var deleteTask = DeleteDirectoryAsync(Path.Combine(settingsManager.LibraryDir,
-                Package.LibraryPath));
+
+            var packagePath = new DirectoryPath(settingsManager.LibraryDir, Package.LibraryPath);
+            var deleteTask = packagePath.DeleteVerboseAsync(logger);
+                
             var taskResult = await notificationService.TryAsync(deleteTask,
                 "Some files could not be deleted. Please close any open files in the package directory and try again.");
             if (taskResult.IsSuccessful)
@@ -104,11 +125,14 @@ public partial class PackageCardViewModel : ProgressViewModel
                 notificationService.Show(new Notification("Success",
                     $"Package {Package.DisplayName} uninstalled",
                     NotificationType.Success));
-            
-                settingsManager.Transaction(settings =>
+
+                if (!IsUnknownPackage)
                 {
-                    settings.RemoveInstalledPackageAndUpdateActive(Package);
-                });
+                    settingsManager.Transaction(settings =>
+                    {
+                        settings.RemoveInstalledPackageAndUpdateActive(Package);
+                    });
+                }
                 
                 EventManager.Instance.OnInstalledPackagesChanged();
             }
@@ -117,25 +141,27 @@ public partial class PackageCardViewModel : ProgressViewModel
     
     public async Task Update()
     {
-        if (Package == null) return;
+        if (Package is null || IsUnknownPackage) return;
         
         var basePackage = packageFactory[Package.PackageName!];
         if (basePackage == null)
         {
-            logger.Warn("Could not find package {SelectedPackagePackageName}", 
+            logger.LogWarning("Could not find package {SelectedPackagePackageName}", 
                 Package.PackageName);
             notificationService.Show("Invalid Package type",
                 $"Package {Package.PackageName.ToRepr()} is not a valid package type",
                 NotificationType.Error);
             return;
         }
+
+        var packageName = Package.DisplayName ?? Package.PackageName ?? "";
         
-        Text = $"Updating {Package.DisplayName}";
+        Text = $"Updating {packageName}";
         IsIndeterminate = true;
         
         var progressId = Guid.NewGuid();
         EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
-            Package.DisplayName,
+            Package.DisplayName ?? Package.PackageName!,
             new ProgressReport(0f, isIndeterminate: true, type: ProgressType.Update)));
 
         try
@@ -152,7 +178,7 @@ public partial class PackageCardViewModel : ProgressViewModel
             
                 EventManager.Instance.OnGlobalProgressChanged(percent);
                 EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
-                    Package.DisplayName, progress));
+                    packageName, progress));
             });
         
             var updateResult = await basePackage.Update(Package, progress);
@@ -170,15 +196,15 @@ public partial class PackageCardViewModel : ProgressViewModel
             InstalledVersion = Package.DisplayVersion ?? "Unknown";
 
             EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
-                Package.DisplayName,
+                packageName,
                 new ProgressReport(1f, "Update complete", type: ProgressType.Update)));
         }
         catch (Exception e)
         {
-            logger.Error(e, "Error Updating Package ({PackageName})", basePackage.Name);
+            logger.LogError(e, "Error Updating Package ({PackageName})", basePackage.Name);
             notificationService.ShowPersistent($"Error Updating {Package.DisplayName}", e.Message, NotificationType.Error);
             EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
-                Package.DisplayName,
+                packageName,
                 new ProgressReport(0f, "Update failed", type: ProgressType.Update), Failed: true));
         }
         finally
@@ -186,6 +212,29 @@ public partial class PackageCardViewModel : ProgressViewModel
             IsIndeterminate = false;
             Value = 0;
             Text = "";
+        }
+    }
+
+    public async Task Import()
+    {
+        if (!IsUnknownPackage || Design.IsDesignMode) return;
+
+        PackageImportViewModel viewModel = null!;
+        var dialog = vmFactory.GetDialog<PackageImportViewModel>(vm =>
+        {
+            vm.PackagePath = new DirectoryPath(Package?.FullPath ?? throw new InvalidOperationException());
+            viewModel = vm;
+        });
+
+        dialog.PrimaryButtonText = Resources.Action_Import;
+        dialog.CloseButtonText = Resources.Action_Cancel;
+        dialog.DefaultButton = ContentDialogButton.Primary;
+
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            viewModel.AddPackageWithCurrentInputs();
+            EventManager.Instance.OnInstalledPackagesChanged();
         }
     }
     
@@ -199,7 +248,7 @@ public partial class PackageCardViewModel : ProgressViewModel
     
     private async Task<bool> HasUpdate()
     {
-        if (Package == null)
+        if (Package == null || IsUnknownPackage || Design.IsDesignMode)
             return false;
 
         var basePackage = packageFactory[Package.PackageName!];
@@ -224,86 +273,8 @@ public partial class PackageCardViewModel : ProgressViewModel
         }
         catch (Exception e)
         {
-            logger.Error(e, $"Error checking {Package.PackageName} for updates");
+            logger.LogError(e, "Error checking {PackageName} for updates", Package.PackageName);
             return false;
-        }
-    }
-    
-    /// <summary>
-    /// Deletes a directory and all of its contents recursively.
-    /// Uses Polly to retry the deletion if it fails, up to 5 times with an exponential backoff.
-    /// </summary>
-    /// <param name="targetDirectory"></param>
-    private Task DeleteDirectoryAsync(string targetDirectory)
-    {
-        var policy = Policy.Handle<IOException>()
-            .WaitAndRetryAsync(3, attempt => TimeSpan.FromMilliseconds(50 * Math.Pow(2, attempt)),
-                onRetry: (exception, calculatedWaitDuration) =>
-                {
-                    logger.Warn(
-                        exception, 
-                        "Deletion of {TargetDirectory} failed. Retrying in {CalculatedWaitDuration}", 
-                        targetDirectory, calculatedWaitDuration);
-                });
-
-        return policy.ExecuteAsync(async () =>
-        {
-            await Task.Run(() =>
-            {
-                DeleteDirectory(targetDirectory);
-            });
-        });
-    }
-    
-    private void DeleteDirectory(string targetDirectory)
-    {
-        // Skip if directory does not exist
-        if (!Directory.Exists(targetDirectory))
-        {
-            return;
-        }
-        // For junction points, delete with recursive false
-        if (new DirectoryInfo(targetDirectory).LinkTarget != null)
-        {
-            logger.Info("Removing junction point {TargetDirectory}", targetDirectory);
-            try
-            {
-                Directory.Delete(targetDirectory, false);
-                return;
-            }
-            catch (IOException ex)
-            {
-                throw new IOException($"Failed to delete junction point {targetDirectory}", ex);
-            }
-        }
-        // Recursively delete all subdirectories
-        var subdirectoryEntries = Directory.GetDirectories(targetDirectory);
-        foreach (var subdirectoryPath in subdirectoryEntries)
-        {
-            DeleteDirectory(subdirectoryPath);
-        }
-        // Delete all files in the directory
-        var fileEntries = Directory.GetFiles(targetDirectory);
-        foreach (var filePath in fileEntries)
-        {
-            try
-            {
-                File.SetAttributes(filePath, FileAttributes.Normal);
-                File.Delete(filePath);
-            }
-            catch (IOException ex)
-            {
-                throw new IOException($"Failed to delete file {filePath}", ex);
-            }
-        }
-        // Delete the target directory itself
-        try
-        {
-            Directory.Delete(targetDirectory, false);
-        }
-        catch (IOException ex)
-        {
-            throw new IOException($"Failed to delete directory {targetDirectory}", ex);
         }
     }
 }

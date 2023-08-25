@@ -34,11 +34,13 @@ using Sentry;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.Views;
@@ -57,8 +59,6 @@ using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
 using Application = Avalonia.Application;
-using CheckpointFile = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFile;
-using CheckpointFolder = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFolder;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace StabilityMatrix.Avalonia;
@@ -194,7 +194,12 @@ public sealed class App : Application
         Services = services.BuildServiceProvider();
         
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
-        settingsManager.TryFindLibrary();
+        
+        if (settingsManager.TryFindLibrary())
+        {
+            Cultures.TrySetSupportedCulture(settingsManager.Settings.Language);
+        }
+        
         Services.GetRequiredService<ProgressManagerViewModel>().StartEventListener();
     }
 
@@ -204,13 +209,15 @@ public sealed class App : Application
             .AddSingleton<SettingsViewModel>()
             .AddSingleton<CheckpointBrowserViewModel>()
             .AddSingleton<CheckpointsPageViewModel>()
+            .AddSingleton<NewCheckpointsPageViewModel>()
             .AddSingleton<LaunchPageViewModel>()
             .AddSingleton<ProgressManagerViewModel>();
         
         services.AddSingleton<MainWindowViewModel>(provider =>
             new MainWindowViewModel(provider.GetRequiredService<ISettingsManager>(),
                 provider.GetRequiredService<IDiscordRichPresenceService>(),
-                provider.GetRequiredService<ServiceManager<ViewModelBase>>())
+                provider.GetRequiredService<ServiceManager<ViewModelBase>>(),
+                provider.GetRequiredService<ITrackedDownloadService>())
             {
                 Pages =
                 {
@@ -240,14 +247,16 @@ public sealed class App : Application
         services.AddTransient<LaunchOptionsViewModel>();
         services.AddTransient<ExceptionViewModel>();
         services.AddTransient<EnvVarsViewModel>();
+        services.AddTransient<PackageImportViewModel>();
+        
+        // Dialog view models (singleton)
         services.AddSingleton<FirstLaunchSetupViewModel>();
         services.AddSingleton<UpdateViewModel>();
         
         // Other transients (usually sub view models)
-        services.AddTransient<CheckpointFolder>()
-            .AddTransient<CheckpointFile>()
-            .AddTransient<CheckpointBrowserCardViewModel>();
-        
+        services.AddTransient<CheckpointFolder>();
+        services.AddTransient<CheckpointFile>();
+        services.AddTransient<CheckpointBrowserCardViewModel>();
         services.AddTransient<PackageCardViewModel>();
         
         // Global progress
@@ -273,7 +282,9 @@ public sealed class App : Application
                 .Register(provider.GetRequiredService<ExceptionViewModel>)
                 .Register(provider.GetRequiredService<EnvVarsViewModel>)
                 .Register(provider.GetRequiredService<ProgressManagerViewModel>)
-                .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>));
+                .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>)
+                .Register(provider.GetRequiredService<PackageImportViewModel>)
+            );
     }
 
     internal static void ConfigureViews(IServiceCollection services)
@@ -285,6 +296,7 @@ public sealed class App : Application
         services.AddSingleton<SettingsPage>();
         services.AddSingleton<CheckpointBrowserPage>();
         services.AddSingleton<ProgressManagerPage>();
+        services.AddSingleton<NewCheckpointsPage>();
         
         // Dialogs
         services.AddTransient<SelectDataDirectoryDialog>();
@@ -292,6 +304,7 @@ public sealed class App : Application
         services.AddTransient<UpdateDialog>();
         services.AddTransient<ExceptionDialog>();
         services.AddTransient<EnvVarsDialog>();
+        services.AddTransient<PackageImportDialog>();
         
         // Controls
         services.AddTransient<RefreshBadge>();
@@ -308,6 +321,7 @@ public sealed class App : Application
         services.AddSingleton<BasePackage, ComfyUI>();
         services.AddSingleton<BasePackage, VoltaML>();
         services.AddSingleton<BasePackage, InvokeAI>();
+        services.AddSingleton<BasePackage, Fooocus>();
     }
 
     private static IServiceCollection ConfigureServices()
@@ -332,6 +346,10 @@ public sealed class App : Application
         services.AddSingleton<IPyRunner, PyRunner>();
         services.AddSingleton<IUpdateHelper, UpdateHelper>();
         services.AddSingleton<INavigationService, NavigationService>();
+        
+        services.AddSingleton<ITrackedDownloadService, TrackedDownloadService>();
+        services.AddSingleton<IDisposable>(provider => 
+            (IDisposable) provider.GetRequiredService<ITrackedDownloadService>());
         
         // Rich presence
         services.AddSingleton<IDiscordRichPresenceService, DiscordRichPresenceService>();

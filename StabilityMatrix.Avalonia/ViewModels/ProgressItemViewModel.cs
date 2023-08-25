@@ -28,6 +28,7 @@ public class ProgressItemViewModel : ProgressItemViewModelBase
         Progress.Value = e.Progress.Percentage;
         Failed = e.Failed;
         Progress.Text = GetProgressText(e.Progress);
+        Progress.IsIndeterminate = e.Progress.IsIndeterminate;
     }
 
     private string GetProgressText(ProgressReport report)

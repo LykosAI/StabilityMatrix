@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -11,6 +12,7 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
@@ -219,23 +221,55 @@ public partial class PackageCardViewModel : ProgressViewModel
     {
         if (!IsUnknownPackage || Design.IsDesignMode) return;
 
-        PackageImportViewModel viewModel = null!;
-        var dialog = vmFactory.GetDialog<PackageImportViewModel>(vm =>
+        var viewModel = vmFactory.Get<PackageImportViewModel>(vm =>
         {
-            vm.PackagePath = new DirectoryPath(Package?.FullPath ?? throw new InvalidOperationException());
-            viewModel = vm;
+            vm.PackagePath =
+                new DirectoryPath(Package?.FullPath ?? throw new InvalidOperationException());
         });
 
-        dialog.PrimaryButtonText = Resources.Action_Import;
-        dialog.CloseButtonText = Resources.Action_Cancel;
-        dialog.DefaultButton = ContentDialogButton.Primary;
-
-        var result = await dialog.ShowAsync();
-        if (result == ContentDialogResult.Primary)
+        var dialog = new TaskDialog
         {
-            viewModel.AddPackageWithCurrentInputs();
-            EventManager.Instance.OnInstalledPackagesChanged();
-        }
+            Content = new PackageImportDialog
+            {
+                DataContext = viewModel
+            },
+            ShowProgressBar = false,
+            Buttons = new List<TaskDialogButton>
+            {
+                new(Resources.Action_Import, TaskDialogStandardResult.Yes)
+                {
+                    IsDefault = true
+                },
+                new(Resources.Action_Cancel, TaskDialogStandardResult.Cancel)
+            }
+        };
+
+        dialog.Closing += async (sender, e) =>
+        {
+            // We only want to use the deferral on the 'Yes' Button
+            if ((TaskDialogStandardResult)e.Result == TaskDialogStandardResult.Yes)
+            {
+                var deferral = e.GetDeferral();
+
+                sender.ShowProgressBar = true;
+                sender.SetProgressBarState(0, TaskDialogProgressState.Indeterminate);
+
+                await using (new MinimumDelay(200, 300))
+                {
+                    var result = await notificationService.TryAsync(viewModel.AddPackageWithCurrentInputs());
+                    if (result.IsSuccessful)
+                    {
+                        EventManager.Instance.OnInstalledPackagesChanged();
+                    }
+                }
+
+                deferral.Complete();
+            }
+        };
+
+        dialog.XamlRoot = App.VisualRoot;
+        
+        await dialog.ShowAsync(true);
     }
     
     public async Task OpenFolder()

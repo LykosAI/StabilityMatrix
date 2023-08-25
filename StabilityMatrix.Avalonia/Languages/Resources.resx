@@ -66,4 +66,7 @@
     <data name="Label_Branches" xml:space="preserve">
         <value>Branches</value>
     </data>
+    <data name="Label_DragAndDropCheckpointsHereToImport" xml:space="preserve">
+        <value>Drag &amp; Drop checkpoints here to import</value>
+    </data>
 </root>

@@ -183,7 +183,7 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
         }
     }
     
-    public void AddPackageWithCurrentInputs()
+    public async Task AddPackageWithCurrentInputs()
     {
         if (SelectedBasePackage is null || PackagePath is null)
             return;
@@ -215,6 +215,15 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
             LaunchCommand = SelectedBasePackage.LaunchCommand,
             LastUpdateCheck = DateTimeOffset.Now,
         };
+        
+        // Recreate venv if it's a BaseGitPackage
+        if (SelectedBasePackage is BaseGitPackage gitPackage)
+        {
+            await gitPackage.SetupVenv(PackagePath, forceRecreate: true);
+        }
+        
+        // Reconfigure shared links
+        await SelectedBasePackage.UpdateModelFolders(PackagePath);
         
         settingsManager.Transaction(s => s.InstalledPackages.Add(package));
     }

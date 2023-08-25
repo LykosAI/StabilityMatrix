@@ -33,7 +33,6 @@ using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
-using Notification = Avalonia.Controls.Notifications.Notification;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
@@ -305,13 +304,16 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
             IsPrimaryButtonEnabled = true,
             PrimaryButtonText = "Save",
             CloseButtonText = "Cancel",
+            FullSizeDesired = true,
             DefaultButton = ContentDialogButton.Primary,
+            ContentMargin = new Thickness(32, 16),
             Padding = new Thickness(0, 16),
             Content = new LaunchOptionsDialog
             {
                 DataContext = viewModel,
             }
         };
+        
         var result = await dialog.ShowAsync();
 
         if (result == ContentDialogResult.Primary)

@@ -24,10 +24,12 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     public const string TorchPipInstallArgsCpu = "torch torchvision torchaudio";
     public const string TorchPipInstallArgsDirectML = "torch-directml";
 
-    public const string TorchPipInstallArgsRocmStable =
-        "torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/rocm5.4.2";
-    public const string TorchPipInstallArgsRocmNightly =
-        "--pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/rocm5.6";
+    public const string TorchPipInstallArgsRocm511 =
+        "torch torchvision --extra-index-url https://download.pytorch.org/whl/rocm5.1.1";
+    public const string TorchPipInstallArgsRocm542 =
+        "torch torchvision --extra-index-url https://download.pytorch.org/whl/rocm5.4.2";
+    public const string TorchPipInstallArgsRocmNightly56 =
+        "--pre torch torchvision --index-url https://download.pytorch.org/whl/nightly/rocm5.6";
 
     /// <summary>
     /// Relative path to the site-packages folder from the venv root.

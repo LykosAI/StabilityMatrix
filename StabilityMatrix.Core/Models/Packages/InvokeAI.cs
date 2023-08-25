@@ -148,7 +148,7 @@ public class InvokeAI : BaseGitPackage
                 "InvokeAI[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu117";
         }
         // For AMD, Install ROCm version
-        else if (gpus.Any(g => g.IsAmd))
+        else if (HardwareHelper.PreferRocm())
         {
             Logger.Info("Starting InvokeAI install (ROCm)...");
             pipCommandArgs =

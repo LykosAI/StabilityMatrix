@@ -130,7 +130,7 @@ public class ComfyUI : BaseGitPackage
         {
             progress?.Report(new ProgressReport(-1, "Installing PyTorch for ROCm", isIndeterminate: true));
             await venvRunner
-                .PipInstall(PyVenvRunner.TorchPipInstallArgsRocmStable, OnConsoleOutput)
+                .PipInstall(PyVenvRunner.TorchPipInstallArgsRocm542, OnConsoleOutput)
                 .ConfigureAwait(false);
         }
         else

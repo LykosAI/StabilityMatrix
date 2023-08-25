@@ -132,6 +132,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Drag &amp; Drop checkpoints here to import.
+        /// </summary>
+        public static string Label_DragAndDropCheckpointsHereToImport {
+            get {
+                return ResourceManager.GetString("Label_DragAndDropCheckpointsHereToImport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Language.
         /// </summary>
         public static string Label_Language {

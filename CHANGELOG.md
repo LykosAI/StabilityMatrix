@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed GPU recognition for Nvidia Tesla GPUs
 - Fix checkpoint file index extension identification with some path names
+- Fixed issue where config file may be overwritten during Automatic1111 package updates
 
 ## v2.3.2
 ### Added

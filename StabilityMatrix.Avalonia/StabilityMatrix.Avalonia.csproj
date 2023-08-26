@@ -24,6 +24,7 @@
         <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.2" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.2" />
+        <PackageReference Include="Avalonia.HtmlRenderer" Version="11.0.0" />
         <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.0.0.1" />
         <PackageReference Include="AvaloniaEdit.TextMate" Version="11.0.0" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
@@ -89,6 +90,8 @@
       <AvaloniaResource Include="Assets\win-x64\**" Condition="'$(RuntimeIdentifier)' == 'win-x64'" />
       <!-- Only for linux-64 -->
       <AvaloniaResource Include="Assets\linux-x64\**" Condition="'$(RuntimeIdentifier)' == 'linux-x64'" />
+      <!-- Only for osx-arm64 -->
+      <AvaloniaResource Include="Assets\macos-arm64\**" Condition="'$(RuntimeIdentifier)' == 'osx-arm64'" />
     </ItemGroup>
     
     <ItemGroup>

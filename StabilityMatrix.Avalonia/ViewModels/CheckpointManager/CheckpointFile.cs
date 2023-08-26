@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -49,11 +48,11 @@ public partial class CheckpointFile : ViewModelBase
     [ObservableProperty] private bool isLoading;
     [ObservableProperty] private CivitModelType modelType;
     
-    public string FileName => Path.GetFileName((string?) FilePath);
+    public string FileName => Path.GetFileName(FilePath);
 
     public ObservableCollection<string> Badges { get; set; } = new();
 
-    private static readonly string[] SupportedCheckpointExtensions = { ".safetensors", ".pt", ".ckpt", ".pth", "bin" };
+    private static readonly string[] SupportedCheckpointExtensions = { ".safetensors", ".pt", ".ckpt", ".pth", ".bin" };
     private static readonly string[] SupportedImageExtensions = { ".png", ".jpg", ".jpeg" };
     private static readonly string[] SupportedMetadataExtensions = { ".json" };
 
@@ -200,7 +199,8 @@ public partial class CheckpointFile : ViewModelBase
     {
         foreach (var file in Directory.EnumerateFiles(directory, "*.*", searchOption))
         {
-            if (!SupportedCheckpointExtensions.Any(ext => file.Contains(ext)))
+            if (!SupportedCheckpointExtensions.Any(ext => 
+                    Path.GetExtension(file).Equals(ext, StringComparison.InvariantCultureIgnoreCase)))
                 continue;
             
             var checkpointFile = new CheckpointFile
@@ -230,7 +230,8 @@ public partial class CheckpointFile : ViewModelBase
     {
         foreach (var file in Directory.EnumerateFiles(modelsDirectory, "*.*", SearchOption.AllDirectories))
         {
-            if (!SupportedCheckpointExtensions.Any(ext => file.Contains(ext)))
+            if (!SupportedCheckpointExtensions.Any(ext => 
+                    Path.GetExtension(file).Equals(ext, StringComparison.InvariantCultureIgnoreCase)))
                 continue;
             
             var checkpointFile = new CheckpointFile
@@ -239,7 +240,7 @@ public partial class CheckpointFile : ViewModelBase
                 FilePath = file,
             };
 
-            var jsonPath = Path.Combine(Path.GetDirectoryName(file),
+            var jsonPath = Path.Combine(Path.GetDirectoryName(file) ?? "",
                 Path.GetFileNameWithoutExtension(file) + ".cm-info.json");
             
             if (File.Exists(jsonPath)) 
@@ -251,7 +252,7 @@ public partial class CheckpointFile : ViewModelBase
             }
 
             checkpointFile.PreviewImagePath = SupportedImageExtensions
-                .Select(ext => Path.Combine(Path.GetDirectoryName(file),
+                .Select(ext => Path.Combine(Path.GetDirectoryName(file) ?? "",
                     $"{Path.GetFileNameWithoutExtension(file)}.preview{ext}")).Where(File.Exists)
                 .FirstOrDefault();
 

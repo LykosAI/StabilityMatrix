@@ -125,13 +125,13 @@ public static partial class HardwareHelper
     }
     
     // Set ROCm for default if AMD and Linux
-    public static bool PreferRocm() => !HardwareHelper.HasNvidiaGpu()
-                                       && HardwareHelper.HasAmdGpu()
+    public static bool PreferRocm() => !HasNvidiaGpu()
+                                       && HasAmdGpu()
                                        && Compat.IsLinux;
     
     // Set DirectML for default if AMD and Windows
-    public static bool PreferDirectML() => !HardwareHelper.HasNvidiaGpu()
-                                           && HardwareHelper.HasAmdGpu()
+    public static bool PreferDirectML() => !HasNvidiaGpu()
+                                           && HasAmdGpu()
                                            && Compat.IsWindows;
 }
 
@@ -155,6 +155,18 @@ public record GpuInfo
         _ => Level.High
     };
     
-    public bool IsNvidia => Name?.ToLowerInvariant().Contains("nvidia") ?? false;
+    public bool IsNvidia
+    {
+        get
+        {
+            var name = Name?.ToLowerInvariant();
+            
+            if (string.IsNullOrEmpty(name)) return false;
+            
+            return name.Contains("nvidia") 
+                   || name.Contains("tesla");
+        }
+    }
+
     public bool IsAmd => Name?.ToLowerInvariant().Contains("amd") ?? false;
 }

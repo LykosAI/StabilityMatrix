@@ -111,6 +111,14 @@ public class A3WebUI : BaseGitPackage
             InitialValue = true,
             Options = new() {"--skip-python-version-check"}
         },
+        new()
+        {
+            Name = "No Half",
+            Type = LaunchOptionType.Bool,
+            Description = "Do not switch the model to 16-bit floats",
+            InitialValue = HardwareHelper.HasAmdGpu(),
+            Options = new() {"--no-half"}
+        },
         LaunchOptionDefinition.Extras
     };
     
@@ -146,6 +154,16 @@ public class A3WebUI : BaseGitPackage
             Logger.Info("Installing xformers...");
             await venvRunner.PipInstall("xformers", OnConsoleOutput).ConfigureAwait(false);
         }
+        else if (HardwareHelper.PreferRocm())
+        {
+            progress?.Report(new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true));
+
+            await venvRunner.PipInstall("--upgrade pip wheel", OnConsoleOutput)
+                .ConfigureAwait(false);
+            
+            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsRocm511, OnConsoleOutput)
+                .ConfigureAwait(false);
+        }
         else
         {
             progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CPU", isIndeterminate: true));
@@ -161,10 +179,15 @@ public class A3WebUI : BaseGitPackage
         progress?.Report(new ProgressReport(1f, "Installing Package Requirements", isIndeterminate: false));
         
         progress?.Report(new ProgressReport(-1f, "Updating configuration", isIndeterminate: true));
+        
         // Create and add {"show_progress_type": "TAESD"} to config.json
+        // Only add if the file doesn't exist
         var configPath = Path.Combine(InstallLocation, "config.json");
-        var config = new JsonObject {{"show_progress_type", "TAESD"}};
-        await File.WriteAllTextAsync(configPath, config.ToString()).ConfigureAwait(false);
+        if (!File.Exists(configPath))
+        {
+            var config = new JsonObject {{"show_progress_type", "TAESD"}};
+            await File.WriteAllTextAsync(configPath, config.ToString()).ConfigureAwait(false);
+        }
 
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
     }

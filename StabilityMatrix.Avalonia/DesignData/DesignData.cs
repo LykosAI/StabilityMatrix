@@ -340,7 +340,9 @@ public static class DesignData
                 new()
                 {
                     Name = "BB95 Furry Mix",
-                    Description = "v1.0.0",
+                    Description = @"Introducing SnoutMix
+A Mix of non-Furry and Furry models such as Furtastic and BB95Furry to create a great variety of anthro AI generation options, but bringing out more detail, still giving a lot of freedom to customise the human aspects, and having great backgrounds, with a focus on something more realistic. Works well with realistic character loras.
+The gallery images are often inpainted, but you will get something very similar if copying their data directly. They are inpainted using the same model, therefore all results are possible without anything custom/hidden-away. Controlnet Tiled is applied to enhance them further afterwards. Gallery images were made with same model but before it was renamed",
                     BaseModel = "SD 1.5",
                     Files = new List<CivitFile>
                     {
@@ -378,6 +380,8 @@ public static class DesignData
 
             // Sample data for dialogs
             vm.Versions = new List<ModelVersionViewModel> {sampleViewModel};
+            vm.Title = sampleCivitVersions[0].Name;
+            vm.Description = sampleCivitVersions[0].Description;
             vm.SelectedVersionViewModel = sampleViewModel;
         });
 

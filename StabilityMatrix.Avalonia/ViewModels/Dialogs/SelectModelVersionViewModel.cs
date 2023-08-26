@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
@@ -7,6 +8,7 @@ using Avalonia.Platform;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -18,11 +20,22 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
 
     public required ContentDialog Dialog { get; set; }
     public required IReadOnlyList<ModelVersionViewModel> Versions { get; set; }
+    public required string Description { get; set; }
+    public required string Title { get; set; }
 
     [ObservableProperty] private Bitmap? previewImage;
     [ObservableProperty] private ModelVersionViewModel? selectedVersionViewModel;
     [ObservableProperty] private CivitFileViewModel? selectedFile;
     [ObservableProperty] private bool isImportEnabled;
+    [ObservableProperty] private ObservableCollection<ImageSource> imageUrls = new();
+    [ObservableProperty] private bool canGoToNextImage;
+    [ObservableProperty] private bool canGoToPreviousImage;
+    
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayedPageNumber))]
+    private int selectedImageIndex;
+
+    public int DisplayedPageNumber => SelectedImageIndex + 1;
 
     public SelectModelVersionViewModel(ISettingsManager settingsManager,
         IDownloadService downloadService)
@@ -34,33 +47,37 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
     public override void OnLoaded()
     {
         SelectedVersionViewModel = Versions[0];
+        CanGoToNextImage = true;
     }
 
     partial void OnSelectedVersionViewModelChanged(ModelVersionViewModel? value)
     {
         var nsfwEnabled = settingsManager.Settings.ModelBrowserNsfwEnabled;
-        var firstImageUrl = value?.ModelVersion?.Images?.FirstOrDefault(
-            img => nsfwEnabled || img.Nsfw == "None")?.Url;
+        var allImages = value?.ModelVersion?.Images?.Where(
+            img => nsfwEnabled || img.Nsfw == "None")?.Select(x => new ImageSource(x.Url)).ToList();
 
-        Dispatcher.UIThread.InvokeAsync(async () =>
+        if (allImages == null || !allImages.Any())
         {
-            SelectedFile = value?.CivitFileViewModels.FirstOrDefault();
-            await UpdateImage(firstImageUrl);
+            allImages = new List<ImageSource> {new(Assets.NoImage)};
+            CanGoToNextImage = false;
+        }
+        else
+        {
+            CanGoToNextImage = allImages.Count > 1;
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            CanGoToPreviousImage = false;
+            SelectedFile = SelectedVersionViewModel?.CivitFileViewModels.FirstOrDefault();
+            ImageUrls = new ObservableCollection<ImageSource>(allImages);
+            SelectedImageIndex = 0;
         });
     }
 
     partial void OnSelectedFileChanged(CivitFileViewModel? value)
     {
         IsImportEnabled = value?.CivitFile != null;
-    }
-
-    private async Task UpdateImage(string? url = null)
-    {
-        var assetStream = string.IsNullOrWhiteSpace(url)
-            ? AssetLoader.Open(new Uri("avares://StabilityMatrix.Avalonia/Assets/noimage.png"))
-            : await downloadService.GetImageStreamFromUrl(url);
-
-        PreviewImage = new Bitmap(assetStream);
     }
 
     public void Cancel()
@@ -71,5 +88,19 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
     public void Import()
     {
         Dialog.Hide(ContentDialogResult.Primary);
+    }
+
+    public void PreviousImage()
+    {
+        if (SelectedImageIndex > 0) SelectedImageIndex--;
+        CanGoToPreviousImage = SelectedImageIndex > 0;
+        CanGoToNextImage = SelectedImageIndex < ImageUrls.Count - 1;
+    }
+
+    public void NextImage()
+    {
+        if (SelectedImageIndex < ImageUrls.Count - 1) SelectedImageIndex++;
+        CanGoToPreviousImage = SelectedImageIndex > 0;
+        CanGoToNextImage = SelectedImageIndex < ImageUrls.Count - 1;
     }
 }

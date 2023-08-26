@@ -27,17 +27,22 @@ internal static class Assets
 
     [SupportedOSPlatform("windows")]
     [SupportedOSPlatform("linux")]
+    [SupportedOSPlatform("macos")]
     public static AvaloniaResource SevenZipExecutable => Compat.Switch(
         (PlatformKind.Windows,
             new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/win-x64/7za.exe")),
         (PlatformKind.Linux | PlatformKind.X64,
-            new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/linux-x64/7zzs", (UnixFileMode) 0x777)));
+            new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/linux-x64/7zzs", (UnixFileMode) 0777)),
+        (PlatformKind.MacOS | PlatformKind.Arm,
+            new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/macos-arm64/7zz", (UnixFileMode) 0x777)));
     
     [SupportedOSPlatform("windows")]
     [SupportedOSPlatform("linux")]
+    [SupportedOSPlatform("macos")]
     public static AvaloniaResource SevenZipLicense => Compat.Switch(
         (PlatformKind.Windows, new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/win-x64/7za - LICENSE.txt")),
-        (PlatformKind.Linux | PlatformKind.X64, new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/linux-x64/7zzs - LICENSE.txt")));
+        (PlatformKind.Linux | PlatformKind.X64, new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/linux-x64/7zzs - LICENSE.txt")),
+        (PlatformKind.MacOS | PlatformKind.Arm, new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/macos-arm64/7zz - LICENSE.txt")));
 
     public static AvaloniaResource PyScriptSiteCustomize => new(
         "avares://StabilityMatrix.Avalonia/Assets/sitecustomize.py");

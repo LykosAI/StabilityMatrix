@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -14,21 +12,18 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
-using Octokit;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Extensions;
-using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
-using Notification = Avalonia.Controls.Notifications.Notification;
 
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
@@ -40,7 +35,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly INotificationService notificationService;
-    
+
     public Action<CheckpointBrowserCardViewModel>? OnDownloadStart { get; set; }
 
     public CivitModel CivitModel
@@ -55,11 +50,18 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
     }
 
     public override bool IsTextVisible => Value > 0;
-    
-    [ObservableProperty] private Uri? cardImage;
-    [ObservableProperty] private bool isImporting;
-    [ObservableProperty] private string updateCardText = string.Empty;
-    [ObservableProperty] private bool showUpdateCard;
+
+    [ObservableProperty]
+    private Uri? cardImage;
+
+    [ObservableProperty]
+    private bool isImporting;
+
+    [ObservableProperty]
+    private string updateCardText = string.Empty;
+
+    [ObservableProperty]
+    private bool showUpdateCard;
     private CivitModel civitModel;
 
     public CheckpointBrowserCardViewModel(
@@ -67,7 +69,8 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         ITrackedDownloadService trackedDownloadService,
         ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> dialogFactory,
-        INotificationService notificationService)
+        INotificationService notificationService
+    )
     {
         this.downloadService = downloadService;
         this.trackedDownloadService = trackedDownloadService;
@@ -78,7 +81,8 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         // Update image when nsfw setting changes
         settingsManager.RegisterPropertyChangedHandler(
             s => s.ModelBrowserNsfwEnabled,
-            _ => Dispatcher.UIThread.Post(UpdateImage));
+            _ => Dispatcher.UIThread.Post(UpdateImage)
+        );
     }
 
     private void CheckIfInstalled()
@@ -89,28 +93,45 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
             ShowUpdateCard = true;
             return;
         }
-        
-        if (CivitModel.ModelVersions == null) return;
-        
+
+        if (CivitModel.ModelVersions == null)
+            return;
+
         var installedModels = settingsManager.Settings.InstalledModelHashes;
-        if (!installedModels.Any()) return;
-        
+        if (!installedModels.Any())
+            return;
+
         // check if latest version is installed
         var latestVersion = CivitModel.ModelVersions.FirstOrDefault();
-        if (latestVersion == null) return;
-        
-        var latestVersionInstalled = latestVersion.Files != null && latestVersion.Files.Any(file =>
-            file is {Type: CivitFileType.Model, Hashes.BLAKE3: not null} &&
-            installedModels.Contains(file.Hashes.BLAKE3));
+        if (latestVersion == null)
+            return;
+
+        var latestVersionInstalled =
+            latestVersion.Files != null
+            && latestVersion.Files.Any(
+                file =>
+                    file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                    && installedModels.Contains(file.Hashes.BLAKE3)
+            );
 
         // check if any of the ModelVersion.Files.Hashes.BLAKE3 hashes are in the installedModels list
-        var anyVersionInstalled = latestVersionInstalled || CivitModel.ModelVersions.Any(version =>
-            version.Files != null && version.Files.Any(file =>
-                file is {Type: CivitFileType.Model, Hashes.BLAKE3: not null} &&
-                installedModels.Contains(file.Hashes.BLAKE3)));
+        var anyVersionInstalled =
+            latestVersionInstalled
+            || CivitModel.ModelVersions.Any(
+                version =>
+                    version.Files != null
+                    && version.Files.Any(
+                        file =>
+                            file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                            && installedModels.Contains(file.Hashes.BLAKE3)
+                    )
+            );
 
-        UpdateCardText = latestVersionInstalled ? "Installed" :
-            anyVersionInstalled ? "Update Available" : string.Empty;
+        UpdateCardText = latestVersionInstalled
+            ? "Installed"
+            : anyVersionInstalled
+                ? "Update Available"
+                : string.Empty;
 
         ShowUpdateCard = anyVersionInstalled;
     }
@@ -131,7 +152,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
             CardImage = new Uri(image.Url);
             return;
         }
-        
+
         // If no valid image found, use no image
         CardImage = Assets.NoImage;
 
@@ -159,11 +180,16 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         var versions = model.ModelVersions;
         if (versions is null || versions.Count == 0)
         {
-            notificationService.Show(new Notification("Model has no versions available",
-                "This model has no versions available for download", NotificationType.Warning));
+            notificationService.Show(
+                new Notification(
+                    "Model has no versions available",
+                    "This model has no versions available for download",
+                    NotificationType.Warning
+                )
+            );
             return;
         }
-        
+
         var dialog = new BetterContentDialog
         {
             Title = model.Name,
@@ -180,16 +206,18 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         viewModel.Dialog = dialog;
         viewModel.Title = model.Name;
         viewModel.Description = prunedDescription;
-        viewModel.Versions = versions.Select(version =>
-                new ModelVersionViewModel(
-                    settingsManager.Settings.InstalledModelHashes ?? new HashSet<string>(), version))
+        viewModel.Versions = versions
+            .Select(
+                version =>
+                    new ModelVersionViewModel(
+                        settingsManager.Settings.InstalledModelHashes ?? new HashSet<string>(),
+                        version
+                    )
+            )
             .ToImmutableArray();
         viewModel.SelectedVersionViewModel = viewModel.Versions[0];
-        
-        dialog.Content = new SelectModelVersionDialog
-        {
-            DataContext = viewModel
-        };
+
+        dialog.Content = new SelectModelVersionDialog { DataContext = viewModel };
 
         var result = await dialog.ShowAsync();
 
@@ -207,33 +235,32 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
 
     private static string PruneDescription(CivitModel model)
     {
-        var prunedDescription =
-            model.Description
-                .Replace("<br/>", $"{Environment.NewLine}{Environment.NewLine}")
-                .Replace("<br />", $"{Environment.NewLine}{Environment.NewLine}")
-                .Replace("</p>", $"{Environment.NewLine}{Environment.NewLine}")
-                .Replace("</h1>", $"{Environment.NewLine}{Environment.NewLine}")
-                .Replace("</h2>", $"{Environment.NewLine}{Environment.NewLine}")
-                .Replace("</h3>", $"{Environment.NewLine}{Environment.NewLine}")
-                .Replace("</h4>", $"{Environment.NewLine}{Environment.NewLine}")
-                .Replace("</h5>", $"{Environment.NewLine}{Environment.NewLine}")
-                .Replace("</h6>", $"{Environment.NewLine}{Environment.NewLine}");
+        var prunedDescription = model.Description
+            .Replace("<br/>", $"{Environment.NewLine}{Environment.NewLine}")
+            .Replace("<br />", $"{Environment.NewLine}{Environment.NewLine}")
+            .Replace("</p>", $"{Environment.NewLine}{Environment.NewLine}")
+            .Replace("</h1>", $"{Environment.NewLine}{Environment.NewLine}")
+            .Replace("</h2>", $"{Environment.NewLine}{Environment.NewLine}")
+            .Replace("</h3>", $"{Environment.NewLine}{Environment.NewLine}")
+            .Replace("</h4>", $"{Environment.NewLine}{Environment.NewLine}")
+            .Replace("</h5>", $"{Environment.NewLine}{Environment.NewLine}")
+            .Replace("</h6>", $"{Environment.NewLine}{Environment.NewLine}");
         prunedDescription = HtmlRegex().Replace(prunedDescription, string.Empty);
         return prunedDescription;
     }
 
     private static async Task<FilePath> SaveCmInfo(
-        CivitModel model, 
+        CivitModel model,
         CivitModelVersion modelVersion,
         CivitFile modelFile,
-        DirectoryPath downloadDirectory)
+        DirectoryPath downloadDirectory
+    )
     {
         var modelFileName = Path.GetFileNameWithoutExtension(modelFile.Name);
-        var modelInfo =
-            new ConnectedModelInfo(model, modelVersion, modelFile, DateTime.UtcNow);
-        
+        var modelInfo = new ConnectedModelInfo(model, modelVersion, modelFile, DateTime.UtcNow);
+
         await modelInfo.SaveJsonToDirectory(downloadDirectory, modelFileName);
-        
+
         var jsonName = $"{modelFileName}.cm-info.json";
         return downloadDirectory.JoinFile(jsonName);
     }
@@ -244,87 +271,103 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
     /// <param name="modelVersion"></param>
     /// <param name="modelFilePath"></param>
     /// <returns>The file path of the saved preview image</returns>
-    private async Task<FilePath?> SavePreviewImage(CivitModelVersion modelVersion, FilePath modelFilePath)
+    private async Task<FilePath?> SavePreviewImage(
+        CivitModelVersion modelVersion,
+        FilePath modelFilePath
+    )
     {
         // Skip if model has no images
         if (modelVersion.Images == null || modelVersion.Images.Count == 0)
         {
             return null;
         }
-        
+
         var image = modelVersion.Images[0];
         var imageExtension = Path.GetExtension(image.Url).TrimStart('.');
         if (imageExtension is "jpg" or "jpeg" or "png")
         {
-            var imageDownloadPath =
-                modelFilePath.Directory!.JoinFile($"{modelFilePath.Name}.preview.{imageExtension}");
+            var imageDownloadPath = modelFilePath.Directory!.JoinFile(
+                $"{modelFilePath.NameWithoutExtension}.preview.{imageExtension}"
+            );
 
-            var imageTask =
-                downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
+            var imageTask = downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
             await notificationService.TryAsync(imageTask, "Could not download preview image");
-            
+
             return imageDownloadPath;
         }
-        
+
         return null;
     }
-    
-    private async Task DoImport(CivitModel model, CivitModelVersion? selectedVersion = null,
-        CivitFile? selectedFile = null)
+
+    private async Task DoImport(
+        CivitModel model,
+        CivitModelVersion? selectedVersion = null,
+        CivitFile? selectedFile = null
+    )
     {
         IsImporting = true;
         Text = "Downloading...";
 
         OnDownloadStart?.Invoke(this);
-        
+
         // Get latest version
         var modelVersion = selectedVersion ?? model.ModelVersions?.FirstOrDefault();
         if (modelVersion is null)
         {
-            notificationService.Show(new Notification("Model has no versions available",
-                "This model has no versions available for download", NotificationType.Warning));
+            notificationService.Show(
+                new Notification(
+                    "Model has no versions available",
+                    "This model has no versions available for download",
+                    NotificationType.Warning
+                )
+            );
             Text = "Unable to Download";
             return;
         }
 
         // Get latest version file
-        var modelFile = selectedFile ??
-                        modelVersion.Files?.FirstOrDefault(x => x.Type == CivitFileType.Model);
+        var modelFile =
+            selectedFile ?? modelVersion.Files?.FirstOrDefault(x => x.Type == CivitFileType.Model);
         if (modelFile is null)
         {
-            notificationService.Show(new Notification("Model has no files available",
-                "This model has no files available for download", NotificationType.Warning));
+            notificationService.Show(
+                new Notification(
+                    "Model has no files available",
+                    "This model has no files available for download",
+                    NotificationType.Warning
+                )
+            );
             Text = "Unable to Download";
             return;
         }
 
         var rootModelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
-        
-        var downloadDirectory =
-            rootModelsDirectory.JoinDir(model.Type.ConvertTo<SharedFolderType>()
-                .GetStringValue());
+
+        var downloadDirectory = rootModelsDirectory.JoinDir(
+            model.Type.ConvertTo<SharedFolderType>().GetStringValue()
+        );
         // Folders might be missing if user didn't install any packages yet
         downloadDirectory.Create();
-        
+
         var downloadPath = downloadDirectory.JoinFile(modelFile.Name);
 
         // Download model info and preview first
         var cmInfoPath = await SaveCmInfo(model, modelVersion, modelFile, downloadDirectory);
         var previewImagePath = await SavePreviewImage(modelVersion, downloadPath);
-        
+
         // Create tracked download
         var download = trackedDownloadService.NewDownload(modelFile.DownloadUrl, downloadPath);
-        
+
         // Add hash info
         download.ExpectedHashSha256 = modelFile.Hashes.SHA256;
-        
+
         // Add files to cleanup list
         download.ExtraCleanupFileNames.Add(cmInfoPath);
         if (previewImagePath is not null)
         {
             download.ExtraCleanupFileNames.Add(previewImagePath);
         }
-        
+
         // Attach for progress updates
         download.ProgressUpdate += (s, e) =>
         {
@@ -344,7 +387,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
             if (e == ProgressState.Success)
             {
                 Text = "Import Complete";
-                
+
                 IsIndeterminate = false;
                 Value = 100;
                 CheckIfInstalled();
@@ -361,21 +404,22 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
                 DelayedClearProgress(TimeSpan.FromMilliseconds(800));
             }
         };
-        
+
         // Add hash context action
         download.ContextAction = CivitPostDownloadContextAction.FromCivitFile(modelFile);
-        
+
         download.Start();
     }
 
     private void DelayedClearProgress(TimeSpan delay)
     {
-        Task.Delay(delay).ContinueWith(_ =>
-        {
-            Text = string.Empty;
-            Value = 0;
-            IsImporting = false;
-        });
+        Task.Delay(delay)
+            .ContinueWith(_ =>
+            {
+                Text = string.Empty;
+                Value = 0;
+                IsImporting = false;
+            });
     }
 
     [GeneratedRegex("<[^>]+>")]

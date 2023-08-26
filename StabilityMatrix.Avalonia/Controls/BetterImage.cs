@@ -1,8 +1,10 @@
-﻿using Avalonia;
+﻿using System;
+using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Automation.Peers;
 using Avalonia.Controls;
 using Avalonia.Controls.Automation.Peers;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Metadata;
 
@@ -77,25 +79,48 @@ public class BetterImage : Control
     {
         var source = Source;
 
-        if (source != null && Bounds.Width > 0 && Bounds.Height > 0)
+        if (source == null || Bounds is not {Width: > 0, Height: > 0}) return;
+        
+        var viewPort = new Rect(Bounds.Size);
+        var sourceSize = source.Size;
+
+        var scale = Stretch.CalculateScaling(Bounds.Size, sourceSize, StretchDirection);
+        var scaledSize = sourceSize * scale;
+            
+        // Calculate starting points for dest
+        var destX = HorizontalAlignment switch
         {
-            Rect viewPort = new Rect(Bounds.Size);
-            Size sourceSize = source.Size;
+            HorizontalAlignment.Left => 0,
+            HorizontalAlignment.Center => (int) (viewPort.Width - scaledSize.Width) / 2,
+            HorizontalAlignment.Right => (int) (viewPort.Width - scaledSize.Width),
+            // Stretch is default, use center
+            HorizontalAlignment.Stretch => (int) (viewPort.Width - scaledSize.Width) / 2, 
+            _ => throw new ArgumentException(nameof(HorizontalAlignment))
+        };
+            
+        var destRect = viewPort
+            .CenterRect(new Rect(scaledSize))
+            .WithX(destX)
+            .WithY(0)
+            .Intersect(viewPort);
+        var destRectUnscaledSize = destRect.Size / scale;
+            
+        var sourceX = HorizontalAlignment switch
+        {
+            HorizontalAlignment.Left => 0,
+            HorizontalAlignment.Center => (int) (sourceSize - destRectUnscaledSize).Width / 2,
+            HorizontalAlignment.Right => (int) (sourceSize - destRectUnscaledSize).Width,
+            // Stretch is default, use center
+            HorizontalAlignment.Stretch => (int) (sourceSize - destRectUnscaledSize).Width / 2, 
+            _ => throw new ArgumentException(nameof(HorizontalAlignment))
+        };
+            
+        var sourceRect = new Rect(sourceSize)
+            .CenterRect(new Rect(destRect.Size / scale))
+            .WithX(sourceX)
+            .WithY(0);
 
-            Vector scale = Stretch.CalculateScaling(Bounds.Size, sourceSize, StretchDirection);
-            Size scaledSize = sourceSize * scale;
-            Rect destRect = viewPort
-                .CenterRect(new Rect(scaledSize))
-                .WithX(0)
-                .WithY(0)
-                .Intersect(viewPort);
-            Rect sourceRect = new Rect(sourceSize)
-                .CenterRect(new Rect(destRect.Size / scale))
-                .WithX(0)
-                .WithY(0);
-
-            context.DrawImage(source, sourceRect, destRect);
-        }
+        context.DrawImage(source, sourceRect, destRect);
     }
 
     /// <summary>

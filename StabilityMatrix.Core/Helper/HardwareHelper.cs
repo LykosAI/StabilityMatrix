@@ -125,13 +125,13 @@ public static partial class HardwareHelper
     }
     
     // Set ROCm for default if AMD and Linux
-    public static bool PreferRocm() => !HardwareHelper.HasNvidiaGpu()
-                                       && HardwareHelper.HasAmdGpu()
+    public static bool PreferRocm() => !HasNvidiaGpu()
+                                       && HasAmdGpu()
                                        && Compat.IsLinux;
     
     // Set DirectML for default if AMD and Windows
-    public static bool PreferDirectML() => !HardwareHelper.HasNvidiaGpu()
-                                           && HardwareHelper.HasAmdGpu()
+    public static bool PreferDirectML() => !HasNvidiaGpu()
+                                           && HasAmdGpu()
                                            && Compat.IsWindows;
 }
 

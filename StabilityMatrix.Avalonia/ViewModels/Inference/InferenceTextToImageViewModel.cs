@@ -1,23 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Media.Imaging;
-using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
 using Refit;
 using SkiaSharp;
-using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
@@ -30,6 +25,7 @@ using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
+
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -129,7 +125,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             }
         );
 
-        GenerateImageCommand.WithNotificationErrorHandler(notificationService);
+        // GenerateImageCommand.WithNotificationErrorHandler(notificationService);
     }
 
     private (NodeDictionary prompt, string[] outputs) BuildPrompt()
@@ -335,7 +331,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         // Decode to bitmap
         using var stream = new MemoryStream(args.ImageBytes);
         var bitmap = new Bitmap(stream);
-
+        
         ImageGalleryCardViewModel.PreviewImage?.Dispose();
         ImageGalleryCardViewModel.PreviewImage = bitmap;
         ImageGalleryCardViewModel.IsPreviewOverlayEnabled = true;
@@ -364,6 +360,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         // client.ProgressUpdateReceived += OnProgressUpdateReceived;
         client.PreviewImageReceived += OnPreviewImageReceived;
 
+        
         ComfyTask? promptTask = null;
         try
         {
@@ -434,18 +431,25 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
                 var lastName = outputImages.Last().LocalFile?.Info.Name;
                 var gridPath = client.OutputImagesDir!.JoinFile($"grid-{lastName}");
 
-                await using var fileStream = gridPath.Info.OpenWrite();
-                await fileStream.WriteAsync(grid.Encode().ToArray(), cancellationToken);
+                await using (var fileStream = gridPath.Info.OpenWrite())
+                {
+                    await fileStream.WriteAsync(grid.Encode().ToArray(), cancellationToken);
+                }
 
                 // Insert to start of images
-                ImageGalleryCardViewModel.ImageSources.Add(new ImageSource(gridPath));
+                var gridImage = new ImageSource(gridPath);
+                // Preload
+                await gridImage.GetBitmapAsync();
+                ImageGalleryCardViewModel.ImageSources.Add(gridImage);
             }
 
             // Add rest of images
-            ImageGalleryCardViewModel.ImageSources.AddRange(outputImages);
-            
-            // Preload all images
-            await Task.WhenAll(outputImages.Select(i => i.BitmapAsync));
+            foreach (var img in outputImages)
+            {
+                // Preload
+                await img.GetBitmapAsync();
+                ImageGalleryCardViewModel.ImageSources.Add(img);
+            }
         }
         finally
         {
@@ -462,7 +466,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         }
     }
 
-    [RelayCommand(IncludeCancelCommand = true, FlowExceptionsToTaskScheduler = true)]
+    [RelayCommand(IncludeCancelCommand = true)]
     private async Task GenerateImage(CancellationToken cancellationToken = default)
     {
         try

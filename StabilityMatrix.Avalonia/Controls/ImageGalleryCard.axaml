@@ -3,8 +3,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:system="clr-namespace:System;assembly=System.Runtime"
-    xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
     x:DataType="vmInference:ImageGalleryCardViewModel">
@@ -40,40 +38,13 @@
                         <!-- Main image view -->
                         <Grid Margin="4">
                             <controls:FrameCarousel 
-                                x:Name="ImageCarousel"
+                                x:Name="PART_ImageCarousel" 
+                                CornerRadius="4"
+                                IsVisible="{Binding !IsPreviewOverlayEnabled}"
                                 SourcePageType="controls:AdvancedImageBoxView"
                                 SelectedItem="{Binding SelectedImage}"
                                 SelectedIndex="{Binding SelectedImageIndex}"
-                                ItemsSource="{Binding ImageSources}">
-                                <!--<controls:FrameCarousel.ContentTemplate>
-                                    <DataTemplate DataType="{x:Type models:ImageSource}">
-                                        <controls:AdvancedImageBox
-                                            x:Name="ImageView"
-                                            CornerRadius="4"
-                                            SizeMode="Fit"
-                                            Image="{Binding BitmapAsync^}">
-                                            <controls:AdvancedImageBox.ContextFlyout>
-                                                <ui:FAMenuFlyout>
-                                                    ~2~<ui:MenuFlyoutItem 
-                                                        Command="{ReflectionBinding #ImageCarousel.DataContext.FlyoutPreviewCommand}" 
-                                                        CommandParameter="{Binding #ImageView.Image}"
-                                                        Text="Expanded Preview"
-                                                        HotKey="Space"
-                                                        IconSource="ZoomInFilled" />
-                                                    <ui:MenuFlyoutSeparator/>@2@
-                                                    <ui:MenuFlyoutItem 
-                                                        IsEnabled="{OnPlatform Windows=True, Default=False}"
-                                                        Command="{ReflectionBinding #ImageCarousel.DataContext.FlyoutCopyCommand}" 
-                                                        CommandParameter="{Binding #ImageView.Image}"
-                                                        Text="Copy"
-                                                        HotKey="Ctrl+C"
-                                                        IconSource="Copy" />
-                                                </ui:FAMenuFlyout>
-                                            </controls:AdvancedImageBox.ContextFlyout>
-                                        </controls:AdvancedImageBox>
-                                    </DataTemplate>
-                                </controls:FrameCarousel.ContentTemplate>-->
-                            </controls:FrameCarousel>
+                                ItemsSource="{Binding ImageSources}" />
 
                             <!--<Carousel
                                 ScrollViewer.IsScrollChainingEnabled="False"
@@ -152,7 +123,7 @@
                                     IsEnabled="{Binding CanNavigateBack}"
                                     Classes="transparent"
                                     Padding="10,20"
-                                    Command="{Binding #ImageCarousel.Previous}">
+                                    Command="{Binding #PART_ImageCarousel.Previous}">
                                     <Path Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" 
                                           Fill="{DynamicResource ButtonForeground}" />
                                 </Button>
@@ -167,7 +138,7 @@
                                     IsEnabled="{Binding CanNavigateForward}"
                                     Classes="transparent"
                                     Padding="10,20"
-                                    Command="{Binding #ImageCarousel.Next}">
+                                    Command="{Binding #PART_ImageCarousel.Next}">
                                     <Path Data="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" 
                                           Fill="{DynamicResource ButtonForeground}" />
                                 </Button>

@@ -16,6 +16,7 @@
                         CornerRadius="{TemplateBinding CornerRadius}">
                     <ui:Frame 
                         Name="PART_Frame"
+                        CornerRadius="{TemplateBinding CornerRadius}"
                         ContentTemplate="{TemplateBinding ContentTemplate}"/>
                 </Border>
             </ControlTemplate>

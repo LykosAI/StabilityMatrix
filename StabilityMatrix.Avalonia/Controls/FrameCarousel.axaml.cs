@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
-using Avalonia.Interactivity;
-using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
 using FluentAvalonia.UI.Navigation;
@@ -67,24 +63,6 @@ public class FrameCarousel : SelectingItemsControl
             TransitionInfoOverride = new SuppressNavigationTransitionInfo()
         };
     
-    private void ItemsView_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        if (frame is null) return;
-        
-        // If current size is 0, reset the frame cache
-        var count = ItemCount;
-        if (count == 0)
-        {
-            frame.ClearValue(Frame.CacheSizeProperty);
-            // Setting this to false clears the page cache and stack caches
-            frame.IsNavigationStackEnabled = false;
-        }
-        else
-        {
-            frame.SetValue(Frame.CacheSizeProperty, count);
-        }
-    }
-    
     /// <inheritdoc />
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
@@ -95,22 +73,9 @@ public class FrameCarousel : SelectingItemsControl
         
         frame.NavigationPageFactory = new FrameNavigationFactory(SourcePageType);
 
-        ItemsView.CollectionChanged += ItemsView_CollectionChanged;
-
         if (SelectedItem is not null)
         {
             frame.NavigateFromObject(SelectedItem, DirectionlessNavigationOptions);
-        }
-    }
-
-    /// <inheritdoc />
-    protected override void OnLoaded(RoutedEventArgs e)
-    {
-        base.OnLoaded(e);
-        
-        if (SelectedItem is not null)
-        {
-            frame!.NavigateFromObject(SelectedItem, DirectionlessNavigationOptions);
         }
     }
 
@@ -118,9 +83,11 @@ public class FrameCarousel : SelectingItemsControl
     {
         base.OnPropertyChanged(change);
 
-        if (change.Property == SelectedItemProperty && frame is not null)
+        if (frame is null) return;
+        
+        if (change.Property == SelectedItemProperty)
         {
-            var value = change.GetNewValue<object?>();
+            if (change.GetNewValue<object?>() is not { } value) return;
             
             if (SelectedIndex > previousIndex)
             {
@@ -138,6 +105,17 @@ public class FrameCarousel : SelectingItemsControl
             }
             
             previousIndex = SelectedIndex;
+        } 
+        else if (change.Property == ItemCountProperty)
+        {
+            // On item count change to 0, clear the frame cache
+            var value = change.GetNewValue<int>();
+
+            if (value == 0)
+            {
+                var pageCache = frame.GetPrivateField<IList>("_pageCache");
+                pageCache?.Clear();
+            }
         }
     }
     

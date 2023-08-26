@@ -21,7 +21,7 @@ public record ImageSource : IDisposable
     /// <summary>
     /// Bitmap
     /// </summary>
-    public Bitmap? Bitmap { get; init; }
+    public Bitmap? Bitmap { get; set; }
     
     public ImageSource(FilePath localFile)
     {
@@ -55,7 +55,8 @@ public record ImageSource : IDisposable
         if (path is null) return null;
         
         // Load the image
-        return await loader.ProvideImageAsync(path).ConfigureAwait(false);
+        Bitmap = await loader.ProvideImageAsync(path).ConfigureAwait(false);
+        return Bitmap;
     }
     
     /// <summary>

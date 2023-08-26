@@ -155,6 +155,18 @@ public record GpuInfo
         _ => Level.High
     };
     
-    public bool IsNvidia => Name?.ToLowerInvariant().Contains("nvidia") ?? false;
+    public bool IsNvidia
+    {
+        get
+        {
+            var name = Name?.ToLowerInvariant();
+            
+            if (string.IsNullOrEmpty(name)) return false;
+            
+            return name.Contains("nvidia") 
+                   || name.Contains("tesla");
+        }
+    }
+
     public bool IsAmd => Name?.ToLowerInvariant().Contains("amd") ?? false;
 }

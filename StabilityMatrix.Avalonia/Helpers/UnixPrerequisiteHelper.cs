@@ -173,8 +173,8 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
             progress?.Report(new ProgressReport(0, "Installing Python", isIndeterminate: true));
             await ArchiveHelper.Extract7ZAuto(downloadPath, PythonDir);
             
-            // For Linux, move the inner 'python' folder up to the root PythonDir
-            if (Compat.IsLinux)
+            // For Unix, move the inner 'python' folder up to the root PythonDir
+            if (Compat.IsUnix)
             {
                 var innerPythonDir = PythonDir.JoinDir("python");
                 if (!innerPythonDir.Exists)

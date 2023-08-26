@@ -31,17 +31,18 @@ public class PyRunner : IPyRunner
     /// </summary>
     public static string RelativePythonDllPath => Compat.Switch(
         (PlatformKind.Windows, "python310.dll"),
-        (PlatformKind.Linux, Path.Combine("lib", "libpython3.10.so")));
-    
-    public static string PythonDllPath => Compat.Switch(
-        (PlatformKind.Windows, Path.Combine(PythonDir, "python310.dll")),
-        (PlatformKind.Linux, Path.Combine(PythonDir, "lib", "libpython3.10.so")));
+        (PlatformKind.Linux, Path.Combine("lib", "libpython3.10.so")),
+        (PlatformKind.MacOS, Path.Combine("lib", "libpython3.10.dylib")));
+
+    public static string PythonDllPath => Path.Combine(PythonDir, RelativePythonDllPath);
     public static string PythonExePath => Compat.Switch(
         (PlatformKind.Windows, Path.Combine(PythonDir, "python.exe")),
-        (PlatformKind.Linux, Path.Combine(PythonDir, "bin", "python3")));
+        (PlatformKind.Linux, Path.Combine(PythonDir, "bin", "python3")),
+        (PlatformKind.MacOS, Path.Combine(PythonDir, "bin", "python3")));
     public static string PipExePath => Compat.Switch(
         (PlatformKind.Windows, Path.Combine(PythonDir, "Scripts", "pip.exe")),
-            (PlatformKind.Linux, Path.Combine(PythonDir, "bin", "pip3")));
+        (PlatformKind.Linux, Path.Combine(PythonDir, "bin", "pip3")),
+        (PlatformKind.MacOS, Path.Combine(PythonDir, "bin", "pip3")));
     
     public static string GetPipPath => Path.Combine(PythonDir, "get-pip.pyc");
 

@@ -114,7 +114,7 @@ public static class Compat
             throw new PlatformNotSupportedException();
         }
         
-        if (RuntimeInformation.ProcessArchitecture == Architecture.Arm)
+        if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
         {
             Platform |= PlatformKind.Arm;
         }

@@ -77,6 +77,8 @@
       <AvaloniaResource Include="Assets\win-x64\**" Condition="'$(RuntimeIdentifier)' == 'win-x64'" />
       <!-- Only for linux-64 -->
       <AvaloniaResource Include="Assets\linux-x64\**" Condition="'$(RuntimeIdentifier)' == 'linux-x64'" />
+      <!-- Only for osx-arm64 -->
+      <AvaloniaResource Include="Assets\macos-arm64\**" Condition="'$(RuntimeIdentifier)' == 'osx-arm64'" />
     </ItemGroup>
     
     <ItemGroup>

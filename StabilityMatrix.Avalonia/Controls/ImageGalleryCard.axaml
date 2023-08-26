@@ -20,6 +20,11 @@
         <Setter Property="Orientation" Value="Horizontal" />
     </Style>
     
+    <Style Selector="controls|ImageGalleryCard /template/ Carousel#ImageCarousel /template/ ScrollViewer#PART_ScrollViewer">
+        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
+        <Setter Property="VerticalScrollBarVisibility" Value="Disabled"/>
+    </Style>
+    
     <Style Selector="controls|ImageGalleryCard">
         <!--  Set Defaults  -->
         <Setter Property="Template">
@@ -34,10 +39,48 @@
                     <Grid RowDefinitions="*,Auto">
                         <!-- Main image view -->
                         <Grid Margin="4">
-                            <Carousel
+                            <controls:FrameCarousel 
+                                x:Name="ImageCarousel"
+                                SourcePageType="controls:AdvancedImageBoxView"
+                                SelectedItem="{Binding SelectedImage}"
+                                SelectedIndex="{Binding SelectedImageIndex}"
+                                ItemsSource="{Binding ImageSources}">
+                                <!--<controls:FrameCarousel.ContentTemplate>
+                                    <DataTemplate DataType="{x:Type models:ImageSource}">
+                                        <controls:AdvancedImageBox
+                                            x:Name="ImageView"
+                                            CornerRadius="4"
+                                            SizeMode="Fit"
+                                            Image="{Binding BitmapAsync^}">
+                                            <controls:AdvancedImageBox.ContextFlyout>
+                                                <ui:FAMenuFlyout>
+                                                    ~2~<ui:MenuFlyoutItem 
+                                                        Command="{ReflectionBinding #ImageCarousel.DataContext.FlyoutPreviewCommand}" 
+                                                        CommandParameter="{Binding #ImageView.Image}"
+                                                        Text="Expanded Preview"
+                                                        HotKey="Space"
+                                                        IconSource="ZoomInFilled" />
+                                                    <ui:MenuFlyoutSeparator/>@2@
+                                                    <ui:MenuFlyoutItem 
+                                                        IsEnabled="{OnPlatform Windows=True, Default=False}"
+                                                        Command="{ReflectionBinding #ImageCarousel.DataContext.FlyoutCopyCommand}" 
+                                                        CommandParameter="{Binding #ImageView.Image}"
+                                                        Text="Copy"
+                                                        HotKey="Ctrl+C"
+                                                        IconSource="Copy" />
+                                                </ui:FAMenuFlyout>
+                                            </controls:AdvancedImageBox.ContextFlyout>
+                                        </controls:AdvancedImageBox>
+                                    </DataTemplate>
+                                </controls:FrameCarousel.ContentTemplate>-->
+                            </controls:FrameCarousel>
+
+                            <!--<Carousel
+                                ScrollViewer.IsScrollChainingEnabled="False"
+                                ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                 x:Name="ImageCarousel"
                                 MinHeight="400"
-                                AutoScrollToSelectedItem="True"
                                 IsVisible="{Binding !IsPreviewOverlayEnabled}"
                                 SelectedItem="{Binding SelectedImage}"
                                 SelectedIndex="{Binding SelectedImageIndex}"
@@ -66,13 +109,13 @@
                                             Image="{Binding BitmapAsync^}">
                                             <controls:AdvancedImageBox.ContextFlyout>
                                                 <ui:FAMenuFlyout>
-                                                    <!--<ui:MenuFlyoutItem 
+                                                    ~1~<ui:MenuFlyoutItem 
                                                         Command="{ReflectionBinding #ImageCarousel.DataContext.FlyoutPreviewCommand}" 
                                                         CommandParameter="{Binding #ImageView.Image}"
                                                         Text="Expanded Preview"
                                                         HotKey="Space"
                                                         IconSource="ZoomInFilled" />
-                                                    <ui:MenuFlyoutSeparator/>-->
+                                                    <ui:MenuFlyoutSeparator/>@1@
                                                     <ui:MenuFlyoutItem 
                                                         IsEnabled="{OnPlatform Windows=True, Default=False}"
                                                         Command="{ReflectionBinding #ImageCarousel.DataContext.FlyoutCopyCommand}" 
@@ -86,7 +129,8 @@
                                     </DataTemplate>
                                 </Carousel.ItemTemplate>
                                     
-                            </Carousel>
+                            </Carousel>-->
+                            
                             <Border
                                 ClipToBounds="True"
                                 CornerRadius="4"

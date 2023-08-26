@@ -443,6 +443,9 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
 
             // Add rest of images
             ImageGalleryCardViewModel.ImageSources.AddRange(outputImages);
+            
+            // Preload all images
+            await Task.WhenAll(outputImages.Select(i => i.BitmapAsync));
         }
         finally
         {

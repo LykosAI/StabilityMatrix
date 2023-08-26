@@ -32,6 +32,7 @@ using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
@@ -634,25 +635,21 @@ public partial class SettingsViewModel : PageViewModelBase
         await using var stream = data.AsStream();
 
         var bitmap = WriteableBitmap.Decode(stream);
-        
-        /*var imageBox = new AdvancedImageBox
-        {
-            Image = bitmap,
-            Width = 600,
-            Height = 800,
-            PixelGridZoomThreshold = 10,
-            ConstrainZoomOutToFitLevel = true,
-            MaxZoom = 6400 * 2,
-        };*/
 
-        var imageBox = new ImageViewerDialog()
+        var galleryImages = new List<ImageSource>
+        {
+            new(bitmap),
+        };
+        galleryImages.AddRange(files.Select(f => new ImageSource(f.Path.ToString())));
+
+        var imageBox = new ImageGalleryCard
         {
             Width = 1000,
-            Height = 1000,
-            DataContext = new ImageViewerViewModel
+            Height = 900,
+            DataContext = dialogFactory.Get<ImageGalleryCardViewModel>(vm =>
             {
-                ImageSource = new ImageSource(bitmap)
-            }
+                vm.ImageSources.AddRange(galleryImages);
+            })
         };
 
         var dialog = new BetterContentDialog
@@ -661,7 +658,7 @@ public partial class SettingsViewModel : PageViewModelBase
             MaxDialogHeight = 1000,
             FullSizeDesired = true,
             Content = imageBox,
-            IsFooterVisible = false,
+            CloseButtonText = "Close",
             ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
         };
 

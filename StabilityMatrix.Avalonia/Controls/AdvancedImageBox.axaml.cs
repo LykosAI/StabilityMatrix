@@ -476,6 +476,9 @@ public class AdvancedImageBox : TemplatedControl
     public ScrollBar VerticalScrollBar { get; private set; }
     public ContentPresenter ViewPort { get; private set; }
 
+    // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+    public bool IsLoaded => ViewPort is not null;
+
     public Vector Offset
     {
         get => new(HorizontalScrollBar.Value, VerticalScrollBar.Value);
@@ -878,7 +881,13 @@ public class AdvancedImageBox : TemplatedControl
         set
         {
             SetValue(SizeModeProperty, value);
-            SizeModeChanged();
+            
+            // Run changed if loaded
+            if (IsLoaded)
+            {
+                SizeModeChanged();
+            }
+            
             RaisePropertyChanged(nameof(IsHorizontalBarVisible));
             RaisePropertyChanged(nameof(IsVerticalBarVisible));
         }
@@ -1207,24 +1216,26 @@ public class AdvancedImageBox : TemplatedControl
         // FocusableProperty.OverrideDefaultValue(typeof(AdvancedImageBox), true);
         AffectsRender<AdvancedImageBox>(ShowGridProperty);
 
-        HorizontalScrollBar = e.NameScope.Find<ScrollBar>("HorizontalScrollBar");
-        VerticalScrollBar = e.NameScope.Find<ScrollBar>("VerticalScrollBar");
-        ViewPort = e.NameScope.Find<ContentPresenter>("ViewPort");
+        HorizontalScrollBar = e.NameScope.Find<ScrollBar>("HorizontalScrollBar") ?? throw new NullReferenceException();
+        VerticalScrollBar = e.NameScope.Find<ScrollBar>("VerticalScrollBar") ?? throw new NullReferenceException();
+        ViewPort = e.NameScope.Find<ContentPresenter>("ViewPort") ?? throw new NullReferenceException();
 
         SizeModeChanged();
 
         HorizontalScrollBar.Scroll += ScrollBarOnScroll;
         VerticalScrollBar.Scroll += ScrollBarOnScroll;
+        
         // ViewPort.PointerPressed += ViewPortOnPointerPressed;
         // ViewPort.PointerExited += ViewPortOnPointerExited;
         // ViewPort.PointerMoved += ViewPortOnPointerMoved;
-        // ViewPort.PointerWheelChanged += ViewPortOnPointerWheelChanged;
+        // ViewPort!.PointerWheelChanged += ViewPort_OnPointerWheelChanged;
     }
-
-    /*private void InitializeComponent()
+    
+    private void ViewPort_OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
     {
-        AvaloniaXamlLoader.Load(this);
-    }*/
+        e.Handled = true;
+    }
+    
     #endregion
 
     #region Render methods
@@ -1427,9 +1438,12 @@ public class AdvancedImageBox : TemplatedControl
     {
         base.OnPointerWheelChanged(e);
         
+        e.PreventGestureRecognition();
         e.Handled = true;
+        
         if (Image is null)
             return;
+        
         if (AllowZoom && SizeMode == SizeModes.Normal)
         {
             // The MouseWheel event can contain multiple "spins" of the wheel so we need to adjust accordingly

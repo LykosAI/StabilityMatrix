@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.3.3
+### Fixed
+- Fixed GPU recognition for Nvidia Tesla GPUs
+
 ## v2.3.2
 ### Added
 - Added warning for exFAT / FAT32 drives when selecting a data directory

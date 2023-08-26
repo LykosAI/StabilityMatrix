@@ -5,6 +5,16 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.3.2
+### Added
+- Added warning for exFAT / FAT32 drives when selecting a data directory
+### Fixed
+- Automatic1111 and ComfyUI should now install the correct version of pytorch for AMD GPUs
+- Fixed "Call from invalid thread" exceptions preventing download completion notifications from showing
+- Fixed model preview image downloading with incorrect name
+### Changed
+- Redesigned "Select Model Version" dialog to include model description and all preview images
+
 ## v2.3.1
 ### Fixed
 - Fixed Auto update not appearing in some regions due to date formatting issues

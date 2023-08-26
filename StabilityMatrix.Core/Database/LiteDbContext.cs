@@ -46,20 +46,22 @@ public class LiteDbContext : ILiteDbContext
         {
             db = new LiteDatabaseAsync(":temp:");
         }
-         
-        // Attempt to create connection, might be in use
-        try
+        else
         {
-            var dbPath = Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db");
-            db = new LiteDatabaseAsync(new ConnectionString()
+            // Attempt to create connection, might be in use
+            try
             {
-                Filename = dbPath,
-                Connection = ConnectionType.Shared,
-            });
-        }
-        catch (IOException e)
-        {
-            logger.LogWarning("Database in use or not accessible ({Message}), using temporary database", e.Message);
+                var dbPath = Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db");
+                db = new LiteDatabaseAsync(new ConnectionString()
+                {
+                    Filename = dbPath,
+                    Connection = ConnectionType.Shared,
+                });
+            }
+            catch (IOException e)
+            {
+                logger.LogWarning("Database in use or not accessible ({Message}), using temporary database", e.Message);
+            }
         }
         
         // Fallback to temporary database
@@ -136,12 +138,15 @@ public class LiteDbContext : ILiteDbContext
         return changed;
     }
 
-    public async Task<GithubCacheEntry?> GetGithubCacheEntry(string cacheKey)
+    public async Task<GithubCacheEntry?> GetGithubCacheEntry(string? cacheKey)
     {
+        if (string.IsNullOrEmpty(cacheKey)) return null;
+        
         if (await GithubCache.FindByIdAsync(cacheKey).ConfigureAwait(false) is { } result)
         {
             return result;
         }
+        
         return null;
     }
 

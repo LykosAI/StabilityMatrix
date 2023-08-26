@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
@@ -317,24 +318,29 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
 
     private void OnProgressUpdateReceived(object? sender, ComfyProgressUpdateEventArgs args)
     {
-        OutputProgress.Value = args.Value;
-        OutputProgress.Maximum = args.Maximum;
-        OutputProgress.IsIndeterminate = false;
+        Dispatcher.UIThread.Post(() =>
+        {
+            OutputProgress.Value = args.Value;
+            OutputProgress.Maximum = args.Maximum;
+            OutputProgress.IsIndeterminate = false;
 
-        OutputProgress.Text =
-            $"({args.Value} / {args.Maximum})"
-            + (args.RunningNode != null ? $" {args.RunningNode}" : "");
+            OutputProgress.Text =
+                $"({args.Value} / {args.Maximum})"
+                + (args.RunningNode != null ? $" {args.RunningNode}" : "");
+        });
     }
 
     private void OnPreviewImageReceived(object? sender, ComfyWebSocketImageData args)
     {
-        // Decode to bitmap
-        using var stream = new MemoryStream(args.ImageBytes);
-        var bitmap = new Bitmap(stream);
+        Dispatcher.UIThread.Post(() =>
+        {
+            using var stream = new MemoryStream(args.ImageBytes);
+            var bitmap = new Bitmap(stream);
         
-        ImageGalleryCardViewModel.PreviewImage?.Dispose();
-        ImageGalleryCardViewModel.PreviewImage = bitmap;
-        ImageGalleryCardViewModel.IsPreviewOverlayEnabled = true;
+            ImageGalleryCardViewModel.PreviewImage?.Dispose();
+            ImageGalleryCardViewModel.PreviewImage = bitmap;
+            ImageGalleryCardViewModel.IsPreviewOverlayEnabled = true;
+        });
     }
 
     private async Task GenerateImageImpl(CancellationToken cancellationToken = default)
@@ -356,10 +362,8 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
 
         var (nodes, outputNodeNames) = BuildPrompt();
 
-        // Connect progress handler
-        // client.ProgressUpdateReceived += OnProgressUpdateReceived;
+        // Connect preview image handler
         client.PreviewImageReceived += OnPreviewImageReceived;
-
         
         ComfyTask? promptTask = null;
         try
@@ -459,8 +463,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             ImageGalleryCardViewModel.PreviewImage?.Dispose();
             ImageGalleryCardViewModel.PreviewImage = null;
             ImageGalleryCardViewModel.IsPreviewOverlayEnabled = false;
-
-            // client.ProgressUpdateReceived -= OnProgressUpdateReceived;
+            
             promptTask?.Dispose();
             client.PreviewImageReceived -= OnPreviewImageReceived;
         }

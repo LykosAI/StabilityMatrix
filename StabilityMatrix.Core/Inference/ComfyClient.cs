@@ -57,7 +57,7 @@ public class ComfyClient : InferenceClientBase
     /// <summary>
     /// Event raised when a preview image is received from the server
     /// </summary>
-    public event EventHandler<ComfyWebSocketImageData>? PreviewImageReceived; 
+    public event EventHandler<ComfyWebSocketImageData>? PreviewImageReceived;
     
     public ComfyClient(IApiFactory apiFactory, Uri baseAddress)
     {

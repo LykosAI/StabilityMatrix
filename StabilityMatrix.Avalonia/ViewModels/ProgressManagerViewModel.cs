@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Collections;
 using Avalonia.Controls.Notifications;
-using CommunityToolkit.Mvvm.ComponentModel;
+using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
-using Polly;
-using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views;
@@ -53,7 +49,10 @@ public partial class ProgressManagerViewModel : PageViewModelBase
             switch (state)
             {
                 case ProgressState.Success:
-                    notificationService.Show("Download Completed", $"Download of {e.FileName} completed successfully.", NotificationType.Success);
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        notificationService.Show("Download Completed", $"Download of {e.FileName} completed successfully.", NotificationType.Success);
+                    });
                     break;
                 case ProgressState.Failed:
                     var msg = "";
@@ -61,10 +60,16 @@ public partial class ProgressManagerViewModel : PageViewModelBase
                     {
                         msg = $"({exception.GetType().Name}) {exception.Message}";
                     }
-                    notificationService.ShowPersistent("Download Failed", $"Download of {e.FileName} failed: {msg}", NotificationType.Error);
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        notificationService.ShowPersistent("Download Failed", $"Download of {e.FileName} failed: {msg}", NotificationType.Error);
+                    });
                     break;
                 case ProgressState.Cancelled:
-                    notificationService.Show("Download Cancelled", $"Download of {e.FileName} was cancelled.", NotificationType.Warning);
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        notificationService.Show("Download Cancelled", $"Download of {e.FileName} was cancelled.", NotificationType.Warning);
+                    });
                     break;
             }
         };

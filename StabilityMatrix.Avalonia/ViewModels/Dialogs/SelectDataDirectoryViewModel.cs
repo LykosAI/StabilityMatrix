@@ -29,6 +29,8 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
     private const string InvalidDirectoryText =
         "Directory must be empty or have a valid settings.json file";
     private const string NotEnoughFreeSpaceText = "Not enough free space on the selected drive";
+    private const string FatWarningText =
+        "FAT32 / exFAT drives are not supported at this time";
 
     [ObservableProperty] private string dataDirectory = DefaultInstallLocation;
     [ObservableProperty] private bool isPortableMode;
@@ -36,6 +38,7 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
     [ObservableProperty] private string directoryStatusText = string.Empty;
     [ObservableProperty] private bool isStatusBadgeVisible;
     [ObservableProperty] private bool isDirectoryValid;
+    [ObservableProperty] private bool showFatWarning;
 
     public RefreshBadgeViewModel ValidatorRefreshBadge { get; } = new()
     {
@@ -66,6 +69,8 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
     private async Task<bool> ValidateDataDirectory()
     {
         await using var delay = new MinimumDelay(100, 200);
+        
+        ShowFatWarning = IsDriveFat(DataDirectory);
 
         // Doesn't exist, this is fine as a new install, hide badge
         if (!Directory.Exists(DataDirectory))
@@ -150,5 +155,19 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
     partial void OnIsPortableModeChanged(bool value)
     {
         DataDirectory = value ? Compat.AppCurrentDir + "Data" : DefaultInstallLocation;
+    }
+
+    private bool IsDriveFat(string path)
+    {
+        try
+        {
+            var drive = new DriveInfo(Path.GetPathRoot(path));
+            return drive.DriveFormat.Contains("FAT", StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Error checking drive FATness");
+            return false;
+        }
     }
 }

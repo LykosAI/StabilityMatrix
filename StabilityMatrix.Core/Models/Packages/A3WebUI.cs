@@ -128,14 +128,14 @@ public class A3WebUI : BaseGitPackage
         return release.TagName!;
     }
 
-    public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
+    public override async Task InstallPackage(string installLocation, IProgress<ProgressReport>? progress = null)
     {
-        await UnzipPackage(progress);
+        await base.InstallPackage(installLocation, progress).ConfigureAwait(false);
         
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
         // Setup venv
-        await using var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
-        venvRunner.WorkingDirectory = InstallLocation;
+        await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
+        venvRunner.WorkingDirectory = installLocation;
         if (!venvRunner.Exists())
         {
             await venvRunner.Setup().ConfigureAwait(false);
@@ -182,7 +182,7 @@ public class A3WebUI : BaseGitPackage
         
         // Create and add {"show_progress_type": "TAESD"} to config.json
         // Only add if the file doesn't exist
-        var configPath = Path.Combine(InstallLocation, "config.json");
+        var configPath = Path.Combine(installLocation, "config.json");
         if (!File.Exists(configPath))
         {
             var config = new JsonObject {{"show_progress_type", "TAESD"}};

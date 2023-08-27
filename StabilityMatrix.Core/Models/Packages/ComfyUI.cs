@@ -90,24 +90,14 @@ public class ComfyUI : BaseGitPackage
 
     public override Task<string> GetLatestVersion() => Task.FromResult("master");
 
-    public override async Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true)
+    public override async Task InstallPackage(string installLocation, IProgress<ProgressReport>? progress = null)
     {
-        var allBranches = await GetAllBranches().ConfigureAwait(false);
-        return allBranches.Select(b => new PackageVersion
-        {
-            TagName = $"{b.Name}", 
-            ReleaseNotesMarkdown = string.Empty
-        });
-    }
-
-    public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
-    {
-        await UnzipPackage(progress);
+        await base.InstallPackage(installLocation, progress).ConfigureAwait(false);
         
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
         // Setup venv
-        await using var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
-        venvRunner.WorkingDirectory = InstallLocation;
+        await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
+        venvRunner.WorkingDirectory = installLocation;
         if (!venvRunner.Exists())
         {
             await venvRunner.Setup().ConfigureAwait(false);

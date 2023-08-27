@@ -54,9 +54,4 @@ public class DankDiffusion : BaseGitPackage
     {
         throw new NotImplementedException();
     }
-
-    public override Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true)
-    {
-        throw new NotImplementedException();
-    }
 }

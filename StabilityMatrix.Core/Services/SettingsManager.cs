@@ -353,7 +353,7 @@ public class SettingsManager : ISettingsManager
         Environment.SetEnvironmentVariable("PATH", toInsert, EnvironmentVariableTarget.Process);
     }
 
-    public void UpdatePackageVersionNumber(Guid id, string? newVersion)
+    public void UpdatePackageVersionNumber(Guid id, InstalledPackageVersion? newVersion)
     {
         var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == id);
         if (package == null || newVersion == null)
@@ -361,11 +361,7 @@ public class SettingsManager : ISettingsManager
             return;
         }
 
-        package.PackageVersion = newVersion;
-        package.DisplayVersion = string.IsNullOrWhiteSpace(package.InstalledBranch)
-            ? newVersion
-            : $"{package.InstalledBranch}@{newVersion[..7]}";
-
+        package.Version = newVersion;
         SaveSettings();
     }
     

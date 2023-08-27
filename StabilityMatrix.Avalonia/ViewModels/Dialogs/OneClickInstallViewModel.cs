@@ -107,16 +107,30 @@ public partial class OneClickInstallViewModel : ViewModelBase
         
         // get latest version & download & install
         SubHeaderText = "Getting latest version...";
-        var latestVersion = await SelectedPackage.GetLatestVersion();
-        SelectedPackage.InstallLocation =
-            Path.Combine(libraryDir, "Packages", SelectedPackage.Name);
+        var installLocation = Path.Combine(libraryDir, "Packages", SelectedPackage.Name);
         SelectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
+
+        var downloadVersion = new DownloadPackageVersionOptions();
+        var installedVersion = new InstalledPackageVersion();
         
-        await DownloadPackage(latestVersion);
-        await InstallPackage();
+        var versionOptions = await SelectedPackage.GetAllVersionOptions();
+        if (versionOptions.AvailableVersions != null && versionOptions.AvailableVersions.Any())
+        {
+            downloadVersion.VersionTag =
+                versionOptions.AvailableVersions.First().TagName;
+            installedVersion.InstalledReleaseVersion = downloadVersion.VersionTag;
+        }
+        else
+        {
+            downloadVersion.BranchName = await SelectedPackage.GetLatestVersion();
+            installedVersion.InstalledBranch = downloadVersion.BranchName;
+        }
+        
+        await DownloadPackage(installLocation, downloadVersion);
+        await InstallPackage(installLocation);
 
         SubHeaderText = "Setting up shared folder links...";
-        await SelectedPackage.SetupModelFolders(SelectedPackage.InstallLocation);
+        await SelectedPackage.SetupModelFolders(installLocation);
         
         var installedPackage = new InstalledPackage
         {
@@ -124,8 +138,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
             LibraryPath = Path.Combine("Packages", SelectedPackage.Name),
             Id = Guid.NewGuid(),
             PackageName = SelectedPackage.Name,
-            PackageVersion = latestVersion,
-            DisplayVersion = latestVersion,
+            Version = installedVersion,
             LaunchCommand = SelectedPackage.LaunchCommand,
             LastUpdateCheck = DateTimeOffset.Now
         };
@@ -148,7 +161,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
         EventManager.Instance.OnOneClickInstallFinished(false);
     }
 
-    private async Task DownloadPackage(string version)
+    private async Task DownloadPackage(string installLocation, DownloadPackageVersionOptions versionOptions)
     {
         SubHeaderText = "Downloading package...";
         
@@ -158,13 +171,13 @@ public partial class OneClickInstallViewModel : ViewModelBase
             OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
             EventManager.Instance.OnGlobalProgressChanged(OneClickInstallProgress);
         });
-        
-        await SelectedPackage.DownloadPackage(version, false, version, progress);
+
+        await SelectedPackage.DownloadPackage(installLocation, versionOptions, progress);
         SubHeaderText = "Download Complete";
         OneClickInstallProgress = 100;
     }
 
-    private async Task InstallPackage()
+    private async Task InstallPackage(string installLocation)
     {
         SelectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
         SubHeaderText = "Downloading and installing package requirements...";
@@ -177,6 +190,6 @@ public partial class OneClickInstallViewModel : ViewModelBase
             EventManager.Instance.OnGlobalProgressChanged(OneClickInstallProgress);
         });
         
-        await SelectedPackage.InstallPackage(progress);
+        await SelectedPackage.InstallPackage(installLocation, progress);
     }
 }

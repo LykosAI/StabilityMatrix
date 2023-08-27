@@ -26,14 +26,14 @@ public class UnknownPackage : BasePackage
         "test-config",
     };
 
-    /// <inheritdoc />
-    public override Task<string> DownloadPackage(string version, bool isCommitHash, string? branch, IProgress<ProgressReport>? progress = null)
+    public override Task DownloadPackage(string installLocation, DownloadPackageVersionOptions versionOptions,
+        IProgress<ProgressReport>? progress1)
     {
         throw new NotImplementedException();
     }
 
     /// <inheritdoc />
-    public override Task InstallPackage(IProgress<ProgressReport>? progress = null)
+    public override Task InstallPackage(string installLocation, IProgress<ProgressReport>? progress = null)
     {
         throw new NotImplementedException();
     }
@@ -80,7 +80,7 @@ public class UnknownPackage : BasePackage
     }
 
     /// <inheritdoc />
-    public override Task<string> Update(InstalledPackage installedPackage, IProgress<ProgressReport>? progress = null,
+    public override Task<InstalledPackageVersion> Update(InstalledPackage installedPackage, IProgress<ProgressReport>? progress = null,
         bool includePrerelease = false)
     {
         throw new NotImplementedException();
@@ -92,7 +92,8 @@ public class UnknownPackage : BasePackage
     public override List<LaunchOptionDefinition> LaunchOptions => new();
     public override Task<string> GetLatestVersion() => Task.FromResult(string.Empty);
 
-    public override Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true) => Task.FromResult(Enumerable.Empty<PackageVersion>());
+    public override Task<PackageVersionOptions> GetAllVersionOptions() =>
+        Task.FromResult(new PackageVersionOptions());
 
     /// <inheritdoc />
     public override Task<IEnumerable<GitCommit>?> GetAllCommits(string branch, int page = 1, int perPage = 10) => Task.FromResult<IEnumerable<GitCommit>?>(null);

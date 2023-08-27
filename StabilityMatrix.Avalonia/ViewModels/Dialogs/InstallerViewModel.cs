@@ -42,14 +42,13 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     
     [ObservableProperty] private BasePackage selectedPackage;
     [ObservableProperty] private PackageVersion? selectedVersion;
-
     [ObservableProperty] private IReadOnlyList<BasePackage>? availablePackages;
     [ObservableProperty] private ObservableCollection<GitCommit>? availableCommits;
     [ObservableProperty] private ObservableCollection<PackageVersion>? availableVersions;
-    
     [ObservableProperty] private GitCommit? selectedCommit;
-
     [ObservableProperty] private string? releaseNotes;
+    [ObservableProperty] private string latestVersionText = string.Empty;
+    [ObservableProperty] private bool isAdvancedMode;
     
     // Version types (release or commit)
     [ObservableProperty]
@@ -107,23 +106,19 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         // Check for updates
         try
         {
+            var versionOptions = await SelectedPackage.GetAllVersionOptions();
             if (IsReleaseMode)
             {
-                var versions = (await SelectedPackage.GetAllVersions()).ToList();
-                AvailableVersions = new ObservableCollection<PackageVersion>(versions);
+                AvailableVersions =
+                    new ObservableCollection<PackageVersion>(versionOptions.AvailableVersions);
                 if (!AvailableVersions.Any()) return;
 
                 SelectedVersion = AvailableVersions[0];
             }
             else
             {
-                var branches = (await SelectedPackage.GetAllBranches()).ToList();
-                AvailableVersions = new ObservableCollection<PackageVersion>(branches.Select(b =>
-                    new PackageVersion
-                    {
-                        TagName = b.Name,
-                        ReleaseNotesMarkdown = b.Commit.Label
-                    }));
+                AvailableVersions =
+                    new ObservableCollection<PackageVersion>(versionOptions.AvailableBranches);
                 UpdateSelectedVersionToLatestMain();
             }
 
@@ -173,9 +168,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         try
         {
             await InstallGitIfNecessary();
-        
-            SelectedPackage.InstallLocation = Path.Combine(
-                settingsManager.LibraryDir, "Packages", InstallName);
+            var installLocation = Path.Combine(settingsManager.LibraryDir, "Packages", InstallName);
 
             if (!PyRunner.PipInstalled || !PyRunner.VenvInstalled)
             {
@@ -193,35 +186,33 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                 }
             }
 
-            string version;
+            var downloadOptions = new DownloadPackageVersionOptions();
+            var installedVersion = new InstalledPackageVersion();
             if (IsReleaseMode)
             {
-                version = SelectedVersion?.TagName ?? 
-                          throw new NullReferenceException("Selected version is null");
-                
-                await DownloadPackage(version, false, null);
+                downloadOptions.VersionTag = SelectedVersion?.TagName ?? 
+                                  throw new NullReferenceException("Selected version is null");
+                installedVersion.InstalledReleaseVersion = downloadOptions.VersionTag;
             }
             else
             {
-                version = SelectedCommit?.Sha ?? 
+                downloadOptions.CommitHash = SelectedCommit?.Sha ?? 
                           throw new NullReferenceException("Selected commit is null");
-                
-                await DownloadPackage(version, true, SelectedVersion!.TagName);
+                installedVersion.InstalledBranch = SelectedVersion?.TagName ?? 
+                          throw new NullReferenceException("Selected version is null");
+                installedVersion.InstalledCommitSha = downloadOptions.CommitHash;
             }
             
-            await InstallPackage();
+            await DownloadPackage(installLocation, downloadOptions);
+            await InstallPackage(installLocation);
 
             InstallProgress.Text = "Setting up shared folder links...";
-            await SelectedPackage.SetupModelFolders(SelectedPackage.InstallLocation);
-            //sharedFolders.SetupLinksForPackage(SelectedPackage, SelectedPackage.InstallLocation);
+            await SelectedPackage.SetupModelFolders(installLocation);
             
             InstallProgress.Text = "Done";
             InstallProgress.IsIndeterminate = false;
             InstallProgress.Value = 100;
             EventManager.Instance.OnGlobalProgressChanged(100);
-
-            var branch = SelectedVersionType == PackageVersionType.GithubRelease ? 
-                null : SelectedVersion!.TagName;
 
             var package = new InstalledPackage
             {
@@ -229,9 +220,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                 LibraryPath = Path.Combine("Packages", InstallName),
                 Id = Guid.NewGuid(),
                 PackageName = SelectedPackage.Name,
-                PackageVersion = version,
-                DisplayVersion = GetDisplayVersion(version, branch),
-                InstalledBranch = branch,
+                Version = installedVersion,
                 LaunchCommand = SelectedPackage.LaunchCommand,
                 LastUpdateCheck = DateTimeOffset.Now
             };
@@ -270,22 +259,22 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     {
         return branch == null ? version : $"{branch}@{version[..7]}";
     }
-    
-    private Task<string> DownloadPackage(string version, bool isCommitHash, string? branch)
+
+    private async Task DownloadPackage(string installLocation, DownloadPackageVersionOptions downloadOptions)
     {
         InstallProgress.Text = "Downloading package...";
-        
+
         var progress = new Progress<ProgressReport>(progress =>
         {
             InstallProgress.IsIndeterminate = progress.IsIndeterminate;
             InstallProgress.Value = progress.Percentage;
             EventManager.Instance.OnGlobalProgressChanged((int) progress.Percentage);
         });
-        
-        return SelectedPackage.DownloadPackage(version, isCommitHash, branch, progress);
+
+        await SelectedPackage.DownloadPackage(installLocation, downloadOptions, progress);
     }
 
-    private async Task InstallPackage()
+    private async Task InstallPackage(string installLocation)
     {
         InstallProgress.Text = "Installing package...";
         SelectedPackage.ConsoleOutput += SelectedPackageOnConsoleOutput;
@@ -298,7 +287,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                 EventManager.Instance.OnGlobalProgressChanged((int) progress.Percentage);
             });
         
-            await SelectedPackage.InstallPackage(progress);
+            await SelectedPackage.InstallPackage(installLocation, progress);
         }
         finally
         {
@@ -360,20 +349,23 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         AvailableVersionTypes = SelectedPackage.ShouldIgnoreReleases
             ? PackageVersionType.Commit
             : PackageVersionType.GithubRelease | PackageVersionType.Commit;
+
+        IsReleaseMode = !SelectedPackage.ShouldIgnoreReleases;
         
         if (Design.IsDesignMode) return;
         
         Dispatcher.UIThread.InvokeAsync(async () =>
         {
             Logger.Debug($"Release mode: {IsReleaseMode}");
-            var versions = (await value.GetAllVersions(IsReleaseMode)).ToList();
+            var versionOptions = await value.GetAllVersionOptions();
             
-            if (!versions.Any()) return;
+            AvailableVersions = IsReleaseModeAvailable
+                ? new ObservableCollection<PackageVersion>(versionOptions.AvailableVersions)
+                : new ObservableCollection<PackageVersion>(versionOptions.AvailableBranches);
 
-            AvailableVersions = new ObservableCollection<PackageVersion>(versions);
-            Logger.Debug($"Available versions: {string.Join(", ", AvailableVersions)}");
             SelectedVersion = AvailableVersions[0];
-            ReleaseNotes = versions.First().ReleaseNotesMarkdown;
+            ReleaseNotes = SelectedVersion.ReleaseNotesMarkdown;
+            
             Logger.Debug($"Loaded release notes for {ReleaseNotes}");
             
             if (!IsReleaseMode)
@@ -387,6 +379,9 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             }
 
             InstallName = SelectedPackage.DisplayName;
+            LatestVersionText = IsReleaseMode
+                ? $"Latest version: {SelectedVersion.TagName}"
+                : $"Branch: {SelectedVersion.TagName}";
         }).SafeFireAndForget();
     }
     

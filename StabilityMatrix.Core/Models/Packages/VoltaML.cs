@@ -124,14 +124,14 @@ public class VoltaML : BaseGitPackage
 
     public override Task<string> GetLatestVersion() => Task.FromResult("main");
     
-    public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
+    public override async Task InstallPackage(string installLocation, IProgress<ProgressReport>? progress = null)
     {
-        await UnzipPackage(progress).ConfigureAwait(false);
+        await base.InstallPackage(installLocation, progress).ConfigureAwait(false);
         
         // Setup venv
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
-        await using var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
-        venvRunner.WorkingDirectory = InstallLocation;
+        await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
+        venvRunner.WorkingDirectory = installLocation;
         
         await venvRunner.Setup().ConfigureAwait(false);
         

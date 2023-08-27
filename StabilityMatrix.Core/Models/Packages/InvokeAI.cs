@@ -116,22 +116,22 @@ public class InvokeAI : BaseGitPackage
 
     public override Task<string> GetLatestVersion() => Task.FromResult("main");
 
-    public override Task<string> DownloadPackage(string version, bool isCommitHash, string? branch,
-        IProgress<ProgressReport>? progress = null)
+    public override Task DownloadPackage(string installLocation,
+        DownloadPackageVersionOptions downloadOptions, IProgress<ProgressReport>? progress = null)
     {
-        return Task.FromResult(version);
+        return Task.CompletedTask;
     }
 
-    public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
+    public override async Task InstallPackage(string installLocation, IProgress<ProgressReport>? progress = null)
     {
         // Setup venv
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
-        await using var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
-        venvRunner.WorkingDirectory = InstallLocation;
+        await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
+        venvRunner.WorkingDirectory = installLocation;
         await venvRunner.Setup().ConfigureAwait(false);
 
-        venvRunner.EnvironmentVariables = GetEnvVars(InstallLocation);
+        venvRunner.EnvironmentVariables = GetEnvVars(installLocation);
 
         var gpus = HardwareHelper.IterGpuInfo().ToList();
 
@@ -174,20 +174,20 @@ public class InvokeAI : BaseGitPackage
 
         progress?.Report(new ProgressReport(-1f, "Configuring InvokeAI", isIndeterminate: true));
 
-        await RunInvokeCommand(InstallLocation, "invokeai-configure", "--yes --skip-sd-weights",
+        await RunInvokeCommand(installLocation, "invokeai-configure", "--yes --skip-sd-weights",
             false).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(1f, "Done!", isIndeterminate: false));
     }
 
-    public override async Task<string> Update(InstalledPackage installedPackage, IProgress<ProgressReport>? progress = null,
+    public override async Task<InstalledPackageVersion> Update(InstalledPackage installedPackage, IProgress<ProgressReport>? progress = null,
         bool includePrerelease = false)
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
-        if (installedPackage.FullPath is null)
+        if (installedPackage.FullPath is null || installedPackage.Version is null)
         {
-            throw new NullReferenceException("Installed package path is null");
+            throw new NullReferenceException("Installed package is missing Path and/or Version");
         }
         
         await using var venvRunner = new PyVenvRunner(Path.Combine(installedPackage.FullPath, "venv"));
@@ -195,11 +195,11 @@ public class InvokeAI : BaseGitPackage
         venvRunner.EnvironmentVariables = GetEnvVars(installedPackage.FullPath);
 
         var latestVersion = await GetUpdateVersion(installedPackage).ConfigureAwait(false);
-        var isReleaseMode = string.IsNullOrWhiteSpace(installedPackage.InstalledBranch);
+        var isReleaseMode = installedPackage.Version.IsReleaseMode;
 
         var downloadUrl = isReleaseMode
             ? $"https://github.com/invoke-ai/InvokeAI/archive/{latestVersion}.zip"
-            : $"https://github.com/invoke-ai/InvokeAI/archive/refs/heads/{installedPackage.InstalledBranch}.zip";
+            : $"https://github.com/invoke-ai/InvokeAI/archive/refs/heads/{installedPackage.Version.InstalledBranch}.zip";
 
         var gpus = HardwareHelper.IterGpuInfo().ToList();
 
@@ -238,7 +238,16 @@ public class InvokeAI : BaseGitPackage
 
         progress?.Report(new ProgressReport(1f, "Done!", isIndeterminate: false));
 
-        return latestVersion;
+        return isReleaseMode
+            ? new InstalledPackageVersion
+            {
+                InstalledReleaseVersion = latestVersion
+            }
+            : new InstalledPackageVersion
+            {
+                InstalledBranch = installedPackage.Version.InstalledBranch,
+                InstalledCommitSha = latestVersion
+            };
     }
 
     public override Task
@@ -247,15 +256,18 @@ public class InvokeAI : BaseGitPackage
 
     private async Task<string> GetUpdateVersion(InstalledPackage installedPackage, bool includePrerelease = false)
     {
-        if (string.IsNullOrWhiteSpace(installedPackage.InstalledBranch))
+        if (installedPackage.Version == null)
+            throw new NullReferenceException("Installed package version is null");
+        
+        if (installedPackage.Version.IsReleaseMode)
         {
             var releases = await GetAllReleases().ConfigureAwait(false);
             var latestRelease = releases.First(x => includePrerelease || !x.Prerelease);
             return latestRelease.TagName;
         }
 
-        var allCommits = await GetAllCommits(
-            installedPackage.InstalledBranch).ConfigureAwait(false);
+        var allCommits = await GetAllCommits(installedPackage.Version.InstalledBranch)
+            .ConfigureAwait(false);
         var latestCommit = allCommits.First();
         return latestCommit.Sha;
     }

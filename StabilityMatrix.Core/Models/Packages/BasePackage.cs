@@ -34,10 +34,16 @@ public abstract class BasePackage
     public virtual bool ShouldIgnoreReleases => false;
     public virtual bool UpdateAvailable { get; set; }
 
-    public abstract Task<string> DownloadPackage(string version, bool isCommitHash, string? branch,
+    public abstract Task DownloadPackage(string installLocation, DownloadPackageVersionOptions versionOptions,
+        IProgress<ProgressReport>? progress1);
+
+    public abstract Task InstallPackage(string installLocation,
         IProgress<ProgressReport>? progress = null);
-    public abstract Task InstallPackage(IProgress<ProgressReport>? progress = null);
     public abstract Task RunPackage(string installedPackagePath, string command, string arguments);
+    public abstract Task<bool> CheckForUpdates(InstalledPackage package);
+    public abstract Task<InstalledPackageVersion> Update(InstalledPackage installedPackage,
+        IProgress<ProgressReport>? progress = null, bool includePrerelease = false);
+    
     public abstract Task SetupModelFolders(DirectoryPath installDirectory);
     public abstract Task UpdateModelFolders(DirectoryPath installDirectory);
     public abstract Task RemoveModelFolderLinks(DirectoryPath installDirectory);
@@ -51,11 +57,6 @@ public abstract class BasePackage
     /// Shuts down the process, returning a Task to wait for output EOF.
     /// </summary>
     public abstract Task WaitForShutdown();
-    
-    public abstract Task<bool> CheckForUpdates(InstalledPackage package);
-
-    public abstract Task<string> Update(InstalledPackage installedPackage,
-        IProgress<ProgressReport>? progress = null, bool includePrerelease = false);
     public abstract Task<IEnumerable<Release>> GetReleaseTags();
 
     public abstract List<LaunchOptionDefinition> LaunchOptions { get; }
@@ -68,14 +69,10 @@ public abstract class BasePackage
     public virtual Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
     
     public abstract Task<string> GetLatestVersion();
-    public abstract Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true);
+    public abstract Task<PackageVersionOptions> GetAllVersionOptions();
     public abstract Task<IEnumerable<GitCommit>?> GetAllCommits(string branch, int page = 1, int perPage = 10);
     public abstract Task<IEnumerable<Branch>> GetAllBranches();
     public abstract Task<IEnumerable<Release>> GetAllReleases();
-
-    public virtual string? DownloadLocation { get; }
-    public virtual string? InstallLocation { get; set; }
-
     public event EventHandler<ProcessOutput>? ConsoleOutput;
     public event EventHandler<int>? Exited;
     public event EventHandler<string>? StartupComplete;
@@ -83,4 +80,8 @@ public abstract class BasePackage
     public void OnConsoleOutput(ProcessOutput output) => ConsoleOutput?.Invoke(this, output);
     public void OnExit(int exitCode) => Exited?.Invoke(this, exitCode);
     public void OnStartupComplete(string url) => StartupComplete?.Invoke(this, url);
+    
+    public virtual PackageVersionType AvailableVersionTypes => ShouldIgnoreReleases
+        ? PackageVersionType.Commit
+        : PackageVersionType.GithubRelease | PackageVersionType.Commit;
 }

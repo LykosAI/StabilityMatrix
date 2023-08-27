@@ -74,7 +74,7 @@ public partial class PackageCardViewModel : ProgressViewModel
             var basePackage = packageFactory[value.PackageName];
             CardImageSource = basePackage?.PreviewImageUri.ToString() 
                               ?? Assets.NoImage.ToString();
-            InstalledVersion = value.DisplayVersion ?? "Unknown";
+            InstalledVersion = value.Version?.DisplayVersion ?? "Unknown";
         }
     }
 
@@ -168,8 +168,6 @@ public partial class PackageCardViewModel : ProgressViewModel
 
         try
         {
-            basePackage.InstallLocation = Package.FullPath!;
-            
             var progress = new Progress<ProgressReport>(progress =>
             {
                 var percent = Convert.ToInt32(progress.Percentage);
@@ -195,7 +193,7 @@ public partial class PackageCardViewModel : ProgressViewModel
                 Package.UpdateAvailable = false;
             }
             IsUpdateAvailable = false;
-            InstalledVersion = Package.DisplayVersion ?? "Unknown";
+            InstalledVersion = updateResult.DisplayVersion ?? "Unknown";
 
             EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
                 packageName,

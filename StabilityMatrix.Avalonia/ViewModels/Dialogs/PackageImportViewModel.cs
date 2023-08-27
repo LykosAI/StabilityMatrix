@@ -77,23 +77,19 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
         // Populate available versions
         try
         {
+            var versionOptions = await SelectedBasePackage.GetAllVersionOptions();
             if (IsReleaseMode)
             {
-                var versions = (await SelectedBasePackage.GetAllVersions()).ToList();
-                AvailableVersions = new ObservableCollection<PackageVersion>(versions);
+                AvailableVersions =
+                    new ObservableCollection<PackageVersion>(versionOptions.AvailableVersions);
                 if (!AvailableVersions.Any()) return;
 
                 SelectedVersion = AvailableVersions[0];
             }
             else
             {
-                var branches = (await SelectedBasePackage.GetAllBranches()).ToList();
-                AvailableVersions = new ObservableCollection<PackageVersion>(branches.Select(b =>
-                    new PackageVersion
-                    {
-                        TagName = b.Name,
-                        ReleaseNotesMarkdown = b.Commit.Label
-                    }));
+                AvailableVersions =
+                    new ObservableCollection<PackageVersion>(versionOptions.AvailableBranches);
                 UpdateSelectedVersionToLatestMain();
             }
         }
@@ -134,20 +130,19 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
         AvailableVersions?.Clear();
         AvailableCommits?.Clear();
 
-        AvailableVersionTypes = SelectedBasePackage.ShouldIgnoreReleases
-            ? PackageVersionType.Commit
-            : PackageVersionType.GithubRelease | PackageVersionType.Commit;
+        AvailableVersionTypes = SelectedBasePackage.AvailableVersionTypes;
         
         if (Design.IsDesignMode) return;
         
         Dispatcher.UIThread.InvokeAsync(async () =>
         {
             Logger.Debug($"Release mode: {IsReleaseMode}");
-            var versions = (await value.GetAllVersions(IsReleaseMode)).ToList();
-            
-            if (!versions.Any()) return;
+            var versionOptions = await value.GetAllVersionOptions();
 
-            AvailableVersions = new ObservableCollection<PackageVersion>(versions);
+            AvailableVersions = IsReleaseModeAvailable
+                ? new ObservableCollection<PackageVersion>(versionOptions.AvailableVersions)
+                : new ObservableCollection<PackageVersion>(versionOptions.AvailableBranches);
+            
             Logger.Debug($"Available versions: {string.Join(", ", AvailableVersions)}");
             SelectedVersion = AvailableVersions[0];
             
@@ -188,20 +183,22 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
         if (SelectedBasePackage is null || PackagePath is null)
             return;
 
-        string version;
+        var version = new InstalledPackageVersion();
         if (IsReleaseMode)
         {
-            version = SelectedVersion?.TagName ?? 
-                      throw new NullReferenceException("Selected version is null");
+            version.InstalledReleaseVersion = SelectedVersion?.TagName ??
+                                              throw new NullReferenceException(
+                                                  "Selected version is null");
         }
         else
         {
-            version = SelectedCommit?.Sha ?? 
-                      throw new NullReferenceException("Selected commit is null");
+            version.InstalledBranch = SelectedVersion?.TagName ??
+                                      throw new NullReferenceException(
+                                          "Selected version is null");
+            version.InstalledCommitSha = SelectedCommit?.Sha ??
+                                         throw new NullReferenceException(
+                                             "Selected commit is null");
         }
-        
-        var branch = SelectedVersionType == PackageVersionType.GithubRelease ? 
-            null : SelectedVersion!.TagName;
         
         var package = new InstalledPackage
         {
@@ -209,9 +206,7 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
             DisplayName = PackagePath.Name,
             PackageName = SelectedBasePackage.Name,
             LibraryPath = $"Packages{Path.DirectorySeparatorChar}{PackagePath.Name}",
-            PackageVersion = version,
-            DisplayVersion = GetDisplayVersion(version, branch),
-            InstalledBranch = branch,
+            Version = version,
             LaunchCommand = SelectedBasePackage.LaunchCommand,
             LastUpdateCheck = DateTimeOffset.Now,
         };

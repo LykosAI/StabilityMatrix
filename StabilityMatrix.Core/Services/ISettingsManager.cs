@@ -76,7 +76,7 @@ public interface ISettingsManager
     /// </summary>
     void InsertPathExtensions();
 
-    void UpdatePackageVersionNumber(Guid id, string? newVersion);
+    void UpdatePackageVersionNumber(Guid id, InstalledPackageVersion? newVersion);
     void SetLastUpdateCheck(InstalledPackage package);
     List<LaunchOption> GetLaunchArgs(Guid packageId);
     void SaveLaunchArgs(Guid packageId, List<LaunchOption> launchArgs);

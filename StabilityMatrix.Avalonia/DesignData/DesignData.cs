@@ -54,9 +54,11 @@ public static class DesignData
                     {
                         Id = activePackageId,
                         DisplayName = "My Installed Package",
-                        DisplayVersion = "v1.0.0",
                         PackageName = "stable-diffusion-webui",
-                        PackageVersion = "v1.0.0",
+                        Version = new InstalledPackageVersion
+                        {
+                            InstalledReleaseVersion = "v1.0.0"
+                        },
                         LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
                         LastUpdateCheck = DateTimeOffset.Now
                     },
@@ -65,7 +67,11 @@ public static class DesignData
                         Id = Guid.NewGuid(),
                         DisplayName = "Dank Diffusion",
                         PackageName = "ComfyUI",
-                        DisplayVersion = "main@ab73d4a",
+                        Version = new InstalledPackageVersion
+                        {
+                           InstalledBranch = "master",
+                           InstalledCommitSha = "abc12uwu345568972abaedf7g7e679a98879e879f87ga8"
+                        },
                         LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
                         LastUpdateCheck = DateTimeOffset.Now
                     }

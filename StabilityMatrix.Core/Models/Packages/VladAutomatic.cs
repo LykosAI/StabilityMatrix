@@ -139,23 +139,13 @@ public class VladAutomatic : BaseGitPackage
     public override string ExtraLaunchArguments => "";
     
     public override Task<string> GetLatestVersion() => Task.FromResult("master");
-
-    public override async Task<IEnumerable<PackageVersion>> GetAllVersions(bool isReleaseMode = true)
-    {
-        var allBranches = await GetAllBranches();
-        return allBranches.Select(b => new PackageVersion
-        {
-            TagName = $"{b.Name}", 
-            ReleaseNotesMarkdown = string.Empty
-        });
-    }
     
-    public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
+    public override async Task InstallPackage(string installLocation, IProgress<ProgressReport>? progress = null)
     {
         progress?.Report(new ProgressReport(-1f, "Installing package...", isIndeterminate: true));
         // Setup venv
-        var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
-        venvRunner.WorkingDirectory = InstallLocation;
+        var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
+        venvRunner.WorkingDirectory = installLocation;
         venvRunner.EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables;
         
         await venvRunner.Setup().ConfigureAwait(false);
@@ -188,23 +178,31 @@ public class VladAutomatic : BaseGitPackage
         progress?.Report(new ProgressReport(1, isIndeterminate: false));
     }
 
-    public override async Task<string> DownloadPackage(string version, bool isCommitHash,
-        string? branch, IProgress<ProgressReport>? progress = null)
+    public override async Task DownloadPackage(string installLocation,
+        DownloadPackageVersionOptions downloadOptions, IProgress<ProgressReport>? progress = null)
     {
         progress?.Report(new ProgressReport(-1f, message: "Downloading package...",
             isIndeterminate: true, type: ProgressType.Download));
 
-        var installDir = new DirectoryPath(InstallLocation);
+        var installDir = new DirectoryPath(installLocation);
         installDir.Create();
 
-        await PrerequisiteHelper
-            .RunGit(installDir.Parent ?? "", "clone", "https://github.com/vladmandic/automatic",
-                installDir.Name).ConfigureAwait(false);
+        if (!string.IsNullOrWhiteSpace(downloadOptions.CommitHash))
+        {
+            await PrerequisiteHelper
+                .RunGit(installDir.Parent ?? "", "clone", "https://github.com/vladmandic/automatic",
+                    installDir.Name).ConfigureAwait(false);
 
-        await PrerequisiteHelper.RunGit(
-            InstallLocation, "checkout", version).ConfigureAwait(false);
-
-        return version;
+            await PrerequisiteHelper.RunGit(installLocation, "checkout", downloadOptions.CommitHash)
+                .ConfigureAwait(false);
+        }
+        else if (!string.IsNullOrWhiteSpace(downloadOptions.BranchName))
+        {
+            await PrerequisiteHelper
+                .RunGit(installDir.Parent ?? "", "clone", "-b", downloadOptions.BranchName,
+                    "https://github.com/vladmandic/automatic", installDir.Name)
+                .ConfigureAwait(false);
+        }
     }
 
     public override async Task RunPackage(string installedPackagePath, string command, string arguments)
@@ -237,22 +235,22 @@ public class VladAutomatic : BaseGitPackage
         VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
     }
 
-    public override async Task<string> Update(InstalledPackage installedPackage,
+    public override async Task<InstalledPackageVersion> Update(InstalledPackage installedPackage,
         IProgress<ProgressReport>? progress = null, bool includePrerelease = false)
     {
-        if (installedPackage.InstalledBranch is null)
+        if (installedPackage.Version is null)
         {
-            throw new Exception("Installed branch is null");
+            throw new Exception("Version is null");
         }
         
         progress?.Report(new ProgressReport(-1f, message: "Downloading package update...",
             isIndeterminate: true, type: ProgressType.Update));
 
         await PrerequisiteHelper.RunGit(installedPackage.FullPath, "checkout",
-            installedPackage.InstalledBranch).ConfigureAwait(false);
+            installedPackage.Version.InstalledBranch).ConfigureAwait(false);
         
         var venvRunner = new PyVenvRunner(Path.Combine(installedPackage.FullPath!, "venv"));
-        venvRunner.WorkingDirectory = InstallLocation;
+        venvRunner.WorkingDirectory = installedPackage.FullPath!;
         venvRunner.EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables;
         
         await venvRunner.CustomInstall("launch.py --upgrade --test", OnConsoleOutput)
@@ -266,7 +264,11 @@ public class VladAutomatic : BaseGitPackage
                     .GetGitOutput(installedPackage.FullPath, "rev-parse", "HEAD")
                     .ConfigureAwait(false);
 
-            return output.Replace(Environment.NewLine, "").Replace("\n", "");
+            return new InstalledPackageVersion
+            {
+                InstalledBranch = installedPackage.Version.InstalledBranch,
+                InstalledCommitSha = output.Replace(Environment.NewLine, "").Replace("\n", "")
+            };
         }
         catch (Exception e)
         {
@@ -278,6 +280,9 @@ public class VladAutomatic : BaseGitPackage
                 type: ProgressType.Update));
         }
         
-        return installedPackage.InstalledBranch;
+        return new InstalledPackageVersion
+        {
+            InstalledBranch = installedPackage.Version.InstalledBranch
+        };
     }
 }

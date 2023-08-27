@@ -350,8 +350,6 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             ? PackageVersionType.Commit
             : PackageVersionType.GithubRelease | PackageVersionType.Commit;
 
-        IsReleaseMode = !SelectedPackage.ShouldIgnoreReleases;
-        
         if (Design.IsDesignMode) return;
         
         Dispatcher.UIThread.InvokeAsync(async () =>
@@ -359,7 +357,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             Logger.Debug($"Release mode: {IsReleaseMode}");
             var versionOptions = await value.GetAllVersionOptions();
             
-            AvailableVersions = IsReleaseModeAvailable
+            AvailableVersions = IsReleaseMode
                 ? new ObservableCollection<PackageVersion>(versionOptions.AvailableVersions)
                 : new ObservableCollection<PackageVersion>(versionOptions.AvailableBranches);
 

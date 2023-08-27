@@ -9,6 +9,8 @@
                           xmlns:packages="clr-namespace:StabilityMatrix.Core.Models.Packages;assembly=StabilityMatrix.Core"
                           xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
                           xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
+                          xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
                           x:DataType="dialogs:InstallerViewModel"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="700"
                           d:DataContext="{x:Static mocks:DesignData.InstallerViewModel}"
@@ -55,30 +57,39 @@
         </Grid>
 
         <!-- Display Name & Version -->
-        <Grid Grid.Column="0" Grid.Row="1"
+        <ToggleSwitch Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1"
+                      HorizontalAlignment="Center"
+                      IsVisible="{Binding IsReleaseModeAvailable}"
+                      OnContent="{x:Static lang:Resources.Label_Releases}"
+                      OffContent="{x:Static lang:Resources.Label_Branches}"
+                      IsChecked="{Binding IsReleaseMode, Mode=TwoWay}"/>
+        <Grid Grid.Column="0" Grid.Row="2"
               Grid.ColumnSpan="2"
-              Margin="16,0,0,0"
+              Margin="16,0,16,0"
               RowDefinitions="Auto, Auto, Auto"
+              HorizontalAlignment="Center"
               ColumnDefinitions="*, *">
 
             <Label Grid.Row="0" Grid.Column="0"
+                   Margin="8,0"
                    Content="Display Name" />
             <TextBox Grid.Row="1" Grid.Column="0"
-                     Margin="0,0,0,8"
-                     MinHeight="38"
-                     FontSize="16"
+                     MinWidth="250"
+                     Margin="8,0"
+                     VerticalAlignment="Stretch"
+                     VerticalContentAlignment="Center"
                      Text="{Binding InstallName, Mode=TwoWay}" />
 
             <StackPanel Grid.Row="2" Grid.Column="0"
                         Orientation="Horizontal"
+                        Margin="8"
                         IsVisible="{Binding ShowDuplicateWarning}">
                 <ui:SymbolIcon
                     Foreground="{DynamicResource ThemeRedColor}"
-                    Margin="8"
+                    Margin="8,0"
                     Symbol="Alert" />
                 <TextBlock
                     Foreground="{DynamicResource ThemeRedColor}"
-                    Margin="0,8,8,8"
                     TextAlignment="Left"
                     TextWrapping="Wrap">
                     <Run Text="An installation with this name already exists." />
@@ -89,82 +100,82 @@
 
             <!-- Version Selector -->
             <Label Grid.Row="0" Grid.Column="1"
-                   Margin="16,0"
                    Content="{Binding ReleaseLabelText}" />
-            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
+            <DockPanel Grid.Row="1" Grid.Column="1">
                 <ComboBox 
-                          Margin="16,0"
                           ItemsSource="{Binding AvailableVersions}"
-                          MinWidth="200"
-                          MinHeight="38"
+                          MinWidth="250"
+                          VerticalAlignment="Stretch"
                           SelectedItem="{Binding SelectedVersion}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate DataType="{x:Type models:PackageVersion}">
                             <TextBlock
-                                Margin="8,4,0,4"
                                 Name="NameTextBlock"
+                                VerticalAlignment="Center"
                                 Text="{Binding TagName}" />
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <CheckBox IsChecked="{Binding IsAdvancedMode}"
-                          VerticalAlignment="Top"
-                          Content="Advanced"/>
-            </StackPanel>
-        </Grid>
-        
-        <!-- Advanced Options -->
-        <DockPanel Grid.Column="0" Grid.Row="2"
-              Grid.ColumnSpan="2"
-              Margin="0,8,0,0"
-              IsVisible="{Binding IsAdvancedMode}">
-            <StackPanel
-                Margin="16,0,0,0"
-                Orientation="Vertical"
-                IsVisible="{Binding !IsReleaseMode}">
-                <Label Content="Commit" />
-                <ComboBox
-                    ItemsSource="{Binding AvailableCommits}"
-                    MinWidth="200"
-                    MinHeight="38"
-                    SelectedItem="{Binding SelectedCommit}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate DataType="{x:Type database:GitCommit}">
-                            <StackPanel Margin="8,0,0,0" VerticalAlignment="Top">
-                                <TextBlock
-                                    Margin="0,4,0,4"
-                                    Name="NameTextBlock"
-                                    Text="{Binding Sha}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </StackPanel>
+                <Button VerticalAlignment="Top"
+                        Margin="8,0">
+                    <ui:SymbolIcon FontSize="16" Margin="4" Symbol="Settings" />
+                    <Button.Flyout>
+                        <Flyout>
+                            <!-- Advanced Options -->
+                            <StackPanel Orientation="Vertical"
+                                        Margin="8"
+                                        IsVisible="{Binding !IsAdvancedMode}">
+
+                                <Label Content="Advanced Options"
+                                       FontSize="18"
+                                       HorizontalAlignment="Center"
+                                       Margin="8,0,8,8"/>
+                                
+                                <Label Content="Commit"
+                                       Margin="0,0,0,4"
+                                       IsVisible="{Binding !IsReleaseMode}"/>
+                                <ComboBox
+                                    IsVisible="{Binding !IsReleaseMode}"
+                                    ItemsSource="{Binding AvailableCommits}"
+                                    MinWidth="200"
+                                    MinHeight="38"
+                                    SelectedItem="{Binding SelectedCommit}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type database:GitCommit}">
+                                            <StackPanel Margin="8,0,0,0" VerticalAlignment="Top">
+                                                <TextBlock
+                                                    Margin="0,4,0,4"
+                                                    Name="NameTextBlock"
+                                                    Text="{Binding ShortSha}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
             
-            <StackPanel
-                Margin="16,0,0,0"
-                Orientation="Vertical"
-                HorizontalAlignment="Right"
-                IsVisible="{Binding !IsReleaseMode}">
-                <Label Content="Shared Model Folder Strategy" />
-                <ComboBox
-                    ItemsSource="{Binding AvailableCommits}"
-                    MinWidth="200"
-                    MinHeight="38"
-                    SelectedItem="{Binding SelectedCommit}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate DataType="{x:Type database:GitCommit}">
-                            <StackPanel Margin="8,0,0,0" VerticalAlignment="Top">
-                                <TextBlock
-                                    Margin="0,4,0,4"
-                                    Name="NameTextBlock"
-                                    Text="{Binding Sha}" />
+                                <Label Content="Shared Model Folder Strategy" 
+                                       Margin="0,8,0,4" />
+                                <ComboBox
+                                    ItemsSource="{Binding AvailableCommits}"
+                                    MinWidth="200"
+                                    MinHeight="38"
+                                    SelectedItem="{Binding SelectedCommit}">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type database:GitCommit}">
+                                            <StackPanel Margin="8,0,0,0" VerticalAlignment="Top">
+                                                <TextBlock
+                                                    Margin="0,4,0,4"
+                                                    Name="NameTextBlock"
+                                                    Text="{Binding ShortSha}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
                             </StackPanel>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </StackPanel>
-        </DockPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+            </DockPanel>
+        </Grid>
 
         <!-- Install Button -->
         <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"

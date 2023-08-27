@@ -59,7 +59,7 @@ public class Fooocus : BaseGitPackage
     public override async Task InstallPackage(IProgress<ProgressReport>? progress = null)
     {
         await base.InstallPackage(progress).ConfigureAwait(false);
-        var venvRunner = await SetupVenv(InstallLocation).ConfigureAwait(false);
+        var venvRunner = await SetupVenv(InstallLocation, forceRecreate: true).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
         

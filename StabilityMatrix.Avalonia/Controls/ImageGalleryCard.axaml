@@ -45,69 +45,12 @@
                                 SelectedItem="{Binding SelectedImage}"
                                 SelectedIndex="{Binding SelectedImageIndex}"
                                 ItemsSource="{Binding ImageSources}" />
-
-                            <!--<Carousel
-                                ScrollViewer.IsScrollChainingEnabled="False"
-                                ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                x:Name="ImageCarousel"
-                                MinHeight="400"
-                                IsVisible="{Binding !IsPreviewOverlayEnabled}"
-                                SelectedItem="{Binding SelectedImage}"
-                                SelectedIndex="{Binding SelectedImageIndex}"
-                                ItemsSource="{Binding ImageSources}">
-                                    
-                                <Carousel.PageTransition>
-                                    <CompositePageTransition>
-                                        <PageSlide Orientation="Horizontal" Duration="0.167">
-                                            <PageSlide.SlideInEasing>
-                                                <QuadraticEaseIn />
-                                            </PageSlide.SlideInEasing>
-                                            <PageSlide.SlideOutEasing>
-                                                <SineEaseInOut />
-                                            </PageSlide.SlideOutEasing>
-                                        </PageSlide>
-                                        <CrossFade Duration="0.1" />
-                                    </CompositePageTransition>
-                                </Carousel.PageTransition>
-                                    
-                                <Carousel.ItemTemplate>
-                                    <DataTemplate DataType="{x:Type models:ImageSource}">
-                                        <controls:AdvancedImageBox
-                                            x:Name="ImageView"
-                                            CornerRadius="4"
-                                            SizeMode="Fit"
-                                            Image="{Binding BitmapAsync^}">
-                                            <controls:AdvancedImageBox.ContextFlyout>
-                                                <ui:FAMenuFlyout>
-                                                    ~1~<ui:MenuFlyoutItem 
-                                                        Command="{ReflectionBinding #ImageCarousel.DataContext.FlyoutPreviewCommand}" 
-                                                        CommandParameter="{Binding #ImageView.Image}"
-                                                        Text="Expanded Preview"
-                                                        HotKey="Space"
-                                                        IconSource="ZoomInFilled" />
-                                                    <ui:MenuFlyoutSeparator/>@1@
-                                                    <ui:MenuFlyoutItem 
-                                                        IsEnabled="{OnPlatform Windows=True, Default=False}"
-                                                        Command="{ReflectionBinding #ImageCarousel.DataContext.FlyoutCopyCommand}" 
-                                                        CommandParameter="{Binding #ImageView.Image}"
-                                                        Text="Copy"
-                                                        HotKey="Ctrl+C"
-                                                        IconSource="Copy" />
-                                                </ui:FAMenuFlyout>
-                                            </controls:AdvancedImageBox.ContextFlyout>
-                                        </controls:AdvancedImageBox>
-                                    </DataTemplate>
-                                </Carousel.ItemTemplate>
-                                    
-                            </Carousel>-->
                             
                             <Border
                                 ClipToBounds="True"
                                 CornerRadius="4"
                                 IsVisible="{Binding IsPreviewOverlayEnabled}">
                                 <Image
-                                    IsVisible="{Binding IsPreviewOverlayEnabled}"
                                     Source="{Binding PreviewImage}"
                                     Stretch="Uniform"
                                     StretchDirection="Both" />
@@ -154,15 +97,6 @@
                             SelectionMode="AlwaysSelected"
                             SelectedItem="{Binding SelectedImage}"
                             ItemsSource="{Binding ImageSources}">
-                            <!--<ItemsRepeater.Layout>
-                                <StackLayout
-                                    Orientation="Horizontal" Spacing="8" />
-                            </ItemsRepeater.Layout>-->
-                            <!--<ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>-->
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:ImageSource}">
                                     <controls:BetterAdvancedImage

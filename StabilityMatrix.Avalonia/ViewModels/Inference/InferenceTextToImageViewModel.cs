@@ -335,11 +335,15 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         Dispatcher.UIThread.Post(() =>
         {
             using var stream = new MemoryStream(args.ImageBytes);
+
             var bitmap = new Bitmap(stream);
-        
-            ImageGalleryCardViewModel.PreviewImage?.Dispose();
+            
+            var currentImage = ImageGalleryCardViewModel.PreviewImage;
+            
             ImageGalleryCardViewModel.PreviewImage = bitmap;
             ImageGalleryCardViewModel.IsPreviewOverlayEnabled = true;
+            
+            currentImage?.Dispose();
         });
     }
 

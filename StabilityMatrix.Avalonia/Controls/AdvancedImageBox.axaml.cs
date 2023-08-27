@@ -221,7 +221,7 @@ public class AdvancedImageBox : TemplatedControl
                 throw new ArgumentNullException(nameof(collection));
             }
 
-            foreach (int value in collection)
+            foreach (var value in collection)
             {
                 Add(value);
             }
@@ -252,7 +252,7 @@ public class AdvancedImageBox : TemplatedControl
         /// <param name="arrayIndex">A 64-bit integer that represents the index in the <see cref="Array"/> at which storing begins.</param>
         public void CopyTo(int[] array, int arrayIndex)
         {
-            for (int i = 0; i < Count; i++)
+            for (var i = 0; i < Count; i++)
             {
                 array[arrayIndex + i] = List.Values[i];
             }
@@ -264,12 +264,12 @@ public class AdvancedImageBox : TemplatedControl
         /// <param name="zoomLevel">The zoom level.</param>
         public int FindNearest(int zoomLevel)
         {
-            int nearestValue = List.Values[0];
-            int nearestDifference = Math.Abs(nearestValue - zoomLevel);
-            for (int i = 1; i < Count; i++)
+            var nearestValue = List.Values[0];
+            var nearestDifference = Math.Abs(nearestValue - zoomLevel);
+            for (var i = 1; i < Count; i++)
             {
-                int value = List.Values[i];
-                int difference = Math.Abs(value - zoomLevel);
+                var value = List.Values[i];
+                var difference = Math.Abs(value - zoomLevel);
                 if (difference < nearestDifference)
                 {
                     nearestValue = value;
@@ -1273,11 +1273,11 @@ public class AdvancedImageBox : TemplatedControl
             var gridColor = GridColor;
             var altColor = GridColorAlternate;
             var currentColor = gridColor;
-            for (int y = 0; y < viewPortSize.Height; y += gridCellSize)
+            for (var y = 0; y < viewPortSize.Height; y += gridCellSize)
             {
                 var firstRowColor = currentColor;
 
-                for (int x = 0; x < viewPortSize.Width; x += gridCellSize)
+                for (var x = 0; x < viewPortSize.Width; x += gridCellSize)
                 {
                     context.FillRectangle(currentColor, new Rect(x, y, gridCellSize, gridCellSize));
                     currentColor = ReferenceEquals(currentColor, gridColor) ? altColor : gridColor;
@@ -1325,7 +1325,7 @@ public class AdvancedImageBox : TemplatedControl
 
             Pen pen = new(PixelGridColor);
             for (
-                double x = imageViewPort.X + zoomFactor - offsetX;
+                var x = imageViewPort.X + zoomFactor - offsetX;
                 x < imageViewPort.Right;
                 x += zoomFactor
             )
@@ -1338,7 +1338,7 @@ public class AdvancedImageBox : TemplatedControl
             }
 
             for (
-                double y = imageViewPort.Y + zoomFactor - offsetY;
+                var y = imageViewPort.Y + zoomFactor - offsetY;
                 y < imageViewPort.Bottom;
                 y += zoomFactor
             )
@@ -1364,7 +1364,7 @@ public class AdvancedImageBox : TemplatedControl
                 selectionColor.Color.G,
                 selectionColor.Color.B
             );
-            context.DrawRectangle(new Pen(color.ToUint32()), rect);
+            context.DrawRectangle(new Pen(color.ToUInt32()), rect);
         }
     }
 
@@ -1384,7 +1384,7 @@ public class AdvancedImageBox : TemplatedControl
         //var width = scaledImageWidth <= Viewport.Width ? Viewport.Width : scaledImageWidth;
         //var height = scaledImageHeight <= Viewport.Height ? Viewport.Height : scaledImageHeight;
 
-        bool changed = false;
+        var changed = false;
         if (Math.Abs(HorizontalScrollBar.Maximum - width) > 0.01)
         {
             HorizontalScrollBar.Maximum = width;
@@ -1896,9 +1896,9 @@ public class AdvancedImageBox : TemplatedControl
 
     private void PerformZoom(ZoomActions action, bool preservePosition, Point relativePoint)
     {
-        Point currentPixel = PointToImage(relativePoint);
-        int currentZoom = Zoom;
-        int newZoom = GetZoomLevel(action);
+        var currentPixel = PointToImage(relativePoint);
+        var currentZoom = Zoom;
+        var newZoom = GetZoomLevel(action);
 
         /*if (preservePosition && Zoom != currentZoom)
             CanRender = false;*/
@@ -2171,7 +2171,7 @@ public class AdvancedImageBox : TemplatedControl
     /// <returns>A <see cref="System.Drawing.PointF"/> which has been repositioned to match the current zoom level and image offset</returns>
     public Point GetOffsetPoint(Point source)
     {
-        Rect viewport = GetImageViewPort();
+        var viewport = GetImageViewPort();
         var scaled = GetScaledPoint(source);
         var offsetX = viewport.Left + Offset.X;
         var offsetY = viewport.Top + Offset.Y;
@@ -2611,10 +2611,10 @@ public class AdvancedImageBox : TemplatedControl
                 var offset = Offset;
                 var viewPort = GetImageViewPort();
                 var zoomFactor = ZoomFactor;
-                double sourceLeft = (offset.X / zoomFactor);
-                double sourceTop = (offset.Y / zoomFactor);
-                double sourceWidth = (viewPort.Width / zoomFactor);
-                double sourceHeight = (viewPort.Height / zoomFactor);
+                var sourceLeft = (offset.X / zoomFactor);
+                var sourceTop = (offset.Y / zoomFactor);
+                var sourceWidth = (viewPort.Width / zoomFactor);
+                var sourceHeight = (viewPort.Height / zoomFactor);
 
                 return new(sourceLeft, sourceTop, sourceWidth, sourceHeight);
         }
@@ -2659,7 +2659,7 @@ public class AdvancedImageBox : TemplatedControl
                 break;
             case SizeModes.Fit:
                 var image = Image;
-                double scaleFactor = Math.Min(
+                var scaleFactor = Math.Min(
                     viewPortSize.Width / image!.Size.Width,
                     viewPortSize.Height / image.Size.Height
                 );
@@ -2706,17 +2706,17 @@ public class AdvancedImageBox : TemplatedControl
         );
         using var newFrameBuffer = newBitmap.Lock();
 
-        int i = 0;
+        var i = 0;
 
         unsafe
         {
             var inputPixels = (uint*)(void*)frameBuffer.Address;
             var targetPixels = (uint*)(void*)newFrameBuffer.Address;
 
-            for (int y = selection.Y; y < selection.Bottom; y++)
+            for (var y = selection.Y; y < selection.Bottom; y++)
             {
                 var thisY = y * frameBuffer.Size.Width;
-                for (int x = selection.X; x < selection.Right; x++)
+                for (var x = selection.X; x < selection.Right; x++)
                 {
                     targetPixels![i++] = inputPixels![thisY + x];
                 }

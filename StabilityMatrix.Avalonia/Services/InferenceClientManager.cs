@@ -43,6 +43,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     {
         this.logger = logger;
         this.apiFactory = apiFactory;
+        
+        ClearSharedProperties();
     }
 
     private async Task LoadSharedPropertiesAsync()
@@ -84,10 +86,15 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         Upscalers = upscalerBuilder.ToImmutable();
     }
 
-    protected void ClearSharedProperties()
+    /// <summary>
+    /// Clears shared properties and sets them to local defaults
+    /// </summary>
+    private void ClearSharedProperties()
     {
         ModelNames = null;
-        Samplers = null;
+
+        Samplers = ComfySampler.Defaults;
+        
         Upscalers = null;
     }
 

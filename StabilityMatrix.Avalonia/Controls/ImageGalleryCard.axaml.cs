@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using Avalonia.Controls.Primitives;
-using Avalonia.Input;
+﻿using Avalonia.Controls.Primitives;
 
 namespace StabilityMatrix.Avalonia.Controls;
 

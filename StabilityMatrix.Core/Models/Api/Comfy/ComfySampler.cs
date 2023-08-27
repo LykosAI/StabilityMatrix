@@ -1,10 +1,9 @@
-﻿namespace StabilityMatrix.Core.Models.Api.Comfy;
+﻿using System.Collections.Immutable;
+
+namespace StabilityMatrix.Core.Models.Api.Comfy;
 
 public readonly record struct ComfySampler(string Name)
 {
-    ///     SAMPLERS = ["euler", "euler_ancestral", "heun", "dpm_2", "dpm_2_ancestral",
-    /// "lms", "dpm_fast", "dpm_adaptive", "dpmpp_2s_ancestral", "dpmpp_sde", "dpmpp_sde_gpu",
-    /// "dpmpp_2m", "dpmpp_2m_sde", "dpmpp_2m_sde_gpu", "ddim", "uni_pc", "uni_pc_bh2"]
     private static Dictionary<string, string> ConvertDict { get; } =
         new()
         {
@@ -26,6 +25,9 @@ public readonly record struct ComfySampler(string Name)
             ["uni_pc"] = "UniPC",
             ["uni_pc_bh2"] = "UniPC BH2"
         };
+    
+    public static IReadOnlyList<ComfySampler> Defaults { get; } =
+        ConvertDict.Keys.Select(k => new ComfySampler(k)).ToImmutableArray();
 
     public string DisplayName =>
         ConvertDict.TryGetValue(Name, out var displayName) ? displayName : Name;

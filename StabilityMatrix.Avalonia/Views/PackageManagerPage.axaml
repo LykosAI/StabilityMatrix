@@ -32,18 +32,23 @@
                 <DataTemplate DataType="{x:Type packageManager:PackageCardViewModel}">
                     <controls:Card Padding="8">
                         <Grid RowDefinitions="Auto, Auto, Auto, Auto"
-                              ColumnDefinitions="Auto">
+                              ColumnDefinitions="*,Auto">
 
                             <TextBlock Grid.Row="0"
                                        Grid.Column="0"
+                                       ToolTip.Tip="{Binding Package.DisplayName, FallbackValue=''}"
                                        Text="{Binding Package.DisplayName, FallbackValue=''}"
+                                       TextTrimming="WordEllipsis"
                                        TextAlignment="Left" />
                             <Button
                                 Grid.Row="0"
-                                Grid.RowSpan="2"
+                                Grid.Column="1"
                                 HorizontalContentAlignment="Right"
                                 HorizontalAlignment="Right"
-                                Margin="8,-8,0,4"
+                                VerticalContentAlignment="Top"
+                                VerticalAlignment="Top"
+                                Padding="4,1"
+                                Margin="4,0,0,0"
                                 Classes="transparent"
                                 Width="24"
                                 BorderThickness="0">
@@ -76,6 +81,7 @@
 
                             <TextBlock Grid.Row="1"
                                        Grid.Column="0"
+                                       Grid.ColumnSpan="2"
                                        Margin="2,0,0,0"
                                        VerticalAlignment="Center"
                                        Text="{Binding InstalledVersion}" />
@@ -84,6 +90,7 @@
                             <controls:BetterAdvancedImage
                                 Grid.Row="2"
                                 Grid.Column="0"
+                                Grid.ColumnSpan="2"
                                 Margin="0,8,0,8"
                                 Height="160"
                                 Width="200"
@@ -99,6 +106,7 @@
                             <Border 
                                 Grid.Row="2" 
                                 Grid.Column="0"
+                                Grid.ColumnSpan="2"
                                 Margin="0,8,0,8"
                                 Height="160"
                                 Width="200"
@@ -115,9 +123,12 @@
                             </Border>
                             
 
-                            <Grid Grid.Row="3" Grid.Column="0"
-                                  IsVisible="{Binding IsUpdateAvailable}"
-                                  ColumnDefinitions="*, *">
+                            <Grid 
+                                Grid.Row="3" 
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                IsVisible="{Binding IsUpdateAvailable}"
+                                ColumnDefinitions="*, *">
                                 <!-- Launch and update buttons -->
                                 <Button Grid.Column="0" Classes="accent"
                                         VerticalAlignment="Bottom"
@@ -144,10 +155,14 @@
                             </Grid>
                             
                             <!-- Big launch button -->
-                            <Button Grid.Row="3" Grid.Column="0" Classes="accent"
-                                    VerticalAlignment="Bottom"
-                                    Command="{Binding Launch}"
-                                    HorizontalAlignment="Stretch">
+                            <Button 
+                                Grid.Row="3" 
+                                Grid.Column="0" 
+                                Grid.ColumnSpan="2"
+                                Classes="accent"
+                                VerticalAlignment="Bottom"
+                                Command="{Binding Launch}"
+                                HorizontalAlignment="Stretch">
                                 <Button.IsVisible>
                                     <MultiBinding Converter="{x:Static BoolConverters.And}">
                                         <Binding Path="!IsUpdateAvailable" />
@@ -164,6 +179,7 @@
                             
                             <!-- Import button (for unknown) -->
                             <Button Grid.Row="3" Grid.Column="0" Classes="transparent-info"
+                                    Grid.ColumnSpan="2"
                                     VerticalAlignment="Bottom"
                                     HorizontalAlignment="Stretch"
                                     Command="{Binding Import}"
@@ -180,6 +196,7 @@
                             <Border
                                 Grid.Row="0" Grid.RowSpan="4"
                                 Grid.Column="0"
+                                Grid.ColumnSpan="2"
                                 Background="#DD000000"
                                 CornerRadius="4"
                                 HorizontalAlignment="Stretch"

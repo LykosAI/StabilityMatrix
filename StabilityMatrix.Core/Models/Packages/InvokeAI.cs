@@ -1,10 +1,8 @@
-﻿using System.Text.Json;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
-using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -129,7 +127,7 @@ public class InvokeAI : BaseGitPackage
 
         await using var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
         venvRunner.WorkingDirectory = InstallLocation;
-        await venvRunner.Setup().ConfigureAwait(false);
+        await venvRunner.Setup(true).ConfigureAwait(false);
 
         venvRunner.EnvironmentVariables = GetEnvVars(InstallLocation);
 

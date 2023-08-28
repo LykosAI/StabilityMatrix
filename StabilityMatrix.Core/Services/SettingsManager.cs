@@ -218,7 +218,9 @@ public class SettingsManager : ISettingsManager
         {
             var libraryJson = libraryJsonFile.ReadAllText();
             var librarySettings = JsonSerializer.Deserialize<LibrarySettings>(libraryJson);
-            if (!string.IsNullOrWhiteSpace(librarySettings?.LibraryPath))
+            
+            if (!string.IsNullOrWhiteSpace(librarySettings?.LibraryPath)
+                && Directory.Exists(librarySettings?.LibraryPath))
             {
                 LibraryDir = librarySettings.LibraryPath;
                 SetStaticLibraryPaths();

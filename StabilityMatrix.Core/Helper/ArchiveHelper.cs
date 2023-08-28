@@ -31,9 +31,13 @@ public static partial class ArchiveHelper
             {
                 return "7za.exe";
             }
-            if (Compat.Platform.HasFlag(PlatformKind.Linux))
+            if (Compat.IsLinux)
             {
                 return "7zzs";
+            }
+            if (Compat.IsMacOS)
+            {
+                return "7zz";
             }
             throw new PlatformNotSupportedException("7z is not supported on this platform.");
         }

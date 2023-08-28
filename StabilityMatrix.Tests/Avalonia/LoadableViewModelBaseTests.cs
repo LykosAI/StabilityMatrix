@@ -5,6 +5,8 @@ using CommunityToolkit.Mvvm.Input;
 using Moq;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Avalonia.ViewModels.Base;
+
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Tests.Avalonia;

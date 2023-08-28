@@ -8,9 +8,8 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Avalonia.Models;
-using StabilityMatrix.Avalonia.ViewModels.Base;
 
-namespace StabilityMatrix.Avalonia.ViewModels;
+namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
 public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 {

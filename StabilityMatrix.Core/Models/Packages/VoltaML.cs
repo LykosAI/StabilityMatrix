@@ -1,7 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
-using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -133,7 +132,7 @@ public class VoltaML : BaseGitPackage
         await using var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
         venvRunner.WorkingDirectory = InstallLocation;
         
-        await venvRunner.Setup().ConfigureAwait(false);
+        await venvRunner.Setup(true).ConfigureAwait(false);
         
         // Install requirements
         progress?.Report(new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true));

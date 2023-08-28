@@ -24,7 +24,7 @@ public partial class SeedCardViewModel : LoadableViewModelBase
     [RelayCommand]
     public void GenerateNewSeed()
     {
-        Seed = Random.Shared.NextInt64();
+        Seed = Random.Shared.NextInt64(0, int.MaxValue);
     }
 
     /// <inheritdoc />

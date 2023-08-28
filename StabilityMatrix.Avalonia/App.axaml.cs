@@ -398,6 +398,7 @@ public sealed class App : Application
         services.AddSingleton<IInferenceClientManager, InferenceClientManager>();
         services.AddSingleton<ICompletionProvider, CompletionProvider>();
         services.AddSingleton<ITokenizerProvider, TokenizerProvider>();
+        services.AddSingleton<IModelIndexService, ModelIndexService>();
         
         services.AddSingleton<ITrackedDownloadService, TrackedDownloadService>();
         services.AddSingleton<IDisposable>(provider => 

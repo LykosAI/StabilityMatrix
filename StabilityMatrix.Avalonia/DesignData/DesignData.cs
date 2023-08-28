@@ -98,6 +98,7 @@ public static class DesignData
             .AddSingleton<IInferenceClientManager, MockInferenceClientManager>()
             .AddSingleton<IDiscordRichPresenceService, MockDiscordRichPresenceService>()
             .AddSingleton<ICompletionProvider, MockCompletionProvider>()
+            .AddSingleton<IModelIndexService, MockModelIndexService>()
             .AddSingleton<ITrackedDownloadService, MockTrackedDownloadService>();
 
         // Placeholder services that nobody should need during design time

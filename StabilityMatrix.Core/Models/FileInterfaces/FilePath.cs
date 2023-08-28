@@ -58,6 +58,11 @@ public class FilePath : FileSystemPath, IPathObject
     {
     }
     
+    public FilePath(FileInfo fileInfo) : base(fileInfo.FullName)
+    {
+        _info = fileInfo;
+    }
+    
     public FilePath(FileSystemPath path) : base(path)
     {
     }

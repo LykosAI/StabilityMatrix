@@ -59,6 +59,7 @@ public partial class SettingsViewModel : PageViewModelBase
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly ICompletionProvider completionProvider;
     private readonly ITrackedDownloadService trackedDownloadService;
+    private readonly IModelIndexService modelIndexService;
     
     public SharedState SharedState { get; }
     
@@ -133,7 +134,8 @@ public partial class SettingsViewModel : PageViewModelBase
         ServiceManager<ViewModelBase> dialogFactory,
         ITrackedDownloadService trackedDownloadService,
         SharedState sharedState, 
-        ICompletionProvider completionProvider)
+        ICompletionProvider completionProvider,
+        IModelIndexService modelIndexService)
     {
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
@@ -142,7 +144,8 @@ public partial class SettingsViewModel : PageViewModelBase
         this.dialogFactory = dialogFactory;
         this.trackedDownloadService = trackedDownloadService;
         this.completionProvider = completionProvider;
-        
+        this.modelIndexService = modelIndexService;
+
         SharedState = sharedState;
         
         SelectedTheme = settingsManager.Settings.Theme ?? AvailableThemes[1];
@@ -676,6 +679,12 @@ public partial class SettingsViewModel : PageViewModelBase
         await completionProvider.LoadFromFile(files[0].TryGetLocalPath()!, true);
         
         notificationService.Show("Loaded completion file", "");
+    }
+    
+    [RelayCommand]
+    private async Task DebugRefreshModelsIndex()
+    {
+        await modelIndexService.RefreshIndex();
     }
     
     [RelayCommand]

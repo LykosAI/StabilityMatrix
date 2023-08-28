@@ -8,7 +8,7 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
-        <Version>2.3.2-dev.1</Version>
+        <Version>2.3.3-dev.1</Version>
         <InformationalVersion>$(Version)</InformationalVersion>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
     </PropertyGroup>
@@ -77,6 +77,8 @@
       <AvaloniaResource Include="Assets\win-x64\**" Condition="'$(RuntimeIdentifier)' == 'win-x64'" />
       <!-- Only for linux-64 -->
       <AvaloniaResource Include="Assets\linux-x64\**" Condition="'$(RuntimeIdentifier)' == 'linux-x64'" />
+      <!-- Only for osx-arm64 -->
+      <AvaloniaResource Include="Assets\macos-arm64\**" Condition="'$(RuntimeIdentifier)' == 'osx-arm64'" />
     </ItemGroup>
     
     <ItemGroup>

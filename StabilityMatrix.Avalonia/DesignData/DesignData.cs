@@ -63,7 +63,7 @@ public static class DesignData
                     new()
                     {
                         Id = Guid.NewGuid(),
-                        DisplayName = "Dank Diffusion",
+                        DisplayName = "Comfy Diffusion WebUI Dev Branch Long Name",
                         PackageName = "ComfyUI",
                         DisplayVersion = "main@ab73d4a",
                         LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
@@ -297,7 +297,7 @@ public static class DesignData
             vm.SetPackages(settings.Settings.InstalledPackages);
             vm.SetUnknownPackages(new InstalledPackage[]
             {
-                UnknownInstalledPackage.FromDirectoryName("sd-unknown"),
+                UnknownInstalledPackage.FromDirectoryName("sd-unknown-with-long-name"),
             });
             
             vm.PackageCards[0].IsUpdateAvailable = true;

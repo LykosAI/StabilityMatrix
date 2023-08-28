@@ -4,7 +4,6 @@ using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
-using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -136,10 +135,7 @@ public class A3WebUI : BaseGitPackage
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(InstallLocation, "venv"));
         venvRunner.WorkingDirectory = InstallLocation;
-        if (!venvRunner.Exists())
-        {
-            await venvRunner.Setup().ConfigureAwait(false);
-        }
+        await venvRunner.Setup(true).ConfigureAwait(false);
 
         // Install torch / xformers based on gpu info
         var gpus = HardwareHelper.IterGpuInfo().ToList();
@@ -179,10 +175,15 @@ public class A3WebUI : BaseGitPackage
         progress?.Report(new ProgressReport(1f, "Installing Package Requirements", isIndeterminate: false));
         
         progress?.Report(new ProgressReport(-1f, "Updating configuration", isIndeterminate: true));
+        
         // Create and add {"show_progress_type": "TAESD"} to config.json
+        // Only add if the file doesn't exist
         var configPath = Path.Combine(InstallLocation, "config.json");
-        var config = new JsonObject {{"show_progress_type", "TAESD"}};
-        await File.WriteAllTextAsync(configPath, config.ToString()).ConfigureAwait(false);
+        if (!File.Exists(configPath))
+        {
+            var config = new JsonObject {{"show_progress_type", "TAESD"}};
+            await File.WriteAllTextAsync(configPath, config.ToString()).ConfigureAwait(false);
+        }
 
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
     }

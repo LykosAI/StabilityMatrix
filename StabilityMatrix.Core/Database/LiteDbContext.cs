@@ -27,6 +27,7 @@ public class LiteDbContext : ILiteDbContext
     public ILiteCollectionAsync<CivitModelVersion> CivitModelVersions => Database.GetCollection<CivitModelVersion>("CivitModelVersions");
     public ILiteCollectionAsync<CivitModelQueryCacheEntry> CivitModelQueryCache => Database.GetCollection<CivitModelQueryCacheEntry>("CivitModelQueryCache");
     public ILiteCollectionAsync<GithubCacheEntry> GithubCache => Database.GetCollection<GithubCacheEntry>("GithubCache");
+    public ILiteCollectionAsync<LocalModelFile> LocalModelFiles => Database.GetCollection<LocalModelFile>("LocalModelFiles");
     
     public LiteDbContext(
         ILogger<LiteDbContext> logger,

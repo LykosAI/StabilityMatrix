@@ -103,7 +103,7 @@
                         x:Name="PromptPane"
                         Alignment="Right"
                         Id="PromptPane"
-                        Proportion="0.3">
+                        Proportion="0.25">
                         <Tool
                             x:Name="PromptTool"
                             Title="Prompt"
@@ -137,6 +137,7 @@
                                                 icons:Attached.Icon="fa-solid fa-magnifying-glass-plus"
                                                 Classes="transparent"
                                                 Command="{Binding GenerateImageCommand}"
+                                                CommandParameter="current_seed,hires_fix"
                                                 ToolTip.Tip="Generate with Hires Scaling" />
 
                                             <!--  Main Generate Button  -->
@@ -174,6 +175,7 @@
                                                 icons:Attached.Icon="fa-solid fa-repeat"
                                                 Classes="transparent"
                                                 Command="{Binding GenerateImageCommand}"
+                                                CommandParameter="current_seed"
                                                 ToolTip.Tip="Generate with current seed" />
                                         </Grid>
                                     </controls:Card>
@@ -190,7 +192,7 @@
                         x:Name="ImageGalleryPane"
                         Alignment="Right"
                         Id="ImageGalleryPane"
-                        Proportion="0.3">
+                        Proportion="0.35">
                         <Tool
                             x:Name="ImageGalleryTool"
                             Title="Image Output"

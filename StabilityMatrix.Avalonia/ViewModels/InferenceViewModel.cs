@@ -1,8 +1,7 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Avalonia.Collections;
 using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -52,10 +51,13 @@ public partial class InferenceViewModel : PageViewModelBase
 
     public IInferenceClientManager ClientManager { get; }
 
-    public AvaloniaList<InferenceTabViewModelBase> Tabs { get; } = new();
+    public ObservableCollection<InferenceTabViewModelBase> Tabs { get; } = new();
 
     [ObservableProperty]
-    private LoadableViewModelBase? selectedTab;
+    private InferenceTabViewModelBase? selectedTab;
+    
+    [ObservableProperty]
+    private int selectedTabIndex;
 
     [ObservableProperty]
     private PackagePair? runningPackage;
@@ -64,7 +66,6 @@ public partial class InferenceViewModel : PageViewModelBase
         ServiceManager<ViewModelBase> vmFactory,
         IApiFactory apiFactory,
         INotificationService notificationService,
-//         IRelayCommandFactory commandFactory,
         IInferenceClientManager inferenceClientManager,
         ISettingsManager settingsManager
     )
@@ -72,7 +73,6 @@ public partial class InferenceViewModel : PageViewModelBase
         this.vmFactory = vmFactory;
         this.apiFactory = apiFactory;
         this.notificationService = notificationService;
-//         this.commandFactory = commandFactory;
         this.settingsManager = settingsManager;
 
         ClientManager = inferenceClientManager;
@@ -88,18 +88,12 @@ public partial class InferenceViewModel : PageViewModelBase
 
     public override void OnLoaded()
     {
+        base.OnLoaded();
+        
         if (Tabs.Count == 0)
         {
             AddTab();
         }
-
-        // Select first tab if none is selected
-        if (SelectedTab is null && Tabs.Count > 0)
-        {
-            SelectedTab = Tabs[0];
-        }
-
-        base.OnLoaded();
     }
 
     /// <summary>
@@ -109,6 +103,9 @@ public partial class InferenceViewModel : PageViewModelBase
     private void AddTab()
     {
         Tabs.Add(vmFactory.Get<InferenceTextToImageViewModel>());
+        
+        // Set as new selected tab
+        SelectedTabIndex = Tabs.Count - 1;
     }
 
     /// <summary>
@@ -123,7 +120,26 @@ public partial class InferenceViewModel : PageViewModelBase
         }
         
         Logger.Trace("Closing tab {Title}", vm.TabTitle);
-        Tabs.Remove(vm);
+        
+        // Set the selected tab to the next tab if there is one, then previous, then null
+        lock (Tabs)
+        {
+            var index = Tabs.IndexOf(vm);
+            if (index < Tabs.Count - 1)
+            {
+                SelectedTabIndex = index + 1;
+            }
+            else if (index > 0)
+            {
+                SelectedTabIndex = index - 1;
+            }
+            
+            // Remove the tab
+            Tabs.RemoveAt(index);
+            
+            // Dispose the view model
+            vm.Dispose();
+        }
     }
 
     /// <summary>
@@ -233,15 +249,66 @@ public partial class InferenceViewModel : PageViewModelBase
             return;
         }
         
+        // Update project file
+        currentTab.ProjectFile = new FilePath(result.TryGetLocalPath()!);
+        
         notificationService.Show(
             "Saved",
             $"Saved project to {result.Name}",
             NotificationType.Success
         );
     }
-    
-    /*public AsyncRelayCommand MenuOpenProjectCommand =>
-        commandFactory.CreateWithNotificationErrorHandling(MenuOpenProject);*/
+
+    /// <summary>
+    /// Menu "Save Project" command.
+    /// </summary>
+    [RelayCommand(FlowExceptionsToTaskScheduler = true)]
+    private async Task MenuSave()
+    {
+        // Get the current tab
+        var currentTab = SelectedTab;
+        
+        if (currentTab == null)
+        {
+            Logger.Info("MenuSaveProject: currentTab is null");
+            return;
+        }
+        
+        // If the tab has no project file, prompt for save as
+        if (currentTab.ProjectFile is not { } projectFile)
+        {
+            await MenuSaveAs();
+            return;
+        }
+        
+        // Otherwise, save to the current project file
+        var document = InferenceProjectDocument.FromLoadable(currentTab);
+        
+        // Save to file
+        try
+        {
+            await using var stream = projectFile.Info.OpenWrite();
+            await JsonSerializer.SerializeAsync(
+                stream,
+                document,
+                new JsonSerializerOptions { WriteIndented = true }
+            );
+        }
+        catch (Exception e)
+        {
+            notificationService.ShowPersistent(
+                "Could not save to file", 
+                $"[{e.GetType().Name}] {e.Message}", 
+                NotificationType.Error);
+            return;
+        }
+        
+        notificationService.Show(
+            "Saved",
+            $"Saved project to {projectFile.Name}",
+            NotificationType.Success
+        );
+    }
     
     /// <summary>
     /// Menu "Open Project" command.
@@ -285,22 +352,28 @@ public partial class InferenceViewModel : PageViewModelBase
         var document = await JsonSerializer.DeserializeAsync<InferenceProjectDocument>(stream);
         if (document is null)
         {
-            Logger.Warn("MenuOpenProject: Deserialize project file returned null");
-            return;
+            throw new ApplicationException("MenuOpenProject: Deserialize project file returned null");
         }
 
-        InferenceTabViewModelBase? vm = null;
-        if (document.ProjectType is InferenceProjectType.TextToImage && document.State is not null)
+        if (document.State is null)
         {
+            throw new ApplicationException("MenuOpenProject: Deserialize project file returned null state");
+        }
+
+        InferenceTabViewModelBase vm;
+        if (document.ProjectType is InferenceProjectType.TextToImage)
+        {
+            // Get view model
             var textToImage = vmFactory.Get<InferenceTextToImageViewModel>();
+            // Load state
             textToImage.LoadStateFromJsonObject(document.State);
+            // Set the file backing the view model
+            textToImage.ProjectFile = new FilePath(file.TryGetLocalPath()!);
             vm = textToImage;
         }
-
-        if (vm == null)
+        else
         {
-            Logger.Warn("MenuOpenProject: Unknown project type");
-            return;
+            throw new InvalidOperationException($"Unsupported project type: {document.ProjectType}");
         }
 
         Tabs.Add(vm);

@@ -1,17 +1,21 @@
-﻿using Avalonia.Markup.Xaml;
-using StabilityMatrix.Avalonia.Controls;
+﻿using System.Diagnostics;
+using StabilityMatrix.Avalonia.Controls.Dock;
 
 namespace StabilityMatrix.Avalonia.Views;
 
-public partial class InferenceTextToImageView : UserControlBase
+public partial class InferenceTextToImageView : DockUserControlBase
 {
     public InferenceTextToImageView()
     {
         InitializeComponent();
     }
     
-    private void InitializeComponent()
+    ~InferenceTextToImageView()
     {
-        AvaloniaXamlLoader.Load(this);
+        if (DataContext is { } dataContext)
+        {
+            Debug.WriteLine("InferenceTextToImageView destructor");
+        }
+        Debug.WriteLine("InferenceTextToImageView destructor");
     }
 }

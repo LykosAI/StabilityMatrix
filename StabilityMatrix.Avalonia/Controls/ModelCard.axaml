@@ -6,7 +6,9 @@
         xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
         x:DataType="inference:ModelCardViewModel">
     <Design.PreviewWith>
-        <controls:ModelCard DataContext="{x:Static mocks:DesignData.ModelCardViewModel}"/>
+        <StackPanel MinWidth="300">
+            <controls:ModelCard DataContext="{x:Static mocks:DesignData.ModelCardViewModel}"/>
+        </StackPanel>
     </Design.PreviewWith>
 
     <Style Selector="controls|ModelCard">
@@ -14,20 +16,46 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <controls:Card Padding="8">
-                    <Grid Margin="8" ColumnDefinitions="Auto,*,Auto">
+                    <Grid Margin="8" RowDefinitions="*,*" ColumnDefinitions="Auto,*,Auto">
+                        <!-- Model -->
                         <TextBlock
                             Grid.Column="0"
-                            Margin="0,0,8,0"
                             VerticalAlignment="Center"
+                            HorizontalAlignment="Left"
+                            MinWidth="60"
                             Text="Model" />
                         <ui:FAComboBox
+                            Grid.Row="0"
                             Grid.Column="1"
                             HorizontalAlignment="Stretch"
                             ItemsSource="{Binding ClientManager.ModelNames}"
                             SelectedItem="{Binding SelectedModelName, Mode=TwoWay}" />
-                        <Button Grid.Column="2" Margin="8,0,0,0">
-                            <ui:SymbolIcon FontSize="16" Symbol="Refresh" />
+                        
+                        <Button
+                            Grid.Row="0"
+                            Grid.Column="2" 
+                            Margin="8,0,0,0">
+                            <ui:SymbolIcon FontSize="16" Symbol="Setting" />
                         </Button>
+                        
+                        <!-- VAE -->
+                        <TextBlock
+                            Grid.Column="0"
+                            Grid.Row="1"
+                            MinWidth="60"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            Text="VAE" />
+                        
+                        <ui:FAComboBox
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            ItemsSource="{Binding ClientManager.ModelNames}"
+                            SelectedItem="{Binding SelectedModelName, Mode=TwoWay}" />
+                        
                     </Grid>
                 </controls:Card>
             </ControlTemplate>

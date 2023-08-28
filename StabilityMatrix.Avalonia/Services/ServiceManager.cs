@@ -192,7 +192,7 @@ public class ServiceManager<T>
             throw new InvalidOperationException($"View not found for {instance.GetType().FullName}");
         }
 
-        if (Activator.CreateInstance(viewAttr.GetViewType()) is not Control view)
+        if (Activator.CreateInstance(viewAttr.ViewType) is not Control view)
         {
             throw new NullReferenceException($"Unable to create instance for {instance.GetType().FullName}");
         }
@@ -214,7 +214,7 @@ public class ServiceManager<T>
             throw new InvalidOperationException($"View not found for {instance.GetType().FullName}");
         }
 
-        if (Activator.CreateInstance(viewAttr.GetViewType()) is not Control view)
+        if (Activator.CreateInstance(viewAttr.ViewType) is not Control view)
         {
             throw new NullReferenceException($"Unable to create instance for {instance.GetType().FullName}");
         }

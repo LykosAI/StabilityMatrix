@@ -2,13 +2,10 @@
     x:Class="StabilityMatrix.Avalonia.Views.InferencePage"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
@@ -17,23 +14,59 @@
     d:DesignWidth="1000"
     x:DataType="vm:InferenceViewModel"
     mc:Ignorable="d">
+    
+    <controls:UserControlBase.Resources>
+        <ui:CommandBarFlyout Placement="Right" x:Key="AddTabFlyout">
+            <!-- Note: unlike a regular CommandBar, primary items can be set as the xml content and don't need
+                   to be wrapped in a <ui:CommandBarFlyout.PrimaryCommands> tag
+        -->
+            <!--<ui:CommandBarButton Label="Text to Image" ToolTip.Tip="Text to Image">
+                <ui:CommandBarButton.IconSource>
+                    <controls:FASymbolIconSource Symbol="fa-solid fa-bolt"/>
+                </ui:CommandBarButton.IconSource>
+            </ui:CommandBarButton>
+            <ui:CommandBarButton Label="Save" ToolTip.Tip="Save" />
+            <ui:CommandBarButton Label="Delete" ToolTip.Tip="Delete" />-->
+            <ui:CommandBarFlyout.SecondaryCommands>
+                <ui:CommandBarButton 
+                    IconSource="FullScreenMaximize"
+                    Label="Text to Image" 
+                    Click="AddTabMenu_TextToImageButton_OnClick"
+                    ToolTip.Tip="Text to Image"/>
+                <ui:CommandBarButton 
+                    IsEnabled="False"
+                    IconSource="ImageCopy"
+                    Label="Image to Image"
+                    ToolTip.Tip="Image to Image"/>
+                <ui:CommandBarButton
+                    IsEnabled="False"
+                    IconSource="ImageEdit"
+                    Label="Inpaint"
+                    ToolTip.Tip="Inpaint"/>
+            </ui:CommandBarFlyout.SecondaryCommands>
+        </ui:CommandBarFlyout>
+    </controls:UserControlBase.Resources>
+    
     <Grid>
+        <!--             AddTabButtonCommand="{Binding AddTabCommand}" -->
         <ui:TabView
+            x:Name="TabView"
+            CanDragTabs="True"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
             CanReorderTabs="True"
             CloseButtonOverlayMode="Auto"
             TabCloseRequested="TabView_OnTabCloseRequested"
-            AddTabButtonCommand="{Binding AddTabCommand}"
+            AddTabButtonClick="TabView_OnAddTabButtonClick"
             TabItems="{Binding Tabs}"
-            SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
+            SelectedItem="{Binding SelectedTab}"
+            SelectedIndex="{Binding SelectedTabIndex}"
             TabWidthMode="SizeToContent">
             <ui:TabView.TabItemTemplate>
                 <DataTemplate DataType="{x:Type vmInference:InferenceTextToImageViewModel}">
-                    <ui:TabViewItem Header="Project 1" 
+                    <ui:TabViewItem Header="{Binding TabTitle}"
                                     IconSource="Document" 
-                                    Content="{Binding}">
-                    </ui:TabViewItem>
+                                    Content="{Binding}" />
                 </DataTemplate>
             </ui:TabView.TabItemTemplate>
             <ui:TabView.TabStripFooter>
@@ -58,6 +91,7 @@
                                           InputGesture="Ctrl+O"/>
                                 <Separator/>
                                 <MenuItem Header="Save"
+                                          Command="{Binding MenuSaveCommand}"
                                           InputGesture="Ctrl+S"/>
                                 <MenuItem Header="Save As..."
                                           Command="{Binding MenuSaveAsCommand}"

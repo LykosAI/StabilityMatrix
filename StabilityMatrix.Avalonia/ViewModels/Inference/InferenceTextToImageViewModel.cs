@@ -31,7 +31,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
-[View(typeof(InferenceTextToImageView))]
+[View(typeof(InferenceTextToImageView), persistent: true)]
 public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -129,7 +129,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         // GenerateImageCommand.WithNotificationErrorHandler(notificationService);
     }
 
-    private (NodeDictionary prompt, string[] outputs) BuildPrompt()
+    private (NodeDictionary prompt, string[] outputs) BuildPrompt(GenerateOverrides? overrides = null)
     {
         using var _ = new CodeTimer();
 
@@ -237,7 +237,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         );
         
         // If hi-res fix is enabled, add the LatentUpscale node and another KSampler node
-        if (IsHiresFixEnabled)
+        if (overrides is { IsHiresFixEnabled: true } || IsHiresFixEnabled)
         {
             var hiresUpscalerCard = UpscalerCardViewModel;
             var hiresSamplerCard = HiresSamplerCardViewModel;
@@ -347,7 +347,9 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         });
     }
 
-    private async Task GenerateImageImpl(CancellationToken cancellationToken = default)
+    private async Task GenerateImageImpl(
+        GenerateOverrides? overrides = null,
+        CancellationToken cancellationToken = default)
     {
         if (!ClientManager.IsConnected)
         {
@@ -357,7 +359,8 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
 
         // If enabled, randomize the seed
         var seedCard = StackCardViewModel.GetCard<SeedCardViewModel>();
-        if (seedCard.IsRandomizeEnabled)
+        if (overrides is not { UseCurrentSeed: true } &&
+            seedCard.IsRandomizeEnabled)
         {
             seedCard.GenerateNewSeed();
         }
@@ -474,15 +477,27 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
     }
 
     [RelayCommand(IncludeCancelCommand = true)]
-    private async Task GenerateImage(CancellationToken cancellationToken = default)
+    private async Task GenerateImage(string? options = null, CancellationToken cancellationToken = default)
     {
         try
         {
-            await GenerateImageImpl(cancellationToken);
+            var overrides = new GenerateOverrides
+            {
+                IsHiresFixEnabled = options?.Contains("hires_fix"),
+                UseCurrentSeed = options?.Contains("current_seed")
+            };
+
+            await GenerateImageImpl(overrides, cancellationToken);
         }
         catch (OperationCanceledException e)
         {
             Logger.Debug($"[Image Generation Canceled] {e.Message}");
         }
+    }
+    
+    internal class GenerateOverrides
+    {
+        public bool? IsHiresFixEnabled { get; set; }
+        public bool? UseCurrentSeed { get; set; }
     }
 }

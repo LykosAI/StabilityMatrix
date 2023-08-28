@@ -3,18 +3,15 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Avalonia;
 using Avalonia.Input;
-using Avalonia.Threading;
 using Avalonia.Xaml.Interactivity;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
 using NLog;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
-using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Core.Extensions;
 using TextMateSharp.Grammars;
-using CompletionWindow = StabilityMatrix.Avalonia.Controls.CodeCompletion.CompletionWindow;
 
 namespace StabilityMatrix.Avalonia.Behaviors;
 
@@ -27,19 +24,20 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
     
     private CompletionWindow? completionWindow;
     
-    public static readonly StyledProperty<ICompletionProvider> CompletionProviderProperty =
-        AvaloniaProperty.Register<TextEditorCompletionBehavior, ICompletionProvider>(nameof(CompletionProvider));
+    public static readonly StyledProperty<ICompletionProvider?> CompletionProviderProperty =
+        AvaloniaProperty.Register<TextEditorCompletionBehavior, ICompletionProvider?>(nameof(CompletionProvider));
 
-    public ICompletionProvider CompletionProvider
+    public ICompletionProvider? CompletionProvider
     {
         get => GetValue(CompletionProviderProperty);
         set => SetValue(CompletionProviderProperty, value);
     }
 
-    public static readonly StyledProperty<ITokenizerProvider> TokenizerProviderProperty = AvaloniaProperty.Register<TextEditorCompletionBehavior, ITokenizerProvider>(
+    public static readonly StyledProperty<ITokenizerProvider?> TokenizerProviderProperty = 
+        AvaloniaProperty.Register<TextEditorCompletionBehavior, ITokenizerProvider?>(
         "TokenizerProvider");
 
-    public ITokenizerProvider TokenizerProvider
+    public ITokenizerProvider? TokenizerProvider
     {
         get => GetValue(TokenizerProviderProperty);
         set => SetValue(TokenizerProviderProperty, value);
@@ -78,7 +76,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
 
     private CompletionWindow CreateCompletionWindow(TextArea textArea)
     {
-        var window = new CompletionWindow(textArea, CompletionProvider, TokenizerProvider)
+        var window = new CompletionWindow(textArea, CompletionProvider!, TokenizerProvider!)
         {
             WindowManagerAddShadowHint = false,
             CloseWhenCaretAtBeginning = true,
@@ -189,7 +187,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         var caretAbsoluteOffset = caret - line.Offset;
         
         // Tokenize
-        var result = TokenizerProvider.TokenizeLine(lineText);
+        var result = TokenizerProvider!.TokenizeLine(lineText);
 
         var currentTokenIndex = -1;
         IToken? currentToken = null;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Avalonia.Collections;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;

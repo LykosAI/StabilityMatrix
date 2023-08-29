@@ -16,7 +16,8 @@ public interface IInferenceClientManager : IDisposable,  INotifyPropertyChanged,
     [MemberNotNullWhen(true, nameof(Client))]
     bool IsConnected { get; }
     
-    IReadOnlyCollection<string>? ModelNames { get; set; }
+    IReadOnlyCollection<HybridModelFile>? Models { get; set; }
+    IReadOnlyCollection<HybridModelFile>? VaeModels { get; set; }
     IReadOnlyCollection<ComfySampler>? Samplers { get; set; }
     IReadOnlyCollection<ComfyUpscaler>? Upscalers { get; set; }
     

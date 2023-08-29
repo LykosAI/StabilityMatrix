@@ -13,7 +13,9 @@ public class MockInferenceClientManager : ObservableObject, IInferenceClientMana
 {
     public ComfyClient? Client { get; set; }
     
-    public IReadOnlyCollection<string>? ModelNames { get; set; }
+    public IReadOnlyCollection<HybridModelFile>? Models { get; set; }
+    public IReadOnlyCollection<HybridModelFile>? VaeModels { get; set; }
+    
     public IReadOnlyCollection<ComfySampler>? Samplers { get; set; } = new ComfySampler[]
     {
         new("euler_ancestral"),

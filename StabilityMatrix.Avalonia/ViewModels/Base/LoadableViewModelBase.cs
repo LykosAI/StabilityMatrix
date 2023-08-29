@@ -14,21 +14,19 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
-    // ReSharper disable once MemberCanBePrivate.Global
-    protected static readonly Type[] SerializerIgnoredTypes =
+
+    private static readonly Type[] SerializerIgnoredTypes =
     {
         typeof(ICommand),
         typeof(IRelayCommand)
     };
-    
-    // ReSharper disable once MemberCanBePrivate.Global
-    protected static readonly string[] SerializerIgnoredNames =
+
+    private static readonly string[] SerializerIgnoredNames =
     {
         nameof(HasErrors),
     };
-    
-    protected static readonly JsonSerializerOptions SerializerOptions = new()
+
+    private static readonly JsonSerializerOptions SerializerOptions = new()
     {
         IgnoreReadOnlyProperties = true,
     };

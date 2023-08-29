@@ -5,6 +5,7 @@ using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Api.Comfy;
 
@@ -26,9 +27,9 @@ public partial class SamplerCardViewModel : LoadableViewModelBase
     [ObservableProperty] private int height = 512;
     
     [ObservableProperty] private bool isSamplerSelectionEnabled = true;
-    
-    [ObservableProperty, Required]
-    private ComfySampler? selectedSampler;
+
+    [ObservableProperty]
+    private ComfySampler? selectedSampler = new ComfySampler("euler_ancestral");
     
     public IInferenceClientManager ClientManager { get; }
 

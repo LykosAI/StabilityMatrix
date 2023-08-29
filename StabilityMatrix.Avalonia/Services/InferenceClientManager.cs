@@ -2,16 +2,20 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Services;
 
@@ -23,6 +27,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 {
     private readonly ILogger<InferenceClientManager> logger;
     private readonly IApiFactory apiFactory;
+    private readonly IModelIndexService modelIndexService;
 
     [ObservableProperty, NotifyPropertyChangedFor(nameof(IsConnected))]
     private ComfyClient? client;
@@ -31,18 +36,25 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     public bool IsConnected => Client is not null;
 
     [ObservableProperty]
-    private IReadOnlyCollection<string>? modelNames;
+    private IReadOnlyCollection<HybridModelFile>? models;
 
+    [ObservableProperty]
+    private IReadOnlyCollection<HybridModelFile>? vaeModels;
+    
     [ObservableProperty]
     private IReadOnlyCollection<ComfySampler>? samplers;
 
     [ObservableProperty]
     private IReadOnlyCollection<ComfyUpscaler>? upscalers;
 
-    public InferenceClientManager(ILogger<InferenceClientManager> logger, IApiFactory apiFactory)
+    public InferenceClientManager(
+        ILogger<InferenceClientManager> logger, 
+        IApiFactory apiFactory,
+        IModelIndexService modelIndexService)
     {
         this.logger = logger;
         this.apiFactory = apiFactory;
+        this.modelIndexService = modelIndexService;
         
         ClearSharedProperties();
     }
@@ -52,7 +64,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         if (!IsConnected)
             throw new InvalidOperationException("Client is not connected");
 
-        ModelNames = await Client.GetModelNamesAsync();
+        var modelNames = await Client.GetModelNamesAsync();
+        Models = modelNames?.Select(HybridModelFile.FromRemote).ToImmutableArray();
 
         // Fetch sampler names from KSampler node
         var samplerNames = await Client.GetSamplerNamesAsync();
@@ -91,8 +104,20 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     /// </summary>
     private void ClearSharedProperties()
     {
-        ModelNames = null;
+        // Load local models
+        modelIndexService.GetModelsOfType(SharedFolderType.StableDiffusion)
+            .ContinueWith(task =>
+            {
+                Models = task.Result.Select(HybridModelFile.FromLocal).ToImmutableArray();
+            }).SafeFireAndForget();
 
+        // Load local VAE models
+        modelIndexService.GetModelsOfType(SharedFolderType.VAE)
+            .ContinueWith(task =>
+            {
+                VaeModels = task.Result.Select(HybridModelFile.FromLocal).ToImmutableArray();
+            }).SafeFireAndForget();
+        
         Samplers = ComfySampler.Defaults;
         
         Upscalers = null;

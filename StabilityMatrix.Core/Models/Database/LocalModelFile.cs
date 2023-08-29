@@ -28,6 +28,11 @@ public class LocalModelFile
     /// </summary>
     public string? PreviewImageRelativePath { get; set; }
 
+    /// <summary>
+    /// File name of the relative path.
+    /// </summary>
+    public string FileName => Path.GetFileName(RelativePath);
+    
     public string GetFullPath(string rootModelDirectory)
     {
         return Path.Combine(rootModelDirectory, RelativePath);
@@ -38,6 +43,12 @@ public class LocalModelFile
         return PreviewImageRelativePath == null ? null 
             : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
     }
+    
+    public string FullPathGlobal 
+        => GetFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
+    
+    public string? PreviewImageFullPathGlobal
+        => GetPreviewImageFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
 
     public static readonly HashSet<string> SupportedCheckpointExtensions =
         new() { ".safetensors", ".pt", ".ckpt", ".pth", ".bin" };

@@ -22,6 +22,7 @@ using FluentAvalonia.UI.Windowing;
 using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Diagnostics.Views;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -52,6 +53,7 @@ public partial class MainWindow : AppWindowBase
         
 #if DEBUG
         this.AttachDevTools();
+        LogWindow.Attach(this, App.Services);
 #endif
         
         TitleBar.ExtendsContentIntoTitleBar = true;

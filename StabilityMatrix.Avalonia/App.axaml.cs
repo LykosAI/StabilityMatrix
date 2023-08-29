@@ -33,6 +33,8 @@ using Refit;
 using Sentry;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.DesignData;
+using StabilityMatrix.Avalonia.Diagnostics.LogViewer;
+using StabilityMatrix.Avalonia.Diagnostics.LogViewer.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -59,6 +61,7 @@ using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
 using Application = Avalonia.Application;
+using DrawingColor = System.Drawing.Color;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace StabilityMatrix.Avalonia;
@@ -464,6 +467,8 @@ public sealed class App : Application
         services.AddHttpClient("A3Client")
             .AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));
 
+        ConditionalAddLogViewer(services);
+        
         // Add logging
         services.AddLogging(builder =>
         {
@@ -473,7 +478,16 @@ public sealed class App : Application
                 .AddFilter("Microsoft", LogLevel.Warning)
                 .AddFilter("System", LogLevel.Warning);
             builder.SetMinimumLevel(LogLevel.Debug);
+#if DEBUG
+            builder.AddNLog(ConfigureLogging(),
+                new NLogProviderOptions
+                {
+                    IgnoreEmptyEventId = false,
+                    CaptureEventId = EventIdCaptureType.Legacy
+                });
+#else
             builder.AddNLog(ConfigureLogging());
+#endif
         });
 
         return services;
@@ -525,7 +539,11 @@ public sealed class App : Application
 
     private static LoggingConfiguration ConfigureLogging()
     {
-        LogManager.Setup().LoadConfiguration(builder => {
+        var setupBuilder = LogManager.Setup();
+
+        ConditionalAddLogViewerNLog(setupBuilder);
+        
+        setupBuilder.LoadConfiguration(builder => {
             var debugTarget = builder.ForTarget("console").WriteTo(new DebuggerTarget
             {
                 Layout = "${message}"
@@ -548,6 +566,14 @@ public sealed class App : Application
             
             builder.ForLogger().FilterMinLevel(NLog.LogLevel.Trace).WriteTo(debugTarget);
             builder.ForLogger().FilterMinLevel(NLog.LogLevel.Debug).WriteTo(fileTarget);
+
+#if DEBUG
+            var logViewerTarget = builder.ForTarget("DataStoreLogger").WriteTo(new DataStoreLoggerTarget()
+            {
+                Layout = "${message}"
+            });
+            builder.ForLogger().FilterMinLevel(NLog.LogLevel.Trace).WriteTo(logViewerTarget);
+#endif
         });
         
         // Sentry
@@ -567,6 +593,21 @@ public sealed class App : Application
             });
         }
 
+        LogManager.ReconfigExistingLoggers();
+        
         return LogManager.Configuration;
+    }
+    
+    [Conditional("DEBUG")]
+    private static void ConditionalAddLogViewer(IServiceCollection services)
+    {
+        services.AddLogViewer();
+    }
+    
+    [Conditional("DEBUG")]
+    private static void ConditionalAddLogViewerNLog(ISetupBuilder setupBuilder)
+    {
+        setupBuilder.SetupExtensions(extensionBuilder =>
+            extensionBuilder.RegisterTarget<DataStoreLoggerTarget>("DataStoreLogger"));
     }
 }

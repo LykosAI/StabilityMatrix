@@ -1,0 +1,74 @@
+<UserControl x:Class="StabilityMatrix.Avalonia.Diagnostics.LogViewer.Controls.LogViewerControl"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Diagnostics.LogViewer.Converters"
+             xmlns:logging="clr-namespace:StabilityMatrix.Avalonia.Diagnostics.LogViewer.Core.Logging"
+             x:CompileBindings="True"
+             x:DataType="logging:ILogDataStoreImpl"
+             mc:Ignorable="d" d:DesignHeight="450" d:DesignWidth="800" >
+
+    <Grid RowDefinitions="*,Auto">
+        <Grid.Resources>
+            <converters:ChangeColorTypeConverter x:Key="ColorConverter" />
+            <converters:EventIdConverter x:Key="EventIdConverter"/>
+            <SolidColorBrush x:Key="ColorBlack">Black</SolidColorBrush>
+            <SolidColorBrush x:Key="ColorTransparent">Transparent</SolidColorBrush>
+        </Grid.Resources>
+        <Grid.Styles>
+            <Style Selector="DataGridRow">
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="Foreground" 
+                        x:DataType="logging:LogModel"
+                        Value="{Binding Color.Foreground, 
+                        FallbackValue=White,
+                        Converter={StaticResource ColorConverter}, ConverterParameter={StaticResource ColorBlack}}" />
+                <Setter Property="Background"
+                        x:DataType="logging:LogModel"
+                        Value="{Binding Color.Background,
+                        FallbackValue=Black,
+                        Converter={StaticResource ColorConverter}, ConverterParameter={StaticResource ColorTransparent}}" />
+            </Style>    
+            <Style Selector="DataGridCell.size">
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="Padding" Value="0" />
+            </Style>
+        </Grid.Styles>
+        <DataGrid x:Name="MyDataGrid"
+                  ItemsSource="{Binding DataStore.Entries}" AutoGenerateColumns="False"
+                  CanUserResizeColumns="True"
+                  CanUserReorderColumns="True"
+                  CanUserSortColumns="False"
+                  LayoutUpdated="OnLayoutUpdated">
+            
+            <DataGrid.Styles>
+                <Style Selector="TextBlock">
+                    <Setter Property="TextWrapping" Value="WrapWithOverflow" />
+                </Style>
+            </DataGrid.Styles>
+            
+            <DataGrid.Columns>
+                <DataGridTextColumn CellStyleClasses="size" Header="Time" Width="Auto"  Binding="{Binding Timestamp}" IsVisible="{Binding #IsTimestampVisible.IsChecked}"/>
+                <DataGridTextColumn CellStyleClasses="size" Header="Level" Width="Auto" Binding="{Binding LogLevel}" />
+                <!--<DataGridTextColumn CellStyleClasses="size" Header="Event Id" Width="120" Binding="{Binding EventId, Converter={StaticResource EventIdConverter}}" />-->
+                <DataGridTextColumn CellStyleClasses="size" Header="Callsite" Width="Auto" Binding="{Binding LoggerDisplayName}" />
+                <DataGridTextColumn CellStyleClasses="size" Header="State" Width="*" Binding="{Binding State}" />
+                <DataGridTextColumn CellStyleClasses="size" Header="Exception" Width="Auto" Binding="{Binding Exception}" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Grid.Row="1" Margin="20 10" Orientation="Horizontal">
+            <CheckBox x:Name="CanAutoScroll"
+                      FontSize="11"
+                      Content="Auto Scroll log"
+                      IsChecked="True"/>
+            <CheckBox x:Name="IsTimestampVisible"
+                      FontSize="11"
+                      Content="Show Timestamp"/>
+        </StackPanel>
+
+
+    </Grid>
+
+</UserControl>

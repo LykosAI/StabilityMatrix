@@ -1,7 +1,6 @@
 ﻿using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit;
@@ -60,10 +59,5 @@ public partial class LaunchPageView : UserControlBase
             var line = Math.Max(editor.Document.LineCount - LineOffset, 1);
             editor.ScrollToLine(line);
         });
-    }
-
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
     }
 }

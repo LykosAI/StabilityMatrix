@@ -90,7 +90,7 @@ public class ModelIndexService : IModelIndexService
             
             // Try to find a connected model info
             var jsonPath = file.Directory!.JoinFile(
-                new FilePath(file.NameWithoutExtension, ".cm-info.json"));
+                new FilePath($"{file.NameWithoutExtension}.cm-info.json"));
 
             if (jsonPath.Exists)
             {

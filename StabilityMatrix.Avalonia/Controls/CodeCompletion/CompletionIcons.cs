@@ -52,6 +52,12 @@ public static class CompletionIcons
         FAIcon = "fa-solid fa-key",
         Foreground = ThemeColors.CompletionForegroundBrush,
     };
+    
+    public static readonly IconData Model = new()
+    {
+        FAIcon = "fa-solid fa-cube",
+        Foreground = ThemeColors.CompletionForegroundBrush,
+    };
 
     public static IconData? GetIconForTagType(TagType tagType)
     {

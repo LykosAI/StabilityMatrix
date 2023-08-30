@@ -77,6 +77,25 @@
       }
     },
     {
+      "name": "Network Type",
+      "scope": [
+        "meta.embedded.network.type"
+      ],
+      "settings": {
+        "fontStyle": "italic",
+        "foreground": "#3990F6"
+      }
+    },
+    {
+      "name": "Network Model",
+      "scope": [
+        "meta.embedded.network.model"
+      ],
+      "settings": {
+        "foreground": "#D0B344"
+      }
+    },
+    {
       "name": "Comment",
       "scope": "comment",
       "settings": {

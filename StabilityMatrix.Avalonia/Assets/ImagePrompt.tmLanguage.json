@@ -1,6 +1,9 @@
 {
   "name": "Image Prompt",
   "scopeName": "source.prompt",
+  "uuid": "A5283894-BA62-4BFE-BB29-7892AE7ACCDC",
+  "foldingStartMarker": "^.*\b(\\#)\b.*$",
+  "foldingStopMarker": "(\r?\n){2}",
   "patterns": [
     {
       "include": "#value"
@@ -107,16 +110,55 @@
       "name": "meta.structure.network.prompt",
       "patterns": [
         {
+          "match": "(?<=\\<)([^,:\\<\\> ]+)(:)([^,:\\<\\> ]+)(:)(\\d+(?:\\.\\d+)?)",
+          "captures": {
+            "1": {
+              "name": "meta.embedded.network.type.prompt"
+            },
+            "2": {
+              "name": "punctuation.separator.variable.prompt"
+            },
+            "3": {
+              "name": "meta.embedded.network.model.prompt"
+            },
+            "4": {
+              "name": "punctuation.separator.variable.prompt"
+            },
+            "5" : {
+              "name": "constant.numeric"
+            }
+          }
+        },
+        {
+          "match": "(?<=\\<)([^,:\\<\\> ]+)(:)([^,:\\<\\> ]+)",
+          "captures": {
+            "1": {
+              "name": "meta.embedded.network.type.prompt"
+            },
+            "2": {
+              "name": "punctuation.separator.variable.prompt"
+            },
+            "3": {
+              "name": "meta.embedded.network.model.prompt"
+            }
+          }
+        },
+        {
+          "match": "(?<=\\<)([^,:\\<\\> ]+)",
+          "captures": {
+            "1": {
+              "name": "meta.embedded.network.type.prompt"
+            }
+          }
+        },
+        {
           "include": "#colon"
         },
         {
           "include": "#number"
         },
         {
-          "include": "#text"
-        },
-        {
-          "match": "[^\\s\\>]",
+          "match": "[^\\s\\>]+",
           "name": "invalid.illegal.expected-array-separator.prompt"
         }
       ]
@@ -141,8 +183,12 @@
       "match": "\\s+",
       "name": "meta.embedded.whitespace"
     },
+    "model": {
+      "match": "\\b(?<type>[\\w\\d_]+):(?<model>\\w+)(?::(?<weight>\\d+(\\.\\d+)?))?\\b",
+      "name": "meta.embedded.model"
+    },
     "text": {
-      "match": "[^,:\\[\\]\\(\\) \\\\]+",
+      "match": "[^,:\\[\\]\\(\\)\\<\\> \\\\]+",
       "name": "meta.embedded"
     },
     "value": {
@@ -173,6 +219,14 @@
         },
         {
           "include": "#text"
+        },
+        {
+          "name": "invalid.illegal.mismatched.parenthesis.closing.prompt",
+          "match": "\\)"
+        },
+        {
+          "name": "invalid.illegal.mismatched.parenthesis.opening.prompt",
+          "match": "\\("
         }
       ]
     }

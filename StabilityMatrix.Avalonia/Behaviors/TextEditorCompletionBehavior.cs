@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Xaml.Interactivity;
 using AvaloniaEdit;
@@ -9,6 +10,7 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
 using NLog;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
+using StabilityMatrix.Avalonia.Models.Inference.Tokens;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Core.Extensions;
 using TextMateSharp.Grammars;
@@ -22,6 +24,10 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
     
     private TextEditor textEditor = null!;
     
+    /// <summary>
+    /// The current completion window, if open.
+    /// Is set to null when the window is closed.
+    /// </summary>
     private CompletionWindow? completionWindow;
     
     public static readonly StyledProperty<ICompletionProvider?> CompletionProviderProperty =
@@ -100,11 +106,13 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
             if (completionWindow == null)
             {
                 // Get the segment of the token the caret is currently in
-                if (GetCaretCompletionToken() is not { } tokenSegment)
+                if (GetCaretCompletionToken() is not { } completionRequest)
                 {
                     Logger.Trace("Token segment not found");
                     return;
                 }
+
+                var tokenSegment = completionRequest.Segment;
 
                 var token = textEditor.Document.GetText(tokenSegment);
                 Logger.Trace("Using token {Token} ({@Segment})", token, tokenSegment);
@@ -113,7 +121,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
                 completionWindow.StartOffset = tokenSegment.Offset;
                 completionWindow.EndOffset = tokenSegment.EndOffset;
 
-                completionWindow.UpdateQuery(token);
+                completionWindow.UpdateQuery(completionRequest);
                 
                 completionWindow.Closed += delegate
                 {
@@ -169,14 +177,14 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
 
     private static bool IsCompletionChar(char c)
     {
-        return char.IsLetterOrDigit(c) || c == '_' || c == '-';
+        return char.IsLetterOrDigit(c) || c == '_' || c == '-' || c == ':';
     }
     
     /// <summary>
     /// Gets a segment of the token the caret is currently in for completions.
     /// Returns null if caret is not on a valid completion token (i.e. comments)
     /// </summary>
-    private ISegment? GetCaretCompletionToken()
+    private EditorCompletionRequest? GetCaretCompletionToken()
     {
         var caret = textEditor.CaretOffset;
         
@@ -223,26 +231,91 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         var endOffset = currentToken.EndIndex + line.Offset;
         
         // Cap the offsets by the line offsets
-        return new TextSegment
+        var segment = new TextSegment
         {
             StartOffset = Math.Max(startOffset, line.Offset),
             EndOffset = Math.Min(endOffset, line.EndOffset)
         };
-
-        // Search for the start and end of a token
-        // A token is defined as either alphanumeric chars or a space
-        /*var start = caret;
-        while (start > 0 && IsCompletionChar(textEditor.Document.GetCharAt(start - 1)))
+        
+        // Check if this is an extra network request
+        if (currentToken.Scopes.Contains("meta.structure.network.prompt")
+            && result.Tokens.ElementAtOrDefault(currentTokenIndex - 1) is { } prevToken)
         {
-            start--;
-        }
+            // (case for initial '<type:')
+            // - Current token has "meta.structure.network" and "punctuation.separator.variable"
+            // - Previous token has "meta.structure.network" and "meta.embedded.network.type"
+            if (currentToken.Scopes.Contains("punctuation.separator.variable.prompt")
+                && prevToken.Scopes.Contains("meta.structure.network.prompt")
+                && prevToken.Scopes.Contains("meta.embedded.network.type.prompt"))
+            {
+                var networkToken = textEditor.Document.GetText(
+                    prevToken.StartIndex + line.Offset, prevToken.Length);
+            
+                PromptExtraNetworkType? networkTypeResult = networkToken.ToLowerInvariant() switch
+                {
+                    "lora" => PromptExtraNetworkType.Lora,
+                    "lyco" => PromptExtraNetworkType.LyCORIS,
+                    "embedding" => PromptExtraNetworkType.Embedding,
+                    _ => null
+                };
 
-        var end = caret;
-        while (end < textEditor.Document.TextLength && IsCompletionChar(textEditor.Document.GetCharAt(end)))
+                if (networkTypeResult is not { } networkType)
+                {
+                    return null;
+                }
+            
+                return new EditorCompletionRequest
+                {
+                    Text = "",
+                    Segment = segment,
+                    Type = CompletionType.ExtraNetwork,
+                    ExtraNetworkTypes = networkType,
+                };
+            }
+            
+            // (case for already in model token '<type:network')
+            // - Current token has "meta.embedded.network.model"
+            if (currentToken.Scopes.Contains("meta.embedded.network.model.prompt"))
+            {
+                var secondPrevToken = result.Tokens.ElementAtOrDefault(currentTokenIndex - 2);
+                if (secondPrevToken is null)
+                {
+                    return null;
+                }
+                
+                var networkToken = textEditor.Document.GetText(
+                    secondPrevToken.StartIndex + line.Offset, secondPrevToken.Length);
+            
+                PromptExtraNetworkType? networkTypeResult = networkToken.ToLowerInvariant() switch
+                {
+                    "lora" => PromptExtraNetworkType.Lora,
+                    "lyco" => PromptExtraNetworkType.LyCORIS,
+                    "embedding" => PromptExtraNetworkType.Embedding,
+                    _ => null
+                };
+
+                if (networkTypeResult is not { } networkType)
+                {
+                    return null;
+                }
+            
+                return new EditorCompletionRequest
+                {
+                    Text = textEditor.Document.GetText(segment),
+                    Segment = segment,
+                    Type = CompletionType.ExtraNetwork,
+                    ExtraNetworkTypes = networkType,
+                };
+            }
+        }
+        
+        
+        // Otherwise treat as tag
+        return new EditorCompletionRequest
         {
-            end++;
-        }
-
-        return start < end ? new TextSegment { StartOffset = start, EndOffset = end } : null;*/
+            Text = textEditor.Document.GetText(segment),
+            Segment = segment,
+            Type = CompletionType.Tag
+        };
     }
 }

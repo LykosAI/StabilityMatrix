@@ -17,6 +17,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls.Documents;
 using Avalonia.Media;
 using AvaloniaEdit.Document;
@@ -48,7 +49,23 @@ public interface ICompletionData
 	/// <summary>
 	/// Gets the image.
 	/// </summary>
-	IImage? Image { get; }
+	ImageSource? ImageSource { get; }
+	
+	/// <summary>
+	/// Title of the image.
+	/// </summary>
+	string? ImageTitle { get; }
+	
+	/// <summary>
+	/// Subtitle of the image.
+	/// </summary>
+	string? ImageSubtitle { get; }
+	
+	/// <summary>
+	/// Whether the image is available.
+	/// </summary>
+	[MemberNotNullWhen(true, nameof(ImageSource))]
+	bool HasImage => ImageSource != null;
 	
 	/// <summary>
 	/// Gets the icon shown on the left.

@@ -274,9 +274,14 @@ public class CompletionWindow : CompletionWindowBase
             {
                 var newText = document.GetText(StartOffset, offset - StartOffset);
                 Debug.WriteLine("CaretPositionChanged newText: " + newText);
+
+                if (lastSearchRequest is not { } lastRequest)
+                {
+                    return;
+                }
                 
                 // CompletionList.SelectItem(newText);
-                Dispatcher.UIThread.Post(() => UpdateQuery(newText));
+                Dispatcher.UIThread.Post(() => UpdateQuery(lastRequest with { Text = newText }));
                 // UpdateQuery(newText);
                 
                 IsVisible = CompletionList.ListBox!.ItemCount != 0;
@@ -284,33 +289,36 @@ public class CompletionWindow : CompletionWindowBase
         }
     }
 
-    private string? lastSearchTerm;
+    private TextCompletionRequest? lastSearchRequest;
     private int lastCompletionLength;
     
     /// <summary>
     /// Update the completion window's current search term.
     /// </summary>
-    public void UpdateQuery(string searchTerm)
+    public void UpdateQuery(TextCompletionRequest completionRequest)
     {
+        var searchTerm = completionRequest.Text;
+        
         // Fast path if the search term starts with the last search term
         // and the last completion count was less than the max list length
         // (such we won't get new results by searching again)
-        if (lastSearchTerm is not null 
-            && searchTerm.StartsWith(lastSearchTerm) 
+        if (lastSearchRequest is not null
+            && completionRequest.Type == lastSearchRequest.Type
+            && searchTerm.StartsWith(lastSearchRequest.Text) 
             && lastCompletionLength < MaxListLength)
         {
             CompletionList.SelectItem(searchTerm);
-            lastSearchTerm = searchTerm;
+            lastSearchRequest = completionRequest;
             return;
         }
         
-        var results = completionProvider.GetCompletions(searchTerm, MaxListLength, true);
+        var results = completionProvider.GetCompletions(completionRequest, MaxListLength, true);
         CompletionList.CompletionData.Clear();
         CompletionList.CompletionData.AddRange(results);
         
         CompletionList.SelectItem(searchTerm, true);
-        
-        lastSearchTerm = searchTerm;
+
+        lastSearchRequest = completionRequest;
         lastCompletionLength = CompletionList.CompletionData.Count;
     }
 }

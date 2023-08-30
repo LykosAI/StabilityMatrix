@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Media;
@@ -23,8 +24,18 @@ public class CompletionData : ICompletionData
     public string? Description { get; init; }
     
     /// <inheritdoc />
-    public IImage? Image { get; set; }
+    public ImageSource? ImageSource { get; set; }
 
+    /// <summary>
+    /// Title of the image.
+    /// </summary>
+    public string? ImageTitle { get; set; }
+	
+    /// <summary>
+    /// Subtitle of the image.
+    /// </summary>
+    public string? ImageSubtitle { get; set; }
+    
     /// <inheritdoc />
     public IconData? Icon { get; init; }
     

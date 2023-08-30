@@ -112,4 +112,10 @@
         <DependentUpon>Resources.resx</DependentUpon>
       </Compile>
     </ItemGroup>
+
+    <!-- set HUSKY to 0 to disable, or opt-in during CI by setting HUSKY to 1 -->
+    <Target Name="husky" BeforeTargets="Restore;CollectPackageReferences" Condition="'$(HUSKY)' == 1 Or ('$(HUSKY)' != 0 And '$(CI)' != 'true')">
+        <Exec Command="dotnet tool restore"  StandardOutputImportance="Low" StandardErrorImportance="High"/>
+        <Exec Command="dotnet husky install" StandardOutputImportance="Low" StandardErrorImportance="High" WorkingDirectory="../" />
+    </Target>
 </Project>

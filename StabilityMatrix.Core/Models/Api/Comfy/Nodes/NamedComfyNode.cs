@@ -34,3 +34,19 @@ public record NamedComfyNode<TOutput>(string Name) : NamedComfyNode(Name) where 
         Data = GetOutput(0)
     };
 }
+
+[JsonSerializable(typeof(NamedComfyNode<>))]
+public record NamedComfyNode<TOutput, TOutput2>(string Name) : NamedComfyNode(Name) 
+    where TOutput : NodeConnectionBase, new()
+    where TOutput2 : NodeConnectionBase, new()
+{
+    public TOutput Output => new TOutput
+    {
+        Data = GetOutput(0)
+    };
+    
+    public TOutput2 Output2 => new TOutput2
+    {
+        Data = GetOutput(1)
+    };
+}

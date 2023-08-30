@@ -27,7 +27,7 @@ public class MockCompletionProvider : ICompletionProvider
     }
 
     /// <inheritdoc />
-    public IEnumerable<ICompletionData> GetCompletions(string searchTerm, int itemsCount, bool suggest)
+    public IEnumerable<ICompletionData> GetCompletions(TextCompletionRequest completionRequest, int itemsCount, bool suggest)
     {
         return Array.Empty<ICompletionData>();
     }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
+using DynamicData.Binding;
 using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
@@ -15,11 +16,11 @@ public interface IInferenceClientManager : IDisposable,  INotifyPropertyChanged,
     
     [MemberNotNullWhen(true, nameof(Client))]
     bool IsConnected { get; }
-    
-    IReadOnlyCollection<HybridModelFile>? Models { get; set; }
-    IReadOnlyCollection<HybridModelFile>? VaeModels { get; set; }
-    IReadOnlyCollection<ComfySampler>? Samplers { get; set; }
-    IReadOnlyCollection<ComfyUpscaler>? Upscalers { get; set; }
+
+    IObservableCollection<HybridModelFile> Models { get; }
+    IObservableCollection<HybridModelFile> VaeModels { get; }
+    IObservableCollection<ComfySampler> Samplers { get; }
+    IObservableCollection<ComfyUpscaler> Upscalers { get; }
     
     Task ConnectAsync();
 

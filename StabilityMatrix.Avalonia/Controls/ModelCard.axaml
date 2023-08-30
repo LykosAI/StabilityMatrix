@@ -7,9 +7,11 @@
         xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
         x:DataType="inference:ModelCardViewModel">
     <Design.PreviewWith>
-        <StackPanel MinWidth="300">
-            <controls:ModelCard DataContext="{x:Static mocks:DesignData.ModelCardViewModel}"/>
-        </StackPanel>
+        <Panel Width="400" Height="200">
+            <StackPanel VerticalAlignment="Center" Width="300">
+                <controls:ModelCard DataContext="{x:Static mocks:DesignData.ModelCardViewModel}"/>
+            </StackPanel>
+        </Panel>
     </Design.PreviewWith>
 
     <Style Selector="controls|ModelCard">
@@ -21,13 +23,14 @@
                         <!-- Model -->
                         <TextBlock
                             Grid.Column="0"
+                            TextAlignment="Left"
                             VerticalAlignment="Center"
-                            HorizontalAlignment="Left"
                             MinWidth="60"
                             Text="Model" />
                         <ui:FAComboBox
                             Grid.Row="0"
                             Grid.Column="1"
+                            IsTextSearchEnabled="True"
                             HorizontalAlignment="Stretch"
                             ItemsSource="{Binding ClientManager.Models}"
                             DisplayMemberBinding="{Binding ShortDisplayName}"
@@ -69,6 +72,13 @@
                             Grid.Column="2" 
                             Margin="8,0,0,0">
                             <ui:SymbolIcon FontSize="16" Symbol="Setting" />
+                            <Button.Flyout>
+                                <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
+                                    <ui:ToggleMenuFlyoutItem
+                                        IsChecked="{Binding IsVaeSelectionEnabled}"
+                                        Text="VAE"/>
+                                </ui:FAMenuFlyout>
+                            </Button.Flyout>
                         </Button>
                         
                         <!-- VAE -->
@@ -76,7 +86,9 @@
                             Grid.Column="0"
                             Grid.Row="1"
                             MinWidth="60"
+                            IsVisible="{Binding IsVaeSelectionEnabled}"
                             Margin="0,8,0,0"
+                            TextAlignment="Left"
                             VerticalAlignment="Center"
                             Text="VAE" />
                         
@@ -85,6 +97,8 @@
                             Grid.Column="1"
                             Grid.ColumnSpan="2"
                             Margin="0,8,0,0"
+                            IsTextSearchEnabled="True"
+                            IsVisible="{Binding IsVaeSelectionEnabled}"
                             HorizontalAlignment="Stretch"
                             ItemsSource="{Binding ClientManager.VaeModels}"
                             DisplayMemberBinding="{Binding ShortDisplayName}"

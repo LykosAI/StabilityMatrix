@@ -32,7 +32,7 @@ public interface ICompletionProvider
     /// Returns a list of completion items for the given text.
     /// </summary>
     public IEnumerable<ICompletionData> GetCompletions(
-        string searchTerm,
+        TextCompletionRequest completionRequest,
         int itemsCount,
         bool suggest
     );

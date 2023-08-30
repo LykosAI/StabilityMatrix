@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using DynamicData.Binding;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
@@ -13,26 +14,31 @@ public class MockInferenceClientManager : ObservableObject, IInferenceClientMana
 {
     public ComfyClient? Client { get; set; }
     
-    public IReadOnlyCollection<HybridModelFile>? Models { get; set; }
-    public IReadOnlyCollection<HybridModelFile>? VaeModels { get; set; }
+    public IObservableCollection<HybridModelFile> Models { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
     
-    public IReadOnlyCollection<ComfySampler>? Samplers { get; set; } = new ComfySampler[]
-    {
-        new("euler_ancestral"),
-        new("euler"),
-        new("lms"),
-        new("heun"),
-        new("dpm_2"),
-        new("dpm_2_ancestral")
-    };
+    public IObservableCollection<HybridModelFile> VaeModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
 
-    public IReadOnlyCollection<ComfyUpscaler>? Upscalers { get; set; } = new ComfyUpscaler[]
-    {
-        new("nearest-exact", ComfyUpscalerType.Latent),
-        new("bicubic", ComfyUpscalerType.Latent),
-        new("ESRGAN-4x", ComfyUpscalerType.ESRGAN)
-    };
-    
+    public IObservableCollection<ComfySampler> Samplers { get; } =
+        new ObservableCollectionExtended<ComfySampler>(new ComfySampler[]
+        {
+            new("euler_ancestral"),
+            new("euler"),
+            new("lms"),
+            new("heun"),
+            new("dpm_2"),
+            new("dpm_2_ancestral")
+        });
+
+    public IObservableCollection<ComfyUpscaler> Upscalers { get; } =
+        new ObservableCollectionExtended<ComfyUpscaler>(new ComfyUpscaler[]
+        {
+            new("nearest-exact", ComfyUpscalerType.Latent),
+            new("bicubic", ComfyUpscalerType.Latent),
+            new("ESRGAN-4x", ComfyUpscalerType.ESRGAN)
+        });
+
     public bool IsConnected { get; set; }
     
     public Task ConnectAsync()

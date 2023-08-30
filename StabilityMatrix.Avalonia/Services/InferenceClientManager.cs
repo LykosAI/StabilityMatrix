@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
+using DynamicData;
+using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
@@ -35,28 +40,61 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     [MemberNotNullWhen(true, nameof(Client))]
     public bool IsConnected => Client is not null;
 
-    [ObservableProperty]
-    private IReadOnlyCollection<HybridModelFile>? models;
+    private readonly SourceCache<HybridModelFile, string> modelsSource = new(p => p.GetId());
 
-    [ObservableProperty]
-    private IReadOnlyCollection<HybridModelFile>? vaeModels;
-    
-    [ObservableProperty]
-    private IReadOnlyCollection<ComfySampler>? samplers;
+    public IObservableCollection<HybridModelFile> Models { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
 
-    [ObservableProperty]
-    private IReadOnlyCollection<ComfyUpscaler>? upscalers;
+    private readonly SourceCache<HybridModelFile, string> vaeModelsSource = new(p => p.GetId());
+
+    private readonly SourceCache<HybridModelFile, string> vaeModelsDefaults = new(p => p.GetId());
+
+    public IObservableCollection<HybridModelFile> VaeModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
+    private readonly SourceCache<ComfySampler, string> samplersSource = new(p => p.Name);
+
+    public IObservableCollection<ComfySampler> Samplers { get; } =
+        new ObservableCollectionExtended<ComfySampler>();
+
+    private readonly SourceCache<ComfyUpscaler, string> modelUpscalersSource = new(p => p.Name);
+
+    private readonly SourceCache<ComfyUpscaler, string> latentUpscalersSource = new(p => p.Name);
+
+    public IObservableCollection<ComfyUpscaler> Upscalers { get; } =
+        new ObservableCollectionExtended<ComfyUpscaler>();
 
     public InferenceClientManager(
-        ILogger<InferenceClientManager> logger, 
+        ILogger<InferenceClientManager> logger,
         IApiFactory apiFactory,
-        IModelIndexService modelIndexService)
+        IModelIndexService modelIndexService
+    )
     {
         this.logger = logger;
         this.apiFactory = apiFactory;
         this.modelIndexService = modelIndexService;
+
+        modelsSource.Connect().DeferUntilLoaded().Bind(Models).Subscribe();
+
+        vaeModelsDefaults.AddOrUpdate(HybridModelFile.Default);
         
-        ClearSharedProperties();
+        vaeModelsDefaults
+            .Connect()
+            .Or(vaeModelsSource.Connect())
+            .DeferUntilLoaded()
+            .Bind(VaeModels)
+            .Subscribe();
+
+        samplersSource.Connect().DeferUntilLoaded().Bind(Samplers).Subscribe();
+
+        latentUpscalersSource
+            .Connect()
+            .Or(modelUpscalersSource.Connect())
+            .DeferUntilLoaded()
+            .Bind(Upscalers)
+            .Subscribe();
+
+        ResetSharedProperties();
     }
 
     private async Task LoadSharedPropertiesAsync()
@@ -64,63 +102,85 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         if (!IsConnected)
             throw new InvalidOperationException("Client is not connected");
 
-        var modelNames = await Client.GetModelNamesAsync();
-        Models = modelNames?.Select(HybridModelFile.FromRemote).ToImmutableArray();
+        if (await Client.GetModelNamesAsync() is { } modelNames)
+        {
+            modelsSource.EditDiff(
+                modelNames.Select(HybridModelFile.FromRemote),
+                HybridModelFile.Comparer
+            );
+        }
 
         // Fetch sampler names from KSampler node
-        var samplerNames = await Client.GetSamplerNamesAsync();
-        Samplers = samplerNames?.Select(name => new ComfySampler(name)).ToImmutableArray();
+        if (await Client.GetSamplerNamesAsync() is { } samplerNames)
+        {
+            samplersSource.EditDiff(
+                samplerNames.Select(name => new ComfySampler(name)),
+                ComfySampler.Comparer
+            );
+        }
 
         // Upscalers is latent and esrgan combined
-        var upscalerBuilder = ImmutableArray.CreateBuilder<ComfyUpscaler>();
-        
+
         // Add latent upscale methods from LatentUpscale node
-        var latentUpscalerNames = await Client.GetNodeOptionNamesAsync(
-            "LatentUpscale", 
-            "upscale_method");
-        if (latentUpscalerNames is not null)
+        if (
+            await Client.GetNodeOptionNamesAsync("LatentUpscale", "upscale_method") is
+            { } latentUpscalerNames
+        )
         {
-            upscalerBuilder.AddRange(latentUpscalerNames.Select(
-                s => new ComfyUpscaler(s, ComfyUpscalerType.Latent)));
+            latentUpscalersSource.EditDiff(
+                latentUpscalerNames.Select(s => new ComfyUpscaler(s, ComfyUpscalerType.Latent)),
+                ComfyUpscaler.Comparer
+            );
+
+            logger.LogTrace("Loaded latent upscale methods: {@Upscalers}", latentUpscalerNames);
         }
-        logger.LogTrace("Loaded latent upscale methods: {@Upscalers}", latentUpscalerNames);
-        
+
         // Add Model upscale methods
-        var modelUpscalerNames = await Client.GetNodeOptionNamesAsync(
-            "UpscaleModelLoader", 
-            "model_name");
-        if (modelUpscalerNames is not null)
+        if (
+            await Client.GetNodeOptionNamesAsync("UpscaleModelLoader", "model_name") is
+            { } modelUpscalerNames
+        )
         {
-            upscalerBuilder.AddRange(modelUpscalerNames.Select(
-                s => new ComfyUpscaler(s, ComfyUpscalerType.ESRGAN)));
+            modelUpscalersSource.EditDiff(modelUpscalerNames.Select(
+                s => new ComfyUpscaler(s, ComfyUpscalerType.ESRGAN)), ComfyUpscaler.Comparer);
+            logger.LogTrace("Loaded model upscale methods: {@Upscalers}", modelUpscalerNames);
         }
-        logger.LogTrace("Loaded model upscale methods: {@Upscalers}", modelUpscalerNames);
-        
-        Upscalers = upscalerBuilder.ToImmutable();
     }
 
     /// <summary>
     /// Clears shared properties and sets them to local defaults
     /// </summary>
-    private void ClearSharedProperties()
+    private void ResetSharedProperties()
     {
         // Load local models
-        modelIndexService.GetModelsOfType(SharedFolderType.StableDiffusion)
+        modelIndexService
+            .GetModelsOfType(SharedFolderType.StableDiffusion)
             .ContinueWith(task =>
             {
-                Models = task.Result.Select(HybridModelFile.FromLocal).ToImmutableArray();
-            }).SafeFireAndForget();
+                modelsSource.EditDiff(
+                    task.Result.Select(HybridModelFile.FromLocal),
+                    HybridModelFile.Comparer
+                );
+            })
+            .SafeFireAndForget();
 
         // Load local VAE models
-        modelIndexService.GetModelsOfType(SharedFolderType.VAE)
+        modelIndexService
+            .GetModelsOfType(SharedFolderType.VAE)
             .ContinueWith(task =>
             {
-                VaeModels = task.Result.Select(HybridModelFile.FromLocal).ToImmutableArray();
-            }).SafeFireAndForget();
-        
-        Samplers = ComfySampler.Defaults;
-        
-        Upscalers = null;
+                vaeModelsSource.EditDiff(
+                    task.Result.Select(HybridModelFile.FromLocal),
+                    HybridModelFile.Comparer
+                );
+            })
+            .SafeFireAndForget();
+
+        samplersSource.EditDiff(ComfySampler.Defaults, ComfySampler.Comparer);
+
+        latentUpscalersSource.EditDiff(ComfyUpscaler.Defaults, ComfyUpscaler.Comparer);
+
+        modelUpscalersSource.Clear();
     }
 
     public async Task ConnectAsync()
@@ -164,7 +224,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         await Client.CloseAsync();
         Client = null;
-        ClearSharedProperties();
+        ResetSharedProperties();
     }
 
     public void Dispose()

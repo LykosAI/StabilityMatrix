@@ -7,6 +7,7 @@
         xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
         xmlns:behaviors="clr-namespace:StabilityMatrix.Avalonia.Behaviors"
         xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+        xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
         x:DataType="vmInference:PromptCardViewModel">
     <Design.PreviewWith>
         <Grid Height="600" Width="600">
@@ -55,6 +56,29 @@
                                 <icons:Icon Value="fa-solid fa-caret-up" Margin="8,0" FontSize="10" />
                             </StackPanel>
                             
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Margin="0,0,0,4" 
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right">
+                                
+                                <Button
+                                    Classes="transparent-full"
+                                    Padding="10,4"
+                                    Margin="0,-2,0,0"
+                                    VerticalAlignment="Top"
+                                    VerticalContentAlignment="Top"
+                                    icons:Attached.Icon="fa-solid fa-question"/>
+                                
+                                <Button 
+                                    Content="Show Tokens"
+                                    Padding="8,4"
+                                    IsVisible="{Binding SharedState.IsDebugMode}"
+                                    Command="{Binding DebugShowTokensCommand}"/>
+                                
+                            </StackPanel>
+                            
                             <ExperimentalAcrylicBorder
                                 Grid.Row="1"
                                 Grid.Column="0"
@@ -71,6 +95,8 @@
                                         <behaviors:TextEditorCompletionBehavior
                                             IsEnabled="{Binding IsAutoCompletionEnabled}"
                                             CompletionProvider="{Binding CompletionProvider}"
+                                            TokenizerProvider="{Binding TokenizerProvider}"/>
+                                        <behaviors:TextEditorToolTipBehavior
                                             TokenizerProvider="{Binding TokenizerProvider}"/>
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>
@@ -108,8 +134,11 @@
                                             IsEnabled="{Binding IsAutoCompletionEnabled}"
                                             CompletionProvider="{Binding CompletionProvider}"
                                             TokenizerProvider="{Binding TokenizerProvider}"/>
+                                        <behaviors:TextEditorToolTipBehavior
+                                            TokenizerProvider="{Binding TokenizerProvider}"/>
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>
+
 
                             </ExperimentalAcrylicBorder>
                         </Grid>

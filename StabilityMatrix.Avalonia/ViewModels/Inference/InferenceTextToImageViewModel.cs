@@ -152,7 +152,25 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             }
         );
 
-        var checkpointVae = checkpointLoader.GetOutput<VAENodeConnection>(2);
+        // Either use checkpoint VAE or custom VAE
+        VAENodeConnection vaeSource;
+        
+        if (modelCard is {IsVaeSelectionEnabled: true, SelectedVae.IsDefault: false})
+        {
+            // Use custom VAE
+            
+            // Add a loader
+            var vaeLoader = 
+                prompt.AddNamedNode(ComfyNodeBuilder.VAELoader("VAELoader", modelCard.SelectedVae.FileName));
+            
+            // Set as source
+            vaeSource = vaeLoader.Output;
+        }
+        else
+        {
+            // Use checkpoint VAE
+            vaeSource = checkpointLoader.GetOutput<VAENodeConnection>(2);
+        }
 
         var emptyLatentImage = prompt.AddNamedNode(
             new NamedComfyNode("EmptyLatentImage")
@@ -219,7 +237,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
                 Inputs = new Dictionary<string, object?>
                 {
                     ["samples"] = lastLatent,
-                    ["vae"] = checkpointLoader.GetOutput(2)
+                    ["vae"] = vaeSource
                 }
             }
         );
@@ -260,7 +278,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             {
                 // Otherwise upscale the latent image
                 hiresLatent = builder.Group_UpscaleToLatent("HiresFix",
-                    lastLatent, checkpointVae, selectedUpscaler, hiresWidth, hiresHeight).Output;
+                    lastLatent, vaeSource, selectedUpscaler, hiresWidth, hiresHeight).Output;
             }
 
             var hiresSampler = prompt.AddNamedNode(
@@ -301,7 +319,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             
             // Build group
             var postUpscaleGroup = builder.Group_UpscaleToImage("PostUpscale",
-                lastLatent, checkpointVae, postUpscalerCard.SelectedUpscaler!.Value,
+                lastLatent, vaeSource, postUpscalerCard.SelectedUpscaler!.Value,
                 upscaleWidth, upscaleHeight);
             
             // Remove the original vae decoder

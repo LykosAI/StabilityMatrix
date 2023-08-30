@@ -31,4 +31,19 @@ public readonly record struct ComfySampler(string Name)
 
     public string DisplayName =>
         ConvertDict.TryGetValue(Name, out var displayName) ? displayName : Name;
+
+    private sealed class NameEqualityComparer : IEqualityComparer<ComfySampler>
+    {
+        public bool Equals(ComfySampler x, ComfySampler y)
+        {
+            return x.Name == y.Name;
+        }
+
+        public int GetHashCode(ComfySampler obj)
+        {
+            return obj.Name.GetHashCode();
+        }
+    }
+
+    public static IEqualityComparer<ComfySampler> Comparer { get; } = new NameEqualityComparer();
 }

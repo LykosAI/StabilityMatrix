@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Database;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -13,6 +14,8 @@ public class ModelIndexService : IModelIndexService
     private readonly ILiteDbContext liteDbContext;
     private readonly ISettingsManager settingsManager;
 
+    public Dictionary<SharedFolderType, List<LocalModelFile>> ModelIndex { get; private set; } = new();
+    
     public ModelIndexService(
         ILogger<ModelIndexService> logger,
         ILiteDbContext liteDbContext,
@@ -61,6 +64,8 @@ public class ModelIndexService : IModelIndexService
         var indexStart = stopwatch.Elapsed;
         
         var added = 0;
+        
+        var newIndex = new Dictionary<SharedFolderType, List<LocalModelFile>>();
         
         foreach (
             var file in modelsDir.Info
@@ -113,8 +118,15 @@ public class ModelIndexService : IModelIndexService
             // Insert into database
             await localModelFiles.InsertAsync(localModel).ConfigureAwait(false);
             
+            // Add to index
+            var list = newIndex.GetOrAdd(sharedFolderType);
+            list.Add(localModel);
+            
             added++;
         }
+        
+        // Update index
+        ModelIndex = newIndex;
         
         // Record end of actual indexing
         var indexEnd = stopwatch.Elapsed;

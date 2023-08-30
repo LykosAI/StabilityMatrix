@@ -126,6 +126,20 @@ public class ComfyNodeBuilder
             }
         };
     }
+    
+    public static NamedComfyNode<VAENodeConnection> VAELoader(
+        string name,
+        string vaeModelName)
+    {
+        return new NamedComfyNode<VAENodeConnection>(name)
+        {
+            ClassType = "VAELoader",
+            Inputs = new Dictionary<string, object?>
+            {
+                ["vae_name"] = vaeModelName
+            }
+        };
+    }
 
     public ImageNodeConnection Lambda_LatentToImage(LatentNodeConnection latent, VAENodeConnection vae)
     {

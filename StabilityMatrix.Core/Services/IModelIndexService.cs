@@ -5,6 +5,8 @@ namespace StabilityMatrix.Core.Services;
 
 public interface IModelIndexService
 {
+    Dictionary<SharedFolderType, List<LocalModelFile>> ModelIndex { get; }
+    
     /// <summary>
     /// Refreshes the local model file index.
     /// </summary>

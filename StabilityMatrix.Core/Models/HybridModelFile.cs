@@ -8,18 +8,18 @@ namespace StabilityMatrix.Core.Models;
 /// Model file union that may be remote or local.
 /// </summary>
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-public partial record HybridModelFile
+public record HybridModelFile
 {
     /// <summary>
     /// Singleton instance of <see cref="HybridModelFile"/> that represents use of a default model.
     /// </summary>
-    public static HybridModelFile Default => new();
+    public static HybridModelFile Default { get; } = FromRemote("@default");
     
     /// <summary>
     /// Singleton instance of <see cref="HybridModelFile"/> that represents no model.
     /// </summary>
-    public static HybridModelFile None => new();
-
+    public static HybridModelFile None { get; } = FromRemote("@none");
+    
     private string? RemoteName { get; init; }
     
     public LocalModelFile? Local { get; init; }
@@ -34,8 +34,24 @@ public partial record HybridModelFile
         ? RemoteName : Local.FileName;
 
     [JsonIgnore]
-    public string ShortDisplayName => Path.GetFileNameWithoutExtension(FileName);
-    
+    public string ShortDisplayName
+    {
+        get
+        {
+            if (IsNone)
+            {
+                return "None";
+            }
+
+            if (IsDefault)
+            {
+                return "Default";
+            }
+            
+            return Path.GetFileNameWithoutExtension(FileName);
+        }
+    }
+
     public static HybridModelFile FromLocal(LocalModelFile local)
     {
         return new HybridModelFile
@@ -51,4 +67,41 @@ public partial record HybridModelFile
             RemoteName = remoteName
         };
     }
+
+    public string GetId()
+    {
+        return $"{FileName};{IsNone};{IsDefault}";
+    }
+    
+    private sealed class RemoteNameLocalEqualityComparer : IEqualityComparer<HybridModelFile>
+    {
+        public bool Equals(HybridModelFile? x, HybridModelFile? y)
+        {
+            if (ReferenceEquals(x, y)) return true;
+            if (ReferenceEquals(x, null)) return false;
+            if (ReferenceEquals(y, null)) return false;
+            if (x.GetType() != y.GetType()) return false;
+
+            return Equals(x.FileName, y.FileName) 
+                   && x.IsNone == y.IsNone 
+                   && x.IsDefault == y.IsDefault;
+        }
+
+        public int GetHashCode(HybridModelFile obj)
+        {
+            return HashCode.Combine(obj.IsNone, obj.IsDefault, obj.FileName);
+        }
+    }
+    
+    /// <summary>
+    /// Whether this instance is the default model.
+    /// </summary>
+    public bool IsDefault => ReferenceEquals(this, Default);
+    
+    /// <summary>
+    /// Whether this instance is no model.
+    /// </summary>
+    public bool IsNone => ReferenceEquals(this, None);
+    
+    public static IEqualityComparer<HybridModelFile> Comparer { get; } = new RemoteNameLocalEqualityComparer();
 }

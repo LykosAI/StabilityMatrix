@@ -13,8 +13,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public partial class UpscalerCardViewModel : LoadableViewModelBase
 {
     [ObservableProperty] private double scale = 1;
-    
-    [ObservableProperty] private ComfyUpscaler? selectedUpscaler;
+
+    [ObservableProperty] private ComfyUpscaler? selectedUpscaler = ComfyUpscaler.Defaults[0];
     
     public IInferenceClientManager ClientManager { get; }
     

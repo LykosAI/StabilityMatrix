@@ -50,6 +50,26 @@ public class LocalModelFile
     public string? PreviewImageFullPathGlobal
         => GetPreviewImageFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
 
+    protected bool Equals(LocalModelFile other)
+    {
+        return RelativePath == other.RelativePath;
+    }
+
+    /// <inheritdoc />
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj)) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != this.GetType()) return false;
+        return Equals((LocalModelFile) obj);
+    }
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+    {
+        return RelativePath.GetHashCode();
+    }
+
     public static readonly HashSet<string> SupportedCheckpointExtensions =
         new() { ".safetensors", ".pt", ".ckpt", ".pth", ".bin" };
     public static readonly HashSet<string> SupportedImageExtensions =

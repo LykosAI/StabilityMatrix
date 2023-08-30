@@ -16,7 +16,7 @@ public partial class ModelCardViewModel : LoadableViewModelBase
     private HybridModelFile? selectedModel;
     
     [ObservableProperty]
-    private HybridModelFile? selectedVae;
+    private HybridModelFile? selectedVae = HybridModelFile.Default;
     
     [ObservableProperty]
     private bool isVaeSelectionEnabled;
@@ -49,10 +49,10 @@ public partial class ModelCardViewModel : LoadableViewModelBase
         var model = DeserializeModel<ModelCardModel>(state);
 
         SelectedModel = model.SelectedModelName is null ? null 
-            : ClientManager.Models!.FirstOrDefault(x => x.FileName == model.SelectedModelName);
+            : ClientManager.Models.FirstOrDefault(x => x.FileName == model.SelectedModelName);
         
-        SelectedVae = model.SelectedVaeName is null ? null
-            : ClientManager.VaeModels!.FirstOrDefault(x => x.FileName == model.SelectedVaeName);
+        SelectedVae = model.SelectedVaeName is null ? HybridModelFile.Default
+            : ClientManager.VaeModels.FirstOrDefault(x => x.FileName == model.SelectedVaeName);
     }
     
     internal class ModelCardModel

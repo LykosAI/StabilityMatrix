@@ -1,4 +1,6 @@
-﻿namespace StabilityMatrix.Core.Models.Api.Comfy;
+﻿using System.Collections.Immutable;
+
+namespace StabilityMatrix.Core.Models.Api.Comfy;
 
 public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
 {
@@ -11,6 +13,9 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
             ["bicubic"] = "Bicubic",
             ["bislerp"] = "Bislerp",
         };
+    
+    public static IReadOnlyList<ComfyUpscaler> Defaults { get; } =
+        ConvertDict.Keys.Select(k => new ComfyUpscaler(k, ComfyUpscalerType.Latent)).ToImmutableArray();
 
     public string DisplayType
     {
@@ -34,6 +39,12 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
             {
                 return ConvertDict.TryGetValue(Name, out var displayName) ? displayName : Name;
             }
+
+            if (Type == ComfyUpscalerType.ESRGAN)
+            {
+                // Remove file extensions
+                return Path.GetFileNameWithoutExtension(Name);
+            }
             
             return Name;
         }
@@ -52,4 +63,19 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
             return DisplayName;
         }
     }
+
+    private sealed class NameTypeEqualityComparer : IEqualityComparer<ComfyUpscaler>
+    {
+        public bool Equals(ComfyUpscaler x, ComfyUpscaler y)
+        {
+            return x.Name == y.Name && x.Type == y.Type;
+        }
+
+        public int GetHashCode(ComfyUpscaler obj)
+        {
+            return HashCode.Combine(obj.Name, (int) obj.Type);
+        }
+    }
+
+    public static IEqualityComparer<ComfyUpscaler> Comparer { get; } = new NameTypeEqualityComparer();
 }

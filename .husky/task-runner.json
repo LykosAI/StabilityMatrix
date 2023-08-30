@@ -1,0 +1,18 @@
+{
+   "tasks": [
+      {
+         "name": "Run csharpier",
+         "group": "pre-commit",
+         "command": "dotnet",
+         "args": [ "csharpier", "${staged}" ],
+         "include": [ "**/*.cs" ]
+      }, 
+      {
+         "name": "Run xamlstyler",
+         "group": "pre-commit",
+         "command": "dotnet",
+         "args": [ "xstyler", "${staged}" ],
+         "include": [ "**/*.axaml" ]
+      }
+   ]
+}

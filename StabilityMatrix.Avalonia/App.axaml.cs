@@ -239,7 +239,7 @@ public sealed class App : Application
             .AddSingleton<NewCheckpointsPageViewModel>()
             .AddSingleton<LaunchPageViewModel>()
             .AddSingleton<ProgressManagerViewModel>()
-            .AddSingleton<InferenceViewModel>();
+            .AddSingleton<InferenceViewModel>()
             .AddSingleton<ProgressManagerViewModel>();
 
         services.AddSingleton<MainWindowViewModel>(

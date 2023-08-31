@@ -18,11 +18,6 @@
         <Setter Property="Orientation" Value="Horizontal" />
     </Style>
     
-    <Style Selector="controls|ImageGalleryCard /template/ Carousel#ImageCarousel /template/ ScrollViewer#PART_ScrollViewer">
-        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
-        <Setter Property="VerticalScrollBarVisibility" Value="Disabled"/>
-    </Style>
-    
     <Style Selector="controls|ImageGalleryCard">
         <!--  Set Defaults  -->
         <Setter Property="Template">
@@ -36,7 +31,13 @@
                     
                     <Grid RowDefinitions="*,Auto">
                         <!-- Main image view -->
-                        <Grid Margin="4">
+                        <Grid Margin="4" x:Name="MainGrid">
+                            <Grid.Styles>
+                                <Style Selector="controls|AdvancedImageBox">
+                                    <!-- ReSharper disable once Xaml.BindingWithContextNotResolved -->
+                                    <Setter Property="IsPixelGridEnabled" Value="{ReflectionBinding ElementName=MainGrid, Path=DataContext.IsPixelGridEnabled}" />
+                                </Style>
+                            </Grid.Styles>
                             <controls:FrameCarousel 
                                 x:Name="PART_ImageCarousel" 
                                 CornerRadius="4"

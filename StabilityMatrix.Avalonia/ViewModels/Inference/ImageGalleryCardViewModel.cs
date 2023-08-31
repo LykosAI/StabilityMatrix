@@ -16,6 +16,7 @@ using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -24,7 +25,7 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly ServiceManager<ViewModelBase> vmFactory;
-    
+
     [ObservableProperty]
     private bool isPreviewOverlayEnabled;
 
@@ -41,22 +42,39 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(CanNavigateBack), nameof(CanNavigateForward))]
     private int selectedImageIndex;
 
+    [ObservableProperty]
+    private bool isPixelGridEnabled;
+
     public bool CanNavigateBack => SelectedImageIndex > 0;
     public bool CanNavigateForward => SelectedImageIndex < ImageSources.Count - 1;
 
-    public ImageGalleryCardViewModel(ServiceManager<ViewModelBase> vmFactory)
+    public ImageGalleryCardViewModel(
+        ServiceManager<ViewModelBase> vmFactory,
+        ISettingsManager settingsManager
+    )
     {
         this.vmFactory = vmFactory;
-        
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.IsPixelGridEnabled,
+            settings => settings.IsImageViewerPixelGridEnabled,
+            true
+        );
+
         ImageSources.CollectionChanged += OnImageSourcesItemsChanged;
     }
-    
+
     private void OnImageSourcesItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (sender is AvaloniaList<ImageSource> sources)
         {
-            if (e.Action is NotifyCollectionChangedAction.Add or NotifyCollectionChangedAction.Remove
-                or NotifyCollectionChangedAction.Reset)
+            if (
+                e.Action
+                is NotifyCollectionChangedAction.Add
+                    or NotifyCollectionChangedAction.Remove
+                    or NotifyCollectionChangedAction.Reset
+            )
             {
                 if (sources.Count == 0)
                 {
@@ -76,7 +94,7 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
             }
         }
     }
-    
+
     [RelayCommand]
     // ReSharper disable once UnusedMember.Local
     private async Task FlyoutCopy(IImage? image)
@@ -97,7 +115,7 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
             }
         });
     }
-    
+
     [RelayCommand]
     // ReSharper disable once UnusedMember.Local
     private async Task FlyoutPreview(IImage? image)
@@ -111,14 +129,11 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
         Logger.Trace($"FlyoutPreview opening...");
 
         var viewerVm = vmFactory.Get<ImageViewerViewModel>();
-        viewerVm.ImageSource = new ImageSource((Bitmap) image);
+        viewerVm.ImageSource = new ImageSource((Bitmap)image);
 
         var dialog = new BetterContentDialog
         {
-            Content = new ImageViewerDialog
-            {
-                DataContext = viewerVm,
-            }
+            Content = new ImageViewerDialog { DataContext = viewerVm, }
         };
 
         await dialog.ShowAsync();

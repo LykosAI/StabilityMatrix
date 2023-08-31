@@ -16,6 +16,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
+using System.IO;
 using System.Runtime.CompilerServices;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader;
@@ -570,8 +571,10 @@ public class AdvancedImageBox : TemplatedControl
         set => SetValue(GridColorAlternateProperty, value);
     }
 
-    public static readonly StyledProperty<string?> SourceProperty = AvaloniaProperty.Register<AdvancedImageBox, string?>(
-        "Source");
+    public static readonly StyledProperty<string?> SourceProperty = AvaloniaProperty.Register<
+        AdvancedImageBox,
+        string?
+    >("Source");
 
     public string? Source
     {
@@ -583,11 +586,13 @@ public class AdvancedImageBox : TemplatedControl
             if (value is not null)
             {
                 var loader = ImageLoader.AsyncImageLoader;
-                
-                Dispatcher.UIThread.InvokeAsync(async () =>
-                {
-                    Image = await loader.ProvideImageAsync(value);
-                }).SafeFireAndForget();
+
+                Dispatcher.UIThread
+                    .InvokeAsync(async () =>
+                    {
+                        Image = await loader.ProvideImageAsync(value);
+                    })
+                    .SafeFireAndForget();
             }
         }
     }
@@ -622,7 +627,7 @@ public class AdvancedImageBox : TemplatedControl
         }
     }
 
-    public WriteableBitmap? ImageAsWriteableBitmap
+    /*public WriteableBitmap? ImageAsWriteableBitmap
     {
         get
         {
@@ -630,7 +635,7 @@ public class AdvancedImageBox : TemplatedControl
                 return null;
             return (WriteableBitmap)Image;
         }
-    }
+    }*/
 
     public bool IsImageLoaded => Image is not null;
 
@@ -881,13 +886,13 @@ public class AdvancedImageBox : TemplatedControl
         set
         {
             SetValue(SizeModeProperty, value);
-            
+
             // Run changed if loaded
             if (IsLoaded)
             {
                 SizeModeChanged();
             }
-            
+
             RaisePropertyChanged(nameof(IsHorizontalBarVisible));
             RaisePropertyChanged(nameof(IsVerticalBarVisible));
         }
@@ -1121,10 +1126,8 @@ public class AdvancedImageBox : TemplatedControl
         AvaloniaProperty.Register<AdvancedImageBox, int>(nameof(PixelGridZoomThreshold), 5);
 
     /// <summary>
-    /// Gets or sets the minimum size of zoomed pixel's before the pixel grid will be drawn
+    /// Minimum size of zoomed pixel's before the pixel grid will be drawn
     /// </summary>
-    /// <value>The pixel grid threshold.</value>
-
     public int PixelGridZoomThreshold
     {
         get => GetValue(PixelGridZoomThresholdProperty);
@@ -1136,6 +1139,18 @@ public class AdvancedImageBox : TemplatedControl
             nameof(SelectionMode),
             SelectionModes.None
         );
+
+    public static readonly StyledProperty<bool> IsPixelGridEnabledProperty =
+        AvaloniaProperty.Register<AdvancedImageBox, bool>("IsPixelGridEnabled", true);
+
+    /// <summary>
+    /// Whether or not to draw the pixel grid at the <see cref="PixelGridZoomThreshold"/>
+    /// </summary>
+    public bool IsPixelGridEnabled
+    {
+        get => GetValue(IsPixelGridEnabledProperty);
+        set => SetValue(IsPixelGridEnabledProperty, value);
+    }
 
     public SelectionModes SelectionMode
     {
@@ -1204,38 +1219,40 @@ public class AdvancedImageBox : TemplatedControl
     public AdvancedImageBox()
     {
         // InitializeComponent();
-
-
     }
 
     /// <inheritdoc />
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
-        
+
         // FocusableProperty.OverrideDefaultValue(typeof(AdvancedImageBox), true);
         AffectsRender<AdvancedImageBox>(ShowGridProperty);
 
-        HorizontalScrollBar = e.NameScope.Find<ScrollBar>("HorizontalScrollBar") ?? throw new NullReferenceException();
-        VerticalScrollBar = e.NameScope.Find<ScrollBar>("VerticalScrollBar") ?? throw new NullReferenceException();
-        ViewPort = e.NameScope.Find<ContentPresenter>("ViewPort") ?? throw new NullReferenceException();
+        HorizontalScrollBar =
+            e.NameScope.Find<ScrollBar>("HorizontalScrollBar")
+            ?? throw new NullReferenceException();
+        VerticalScrollBar =
+            e.NameScope.Find<ScrollBar>("VerticalScrollBar") ?? throw new NullReferenceException();
+        ViewPort =
+            e.NameScope.Find<ContentPresenter>("ViewPort") ?? throw new NullReferenceException();
 
         SizeModeChanged();
 
         HorizontalScrollBar.Scroll += ScrollBarOnScroll;
         VerticalScrollBar.Scroll += ScrollBarOnScroll;
-        
+
         // ViewPort.PointerPressed += ViewPortOnPointerPressed;
         // ViewPort.PointerExited += ViewPortOnPointerExited;
         // ViewPort.PointerMoved += ViewPortOnPointerMoved;
         // ViewPort!.PointerWheelChanged += ViewPort_OnPointerWheelChanged;
     }
-    
+
     private void ViewPort_OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
     {
         e.Handled = true;
     }
-    
+
     #endregion
 
     #region Render methods
@@ -1254,15 +1271,20 @@ public class AdvancedImageBox : TemplatedControl
         base.Render(context);
 
         var zoomFactor = ZoomFactor;
+
         var shouldDrawPixelGrid =
-            zoomFactor > PixelGridZoomThreshold && SizeMode == SizeModes.Normal;
-        
-        // If we're in pixel grid mode, switch off bitmap interpolation mode
+            IsPixelGridEnabled
+            && SizeMode == SizeModes.Normal
+            && zoomFactor > PixelGridZoomThreshold;
+
+        var isHighZoom = zoomFactor > PixelGridZoomThreshold;
+
+        // If we're in high zoom, switch off bitmap interpolation mode
         // Otherwise use high quality
-        RenderOptions.SetBitmapInterpolationMode(this,
-            shouldDrawPixelGrid
-                ? BitmapInterpolationMode.None
-                : BitmapInterpolationMode.HighQuality);
+        RenderOptions.SetBitmapInterpolationMode(
+            this,
+            isHighZoom ? BitmapInterpolationMode.None : BitmapInterpolationMode.HighQuality
+        );
 
         var viewPortSize = ViewPortSize;
         // Draw Grid
@@ -1437,13 +1459,13 @@ public class AdvancedImageBox : TemplatedControl
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
         base.OnPointerWheelChanged(e);
-        
+
         e.PreventGestureRecognition();
         e.Handled = true;
-        
+
         if (Image is null)
             return;
-        
+
         if (AllowZoom && SizeMode == SizeModes.Normal)
         {
             // The MouseWheel event can contain multiple "spins" of the wheel so we need to adjust accordingly
@@ -1479,7 +1501,7 @@ public class AdvancedImageBox : TemplatedControl
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
-        
+
         if (e.Handled || _isPanning || _isSelecting || Image is null)
             return;
 
@@ -1490,11 +1512,11 @@ public class AdvancedImageBox : TemplatedControl
             if (
                 !(
                     pointer.Properties.IsLeftButtonPressed
-                    && (SelectWithMouseButtons & MouseButtons.LeftButton) != 0
+                        && (SelectWithMouseButtons & MouseButtons.LeftButton) != 0
                     || pointer.Properties.IsMiddleButtonPressed
-                    && (SelectWithMouseButtons & MouseButtons.MiddleButton) != 0
+                        && (SelectWithMouseButtons & MouseButtons.MiddleButton) != 0
                     || pointer.Properties.IsRightButtonPressed
-                    && (SelectWithMouseButtons & MouseButtons.RightButton) != 0
+                        && (SelectWithMouseButtons & MouseButtons.RightButton) != 0
                 )
             )
                 return;
@@ -1505,11 +1527,11 @@ public class AdvancedImageBox : TemplatedControl
             if (
                 !(
                     pointer.Properties.IsLeftButtonPressed
-                    && (PanWithMouseButtons & MouseButtons.LeftButton) != 0
+                        && (PanWithMouseButtons & MouseButtons.LeftButton) != 0
                     || pointer.Properties.IsMiddleButtonPressed
-                    && (PanWithMouseButtons & MouseButtons.MiddleButton) != 0
+                        && (PanWithMouseButtons & MouseButtons.MiddleButton) != 0
                     || pointer.Properties.IsRightButtonPressed
-                    && (PanWithMouseButtons & MouseButtons.RightButton) != 0
+                        && (PanWithMouseButtons & MouseButtons.RightButton) != 0
                 )
                 || !AutoPan
                 || SizeMode != SizeModes.Normal
@@ -1635,7 +1657,7 @@ public class AdvancedImageBox : TemplatedControl
     protected override void OnPointerExited(PointerEventArgs e)
     {
         base.OnPointerExited(e);
-        
+
         PointerPosition = new Point(-1, -1);
         TriggerRender(true);
         e.Handled = true;
@@ -1655,12 +1677,12 @@ public class AdvancedImageBox : TemplatedControl
         TriggerRender(true);
         e.Handled = true;
     }*/
-    
+
     /// <inheritdoc />
     protected override void OnPointerMoved(PointerEventArgs e)
     {
         base.OnPointerMoved(e);
-        
+
         if (e.Handled)
             return;
 
@@ -1842,7 +1864,7 @@ public class AdvancedImageBox : TemplatedControl
             {
                 Debug.WriteLine(exception);
             }
-            
+
             try
             {
                 RestoreSizeMode();
@@ -2033,12 +2055,12 @@ public class AdvancedImageBox : TemplatedControl
     {
         return rect == EmptyRect;
     }
-    
+
     /// <summary>
     /// Static empty rectangle
     /// </summary>
     private static readonly Rect EmptyRect = new();
-    
+
     /// <summary>
     ///   Determines whether the specified point is located within the image view port
     /// </summary>
@@ -2690,9 +2712,13 @@ public class AdvancedImageBox : TemplatedControl
 
     public Bitmap? GetSelectedBitmap()
     {
-        var image = ImageAsWriteableBitmap;
-        if (image is null || !HaveSelection)
+        if (!HaveSelection || Image is null)
             return null;
+
+        using var stream = new MemoryStream();
+        Image.Save(stream);
+        var image = WriteableBitmap.Decode(stream);
+        stream.Dispose();
 
         var selection = SelectionRegionNet;
         var pixelSize = SelectionPixelSize;

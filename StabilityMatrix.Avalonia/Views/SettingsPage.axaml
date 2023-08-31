@@ -82,7 +82,7 @@
             </Grid>
             
             <!-- Inference UI -->
-            <Grid Margin="0,8,0,0" RowDefinitions="auto,*">
+            <Grid Margin="0,8,0,0" RowDefinitions="auto,*,*">
                 <TextBlock 
                     FontWeight="Medium"
                     Text="Inference UI" 
@@ -134,6 +134,24 @@
                         <ui:SettingsExpanderItem.Footer>
                             <CheckBox Margin="8"
                                       IsChecked="{Binding IsCompletionRemoveUnderscoresEnabled}"/>
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                </ui:SettingsExpander>
+                
+                <!-- Image Viewer -->
+                <ui:SettingsExpander  Grid.Row="2"
+                                      Header="Image Viewer"
+                                      IconSource="Image"
+                                      Margin="8,0,8,4">
+                    
+                    <!-- Pixel grid  -->
+                    <ui:SettingsExpanderItem 
+                        Content="Show pixel grid at high zoom levels"
+                        IconSource="ViewAll"
+                        IsEnabled="{Binding IsPromptCompletionEnabled}">
+                        <ui:SettingsExpanderItem.Footer>
+                            <CheckBox Margin="8"
+                                      IsChecked="{Binding IsImageViewerPixelGridEnabled}"/>
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
                 </ui:SettingsExpander>

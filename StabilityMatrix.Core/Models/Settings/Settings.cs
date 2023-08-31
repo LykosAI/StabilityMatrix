@@ -1,17 +1,17 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace StabilityMatrix.Core.Models.Settings;
 
+[JsonSerializable(typeof(Settings))]
 public class Settings
 {
     public int? Version { get; set; } = 1;
     public bool FirstLaunchSetupComplete { get; set; }
     public string? Theme { get; set; } = "Dark";
     public string? Language { get; set; } = "en-US";
-    
+
     public List<InstalledPackage> InstalledPackages { get; set; } = new();
-    
+
     [JsonPropertyName("ActiveInstalledPackage")]
     public Guid? ActiveInstalledPackageId { get; set; }
 
@@ -22,48 +22,53 @@ public class Settings
     [JsonIgnore]
     public InstalledPackage? ActiveInstalledPackage
     {
-        get => ActiveInstalledPackageId == null ? null : 
-            InstalledPackages.FirstOrDefault(x => x.Id == ActiveInstalledPackageId);
+        get =>
+            ActiveInstalledPackageId == null
+                ? null
+                : InstalledPackages.FirstOrDefault(x => x.Id == ActiveInstalledPackageId);
         set => ActiveInstalledPackageId = value?.Id;
     }
-    
+
     public bool HasSeenWelcomeNotification { get; set; }
     public List<string>? PathExtensions { get; set; }
     public string? WebApiHost { get; set; }
     public string? WebApiPort { get; set; }
-    
+
     // UI states
     public bool ModelBrowserNsfwEnabled { get; set; }
     public bool IsNavExpanded { get; set; }
     public bool IsImportAsConnected { get; set; }
     public SharedFolderType? SharedFolderVisibleCategories { get; set; } =
-        SharedFolderType.StableDiffusion | 
-        SharedFolderType.Lora | 
-        SharedFolderType.LyCORIS;
+        SharedFolderType.StableDiffusion | SharedFolderType.Lora | SharedFolderType.LyCORIS;
 
     public WindowSettings? WindowSettings { get; set; }
 
     public ModelSearchOptions? ModelSearchOptions { get; set; }
-    
+
     /// <summary>
     /// Whether prompt auto completion is enabled
     /// </summary>
     public bool IsPromptCompletionEnabled { get; set; }
-    
+
     /// <summary>
     /// Relative path to the tag completion CSV file from 'LibraryDir/Tags'
     /// </summary>
     public string? TagCompletionCsv { get; set; }
-    
+
     /// <summary>
     /// Whether to remove underscores from completions
     /// </summary>
     public bool IsCompletionRemoveUnderscoresEnabled { get; set; }
-    
+
+    /// <summary>
+    /// Whether the Inference Image Viewer shows pixel grids at high zoom levels
+    /// </summary>
+    public bool IsImageViewerPixelGridEnabled { get; set; }
+
     public bool RemoveFolderLinksOnShutdown { get; set; }
-    
+
     public bool IsDiscordRichPresenceEnabled { get; set; }
-    
+
     public Dictionary<string, string>? EnvironmentVariables { get; set; }
 
     public HashSet<string>? InstalledModelHashes { get; set; } = new();
@@ -74,13 +79,13 @@ public class Settings
     {
         RemoveInstalledPackageAndUpdateActive(package.Id);
     }
-    
+
     public void RemoveInstalledPackageAndUpdateActive(Guid id)
     {
         InstalledPackages.RemoveAll(x => x.Id == id);
         UpdateActiveInstalledPackage();
     }
-    
+
     /// <summary>
     /// Update ActiveInstalledPackage if not valid
     /// uses first package or null if no packages

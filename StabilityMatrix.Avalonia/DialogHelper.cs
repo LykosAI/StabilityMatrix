@@ -20,6 +20,9 @@ using Markdown.Avalonia;
 using Markdown.Avalonia.SyntaxHigh.Extensions;
 using Refit;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Core.Exceptions;
+using StabilityMatrix.Core.Extensions;
 using TextMateSharp.Grammars;
 
 namespace StabilityMatrix.Avalonia;
@@ -30,26 +33,24 @@ public static class DialogHelper
     /// Create a generic textbox entry content dialog.
     /// </summary>
     public static BetterContentDialog CreateTextEntryDialog(
-        string title, 
-        string description, 
-        IReadOnlyList<TextBoxField> textFields)
+        string title,
+        string description,
+        IReadOnlyList<TextBoxField> textFields
+    )
     {
         Dispatcher.UIThread.VerifyAccess();
 
         var stackPanel = new StackPanel();
         var grid = new Grid
         {
-            RowDefinitions = 
+            RowDefinitions =
             {
                 new RowDefinition(GridLength.Auto),
                 new RowDefinition(GridLength.Star)
             },
             Children =
             {
-                new TextBlock
-                {
-                    Text = description
-                },
+                new TextBlock { Text = description },
                 stackPanel
             }
         };
@@ -60,25 +61,24 @@ public static class DialogHelper
             firstTextBox.Focus();
             firstTextBox.CaretIndex = firstTextBox.Text?.LastIndexOf('.') ?? 0;
         };
-        
+
         // Disable primary button if any textboxes are invalid
-        var primaryCommand = new RelayCommand(delegate { },
+        var primaryCommand = new RelayCommand(
+            delegate { },
             () =>
             {
                 var invalidCount = textFields.Count(field => !field.IsValid);
                 Debug.WriteLine($"Checking can execute: {invalidCount} invalid fields");
                 return invalidCount == 0;
-            });
-        
+            }
+        );
+
         // Create textboxes
         foreach (var field in textFields)
         {
-            var label = new TextBlock
-            {
-                Text = field.Label
-            };
+            var label = new TextBlock { Text = field.Label };
             stackPanel.Children.Add(label);
-            
+
             var textBox = new TextBox
             {
                 [!TextBox.TextProperty] = new Binding("TextProperty"),
@@ -86,7 +86,7 @@ public static class DialogHelper
                 DataContext = field,
             };
             stackPanel.Children.Add(textBox);
-            
+
             // When IsValid property changes, update invalid count and primary button
             field.PropertyChanged += (_, args) =>
             {
@@ -95,10 +95,10 @@ public static class DialogHelper
                     primaryCommand.NotifyCanExecuteChanged();
                 }
             };
-            
+
             // Set initial value
             textBox.Text = field.Text;
-            
+
             // See if initial value is valid
             try
             {
@@ -109,7 +109,7 @@ public static class DialogHelper
                 field.IsValid = false;
             }
         }
-        
+
         return new BetterContentDialog
         {
             Title = title,
@@ -129,11 +129,8 @@ public static class DialogHelper
     {
         Dispatcher.UIThread.VerifyAccess();
 
-        var viewer = new MarkdownScrollViewer
-        {
-            Markdown = markdown
-        };
-        
+        var viewer = new MarkdownScrollViewer { Markdown = markdown };
+
         return new BetterContentDialog
         {
             Title = title,
@@ -142,28 +139,29 @@ public static class DialogHelper
             IsPrimaryButtonEnabled = false,
         };
     }
-    
+
     /// <summary>
     /// Create a dialog for displaying an ApiException
     /// </summary>
-    public static BetterContentDialog CreateApiExceptionDialog(ApiException exception, string? title = null)
+    public static BetterContentDialog CreateApiExceptionDialog(
+        ApiException exception,
+        string? title = null
+    )
     {
         Dispatcher.UIThread.VerifyAccess();
-        
+
         // Setup text editor
         var textEditor = new TextEditor
         {
             IsReadOnly = true,
             WordWrap = true,
-            Options =
-            {
-                ShowColumnRulers = false,
-                AllowScrollBelowDocument = false
-            }
+            Options = { ShowColumnRulers = false, AllowScrollBelowDocument = false }
         };
         var registryOptions = new RegistryOptions(ThemeName.DarkPlus);
-        textEditor.InstallTextMate(registryOptions).SetGrammar(registryOptions.GetScopeByLanguageId("json"));
-        
+        textEditor
+            .InstallTextMate(registryOptions)
+            .SetGrammar(registryOptions.GetScopeByLanguageId("json"));
+
         var mainGrid = new StackPanel
         {
             Spacing = 8,
@@ -172,15 +170,15 @@ public static class DialogHelper
             {
                 new TextBlock
                 {
-                    Text = $"{(int) exception.StatusCode} - {exception.ReasonPhrase}",
+                    Text = $"{(int)exception.StatusCode} - {exception.ReasonPhrase}",
                     FontSize = 18,
                     FontWeight = FontWeight.Medium,
-                    Margin = new Thickness(0,8),
+                    Margin = new Thickness(0, 8),
                 },
                 textEditor
             }
         };
-        
+
         var dialog = new BetterContentDialog
         {
             Title = title,
@@ -195,15 +193,18 @@ public static class DialogHelper
             try
             {
                 // Deserialize to json element then re-serialize to ensure indentation
-                var jsonElement = JsonSerializer.Deserialize<JsonElement>(exception.Content, new JsonSerializerOptions
-                {
-                    AllowTrailingCommas = true,
-                    ReadCommentHandling = JsonCommentHandling.Skip
-                });
-                var formatted = JsonSerializer.Serialize(jsonElement, new JsonSerializerOptions()
-                {
-                    WriteIndented = true
-                });
+                var jsonElement = JsonSerializer.Deserialize<JsonElement>(
+                    exception.Content,
+                    new JsonSerializerOptions
+                    {
+                        AllowTrailingCommas = true,
+                        ReadCommentHandling = JsonCommentHandling.Skip
+                    }
+                );
+                var formatted = JsonSerializer.Serialize(
+                    jsonElement,
+                    new JsonSerializerOptions() { WriteIndented = true }
+                );
 
                 textEditor.Document.Text = formatted;
             }
@@ -216,7 +217,103 @@ public static class DialogHelper
 
         return dialog;
     }
-    
+
+    public static BetterContentDialog CreatePromptErrorDialog(
+        PromptError exception,
+        string sourceText
+    )
+    {
+        Dispatcher.UIThread.VerifyAccess();
+
+        var title =
+            exception is PromptSyntaxError ? "Prompt Syntax Error" : "Prompt Validation Error";
+
+        // Get the index of the error
+        var errorIndex = exception.TextOffset;
+
+        // Get the line of error
+        var total = 0;
+        var errorLine = string.Empty;
+        var errorLineNum = 0;
+        var errorLineOffset = -1;
+        var errorLineEndOffset = -1;
+        foreach (var (i, line) in sourceText.Split(Environment.NewLine).Enumerate())
+        {
+            var lineLength = line.Length + Environment.NewLine.Length;
+            if (total + lineLength > errorIndex)
+            {
+                // Found, set the line text and number
+                errorLine = line;
+                errorLineNum = i + 1;
+                // Calculate line offset of the error
+                errorLineOffset = exception.TextOffset - total;
+                // Calculate line offset of the end of the error
+                errorLineEndOffset = exception.TextEndOffset - total;
+                break;
+            }
+            total += lineLength;
+        }
+
+        // Format the error line
+        var errorLineFormattedBuilder = new StringBuilder();
+        // Add line number
+        var errorLinePrefix = $"[{errorLineNum}] ";
+        errorLineFormattedBuilder.AppendLine(errorLinePrefix + errorLine);
+        // Add error indicator at line offset
+        errorLineFormattedBuilder.Append(' ', errorLinePrefix.Length + errorLineOffset);
+        errorLineFormattedBuilder.Append('^', errorLineEndOffset - errorLineOffset);
+        var errorLineFormatted = errorLineFormattedBuilder.ToString();
+
+        // Setup text editor
+        var textEditor = new TextEditor
+        {
+            IsReadOnly = true,
+            WordWrap = true,
+            IsEnabled = false,
+            ShowLineNumbers = false,
+            FontFamily = "Cascadia Code,Consolas,Menlo,Monospace",
+            FontSize = 15,
+            Options =
+            {
+                HighlightCurrentLine = true,
+                ShowColumnRulers = false,
+                AllowScrollBelowDocument = false
+            }
+        };
+        TextEditorConfigs.ConfigForPrompt(textEditor);
+
+        textEditor.Document.Text = errorLineFormatted;
+        textEditor.TextArea.Caret.Offset = textEditor.Document.Lines[0].EndOffset;
+
+        var mainGrid = new StackPanel
+        {
+            Spacing = 8,
+            Margin = new Thickness(16),
+            Children =
+            {
+                new TextBlock
+                {
+                    Text =
+                        $"{exception.Message} - at line {errorLineNum} [{errorLineOffset}:{errorLineEndOffset}]",
+                    FontSize = 18,
+                    FontWeight = FontWeight.Medium,
+                    Margin = new Thickness(0, 8),
+                },
+                textEditor
+            }
+        };
+
+        var dialog = new BetterContentDialog
+        {
+            Title = title,
+            Content = mainGrid,
+            CloseButtonText = "Close",
+            IsPrimaryButtonEnabled = false,
+        };
+
+        return dialog;
+    }
+
     /// <summary>
     /// Create a simple title and description task dialog.
     /// Sets the XamlRoot to the current top level window.
@@ -224,23 +321,19 @@ public static class DialogHelper
     public static TaskDialog CreateTaskDialog(string title, string description)
     {
         Dispatcher.UIThread.VerifyAccess();
-        
+
         var content = new StackPanel
         {
             Children =
             {
                 new TextBlock
                 {
-                    Margin = new Thickness(0,0,0,8),
+                    Margin = new Thickness(0, 0, 0, 8),
                     FontSize = 16,
                     Text = title,
                     TextWrapping = TextWrapping.WrapWithOverflow,
                 },
-                new TextBlock
-                {
-                    Text = description,
-                    TextWrapping = TextWrapping.WrapWithOverflow,
-                }
+                new TextBlock { Text = description, TextWrapping = TextWrapping.WrapWithOverflow, }
             }
         };
 
@@ -258,16 +351,18 @@ public sealed class TextBoxField : INotifyPropertyChanged
 {
     // Label above the textbox
     public string Label { get; init; } = string.Empty;
+
     // Actual text value
     public string Text { get; set; } = string.Empty;
+
     // Watermark text
     public string Watermark { get; init; } = string.Empty;
-    
+
     /// <summary>
     /// Validation action on text changes. Throw exception if invalid.
     /// </summary>
     public Action<string>? Validator { get; init; }
-    
+
     public string TextProperty
     {
         get => Text;
@@ -288,7 +383,7 @@ public sealed class TextBoxField : INotifyPropertyChanged
             OnPropertyChanged();
         }
     }
-    
+
     // Default to true if no validator is provided
     private bool isValid;
     public bool IsValid

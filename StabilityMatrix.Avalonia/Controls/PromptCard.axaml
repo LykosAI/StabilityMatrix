@@ -98,6 +98,7 @@
                                             CompletionProvider="{Binding CompletionProvider}"
                                             TokenizerProvider="{Binding TokenizerProvider}"/>
                                         <behaviors:TextEditorToolTipBehavior
+                                            IsEnabled="False"
                                             TokenizerProvider="{Binding TokenizerProvider}"/>
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>
@@ -136,6 +137,7 @@
                                             CompletionProvider="{Binding CompletionProvider}"
                                             TokenizerProvider="{Binding TokenizerProvider}"/>
                                         <behaviors:TextEditorToolTipBehavior
+                                            IsEnabled="False"
                                             TokenizerProvider="{Binding TokenizerProvider}"/>
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>

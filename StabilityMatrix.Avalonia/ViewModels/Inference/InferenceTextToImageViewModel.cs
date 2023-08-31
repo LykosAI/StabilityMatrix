@@ -194,32 +194,30 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
 
         // See if we need to load loras
         var prompt = PromptCardViewModel.GetPrompt();
+        prompt.Process();
         var negativePrompt = PromptCardViewModel.GetNegativePrompt();
-        var promptNetworks = prompt.ExtraNetworks;
+        negativePrompt.Process();
 
         // If need to load loras, add a group
-        if (promptNetworks.Count > 0)
+        if (prompt.ExtraNetworks.Count > 0)
         {
             // Convert to local file names
-            IEnumerable<(string FileName, double? ModelWeight, double? ClipWeight)> loras =
-                promptNetworks.Select(n =>
+            var loras = prompt.ExtraNetworks.Select(n =>
+            {
+                var localLoras = modelIndexService.ModelIndex.GetOrAdd(SharedFolderType.Lora);
+                var localLora = localLoras.FirstOrDefault(
+                    m =>
+                        m.FileName == n.Name
+                        || Path.GetFileNameWithoutExtension(m.FileName) == n.Name
+                );
+
+                if (localLora is null)
                 {
-                    var localLoras = modelIndexService.ModelIndex.GetOrAdd(SharedFolderType.Lora);
-                    var localLora = localLoras.FirstOrDefault(
-                        m =>
-                            m.FileName == n.Name
-                            || Path.GetFileNameWithoutExtension(m.FileName) == n.Name
-                    );
+                    throw new ApplicationException($"Lora model {n.Name} was not found locally");
+                }
 
-                    if (localLora is null)
-                    {
-                        throw new ApplicationException(
-                            $"Lora model {n.Name} was not found locally"
-                        );
-                    }
-
-                    return (localLora.FileName, n.ModelWeight, n.ClipWeight);
-                });
+                return (localLora.FileName, n.ModelWeight, n.ClipWeight);
+            });
 
             var lorasGroup = builder.Group_LoraLoadMany("Loras", modelSource, clipSource, loras);
 
@@ -235,7 +233,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
                 Inputs = new Dictionary<string, object?>
                 {
                     ["clip"] = clipSource,
-                    ["text"] = PromptCardViewModel.PromptDocument.Text,
+                    ["text"] = prompt.ProcessedText,
                 }
             }
         );
@@ -247,7 +245,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
                 Inputs = new Dictionary<string, object?>
                 {
                     ["clip"] = clipSource,
-                    ["text"] = PromptCardViewModel.NegativePromptDocument.Text,
+                    ["text"] = negativePrompt.ProcessedText,
                 }
             }
         );
@@ -431,6 +429,27 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         {
             notificationService.Show("Client not connected", "Please connect first");
             return;
+        }
+
+        // Validate the prompts
+        {
+            var text = "";
+            try
+            {
+                var prompt = PromptCardViewModel.GetPrompt();
+                text = prompt.RawText;
+                prompt.Process();
+
+                var negPrompt = PromptCardViewModel.GetPrompt();
+                text = negPrompt.RawText;
+                negPrompt.Process();
+            }
+            catch (PromptError e)
+            {
+                var dialog = DialogHelper.CreatePromptErrorDialog(e, text);
+                await dialog.ShowAsync();
+                return;
+            }
         }
 
         // If enabled, randomize the seed

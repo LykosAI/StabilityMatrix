@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
@@ -17,20 +18,29 @@ public record Prompt
 
     public required ITokenizeLineResult TokenizeResult { get; init; }
 
-    private List<PromptExtraNetwork>? extraNetworks;
-
-    public IReadOnlyList<PromptExtraNetwork> ExtraNetworks => extraNetworks ??= GetExtraNetworks();
-
-    public string? ProcessedText { get; private set; }
+    [MemberNotNullWhen(true, nameof(ExtraNetworks), nameof(ProcessedText))]
+    public bool IsProcessed { get; private set; }
 
     /// <summary>
-    /// Returns processed text suitable for sending to inference backend.
+    /// Extra networks specified in prompt.
+    /// </summary>
+    public IReadOnlyList<PromptExtraNetwork>? ExtraNetworks { get; private set; }
+
+    /// <summary>
+    /// Processed text suitable for sending to inference backend.
     /// This excludes extra network (i.e. LORA) tokens.
     /// </summary>
-    public string GetProcessedText()
+    public string? ProcessedText { get; private set; }
+
+    [MemberNotNull(nameof(ExtraNetworks), nameof(ProcessedText))]
+    public void Process()
     {
-        // TODO
-        return RawText;
+        if (IsProcessed)
+            return;
+
+        var (promptExtraNetworks, processedText) = GetExtraNetworks();
+        ExtraNetworks = promptExtraNetworks;
+        ProcessedText = processedText;
     }
 
     private int GetSafeEndIndex(int index)
@@ -38,7 +48,7 @@ public record Prompt
         return Math.Min(index, RawText.Length);
     }
 
-    private List<PromptExtraNetwork> GetExtraNetworks()
+    private (List<PromptExtraNetwork> promptExtraNetworks, string processedText) GetExtraNetworks()
     {
         // Parse tokens "meta.structure.network.prompt"
         // "<": "punctuation.definition.network.begin.prompt"
@@ -58,21 +68,34 @@ public record Prompt
         while (tokens.MoveNext())
         {
             var token = tokens.Current;
-            var tokenSafeEndIndex = GetSafeEndIndex(token.EndIndex);
+
+            // For any invalid syntax, throw
+            if (token.Scopes.Any(s => s.Contains("invalid.illegal")))
+            {
+                // Generic
+                throw new PromptSyntaxError(
+                    "Invalid Token",
+                    token.StartIndex,
+                    GetSafeEndIndex(token.EndIndex)
+                );
+            }
 
             // Find start of network token, until then just add to output
             if (!token.Scopes.Contains("punctuation.definition.network.begin.prompt"))
             {
                 // Push both token and text
                 outputTokens.Push(token);
-                outputText.Push(RawText[token.StartIndex..tokenSafeEndIndex]);
+                outputText.Push(RawText[token.StartIndex..GetSafeEndIndex(token.EndIndex)]);
                 continue;
             }
 
             // Expect next token to be network type
             if (!tokens.MoveNext())
             {
-                throw PromptSyntaxError.UnexpectedEndOfText(token.StartIndex, tokenSafeEndIndex);
+                throw PromptSyntaxError.UnexpectedEndOfText(
+                    token.StartIndex,
+                    GetSafeEndIndex(token.EndIndex)
+                );
             }
             var networkTypeToken = tokens.Current;
 
@@ -80,7 +103,7 @@ public record Prompt
             {
                 throw PromptSyntaxError.Network_ExpectedType(
                     networkTypeToken.StartIndex,
-                    tokenSafeEndIndex
+                    GetSafeEndIndex(networkTypeToken.EndIndex)
                 );
             }
 
@@ -104,7 +127,10 @@ public record Prompt
             // Skip colon token
             if (!tokens.MoveNext())
             {
-                throw PromptSyntaxError.UnexpectedEndOfText(token.StartIndex, tokenSafeEndIndex);
+                throw PromptSyntaxError.UnexpectedEndOfText(
+                    tokens.Current.StartIndex,
+                    GetSafeEndIndex(tokens.Current.EndIndex)
+                );
             }
             // Ensure next token is colon
             if (!tokens.Current.Scopes.Contains("punctuation.separator.variable.prompt"))
@@ -118,7 +144,10 @@ public record Prompt
             // Get model name
             if (!tokens.MoveNext())
             {
-                throw PromptSyntaxError.UnexpectedEndOfText(token.StartIndex, tokenSafeEndIndex);
+                throw PromptSyntaxError.UnexpectedEndOfText(
+                    tokens.Current.StartIndex,
+                    GetSafeEndIndex(tokens.Current.EndIndex)
+                );
             }
 
             var modelNameToken = tokens.Current;
@@ -137,7 +166,10 @@ public record Prompt
             // Skip another colon token
             if (!tokens.MoveNext())
             {
-                throw PromptSyntaxError.UnexpectedEndOfText(token.StartIndex, tokenSafeEndIndex);
+                throw PromptSyntaxError.UnexpectedEndOfText(
+                    tokens.Current.StartIndex,
+                    GetSafeEndIndex(tokens.Current.EndIndex)
+                );
             }
 
             // If its a ending token instead, we can end here
@@ -171,7 +203,10 @@ public record Prompt
             // Get model weight
             if (!tokens.MoveNext())
             {
-                throw PromptSyntaxError.UnexpectedEndOfText(token.StartIndex, tokenSafeEndIndex);
+                throw PromptSyntaxError.UnexpectedEndOfText(
+                    tokens.Current.StartIndex,
+                    GetSafeEndIndex(tokens.Current.EndIndex)
+                );
             }
 
             var modelWeightToken = tokens.Current;
@@ -199,7 +234,10 @@ public record Prompt
             // Expect end
             if (!tokens.MoveNext())
             {
-                throw PromptSyntaxError.UnexpectedEndOfText(token.StartIndex, tokenSafeEndIndex);
+                throw PromptSyntaxError.UnexpectedEndOfText(
+                    tokens.Current.StartIndex,
+                    GetSafeEndIndex(tokens.Current.EndIndex)
+                );
             }
             var endToken = tokens.Current;
             if (!endToken.Scopes.Contains("punctuation.definition.network.end.prompt"))
@@ -231,9 +269,9 @@ public record Prompt
             );
         }
 
-        ProcessedText = string.Join("", outputText.Reverse());
+        var processedText = string.Join("", outputText.Reverse());
 
-        return promptExtraNetworks;
+        return (promptExtraNetworks, processedText);
     }
 
     public string GetDebugText()

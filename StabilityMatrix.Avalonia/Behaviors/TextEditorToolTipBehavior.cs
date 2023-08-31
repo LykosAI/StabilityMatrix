@@ -20,18 +20,19 @@ namespace StabilityMatrix.Avalonia.Behaviors;
 public class TextEditorToolTipBehavior : Behavior<TextEditor>
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
+
     private TextEditor textEditor = null!;
-    
+
     /// <summary>
     /// The current ToolTip, if open.
     /// Is set to null when the Tooltip is closed.
     /// </summary>
     private ToolTip? toolTip;
 
-    public static readonly StyledProperty<ITokenizerProvider?> TokenizerProviderProperty = 
+    public static readonly StyledProperty<ITokenizerProvider?> TokenizerProviderProperty =
         AvaloniaProperty.Register<TextEditorCompletionBehavior, ITokenizerProvider?>(
-            "TokenizerProvider");
+            "TokenizerProvider"
+        );
 
     public ITokenizerProvider? TokenizerProvider
     {
@@ -39,15 +40,17 @@ public class TextEditorToolTipBehavior : Behavior<TextEditor>
         set => SetValue(TokenizerProviderProperty, value);
     }
 
-    public static readonly StyledProperty<bool> IsEnabledProperty = AvaloniaProperty.Register<TextEditorCompletionBehavior, bool>(
-        "IsEnabled", true);
+    public static readonly StyledProperty<bool> IsEnabledProperty = AvaloniaProperty.Register<
+        TextEditorCompletionBehavior,
+        bool
+    >("IsEnabled", true);
 
     public bool IsEnabled
     {
         get => GetValue(IsEnabledProperty);
         set => SetValue(IsEnabledProperty, value);
     }
-    
+
     protected override void OnAttached()
     {
         base.OnAttached();
@@ -56,7 +59,7 @@ public class TextEditorToolTipBehavior : Behavior<TextEditor>
         {
             throw new NullReferenceException("AssociatedObject is null");
         }
-        
+
         textEditor = editor;
         textEditor.PointerHover += TextEditor_OnPointerHover;
         textEditor.PointerHoverStopped += TextEditor_OnPointerHoverStopped;
@@ -69,14 +72,17 @@ public class TextEditorToolTipBehavior : Behavior<TextEditor>
         textEditor.PointerHover -= TextEditor_OnPointerHover;
         textEditor.PointerHoverStopped -= TextEditor_OnPointerHoverStopped;
     }
-    
+
     /*private void OnVisualLinesChanged(object? sender, EventArgs e)
     {
         _toolTip?.Close(this);
     }*/
 
-    private static void TextEditor_OnPointerHoverStopped(object? sender, PointerEventArgs e)
+    private void TextEditor_OnPointerHoverStopped(object? sender, PointerEventArgs e)
     {
+        if (!IsEnabled)
+            return;
+
         if (sender is TextEditor editor)
         {
             ToolTip.SetIsOpen(editor, false);
@@ -86,14 +92,18 @@ public class TextEditorToolTipBehavior : Behavior<TextEditor>
 
     private void TextEditor_OnPointerHover(object? sender, PointerEventArgs e)
     {
+        if (!IsEnabled)
+            return;
+
         TextViewPosition? position;
-        
+
         var textArea = textEditor.TextArea;
-        
+
         try
         {
             position = textArea.TextView.GetPositionFloor(
-                e.GetPosition(textArea.TextView) + textArea.TextView.ScrollOffset);
+                e.GetPosition(textArea.TextView) + textArea.TextView.ScrollOffset
+            );
         }
         catch (ArgumentOutOfRangeException)
         {
@@ -101,17 +111,17 @@ public class TextEditorToolTipBehavior : Behavior<TextEditor>
             e.Handled = true;
             return;
         }
-        
+
         if (!position.HasValue || position.Value.Location.IsEmpty || position.Value.IsAtEndOfLine)
         {
             return;
         }
-        
+
         /*var args = new ToolTipRequestEventArgs { InDocument = position.HasValue };
 
         args.LogicalPosition = position.Value.Location;
         args.Position = textEditor.Document.GetOffset(position.Value.Line, position.Value.Column);*/
-        
+
         // Get the ToolTip data
         if (GetCaretToolTipData(position.Value) is not { } data)
         {
@@ -120,46 +130,44 @@ public class TextEditorToolTipBehavior : Behavior<TextEditor>
 
         if (toolTip == null)
         {
-            toolTip = new ToolTip
-            {
-                MaxWidth = 400
-            };
-            
+            toolTip = new ToolTip { MaxWidth = 400 };
+
             ToolTip.SetShowDelay(textEditor, 0);
             ToolTip.SetPlacement(textEditor, PlacementMode.Pointer);
             ToolTip.SetTip(textEditor, toolTip);
-            
-            toolTip.GetPropertyChangedObservable(ToolTip.IsOpenProperty).Subscribe(c =>
-            {
-                if (c.NewValue as bool? != true)
+
+            toolTip
+                .GetPropertyChangedObservable(ToolTip.IsOpenProperty)
+                .Subscribe(c =>
                 {
-                    toolTip = null;
-                }
-            });
+                    if (c.NewValue as bool? != true)
+                    {
+                        toolTip = null;
+                    }
+                });
         }
-        
-        toolTip.Content = new TextBlock
-        {
-            Text = data.Message,
-            TextWrapping = TextWrapping.Wrap
-        };
+
+        toolTip.Content = new TextBlock { Text = data.Message, TextWrapping = TextWrapping.Wrap };
 
         e.Handled = true;
         ToolTip.SetIsOpen(textEditor, true);
         toolTip.InvalidateVisual();
     }
-    
+
     /// <summary>
     /// Get ToolTip data to show at the caret position, can be null if no ToolTip should be shown.
     /// </summary>
     private ToolTipData? GetCaretToolTipData(TextViewPosition position)
     {
         var logicalPosition = position.Location;
-        var pointerOffset = textEditor.Document.GetOffset(logicalPosition.Line, logicalPosition.Column);
-        
+        var pointerOffset = textEditor.Document.GetOffset(
+            logicalPosition.Line,
+            logicalPosition.Column
+        );
+
         var line = textEditor.Document.GetLineByOffset(pointerOffset);
         var lineText = textEditor.Document.GetText(line.Offset, line.Length);
-        
+
         var lineOffset = pointerOffset - line.Offset;
         /*var caret = textEditor.CaretOffset;
         
@@ -168,7 +176,7 @@ public class TextEditorToolTipBehavior : Behavior<TextEditor>
         var lineText = textEditor.Document.GetText(line.Offset, line.Length);
         
         var caretAbsoluteOffset = caret - line.Offset;*/
-        
+
         // Tokenize
         var result = TokenizerProvider!.TokenizeLine(lineText);
 
@@ -184,7 +192,7 @@ public class TextEditorToolTipBehavior : Behavior<TextEditor>
                 Logger.Trace("Caret is in a comment");
                 return null;
             }
-            
+
             // Find match
             if (lineOffset >= token.StartIndex && lineOffset <= token.EndIndex)
             {
@@ -193,24 +201,26 @@ public class TextEditorToolTipBehavior : Behavior<TextEditor>
                 break;
             }
         }
-        
+
         // Still not found
         if (currentToken is null || currentTokenIndex == -1)
         {
-            Logger.Info($"Could not find token at pointer offset {pointerOffset} for line {lineText.ToRepr()}");
+            Logger.Info(
+                $"Could not find token at pointer offset {pointerOffset} for line {lineText.ToRepr()}"
+            );
             return null;
         }
-        
+
         var startOffset = currentToken.StartIndex + line.Offset;
         var endOffset = currentToken.EndIndex + line.Offset;
-        
+
         // Cap the offsets by the line offsets
         var segment = new TextSegment
         {
             StartOffset = Math.Max(startOffset, line.Offset),
             EndOffset = Math.Min(endOffset, line.EndOffset)
         };
-        
+
         // Only return for supported scopes
         // Attempt with first current, then next and previous
         foreach (var tokenOffset in new[] { 0, 1, -1 })
@@ -218,8 +228,10 @@ public class TextEditorToolTipBehavior : Behavior<TextEditor>
             if (result.Tokens.ElementAtOrDefault(currentTokenIndex + tokenOffset) is { } token)
             {
                 // Check supported scopes
-                if (token.Scopes.Where(s => s.Contains("invalid")).ToArray() 
-                    is { Length: > 0 } results)
+                if (
+                    token.Scopes.Where(s => s.Contains("invalid")).ToArray() is
+                    { Length: > 0 } results
+                )
                 {
                     // Special cases
                     if (results.Contains("invalid.illegal.mismatched.parenthesis.closing.prompt"))
@@ -230,15 +242,14 @@ public class TextEditorToolTipBehavior : Behavior<TextEditor>
                     {
                         return new ToolTipData(segment, "Mismatched opening parenthesis '('");
                     }
-                    
+
                     return new ToolTipData(segment, "Syntax error: " + string.Join(", ", results));
                 }
             }
         }
 
-        
         return null;
     }
-    
+
     internal record ToolTipData(ISegment Segment, string Message);
 }

@@ -1,8 +1,7 @@
-﻿using System;
-using StabilityMatrix.Core.Extensions;
-using StabilityMatrix.Core.Models;
+﻿using StabilityMatrix.Core.Extensions;
 
-namespace StabilityMatrix.Avalonia.Models.Inference.Tokens;
+namespace StabilityMatrix.Core.Models.Tokens;
+
 
 [Flags]
 public enum PromptExtraNetworkType

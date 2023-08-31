@@ -1,4 +1,4 @@
-﻿namespace StabilityMatrix.Avalonia.Models.Inference.Tokens;
+﻿namespace StabilityMatrix.Core.Models.Tokens;
 
 /// <summary>
 /// Represents an extra network token in a prompt.

@@ -14,34 +14,39 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
     private readonly ILogger<TrackedDownloadService> logger;
     private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
-    
+    private readonly IModelIndexService modelIndexService;
+
     private readonly ConcurrentDictionary<Guid, (TrackedDownload, FileStream)> downloads = new();
 
     public IEnumerable<TrackedDownload> Downloads => downloads.Values.Select(x => x.Item1);
-    
+
     /// <inheritdoc />
     public event EventHandler<TrackedDownload>? DownloadAdded;
-    
+
     public TrackedDownloadService(
         ILogger<TrackedDownloadService> logger,
         IDownloadService downloadService,
-        ISettingsManager settingsManager)
+        IModelIndexService modelIndexService,
+        ISettingsManager settingsManager
+    )
     {
         this.logger = logger;
         this.downloadService = downloadService;
         this.settingsManager = settingsManager;
+        this.modelIndexService = modelIndexService;
 
         // Index for in-progress downloads when library dir loaded
         settingsManager.RegisterOnLibraryDirSet(path =>
         {
             var downloadsDir = new DirectoryPath(settingsManager.DownloadsDirectory);
             // Ignore if not exist
-            if (!downloadsDir.Exists) return;
-            
+            if (!downloadsDir.Exists)
+                return;
+
             LoadInProgressDownloads(downloadsDir);
         });
     }
-    
+
     private void OnDownloadAdded(TrackedDownload download)
     {
         DownloadAdded?.Invoke(this, download);
@@ -55,28 +60,32 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
     {
         // Set download service
         download.SetDownloadService(downloadService);
-        
+
         // Create json file
         var downloadsDir = new DirectoryPath(settingsManager.DownloadsDirectory);
         downloadsDir.Create();
         var jsonFile = downloadsDir.JoinFile($"{download.Id}.json");
-        var jsonFileStream = jsonFile.Info.Open(FileMode.CreateNew, FileAccess.ReadWrite, FileShare.Read);
-        
+        var jsonFileStream = jsonFile.Info.Open(
+            FileMode.CreateNew,
+            FileAccess.ReadWrite,
+            FileShare.Read
+        );
+
         // Serialize to json
         var json = JsonSerializer.Serialize(download);
         jsonFileStream.Write(Encoding.UTF8.GetBytes(json));
         jsonFileStream.Flush();
-        
+
         // Add to dictionary
         downloads.TryAdd(download.Id, (download, jsonFileStream));
-        
+
         // Connect to state changed event to update json file
         AttachHandlers(download);
-        
+
         logger.LogDebug("Added download {Download}", download.FileName);
         OnDownloadAdded(download);
     }
-    
+
     /// <summary>
     /// Update the json file for the download.
     /// </summary>
@@ -85,19 +94,19 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
         // Serialize to json
         var json = JsonSerializer.Serialize(download);
         var jsonBytes = Encoding.UTF8.GetBytes(json);
-        
+
         // Write to file
         var (_, fs) = downloads[download.Id];
         fs.Seek(0, SeekOrigin.Begin);
         fs.Write(jsonBytes);
         fs.Flush();
     }
-    
+
     private void AttachHandlers(TrackedDownload download)
     {
         download.ProgressStateChanged += TrackedDownload_OnProgressStateChanged;
     }
-    
+
     /// <summary>
     /// Handler when the download's state changes
     /// </summary>
@@ -107,10 +116,10 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
         {
             return;
         }
-        
+
         // Update json file
         UpdateJsonForDownload(download);
-        
+
         // If the download is completed, remove it from the dictionary and delete the json file
         if (e is ProgressState.Success or ProgressState.Failed or ProgressState.Cancelled)
         {
@@ -118,28 +127,30 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
             {
                 downloadInfo.Item2.Dispose();
                 // Delete json file
-                new DirectoryPath(settingsManager.DownloadsDirectory).JoinFile($"{download.Id}.json").Delete();
+                new DirectoryPath(settingsManager.DownloadsDirectory)
+                    .JoinFile($"{download.Id}.json")
+                    .Delete();
                 logger.LogDebug("Removed download {Download}", download.FileName);
             }
         }
-        
+
         // On successes, run the continuation action
         if (e == ProgressState.Success)
         {
             if (download.ContextAction is CivitPostDownloadContextAction action)
             {
                 logger.LogDebug("Running context action for {Download}", download.FileName);
-                action.Invoke(settingsManager);
+                action.Invoke(settingsManager, modelIndexService);
             }
         }
     }
-    
+
     private void LoadInProgressDownloads(DirectoryPath downloadsDir)
     {
         logger.LogDebug("Indexing in-progress downloads at {DownloadsDir}...", downloadsDir);
-        
+
         var jsonFiles = downloadsDir.Info.EnumerateFiles("*.json", SearchOption.TopDirectoryOnly);
-            
+
         // Add to dictionary, the file name is the guid
         foreach (var file in jsonFiles)
         {
@@ -147,10 +158,10 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
             try
             {
                 var fileStream = file.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
-                
+
                 // Deserialize json and add to dictionary
                 var download = JsonSerializer.Deserialize<TrackedDownload>(fileStream)!;
-                
+
                 // If the download is marked as working, pause it
                 if (download.ProgressState == ProgressState.Working)
                 {
@@ -159,23 +170,30 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
                 else if (download.ProgressState != ProgressState.Inactive)
                 {
                     // If the download is not inactive, skip it
-                    logger.LogWarning("Skipping download {Download} with state {State}", download.FileName, download.ProgressState);
+                    logger.LogWarning(
+                        "Skipping download {Download} with state {State}",
+                        download.FileName,
+                        download.ProgressState
+                    );
                     fileStream.Dispose();
-                    
+
                     // Delete json file
-                    logger.LogDebug("Deleting json file for {Download} with unsupported state", download.FileName);
+                    logger.LogDebug(
+                        "Deleting json file for {Download} with unsupported state",
+                        download.FileName
+                    );
                     file.Delete();
                     continue;
                 }
-                
+
                 download.SetDownloadService(downloadService);
-                
+
                 downloads.TryAdd(download.Id, (download, fileStream));
-                
+
                 AttachHandlers(download);
-                
+
                 OnDownloadAdded(download);
-                
+
                 logger.LogDebug("Loaded in-progress download {Download}", download.FileName);
             }
             catch (Exception e)
@@ -197,10 +215,10 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
         };
 
         AddDownload(download);
-        
+
         return download;
     }
-    
+
     /// <summary>
     /// Generate a new temp file name that is unique in the given directory.
     /// In format of "Unconfirmed {id}.smdownload"
@@ -213,14 +231,14 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
 
         for (var i = 0; i < 10; i++)
         {
-            if (tempFile is {Exists: false})
+            if (tempFile is { Exists: false })
             {
                 return tempFile.Name;
             }
             var id = Random.Shared.Next(1000000, 9999999);
             tempFile = parentDir.JoinFile($"Unconfirmed {id}.smdownload");
         }
-        
+
         throw new Exception("Failed to generate a unique temp file name.");
     }
 
@@ -241,7 +259,7 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
                 }
             }
         }
-        
+
         GC.SuppressFinalize(this);
     }
 }

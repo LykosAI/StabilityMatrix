@@ -462,7 +462,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
 
         var client = ClientManager.Client;
 
-        var (nodes, outputNodeNames) = BuildPrompt();
+        var (nodes, outputNodeNames) = BuildPrompt(overrides);
 
         // Connect preview image handler
         client.PreviewImageReceived += OnPreviewImageReceived;

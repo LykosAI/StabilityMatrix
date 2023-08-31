@@ -154,7 +154,7 @@ public class InvokeAI : BaseGitPackage
 
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
         venvRunner.WorkingDirectory = installLocation;
-        await venvRunner.Setup().ConfigureAwait(false);
+        await venvRunner.Setup(true).ConfigureAwait(false);
 
         venvRunner.EnvironmentVariables = GetEnvVars(installLocation);
         progress?.Report(new ProgressReport(-1f, "Installing Package", isIndeterminate: true));

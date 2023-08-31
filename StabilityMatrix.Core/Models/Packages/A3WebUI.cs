@@ -4,7 +4,6 @@ using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
-using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -153,10 +152,7 @@ public class A3WebUI : BaseGitPackage
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
         venvRunner.WorkingDirectory = installLocation;
-        if (!venvRunner.Exists())
-        {
-            await venvRunner.Setup().ConfigureAwait(false);
-        }
+        await venvRunner.Setup(true).ConfigureAwait(false);
 
         switch (torchVersion)
         {

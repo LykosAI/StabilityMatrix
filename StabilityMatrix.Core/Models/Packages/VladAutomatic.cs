@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Helper;
@@ -160,7 +158,7 @@ public class VladAutomatic : BaseGitPackage
         venvRunner.WorkingDirectory = installLocation;
         venvRunner.EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables;
 
-        await venvRunner.Setup().ConfigureAwait(false);
+        await venvRunner.Setup(true).ConfigureAwait(false);
 
         switch (torchVersion)
         {

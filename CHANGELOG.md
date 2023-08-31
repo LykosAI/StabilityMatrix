@@ -5,12 +5,18 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.3.4
+### Changed
+- Revamped Package Installer dialog with some more advanced options
+
 ## v2.3.3
 ### Fixed
 - Fixed GPU recognition for Nvidia Tesla GPUs
-- Fix checkpoint file index extension identification with some path names
+- Fixed checkpoint file index extension identification with some path names
 - Fixed issue where config file may be overwritten during Automatic1111 package updates
 - Fixed "Directory Not Found" error on startup when previously selected Data directory does not exist
+- Fixed [#83](https://github.com/LykosAI/StabilityMatrix/issues/83) - Display of packages with long names in the Package Manager
+- Fixed [#64](https://github.com/LykosAI/StabilityMatrix/issues/64) - Package install error if venv already exists
 
 ## v2.3.2
 ### Added

@@ -97,7 +97,7 @@ public class Fooocus : BaseGitPackage
         TorchVersion torchVersion, IProgress<ProgressReport>? progress = null)
     {
         await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
-        var venvRunner = await SetupVenv(installLocation).ConfigureAwait(false);
+        var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
 

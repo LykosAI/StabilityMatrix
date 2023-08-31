@@ -110,10 +110,7 @@ public class ComfyUI : BaseGitPackage
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
         venvRunner.WorkingDirectory = installLocation;
-        if (!venvRunner.Exists())
-        {
-            await venvRunner.Setup().ConfigureAwait(false);
-        }
+        await venvRunner.Setup(true).ConfigureAwait(false);
 
         // Install torch / xformers based on gpu info
         switch (torchVersion)

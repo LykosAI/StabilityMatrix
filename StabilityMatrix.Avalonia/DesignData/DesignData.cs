@@ -65,7 +65,7 @@ public static class DesignData
                     new()
                     {
                         Id = Guid.NewGuid(),
-                        DisplayName = "Dank Diffusion",
+                        DisplayName = "Comfy Diffusion WebUI Dev Branch Long Name",
                         PackageName = "ComfyUI",
                         Version = new InstalledPackageVersion
                         {
@@ -95,6 +95,7 @@ public static class DesignData
             .AddSingleton<IDownloadService, MockDownloadService>()
             .AddSingleton<IHttpClientFactory, MockHttpClientFactory>()
             .AddSingleton<IDiscordRichPresenceService, MockDiscordRichPresenceService>()
+            .AddSingleton<IModelIndexService, MockModelIndexService>()
             .AddSingleton<ITrackedDownloadService, MockTrackedDownloadService>();
 
         // Placeholder services that nobody should need during design time
@@ -303,7 +304,7 @@ public static class DesignData
             vm.SetPackages(settings.Settings.InstalledPackages);
             vm.SetUnknownPackages(new InstalledPackage[]
             {
-                UnknownInstalledPackage.FromDirectoryName("sd-unknown"),
+                UnknownInstalledPackage.FromDirectoryName("sd-unknown-with-long-name"),
             });
             
             vm.PackageCards[0].IsUpdateAvailable = true;

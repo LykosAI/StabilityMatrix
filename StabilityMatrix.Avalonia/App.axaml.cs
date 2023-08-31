@@ -240,6 +240,7 @@ public sealed class App : Application
             .AddSingleton<LaunchPageViewModel>()
             .AddSingleton<ProgressManagerViewModel>()
             .AddSingleton<InferenceViewModel>();
+            .AddSingleton<ProgressManagerViewModel>();
 
         services.AddSingleton<MainWindowViewModel>(
             provider =>

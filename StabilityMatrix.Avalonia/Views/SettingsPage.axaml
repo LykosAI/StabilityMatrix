@@ -147,8 +147,7 @@
                     <!-- Pixel grid  -->
                     <ui:SettingsExpanderItem 
                         Content="Show pixel grid at high zoom levels"
-                        IconSource="ViewAll"
-                        IsEnabled="{Binding IsPromptCompletionEnabled}">
+                        IconSource="ViewAll">
                         <ui:SettingsExpanderItem.Footer>
                             <CheckBox Margin="8"
                                       IsChecked="{Binding IsImageViewerPixelGridEnabled}"/>

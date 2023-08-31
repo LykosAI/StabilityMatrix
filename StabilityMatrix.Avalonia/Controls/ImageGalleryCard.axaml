@@ -35,7 +35,7 @@
                             <Grid.Styles>
                                 <Style Selector="controls|AdvancedImageBox">
                                     <!-- ReSharper disable once Xaml.BindingWithContextNotResolved -->
-                                    <Setter Property="IsPixelGridEnabled" Value="{ReflectionBinding ElementName=MainGrid, Path=DataContext.IsPixelGridEnabled}" />
+                                    <Setter Property="IsPixelGridEnabled" Value="{ReflectionBinding ElementName=MainGrid, Path=DataContext.IsPixelGridEnabled, FallbackValue=True}" />
                                 </Style>
                             </Grid.Styles>
                             <controls:FrameCarousel 

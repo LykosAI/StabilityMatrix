@@ -10,11 +10,13 @@ namespace StabilityMatrix.Core.Models.Packages;
 
 public class Fooocus : BaseGitPackage
 {
-    public Fooocus(IGithubApiCache githubApi, ISettingsManager settingsManager,
-        IDownloadService downloadService, IPrerequisiteHelper prerequisiteHelper) : base(githubApi,
-        settingsManager, downloadService, prerequisiteHelper)
-    {
-    }
+    public Fooocus(
+        IGithubApiCache githubApi,
+        ISettingsManager settingsManager,
+        IDownloadService downloadService,
+        IPrerequisiteHelper prerequisiteHelper
+    )
+        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
 
     public override string Name => "Fooocus";
     public override string DisplayName { get; set; } = "Fooocus";
@@ -28,76 +30,76 @@ public class Fooocus : BaseGitPackage
     public override string LaunchCommand => "launch.py";
 
     public override Uri PreviewImageUri =>
-        new("https://user-images.githubusercontent.com/19834515/261830306-f79c5981-cf80-4ee3-b06b-3fef3f8bfbc7.png");
+        new(
+            "https://user-images.githubusercontent.com/19834515/261830306-f79c5981-cf80-4ee3-b06b-3fef3f8bfbc7.png"
+        );
 
-    public override List<LaunchOptionDefinition> LaunchOptions => new()
-    {
-        new LaunchOptionDefinition
+    public override List<LaunchOptionDefinition> LaunchOptions =>
+        new()
         {
-            Name = "Port",
-            Type = LaunchOptionType.String,
-            Description = "Sets the listen port",
-            Options = {"--port"}
-        },
-        new LaunchOptionDefinition
-        {
-            Name = "Share",
-            Type = LaunchOptionType.Bool,
-            Description = "Set whether to share on Gradio",
-            Options = {"--share"}
-        },
-        new LaunchOptionDefinition
-        {
-            Name = "Listen",
-            Type = LaunchOptionType.String,
-            Description = "Set the listen interface",
-            Options = {"--listen"}
-        },
-        LaunchOptionDefinition.Extras
-    };
-    
-    public override SharedFolderMethod RecommendedSharedFolderMethod =>
-        SharedFolderMethod.Symlink;
+            new LaunchOptionDefinition
+            {
+                Name = "Port",
+                Type = LaunchOptionType.String,
+                Description = "Sets the listen port",
+                Options = { "--port" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Share",
+                Type = LaunchOptionType.Bool,
+                Description = "Set whether to share on Gradio",
+                Options = { "--share" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Listen",
+                Type = LaunchOptionType.String,
+                Description = "Set the listen interface",
+                Options = { "--listen" }
+            },
+            LaunchOptionDefinition.Extras
+        };
 
-    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods => new[]
-    {
-        SharedFolderMethod.Symlink,
-        SharedFolderMethod.None
-    };
+    public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
-    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders => new()
-    {
-        [SharedFolderType.StableDiffusion] = new[] {"models/checkpoints"},
-        [SharedFolderType.Diffusers] = new[] {"models/diffusers"},
-        [SharedFolderType.Lora] = new[] {"models/loras"},
-        [SharedFolderType.CLIP] = new[] {"models/clip"},
-        [SharedFolderType.TextualInversion] = new[] {"models/embeddings"},
-        [SharedFolderType.VAE] = new[] {"models/vae"},
-        [SharedFolderType.ApproxVAE] = new[] {"models/vae_approx"},
-        [SharedFolderType.ControlNet] = new[] {"models/controlnet"},
-        [SharedFolderType.GLIGEN] = new[] {"models/gligen"},
-        [SharedFolderType.ESRGAN] = new[] {"models/upscale_models"},
-        [SharedFolderType.Hypernetwork] = new[] {"models/hypernetworks"}
-    };
-    
-    public override IEnumerable<TorchVersion> AvailableTorchVersions => new[]
-    {
-        TorchVersion.Cpu,
-        TorchVersion.Cuda,
-        TorchVersion.Rocm
-    };
-    
+    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
+        new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
+
+    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
+        new()
+        {
+            [SharedFolderType.StableDiffusion] = new[] { "models/checkpoints" },
+            [SharedFolderType.Diffusers] = new[] { "models/diffusers" },
+            [SharedFolderType.Lora] = new[] { "models/loras" },
+            [SharedFolderType.CLIP] = new[] { "models/clip" },
+            [SharedFolderType.TextualInversion] = new[] { "models/embeddings" },
+            [SharedFolderType.VAE] = new[] { "models/vae" },
+            [SharedFolderType.ApproxVAE] = new[] { "models/vae_approx" },
+            [SharedFolderType.ControlNet] = new[] { "models/controlnet" },
+            [SharedFolderType.GLIGEN] = new[] { "models/gligen" },
+            [SharedFolderType.ESRGAN] = new[] { "models/upscale_models" },
+            [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" }
+        };
+
+    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
+        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
+
     public override async Task<string> GetLatestVersion()
     {
         var release = await GetLatestRelease().ConfigureAwait(false);
         return release.TagName!;
     }
 
-    public override async Task InstallPackage(string installLocation,
-        TorchVersion torchVersion, IProgress<ProgressReport>? progress = null)
+    public override async Task InstallPackage(
+        string installLocation,
+        TorchVersion torchVersion,
+        IProgress<ProgressReport>? progress = null
+    )
     {
         await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
-        var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
+        var venvRunner = await SetupVenv(installLocation, forceRecreate: true)
+            .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
 
@@ -120,22 +122,30 @@ public class Fooocus : BaseGitPackage
         await venvRunner
             .PipInstall(
                 $"torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/{torchVersionStr}",
-                OnConsoleOutput).ConfigureAwait(false);
+                OnConsoleOutput
+            )
+            .ConfigureAwait(false);
 
-        progress?.Report(new ProgressReport(-1f, "Installing requirements...",
-            isIndeterminate: true));
-        await venvRunner.PipInstall("-r requirements_versions.txt", OnConsoleOutput)
+        progress?.Report(
+            new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true)
+        );
+        await venvRunner
+            .PipInstall("-r requirements_versions.txt", OnConsoleOutput)
             .ConfigureAwait(false);
     }
 
-    public override async Task RunPackage(string installedPackagePath, string command, string arguments)
+    public override async Task RunPackage(
+        string installedPackagePath,
+        string command,
+        string arguments
+    )
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
             OnConsoleOutput(s);
-            
+
             if (s.Text.Contains("Use the app with", StringComparison.OrdinalIgnoreCase))
             {
                 var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
@@ -156,9 +166,6 @@ public class Fooocus : BaseGitPackage
 
         var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
-        VenvRunner?.RunDetached(
-            args.TrimEnd(), 
-            HandleConsoleOutput, 
-            HandleExit);
+        VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
     }
 }

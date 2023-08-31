@@ -20,11 +20,7 @@ public class InstallPackageStep : IPackageStep
     {
         package.ConsoleOutput += (sender, output) =>
         {
-            progress?.Report(new ProgressReport
-            {
-                IsIndeterminate = true,
-                Message = output.Text
-            });
+            progress?.Report(new ProgressReport { IsIndeterminate = true, Message = output.Text });
         };
         await package.InstallPackage(installPath, torchVersion, progress).ConfigureAwait(false);
     }

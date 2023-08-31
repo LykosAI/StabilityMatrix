@@ -19,15 +19,16 @@ public class SetupPrerequisitesStep : IPackageStep
     {
         // git, vcredist, etc...
         await prerequisiteHelper.InstallAllIfNecessary(progress).ConfigureAwait(false);
-        
+
         // python stuff
         if (!PyRunner.PipInstalled || !PyRunner.VenvInstalled)
         {
-            progress?.Report(new ProgressReport(-1f, "Installing Python prerequisites...",
-                isIndeterminate: true));
-            
+            progress?.Report(
+                new ProgressReport(-1f, "Installing Python prerequisites...", isIndeterminate: true)
+            );
+
             await pyRunner.Initialize().ConfigureAwait(false);
-                
+
             if (!PyRunner.PipInstalled)
             {
                 await pyRunner.SetupPip().ConfigureAwait(false);

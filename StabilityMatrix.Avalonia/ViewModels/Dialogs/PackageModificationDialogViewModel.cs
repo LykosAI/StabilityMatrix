@@ -16,14 +16,17 @@ public class PackageModificationDialogViewModel : ContentDialogProgressViewModel
     private readonly INotificationService notificationService;
     private readonly IEnumerable<IPackageStep> steps;
 
-    public PackageModificationDialogViewModel(IPackageModificationRunner packageModificationRunner,
-        INotificationService notificationService, IEnumerable<IPackageStep> steps)
+    public PackageModificationDialogViewModel(
+        IPackageModificationRunner packageModificationRunner,
+        INotificationService notificationService,
+        IEnumerable<IPackageStep> steps
+    )
     {
         this.packageModificationRunner = packageModificationRunner;
         this.notificationService = notificationService;
         this.steps = steps;
     }
-    
+
     public ConsoleViewModel Console { get; } = new();
 
     public override async Task OnLoadedAsync()
@@ -34,9 +37,12 @@ public class PackageModificationDialogViewModel : ContentDialogProgressViewModel
             packageModificationRunner.ProgressChanged += PackageModificationRunnerOnProgressChanged;
             await packageModificationRunner.ExecuteSteps(steps.ToList());
 
-            notificationService.Show("Package Install Completed",
-                "Package install completed successfully.", NotificationType.Success);
-            
+            notificationService.Show(
+                "Package Install Completed",
+                "Package install completed successfully.",
+                NotificationType.Success
+            );
+
             OnCloseButtonClick();
         }
     }
@@ -46,14 +52,14 @@ public class PackageModificationDialogViewModel : ContentDialogProgressViewModel
         Text = string.IsNullOrWhiteSpace(e.Title)
             ? packageModificationRunner.CurrentStep?.ProgressTitle
             : e.Title;
-        
+
         Value = e.Percentage;
         Description = e.Message;
         IsIndeterminate = e.IsIndeterminate;
 
-        if (string.IsNullOrWhiteSpace(e.Message) || e.Message.Equals("Downloading...")) 
+        if (string.IsNullOrWhiteSpace(e.Message) || e.Message.Equals("Downloading..."))
             return;
-        
+
         Console.PostLine(e.Message);
         EventManager.Instance.OnScrollToBottomRequested();
     }

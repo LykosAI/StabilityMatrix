@@ -24,18 +24,29 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
     private readonly IHttpClientFactory httpClientFactory;
     private readonly IUpdateHelper updateHelper;
 
-    [ObservableProperty] private bool isUpdateAvailable;
-    [ObservableProperty] private UpdateInfo? updateInfo;
-    
-    [ObservableProperty] private string? releaseNotes;
-    [ObservableProperty] private string? updateText;
-    [ObservableProperty] private int progressValue;
-    [ObservableProperty] private bool showProgressBar;
-    
+    [ObservableProperty]
+    private bool isUpdateAvailable;
+
+    [ObservableProperty]
+    private UpdateInfo? updateInfo;
+
+    [ObservableProperty]
+    private string? releaseNotes;
+
+    [ObservableProperty]
+    private string? updateText;
+
+    [ObservableProperty]
+    private int progressValue;
+
+    [ObservableProperty]
+    private bool showProgressBar;
+
     public UpdateViewModel(
         ISettingsManager settingsManager,
-        IHttpClientFactory httpClientFactory, 
-        IUpdateHelper updateHelper)
+        IHttpClientFactory httpClientFactory,
+        IUpdateHelper updateHelper
+    )
     {
         this.settingsManager = settingsManager;
         this.httpClientFactory = httpClientFactory;
@@ -48,19 +59,21 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         };
         updateHelper.StartCheckingForUpdates().SafeFireAndForget();
     }
-    
+
     public override async Task OnLoadedAsync()
     {
-        if (UpdateInfo is null) return;
-        
-        UpdateText = $"Stability Matrix v{UpdateInfo.Version} is now available! You currently have v{Compat.AppVersion}. Would you like to update now?";
-        
+        if (UpdateInfo is null)
+            return;
+
+        UpdateText =
+            $"Stability Matrix v{UpdateInfo.Version} is now available! You currently have v{Compat.AppVersion}. Would you like to update now?";
+
         var client = httpClientFactory.CreateClient();
         var response = await client.GetAsync(UpdateInfo.ChangelogUrl);
         if (response.IsSuccessStatusCode)
         {
             ReleaseNotes = await response.Content.ReadAsStringAsync();
-            
+
             // Formatting for new changelog format
             // https://keepachangelog.com/en/1.1.0/
             if (UpdateInfo.ChangelogUrl.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
@@ -87,20 +100,23 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         {
             return;
         }
-        
+
         ShowProgressBar = true;
         UpdateText = $"Downloading update v{UpdateInfo.Version}...";
-        await updateHelper.DownloadUpdate(UpdateInfo, new Progress<ProgressReport>(report =>
-        {
-            ProgressValue = Convert.ToInt32(report.Percentage);
-        }));
-        
+        await updateHelper.DownloadUpdate(
+            UpdateInfo,
+            new Progress<ProgressReport>(report =>
+            {
+                ProgressValue = Convert.ToInt32(report.Percentage);
+            })
+        );
+
         // On unix, we need to set the executable bit
         if (Compat.IsUnix)
         {
-            File.SetUnixFileMode(UpdateHelper.ExecutablePath, (UnixFileMode) 0x755);
+            File.SetUnixFileMode(UpdateHelper.ExecutablePath, (UnixFileMode)0x755);
         }
-        
+
         UpdateText = "Update complete. Restarting Stability Matrix in 3 seconds...";
         await Task.Delay(1000);
         UpdateText = "Update complete. Restarting Stability Matrix in 2 seconds...";

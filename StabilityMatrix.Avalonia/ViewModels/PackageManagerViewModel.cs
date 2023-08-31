@@ -84,11 +84,14 @@ public partial class PackageManagerViewModel : PageViewModelBase
             .Or(unknown)
             .DeferUntilLoaded()
             .Bind(Packages)
-            .Transform(p => dialogFactory.Get<PackageCardViewModel>(vm =>
-            {
-                vm.Package = p;
-                vm.OnLoadedAsync().SafeFireAndForget();
-            }))
+            .Transform(
+                p =>
+                    dialogFactory.Get<PackageCardViewModel>(vm =>
+                    {
+                        vm.Package = p;
+                        vm.OnLoadedAsync().SafeFireAndForget();
+                    })
+            )
             .Bind(PackageCards)
             .Subscribe();
     }
@@ -107,8 +110,11 @@ public partial class PackageManagerViewModel : PageViewModelBase
     {
         if (Design.IsDesignMode)
             return;
-        
-        installedPackages.EditDiff(settingsManager.Settings.InstalledPackages, InstalledPackage.Comparer);
+
+        installedPackages.EditDiff(
+            settingsManager.Settings.InstalledPackages,
+            InstalledPackage.Comparer
+        );
 
         var currentUnknown = await Task.Run(IndexUnknownPackages);
         unknownInstalledPackages.Edit(s => s.Load(currentUnknown));
@@ -135,8 +141,11 @@ public partial class PackageManagerViewModel : PageViewModelBase
         if (result == ContentDialogResult.Primary)
         {
             var steps = viewModel.Steps;
-            var packageModificationDialogViewModel =
-                new PackageModificationDialogViewModel(packageModificationRunner, notificationService, steps);
+            var packageModificationDialogViewModel = new PackageModificationDialogViewModel(
+                packageModificationRunner,
+                notificationService,
+                steps
+            );
 
             dialog = new BetterContentDialog
             {
@@ -146,7 +155,10 @@ public partial class PackageManagerViewModel : PageViewModelBase
                 IsPrimaryButtonEnabled = false,
                 IsSecondaryButtonEnabled = false,
                 IsFooterVisible = false,
-                Content = new PackageModificationDialog {DataContext = packageModificationDialogViewModel}
+                Content = new PackageModificationDialog
+                {
+                    DataContext = packageModificationDialogViewModel
+                }
             };
 
             await dialog.ShowAsync();
@@ -156,22 +168,24 @@ public partial class PackageManagerViewModel : PageViewModelBase
     }
 
     private IEnumerable<UnknownInstalledPackage> IndexUnknownPackages()
-    {         
+    {
         var packageDir = new DirectoryPath(settingsManager.LibraryDir).JoinDir("Packages");
 
         if (!packageDir.Exists)
         {
             yield break;
         }
-        
+
         var currentPackages = settingsManager.Settings.InstalledPackages.ToImmutableArray();
-        
-        foreach (var subDir in packageDir.Info
-                     .EnumerateDirectories()
-                     .Select(info => new DirectoryPath(info)))
+
+        foreach (
+            var subDir in packageDir.Info
+                .EnumerateDirectories()
+                .Select(info => new DirectoryPath(info))
+        )
         {
             var expectedLibraryPath = $"Packages{Path.DirectorySeparatorChar}{subDir.Name}";
-            
+
             // Skip if the package is already installed
             if (currentPackages.Any(p => p.LibraryPath == expectedLibraryPath))
             {

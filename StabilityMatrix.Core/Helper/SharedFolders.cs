@@ -20,7 +20,7 @@ public class SharedFolders : ISharedFolders
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
     }
-    
+
     // Platform redirect for junctions / symlinks
     private static void CreateLinkOrJunction(string junctionDir, string targetDir, bool overwrite)
     {
@@ -36,8 +36,11 @@ public class SharedFolders : ISharedFolders
         }
     }
 
-    public static void SetupLinks(Dictionary<SharedFolderType, IReadOnlyList<string>> definitions, 
-        DirectoryPath modelsDirectory, DirectoryPath installDirectory)
+    public static void SetupLinks(
+        Dictionary<SharedFolderType, IReadOnlyList<string>> definitions,
+        DirectoryPath modelsDirectory,
+        DirectoryPath installDirectory
+    )
     {
         foreach (var (folderType, relativePaths) in definitions)
         {
@@ -63,7 +66,9 @@ public class SharedFolders : ISharedFolders
                         // Skip name collisions
                         if (File.Exists(sourceFile))
                         {
-                            Logger.Warn($"Skipping file {file.FullName} because it already exists in {sourceDir}");
+                            Logger.Warn(
+                                $"Skipping file {file.FullName} because it already exists in {sourceDir}"
+                            );
                             continue;
                         }
                         destinationFile.Info.MoveTo(sourceFile);
@@ -81,19 +86,25 @@ public class SharedFolders : ISharedFolders
     {
         var modelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
         var sharedFolders = basePackage.SharedFolders;
-        if (sharedFolders == null) return;
+        if (sharedFolders == null)
+            return;
         SetupLinks(sharedFolders, modelsDirectory, installDirectory);
     }
-    
+
     /// <summary>
-    /// Deletes junction links and remakes them. Unlike SetupLinksForPackage, 
+    /// Deletes junction links and remakes them. Unlike SetupLinksForPackage,
     /// this will not copy files from the destination to the source.
     /// </summary>
-    public static async Task UpdateLinksForPackage(BasePackage basePackage, DirectoryPath modelsDirectory, DirectoryPath installDirectory)
+    public static async Task UpdateLinksForPackage(
+        BasePackage basePackage,
+        DirectoryPath modelsDirectory,
+        DirectoryPath installDirectory
+    )
     {
         var sharedFolders = basePackage.SharedFolders;
-        if (sharedFolders is null) return;
-        
+        if (sharedFolders is null)
+            return;
+
         foreach (var (folderType, relativePaths) in sharedFolders)
         {
             foreach (var relativePath in relativePaths)
@@ -117,7 +128,8 @@ public class SharedFolders : ISharedFolders
                         if (destinationDir.Info.LinkTarget == sourceDir)
                         {
                             Logger.Info(
-                                $"Skipped updating matching folder link ({destinationDir} -> ({sourceDir})");
+                                $"Skipped updating matching folder link ({destinationDir} -> ({sourceDir})"
+                            );
                             return;
                         }
 
@@ -131,8 +143,12 @@ public class SharedFolders : ISharedFolders
                         if (destinationDir.Info.EnumerateFileSystemInfos().Any())
                         {
                             Logger.Info($"Moving files from {destinationDir} to {sourceDir}");
-                            await FileTransfers.MoveAllFilesAndDirectories(
-                                    destinationDir, sourceDir, overwriteIfHashMatches: true)
+                            await FileTransfers
+                                .MoveAllFilesAndDirectories(
+                                    destinationDir,
+                                    sourceDir,
+                                    overwriteIfHashMatches: true
+                                )
                                 .ConfigureAwait(false);
                         }
 
@@ -154,15 +170,16 @@ public class SharedFolders : ISharedFolders
         {
             return;
         }
-        
+
         foreach (var (_, relativePaths) in sharedFolders)
         {
             foreach (var relativePath in relativePaths)
             {
                 var destination = Path.GetFullPath(Path.Combine(installPath, relativePath));
                 // Delete the destination folder if it exists
-                if (!Directory.Exists(destination)) continue;
-            
+                if (!Directory.Exists(destination))
+                    continue;
+
                 Logger.Info($"Deleting junction target {destination}");
                 Directory.Delete(destination, false);
             }
@@ -174,22 +191,32 @@ public class SharedFolders : ISharedFolders
         var packages = settingsManager.Settings.InstalledPackages;
         foreach (var package in packages)
         {
-            if (package.PackageName == null) continue;
+            if (package.PackageName == null)
+                continue;
             var basePackage = packageFactory[package.PackageName];
-            if (basePackage == null) continue;
-            if (package.LibraryPath == null) continue;
- 
+            if (basePackage == null)
+                continue;
+            if (package.LibraryPath == null)
+                continue;
+
             try
             {
-                var sharedFolderMethod = package.PreferredSharedFolderMethod ??
-                                         basePackage.RecommendedSharedFolderMethod;
-                basePackage.RemoveModelFolderLinks(package.FullPath, sharedFolderMethod)
-                    .GetAwaiter().GetResult();
+                var sharedFolderMethod =
+                    package.PreferredSharedFolderMethod
+                    ?? basePackage.RecommendedSharedFolderMethod;
+                basePackage
+                    .RemoveModelFolderLinks(package.FullPath, sharedFolderMethod)
+                    .GetAwaiter()
+                    .GetResult();
             }
             catch (Exception e)
             {
-                Logger.Warn("Failed to remove links for package {Package} " +
-                            "({DisplayName}): {Message}", package.PackageName, package.DisplayName, e.Message);
+                Logger.Warn(
+                    "Failed to remove links for package {Package} " + "({DisplayName}): {Message}",
+                    package.PackageName,
+                    package.DisplayName,
+                    e.Message
+                );
             }
         }
     }
@@ -197,8 +224,9 @@ public class SharedFolders : ISharedFolders
     public void SetupSharedModelFolders()
     {
         var modelsDir = settingsManager.ModelsDirectory;
-        if (string.IsNullOrWhiteSpace(modelsDir)) return;
-        
+        if (string.IsNullOrWhiteSpace(modelsDir))
+            return;
+
         Directory.CreateDirectory(modelsDir);
         var allSharedFolderTypes = Enum.GetValues<SharedFolderType>();
         foreach (var sharedFolder in allSharedFolderTypes)

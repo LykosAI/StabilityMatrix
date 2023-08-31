@@ -16,6 +16,7 @@
                         Width="1100"
                         Height="750"
                         Title="Stability Matrix"
+                        FontFamily="San Francisco, Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif"
                         x:Class="StabilityMatrix.Avalonia.Views.MainWindow">
     
     <Grid RowDefinitions="Auto,Auto,*">

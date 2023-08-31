@@ -23,7 +23,7 @@ public interface ISettingsManager
     /// Will fire instantly if it is already set.
     /// </summary>
     void RegisterOnLibraryDirSet(Action<string> handler);
-    
+
     /// <inheritdoc />
     SettingsTransaction BeginTransaction();
 
@@ -35,14 +35,17 @@ public interface ISettingsManager
 
     /// <inheritdoc />
     void RelayPropertyFor<T, TValue>(
-        T source, 
+        T source,
         Expression<Func<T, TValue>> sourceProperty,
-        Expression<Func<Settings, TValue>> settingsProperty) where T : INotifyPropertyChanged;
+        Expression<Func<Settings, TValue>> settingsProperty
+    )
+        where T : INotifyPropertyChanged;
 
     /// <inheritdoc />
     void RegisterPropertyChangedHandler<T>(
         Expression<Func<Settings, T>> settingsProperty,
-        Action<T> onPropertyChanged);
+        Action<T> onPropertyChanged
+    );
 
     /// <summary>
     /// Attempts to locate and set the library path

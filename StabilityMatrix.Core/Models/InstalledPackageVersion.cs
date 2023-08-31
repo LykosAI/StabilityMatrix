@@ -12,9 +12,12 @@ public class InstalledPackageVersion
     public bool IsReleaseMode => string.IsNullOrWhiteSpace(InstalledBranch);
 
     [JsonIgnore]
-    public string DisplayVersion => (IsReleaseMode
-        ? InstalledReleaseVersion
-        : string.IsNullOrWhiteSpace(InstalledCommitSha)
-            ? InstalledBranch
-            : $"{InstalledBranch}@{InstalledCommitSha[..7]}") ?? string.Empty;
+    public string DisplayVersion =>
+        (
+            IsReleaseMode
+                ? InstalledReleaseVersion
+                : string.IsNullOrWhiteSpace(InstalledCommitSha)
+                    ? InstalledBranch
+                    : $"{InstalledBranch}@{InstalledCommitSha[..7]}"
+        ) ?? string.Empty;
 }

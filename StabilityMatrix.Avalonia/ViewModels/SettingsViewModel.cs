@@ -43,7 +43,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 public partial class SettingsViewModel : PageViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
+
     private readonly INotificationService notificationService;
     private readonly ISettingsManager settingsManager;
     private readonly IPrerequisiteHelper prerequisiteHelper;
@@ -51,72 +51,74 @@ public partial class SettingsViewModel : PageViewModelBase
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly IModelIndexService modelIndexService;
-    
-    public SharedState SharedState { get; }
-    
-    public override string Title => "Settings";
-    public override IconSource IconSource => new SymbolIconSource {Symbol = Symbol.Settings, IsFilled = true};
-    
-    // ReSharper disable once MemberCanBeMadeStatic.Global
-    public string AppVersion => $"Version {Compat.AppVersion}" + 
-                                (Program.IsDebugBuild ? " (Debug)" : "");
-    
-    // Theme section
-    [ObservableProperty] private string? selectedTheme;
-    
-    public IReadOnlyList<string> AvailableThemes { get; } = new[]
-    {
-        "Light",
-        "Dark",
-        "System",
-    };
 
-    [ObservableProperty] private CultureInfo selectedLanguage;
+    public SharedState SharedState { get; }
+
+    public override string Title => "Settings";
+    public override IconSource IconSource =>
+        new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
+
+    // ReSharper disable once MemberCanBeMadeStatic.Global
+    public string AppVersion =>
+        $"Version {Compat.AppVersion}" + (Program.IsDebugBuild ? " (Debug)" : "");
+
+    // Theme section
+    [ObservableProperty]
+    private string? selectedTheme;
+
+    public IReadOnlyList<string> AvailableThemes { get; } = new[] { "Light", "Dark", "System", };
+
+    [ObservableProperty]
+    private CultureInfo selectedLanguage;
 
     // ReSharper disable once MemberCanBeMadeStatic.Global
     public IReadOnlyList<CultureInfo> AvailableLanguages => Cultures.SupportedCultures;
 
-    public IReadOnlyList<float> AnimationScaleOptions { get; } = new[]
-    {
-        0f,
-        0.25f,
-        0.5f,
-        0.75f,
-        1f,
-        1.25f,
-        1.5f,
-        1.75f,
-        2f,
-    };
-    
-    [ObservableProperty] private float selectedAnimationScale;
-    
+    public IReadOnlyList<float> AnimationScaleOptions { get; } =
+        new[] { 0f, 0.25f, 0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f, };
+
+    [ObservableProperty]
+    private float selectedAnimationScale;
+
     // Shared folder options
-    [ObservableProperty] private bool removeSymlinksOnShutdown;
-    
+    [ObservableProperty]
+    private bool removeSymlinksOnShutdown;
+
     // Integrations section
-    [ObservableProperty] private bool isDiscordRichPresenceEnabled;
-    
+    [ObservableProperty]
+    private bool isDiscordRichPresenceEnabled;
+
     // Debug section
-    [ObservableProperty] private string? debugPaths;
-    [ObservableProperty] private string? debugCompatInfo;
-    [ObservableProperty] private string? debugGpuInfo;
-    
+    [ObservableProperty]
+    private string? debugPaths;
+
+    [ObservableProperty]
+    private string? debugCompatInfo;
+
+    [ObservableProperty]
+    private string? debugGpuInfo;
+
     // Info section
     private const int VersionTapCountThreshold = 7;
-    [ObservableProperty, NotifyPropertyChangedFor(nameof(VersionFlyoutText))] private int versionTapCount;
-    [ObservableProperty] private bool isVersionTapTeachingTipOpen;
-    public string VersionFlyoutText => $"You are {VersionTapCountThreshold - VersionTapCount} clicks away from enabling Debug options.";
-    
+
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(VersionFlyoutText))]
+    private int versionTapCount;
+
+    [ObservableProperty]
+    private bool isVersionTapTeachingTipOpen;
+    public string VersionFlyoutText =>
+        $"You are {VersionTapCountThreshold - VersionTapCount} clicks away from enabling Debug options.";
+
     public SettingsViewModel(
-        INotificationService notificationService, 
+        INotificationService notificationService,
         ISettingsManager settingsManager,
         IPrerequisiteHelper prerequisiteHelper,
         IPyRunner pyRunner,
         ServiceManager<ViewModelBase> dialogFactory,
         SharedState sharedState,
-        ITrackedDownloadService trackedDownloadService, 
-        IModelIndexService modelIndexService)
+        ITrackedDownloadService trackedDownloadService,
+        IModelIndexService modelIndexService
+    )
     {
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
@@ -127,29 +129,32 @@ public partial class SettingsViewModel : PageViewModelBase
         this.modelIndexService = modelIndexService;
 
         SharedState = sharedState;
-        
+
         SelectedTheme = settingsManager.Settings.Theme ?? AvailableThemes[1];
         SelectedLanguage = Cultures.GetSupportedCultureOrDefault(settingsManager.Settings.Language);
         RemoveSymlinksOnShutdown = settingsManager.Settings.RemoveFolderLinksOnShutdown;
         SelectedAnimationScale = settingsManager.Settings.AnimationScale;
-        
-        settingsManager.RelayPropertyFor(this, 
-            vm => vm.SelectedTheme, 
-            settings => settings.Theme);
-        
-        settingsManager.RelayPropertyFor(this,
+
+        settingsManager.RelayPropertyFor(this, vm => vm.SelectedTheme, settings => settings.Theme);
+
+        settingsManager.RelayPropertyFor(
+            this,
             vm => vm.IsDiscordRichPresenceEnabled,
-            settings => settings.IsDiscordRichPresenceEnabled);
-        
-        settingsManager.RelayPropertyFor(this,
+            settings => settings.IsDiscordRichPresenceEnabled
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
             vm => vm.SelectedAnimationScale,
-            settings => settings.AnimationScale);
+            settings => settings.AnimationScale
+        );
     }
-    
+
     partial void OnSelectedThemeChanged(string? value)
     {
         // In case design / tests
-        if (Application.Current is null) return;
+        if (Application.Current is null)
+            return;
         // Change theme
         Application.Current.RequestedThemeVariant = value switch
         {
@@ -161,16 +166,16 @@ public partial class SettingsViewModel : PageViewModelBase
 
     partial void OnSelectedLanguageChanged(CultureInfo? oldValue, CultureInfo newValue)
     {
-        if (oldValue is null || newValue.Name == Cultures.Current.Name) return;
+        if (oldValue is null || newValue.Name == Cultures.Current.Name)
+            return;
         // Set locale
         if (AvailableLanguages.Contains(newValue))
         {
-            Logger.Info("Changing language from {Old} to {New}", 
-                oldValue, newValue);
+            Logger.Info("Changing language from {Old} to {New}", oldValue, newValue);
 
             Cultures.TrySetSupportedCulture(newValue);
             settingsManager.Transaction(s => s.Language = newValue.Name);
-            
+
             var dialog = new BetterContentDialog
             {
                 Title = Resources.Label_RelaunchRequired,
@@ -191,11 +196,14 @@ public partial class SettingsViewModel : PageViewModelBase
         }
         else
         {
-            Logger.Info("Requested invalid language change from {Old} to {New}", 
-                oldValue, newValue);
+            Logger.Info(
+                "Requested invalid language change from {Old} to {New}",
+                oldValue,
+                newValue
+            );
         }
     }
-    
+
     partial void OnRemoveSymlinksOnShutdownChanged(bool value)
     {
         settingsManager.Transaction(s => s.RemoveFolderLinksOnShutdown = value);
@@ -205,29 +213,30 @@ public partial class SettingsViewModel : PageViewModelBase
     {
         settingsManager.Transaction(s => s.InstalledModelHashes = new HashSet<string>());
         await Task.Run(() => settingsManager.IndexCheckpoints());
-        notificationService.Show("Checkpoint cache reset", "The checkpoint cache has been reset.",
-            NotificationType.Success);
+        notificationService.Show(
+            "Checkpoint cache reset",
+            "The checkpoint cache has been reset.",
+            NotificationType.Success
+        );
     }
 
     #region Package Environment
-    
+
     [RelayCommand]
     private async Task OpenEnvVarsDialog()
     {
         var viewModel = dialogFactory.Get<EnvVarsViewModel>();
-        
+
         // Load current settings
-        var current = settingsManager.Settings.EnvironmentVariables 
-                      ?? new Dictionary<string, string>();
+        var current =
+            settingsManager.Settings.EnvironmentVariables ?? new Dictionary<string, string>();
         viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>(
-            current.Select(kvp => new EnvVarKeyPair(kvp.Key, kvp.Value)));
-        
+            current.Select(kvp => new EnvVarKeyPair(kvp.Key, kvp.Value))
+        );
+
         var dialog = new BetterContentDialog
         {
-            Content = new EnvVarsDialog
-            {
-                DataContext = viewModel
-            },
+            Content = new EnvVarsDialog { DataContext = viewModel },
             PrimaryButtonText = "Save",
             IsPrimaryButtonEnabled = true,
             CloseButtonText = "Cancel",
@@ -275,7 +284,7 @@ public partial class SettingsViewModel : PageViewModelBase
         dialog.PrimaryButtonText = "Ok";
         await dialog.ShowAsync();
     }
-    
+
     #endregion
 
     #region System
@@ -288,27 +297,29 @@ public partial class SettingsViewModel : PageViewModelBase
     {
         if (!Compat.IsWindows)
         {
-            notificationService.Show(
-                "Not supported", "This feature is only supported on Windows.");
+            notificationService.Show("Not supported", "This feature is only supported on Windows.");
             return;
         }
-        
+
         await using var _ = new MinimumDelay(200, 300);
-        
+
         var shortcutDir = new DirectoryPath(
             Environment.GetFolderPath(Environment.SpecialFolder.StartMenu),
-            "Programs");
+            "Programs"
+        );
         var shortcutLink = shortcutDir.JoinFile("Stability Matrix.lnk");
 
         var appPath = Compat.AppCurrentPath;
         var iconPath = shortcutDir.JoinFile("Stability Matrix.ico");
         await Assets.AppIcon.ExtractTo(iconPath);
-        
-        WindowsShortcuts.CreateShortcut(
-            shortcutLink, appPath, iconPath, "Stability Matrix");
-        
-        notificationService.Show("Added to Start Menu",
-            "Stability Matrix has been added to the Start Menu.", NotificationType.Success);
+
+        WindowsShortcuts.CreateShortcut(shortcutLink, appPath, iconPath, "Stability Matrix");
+
+        notificationService.Show(
+            "Added to Start Menu",
+            "Stability Matrix has been added to the Start Menu.",
+            NotificationType.Success
+        );
     }
 
     /// <summary>
@@ -320,54 +331,62 @@ public partial class SettingsViewModel : PageViewModelBase
     {
         if (!Compat.IsWindows)
         {
-            notificationService.Show(
-                "Not supported", "This feature is only supported on Windows.");
+            notificationService.Show("Not supported", "This feature is only supported on Windows.");
             return;
         }
-        
+
         // Confirmation dialog
         var dialog = new BetterContentDialog
         {
-            Title = "This will create a shortcut for Stability Matrix in the Start Menu for all users",
+            Title =
+                "This will create a shortcut for Stability Matrix in the Start Menu for all users",
             Content = "You will be prompted for administrator privileges. Continue?",
             PrimaryButtonText = "Yes",
             CloseButtonText = "Cancel",
             DefaultButton = ContentDialogButton.Primary
         };
-        
+
         if (await dialog.ShowAsync() != ContentDialogResult.Primary)
         {
             return;
         }
-        
+
         await using var _ = new MinimumDelay(200, 300);
-        
+
         var shortcutDir = new DirectoryPath(
             Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu),
-            "Programs");
+            "Programs"
+        );
         var shortcutLink = shortcutDir.JoinFile("Stability Matrix.lnk");
-        
+
         var appPath = Compat.AppCurrentPath;
         var iconPath = shortcutDir.JoinFile("Stability Matrix.ico");
-        
+
         // We can't directly write to the targets, so extract to temporary directory first
         using var tempDir = new TempDirectoryPath();
-        
+
         await Assets.AppIcon.ExtractTo(tempDir.JoinFile("Stability Matrix.ico"));
         WindowsShortcuts.CreateShortcut(
-            tempDir.JoinFile("Stability Matrix.lnk"), appPath, iconPath, 
-            "Stability Matrix");
-        
+            tempDir.JoinFile("Stability Matrix.lnk"),
+            appPath,
+            iconPath,
+            "Stability Matrix"
+        );
+
         // Move to target
         try
         {
             var moveLinkResult = await WindowsElevated.MoveFiles(
                 (tempDir.JoinFile("Stability Matrix.lnk"), shortcutLink),
-                (tempDir.JoinFile("Stability Matrix.ico"), iconPath));
+                (tempDir.JoinFile("Stability Matrix.ico"), iconPath)
+            );
             if (moveLinkResult != 0)
             {
-                notificationService.ShowPersistent("Failed to create shortcut", $"Could not copy shortcut", 
-                    NotificationType.Error);
+                notificationService.ShowPersistent(
+                    "Failed to create shortcut",
+                    $"Could not copy shortcut",
+                    NotificationType.Error
+                );
             }
         }
         catch (Win32Exception e)
@@ -377,9 +396,12 @@ public partial class SettingsViewModel : PageViewModelBase
             notificationService.Show("Could not create shortcut", "", NotificationType.Warning);
             return;
         }
-        
-        notificationService.Show("Added to Start Menu", 
-            "Stability Matrix has been added to the Start Menu for all users.", NotificationType.Success);
+
+        notificationService.Show(
+            "Added to Start Menu",
+            "Stability Matrix has been added to the Start Menu for all users.",
+            NotificationType.Success
+        );
     }
 
     public async Task PickNewDataDirectory()
@@ -390,10 +412,7 @@ public partial class SettingsViewModel : PageViewModelBase
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
             IsFooterVisible = false,
-            Content = new SelectDataDirectoryDialog
-            {
-                DataContext = viewModel
-            }
+            Content = new SelectDataDirectoryDialog { DataContext = viewModel }
         };
 
         var result = await dialog.ShowAsync();
@@ -409,7 +428,7 @@ public partial class SettingsViewModel : PageViewModelBase
             {
                 settingsManager.SetLibraryPath(viewModel.DataDirectory);
             }
-            
+
             // Restart
             var restartDialog = new BetterContentDialog
             {
@@ -420,14 +439,14 @@ public partial class SettingsViewModel : PageViewModelBase
                 IsSecondaryButtonEnabled = false,
             };
             await restartDialog.ShowAsync();
-            
+
             Process.Start(Compat.AppCurrentPath);
             App.Shutdown();
         }
     }
 
     #endregion
-    
+
     #region Debug Section
     public void LoadDebugInfo()
     {
@@ -443,12 +462,12 @@ public partial class SettingsViewModel : PageViewModelBase
                       AppData Directory [SpecialFolder.ApplicationData]
                         "{appData}"
                       """;
-        
+
         // 1. Check portable mode
         var appDir = Compat.AppCurrentDir;
         var expectedPortableFile = Path.Combine(appDir, "Data", ".sm-portable");
         var isPortableMode = File.Exists(expectedPortableFile);
-        
+
         DebugCompatInfo = $"""
                             Platform: {Compat.Platform}
                             AppData: {Compat.AppData}
@@ -461,24 +480,27 @@ public partial class SettingsViewModel : PageViewModelBase
                             IsLibraryDirSet = {settingsManager.IsLibraryDirSet}
                             IsPortableMode = {settingsManager.IsPortableMode}
                             """;
-        
+
         // Get Gpu info
         var gpuInfo = "";
         foreach (var (i, gpu) in HardwareHelper.IterGpuInfo().Enumerate())
         {
-            gpuInfo += $"[{i+1}] {gpu}\n";
+            gpuInfo += $"[{i + 1}] {gpu}\n";
         }
         DebugGpuInfo = gpuInfo;
     }
-    
+
     // Debug buttons
     [RelayCommand]
     private void DebugNotification()
     {
-        notificationService.Show(new Notification(
-            title: "Test Notification",
-            message: "Here is some message",
-            type: NotificationType.Information));
+        notificationService.Show(
+            new Notification(
+                title: "Test Notification",
+                message: "Here is some message",
+                type: NotificationType.Information
+            )
+        );
     }
 
     [RelayCommand]
@@ -493,8 +515,7 @@ public partial class SettingsViewModel : PageViewModelBase
         };
 
         var result = await dialog.ShowAsync();
-        notificationService.Show(new Notification("Content dialog closed",
-            $"Result: {result}"));
+        notificationService.Show(new Notification("Content dialog closed", $"Result: {result}"));
     }
 
     [RelayCommand]
@@ -509,20 +530,14 @@ public partial class SettingsViewModel : PageViewModelBase
     {
         await modelIndexService.RefreshIndex();
     }
-    
+
     [RelayCommand]
     private async Task DebugTrackedDownload()
     {
         var textFields = new TextBoxField[]
         {
-            new()
-            {
-                Label = "Url",
-            },
-            new()
-            {
-                Label = "File path"
-            }
+            new() { Label = "Url", },
+            new() { Label = "File path" }
         };
 
         var dialog = DialogHelper.CreateTextEntryDialog("Add download", "", textFields);
@@ -542,10 +557,11 @@ public partial class SettingsViewModel : PageViewModelBase
     public void OnVersionClick()
     {
         // Ignore if already enabled
-        if (SharedState.IsDebugMode) return;
-        
+        if (SharedState.IsDebugMode)
+            return;
+
         VersionTapCount++;
-        
+
         switch (VersionTapCount)
         {
             // Reached required threshold
@@ -555,7 +571,9 @@ public partial class SettingsViewModel : PageViewModelBase
                 // Enable debug options
                 SharedState.IsDebugMode = true;
                 notificationService.Show(
-                    "Debug options enabled", "Warning: Improper use may corrupt application state or cause loss of data.");
+                    "Debug options enabled",
+                    "Warning: Improper use may corrupt application state or cause loss of data."
+                );
                 VersionTapCount = 0;
                 break;
             }
@@ -579,8 +597,11 @@ public partial class SettingsViewModel : PageViewModelBase
         }
         catch (Exception e)
         {
-            notificationService.Show("Failed to read licenses information", 
-                $"{e}", NotificationType.Error);
+            notificationService.Show(
+                "Failed to read licenses information",
+                $"{e}",
+                NotificationType.Error
+            );
         }
     }
 
@@ -588,15 +609,17 @@ public partial class SettingsViewModel : PageViewModelBase
     {
         // Read licenses.json
         using var reader = new StreamReader(Assets.LicensesJson.Open());
-        var licenses = JsonSerializer
-            .Deserialize<IReadOnlyList<LicenseInfo>>(reader.ReadToEnd()) ??
-                       throw new InvalidOperationException("Failed to read licenses.json");
-        
+        var licenses =
+            JsonSerializer.Deserialize<IReadOnlyList<LicenseInfo>>(reader.ReadToEnd())
+            ?? throw new InvalidOperationException("Failed to read licenses.json");
+
         // Generate markdown
         var builder = new StringBuilder();
         foreach (var license in licenses)
         {
-            builder.AppendLine($"## [{license.PackageName}]({license.PackageUrl}) by {string.Join(", ", license.Authors)}");
+            builder.AppendLine(
+                $"## [{license.PackageName}]({license.PackageUrl}) by {string.Join(", ", license.Authors)}"
+            );
             builder.AppendLine();
             builder.AppendLine(license.Description);
             builder.AppendLine();
@@ -608,5 +631,4 @@ public partial class SettingsViewModel : PageViewModelBase
     }
 
     #endregion
-
 }

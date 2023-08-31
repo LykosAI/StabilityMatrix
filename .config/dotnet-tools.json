@@ -13,6 +13,12 @@
       "commands": [
         "xstyler"
       ]
+    },
+    "csharpier": {
+      "version": "0.25.0",
+      "commands": [
+        "dotnet-csharpier"
+      ]
     }
   }
 }

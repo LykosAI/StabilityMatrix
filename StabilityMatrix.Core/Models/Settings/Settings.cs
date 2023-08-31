@@ -63,7 +63,7 @@ public class Settings
     /// <summary>
     /// Whether the Inference Image Viewer shows pixel grids at high zoom levels
     /// </summary>
-    public bool IsImageViewerPixelGridEnabled { get; set; }
+    public bool IsImageViewerPixelGridEnabled { get; set; } = true;
 
     public bool RemoveFolderLinksOnShutdown { get; set; }
 

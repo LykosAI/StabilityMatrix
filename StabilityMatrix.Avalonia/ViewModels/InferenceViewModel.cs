@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -31,10 +32,12 @@ public partial class InferenceViewModel : PageViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly INotificationService notificationService;
+
     // private readonly IRelayCommandFactory commandFactory;
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> vmFactory;
     private readonly IApiFactory apiFactory;
+    private readonly IModelIndexService modelIndexService;
 
     public override string Title => "Inference";
     public override IconSource IconSource =>
@@ -55,28 +58,30 @@ public partial class InferenceViewModel : PageViewModelBase
 
     [ObservableProperty]
     private InferenceTabViewModelBase? selectedTab;
-    
+
     [ObservableProperty]
     private int selectedTabIndex;
 
     [ObservableProperty]
     private PackagePair? runningPackage;
-    
+
     public InferenceViewModel(
         ServiceManager<ViewModelBase> vmFactory,
         IApiFactory apiFactory,
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
-        ISettingsManager settingsManager
+        ISettingsManager settingsManager,
+        IModelIndexService modelIndexService
     )
     {
         this.vmFactory = vmFactory;
         this.apiFactory = apiFactory;
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
+        this.modelIndexService = modelIndexService;
 
         ClientManager = inferenceClientManager;
-        
+
         // Keep RunningPackage updated with the current package pair
         EventManager.Instance.RunningPackageStatusChanged += (_, args) =>
         {
@@ -89,11 +94,14 @@ public partial class InferenceViewModel : PageViewModelBase
     public override void OnLoaded()
     {
         base.OnLoaded();
-        
+
         if (Tabs.Count == 0)
         {
             AddTab();
         }
+
+        // Start a model index update
+        modelIndexService.RefreshIndex().SafeFireAndForget();
     }
 
     /// <summary>
@@ -103,7 +111,7 @@ public partial class InferenceViewModel : PageViewModelBase
     private void AddTab()
     {
         Tabs.Add(vmFactory.Get<InferenceTextToImageViewModel>());
-        
+
         // Set as new selected tab
         SelectedTabIndex = Tabs.Count - 1;
     }
@@ -118,9 +126,9 @@ public partial class InferenceViewModel : PageViewModelBase
             Logger.Warn("Tab close requested for unknown item {@Item}", e);
             return;
         }
-        
+
         Logger.Trace("Closing tab {Title}", vm.TabTitle);
-        
+
         // Set the selected tab to the next tab if there is one, then previous, then null
         lock (Tabs)
         {
@@ -133,10 +141,10 @@ public partial class InferenceViewModel : PageViewModelBase
             {
                 SelectedTabIndex = index - 1;
             }
-            
+
             // Remove the tab
             Tabs.RemoveAt(index);
-            
+
             // Dispose the view model
             vm.Dispose();
         }
@@ -155,7 +163,7 @@ public partial class InferenceViewModel : PageViewModelBase
         }
 
         // TODO: make address configurable
-        
+
         if (RunningPackage is not null)
         {
             await notificationService.TryAsync(
@@ -227,7 +235,7 @@ public partial class InferenceViewModel : PageViewModelBase
             Logger.Trace("MenuSaveAs: user cancelled");
             return;
         }
-        
+
         var document = InferenceProjectDocument.FromLoadable(currentTab);
 
         // Save to file
@@ -243,15 +251,16 @@ public partial class InferenceViewModel : PageViewModelBase
         catch (Exception e)
         {
             notificationService.ShowPersistent(
-                "Could not save to file", 
-                $"[{e.GetType().Name}] {e.Message}", 
-                NotificationType.Error);
+                "Could not save to file",
+                $"[{e.GetType().Name}] {e.Message}",
+                NotificationType.Error
+            );
             return;
         }
-        
+
         // Update project file
         currentTab.ProjectFile = new FilePath(result.TryGetLocalPath()!);
-        
+
         notificationService.Show(
             "Saved",
             $"Saved project to {result.Name}",
@@ -267,23 +276,23 @@ public partial class InferenceViewModel : PageViewModelBase
     {
         // Get the current tab
         var currentTab = SelectedTab;
-        
+
         if (currentTab == null)
         {
             Logger.Info("MenuSaveProject: currentTab is null");
             return;
         }
-        
+
         // If the tab has no project file, prompt for save as
         if (currentTab.ProjectFile is not { } projectFile)
         {
             await MenuSaveAs();
             return;
         }
-        
+
         // Otherwise, save to the current project file
         var document = InferenceProjectDocument.FromLoadable(currentTab);
-        
+
         // Save to file
         try
         {
@@ -297,19 +306,20 @@ public partial class InferenceViewModel : PageViewModelBase
         catch (Exception e)
         {
             notificationService.ShowPersistent(
-                "Could not save to file", 
-                $"[{e.GetType().Name}] {e.Message}", 
-                NotificationType.Error);
+                "Could not save to file",
+                $"[{e.GetType().Name}] {e.Message}",
+                NotificationType.Error
+            );
             return;
         }
-        
+
         notificationService.Show(
             "Saved",
             $"Saved project to {projectFile.Name}",
             NotificationType.Success
         );
     }
-    
+
     /// <summary>
     /// Menu "Open Project" command.
     /// </summary>
@@ -352,12 +362,16 @@ public partial class InferenceViewModel : PageViewModelBase
         var document = await JsonSerializer.DeserializeAsync<InferenceProjectDocument>(stream);
         if (document is null)
         {
-            throw new ApplicationException("MenuOpenProject: Deserialize project file returned null");
+            throw new ApplicationException(
+                "MenuOpenProject: Deserialize project file returned null"
+            );
         }
 
         if (document.State is null)
         {
-            throw new ApplicationException("MenuOpenProject: Deserialize project file returned null state");
+            throw new ApplicationException(
+                "MenuOpenProject: Deserialize project file returned null state"
+            );
         }
 
         InferenceTabViewModelBase vm;
@@ -373,11 +387,13 @@ public partial class InferenceViewModel : PageViewModelBase
         }
         else
         {
-            throw new InvalidOperationException($"Unsupported project type: {document.ProjectType}");
+            throw new InvalidOperationException(
+                $"Unsupported project type: {document.ProjectType}"
+            );
         }
 
         Tabs.Add(vm);
-        
+
         // Set the selected tab to the newly opened tab
         SelectedTab = vm;
     }

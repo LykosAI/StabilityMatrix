@@ -69,6 +69,7 @@
                                     Margin="0,-2,0,0"
                                     VerticalAlignment="Top"
                                     VerticalContentAlignment="Top"
+                                    Command="{Binding ShowHelpDialogCommand}"
                                     icons:Attached.Icon="fa-solid fa-question"/>
                                 
                                 <Button 

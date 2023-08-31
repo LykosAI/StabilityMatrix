@@ -69,4 +69,22 @@
     <data name="Label_DragAndDropCheckpointsHereToImport" xml:space="preserve">
         <value>Drag &amp; Drop checkpoints here to import</value>
     </data>
+    <data name="Label_Emphasis" xml:space="preserve">
+        <value>Emphasis</value>
+    </data>
+    <data name="Label_Deemphasis" xml:space="preserve">
+        <value>Deemphasis</value>
+    </data>
+    <data name="Label_EmbeddingsOrTextualInversion" xml:space="preserve">
+        <value>Emebeddings / Textual Inversion</value>
+    </data>
+    <data name="Label_NetworksLoraOrLycoris" xml:space="preserve">
+        <value>Networks (Lora / LyCORIS)</value>
+    </data>
+    <data name="Label_Comments" xml:space="preserve">
+        <value>Comments</value>
+    </data>
+    <data name="Label_ShowPixelGridAtHighZoomLevels" xml:space="preserve">
+        <value>Show pixel grid at high zoom levels</value>
+    </data>
 </root>

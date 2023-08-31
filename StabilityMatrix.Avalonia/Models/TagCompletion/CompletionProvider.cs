@@ -14,13 +14,13 @@ using Nito.AsyncEx;
 using NLog;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Helpers;
-using StabilityMatrix.Avalonia.Models.Inference.Tokens;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
+using StabilityMatrix.Core.Models.Tokens;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Models.TagCompletion;
@@ -237,7 +237,7 @@ public class CompletionProvider : ICompletionProvider
                     from model in localModels
                     where model.FileName.StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase)
                     select ModelCompletionData.FromLocalModel(model, networkType);
-                    
+
                 completions.AddRange(results.Take(itemsCount));
             }
         }

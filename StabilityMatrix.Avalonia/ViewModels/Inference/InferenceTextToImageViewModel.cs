@@ -20,12 +20,16 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Exceptions;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Inference;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
+using StabilityMatrix.Core.Services;
 
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
@@ -38,6 +42,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
 
     private readonly INotificationService notificationService;
     private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly IModelIndexService modelIndexService;
 
     public IInferenceClientManager ClientManager { get; }
 
@@ -54,7 +59,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
     public bool IsHiresFixEnabled => StackCardViewModel.GetCard<StackExpanderViewModel>().IsEnabled;
 
     public bool IsUpscaleEnabled => StackCardViewModel.GetCard<StackExpanderViewModel>(1).IsEnabled;
-    
+
     [JsonIgnore]
     public ProgressViewModel OutputProgress { get; } = new();
 
@@ -65,11 +70,13 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
     public InferenceTextToImageViewModel(
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
-        ServiceManager<ViewModelBase> vmFactory
+        ServiceManager<ViewModelBase> vmFactory,
+        IModelIndexService modelIndexService
     )
     {
         this.notificationService = notificationService;
         this.vmFactory = vmFactory;
+        this.modelIndexService = modelIndexService;
         ClientManager = inferenceClientManager;
 
         // Get sub view models from service manager
@@ -117,7 +124,8 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
                         {
                             // Post processing upscaler
                             vmFactory.Get<UpscalerCardViewModel>(),
-                        });
+                        }
+                    );
                 }),
                 // Seed
                 seedCard,
@@ -129,7 +137,9 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         // GenerateImageCommand.WithNotificationErrorHandler(notificationService);
     }
 
-    private (NodeDictionary prompt, string[] outputs) BuildPrompt(GenerateOverrides? overrides = null)
+    private (NodeDictionary prompt, string[] outputs) BuildPrompt(
+        GenerateOverrides? overrides = null
+    )
     {
         using var _ = new CodeTimer();
 
@@ -138,41 +148,10 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         var modelCard = StackCardViewModel.GetCard<ModelCardViewModel>();
         var seedCard = StackCardViewModel.GetCard<SeedCardViewModel>();
 
-        var prompt = new NodeDictionary();
-        var builder = new ComfyNodeBuilder(prompt);
+        var nodes = new NodeDictionary();
+        var builder = new ComfyNodeBuilder(nodes);
 
-        var checkpointLoader = prompt.AddNamedNode(
-            new NamedComfyNode("CheckpointLoader")
-            {
-                ClassType = "CheckpointLoaderSimple",
-                Inputs = new Dictionary<string, object?>
-                {
-                    ["ckpt_name"] = modelCard.SelectedModelName
-                }
-            }
-        );
-
-        // Either use checkpoint VAE or custom VAE
-        VAENodeConnection vaeSource;
-        
-        if (modelCard is {IsVaeSelectionEnabled: true, SelectedVae.IsDefault: false})
-        {
-            // Use custom VAE
-            
-            // Add a loader
-            var vaeLoader = 
-                prompt.AddNamedNode(ComfyNodeBuilder.VAELoader("VAELoader", modelCard.SelectedVae.FileName));
-            
-            // Set as source
-            vaeSource = vaeLoader.Output;
-        }
-        else
-        {
-            // Use checkpoint VAE
-            vaeSource = checkpointLoader.GetOutput<VAENodeConnection>(2);
-        }
-
-        var emptyLatentImage = prompt.AddNamedNode(
+        var emptyLatentImage = nodes.AddNamedNode(
             new NamedComfyNode("EmptyLatentImage")
             {
                 ClassType = "EmptyLatentImage",
@@ -185,34 +164,98 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             }
         );
 
-        var positiveClip = prompt.AddNamedNode(
+        var checkpointLoader = nodes.AddNamedNode(
+            new NamedComfyNode("CheckpointLoader")
+            {
+                ClassType = "CheckpointLoaderSimple",
+                Inputs = new Dictionary<string, object?>
+                {
+                    ["ckpt_name"] = modelCard.SelectedModelName
+                }
+            }
+        );
+
+        // Global connections for chaining
+        var modelSource = checkpointLoader.GetOutput<ModelNodeConnection>(0);
+        var clipSource = checkpointLoader.GetOutput<ClipNodeConnection>(1);
+        var vaeSource = checkpointLoader.GetOutput<VAENodeConnection>(2);
+
+        // Use custom VAE if enabled
+        if (modelCard is { IsVaeSelectionEnabled: true, SelectedVae.IsDefault: false })
+        {
+            // Add a loader
+            var vaeLoader = nodes.AddNamedNode(
+                ComfyNodeBuilder.VAELoader("VAELoader", modelCard.SelectedVae.FileName)
+            );
+
+            // Set as source
+            vaeSource = vaeLoader.Output;
+        }
+
+        // See if we need to load loras
+        var prompt = PromptCardViewModel.GetPrompt();
+        var negativePrompt = PromptCardViewModel.GetNegativePrompt();
+        var promptNetworks = prompt.ExtraNetworks;
+
+        // If need to load loras, add a group
+        if (promptNetworks.Count > 0)
+        {
+            // Convert to local file names
+            IEnumerable<(string FileName, double? ModelWeight, double? ClipWeight)> loras =
+                promptNetworks.Select(n =>
+                {
+                    var localLoras = modelIndexService.ModelIndex.GetOrAdd(SharedFolderType.Lora);
+                    var localLora = localLoras.FirstOrDefault(
+                        m =>
+                            m.FileName == n.Name
+                            || Path.GetFileNameWithoutExtension(m.FileName) == n.Name
+                    );
+
+                    if (localLora is null)
+                    {
+                        throw new ApplicationException(
+                            $"Lora model {n.Name} was not found locally"
+                        );
+                    }
+
+                    return (localLora.FileName, n.ModelWeight, n.ClipWeight);
+                });
+
+            var lorasGroup = builder.Group_LoraLoadMany("Loras", modelSource, clipSource, loras);
+
+            // Set as source
+            modelSource = lorasGroup.Output1;
+            clipSource = lorasGroup.Output2;
+        }
+
+        var positiveClip = nodes.AddNamedNode(
             new NamedComfyNode("PositiveCLIP")
             {
                 ClassType = "CLIPTextEncode",
                 Inputs = new Dictionary<string, object?>
                 {
-                    ["clip"] = checkpointLoader.GetOutput(1),
+                    ["clip"] = clipSource,
                     ["text"] = PromptCardViewModel.PromptDocument.Text,
                 }
             }
         );
 
-        var negativeClip = prompt.AddNamedNode(
+        var negativeClip = nodes.AddNamedNode(
             new NamedComfyNode("NegativeCLIP")
             {
                 ClassType = "CLIPTextEncode",
                 Inputs = new Dictionary<string, object?>
                 {
-                    ["clip"] = checkpointLoader.GetOutput(1),
+                    ["clip"] = clipSource,
                     ["text"] = PromptCardViewModel.NegativePromptDocument.Text,
                 }
             }
         );
 
-        var sampler = prompt.AddNamedNode(
+        var sampler = nodes.AddNamedNode(
             ComfyNodeBuilder.KSampler(
                 "Sampler",
-                checkpointLoader.GetOutput<ModelNodeConnection>(0),
+                modelSource,
                 Convert.ToUInt64(seedCard.Seed),
                 samplerCard.Steps,
                 samplerCard.CfgScale,
@@ -229,8 +272,8 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         var lastLatent = sampler.Output;
         var lastLatentWidth = samplerCard.Width;
         var lastLatentHeight = samplerCard.Height;
-        
-        var vaeDecoder = prompt.AddNamedNode(
+
+        var vaeDecoder = nodes.AddNamedNode(
             new NamedComfyNode("VAEDecoder")
             {
                 ClassType = "VAEDecode",
@@ -242,7 +285,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             }
         );
 
-        var saveImage = prompt.AddNamedNode(
+        var saveImage = nodes.AddNamedNode(
             new NamedComfyNode("SaveImage")
             {
                 ClassType = "SaveImage",
@@ -253,7 +296,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
                 }
             }
         );
-        
+
         // If hi-res fix is enabled, add the LatentUpscale node and another KSampler node
         if (overrides is { IsHiresFixEnabled: true } || IsHiresFixEnabled)
         {
@@ -263,12 +306,12 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             // Requested upscale to this size
             var hiresWidth = (int)Math.Floor(lastLatentWidth * hiresUpscalerCard.Scale);
             var hiresHeight = (int)Math.Floor(lastLatentHeight * hiresUpscalerCard.Scale);
-            
+
             LatentNodeConnection hiresLatent;
-            
+
             // Select between latent upscale and normal upscale based on the upscale method
             var selectedUpscaler = hiresUpscalerCard.SelectedUpscaler!.Value;
-            
+
             if (selectedUpscaler.Type == ComfyUpscalerType.None)
             {
                 // If no upscaler selected or none, just reroute the latent image
@@ -277,14 +320,22 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             else
             {
                 // Otherwise upscale the latent image
-                hiresLatent = builder.Group_UpscaleToLatent("HiresFix",
-                    lastLatent, vaeSource, selectedUpscaler, hiresWidth, hiresHeight).Output;
+                hiresLatent = builder
+                    .Group_UpscaleToLatent(
+                        "HiresFix",
+                        lastLatent,
+                        vaeSource,
+                        selectedUpscaler,
+                        hiresWidth,
+                        hiresHeight
+                    )
+                    .Output;
             }
 
-            var hiresSampler = prompt.AddNamedNode(
+            var hiresSampler = nodes.AddNamedNode(
                 ComfyNodeBuilder.KSampler(
                     "HiresSampler",
-                    checkpointLoader.GetOutput<ModelNodeConnection>(0),
+                    modelSource,
                     Convert.ToUInt64(seedCard.Seed),
                     hiresSamplerCard.Steps,
                     hiresSamplerCard.CfgScale,
@@ -307,31 +358,37 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             // Reroute the VAEDecoder's input to be from the hires sampler
             vaeDecoder.Inputs["samples"] = lastLatent;
         }
-        
+
         // If upscale is enabled, add another upscale group
         if (IsUpscaleEnabled)
         {
-            var postUpscalerCard = StackCardViewModel.GetCard<StackExpanderViewModel>(1)
+            var postUpscalerCard = StackCardViewModel
+                .GetCard<StackExpanderViewModel>(1)
                 .GetCard<UpscalerCardViewModel>();
-            
+
             var upscaleWidth = (int)Math.Floor(lastLatentWidth * postUpscalerCard.Scale);
             var upscaleHeight = (int)Math.Floor(lastLatentHeight * postUpscalerCard.Scale);
-            
+
             // Build group
-            var postUpscaleGroup = builder.Group_UpscaleToImage("PostUpscale",
-                lastLatent, vaeSource, postUpscalerCard.SelectedUpscaler!.Value,
-                upscaleWidth, upscaleHeight);
-            
+            var postUpscaleGroup = builder.Group_UpscaleToImage(
+                "PostUpscale",
+                lastLatent,
+                vaeSource,
+                postUpscalerCard.SelectedUpscaler!.Value,
+                upscaleWidth,
+                upscaleHeight
+            );
+
             // Remove the original vae decoder
-            prompt.Remove(vaeDecoder.Name);
-            
+            nodes.Remove(vaeDecoder.Name);
+
             // Set as the input for save image
             saveImage.Inputs["images"] = postUpscaleGroup.Output;
         }
 
-        prompt.NormalizeConnectionTypes();
+        nodes.NormalizeConnectionTypes();
 
-        return (prompt, new[] { saveImage.Name });
+        return (nodes, new[] { saveImage.Name });
     }
 
     private void OnProgressUpdateReceived(object? sender, ComfyProgressUpdateEventArgs args)
@@ -355,19 +412,20 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             using var stream = new MemoryStream(args.ImageBytes);
 
             var bitmap = new Bitmap(stream);
-            
+
             var currentImage = ImageGalleryCardViewModel.PreviewImage;
-            
+
             ImageGalleryCardViewModel.PreviewImage = bitmap;
             ImageGalleryCardViewModel.IsPreviewOverlayEnabled = true;
-            
+
             currentImage?.Dispose();
         });
     }
 
     private async Task GenerateImageImpl(
         GenerateOverrides? overrides = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (!ClientManager.IsConnected)
         {
@@ -377,8 +435,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
 
         // If enabled, randomize the seed
         var seedCard = StackCardViewModel.GetCard<SeedCardViewModel>();
-        if (overrides is not { UseCurrentSeed: true } &&
-            seedCard.IsRandomizeEnabled)
+        if (overrides is not { UseCurrentSeed: true } && seedCard.IsRandomizeEnabled)
         {
             seedCard.GenerateNewSeed();
         }
@@ -389,7 +446,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
 
         // Connect preview image handler
         client.PreviewImageReceived += OnPreviewImageReceived;
-        
+
         ComfyTask? promptTask = null;
         try
         {
@@ -488,14 +545,17 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             ImageGalleryCardViewModel.PreviewImage?.Dispose();
             ImageGalleryCardViewModel.PreviewImage = null;
             ImageGalleryCardViewModel.IsPreviewOverlayEnabled = false;
-            
+
             promptTask?.Dispose();
             client.PreviewImageReceived -= OnPreviewImageReceived;
         }
     }
 
     [RelayCommand(IncludeCancelCommand = true)]
-    private async Task GenerateImage(string? options = null, CancellationToken cancellationToken = default)
+    private async Task GenerateImage(
+        string? options = null,
+        CancellationToken cancellationToken = default
+    )
     {
         try
         {
@@ -512,7 +572,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             Logger.Debug($"[Image Generation Canceled] {e.Message}");
         }
     }
-    
+
     internal class GenerateOverrides
     {
         public bool? IsHiresFixEnabled { get; set; }

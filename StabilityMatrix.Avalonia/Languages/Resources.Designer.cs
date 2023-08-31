@@ -132,6 +132,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Comments.
+        /// </summary>
+        public static string Label_Comments {
+            get {
+                return ResourceManager.GetString("Label_Comments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Deemphasis.
+        /// </summary>
+        public static string Label_Deemphasis {
+            get {
+                return ResourceManager.GetString("Label_Deemphasis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Drag &amp; Drop checkpoints here to import.
         /// </summary>
         public static string Label_DragAndDropCheckpointsHereToImport {
@@ -141,11 +159,38 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Emebeddings / Textual Inversion.
+        /// </summary>
+        public static string Label_EmbeddingsOrTextualInversion {
+            get {
+                return ResourceManager.GetString("Label_EmbeddingsOrTextualInversion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Emphasis.
+        /// </summary>
+        public static string Label_Emphasis {
+            get {
+                return ResourceManager.GetString("Label_Emphasis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Language.
         /// </summary>
         public static string Label_Language {
             get {
                 return ResourceManager.GetString("Label_Language", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Networks (Lora / LyCORIS).
+        /// </summary>
+        public static string Label_NetworksLoraOrLycoris {
+            get {
+                return ResourceManager.GetString("Label_NetworksLoraOrLycoris", resourceCulture);
             }
         }
         
@@ -173,6 +218,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Releases {
             get {
                 return ResourceManager.GetString("Label_Releases", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show pixel grid at high zoom levels.
+        /// </summary>
+        public static string Label_ShowPixelGridAtHighZoomLevels {
+            get {
+                return ResourceManager.GetString("Label_ShowPixelGridAtHighZoomLevels", resourceCulture);
             }
         }
         

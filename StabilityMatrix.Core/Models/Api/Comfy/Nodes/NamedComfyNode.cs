@@ -13,40 +13,30 @@ public record NamedComfyNode([property: JsonIgnore] string Name) : ComfyNode, IO
     {
         return new object[] { Name, index };
     }
-    
+
     /// <summary>
     /// Returns typed { Name, index } for use as a node connection
     /// </summary>
-    public TOutput GetOutput<TOutput>(int index) where TOutput : NodeConnectionBase, new()
+    public TOutput GetOutput<TOutput>(int index)
+        where TOutput : NodeConnectionBase, new()
     {
-        return new TOutput
-        {
-            Data = GetOutput(index)
-        };
+        return new TOutput { Data = GetOutput(index) };
     }
 }
 
 [JsonSerializable(typeof(NamedComfyNode<>))]
-public record NamedComfyNode<TOutput>(string Name) : NamedComfyNode(Name) where TOutput : NodeConnectionBase, new()
+public record NamedComfyNode<TOutput>(string Name) : NamedComfyNode(Name)
+    where TOutput : NodeConnectionBase, new()
 {
-    public TOutput Output => new TOutput
-    {
-        Data = GetOutput(0)
-    };
+    public TOutput Output => new TOutput { Data = GetOutput(0) };
 }
 
 [JsonSerializable(typeof(NamedComfyNode<>))]
-public record NamedComfyNode<TOutput, TOutput2>(string Name) : NamedComfyNode(Name) 
-    where TOutput : NodeConnectionBase, new()
+public record NamedComfyNode<TOutput1, TOutput2>(string Name) : NamedComfyNode(Name)
+    where TOutput1 : NodeConnectionBase, new()
     where TOutput2 : NodeConnectionBase, new()
 {
-    public TOutput Output => new TOutput
-    {
-        Data = GetOutput(0)
-    };
-    
-    public TOutput2 Output2 => new TOutput2
-    {
-        Data = GetOutput(1)
-    };
+    public TOutput1 Output1 => new TOutput1 { Data = GetOutput(0) };
+
+    public TOutput2 Output2 => new TOutput2 { Data = GetOutput(1) };
 }

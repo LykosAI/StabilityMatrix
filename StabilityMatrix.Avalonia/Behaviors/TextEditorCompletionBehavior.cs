@@ -10,9 +10,9 @@ using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
 using NLog;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
-using StabilityMatrix.Avalonia.Models.Inference.Tokens;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Models.Tokens;
 using TextMateSharp.Grammars;
 
 namespace StabilityMatrix.Avalonia.Behaviors;
@@ -21,17 +21,19 @@ namespace StabilityMatrix.Avalonia.Behaviors;
 public class TextEditorCompletionBehavior : Behavior<TextEditor>
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
+
     private TextEditor textEditor = null!;
-    
+
     /// <summary>
     /// The current completion window, if open.
     /// Is set to null when the window is closed.
     /// </summary>
     private CompletionWindow? completionWindow;
-    
+
     public static readonly StyledProperty<ICompletionProvider?> CompletionProviderProperty =
-        AvaloniaProperty.Register<TextEditorCompletionBehavior, ICompletionProvider?>(nameof(CompletionProvider));
+        AvaloniaProperty.Register<TextEditorCompletionBehavior, ICompletionProvider?>(
+            nameof(CompletionProvider)
+        );
 
     public ICompletionProvider? CompletionProvider
     {
@@ -39,9 +41,10 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         set => SetValue(CompletionProviderProperty, value);
     }
 
-    public static readonly StyledProperty<ITokenizerProvider?> TokenizerProviderProperty = 
+    public static readonly StyledProperty<ITokenizerProvider?> TokenizerProviderProperty =
         AvaloniaProperty.Register<TextEditorCompletionBehavior, ITokenizerProvider?>(
-        "TokenizerProvider");
+            "TokenizerProvider"
+        );
 
     public ITokenizerProvider? TokenizerProvider
     {
@@ -49,15 +52,17 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         set => SetValue(TokenizerProviderProperty, value);
     }
 
-    public static readonly StyledProperty<bool> IsEnabledProperty = AvaloniaProperty.Register<TextEditorCompletionBehavior, bool>(
-        "IsEnabled", true);
+    public static readonly StyledProperty<bool> IsEnabledProperty = AvaloniaProperty.Register<
+        TextEditorCompletionBehavior,
+        bool
+    >("IsEnabled", true);
 
     public bool IsEnabled
     {
         get => GetValue(IsEnabledProperty);
         set => SetValue(IsEnabledProperty, value);
     }
-    
+
     protected override void OnAttached()
     {
         base.OnAttached();
@@ -66,7 +71,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         {
             throw new NullReferenceException("AssociatedObject is null");
         }
-        
+
         textEditor = editor;
         textEditor.TextArea.TextEntered += TextArea_TextEntered;
         textEditor.TextArea.TextEntering += TextArea_TextEntering;
@@ -88,18 +93,16 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
             CloseWhenCaretAtBeginning = true,
             CloseAutomatically = true,
             IsLightDismissEnabled = true,
-            CompletionList =
-            {
-                IsFiltering = true
-            }
+            CompletionList = { IsFiltering = true }
         };
         return window;
     }
 
     private void TextArea_TextEntered(object? sender, TextInputEventArgs e)
     {
-        if (!IsEnabled || e.Text is not { } triggerText) return;
-        
+        if (!IsEnabled || e.Text is not { } triggerText)
+            return;
+
         if (triggerText.All(IsCompletionChar))
         {
             // Create completion window if its not already created
@@ -116,18 +119,18 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
 
                 var token = textEditor.Document.GetText(tokenSegment);
                 Logger.Trace("Using token {Token} ({@Segment})", token, tokenSegment);
-                
+
                 completionWindow = CreateCompletionWindow(textEditor.TextArea);
                 completionWindow.StartOffset = tokenSegment.Offset;
                 completionWindow.EndOffset = tokenSegment.EndOffset;
 
                 completionWindow.UpdateQuery(completionRequest);
-                
+
                 completionWindow.Closed += delegate
                 {
                     completionWindow = null;
                 };
-            
+
                 completionWindow.Show();
             }
         }
@@ -149,8 +152,9 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
 
     private void TextArea_TextEntering(object? sender, TextInputEventArgs e)
     {
-        if (completionWindow is null) return;
-        
+        if (completionWindow is null)
+            return;
+
         /*Dispatcher.UIThread.Post(() =>
         {
             // When completion window is open, parse and update token offsets
@@ -179,7 +183,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
     {
         return char.IsLetterOrDigit(c) || c == '_' || c == '-' || c == ':';
     }
-    
+
     /// <summary>
     /// Gets a segment of the token the caret is currently in for completions.
     /// Returns null if caret is not on a valid completion token (i.e. comments)
@@ -187,13 +191,13 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
     private EditorCompletionRequest? GetCaretCompletionToken()
     {
         var caret = textEditor.CaretOffset;
-        
+
         // Get the line the caret is on
         var line = textEditor.Document.GetLineByOffset(caret);
         var lineText = textEditor.Document.GetText(line.Offset, line.Length);
-        
+
         var caretAbsoluteOffset = caret - line.Offset;
-        
+
         // Tokenize
         var result = TokenizerProvider!.TokenizeLine(lineText);
 
@@ -209,7 +213,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
                 Logger.Trace("Caret is in a comment");
                 return null;
             }
-            
+
             // Find match
             if (caretAbsoluteOffset >= token.StartIndex && caretAbsoluteOffset <= token.EndIndex)
             {
@@ -218,39 +222,46 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
                 break;
             }
         }
-        
+
         // Still not found
         if (currentToken is null || currentTokenIndex == -1)
         {
-            Logger.Info($"Could not find token at caret offset {caret} for line {lineText.ToRepr()}");
+            Logger.Info(
+                $"Could not find token at caret offset {caret} for line {lineText.ToRepr()}"
+            );
             return null;
         }
-        
 
         var startOffset = currentToken.StartIndex + line.Offset;
         var endOffset = currentToken.EndIndex + line.Offset;
-        
+
         // Cap the offsets by the line offsets
         var segment = new TextSegment
         {
             StartOffset = Math.Max(startOffset, line.Offset),
             EndOffset = Math.Min(endOffset, line.EndOffset)
         };
-        
+
         // Check if this is an extra network request
-        if (currentToken.Scopes.Contains("meta.structure.network.prompt")
-            && result.Tokens.ElementAtOrDefault(currentTokenIndex - 1) is { } prevToken)
+        if (
+            currentToken.Scopes.Contains("meta.structure.network.prompt")
+            && result.Tokens.ElementAtOrDefault(currentTokenIndex - 1) is { } prevToken
+        )
         {
             // (case for initial '<type:')
             // - Current token has "meta.structure.network" and "punctuation.separator.variable"
             // - Previous token has "meta.structure.network" and "meta.embedded.network.type"
-            if (currentToken.Scopes.Contains("punctuation.separator.variable.prompt")
+            if (
+                currentToken.Scopes.Contains("punctuation.separator.variable.prompt")
                 && prevToken.Scopes.Contains("meta.structure.network.prompt")
-                && prevToken.Scopes.Contains("meta.embedded.network.type.prompt"))
+                && prevToken.Scopes.Contains("meta.embedded.network.type.prompt")
+            )
             {
                 var networkToken = textEditor.Document.GetText(
-                    prevToken.StartIndex + line.Offset, prevToken.Length);
-            
+                    prevToken.StartIndex + line.Offset,
+                    prevToken.Length
+                );
+
                 PromptExtraNetworkType? networkTypeResult = networkToken.ToLowerInvariant() switch
                 {
                     "lora" => PromptExtraNetworkType.Lora,
@@ -263,7 +274,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
                 {
                     return null;
                 }
-            
+
                 return new EditorCompletionRequest
                 {
                     Text = "",
@@ -272,7 +283,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
                     ExtraNetworkTypes = networkType,
                 };
             }
-            
+
             // (case for already in model token '<type:network')
             // - Current token has "meta.embedded.network.model"
             if (currentToken.Scopes.Contains("meta.embedded.network.model.prompt"))
@@ -282,10 +293,12 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
                 {
                     return null;
                 }
-                
+
                 var networkToken = textEditor.Document.GetText(
-                    secondPrevToken.StartIndex + line.Offset, secondPrevToken.Length);
-            
+                    secondPrevToken.StartIndex + line.Offset,
+                    secondPrevToken.Length
+                );
+
                 PromptExtraNetworkType? networkTypeResult = networkToken.ToLowerInvariant() switch
                 {
                     "lora" => PromptExtraNetworkType.Lora,
@@ -298,7 +311,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
                 {
                     return null;
                 }
-            
+
                 return new EditorCompletionRequest
                 {
                     Text = textEditor.Document.GetText(segment),
@@ -308,8 +321,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
                 };
             }
         }
-        
-        
+
         // Otherwise treat as tag
         return new EditorCompletionRequest
         {

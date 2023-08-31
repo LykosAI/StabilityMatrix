@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using AvaloniaEdit.Document;
-using StabilityMatrix.Avalonia.Models.Inference.Tokens;
+using StabilityMatrix.Core.Models.Tokens;
 
 namespace StabilityMatrix.Avalonia.Models.TagCompletion;
 

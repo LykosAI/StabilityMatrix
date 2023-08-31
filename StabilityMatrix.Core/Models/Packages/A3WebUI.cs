@@ -29,6 +29,8 @@ public class A3WebUI : BaseGitPackage
         new("https://github.com/AUTOMATIC1111/stable-diffusion-webui/raw/master/screenshot.png");
     public string RelativeArgsDefinitionScriptPath => "modules.cmd_args";
 
+    public override SharedFolderMethod RecommendedSharedFolderMethod =>
+        SharedFolderMethod.Symlink;
 
     public A3WebUI(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService,
         IPrerequisiteHelper prerequisiteHelper) :
@@ -81,7 +83,7 @@ public class A3WebUI : BaseGitPackage
                 Level.Medium => "--medvram",
                 _ => null
             },
-            Options = new() { "--lowvram", "--medvram" }
+            Options = new() { "--lowvram", "--medvram", "--medvram-sdxl" }
         },
         new()
         {
@@ -121,17 +123,32 @@ public class A3WebUI : BaseGitPackage
         },
         LaunchOptionDefinition.Extras
     };
-    
+
+    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods => new[]
+    {
+        SharedFolderMethod.Symlink,
+        SharedFolderMethod.None
+    };
+
+    public override IEnumerable<TorchVersion> AvailableTorchVersions => new[]
+    {
+        TorchVersion.Cpu,
+        TorchVersion.Cuda,
+        TorchVersion.DirectMl,
+        TorchVersion.Rocm
+    };
+
     public override async Task<string> GetLatestVersion()
     {
         var release = await GetLatestRelease().ConfigureAwait(false);
         return release.TagName!;
     }
 
-    public override async Task InstallPackage(string installLocation, IProgress<ProgressReport>? progress = null)
+    public override async Task InstallPackage(string installLocation,
+        TorchVersion torchVersion, IProgress<ProgressReport>? progress = null)
     {
-        await base.InstallPackage(installLocation, progress).ConfigureAwait(false);
-        
+        await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
+
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
@@ -141,45 +158,36 @@ public class A3WebUI : BaseGitPackage
             await venvRunner.Setup().ConfigureAwait(false);
         }
 
-        // Install torch / xformers based on gpu info
-        var gpus = HardwareHelper.IterGpuInfo().ToList();
-        if (gpus.Any(g => g.IsNvidia))
+        switch (torchVersion)
         {
-            progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CUDA", isIndeterminate: true));
-            
-            Logger.Info("Starting torch install (CUDA)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, OnConsoleOutput)
-                .ConfigureAwait(false);
-            
-            Logger.Info("Installing xformers...");
-            await venvRunner.PipInstall("xformers", OnConsoleOutput).ConfigureAwait(false);
-        }
-        else if (HardwareHelper.PreferRocm())
-        {
-            progress?.Report(new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true));
-
-            await venvRunner.PipInstall("--upgrade pip wheel", OnConsoleOutput)
-                .ConfigureAwait(false);
-            
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsRocm511, OnConsoleOutput)
-                .ConfigureAwait(false);
-        }
-        else
-        {
-            progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CPU", isIndeterminate: true));
-            Logger.Info("Starting torch install (CPU)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, OnConsoleOutput).ConfigureAwait(false);
+            case TorchVersion.Cpu:
+                await InstallCpuTorch(venvRunner, progress).ConfigureAwait(false);
+                break;
+            case TorchVersion.Cuda:
+                await InstallCudaTorch(venvRunner, progress).ConfigureAwait(false);
+                break;
+            case TorchVersion.Rocm:
+                await InstallRocmTorch(venvRunner, progress).ConfigureAwait(false);
+                break;
+            case TorchVersion.DirectMl:
+                await InstallDirectMlTorch(venvRunner, progress).ConfigureAwait(false);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);
         }
 
         // Install requirements file
-        progress?.Report(new ProgressReport(-1f, "Installing Package Requirements", isIndeterminate: true));
+        progress?.Report(new ProgressReport(-1f, "Installing Package Requirements",
+            isIndeterminate: true));
         Logger.Info("Installing requirements_versions.txt");
-        await venvRunner.PipInstall($"-r requirements_versions.txt", OnConsoleOutput).ConfigureAwait(false);
-        
-        progress?.Report(new ProgressReport(1f, "Installing Package Requirements", isIndeterminate: false));
-        
+        await venvRunner.PipInstall($"-r requirements_versions.txt", OnConsoleOutput)
+            .ConfigureAwait(false);
+
+        progress?.Report(new ProgressReport(1f, "Installing Package Requirements",
+            isIndeterminate: false));
+
         progress?.Report(new ProgressReport(-1f, "Updating configuration", isIndeterminate: true));
-        
+
         // Create and add {"show_progress_type": "TAESD"} to config.json
         // Only add if the file doesn't exist
         var configPath = Path.Combine(installLocation, "config.json");
@@ -215,5 +223,18 @@ public class A3WebUI : BaseGitPackage
         var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
         VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
+    }
+
+    private async Task InstallRocmTorch(PyVenvRunner venvRunner,
+        IProgress<ProgressReport>? progress = null)
+    {
+        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for ROCm",
+            isIndeterminate: true));
+
+        await venvRunner.PipInstall("--upgrade pip wheel", OnConsoleOutput)
+            .ConfigureAwait(false);
+
+        await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsRocm511, OnConsoleOutput)
+            .ConfigureAwait(false);
     }
 }

@@ -26,6 +26,9 @@ public class UnknownPackage : BasePackage
         "test-config",
     };
 
+    public override SharedFolderMethod RecommendedSharedFolderMethod =>
+        SharedFolderMethod.Symlink;
+    
     public override Task DownloadPackage(string installLocation, DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress1)
     {
@@ -33,7 +36,8 @@ public class UnknownPackage : BasePackage
     }
 
     /// <inheritdoc />
-    public override Task InstallPackage(string installLocation, IProgress<ProgressReport>? progress = null)
+    public override Task InstallPackage(string installLocation, TorchVersion torchVersion,
+        IProgress<ProgressReport>? progress = null)
     {
         throw new NotImplementedException();
     }
@@ -44,22 +48,33 @@ public class UnknownPackage : BasePackage
     }
 
     /// <inheritdoc />
-    public override Task SetupModelFolders(DirectoryPath installDirectory)
+    public override Task SetupModelFolders(DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod)
     {
         throw new NotImplementedException();
     }
 
     /// <inheritdoc />
-    public override Task UpdateModelFolders(DirectoryPath installDirectory)
+    public override Task UpdateModelFolders(DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod)
     {
         throw new NotImplementedException();
     }
 
     /// <inheritdoc />
-    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory)
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod)
     {
         throw new NotImplementedException();
     }
+
+    public override IEnumerable<TorchVersion> AvailableTorchVersions => new[]
+    {
+        TorchVersion.Cuda,
+        TorchVersion.Cpu,
+        TorchVersion.Rocm,
+        TorchVersion.DirectMl
+    };
 
     /// <inheritdoc />
     public override void Shutdown()
@@ -80,7 +95,8 @@ public class UnknownPackage : BasePackage
     }
 
     /// <inheritdoc />
-    public override Task<InstalledPackageVersion> Update(InstalledPackage installedPackage, IProgress<ProgressReport>? progress = null,
+    public override Task<InstalledPackageVersion> Update(InstalledPackage installedPackage,
+        TorchVersion torchVersion, IProgress<ProgressReport>? progress = null,
         bool includePrerelease = false)
     {
         throw new NotImplementedException();

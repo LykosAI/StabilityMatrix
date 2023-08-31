@@ -1,8 +1,7 @@
 ﻿using System;
 using FluentAvalonia.UI.Controls;
-using StabilityMatrix.Avalonia.ViewModels.Base;
 
-namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
+namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
 public class ContentDialogViewModelBase : ViewModelBase
 {

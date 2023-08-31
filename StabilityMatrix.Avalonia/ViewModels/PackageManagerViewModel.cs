@@ -21,6 +21,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
@@ -37,6 +38,8 @@ public partial class PackageManagerViewModel : PageViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly IPackageFactory packageFactory;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
+    private readonly IPackageModificationRunner packageModificationRunner;
+    private readonly INotificationService notificationService;
 
     public override string Title => "Packages";
     public override IconSource IconSource =>
@@ -61,12 +64,16 @@ public partial class PackageManagerViewModel : PageViewModelBase
     public PackageManagerViewModel(
         ISettingsManager settingsManager,
         IPackageFactory packageFactory,
-        ServiceManager<ViewModelBase> dialogFactory
+        ServiceManager<ViewModelBase> dialogFactory,
+        IPackageModificationRunner packageModificationRunner,
+        INotificationService notificationService
     )
     {
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         this.dialogFactory = dialogFactory;
+        this.packageModificationRunner = packageModificationRunner;
+        this.notificationService = notificationService;
 
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
 
@@ -115,7 +122,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
         var dialog = new BetterContentDialog
         {
-            MaxDialogWidth = 1100,
+            MaxDialogWidth = 900,
             MinDialogWidth = 900,
             DefaultButton = ContentDialogButton.Close,
             IsPrimaryButtonEnabled = false,
@@ -124,7 +131,27 @@ public partial class PackageManagerViewModel : PageViewModelBase
             Content = new InstallerDialog { DataContext = viewModel }
         };
 
-        await dialog.ShowAsync();
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            var steps = viewModel.Steps;
+            var packageModificationDialogViewModel =
+                new PackageModificationDialogViewModel(packageModificationRunner, notificationService, steps);
+
+            dialog = new BetterContentDialog
+            {
+                MaxDialogWidth = 900,
+                MinDialogWidth = 900,
+                DefaultButton = ContentDialogButton.Close,
+                IsPrimaryButtonEnabled = false,
+                IsSecondaryButtonEnabled = false,
+                IsFooterVisible = false,
+                Content = new PackageModificationDialog {DataContext = packageModificationDialogViewModel}
+            };
+
+            await dialog.ShowAsync();
+        }
+
         await OnLoadedAsync();
     }
 

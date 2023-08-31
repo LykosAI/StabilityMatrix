@@ -1,8 +1,10 @@
 ﻿using Octokit;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -37,16 +39,63 @@ public abstract class BasePackage
     public abstract Task DownloadPackage(string installLocation, DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress1);
 
-    public abstract Task InstallPackage(string installLocation,
+    public abstract Task InstallPackage(string installLocation, TorchVersion torchVersion,
         IProgress<ProgressReport>? progress = null);
-    public abstract Task RunPackage(string installedPackagePath, string command, string arguments);
-    public abstract Task<bool> CheckForUpdates(InstalledPackage package);
-    public abstract Task<InstalledPackageVersion> Update(InstalledPackage installedPackage,
-        IProgress<ProgressReport>? progress = null, bool includePrerelease = false);
     
-    public abstract Task SetupModelFolders(DirectoryPath installDirectory);
-    public abstract Task UpdateModelFolders(DirectoryPath installDirectory);
-    public abstract Task RemoveModelFolderLinks(DirectoryPath installDirectory);
+    public abstract Task RunPackage(string installedPackagePath, string command, string arguments);
+    
+    public abstract Task<bool> CheckForUpdates(InstalledPackage package);
+
+    public abstract Task<InstalledPackageVersion> Update(InstalledPackage installedPackage,
+        TorchVersion torchVersion, IProgress<ProgressReport>? progress = null,
+        bool includePrerelease = false);
+    
+    public virtual IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods => new[]
+    {
+        SharedFolderMethod.Symlink,
+        SharedFolderMethod.Configuration,
+        SharedFolderMethod.None
+    };
+
+    public abstract SharedFolderMethod RecommendedSharedFolderMethod { get; }
+
+    public abstract Task SetupModelFolders(DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod);
+
+    public abstract Task UpdateModelFolders(DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod);
+
+    public abstract Task RemoveModelFolderLinks(DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod);
+
+    public abstract IEnumerable<TorchVersion> AvailableTorchVersions { get; }
+
+    public virtual TorchVersion GetRecommendedTorchVersion()
+    {
+        // if there's only one AvailableTorchVersion, return that
+        if (AvailableTorchVersions.Count() == 1)
+        {
+            return AvailableTorchVersions.First();
+        }
+        
+        if (HardwareHelper.HasNvidiaGpu() && AvailableTorchVersions.Contains(TorchVersion.Cuda))
+        {
+            return TorchVersion.Cuda;
+        }
+
+        if (HardwareHelper.PreferRocm() && AvailableTorchVersions.Contains(TorchVersion.Rocm))
+        {
+            return TorchVersion.Rocm;
+        }
+
+        if (HardwareHelper.PreferDirectML() &&
+            AvailableTorchVersions.Contains(TorchVersion.DirectMl))
+        {
+            return TorchVersion.DirectMl;
+        }
+
+        return TorchVersion.Cpu;
+    }
     
     /// <summary>
     /// Shuts down the subprocess, canceling any pending streams.
@@ -84,4 +133,38 @@ public abstract class BasePackage
     public virtual PackageVersionType AvailableVersionTypes => ShouldIgnoreReleases
         ? PackageVersionType.Commit
         : PackageVersionType.GithubRelease | PackageVersionType.Commit;
+    
+    
+    
+    
+    
+    protected async Task InstallCudaTorch(PyVenvRunner venvRunner,
+        IProgress<ProgressReport>? progress = null)
+    {
+        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CUDA",
+            isIndeterminate: true));
+
+        await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, OnConsoleOutput)
+            .ConfigureAwait(false);
+        await venvRunner.PipInstall("xformers", OnConsoleOutput).ConfigureAwait(false);
+    }
+    
+    protected async Task InstallDirectMlTorch(PyVenvRunner venvRunner,
+        IProgress<ProgressReport>? progress = null)
+    {
+        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for DirectML",
+            isIndeterminate: true));
+
+        await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, OnConsoleOutput)
+            .ConfigureAwait(false);
+    }
+    
+    protected async Task InstallCpuTorch(PyVenvRunner venvRunner, IProgress<ProgressReport>? progress = null)
+    {
+        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CPU",
+            isIndeterminate: true));
+
+        await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, OnConsoleOutput)
+            .ConfigureAwait(false);
+    }
 }

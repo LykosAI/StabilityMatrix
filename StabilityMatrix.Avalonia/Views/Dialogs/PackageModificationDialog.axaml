@@ -1,0 +1,41 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+             xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+             xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="dialogs:PackageModificationDialogViewModel"
+             x:Class="StabilityMatrix.Avalonia.Views.Dialogs.PackageModificationDialog">
+    <Grid Margin="8" RowDefinitions="Auto, Auto, Auto, *">
+        <TextBlock Grid.Row="0" Text="{Binding Text}"
+                   FontSize="16"
+                   TextAlignment="Center"
+                   HorizontalAlignment="Center"/>
+        
+        <TextBlock Grid.Row="1" Text="{Binding Description}"
+                   Margin="4"
+                   TextWrapping="WrapWithOverflow"
+                   IsVisible="{Binding !#Expander.IsExpanded}"/>
+        
+        <ProgressBar Grid.Row="2" Value="{Binding Value}"
+                     Margin="8"
+                     IsIndeterminate="{Binding IsIndeterminate}"/>
+        
+        <Expander Grid.Row="3" Header="More Details" x:Name="Expander">
+            <avaloniaEdit:TextEditor
+                x:Name="Console"
+                Margin="8,8,16,10"
+                MaxHeight="400"
+                DataContext="{Binding Console}"
+                Document="{Binding Document}"
+                FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                IsReadOnly="True"
+                LineNumbersForeground="DarkSlateGray"
+                ShowLineNumbers="True"
+                VerticalScrollBarVisibility="Auto"
+                WordWrap="True" />
+        </Expander>
+    </Grid>
+</controls:UserControlBase>

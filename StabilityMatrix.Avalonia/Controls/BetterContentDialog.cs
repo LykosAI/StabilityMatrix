@@ -156,6 +156,12 @@ public class BetterContentDialog : ContentDialog
             viewModel.SecondaryButtonClick += OnDialogButtonClick;
             viewModel.CloseButtonClick += OnDialogButtonClick;
         }
+        else if ((Content as Control)?.DataContext is ContentDialogProgressViewModelBase progressViewModel)
+        {
+            progressViewModel.PrimaryButtonClick += OnDialogButtonClick;
+            progressViewModel.SecondaryButtonClick += OnDialogButtonClick;
+            progressViewModel.CloseButtonClick += OnDialogButtonClick;
+        }
         
         // If commands provided, bind OnCanExecuteChanged to hide buttons
         // otherwise link visibility to IsEnabled

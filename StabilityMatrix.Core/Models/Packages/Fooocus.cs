@@ -32,7 +32,37 @@ public class Fooocus : BaseGitPackage
 
     public override List<LaunchOptionDefinition> LaunchOptions => new()
     {
+        new LaunchOptionDefinition
+        {
+            Name = "Port",
+            Type = LaunchOptionType.String,
+            Description = "Sets the listen port",
+            Options = {"--port"}
+        },
+        new LaunchOptionDefinition
+        {
+            Name = "Share",
+            Type = LaunchOptionType.Bool,
+            Description = "Set whether to share on Gradio",
+            Options = {"--share"}
+        },
+        new LaunchOptionDefinition
+        {
+            Name = "Listen",
+            Type = LaunchOptionType.String,
+            Description = "Set the listen interface",
+            Options = {"--listen"}
+        },
         LaunchOptionDefinition.Extras
+    };
+    
+    public override SharedFolderMethod RecommendedSharedFolderMethod =>
+        SharedFolderMethod.Symlink;
+
+    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods => new[]
+    {
+        SharedFolderMethod.Symlink,
+        SharedFolderMethod.None
     };
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders => new()
@@ -50,34 +80,46 @@ public class Fooocus : BaseGitPackage
         [SharedFolderType.Hypernetwork] = new[] {"models/hypernetworks"}
     };
     
+    public override IEnumerable<TorchVersion> AvailableTorchVersions => new[]
+    {
+        TorchVersion.Cpu,
+        TorchVersion.Cuda,
+        TorchVersion.Rocm
+    };
+    
     public override async Task<string> GetLatestVersion()
     {
         var release = await GetLatestRelease().ConfigureAwait(false);
         return release.TagName!;
     }
 
-    public override async Task InstallPackage(string installLocation, IProgress<ProgressReport>? progress = null)
+    public override async Task InstallPackage(string installLocation,
+        TorchVersion torchVersion, IProgress<ProgressReport>? progress = null)
     {
-        await base.InstallPackage(installLocation, progress).ConfigureAwait(false);
+        await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
         var venvRunner = await SetupVenv(installLocation).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
-        
-        var torchVersion = "cpu";
-        var gpus = HardwareHelper.IterGpuInfo().ToList();
-        
-        if (gpus.Any(g => g.IsNvidia))
+
+        var torchVersionStr = "cpu";
+
+        switch (torchVersion)
         {
-            torchVersion = "cu118";
-        }
-        else if (HardwareHelper.PreferRocm())
-        {
-            torchVersion = "rocm5.4.2";
+            case TorchVersion.Cuda:
+                torchVersionStr = "cu118";
+                break;
+            case TorchVersion.Rocm:
+                torchVersionStr = "rocm5.4.2";
+                break;
+            case TorchVersion.Cpu:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);
         }
 
         await venvRunner
             .PipInstall(
-                $"torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/{torchVersion}",
+                $"torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/{torchVersionStr}",
                 OnConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements...",

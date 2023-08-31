@@ -104,7 +104,8 @@ public abstract class BaseGitPackage : BasePackage
                 new PackageVersion
                 {
                     TagName = r.TagName!,
-                    ReleaseNotesMarkdown = r.Body
+                    ReleaseNotesMarkdown = r.Body,
+                    IsPrerelease = r.Prerelease
                 });
         }
 
@@ -172,10 +173,10 @@ public abstract class BaseGitPackage : BasePackage
         progress?.Report(new ProgressReport(100, message: "Download Complete"));
     }
 
-    public override async Task InstallPackage(string installLocation, IProgress<ProgressReport>? progress = null)
+    public override async Task InstallPackage(string installLocation,
+        TorchVersion torchVersion, IProgress<ProgressReport>? progress = null)
     {
         await UnzipPackage(installLocation, progress).ConfigureAwait(false);
-        progress?.Report(new ProgressReport(1f, $"{DisplayName} installed successfully"));
         File.Delete(DownloadLocation);
     }
 
@@ -210,8 +211,6 @@ public abstract class BaseGitPackage : BasePackage
             progress?.Report(new ProgressReport(current: Convert.ToUInt64(currentEntry),
                 total: Convert.ToUInt64(totalEntries)));
         }
-        
-        progress?.Report(new ProgressReport(1f, $"{DisplayName} installed successfully"));
 
         return Task.CompletedTask;
     }
@@ -252,10 +251,11 @@ public abstract class BaseGitPackage : BasePackage
     }
 
     public override async Task<InstalledPackageVersion> Update(InstalledPackage installedPackage,
-        IProgress<ProgressReport>? progress = null, bool includePrerelease = false)
+        TorchVersion torchVersion, IProgress<ProgressReport>? progress = null,
+        bool includePrerelease = false)
     {
         if (installedPackage.Version == null) throw new NullReferenceException("Version is null");
-        
+
         if (installedPackage.Version.IsReleaseMode)
         {
             var releases = await GetAllReleases().ConfigureAwait(false);
@@ -265,12 +265,13 @@ public abstract class BaseGitPackage : BasePackage
                     new DownloadPackageVersionOptions {VersionTag = latestRelease.TagName},
                     progress)
                 .ConfigureAwait(false);
-            
-            await InstallPackage(installedPackage.FullPath, progress).ConfigureAwait(false);
-            
+
+            await InstallPackage(installedPackage.FullPath, torchVersion, progress)
+                .ConfigureAwait(false);
+
             return new InstalledPackageVersion
             {
-                InstalledReleaseVersion = latestRelease.TagName 
+                InstalledReleaseVersion = latestRelease.TagName
             };
         }
 
@@ -287,37 +288,41 @@ public abstract class BaseGitPackage : BasePackage
         await DownloadPackage(installedPackage.FullPath,
                 new DownloadPackageVersionOptions {CommitHash = latestCommit.Sha}, progress)
             .ConfigureAwait(false);
-        await InstallPackage(installedPackage.FullPath, progress).ConfigureAwait(false);
-        
+        await InstallPackage(installedPackage.FullPath, torchVersion, progress)
+            .ConfigureAwait(false);
+
         return new InstalledPackageVersion
         {
             InstalledBranch = installedPackage.Version.InstalledBranch,
             InstalledCommitSha = latestCommit.Sha
         };
     }
-    
-    public override Task SetupModelFolders(DirectoryPath installDirectory)
+
+    public override Task SetupModelFolders(DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod)
     {
-        if (SharedFolders is { } folders)
+        if (sharedFolderMethod == SharedFolderMethod.Symlink && SharedFolders is { } folders)
         {
             StabilityMatrix.Core.Helper.SharedFolders
                 .SetupLinks(folders, SettingsManager.ModelsDirectory, installDirectory);
         }
+
         return Task.CompletedTask;
     }
 
-    public override async Task UpdateModelFolders(DirectoryPath installDirectory)
+    public override async Task UpdateModelFolders(DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod)
     {
-        if (SharedFolders is not null)
+        if (SharedFolders is not null && sharedFolderMethod == SharedFolderMethod.Symlink)
         {
             await StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(this,
                 SettingsManager.ModelsDirectory, installDirectory).ConfigureAwait(false);
         }
     }
 
-    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory)
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
     {
-        if (SharedFolders is not null)
+        if (SharedFolders is not null && sharedFolderMethod == SharedFolderMethod.Symlink)
         {
             StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(this, installDirectory);
         }

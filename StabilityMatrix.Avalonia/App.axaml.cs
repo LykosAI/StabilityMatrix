@@ -53,6 +53,7 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Python;
@@ -322,6 +323,7 @@ public sealed class App : Application
         services.AddSingleton<BasePackage, VoltaML>();
         services.AddSingleton<BasePackage, InvokeAI>();
         services.AddSingleton<BasePackage, Fooocus>();
+        //services.AddSingleton<BasePackage, KohyaSs>();
     }
 
     private static IServiceCollection ConfigureServices()
@@ -346,6 +348,7 @@ public sealed class App : Application
         services.AddSingleton<IPyRunner, PyRunner>();
         services.AddSingleton<IUpdateHelper, UpdateHelper>();
         services.AddSingleton<INavigationService, NavigationService>();
+        services.AddSingleton<IPackageModificationRunner, PackageModificationRunner>();
         
         services.AddSingleton<ITrackedDownloadService, TrackedDownloadService>();
         services.AddSingleton<IDisposable>(provider => 
@@ -391,7 +394,8 @@ public sealed class App : Application
             // if (string.IsNullOrWhiteSpace(githubApiKey))
             //     return client;
             //
-            // client.Credentials = new Credentials(githubApiKey);
+            // client.Credentials =
+            //     new Credentials("");
             return client;
         });
 

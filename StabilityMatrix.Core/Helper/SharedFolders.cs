@@ -181,7 +181,10 @@ public class SharedFolders : ISharedFolders
  
             try
             {
-                basePackage.RemoveModelFolderLinks(package.FullPath).GetAwaiter().GetResult();
+                var sharedFolderMethod = package.PreferredSharedFolderMethod ??
+                                         basePackage.RecommendedSharedFolderMethod;
+                basePackage.RemoveModelFolderLinks(package.FullPath, sharedFolderMethod)
+                    .GetAwaiter().GetResult();
             }
             catch (Exception e)
             {

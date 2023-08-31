@@ -3,6 +3,6 @@
 public enum SharedFolderMethod
 {
     Symlink,
-    Config,
+    Configuration,
     None
 }

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Drawing;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Helper;
@@ -28,6 +29,8 @@ public class ComfyUI : BaseGitPackage
     public override Uri PreviewImageUri =>
         new("https://github.com/comfyanonymous/ComfyUI/raw/master/comfyui_screenshot.png");
     public override bool ShouldIgnoreReleases => true;
+    public override SharedFolderMethod RecommendedSharedFolderMethod =>
+        SharedFolderMethod.Configuration;
 
     public ComfyUI(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService,
         IPrerequisiteHelper prerequisiteHelper) :
@@ -89,11 +92,20 @@ public class ComfyUI : BaseGitPackage
     };
 
     public override Task<string> GetLatestVersion() => Task.FromResult("master");
-
-    public override async Task InstallPackage(string installLocation, IProgress<ProgressReport>? progress = null)
+    
+    public override IEnumerable<TorchVersion> AvailableTorchVersions => new[]
     {
-        await base.InstallPackage(installLocation, progress).ConfigureAwait(false);
-        
+        TorchVersion.Cpu,
+        TorchVersion.Cuda,
+        TorchVersion.DirectMl,
+        TorchVersion.Rocm
+    };
+
+    public override async Task InstallPackage(string installLocation,
+        TorchVersion torchVersion, IProgress<ProgressReport>? progress = null)
+    {
+        await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
+
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
@@ -104,41 +116,56 @@ public class ComfyUI : BaseGitPackage
         }
 
         // Install torch / xformers based on gpu info
-        var gpus = HardwareHelper.IterGpuInfo().ToList();
-        if (gpus.Any(g => g.IsNvidia))
+        switch (torchVersion)
         {
-            progress?.Report(new ProgressReport(-1, "Installing PyTorch for CUDA", isIndeterminate: true));
-            
-            Logger.Info("Starting torch install (CUDA)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, OnConsoleOutput)
-                .ConfigureAwait(false);
-            
-            Logger.Info("Installing xformers...");
-            await venvRunner.PipInstall("xformers", OnConsoleOutput).ConfigureAwait(false);
-        }
-        else if (HardwareHelper.PreferRocm())
-        {
-            progress?.Report(new ProgressReport(-1, "Installing PyTorch for ROCm", isIndeterminate: true));
-            await venvRunner
-                .PipInstall(PyVenvRunner.TorchPipInstallArgsRocm542, OnConsoleOutput)
-                .ConfigureAwait(false);
-        }
-        else
-        {
-            progress?.Report(new ProgressReport(-1, "Installing PyTorch for CPU", isIndeterminate: true));
-            Logger.Info("Starting torch install (CPU)...");
-            await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, OnConsoleOutput)
-                .ConfigureAwait(false);
+            case TorchVersion.Cpu:
+                await InstallCpuTorch(venvRunner, progress).ConfigureAwait(false);
+                break;
+            case TorchVersion.Cuda:
+                await InstallCudaTorch(venvRunner, progress).ConfigureAwait(false);
+                break;
+            case TorchVersion.Rocm:
+                await InstallRocmTorch(venvRunner, progress).ConfigureAwait(false);
+                break;
+            case TorchVersion.DirectMl:
+                await InstallDirectMlTorch(venvRunner, progress).ConfigureAwait(false);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);
         }
 
         // Install requirements file
-        progress?.Report(new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true));
+        progress?.Report(new ProgressReport(-1, "Installing Package Requirements",
+            isIndeterminate: true));
         Logger.Info("Installing requirements.txt");
         await venvRunner.PipInstall($"-r requirements.txt", OnConsoleOutput).ConfigureAwait(false);
-        
-        progress?.Report(new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false));
+
+        progress?.Report(new ProgressReport(1, "Installing Package Requirements",
+            isIndeterminate: false));
     }
-    
+
+    private async Task AutoDetectAndInstallTorch(PyVenvRunner venvRunner,
+        IProgress<ProgressReport>? progress = null)
+    {
+        var gpus = HardwareHelper.IterGpuInfo().ToList();
+        if (gpus.Any(g => g.IsNvidia))
+        {
+            await InstallCudaTorch(venvRunner, progress).ConfigureAwait(false);
+        }
+        else if (HardwareHelper.PreferRocm())
+        {
+            await InstallRocmTorch(venvRunner, progress).ConfigureAwait(false);
+        }
+        else if (HardwareHelper.PreferDirectML())
+        {
+            await InstallDirectMlTorch(venvRunner, progress).ConfigureAwait(false);
+        }
+        else
+        {
+            await InstallCpuTorch(venvRunner, progress).ConfigureAwait(false);
+        }
+    }
+
     public override async Task RunPackage(string installedPackagePath, string command, string arguments)
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
@@ -173,8 +200,17 @@ public class ComfyUI : BaseGitPackage
             HandleExit);
     }
 
-    public override Task SetupModelFolders(DirectoryPath installDirectory)
+    public override Task SetupModelFolders(DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod)
     {
+        switch (sharedFolderMethod)
+        {
+            case SharedFolderMethod.None:
+                return Task.CompletedTask;
+            case SharedFolderMethod.Symlink:
+                return base.SetupModelFolders(installDirectory, sharedFolderMethod);
+        }
+
         var extraPathsYamlPath = installDirectory + "extra_model_paths.yaml";
         var modelsDir = SettingsManager.ModelsDirectory;
 
@@ -220,11 +256,35 @@ public class ComfyUI : BaseGitPackage
         return Task.CompletedTask;
     }
 
-    public override Task UpdateModelFolders(DirectoryPath installDirectory) =>
-        SetupModelFolders(installDirectory);
+    public override Task UpdateModelFolders(DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod) =>
+        SetupModelFolders(installDirectory, sharedFolderMethod);
 
-    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory) =>
-        Task.CompletedTask;
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod)
+    {
+        return sharedFolderMethod switch
+        {
+            SharedFolderMethod.Configuration => Task.CompletedTask,
+            SharedFolderMethod.None => Task.CompletedTask,
+            SharedFolderMethod.Symlink => base.RemoveModelFolderLinks(installDirectory,
+                sharedFolderMethod),
+            _ => Task.CompletedTask
+        };
+    }
+
+    private async Task InstallRocmTorch(PyVenvRunner venvRunner,
+        IProgress<ProgressReport>? progress = null)
+    {
+        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for ROCm",
+            isIndeterminate: true));
+
+        await venvRunner.PipInstall("--upgrade pip wheel", OnConsoleOutput)
+            .ConfigureAwait(false);
+
+        await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsRocm542, OnConsoleOutput)
+            .ConfigureAwait(false);
+    }
 
     public class ComfyModelPathsYaml
     {

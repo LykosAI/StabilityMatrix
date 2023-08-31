@@ -126,11 +126,14 @@ public partial class OneClickInstallViewModel : ViewModelBase
             installedVersion.InstalledBranch = downloadVersion.BranchName;
         }
         
-        await DownloadPackage(installLocation, downloadVersion);
-        await InstallPackage(installLocation);
+        var torchVersion = SelectedPackage.GetRecommendedTorchVersion();
 
+        await DownloadPackage(installLocation, downloadVersion);
+        await InstallPackage(installLocation, torchVersion);
+        
         SubHeaderText = "Setting up shared folder links...";
-        await SelectedPackage.SetupModelFolders(installLocation);
+        var recommendedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
+        await SelectedPackage.SetupModelFolders(installLocation, recommendedSharedFolderMethod);
         
         var installedPackage = new InstalledPackage
         {
@@ -140,7 +143,9 @@ public partial class OneClickInstallViewModel : ViewModelBase
             PackageName = SelectedPackage.Name,
             Version = installedVersion,
             LaunchCommand = SelectedPackage.LaunchCommand,
-            LastUpdateCheck = DateTimeOffset.Now
+            LastUpdateCheck = DateTimeOffset.Now,
+            PreferredTorchVersion = torchVersion,
+            PreferredSharedFolderMethod = recommendedSharedFolderMethod
         };
         await using var st = settingsManager.BeginTransaction();
         st.Settings.InstalledPackages.Add(installedPackage);
@@ -177,7 +182,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
         OneClickInstallProgress = 100;
     }
 
-    private async Task InstallPackage(string installLocation)
+    private async Task InstallPackage(string installLocation, TorchVersion torchVersion)
     {
         SelectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
         SubHeaderText = "Downloading and installing package requirements...";
@@ -190,6 +195,6 @@ public partial class OneClickInstallViewModel : ViewModelBase
             EventManager.Instance.OnGlobalProgressChanged(OneClickInstallProgress);
         });
         
-        await SelectedPackage.InstallPackage(installLocation, progress);
+        await SelectedPackage.InstallPackage(installLocation, torchVersion, progress);
     }
 }

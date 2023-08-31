@@ -44,6 +44,17 @@ public class VoltaML : BaseGitPackage
         [SharedFolderType.TextualInversion] = new[] {"data/textual-inversion"},
     };
     
+    public override SharedFolderMethod RecommendedSharedFolderMethod =>
+        SharedFolderMethod.Symlink;
+
+    public override IEnumerable<TorchVersion> AvailableTorchVersions => new[] {TorchVersion.None};
+
+    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods => new[]
+    {
+        SharedFolderMethod.Symlink,
+        SharedFolderMethod.None
+    };
+    
     // https://github.com/VoltaML/voltaML-fast-stable-diffusion/blob/main/main.py#L45
     public override List<LaunchOptionDefinition> LaunchOptions => new List<LaunchOptionDefinition>
     {
@@ -123,27 +134,30 @@ public class VoltaML : BaseGitPackage
     };
 
     public override Task<string> GetLatestVersion() => Task.FromResult("main");
-    
-    public override async Task InstallPackage(string installLocation, IProgress<ProgressReport>? progress = null)
+
+    public override async Task InstallPackage(string installLocation, TorchVersion torchVersion,
+        IProgress<ProgressReport>? progress = null)
     {
-        await base.InstallPackage(installLocation, progress).ConfigureAwait(false);
-        
+        await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
+
         // Setup venv
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
         venvRunner.WorkingDirectory = installLocation;
-        
+
         await venvRunner.Setup().ConfigureAwait(false);
-        
+
         // Install requirements
-        progress?.Report(new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true));
+        progress?.Report(new ProgressReport(-1, "Installing Package Requirements",
+            isIndeterminate: true));
         await venvRunner
             .PipInstall("rich packaging python-dotenv", OnConsoleOutput)
             .ConfigureAwait(false);
-        
-        progress?.Report(new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false));
+
+        progress?.Report(new ProgressReport(1, "Installing Package Requirements",
+            isIndeterminate: false));
     }
-    
+
     public override async Task RunPackage(string installedPackagePath, string command, string arguments)
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);

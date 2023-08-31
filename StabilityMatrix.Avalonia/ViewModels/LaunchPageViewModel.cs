@@ -233,7 +233,8 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         Console.StartUpdates();
 
         // Update shared folder links (in case library paths changed)
-        await basePackage.UpdateModelFolders(packagePath);
+        await basePackage.UpdateModelFolders(packagePath,
+            activeInstall.PreferredSharedFolderMethod ?? basePackage.RecommendedSharedFolderMethod);
 
         // Load user launch args from settings and convert to string
         var userArgs = settingsManager.GetLaunchArgs(activeInstall.Id);

@@ -180,8 +180,11 @@ public partial class PackageCardViewModel : ProgressViewModel
                 EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
                     packageName, progress));
             });
-        
-            var updateResult = await basePackage.Update(Package, progress);
+
+            var torchVersion = Package.PreferredTorchVersion ??
+                               basePackage.GetRecommendedTorchVersion();
+            
+            var updateResult = await basePackage.Update(Package, torchVersion, progress);
         
             settingsManager.UpdatePackageVersionNumber(Package.Id, updateResult);
             notificationService.Show("Update complete",

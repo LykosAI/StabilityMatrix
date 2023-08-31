@@ -45,8 +45,9 @@ public class InstalledPackage : IJsonOnDeserialized
     public string? LaunchCommand { get; set; }
     public List<LaunchOption>? LaunchArgs { get; set; }
     public DateTimeOffset? LastUpdateCheck { get; set; }
-
     public bool UpdateAvailable { get; set; }
+    public TorchVersion? PreferredTorchVersion { get; set; }
+    public SharedFolderMethod? PreferredSharedFolderMethod { get; set; }
     
     /// <summary>
     /// Get the path as a relative sub-path of the relative path.
@@ -193,29 +194,21 @@ public class InstalledPackage : IJsonOnDeserialized
         if (Version != null) 
             return;
 
-        if (string.IsNullOrWhiteSpace(InstalledBranch))
+        if (string.IsNullOrWhiteSpace(InstalledBranch) && !string.IsNullOrWhiteSpace(PackageVersion))
         {
             // release mode
             Version = new InstalledPackageVersion
             {
                 InstalledReleaseVersion = PackageVersion
             };
-            
-            PackageVersion = null;
-            DisplayVersion = null;
-            InstalledBranch = null;
         }
-        else
+        else if (!string.IsNullOrWhiteSpace(PackageVersion))
         {
             Version = new InstalledPackageVersion
             {
                 InstalledBranch = InstalledBranch,
                 InstalledCommitSha = PackageVersion
             };
-            
-            PackageVersion = null;
-            DisplayVersion = null;
-            InstalledBranch = null;
         }
     }
 #pragma warning restore CS0618 // Type or member is obsolete

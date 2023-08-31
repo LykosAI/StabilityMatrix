@@ -21,6 +21,8 @@ public class DankDiffusion : BaseGitPackage
         "https://github.com/LykosAI/StabilityMatrix/blob/main/LICENSE";
     public override string Blurb => "A dank interface for diffusion";
     public override string LaunchCommand => "test";
+    public override SharedFolderMethod RecommendedSharedFolderMethod =>
+        SharedFolderMethod.Symlink;
     
     public override IReadOnlyList<string> ExtraLaunchCommands => new[]
     {
@@ -34,20 +36,25 @@ public class DankDiffusion : BaseGitPackage
         throw new NotImplementedException();
     }
 
-    public override Task SetupModelFolders(DirectoryPath installDirectory)
+    public override Task SetupModelFolders(DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod)
     {
         throw new NotImplementedException();
     }
 
-    public override Task UpdateModelFolders(DirectoryPath installDirectory)
+    public override Task UpdateModelFolders(DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod)
     {
         throw new NotImplementedException();
     }
 
-    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory)
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod)
     {
         throw new NotImplementedException();
     }
+
+    public override IEnumerable<TorchVersion> AvailableTorchVersions { get; }
 
     public override List<LaunchOptionDefinition> LaunchOptions { get; }
     public override Task<string> GetLatestVersion()

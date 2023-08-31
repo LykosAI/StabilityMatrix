@@ -10,6 +10,7 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using NLog;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper.Factory;
@@ -200,6 +201,8 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
                                              "Selected commit is null");
         }
         
+        var torchVersion = SelectedBasePackage.GetRecommendedTorchVersion();
+        var sharedFolderRecommendation = SelectedBasePackage.RecommendedSharedFolderMethod;
         var package = new InstalledPackage
         {
             Id = Guid.NewGuid(),
@@ -209,6 +212,8 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
             Version = version,
             LaunchCommand = SelectedBasePackage.LaunchCommand,
             LastUpdateCheck = DateTimeOffset.Now,
+            PreferredTorchVersion = torchVersion,
+            PreferredSharedFolderMethod = sharedFolderRecommendation
         };
         
         // Recreate venv if it's a BaseGitPackage
@@ -218,7 +223,8 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
         }
         
         // Reconfigure shared links
-        await SelectedBasePackage.UpdateModelFolders(PackagePath);
+        var recommendedSharedFolderMethod = SelectedBasePackage.RecommendedSharedFolderMethod;
+        await SelectedBasePackage.UpdateModelFolders(PackagePath, recommendedSharedFolderMethod);
         
         settingsManager.Transaction(s => s.InstalledPackages.Add(package));
     }

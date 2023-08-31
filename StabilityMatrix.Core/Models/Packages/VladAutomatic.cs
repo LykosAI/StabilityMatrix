@@ -30,6 +30,17 @@ public class VladAutomatic : BaseGitPackage
     public override Uri PreviewImageUri =>
         new("https://github.com/vladmandic/automatic/raw/master/html/black-orange.jpg");
     public override bool ShouldIgnoreReleases => true;
+    
+    public override SharedFolderMethod RecommendedSharedFolderMethod =>
+        SharedFolderMethod.Symlink;
+
+    public override IEnumerable<TorchVersion> AvailableTorchVersions => new[]
+    {
+        TorchVersion.Cpu,
+        TorchVersion.Rocm,
+        TorchVersion.DirectMl,
+        TorchVersion.Cuda
+    };
 
     public VladAutomatic(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService,
         IPrerequisiteHelper prerequisiteHelper) :
@@ -139,43 +150,42 @@ public class VladAutomatic : BaseGitPackage
     public override string ExtraLaunchArguments => "";
     
     public override Task<string> GetLatestVersion() => Task.FromResult("master");
-    
-    public override async Task InstallPackage(string installLocation, IProgress<ProgressReport>? progress = null)
+
+    public override async Task InstallPackage(string installLocation, TorchVersion torchVersion,
+        IProgress<ProgressReport>? progress = null)
     {
         progress?.Report(new ProgressReport(-1f, "Installing package...", isIndeterminate: true));
         // Setup venv
         var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
         venvRunner.WorkingDirectory = installLocation;
         venvRunner.EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables;
-        
+
         await venvRunner.Setup().ConfigureAwait(false);
 
-        // Run initial install
-        if (HardwareHelper.HasNvidiaGpu())
+        switch (torchVersion)
         {
-            // CUDA
-            await venvRunner.CustomInstall("launch.py --use-cuda --debug --test", OnConsoleOutput)
-                .ConfigureAwait(false);
+            // Run initial install
+            case TorchVersion.Cuda:
+                await venvRunner.CustomInstall("launch.py --use-cuda --debug --test", OnConsoleOutput)
+                    .ConfigureAwait(false);
+                break;
+            case TorchVersion.Rocm:
+                await venvRunner.CustomInstall("launch.py --use-rocm --debug --test", OnConsoleOutput)
+                    .ConfigureAwait(false);
+                break;
+            case TorchVersion.DirectMl:
+                await venvRunner
+                    .CustomInstall("launch.py --use-directml --debug --test", OnConsoleOutput)
+                    .ConfigureAwait(false);
+                break;
+            default:
+                // CPU
+                await venvRunner.CustomInstall("launch.py --debug --test", OnConsoleOutput)
+                    .ConfigureAwait(false);
+                break;
         }
-        else if (HardwareHelper.PreferRocm())
-        {
-            // ROCm
-            await venvRunner.CustomInstall("launch.py --use-rocm --debug --test", OnConsoleOutput)
-                .ConfigureAwait(false);
-        }
-        else if (HardwareHelper.PreferDirectML())
-        {
-            // DirectML
-            await venvRunner.CustomInstall("launch.py --use-directml --debug --test", OnConsoleOutput)
-                .ConfigureAwait(false);
-        }
-        else
-        {
-            await venvRunner.CustomInstall("launch.py --debug --test", OnConsoleOutput)
-                .ConfigureAwait(false);
-        }
-        
-        progress?.Report(new ProgressReport(1, isIndeterminate: false));
+
+        progress?.Report(new ProgressReport(1f, isIndeterminate: false));
     }
 
     public override async Task DownloadPackage(string installLocation,
@@ -236,23 +246,24 @@ public class VladAutomatic : BaseGitPackage
     }
 
     public override async Task<InstalledPackageVersion> Update(InstalledPackage installedPackage,
-        IProgress<ProgressReport>? progress = null, bool includePrerelease = false)
+        TorchVersion torchVersion, IProgress<ProgressReport>? progress = null,
+        bool includePrerelease = false)
     {
         if (installedPackage.Version is null)
         {
             throw new Exception("Version is null");
         }
-        
+
         progress?.Report(new ProgressReport(-1f, message: "Downloading package update...",
             isIndeterminate: true, type: ProgressType.Update));
 
         await PrerequisiteHelper.RunGit(installedPackage.FullPath, "checkout",
             installedPackage.Version.InstalledBranch).ConfigureAwait(false);
-        
+
         var venvRunner = new PyVenvRunner(Path.Combine(installedPackage.FullPath!, "venv"));
         venvRunner.WorkingDirectory = installedPackage.FullPath!;
         venvRunner.EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables;
-        
+
         await venvRunner.CustomInstall("launch.py --upgrade --test", OnConsoleOutput)
             .ConfigureAwait(false);
 
@@ -276,13 +287,87 @@ public class VladAutomatic : BaseGitPackage
         }
         finally
         {
-            progress?.Report(new ProgressReport(1f, message: "Update Complete", isIndeterminate: false,
+            progress?.Report(new ProgressReport(1f, message: "Update Complete",
+                isIndeterminate: false,
                 type: ProgressType.Update));
         }
-        
+
         return new InstalledPackageVersion
         {
             InstalledBranch = installedPackage.Version.InstalledBranch
         };
     }
+
+    public override Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
+    {
+        switch (sharedFolderMethod)
+        {
+            case SharedFolderMethod.Symlink:
+                return base.SetupModelFolders(installDirectory, sharedFolderMethod);
+            case SharedFolderMethod.None:
+                return Task.CompletedTask;
+        }
+
+        // Config option
+        var configJsonPath = installDirectory + "config.json";
+        var exists = File.Exists(configJsonPath);
+        JsonObject? configRoot;
+        if (exists)
+        {
+            var configJson = File.ReadAllText(configJsonPath);
+            try
+            {
+                configRoot = JsonSerializer.Deserialize<JsonObject>(configJson) ?? new JsonObject();
+            }
+            catch (JsonException e)
+            {
+                Logger.Error(e, "Error setting up Vlad shared model config");
+                return Task.CompletedTask;
+            }
+        }
+        else
+        {
+            configRoot = new JsonObject();
+        }
+
+        configRoot["ckpt_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "StableDiffusion");
+        configRoot["diffusers_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "Diffusers");
+        configRoot["vae_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "VAE");
+        configRoot["lora_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "Lora");
+        configRoot["lyco_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "LyCORIS");
+        configRoot["embeddings_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "TextualInversion");
+        configRoot["hypernetwork_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "Hypernetwork");
+        configRoot["codeformer_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "Codeformer");
+        configRoot["gfpgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "GFPGAN");
+        configRoot["bsrgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "BSRGAN");
+        configRoot["esrgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "ESRGAN");
+        configRoot["realesrgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "RealESRGAN");
+        configRoot["scunet_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "ScuNET");
+        configRoot["swinir_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "SwinIR");
+        configRoot["ldsr_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "LDSR");
+        configRoot["clip_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "CLIP");
+        configRoot["control_net_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "ControlNet");
+
+        var configJsonStr = JsonSerializer.Serialize(configRoot, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        File.WriteAllText(configJsonPath, configJsonStr);
+
+        return Task.CompletedTask;
+    }
+
+    public override Task UpdateModelFolders(DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod) =>
+        SetupModelFolders(installDirectory, sharedFolderMethod);
+
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod) =>
+        sharedFolderMethod switch
+        {
+            SharedFolderMethod.Symlink => base.RemoveModelFolderLinks(installDirectory,
+                sharedFolderMethod),
+            SharedFolderMethod.None => Task.CompletedTask,
+            _ => Task.CompletedTask
+        };
 }

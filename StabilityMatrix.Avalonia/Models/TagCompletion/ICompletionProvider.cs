@@ -16,8 +16,8 @@ public interface ICompletionProvider
     /// <summary>
     /// Optional function to transform the text to be inserted
     /// </summary>
-    Func<string, string>? PrepareInsertionText => null;
-    
+    Func<ICompletionData, string>? PrepareInsertionText => null;
+
     /// <summary>
     /// Load the completion provider from a file.
     /// </summary>
@@ -27,7 +27,7 @@ public interface ICompletionProvider
     /// Load the completion provider from a file in the background.
     /// </summary>
     void BackgroundLoadFromFile(FilePath path, bool recreate = false);
-    
+
     /// <summary>
     /// Returns a list of completion items for the given text.
     /// </summary>

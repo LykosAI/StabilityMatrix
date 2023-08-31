@@ -6,5 +6,6 @@
 public enum CompletionType
 {
     Tag,
-    ExtraNetwork
+    ExtraNetwork,
+    ExtraNetworkType
 }

@@ -181,7 +181,8 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
 
     private static bool IsCompletionChar(char c)
     {
-        return char.IsLetterOrDigit(c) || c == '_' || c == '-' || c == ':';
+        const string extraAllowedChars = "._-:<";
+        return char.IsLetterOrDigit(c) || extraAllowedChars.Contains(c);
     }
 
     /// <summary>
@@ -243,11 +244,44 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         };
 
         // Check if this is an extra network request
-        if (
-            currentToken.Scopes.Contains("meta.structure.network.prompt")
-            && result.Tokens.ElementAtOrDefault(currentTokenIndex - 1) is { } prevToken
-        )
+        if (currentToken.Scopes.Contains("meta.structure.network.prompt"))
         {
+            // (case for initial '<')
+            // - Current token is "punctuation.definition.network.begin.prompt"
+            if (currentToken.Scopes.Contains("punctuation.definition.network.begin.prompt"))
+            {
+                // Offset the segment
+                var offsetSegment = new TextSegment
+                {
+                    StartOffset = segment.StartOffset + 1,
+                    EndOffset = segment.EndOffset
+                };
+                return new EditorCompletionRequest
+                {
+                    Text = "",
+                    Segment = offsetSegment,
+                    Type = CompletionType.ExtraNetworkType
+                };
+            }
+
+            // Next steps require a previous token
+            if (result.Tokens.ElementAtOrDefault(currentTokenIndex - 1) is not { } prevToken)
+            {
+                return null;
+            }
+
+            // (case for initial '<type')
+            // - Current token has "meta.embedded.network.type.prompt"
+            if (currentToken.Scopes.Contains("meta.embedded.network.type.prompt"))
+            {
+                return new EditorCompletionRequest
+                {
+                    Text = textEditor.Document.GetText(segment),
+                    Segment = segment,
+                    Type = CompletionType.ExtraNetworkType
+                };
+            }
+
             // (case for initial '<type:')
             // - Current token has "meta.structure.network" and "punctuation.separator.variable"
             // - Previous token has "meta.structure.network" and "meta.embedded.network.type"
@@ -275,10 +309,17 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
                     return null;
                 }
 
+                // Use offset segment to not replace the ':'
+                var offsetSegment = new TextSegment
+                {
+                    StartOffset = segment.StartOffset + 1,
+                    EndOffset = segment.EndOffset
+                };
+
                 return new EditorCompletionRequest
                 {
                     Text = "",
-                    Segment = segment,
+                    Segment = offsetSegment,
                     Type = CompletionType.ExtraNetwork,
                     ExtraNetworkTypes = networkType,
                 };

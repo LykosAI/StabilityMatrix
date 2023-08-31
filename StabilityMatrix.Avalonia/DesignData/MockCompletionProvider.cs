@@ -13,7 +13,7 @@ public class MockCompletionProvider : ICompletionProvider
     public bool IsLoaded => false;
 
     /// <inheritdoc />
-    public Func<string, string>? PrepareInsertionText => null;
+    public Func<ICompletionData, string>? PrepareInsertionText { get; } = data => data.Text;
 
     /// <inheritdoc />
     public Task LoadFromFile(FilePath path, bool recreate = false)
@@ -22,12 +22,14 @@ public class MockCompletionProvider : ICompletionProvider
     }
 
     /// <inheritdoc />
-    public void BackgroundLoadFromFile(FilePath path, bool recreate = false)
-    {
-    }
+    public void BackgroundLoadFromFile(FilePath path, bool recreate = false) { }
 
     /// <inheritdoc />
-    public IEnumerable<ICompletionData> GetCompletions(TextCompletionRequest completionRequest, int itemsCount, bool suggest)
+    public IEnumerable<ICompletionData> GetCompletions(
+        TextCompletionRequest completionRequest,
+        int itemsCount,
+        bool suggest
+    )
     {
         return Array.Empty<ICompletionData>();
     }

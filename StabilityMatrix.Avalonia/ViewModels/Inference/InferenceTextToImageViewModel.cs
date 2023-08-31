@@ -439,6 +439,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
                 var prompt = PromptCardViewModel.GetPrompt();
                 text = prompt.RawText;
                 prompt.Process();
+                prompt.ValidateExtraNetworks(modelIndexService);
 
                 var negPrompt = PromptCardViewModel.GetPrompt();
                 text = negPrompt.RawText;

@@ -40,7 +40,7 @@ public class CompletionProvider : ICompletionProvider
 
     public bool IsLoaded => searcher is not null;
 
-    public Func<string, string>? PrepareInsertionText =>
+    public Func<ICompletionData, string>? PrepareInsertionText =>
         settingsManager.Settings.IsCompletionRemoveUnderscoresEnabled
             ? PrepareInsertionText_RemoveUnderscores
             : null;
@@ -86,9 +86,10 @@ public class CompletionProvider : ICompletionProvider
         }
     }
 
-    private static string PrepareInsertionText_RemoveUnderscores(string text)
+    private static string PrepareInsertionText_RemoveUnderscores(ICompletionData data)
     {
-        return text.Replace("_", " ");
+        // Only for tags, skip and return text for other completion data
+        return data is not TagCompletionData ? data.Text : data.Text.Replace("_", " ");
     }
 
     /// <inheritdoc />
@@ -212,6 +213,11 @@ public class CompletionProvider : ICompletionProvider
             );
         }
 
+        if (completionRequest.Type == CompletionType.ExtraNetworkType)
+        {
+            return GetCompletionNetworkTypes(completionRequest.Text);
+        }
+
         throw new InvalidOperationException();
     }
 
@@ -243,6 +249,24 @@ public class CompletionProvider : ICompletionProvider
         }
 
         return completions;
+    }
+
+    private IEnumerable<ICompletionData> GetCompletionNetworkTypes(string searchTerm)
+    {
+        var availableTypes = new[]
+        {
+            (PromptExtraNetworkType.Lora, "lora"),
+            (PromptExtraNetworkType.LyCORIS, "lyco")
+        };
+
+        return availableTypes
+            .Where(
+                type =>
+                    type.Item1
+                        .GetStringValue()
+                        .StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase)
+            )
+            .Select(type => new ModelTypeCompletionData(type.Item2, type.Item1));
     }
 
     private IEnumerable<ICompletionData> GetCompletionTags(

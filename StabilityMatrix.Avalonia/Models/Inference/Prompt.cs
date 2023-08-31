@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Text;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Tokens;
+using StabilityMatrix.Core.Services;
 using TextMateSharp.Grammars;
 
 namespace StabilityMatrix.Avalonia.Models.Inference;
@@ -43,12 +47,23 @@ public record Prompt
         ProcessedText = processedText;
     }
 
+    /// <summary>
+    /// Verifies that extra network files exists locally.
+    /// </summary>
+    /// <exception cref="PromptValidationError">Thrown if a filename does not exist</exception>
+    public void ValidateExtraNetworks(IModelIndexService indexService)
+    {
+        GetExtraNetworks(indexService);
+    }
+
     private int GetSafeEndIndex(int index)
     {
         return Math.Min(index, RawText.Length);
     }
 
-    private (List<PromptExtraNetwork> promptExtraNetworks, string processedText) GetExtraNetworks()
+    private (List<PromptExtraNetwork> promptExtraNetworks, string processedText) GetExtraNetworks(
+        IModelIndexService? indexService = null
+    )
     {
         // Parse tokens "meta.structure.network.prompt"
         // "<": "punctuation.definition.network.begin.prompt"
@@ -162,6 +177,25 @@ public record Prompt
             var modelName = RawText[
                 modelNameToken.StartIndex..GetSafeEndIndex(modelNameToken.EndIndex)
             ];
+
+            // If index service provided, validate model name
+            if (indexService != null)
+            {
+                var localModelList = indexService.ModelIndex.GetOrAdd(
+                    parsedNetworkType.ConvertTo<SharedFolderType>()
+                );
+                var localModel = localModelList.FirstOrDefault(
+                    m => Path.GetFileNameWithoutExtension(m.FileName) == modelName
+                );
+                if (localModel == null)
+                {
+                    throw PromptValidationError.Network_UnknownModel(
+                        modelName,
+                        modelNameToken.StartIndex,
+                        GetSafeEndIndex(modelNameToken.EndIndex)
+                    );
+                }
+            }
 
             // Skip another colon token
             if (!tokens.MoveNext())

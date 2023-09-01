@@ -1,0 +1,22 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <!-- Add Controls for Previewer Here -->
+        </Border>
+    </Design.PreviewWith>
+    
+    <!--  Default grid splitter style  -->
+    <Style Selector="GridSplitter">
+        <Setter Property="Opacity" Value="0.6" />
+        <Setter Property="Background" Value="{DynamicResource ScrollBarTrackStroke}" />
+        <!--<Setter Property="Background" Value="{DynamicResource ScrollBarTrackStroke}" />-->
+        <Setter Property="BorderThickness" Value="6" />
+        <Setter Property="CornerRadius" Value="4" />
+    </Style>
+        
+    <!-- Remove accent color from active dock bar -->
+    <Style Selector="ToolChromeControl:active /template/ Grid#PART_Grip">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+</Styles>

@@ -16,24 +16,6 @@
     Focusable="True"
     mc:Ignorable="d">
 
-    <controls:UserControlBase.Styles>
-
-        <!--  Default grid splitter style  -->
-        <Style Selector="GridSplitter">
-            <Setter Property="Opacity" Value="0.6" />
-            <Setter Property="Background" Value="{DynamicResource ScrollBarTrackStroke}" />
-            <!--<Setter Property="Background" Value="{DynamicResource ScrollBarTrackStroke}" />-->
-            <Setter Property="BorderThickness" Value="6" />
-            <Setter Property="CornerRadius" Value="4" />
-        </Style>
-        
-        <!-- Remove accent color from active dock bar -->
-        <Style Selector="ToolChromeControl:active /template/ Grid#PART_Grip">
-            <Setter Property="Background" Value="Transparent" />
-        </Style>
-
-    </controls:UserControlBase.Styles>
-
     <Grid Margin="2,0,2,8">
         <DockControl
             x:Name="Dock"

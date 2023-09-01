@@ -132,11 +132,14 @@ public class AdvancedImageBox : TemplatedControl
                 {
                     7,
                     10,
-                    15,
+                    13,
+                    16,
                     20,
-                    25,
+                    24,
                     30,
+                    40,
                     50,
+                    60,
                     70,
                     100,
                     150,
@@ -803,7 +806,7 @@ public class AdvancedImageBox : TemplatedControl
     public static readonly StyledProperty<MouseButtons> PanWithMouseButtonsProperty =
         AvaloniaProperty.Register<AdvancedImageBox, MouseButtons>(
             nameof(PanWithMouseButtons),
-            MouseButtons.LeftButton | MouseButtons.MiddleButton | MouseButtons.RightButton
+            MouseButtons.LeftButton | MouseButtons.MiddleButton
         );
 
     /// <summary>
@@ -832,7 +835,7 @@ public class AdvancedImageBox : TemplatedControl
     public static readonly StyledProperty<MouseButtons> SelectWithMouseButtonsProperty =
         AvaloniaProperty.Register<AdvancedImageBox, MouseButtons>(
             nameof(SelectWithMouseButtons),
-            MouseButtons.LeftButton | MouseButtons.RightButton
+            MouseButtons.LeftButton
         );
 
     /// <summary>
@@ -1266,11 +1269,6 @@ public class AdvancedImageBox : TemplatedControl
         // ViewPort!.PointerWheelChanged += ViewPort_OnPointerWheelChanged;
     }
 
-    private void ViewPort_OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
-    {
-        e.Handled = true;
-    }
-
     #endregion
 
     #region Render methods
@@ -1495,24 +1493,6 @@ public class AdvancedImageBox : TemplatedControl
             //}
         }
     }
-
-    /*private void ViewPortOnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
-    {
-        e.Handled = true;
-        if (Image is null)
-            return;
-        if (AllowZoom && SizeMode == SizeModes.Normal)
-        {
-            // The MouseWheel event can contain multiple "spins" of the wheel so we need to adjust accordingly
-            //double spins = Math.Abs(e.Delta.Y);
-            //Debug.WriteLine(e.GetPosition(this));
-            // TODO: Really should update the source method to handle multiple increments rather than calling it multiple times
-            /*for (int i = 0; i < spins; i++)
-            {#1#
-            ProcessMouseZoom(e.Delta.Y > 0, e.GetPosition(ViewPort));
-            //}
-        }
-    }*/
 
     /// <inheritdoc />
     protected override void OnPointerPressed(PointerPressedEventArgs e)

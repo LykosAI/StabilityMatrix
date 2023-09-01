@@ -13,34 +13,31 @@ namespace StabilityMatrix.Avalonia.DesignData;
 public class MockInferenceClientManager : ObservableObject, IInferenceClientManager
 {
     public ComfyClient? Client { get; set; }
-    
+
     public IObservableCollection<HybridModelFile> Models { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
-    
+
     public IObservableCollection<HybridModelFile> VaeModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
     public IObservableCollection<ComfySampler> Samplers { get; } =
-        new ObservableCollectionExtended<ComfySampler>(new ComfySampler[]
-        {
-            new("euler_ancestral"),
-            new("euler"),
-            new("lms"),
-            new("heun"),
-            new("dpm_2"),
-            new("dpm_2_ancestral")
-        });
+        new ObservableCollectionExtended<ComfySampler>(ComfySampler.Defaults);
 
     public IObservableCollection<ComfyUpscaler> Upscalers { get; } =
-        new ObservableCollectionExtended<ComfyUpscaler>(new ComfyUpscaler[]
-        {
-            new("nearest-exact", ComfyUpscalerType.Latent),
-            new("bicubic", ComfyUpscalerType.Latent),
-            new("ESRGAN-4x", ComfyUpscalerType.ESRGAN)
-        });
+        new ObservableCollectionExtended<ComfyUpscaler>(
+            new ComfyUpscaler[]
+            {
+                new("nearest-exact", ComfyUpscalerType.Latent),
+                new("bicubic", ComfyUpscalerType.Latent),
+                new("ESRGAN-4x", ComfyUpscalerType.ESRGAN)
+            }
+        );
+
+    public IObservableCollection<ComfyScheduler> Schedulers { get; } =
+        new ObservableCollectionExtended<ComfyScheduler>(ComfyScheduler.Defaults);
 
     public bool IsConnected { get; set; }
-    
+
     public Task ConnectAsync()
     {
         return Task.CompletedTask;
@@ -56,7 +53,7 @@ public class MockInferenceClientManager : ObservableObject, IInferenceClientMana
     {
         return Task.CompletedTask;
     }
-    
+
     public void Dispose()
     {
         GC.SuppressFinalize(this);

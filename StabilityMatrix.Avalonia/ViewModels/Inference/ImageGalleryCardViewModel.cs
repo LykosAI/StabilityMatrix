@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Specialized;
+using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Collections;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
@@ -63,6 +65,23 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
         );
 
         ImageSources.CollectionChanged += OnImageSourcesItemsChanged;
+    }
+
+    public void SetPreviewImage(byte[] imageBytes)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            using var stream = new MemoryStream(imageBytes);
+
+            using var bitmap = new Bitmap(stream);
+
+            var currentImage = PreviewImage;
+
+            PreviewImage = bitmap;
+            IsPreviewOverlayEnabled = true;
+
+            currentImage?.Dispose();
+        });
     }
 
     private void OnImageSourcesItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)

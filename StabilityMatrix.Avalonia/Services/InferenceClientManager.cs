@@ -64,6 +64,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     public IObservableCollection<ComfyUpscaler> Upscalers { get; } =
         new ObservableCollectionExtended<ComfyUpscaler>();
 
+    private readonly SourceCache<ComfyScheduler, string> schedulersSource = new(p => p.Name);
+
+    public IObservableCollection<ComfyScheduler> Schedulers { get; } =
+        new ObservableCollectionExtended<ComfyScheduler>();
+
     public InferenceClientManager(
         ILogger<InferenceClientManager> logger,
         IApiFactory apiFactory,
@@ -77,7 +82,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         modelsSource.Connect().DeferUntilLoaded().Bind(Models).Subscribe();
 
         vaeModelsDefaults.AddOrUpdate(HybridModelFile.Default);
-        
+
         vaeModelsDefaults
             .Connect()
             .Or(vaeModelsSource.Connect())
@@ -93,6 +98,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             .DeferUntilLoaded()
             .Bind(Upscalers)
             .Subscribe();
+
+        schedulersSource.Connect().DeferUntilLoaded().Bind(Schedulers).Subscribe();
 
         ResetSharedProperties();
     }
@@ -141,9 +148,21 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             { } modelUpscalerNames
         )
         {
-            modelUpscalersSource.EditDiff(modelUpscalerNames.Select(
-                s => new ComfyUpscaler(s, ComfyUpscalerType.ESRGAN)), ComfyUpscaler.Comparer);
+            modelUpscalersSource.EditDiff(
+                modelUpscalerNames.Select(s => new ComfyUpscaler(s, ComfyUpscalerType.ESRGAN)),
+                ComfyUpscaler.Comparer
+            );
             logger.LogTrace("Loaded model upscale methods: {@Upscalers}", modelUpscalerNames);
+        }
+
+        // Add scheduler names from Scheduler node
+        if (await Client.GetNodeOptionNamesAsync("KSampler", "scheduler") is { } schedulerNames)
+        {
+            schedulersSource.EditDiff(
+                schedulerNames.Select(s => new ComfyScheduler(s)),
+                ComfyScheduler.Comparer
+            );
+            logger.LogTrace("Loaded scheduler methods: {@Schedulers}", schedulerNames);
         }
     }
 
@@ -181,6 +200,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         latentUpscalersSource.EditDiff(ComfyUpscaler.Defaults, ComfyUpscaler.Comparer);
 
         modelUpscalersSource.Clear();
+
+        schedulersSource.EditDiff(ComfyScheduler.Defaults, ComfyScheduler.Comparer);
     }
 
     public async Task ConnectAsync()

@@ -21,7 +21,7 @@
                     <StackPanel 
                         HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
                         Spacing="8">
-                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="*,*,*">
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="*,*,*,*">
                             <!-- Sampler -->
                             <TextBlock
                                 Grid.Row="0"
@@ -39,15 +39,32 @@
                                 DisplayMemberBinding="{Binding DisplayName}"
                                 Margin="8,0,0,8"
                                 HorizontalAlignment="Stretch"/>
-                            <!-- Steps -->
+                            <!-- Scheduler -->
                             <TextBlock
                                 Grid.Row="1"
+                                Grid.Column="0"
+                                IsVisible="{Binding IsSchedulerSelectionEnabled}"
+                                Margin="0,0,0,8"
+                                VerticalAlignment="Center"
+                                Text="Scheduler" />
+                            <ui:FAComboBox
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                IsVisible="{Binding IsSchedulerSelectionEnabled}"
+                                ItemsSource="{Binding ClientManager.Schedulers}"
+                                SelectedItem="{Binding SelectedScheduler}"
+                                DisplayMemberBinding="{Binding DisplayName}"
+                                Margin="8,0,0,8"
+                                HorizontalAlignment="Stretch"/>
+                            <!-- Steps -->
+                            <TextBlock
+                                Grid.Row="2"
                                 Grid.Column="0"
                                 Margin="0,0,0,8"
                                 VerticalAlignment="Center"
                                 Text="Steps" />
                             <ui:NumberBox
-                                Grid.Row="1"
+                                Grid.Row="2"
                                 Grid.Column="1"
                                 SelectionHighlightColor="Transparent"
                                 Value="{Binding Steps}"
@@ -56,13 +73,13 @@
                                 SpinButtonPlacementMode="Inline"/>
                             <!-- CFG Scale -->
                             <TextBlock
-                                Grid.Row="2"
+                                Grid.Row="3"
                                 Grid.Column="0"
                                 IsVisible="{Binding IsCfgScaleEnabled}"
                                 VerticalAlignment="Center"
                                 Text="CFG Scale" />
                             <ui:NumberBox
-                                Grid.Row="2"
+                                Grid.Row="3"
                                 Grid.Column="1"
                                 IsVisible="{Binding IsCfgScaleEnabled}"
                                 SelectionHighlightColor="Transparent"

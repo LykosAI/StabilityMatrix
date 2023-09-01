@@ -10,10 +10,13 @@ using StabilityMatrix.Core.Models.Api.Comfy;
 
 namespace StabilityMatrix.Avalonia.Services;
 
-public interface IInferenceClientManager : IDisposable,  INotifyPropertyChanged, INotifyPropertyChanging
+public interface IInferenceClientManager
+    : IDisposable,
+        INotifyPropertyChanged,
+        INotifyPropertyChanging
 {
     ComfyClient? Client { get; set; }
-    
+
     [MemberNotNullWhen(true, nameof(Client))]
     bool IsConnected { get; }
 
@@ -21,7 +24,8 @@ public interface IInferenceClientManager : IDisposable,  INotifyPropertyChanged,
     IObservableCollection<HybridModelFile> VaeModels { get; }
     IObservableCollection<ComfySampler> Samplers { get; }
     IObservableCollection<ComfyUpscaler> Upscalers { get; }
-    
+    IObservableCollection<ComfyScheduler> Schedulers { get; }
+
     Task ConnectAsync();
 
     Task ConnectAsync(PackagePair packagePair);

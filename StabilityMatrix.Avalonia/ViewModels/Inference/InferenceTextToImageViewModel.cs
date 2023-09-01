@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -95,7 +96,13 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
                 // Model Card
                 vmFactory.Get<ModelCardViewModel>(),
                 // Sampler
-                vmFactory.Get<SamplerCardViewModel>(),
+                vmFactory.Get<SamplerCardViewModel>(samplerCard =>
+                {
+                    samplerCard.IsDimensionsEnabled = true;
+                    samplerCard.IsCfgScaleEnabled = true;
+                    samplerCard.IsSamplerSelectionEnabled = true;
+                    samplerCard.IsSchedulerSelectionEnabled = true;
+                }),
                 // Hires Fix
                 vmFactory.Get<StackExpanderViewModel>(stackExpander =>
                 {
@@ -108,9 +115,6 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
                             // Hires Fix Sampler
                             vmFactory.Get<SamplerCardViewModel>(samplerCard =>
                             {
-                                samplerCard.IsDimensionsEnabled = false;
-                                samplerCard.IsCfgScaleEnabled = false;
-                                samplerCard.IsSamplerSelectionEnabled = false;
                                 samplerCard.IsDenoiseStrengthEnabled = true;
                             })
                         }
@@ -257,9 +261,10 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
                 Convert.ToUInt64(seedCard.Seed),
                 samplerCard.Steps,
                 samplerCard.CfgScale,
-                samplerCard.SelectedSampler?.Name
-                    ?? throw new InvalidOperationException("Sampler not selected"),
-                "normal",
+                samplerCard.SelectedSampler
+                    ?? throw new ValidationException("Sampler not selected"),
+                samplerCard.SelectedScheduler
+                    ?? throw new ValidationException("Sampler not selected"),
                 positiveClip.GetOutput<ConditioningNodeConnection>(0),
                 negativeClip.GetOutput<ConditioningNodeConnection>(0),
                 emptyLatentImage.GetOutput<LatentNodeConnection>(0),
@@ -337,11 +342,13 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
                     Convert.ToUInt64(seedCard.Seed),
                     hiresSamplerCard.Steps,
                     hiresSamplerCard.CfgScale,
-                    // Use hires sampler name if not null, otherwise use the normal sampler name
-                    hiresSamplerCard.SelectedSampler?.Name
-                        ?? samplerCard.SelectedSampler?.Name
-                        ?? throw new InvalidOperationException("Sampler not selected"),
-                    "normal",
+                    // Use hires sampler name if not null, otherwise use the normal sampler
+                    hiresSamplerCard.SelectedSampler
+                        ?? samplerCard.SelectedSampler
+                        ?? throw new ValidationException("Sampler not selected"),
+                    hiresSamplerCard.SelectedScheduler
+                        ?? samplerCard.SelectedScheduler
+                        ?? throw new ValidationException("Scheduler not selected"),
                     positiveClip.GetOutput<ConditioningNodeConnection>(0),
                     negativeClip.GetOutput<ConditioningNodeConnection>(0),
                     hiresLatent,
@@ -405,19 +412,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
 
     private void OnPreviewImageReceived(object? sender, ComfyWebSocketImageData args)
     {
-        Dispatcher.UIThread.Post(() =>
-        {
-            using var stream = new MemoryStream(args.ImageBytes);
-
-            var bitmap = new Bitmap(stream);
-
-            var currentImage = ImageGalleryCardViewModel.PreviewImage;
-
-            ImageGalleryCardViewModel.PreviewImage = bitmap;
-            ImageGalleryCardViewModel.IsPreviewOverlayEnabled = true;
-
-            currentImage?.Dispose();
-        });
+        ImageGalleryCardViewModel.SetPreviewImage(args.ImageBytes);
     }
 
     private async Task GenerateImageImpl(

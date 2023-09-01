@@ -1296,10 +1296,12 @@ public class AdvancedImageBox : TemplatedControl
     {
         base.Render(context);
 
+        var zoomFactor = ZoomFactor;
+
         var shouldDrawPixelGrid =
             IsPixelGridEnabled
             && SizeMode == SizeModes.Normal
-            && ZoomFactor > PixelGridZoomThreshold;
+            && zoomFactor > PixelGridZoomThreshold;
 
         var viewPortSize = ViewPortSize;
         // Draw Grid

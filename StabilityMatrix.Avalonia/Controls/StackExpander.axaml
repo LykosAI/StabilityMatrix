@@ -7,9 +7,11 @@
         x:DataType="vmInference:StackExpanderViewModel">
     
     <Design.PreviewWith>
-        <Grid Width="600" Height="800">
-            <controls:StackExpander
-                DataContext="{x:Static mocks:DesignData.StackExpanderViewModel}"/>
+        <Grid Width="500" Height="800">
+            <StackPanel>
+                <controls:StackExpander
+                    DataContext="{x:Static mocks:DesignData.StackExpanderViewModel}"/>
+            </StackPanel>
         </Grid>
     </Design.PreviewWith>
     
@@ -41,6 +43,12 @@
                         VerticalAlignment="Top"
                         ItemsSource="{Binding Cards}">
                         
+                        <ItemsControl.Styles>
+                            <Style Selector="controls|Card">
+                                <Setter Property="IsCardVisualsEnabled" Value="False"/>
+                            </Style>
+                        </ItemsControl.Styles>
+                        
                         <ItemsControl.DataTemplates>
                             <local:ViewLocator/>
                         </ItemsControl.DataTemplates>
@@ -48,8 +56,9 @@
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <StackPanel 
+                                    x:Name="PART_ItemsPanel"
                                     VerticalAlignment="Top"
-                                    Spacing="{TemplateBinding Spacing}"/>
+                                    Spacing="{TemplateBinding Spacing}" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         

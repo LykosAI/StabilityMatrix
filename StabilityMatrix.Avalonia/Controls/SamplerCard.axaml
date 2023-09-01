@@ -19,9 +19,8 @@
                 <controls:Card
                     HorizontalAlignment="{TemplateBinding HorizontalAlignment}" >
                     <StackPanel 
-                        Margin="8" 
                         HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
-                        Spacing="12">
+                        Spacing="8">
                         <Grid ColumnDefinitions="Auto,*" RowDefinitions="*,*,*">
                             <!-- Sampler -->
                             <TextBlock

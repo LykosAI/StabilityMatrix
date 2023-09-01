@@ -1,25 +1,28 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
-        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-        xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
-        xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-        xmlns:data="clr-namespace:FluentAvalonia.UI.Data;assembly=FluentAvalonia"
-        xmlns:comfy="clr-namespace:StabilityMatrix.Core.Models.Api.Comfy;assembly=StabilityMatrix.Core"
-        x:DataType="vmInference:UpscalerCardViewModel">
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:comfy="clr-namespace:StabilityMatrix.Core.Models.Api.Comfy;assembly=StabilityMatrix.Core"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:data="clr-namespace:FluentAvalonia.UI.Data;assembly=FluentAvalonia"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
+    x:DataType="vmInference:UpscalerCardViewModel">
     <Design.PreviewWith>
         <Grid MinWidth="300">
             <StackPanel Spacing="16">
                 <controls:UpscalerCard DataContext="{x:Static mocks:DesignData.UpscalerCardViewModel}" />
+                <controls:UpscalerCard 
+                    DataContext="{x:Static mocks:DesignData.UpscalerCardViewModel}" />
             </StackPanel>
         </Grid>
     </Design.PreviewWith>
-
+    
     <Style Selector="controls|UpscalerCard">
-        <!-- Set Defaults -->
+        <!--  Set Defaults  -->
         <Setter Property="Template">
             <ControlTemplate>
-                <controls:Card>
+                <controls:Card x:Name="PART_Card">
                     <StackPanel Spacing="8">
                         <Grid ColumnDefinitions="Auto,*" RowDefinitions="*,*,*">
                             <!-- Upscaler -->
@@ -41,7 +44,7 @@
                         <!-- Dimensions (Scale) -->
                         <StackPanel>
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock 
+                                <TextBlock
                                     VerticalAlignment="Center"
                                     Text="Upscale by"/>
                                 <ui:NumberBox
@@ -54,15 +57,15 @@
                                     HorizontalAlignment="Stretch"
                                     SpinButtonPlacementMode="Compact"/>
                             </Grid>
-                            <Slider 
+                            <Slider
                                 Minimum="1"
                                 Maximum="4"
                                 Value="{Binding Scale}"
-                                IsSnapToTickEnabled="True" 
+                                IsSnapToTickEnabled="True"
                                 TickFrequency="0.5"
                                 TickPlacement="BottomRight"/>
                         </StackPanel>
-                        
+
                     </StackPanel>
                 </controls:Card>
             </ControlTemplate>

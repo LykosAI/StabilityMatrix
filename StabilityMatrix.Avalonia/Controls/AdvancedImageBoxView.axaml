@@ -14,7 +14,6 @@
         Name="ImageBox"
         SizeMode="Fit"
         CornerRadius="4"
-        PixelGridZoomThreshold="10"
         Image="{Binding BitmapAsync^}">
         <controls:AdvancedImageBox.ContextFlyout>
             <ui:FAMenuFlyout>

@@ -1123,7 +1123,7 @@ public class AdvancedImageBox : TemplatedControl
     }
 
     public static readonly StyledProperty<int> PixelGridZoomThresholdProperty =
-        AvaloniaProperty.Register<AdvancedImageBox, int>(nameof(PixelGridZoomThreshold), 5);
+        AvaloniaProperty.Register<AdvancedImageBox, int>(nameof(PixelGridZoomThreshold), 15);
 
     /// <summary>
     /// Minimum size of zoomed pixel's before the pixel grid will be drawn

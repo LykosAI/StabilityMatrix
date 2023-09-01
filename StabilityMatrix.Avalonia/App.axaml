@@ -45,5 +45,6 @@
         <StyleInclude Source="Controls/AdvancedImageBox.axaml"/>
         <StyleInclude Source="Controls/FrameCarousel.axaml"/>
         <StyleInclude Source="Controls/CodeCompletion/CompletionWindow.axaml"/>
+        <StyleInclude Source="Controls/SelectImageCard.axaml"/>
     </Application.Styles>
 </Application>

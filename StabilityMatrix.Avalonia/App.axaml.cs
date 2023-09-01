@@ -307,6 +307,7 @@ public sealed class App : Application
         services.AddTransient<StackExpanderViewModel>();
         services.AddTransient<ModelCardViewModel>();
         services.AddTransient<BatchSizeCardViewModel>();
+        services.AddTransient<SelectImageCardViewModel>();
 
         // Dialog factory
         services.AddSingleton<ServiceManager<ViewModelBase>>(
@@ -339,6 +340,7 @@ public sealed class App : Application
                     .Register(provider.GetRequiredService<ImageViewerViewModel>)
                     .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>)
                     .Register(provider.GetRequiredService<PackageImportViewModel>)
+                    .Register(provider.GetRequiredService<SelectImageCardViewModel>)
         );
     }
 
@@ -367,6 +369,7 @@ public sealed class App : Application
         services.AddTransient<UpscalerCard>();
         services.AddTransient<ModelCard>();
         services.AddTransient<BatchSizeCard>();
+        services.AddTransient<SelectImageCard>();
         services.AddSingleton<NewCheckpointsPage>();
 
         // Dialogs

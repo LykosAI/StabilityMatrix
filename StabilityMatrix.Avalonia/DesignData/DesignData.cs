@@ -36,7 +36,8 @@ namespace StabilityMatrix.Avalonia.DesignData;
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public static class DesignData
 {
-    [NotNull] public static IServiceProvider? Services { get; set; }
+    [NotNull]
+    public static IServiceProvider? Services { get; set; }
 
     private static bool isInitialized;
 
@@ -50,38 +51,42 @@ public static class DesignData
         var services = new ServiceCollection();
 
         var activePackageId = Guid.NewGuid();
-        services.AddSingleton<ISettingsManager, MockSettingsManager>(_ => new MockSettingsManager
-        {
-            Settings =
-            {
-                InstalledPackages = new List<InstalledPackage>
+        services.AddSingleton<ISettingsManager, MockSettingsManager>(
+            _ =>
+                new MockSettingsManager
                 {
-                    new()
+                    Settings =
                     {
-                        Id = activePackageId,
-                        DisplayName = "My Installed Package",
-                        DisplayVersion = "v1.0.0",
-                        PackageName = "stable-diffusion-webui",
-                        PackageVersion = "v1.0.0",
-                        LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
-                        LastUpdateCheck = DateTimeOffset.Now
-                    },
-                    new()
-                    {
-                        Id = Guid.NewGuid(),
-                        DisplayName = "Comfy Diffusion WebUI Dev Branch Long Name",
-                        PackageName = "ComfyUI",
-                        DisplayVersion = "main@ab73d4a",
-                        LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
-                        LastUpdateCheck = DateTimeOffset.Now
+                        InstalledPackages = new List<InstalledPackage>
+                        {
+                            new()
+                            {
+                                Id = activePackageId,
+                                DisplayName = "My Installed Package",
+                                DisplayVersion = "v1.0.0",
+                                PackageName = "stable-diffusion-webui",
+                                PackageVersion = "v1.0.0",
+                                LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
+                                LastUpdateCheck = DateTimeOffset.Now
+                            },
+                            new()
+                            {
+                                Id = Guid.NewGuid(),
+                                DisplayName = "Comfy Diffusion WebUI Dev Branch Long Name",
+                                PackageName = "ComfyUI",
+                                DisplayVersion = "main@ab73d4a",
+                                LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
+                                LastUpdateCheck = DateTimeOffset.Now
+                            }
+                        },
+                        ActiveInstalledPackageId = activePackageId
                     }
-                },
-                ActiveInstalledPackageId = activePackageId
-            }
-        });
+                }
+        );
 
         // General services
-        services.AddLogging()
+        services
+            .AddLogging()
             .AddSingleton<INavigationService, NavigationService>()
             .AddSingleton<IPackageFactory, PackageFactory>()
             .AddSingleton<IUpdateHelper, UpdateHelper>()
@@ -132,26 +137,31 @@ public static class DesignData
         LaunchOptionsViewModel = Services.GetRequiredService<LaunchOptionsViewModel>();
         LaunchOptionsViewModel.Cards = new[]
         {
-            LaunchOptionCard.FromDefinition(new LaunchOptionDefinition
-            {
-                Name = "Host",
-                Type = LaunchOptionType.String,
-                Description = "The host name for the Web UI",
-                DefaultValue = "localhost",
-                Options = {"--host"}
-            }),
-            LaunchOptionCard.FromDefinition(new LaunchOptionDefinition
-            {
-                Name = "API",
-                Type = LaunchOptionType.Bool,
-                Options = {"--api"}
-            })
+            LaunchOptionCard.FromDefinition(
+                new LaunchOptionDefinition
+                {
+                    Name = "Host",
+                    Type = LaunchOptionType.String,
+                    Description = "The host name for the Web UI",
+                    DefaultValue = "localhost",
+                    Options = { "--host" }
+                }
+            ),
+            LaunchOptionCard.FromDefinition(
+                new LaunchOptionDefinition
+                {
+                    Name = "API",
+                    Type = LaunchOptionType.Bool,
+                    Options = { "--api" }
+                }
+            )
         };
         LaunchOptionsViewModel.UpdateFilterCards();
 
         InstallerViewModel = Services.GetRequiredService<InstallerViewModel>();
-        InstallerViewModel.AvailablePackages =
-            packageFactory.GetAllAvailablePackages().ToImmutableArray();
+        InstallerViewModel.AvailablePackages = packageFactory
+            .GetAllAvailablePackages()
+            .ToImmutableArray();
         InstallerViewModel.SelectedPackage = InstallerViewModel.AvailablePackages[0];
         InstallerViewModel.ReleaseNotes = "## Release Notes\nThis is a test release note.";
 
@@ -168,8 +178,9 @@ public static class DesignData
                     {
                         FilePath = "~/Models/StableDiffusion/electricity-light.safetensors",
                         Title = "Auroral Background",
-                        PreviewImagePath = "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/" +
-                                           "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
+                        PreviewImagePath =
+                            "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
+                            + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
                         ConnectedModel = new ConnectedModelInfo
                         {
                             VersionName = "Lightning Auroral",
@@ -184,11 +195,7 @@ public static class DesignData
                             }
                         }
                     },
-                    new()
-                    {
-                        FilePath = "~/Models/Lora/model.safetensors",
-                        Title = "Some model"
-                    },
+                    new() { FilePath = "~/Models/Lora/model.safetensors", Title = "Some model" },
                 },
             },
             new(settingsManager, downloadService, modelFinder)
@@ -210,11 +217,7 @@ public static class DesignData
                 },
                 CheckpointFiles = new AdvancedObservableList<CheckpointFile>
                 {
-                    new()
-                    {
-                        FilePath = "~/Models/Lora/lora_v2.pt",
-                        Title = "Best Lora v2",
-                    }
+                    new() { FilePath = "~/Models/Lora/lora_v2.pt", Title = "Best Lora v2", }
                 }
             }
         };
@@ -224,8 +227,8 @@ public static class DesignData
             folder.DisplayedCheckpointFiles = folder.CheckpointFiles;
         }
 
-        CheckpointBrowserViewModel.ModelCards = new
-            ObservableCollection<CheckpointBrowserCardViewModel>
+        CheckpointBrowserViewModel.ModelCards =
+            new ObservableCollection<CheckpointBrowserCardViewModel>
             {
                 dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
                 {
@@ -243,8 +246,9 @@ public static class DesignData
             {
                 FilePath = "~/Models/StableDiffusion/electricity-light.safetensors",
                 Title = "Auroral Background",
-                PreviewImagePath = "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/" +
-                                   "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
+                PreviewImagePath =
+                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
+                    + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
                 ConnectedModel = new ConnectedModelInfo
                 {
                     VersionName = "Lightning Auroral",
@@ -259,19 +263,22 @@ public static class DesignData
                     }
                 }
             },
-            new()
-            {
-                FilePath = "~/Models/Lora/model.safetensors",
-                Title = "Some model"
-            }
+            new() { FilePath = "~/Models/Lora/model.safetensors", Title = "Some model" }
         };
 
-        ProgressManagerViewModel.ProgressItems.AddRange(new ProgressItemViewModelBase[]
-        {
-            new ProgressItemViewModel(new ProgressItem(Guid.NewGuid(), "Test File.exe",
-                new ProgressReport(0.5f, "Downloading..."))),
-            new MockDownloadProgressItemViewModel("Test File 2.exe"),
-        });
+        ProgressManagerViewModel.ProgressItems.AddRange(
+            new ProgressItemViewModelBase[]
+            {
+                new ProgressItemViewModel(
+                    new ProgressItem(
+                        Guid.NewGuid(),
+                        "Test File.exe",
+                        new ProgressReport(0.5f, "Downloading...")
+                    )
+                ),
+                new MockDownloadProgressItemViewModel("Test File 2.exe"),
+            }
+        );
 
         UpdateViewModel = Services.GetRequiredService<UpdateViewModel>();
         UpdateViewModel.UpdateText =
@@ -282,9 +289,14 @@ public static class DesignData
         isInitialized = true;
     }
 
-    [NotNull] public static InstallerViewModel? InstallerViewModel { get; private set; }
-    [NotNull] public static LaunchOptionsViewModel? LaunchOptionsViewModel { get; private set; }
-    [NotNull] public static UpdateViewModel? UpdateViewModel { get; private set; }
+    [NotNull]
+    public static InstallerViewModel? InstallerViewModel { get; private set; }
+
+    [NotNull]
+    public static LaunchOptionsViewModel? LaunchOptionsViewModel { get; private set; }
+
+    [NotNull]
+    public static UpdateViewModel? UpdateViewModel { get; private set; }
 
     public static ServiceManager<ViewModelBase> DialogFactory =>
         Services.GetRequiredService<ServiceManager<ViewModelBase>>();
@@ -306,13 +318,15 @@ public static class DesignData
             var vm = Services.GetRequiredService<PackageManagerViewModel>();
 
             vm.SetPackages(settings.Settings.InstalledPackages);
-            vm.SetUnknownPackages(new InstalledPackage[]
-            {
-                UnknownInstalledPackage.FromDirectoryName("sd-unknown-with-long-name"),
-            });
-            
+            vm.SetUnknownPackages(
+                new InstalledPackage[]
+                {
+                    UnknownInstalledPackage.FromDirectoryName("sd-unknown-with-long-name"),
+                }
+            );
+
             vm.PackageCards[0].IsUpdateAvailable = true;
-            
+
             return vm;
         }
     }
@@ -325,10 +339,10 @@ public static class DesignData
 
     public static SettingsViewModel SettingsViewModel =>
         Services.GetRequiredService<SettingsViewModel>();
-    
+
     public static InferenceSettingsViewModel InferenceSettingsViewModel =>
         Services.GetRequiredService<InferenceSettingsViewModel>();
-    
+
     public static CheckpointBrowserViewModel CheckpointBrowserViewModel =>
         Services.GetRequiredService<CheckpointBrowserViewModel>();
 
@@ -341,7 +355,8 @@ public static class DesignData
                 new()
                 {
                     Name = "BB95 Furry Mix",
-                    Description = @"Introducing SnoutMix
+                    Description =
+                        @"Introducing SnoutMix
 A Mix of non-Furry and Furry models such as Furtastic and BB95Furry to create a great variety of anthro AI generation options, but bringing out more detail, still giving a lot of freedom to customise the human aspects, and having great backgrounds, with a focus on something more realistic. Works well with realistic character loras.
 The gallery images are often inpainted, but you will get something very similar if copying their data directly. They are inpainted using the same model, therefore all results are possible without anything custom/hidden-away. Controlnet Tiled is applied to enhance them further afterwards. Gallery images were made with same model but before it was renamed",
                     BaseModel = "SD 1.5",
@@ -368,19 +383,18 @@ The gallery images are often inpainted, but you will get something very similar 
                                 Fp = CivitModelFpType.fp32,
                                 Size = CivitModelSize.full
                             },
-                            Hashes = new CivitFileHashes
-                            {
-                                BLAKE3 = "ABCD"
-                            }
+                            Hashes = new CivitFileHashes { BLAKE3 = "ABCD" }
                         }
                     }
                 }
             };
-            var sampleViewModel =
-                new ModelVersionViewModel(new HashSet<string> {"ABCD"}, sampleCivitVersions[0]);
+            var sampleViewModel = new ModelVersionViewModel(
+                new HashSet<string> { "ABCD" },
+                sampleCivitVersions[0]
+            );
 
             // Sample data for dialogs
-            vm.Versions = new List<ModelVersionViewModel> {sampleViewModel};
+            vm.Versions = new List<ModelVersionViewModel> { sampleViewModel };
             vm.Title = sampleCivitVersions[0].Name;
             vm.Description = sampleCivitVersions[0].Description;
             vm.SelectedVersionViewModel = sampleViewModel;
@@ -388,7 +402,7 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static OneClickInstallViewModel OneClickInstallViewModel =>
         Services.GetRequiredService<OneClickInstallViewModel>();
-    
+
     public static InferenceViewModel InferenceViewModel =>
         Services.GetRequiredService<InferenceViewModel>();
 
@@ -419,113 +433,115 @@ The gallery images are often inpainted, but you will get something very similar 
             }
         });
 
-    public static EnvVarsViewModel EnvVarsViewModel => DialogFactory.Get<EnvVarsViewModel>(
-        viewModel =>
+    public static EnvVarsViewModel EnvVarsViewModel =>
+        DialogFactory.Get<EnvVarsViewModel>(viewModel =>
         {
-            viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>
-            {
-                new("UWU", "TRUE"),
-            };
+            viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair> { new("UWU", "TRUE"), };
         });
-    
+
     public static InferenceTextToImageViewModel InferenceTextToImageViewModel =>
         DialogFactory.Get<InferenceTextToImageViewModel>();
 
     public static PackageImportViewModel PackageImportViewModel =>
         DialogFactory.Get<PackageImportViewModel>();
 
-    public static RefreshBadgeViewModel RefreshBadgeViewModel => new()
-    {
-        State = ProgressState.Success
-    };
+    public static RefreshBadgeViewModel RefreshBadgeViewModel =>
+        new() { State = ProgressState.Success };
 
     public static SeedCardViewModel SeedCardViewModel => new();
 
-    public static SamplerCardViewModel SamplerCardViewModel => DialogFactory.Get<SamplerCardViewModel>(vm =>
-    {
-        vm.Steps = 20;
-        vm.CfgScale = 7;
-        vm.IsDenoiseStrengthEnabled = false;
-        vm.IsDimensionsEnabled = true;
-        vm.SelectedSampler = new ComfySampler("euler");
-    });
-    
-    public static SamplerCardViewModel SamplerCardViewModelScaleMode => DialogFactory.Get<SamplerCardViewModel>(vm =>
-    {
-        vm.Steps = 20;
-        vm.CfgScale = 7;
-        vm.SelectedSampler = new ComfySampler("euler");
-        vm.IsDimensionsEnabled = false;
-        vm.IsCfgScaleEnabled = false;
-        vm.IsSamplerSelectionEnabled = false;
-        vm.IsDenoiseStrengthEnabled = true;
-    });
+    public static SamplerCardViewModel SamplerCardViewModel =>
+        DialogFactory.Get<SamplerCardViewModel>(vm =>
+        {
+            vm.Steps = 20;
+            vm.CfgScale = 7;
+            vm.IsDenoiseStrengthEnabled = false;
+            vm.IsDimensionsEnabled = true;
+            vm.SelectedSampler = new ComfySampler("euler");
+        });
+
+    public static SamplerCardViewModel SamplerCardViewModelScaleMode =>
+        DialogFactory.Get<SamplerCardViewModel>(vm =>
+        {
+            vm.Steps = 20;
+            vm.CfgScale = 7;
+            vm.SelectedSampler = new ComfySampler("euler");
+            vm.IsDimensionsEnabled = false;
+            vm.IsCfgScaleEnabled = false;
+            vm.IsSamplerSelectionEnabled = false;
+            vm.IsDenoiseStrengthEnabled = true;
+        });
 
     public static ModelCardViewModel ModelCardViewModel => DialogFactory.Get<ModelCardViewModel>();
-    
+
     public static ImageGalleryCardViewModel ImageGalleryCardViewModel =>
         DialogFactory.Get<ImageGalleryCardViewModel>(vm =>
         {
-            vm.ImageSources.AddRange(new ImageSource[]
-            {
-                new(new Uri("https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/4a7e00a7-6f18-42d4-87c0-10e792df2640/width=1152")),
-                new(new Uri("https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1024")),
-                new(new Uri("https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/16588c94-6595-4be9-8806-d7e6e22d198c/width=1152")),
-            });
+            vm.ImageSources.AddRange(
+                new ImageSource[]
+                {
+                    new(
+                        new Uri(
+                            "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/4a7e00a7-6f18-42d4-87c0-10e792df2640/width=1152"
+                        )
+                    ),
+                    new(
+                        new Uri(
+                            "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1024"
+                        )
+                    ),
+                    new(
+                        new Uri(
+                            "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/16588c94-6595-4be9-8806-d7e6e22d198c/width=1152"
+                        )
+                    ),
+                }
+            );
         });
 
     public static PromptCardViewModel PromptCardViewModel =>
         DialogFactory.Get<PromptCardViewModel>(vm =>
         {
-            vm.PromptDocument.Text = "house, (high quality), [example], BREAK\n\n<lora:details:0.8>";
+            vm.PromptDocument.Text =
+                "house, (high quality), [example], BREAK\n\n<lora:details:0.8>";
             vm.NegativePromptDocument.Text = "blurry, jpeg artifacts";
         });
 
     public static StackCardViewModel StackCardViewModel =>
         DialogFactory.Get<StackCardViewModel>(vm =>
         {
-            vm.AddCards(new LoadableViewModelBase[]
-            {
-                SamplerCardViewModel,
-                SeedCardViewModel,
-            });
+            vm.AddCards(new LoadableViewModelBase[] { SamplerCardViewModel, SeedCardViewModel, });
         });
 
     public static StackExpanderViewModel StackExpanderViewModel =>
         DialogFactory.Get<StackExpanderViewModel>(vm =>
         {
             vm.Title = "Hires Fix";
-            vm.AddCards(new LoadableViewModelBase[]
-            {
-                SamplerCardViewModel,
-                SeedCardViewModel,
-            });
+            vm.AddCards(new LoadableViewModelBase[] { SamplerCardViewModel, SeedCardViewModel, });
         });
 
     public static UpscalerCardViewModel UpscalerCardViewModel =>
         DialogFactory.Get<UpscalerCardViewModel>();
-    
+
     public static BatchSizeCardViewModel BatchSizeCardViewModel =>
         DialogFactory.Get<BatchSizeCardViewModel>();
 
-    public static IList<ICompletionData> SampleCompletionData => new List<ICompletionData>
-    {
-        new TagCompletionData("test1", TagType.General),
-        new TagCompletionData("test2", TagType.Artist),
-        new TagCompletionData("test3", TagType.Character),
-        new TagCompletionData("test4", TagType.Copyright),
-        new TagCompletionData("test5", TagType.Species),
-        new TagCompletionData("test_unknown", TagType.Invalid),
-    };
-    
+    public static IList<ICompletionData> SampleCompletionData =>
+        new List<ICompletionData>
+        {
+            new TagCompletionData("test1", TagType.General),
+            new TagCompletionData("test2", TagType.Artist),
+            new TagCompletionData("test3", TagType.Character),
+            new TagCompletionData("test4", TagType.Copyright),
+            new TagCompletionData("test5", TagType.Species),
+            new TagCompletionData("test_unknown", TagType.Invalid),
+        };
+
     public static CompletionList SampleCompletionList
     {
         get
         {
-            var list = new CompletionList
-            {
-                IsFiltering = true
-            };
+            var list = new CompletionList { IsFiltering = true };
             list.CompletionData.AddRange(SampleCompletionData);
             list.FilteredCompletionData.AddRange(list.CompletionData);
             list.SelectItem("te", true);
@@ -533,16 +549,36 @@ The gallery images are often inpainted, but you will get something very similar 
         }
     }
 
-    public static ImageViewerViewModel ImageViewerViewModel 
-        => DialogFactory.Get<ImageViewerViewModel>(vm =>
+    public static ImageViewerViewModel ImageViewerViewModel =>
+        DialogFactory.Get<ImageViewerViewModel>(vm =>
         {
-            vm.ImageSource = new ImageSource(new Uri(
-                "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"));
+            vm.ImageSource = new ImageSource(
+                new Uri(
+                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"
+                )
+            );
         });
-    
-    public static ImageSource SampleImageSource => new(new Uri(
-        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"));
-    
+
+    public static SelectImageCardViewModel SelectImageCardViewModel =>
+        DialogFactory.Get<SelectImageCardViewModel>();
+
+    public static SelectImageCardViewModel SelectImageCardViewModel_WithImage =>
+        DialogFactory.Get<SelectImageCardViewModel>(vm =>
+        {
+            vm.ImageSource = new ImageSource(
+                new Uri(
+                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"
+                )
+            );
+        });
+
+    public static ImageSource SampleImageSource =>
+        new(
+            new Uri(
+                "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"
+            )
+        );
+
     public static Indexer Types => new();
 
     public class Indexer
@@ -551,8 +587,9 @@ The gallery images are often inpainted, but you will get something very similar 
         {
             get
             {
-                var type = Type.GetType(typeName) ?? 
-                           throw new ArgumentException($"Type {typeName} not found");
+                var type =
+                    Type.GetType(typeName)
+                    ?? throw new ArgumentException($"Type {typeName} not found");
                 try
                 {
                     return Services.GetService(type);

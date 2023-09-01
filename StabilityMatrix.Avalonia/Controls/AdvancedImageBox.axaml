@@ -20,8 +20,6 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <Grid 
-                    ColumnDefinitions="*,Auto" 
-                    RowDefinitions="*,Auto"
                     HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
                     VerticalAlignment="{TemplateBinding VerticalAlignment}">
 
@@ -34,7 +32,9 @@
                     <ScrollBar
                         Name="VerticalScrollBar"
                         Grid.Row="0"
-                        Grid.Column="1"
+                        Grid.Column="0"
+                        HorizontalAlignment="Right"
+                        Background="Transparent"
                         Maximum="0"
                         Minimum="0"
                         Orientation="Vertical"
@@ -43,8 +43,10 @@
 
                     <ScrollBar
                         Name="HorizontalScrollBar"
-                        Grid.Row="1"
+                        Grid.Row="0"
                         Grid.Column="0"
+                        VerticalAlignment="Bottom"
+                        Background="Transparent"
                         Maximum="0"
                         Minimum="0"
                         Orientation="Horizontal"

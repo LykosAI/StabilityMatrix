@@ -14,16 +14,6 @@
             <controls:PromptCard DataContext="{x:Static mocks:DesignData.PromptCardViewModel}"/>
         </Grid>
     </Design.PreviewWith>
-
-    <Styles.Resources>
-        <ExperimentalAcrylicMaterial
-            x:Key="AcrylicMaterial"
-            FallbackColor="{DynamicResource ThemeBackgroundColor}"
-            TintColor="Black"
-            TintOpacity="0.78"
-            MaterialOpacity="0.9"
-            BackgroundSource="Digger" />
-    </Styles.Resources>
     
     <Style Selector="controls|PromptCard">
         <!-- Set Defaults -->
@@ -85,7 +75,7 @@
                                 Grid.Column="0"
                                 Grid.ColumnSpan="2"
                                 VerticalAlignment="Stretch"
-                                Material="{StaticResource AcrylicMaterial}"
+                                Material="{StaticResource ThemeDarkAcrylicMaterial}"
                                 CornerRadius="4">
                             
                                 <avaloniaEdit:TextEditor
@@ -124,7 +114,7 @@
                             <ExperimentalAcrylicBorder
                                 Grid.Row="1"
                                 VerticalAlignment="Stretch"
-                                Material="{StaticResource AcrylicMaterial}"
+                                Material="{StaticResource ThemeDarkAcrylicMaterial}"
                                 CornerRadius="4">
                             
                                 <avaloniaEdit:TextEditor

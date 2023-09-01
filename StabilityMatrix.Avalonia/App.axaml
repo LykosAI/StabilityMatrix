@@ -14,6 +14,7 @@
          <ResourceDictionary>
              <ResourceDictionary.MergedDictionaries>
                  <ResourceInclude Source="Styles/ThemeColors.axaml"/>
+                 <ResourceInclude Source="Styles/ThemeMaterials.axaml"/>
                  <ResourceInclude Source="Styles/Card.axaml"/>
                  <ResourceInclude Source="Controls/CodeCompletion/CompletionListThemes.axaml"/>
              </ResourceDictionary.MergedDictionaries>

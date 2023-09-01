@@ -20,16 +20,6 @@
             </Grid>
         </Panel>
     </Design.PreviewWith>
-
-    <Styles.Resources>
-        <ExperimentalAcrylicMaterial
-            x:Key="AcrylicMaterial"
-            FallbackColor="{DynamicResource ThemeBackgroundColor}"
-            TintColor="Black"
-            TintOpacity="0.78"
-            MaterialOpacity="0.9"
-            BackgroundSource="Digger" />
-    </Styles.Resources>
     
     <Style Selector="controls|SelectImageCard">
         <!-- Set Defaults -->
@@ -44,7 +34,7 @@
                     <!-- Background frame -->
                     <ExperimentalAcrylicBorder
                         VerticalAlignment="Stretch"
-                        Material="{StaticResource AcrylicMaterial}"
+                        Material="{StaticResource ThemeDarkAcrylicMaterial}"
                         CornerRadius="4">
                         <Panel>
                             <!-- Image -->

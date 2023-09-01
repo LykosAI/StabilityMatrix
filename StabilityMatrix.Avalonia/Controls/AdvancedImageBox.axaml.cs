@@ -1213,6 +1213,24 @@ public class AdvancedImageBox : TemplatedControl
     }
 
     public bool HaveSelection => !IsRectEmpty(SelectionRegion);
+
+    private BitmapInterpolationMode? _bitmapInterpolationMode;
+
+    /// <summary>
+    /// Gets or sets the current Bitmap Interpolation Mode
+    /// </summary>
+    public BitmapInterpolationMode BitmapInterpolationMode
+    {
+        get => _bitmapInterpolationMode ??= RenderOptions.GetBitmapInterpolationMode(this);
+        set
+        {
+            if (_bitmapInterpolationMode == value)
+                return;
+            _bitmapInterpolationMode = value;
+            RenderOptions.SetBitmapInterpolationMode(this, value);
+        }
+    }
+
     #endregion
 
     #region Constructor
@@ -1262,29 +1280,26 @@ public class AdvancedImageBox : TemplatedControl
             return;
         if (renderOnlyCursorTracker && _trackerImage is null)
             return;
+
+        var isHighZoom = ZoomFactor > PixelGridZoomThreshold;
+
+        // If we're in high zoom, switch off bitmap interpolation mode
+        // Otherwise use high quality
+        BitmapInterpolationMode = isHighZoom
+            ? BitmapInterpolationMode.None
+            : BitmapInterpolationMode.HighQuality;
+
         InvalidateVisual();
     }
 
     public override void Render(DrawingContext context)
     {
-        //Debug.WriteLine($"Render: {DateTime.Now.Ticks}");
         base.Render(context);
-
-        var zoomFactor = ZoomFactor;
 
         var shouldDrawPixelGrid =
             IsPixelGridEnabled
             && SizeMode == SizeModes.Normal
-            && zoomFactor > PixelGridZoomThreshold;
-
-        var isHighZoom = zoomFactor > PixelGridZoomThreshold;
-
-        // If we're in high zoom, switch off bitmap interpolation mode
-        // Otherwise use high quality
-        RenderOptions.SetBitmapInterpolationMode(
-            this,
-            isHighZoom ? BitmapInterpolationMode.None : BitmapInterpolationMode.HighQuality
-        );
+            && ZoomFactor > PixelGridZoomThreshold;
 
         var viewPortSize = ViewPortSize;
         // Draw Grid

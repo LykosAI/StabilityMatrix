@@ -442,6 +442,9 @@ The gallery images are often inpainted, but you will get something very similar 
     public static InferenceTextToImageViewModel InferenceTextToImageViewModel =>
         DialogFactory.Get<InferenceTextToImageViewModel>();
 
+    public static InferenceImageUpscaleViewModel InferenceImageUpscaleViewModel =>
+        DialogFactory.Get<InferenceImageUpscaleViewModel>();
+
     public static PackageImportViewModel PackageImportViewModel =>
         DialogFactory.Get<PackageImportViewModel>();
 
@@ -517,7 +520,9 @@ The gallery images are often inpainted, but you will get something very similar 
         DialogFactory.Get<StackExpanderViewModel>(vm =>
         {
             vm.Title = "Hires Fix";
-            vm.AddCards(new LoadableViewModelBase[] { SamplerCardViewModel, SeedCardViewModel, });
+            vm.AddCards(
+                new LoadableViewModelBase[] { UpscalerCardViewModel, SamplerCardViewModel }
+            );
         });
 
     public static UpscalerCardViewModel UpscalerCardViewModel =>

@@ -52,6 +52,7 @@ using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
+using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Avalonia.Views.Settings;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Converters.Json;
@@ -289,6 +290,7 @@ public sealed class App : Application
         services.AddTransient<CheckpointFolder>();
         services.AddTransient<CheckpointFile>();
         services.AddTransient<InferenceTextToImageViewModel>();
+        services.AddTransient<InferenceImageUpscaleViewModel>();
         services.AddTransient<CheckpointBrowserCardViewModel>();
         services.AddTransient<PackageCardViewModel>();
 
@@ -329,6 +331,7 @@ public sealed class App : Application
                     .Register(provider.GetRequiredService<EnvVarsViewModel>)
                     .Register(provider.GetRequiredService<ProgressManagerViewModel>)
                     .Register(provider.GetRequiredService<InferenceTextToImageViewModel>)
+                    .Register(provider.GetRequiredService<InferenceImageUpscaleViewModel>)
                     .Register(provider.GetRequiredService<SeedCardViewModel>)
                     .Register(provider.GetRequiredService<SamplerCardViewModel>)
                     .Register(provider.GetRequiredService<ImageGalleryCardViewModel>)
@@ -359,6 +362,7 @@ public sealed class App : Application
 
         // Inference tabs
         services.AddTransient<InferenceTextToImageView>();
+        services.AddTransient<InferenceImageUpscaleView>();
 
         // Inference controls
         services.AddTransient<ImageGalleryCard>();

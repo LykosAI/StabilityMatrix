@@ -296,7 +296,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         );
 
         // If hi-res fix is enabled, add the LatentUpscale node and another KSampler node
-        if (overrides is { IsHiresFixEnabled: true } || IsHiresFixEnabled)
+        if (overrides?.IsHiresFixEnabled ?? IsHiresFixEnabled)
         {
             var hiresUpscalerCard = UpscalerCardViewModel;
             var hiresSamplerCard = HiresSamplerCardViewModel;
@@ -432,25 +432,9 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         }
 
         // Validate the prompts
+        if (!await PromptCardViewModel.ValidatePrompts())
         {
-            var text = "";
-            try
-            {
-                var prompt = PromptCardViewModel.GetPrompt();
-                text = prompt.RawText;
-                prompt.Process();
-                prompt.ValidateExtraNetworks(modelIndexService);
-
-                var negPrompt = PromptCardViewModel.GetPrompt();
-                text = negPrompt.RawText;
-                negPrompt.Process();
-            }
-            catch (PromptError e)
-            {
-                var dialog = DialogHelper.CreatePromptErrorDialog(e, text);
-                await dialog.ShowAsync();
-                return;
-            }
+            return;
         }
 
         // If enabled, randomize the seed

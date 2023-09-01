@@ -20,6 +20,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -27,6 +28,13 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(PromptCard))]
 public partial class PromptCardViewModel : LoadableViewModelBase
 {
+    private readonly IModelIndexService modelIndexService;
+
+    /// <summary>
+    /// Cache of prompt text to tokenized Prompt
+    /// </summary>
+    private LRUCache<string, Prompt> PromptCache { get; } = new(4);
+
     public ICompletionProvider CompletionProvider { get; }
     public ITokenizerProvider TokenizerProvider { get; }
     public SharedState SharedState { get; }
@@ -42,9 +50,11 @@ public partial class PromptCardViewModel : LoadableViewModelBase
         ICompletionProvider completionProvider,
         ITokenizerProvider tokenizerProvider,
         ISettingsManager settingsManager,
+        IModelIndexService modelIndexService,
         SharedState sharedState
     )
     {
+        this.modelIndexService = modelIndexService;
         CompletionProvider = completionProvider;
         TokenizerProvider = tokenizerProvider;
         SharedState = sharedState;
@@ -58,19 +68,64 @@ public partial class PromptCardViewModel : LoadableViewModelBase
     }
 
     /// <summary>
+    /// Gets the tokenized Prompt for given text and caches it
+    /// </summary>
+    private Prompt GetOrCachePrompt(string text)
+    {
+        // Try get from cache
+        if (PromptCache.Get(text, out var cachedPrompt))
+        {
+            return cachedPrompt!;
+        }
+        var prompt = Prompt.FromRawText(text, TokenizerProvider);
+        PromptCache.Add(text, prompt);
+        return prompt;
+    }
+
+    /// <summary>
     /// Processes current positive prompt text into a Prompt object
     /// </summary>
-    public Prompt GetPrompt()
-    {
-        return Prompt.FromRawText(PromptDocument.Text, TokenizerProvider);
-    }
+    public Prompt GetPrompt() => GetOrCachePrompt(PromptDocument.Text);
 
     /// <summary>
     /// Processes current negative prompt text into a Prompt object
     /// </summary>
-    public Prompt GetNegativePrompt()
+    public Prompt GetNegativePrompt() => GetOrCachePrompt(NegativePromptDocument.Text);
+
+    /// <summary>
+    /// Validates both prompts, shows an error dialog if invalid
+    /// </summary>
+    public async Task<bool> ValidatePrompts()
     {
-        return Prompt.FromRawText(NegativePromptDocument.Text, TokenizerProvider);
+        var promptText = PromptDocument.Text;
+        var negPromptText = NegativePromptDocument.Text;
+
+        try
+        {
+            var prompt = GetOrCachePrompt(promptText);
+            prompt.Process();
+            prompt.ValidateExtraNetworks(modelIndexService);
+        }
+        catch (PromptError e)
+        {
+            var dialog = DialogHelper.CreatePromptErrorDialog(e, promptText);
+            await dialog.ShowAsync();
+            return false;
+        }
+
+        try
+        {
+            var negPrompt = GetOrCachePrompt(negPromptText);
+            negPrompt.Process();
+        }
+        catch (PromptError e)
+        {
+            var dialog = DialogHelper.CreatePromptErrorDialog(e, negPromptText);
+            await dialog.ShowAsync();
+            return false;
+        }
+
+        return true;
     }
 
     [RelayCommand]

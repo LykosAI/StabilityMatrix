@@ -1,7 +1,10 @@
 ﻿using System.Collections.Immutable;
+using System.Text.Json.Serialization;
+using StabilityMatrix.Core.Converters.Json;
 
 namespace StabilityMatrix.Core.Models.Api.Comfy;
 
+[JsonConverter(typeof(StringJsonConverter<ComfyUpscaler>))]
 public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
 {
     private static Dictionary<string, string> ConvertDict { get; } =
@@ -13,9 +16,11 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
             ["bicubic"] = "Bicubic",
             ["bislerp"] = "Bislerp",
         };
-    
+
     public static IReadOnlyList<ComfyUpscaler> Defaults { get; } =
-        ConvertDict.Keys.Select(k => new ComfyUpscaler(k, ComfyUpscalerType.Latent)).ToImmutableArray();
+        ConvertDict.Keys
+            .Select(k => new ComfyUpscaler(k, ComfyUpscalerType.Latent))
+            .ToImmutableArray();
 
     public string DisplayType
     {
@@ -30,7 +35,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
             };
         }
     }
-    
+
     public string DisplayName
     {
         get
@@ -45,11 +50,11 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                 // Remove file extensions
                 return Path.GetFileNameWithoutExtension(Name);
             }
-            
+
             return Name;
         }
     }
-    
+
     public string ShortDisplayName
     {
         get
@@ -59,7 +64,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                 // Remove file extensions
                 return Path.GetFileNameWithoutExtension(Name);
             }
-            
+
             return DisplayName;
         }
     }
@@ -73,9 +78,10 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
 
         public int GetHashCode(ComfyUpscaler obj)
         {
-            return HashCode.Combine(obj.Name, (int) obj.Type);
+            return HashCode.Combine(obj.Name, (int)obj.Type);
         }
     }
 
-    public static IEqualityComparer<ComfyUpscaler> Comparer { get; } = new NameTypeEqualityComparer();
+    public static IEqualityComparer<ComfyUpscaler> Comparer { get; } =
+        new NameTypeEqualityComparer();
 }

@@ -458,7 +458,8 @@ The gallery images are often inpainted, but you will get something very similar 
         {
             vm.Steps = 20;
             vm.CfgScale = 7;
-            vm.IsDenoiseStrengthEnabled = false;
+            vm.IsCfgScaleEnabled = true;
+            vm.IsSamplerSelectionEnabled = true;
             vm.IsDimensionsEnabled = true;
             vm.SelectedSampler = new ComfySampler("euler");
         });
@@ -466,13 +467,16 @@ The gallery images are often inpainted, but you will get something very similar 
     public static SamplerCardViewModel SamplerCardViewModelScaleMode =>
         DialogFactory.Get<SamplerCardViewModel>(vm =>
         {
-            vm.Steps = 20;
-            vm.CfgScale = 7;
-            vm.SelectedSampler = new ComfySampler("euler");
-            vm.IsDimensionsEnabled = false;
-            vm.IsCfgScaleEnabled = false;
-            vm.IsSamplerSelectionEnabled = false;
             vm.IsDenoiseStrengthEnabled = true;
+        });
+
+    public static SamplerCardViewModel SamplerCardViewModelRefinerMode =>
+        DialogFactory.Get<SamplerCardViewModel>(vm =>
+        {
+            vm.IsCfgScaleEnabled = true;
+            vm.IsSamplerSelectionEnabled = true;
+            vm.IsDimensionsEnabled = true;
+            vm.IsRefinerStepsEnabled = true;
         });
 
     public static ModelCardViewModel ModelCardViewModel => DialogFactory.Get<ModelCardViewModel>();

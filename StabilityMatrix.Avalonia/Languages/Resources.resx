@@ -87,4 +87,25 @@
     <data name="Label_ShowPixelGridAtHighZoomLevels" xml:space="preserve">
         <value>Show pixel grid at high zoom levels</value>
     </data>
+    <data name="Label_Steps" xml:space="preserve">
+        <value>Steps</value>
+    </data>
+    <data name="Label_StepsBase" xml:space="preserve">
+        <value>Steps - Base</value>
+    </data>
+    <data name="Label_StepsRefiner" xml:space="preserve">
+        <value>Steps - Refiner</value>
+    </data>
+    <data name="Label_CFGScale" xml:space="preserve">
+        <value>CFG Scale</value>
+    </data>
+    <data name="Label_DenoisingStrength" xml:space="preserve">
+        <value>Denoising Strength</value>
+    </data>
+    <data name="Label_Width" xml:space="preserve">
+        <value>Width</value>
+    </data>
+    <data name="Label_Height" xml:space="preserve">
+        <value>Height</value>
+    </data>
 </root>

@@ -1,7 +1,10 @@
 ﻿using System.Collections.Immutable;
+using System.Text.Json.Serialization;
+using StabilityMatrix.Core.Converters.Json;
 
 namespace StabilityMatrix.Core.Models.Api.Comfy;
 
+[JsonConverter(typeof(StringJsonConverter<ComfySampler>))]
 public readonly record struct ComfySampler(string Name)
 {
     private static Dictionary<string, string> ConvertDict { get; } =

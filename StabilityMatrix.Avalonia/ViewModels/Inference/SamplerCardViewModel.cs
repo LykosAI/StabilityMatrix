@@ -1,9 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Nodes;
+﻿using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Avalonia.Models;
-using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
@@ -15,7 +12,13 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public partial class SamplerCardViewModel : LoadableViewModelBase
 {
     [ObservableProperty]
+    private bool isRefinerStepsEnabled;
+
+    [ObservableProperty]
     private int steps = 20;
+
+    [ObservableProperty]
+    private int refinerSteps = 10;
 
     [ObservableProperty]
     private bool isDenoiseStrengthEnabled;
@@ -50,6 +53,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase
     [ObservableProperty]
     private ComfyScheduler? selectedScheduler = new ComfyScheduler("normal");
 
+    [JsonIgnore]
     public IInferenceClientManager ClientManager { get; }
 
     public SamplerCardViewModel(IInferenceClientManager clientManager)
@@ -57,7 +61,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase
         ClientManager = clientManager;
     }
 
-    /// <inheritdoc />
+    /*/// <inheritdoc />
     public override void LoadStateFromJsonObject(JsonObject state)
     {
         var model = DeserializeModel<SamplerCardModel>(state);
@@ -94,5 +98,5 @@ public partial class SamplerCardViewModel : LoadableViewModelBase
                 SelectedSampler = SelectedSampler?.Name
             }
         );
-    }
+    }*/
 }

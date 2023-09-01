@@ -21,11 +21,14 @@ public readonly record struct ComfySampler(string Name)
             ["dpmpp_2m"] = "DPM++ 2M",
             ["dpmpp_2m_sde"] = "DPM++ 2M SDE",
             ["dpmpp_2m_sde_gpu"] = "DPM++ 2M SDE GPU",
+            ["dpmpp_3m"] = "DPM++ 3M",
+            ["dpmpp_3m_sde"] = "DPM++ 3M SDE",
+            ["dpmpp_3m_sde_gpu"] = "DPM++ 3M SDE GPU",
             ["ddim"] = "DDIM",
             ["uni_pc"] = "UniPC",
             ["uni_pc_bh2"] = "UniPC BH2"
         };
-    
+
     public static IReadOnlyList<ComfySampler> Defaults { get; } =
         ConvertDict.Keys.Select(k => new ComfySampler(k)).ToImmutableArray();
 

@@ -1,5 +1,5 @@
 ﻿<controls:UserControlBase
-    x:Class="StabilityMatrix.Avalonia.Views.InferenceTextToImageView"
+    x:Class="StabilityMatrix.Avalonia.Views.Inference.InferenceTextToImageView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"

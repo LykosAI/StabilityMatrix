@@ -3,8 +3,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
+    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     x:DataType="vmInference:ImageGalleryCardViewModel">
 
     <Design.PreviewWith>
@@ -12,96 +12,105 @@
             <controls:ImageGalleryCard DataContext="{x:Static mocks:DesignData.ImageGalleryCardViewModel}" />
         </Grid>
     </Design.PreviewWith>
-    
-    
+
+
     <Style Selector="ListBox /template/ VirtualizingStackPanel">
         <Setter Property="Orientation" Value="Horizontal" />
     </Style>
-    
+
     <Style Selector="controls|ImageGalleryCard">
         <!--  Set Defaults  -->
         <Setter Property="Template">
             <ControlTemplate>
                 <controls:Card
-                    Padding="8"
+                    Padding="12,12,12,8"
                     HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
                     VerticalAlignment="{TemplateBinding VerticalAlignment}"
-                    VerticalContentAlignment="{TemplateBinding VerticalAlignment}"
-                    HorizontalContentAlignment="{TemplateBinding HorizontalAlignment}">
-                    
-                    <Grid RowDefinitions="*,Auto">
-                        <!-- Main image view -->
-                        <Grid Margin="4" x:Name="MainGrid">
-                            <Grid.Styles>
-                                <Style Selector="controls|AdvancedImageBox">
-                                    <!-- ReSharper disable once Xaml.BindingWithContextNotResolved -->
-                                    <Setter Property="IsPixelGridEnabled" Value="{ReflectionBinding ElementName=MainGrid, Path=DataContext.IsPixelGridEnabled, FallbackValue=True}" />
-                                </Style>
-                            </Grid.Styles>
-                            <controls:FrameCarousel 
-                                x:Name="PART_ImageCarousel" 
-                                CornerRadius="4"
-                                IsVisible="{Binding !IsPreviewOverlayEnabled}"
-                                SourcePageType="controls:AdvancedImageBoxView"
-                                SelectedItem="{Binding SelectedImage}"
-                                SelectedIndex="{Binding SelectedImageIndex}"
-                                ItemsSource="{Binding ImageSources}" />
-                            
-                            <Border
-                                ClipToBounds="True"
-                                CornerRadius="4"
-                                IsVisible="{Binding IsPreviewOverlayEnabled}">
-                                <Image
-                                    Source="{Binding PreviewImage}"
-                                    Stretch="Uniform"
-                                    StretchDirection="Both" />
-                            </Border>
+                    HorizontalContentAlignment="{TemplateBinding HorizontalAlignment}"
+                    VerticalContentAlignment="{TemplateBinding VerticalAlignment}">
 
-                            <!-- Left button -->
-                            <Border
-                                Margin="4"
-                                VerticalAlignment="Center"
-                                HorizontalAlignment="Left"
-                                Grid.Column="0">
-                                <Button
-                                    IsEnabled="{Binding CanNavigateBack}"
-                                    Classes="transparent"
-                                    Padding="10,20"
-                                    Command="{Binding #PART_ImageCarousel.Previous}">
-                                    <Path Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" 
-                                          Fill="{DynamicResource ButtonForeground}" />
-                                </Button>
-                            </Border>
-                            
-                            <!-- Right button -->
-                            <Border
-                                Margin="4"
-                                VerticalAlignment="Center"
-                                HorizontalAlignment="Right">
-                                <Button
-                                    IsEnabled="{Binding CanNavigateForward}"
-                                    Classes="transparent"
-                                    Padding="10,20"
-                                    Command="{Binding #PART_ImageCarousel.Next}">
-                                    <Path Data="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" 
-                                          Fill="{DynamicResource ButtonForeground}" />
-                                </Button>
-                            </Border>
-                            
-                        </Grid>
-                        <!-- Thumbnails -->
+                    <Grid RowDefinitions="*,Auto">
+                        
+                        <!--  Main image view  -->
+                        <ExperimentalAcrylicBorder
+                            VerticalAlignment="Stretch"
+                            CornerRadius="4"
+                            Margin="0,0,0,4"
+                            Material="{StaticResource ThemeDarkAcrylicMaterial}">
+                            <Grid x:Name="MainGrid">
+                                <Grid.Styles>
+                                    <Style Selector="controls|AdvancedImageBox">
+                                        <!--  ReSharper disable once Xaml.BindingWithContextNotResolved  -->
+                                        <Setter Property="IsPixelGridEnabled" Value="{ReflectionBinding ElementName=MainGrid, Path=DataContext.IsPixelGridEnabled, FallbackValue=True}" />
+                                    </Style>
+                                </Grid.Styles>
+
+                                <controls:FrameCarousel
+                                    x:Name="PART_ImageCarousel"
+                                    CornerRadius="4"
+                                    IsVisible="{Binding !IsPreviewOverlayEnabled}"
+                                    ItemsSource="{Binding ImageSources}"
+                                    SelectedIndex="{Binding SelectedImageIndex}"
+                                    SelectedItem="{Binding SelectedImage}"
+                                    SourcePageType="controls:AdvancedImageBoxView" />
+
+                                <Border
+                                    ClipToBounds="True"
+                                    CornerRadius="4"
+                                    IsVisible="{Binding IsPreviewOverlayEnabled}">
+                                    <Image
+                                        Source="{Binding PreviewImage}"
+                                        Stretch="Uniform"
+                                        StretchDirection="Both" />
+                                </Border>
+
+                                <!--  Left button  -->
+                                <Border
+                                    Grid.Column="0"
+                                    Margin="4"
+                                    IsVisible="{Binding HasMultipleImages}"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center">
+                                    <Button
+                                        Padding="10,20"
+                                        Classes="transparent"
+                                        Command="{Binding #PART_ImageCarousel.Previous}"
+                                        IsEnabled="{Binding CanNavigateBack}">
+                                        <Path Data="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" Fill="{DynamicResource ButtonForeground}" />
+                                    </Button>
+                                </Border>
+
+                                <!--  Right button  -->
+                                <Border
+                                    Margin="4"
+                                    IsVisible="{Binding HasMultipleImages}"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center">
+                                    <Button
+                                        Padding="10,20"
+                                        Classes="transparent"
+                                        Command="{Binding #PART_ImageCarousel.Next}"
+                                        IsEnabled="{Binding CanNavigateForward}">
+                                        <Path Data="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" Fill="{DynamicResource ButtonForeground}" />
+                                    </Button>
+                                </Border>
+
+                            </Grid>
+                        </ExperimentalAcrylicBorder>
+
+                        <!--  Thumbnails  -->
                         <ListBox
                             Grid.Row="1"
-                            Margin="4"
-                            VerticalAlignment="Stretch"
                             HorizontalAlignment="Center"
-                            SelectionMode="AlwaysSelected"
+                            VerticalAlignment="Stretch"
+                            MinHeight="65"
+                            ItemsSource="{Binding ImageSources}"
                             SelectedItem="{Binding SelectedImage}"
-                            ItemsSource="{Binding ImageSources}">
+                            SelectionMode="AlwaysSelected">
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:ImageSource}">
                                     <controls:BetterAdvancedImage
-                                        MaxHeight="60"
+                                        MaxHeight="65"
                                         CornerRadius="4"
                                         Source="{Binding}"
                                         Stretch="Uniform"

@@ -47,6 +47,8 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
     [ObservableProperty]
     private bool isPixelGridEnabled;
 
+    public bool HasMultipleImages => ImageSources.Count > 1;
+
     public bool CanNavigateBack => SelectedImageIndex > 0;
     public bool CanNavigateForward => SelectedImageIndex < ImageSources.Count - 1;
 
@@ -73,7 +75,7 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
         {
             using var stream = new MemoryStream(imageBytes);
 
-            using var bitmap = new Bitmap(stream);
+            var bitmap = new Bitmap(stream);
 
             var currentImage = PreviewImage;
 
@@ -110,6 +112,7 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
                 }
                 OnPropertyChanged(nameof(CanNavigateBack));
                 OnPropertyChanged(nameof(CanNavigateForward));
+                OnPropertyChanged(nameof(HasMultipleImages));
             }
         }
     }

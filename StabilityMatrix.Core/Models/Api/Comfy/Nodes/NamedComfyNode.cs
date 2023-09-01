@@ -36,7 +36,7 @@ public record NamedComfyNode<TOutput1, TOutput2>(string Name) : NamedComfyNode(N
     where TOutput1 : NodeConnectionBase, new()
     where TOutput2 : NodeConnectionBase, new()
 {
-    public TOutput1 Output1 => new TOutput1 { Data = GetOutput(0) };
+    public TOutput1 Output1 => new() { Data = GetOutput(0) };
 
-    public TOutput2 Output2 => new TOutput2 { Data = GetOutput(1) };
+    public TOutput2 Output2 => new() { Data = GetOutput(1) };
 }

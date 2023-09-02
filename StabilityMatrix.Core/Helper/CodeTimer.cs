@@ -7,29 +7,29 @@ namespace StabilityMatrix.Core.Helper;
 public class CodeTimer : IDisposable
 {
     private static readonly Stack<CodeTimer> RunningTimers = new();
-    
+
     private readonly string name;
     private readonly Stopwatch stopwatch;
 
     private CodeTimer? ParentTimer { get; }
     private List<CodeTimer> SubTimers { get; } = new();
-    
-    public CodeTimer([CallerMemberName] string? name = null)
+
+    public CodeTimer(string postFix = "", [CallerMemberName] string callerName = "")
     {
-        this.name = name ?? "";
+        name = $"{callerName}" + (string.IsNullOrEmpty(postFix) ? "" : $" ({postFix})");
         stopwatch = Stopwatch.StartNew();
-        
+
         // Set parent as the top of the stack
         if (RunningTimers.TryPeek(out var timer))
         {
             ParentTimer = timer;
             timer.SubTimers.Add(this);
         }
-        
+
         // Add ourselves to the stack
         RunningTimers.Push(this);
     }
-    
+
     /// <summary>
     /// Formats a TimeSpan into a string. Chooses the most appropriate unit of time.
     /// </summary>
@@ -64,22 +64,22 @@ public class CodeTimer : IDisposable
     private string GetResult()
     {
         var builder = new StringBuilder();
-        
+
         builder.AppendLine($"{name}: took {FormatTime(stopwatch.Elapsed)}");
-        
+
         foreach (var timer in SubTimers)
         {
             // For each sub timer layer, add a `|-` prefix
             builder.AppendLine($"|- {timer.GetResult()}");
         }
-        
+
         return builder.ToString();
     }
-    
+
     public void Dispose()
     {
         stopwatch.Stop();
-        
+
         // Remove ourselves from the stack
         if (RunningTimers.TryPop(out var timer))
         {
@@ -92,14 +92,14 @@ public class CodeTimer : IDisposable
         {
             throw new InvalidOperationException("Timer stack is empty");
         }
-        
+
         // If we're a root timer, output all results
         if (ParentTimer is null)
         {
             OutputDebug(GetResult());
             SubTimers.Clear();
         }
-        
+
         GC.SuppressFinalize(this);
     }
 }

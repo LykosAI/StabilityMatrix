@@ -50,6 +50,7 @@ public partial class SettingsViewModel : PageViewModelBase
     private readonly IPyRunner pyRunner;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly ITrackedDownloadService trackedDownloadService;
+    private readonly IModelIndexService modelIndexService;
     
     public SharedState SharedState { get; }
     
@@ -114,7 +115,8 @@ public partial class SettingsViewModel : PageViewModelBase
         IPyRunner pyRunner,
         ServiceManager<ViewModelBase> dialogFactory,
         SharedState sharedState,
-        ITrackedDownloadService trackedDownloadService)
+        ITrackedDownloadService trackedDownloadService, 
+        IModelIndexService modelIndexService)
     {
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
@@ -122,7 +124,8 @@ public partial class SettingsViewModel : PageViewModelBase
         this.pyRunner = pyRunner;
         this.dialogFactory = dialogFactory;
         this.trackedDownloadService = trackedDownloadService;
-        
+        this.modelIndexService = modelIndexService;
+
         SharedState = sharedState;
         
         SelectedTheme = settingsManager.Settings.Theme ?? AvailableThemes[1];
@@ -501,6 +504,12 @@ public partial class SettingsViewModel : PageViewModelBase
         throw new OperationCanceledException("Example Message");
     }
 
+    [RelayCommand]
+    private async Task DebugRefreshModelsIndex()
+    {
+        await modelIndexService.RefreshIndex();
+    }
+    
     [RelayCommand]
     private async Task DebugTrackedDownload()
     {

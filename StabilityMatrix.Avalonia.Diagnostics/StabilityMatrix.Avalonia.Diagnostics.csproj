@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <InternalsVisibleTo Include="StabilityMatrix.Tests" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="LogViewer\Core\" />
+      <Folder Include="Views\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Avalonia" Version="11.0.4" />
+      <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.0.4" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
+      <PackageReference Include="NLog" Version="5.2.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Views\LogWindow.axaml.cs">
+        <DependentUpon>LogWindow.axaml</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
+</Project>

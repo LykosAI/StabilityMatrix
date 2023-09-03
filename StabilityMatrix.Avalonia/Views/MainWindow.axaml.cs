@@ -26,6 +26,9 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Processes;
+#if DEBUG
+using StabilityMatrix.Avalonia.Diagnostics.Views;
+#endif
 
 namespace StabilityMatrix.Avalonia.Views;
 
@@ -42,18 +45,21 @@ public partial class MainWindow : AppWindowBase
         notificationService = null!;
         navigationService = null!;
     }
-    
-    public MainWindow(INotificationService notificationService, INavigationService navigationService)
+
+    public MainWindow(
+        INotificationService notificationService,
+        INavigationService navigationService
+    )
     {
         this.notificationService = notificationService;
         this.navigationService = navigationService;
-        
+
         InitializeComponent();
-        
+
 #if DEBUG
         this.AttachDevTools();
+        LogWindow.Attach(this, App.Services);
 #endif
-        
         TitleBar.ExtendsContentIntoTitleBar = true;
         TitleBar.TitleBarHitTestType = TitleBarHitTestType.Complex;
     }
@@ -62,15 +68,17 @@ public partial class MainWindow : AppWindowBase
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
-        
-        navigationService.SetFrame(FrameView ?? throw new NullReferenceException("Frame not found"));
-        
+
+        navigationService.SetFrame(
+            FrameView ?? throw new NullReferenceException("Frame not found")
+        );
+
         // Navigate to first page
         if (DataContext is not MainWindowViewModel vm)
         {
             throw new NullReferenceException("DataContext is not MainWindowViewModel");
         }
-        
+
         navigationService.NavigateTo(vm.Pages[0], new DrillInNavigationTransitionInfo());
     }
 
@@ -79,7 +87,7 @@ public partial class MainWindow : AppWindowBase
         base.OnOpened(e);
 
         Application.Current!.ActualThemeVariantChanged += OnActualThemeVariantChanged;
-        
+
         var theme = ActualThemeVariant;
         // Enable mica for Windows 11
         if (IsWindows11 && theme != FluentAvaloniaTheme.HighContrastTheme)
@@ -91,11 +99,10 @@ public partial class MainWindow : AppWindowBase
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         // Show confirmation if package running
-        var launchPageViewModel = App.Services
-            .GetRequiredService<LaunchPageViewModel>();
+        var launchPageViewModel = App.Services.GetRequiredService<LaunchPageViewModel>();
 
         launchPageViewModel.OnMainWindowClosing(e);
-        
+
         base.OnClosing(e);
     }
 
@@ -104,7 +111,7 @@ public partial class MainWindow : AppWindowBase
         base.OnLoaded(e);
         // Initialize notification service using this window as the visual root
         notificationService.Initialize(this);
-        
+
         // Attach error notification handler for image loader
         if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
         {
@@ -115,7 +122,7 @@ public partial class MainWindow : AppWindowBase
     protected override void OnUnloaded(RoutedEventArgs e)
     {
         base.OnUnloaded(e);
-        
+
         // Detach error notification handler for image loader
         if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
         {
@@ -132,20 +139,22 @@ public partial class MainWindow : AppWindowBase
             {
                 return;
             }
-            
+
             if (nvi.Tag is null)
             {
                 throw new InvalidOperationException("NavigationViewItem Tag is null");
             }
-            
+
             if (nvi.Tag is not ViewModelBase vm)
             {
-                throw new InvalidOperationException($"NavigationViewItem Tag must be of type ViewModelBase, not {nvi.Tag?.GetType()}");
+                throw new InvalidOperationException(
+                    $"NavigationViewItem Tag must be of type ViewModelBase, not {nvi.Tag?.GetType()}"
+                );
             }
             navigationService.NavigateTo(vm, new BetterEntranceNavigationTransition());
         }
     }
-    
+
     private void OnActualThemeVariantChanged(object? sender, EventArgs e)
     {
         if (IsWindows11)
@@ -161,7 +170,7 @@ public partial class MainWindow : AppWindowBase
             }
         }
     }
-    
+
     private void OnImageLoadFailed(object? sender, ImageLoadFailedEventArgs e)
     {
         Dispatcher.UIThread.Post(() =>
@@ -171,24 +180,30 @@ public partial class MainWindow : AppWindowBase
             notificationService.ShowPersistent(
                 "Failed to load image",
                 $"Could not load '{displayName}'\n({e.Exception.Message})",
-                NotificationType.Warning);
+                NotificationType.Warning
+            );
         });
     }
-    
+
     private void TryEnableMicaEffect()
     {
         TransparencyBackgroundFallback = Brushes.Transparent;
         TransparencyLevelHint = new[]
         {
-            WindowTransparencyLevel.Mica, 
+            WindowTransparencyLevel.Mica,
             WindowTransparencyLevel.AcrylicBlur,
             WindowTransparencyLevel.Blur
         };
-        
+
         if (ActualThemeVariant == ThemeVariant.Dark)
         {
-            var color = this.TryFindResource("SolidBackgroundFillColorBase",
-                ThemeVariant.Dark, out var value) ? (Color2)(Color)value! : new Color2(32, 32, 32);
+            var color = this.TryFindResource(
+                "SolidBackgroundFillColorBase",
+                ThemeVariant.Dark,
+                out var value
+            )
+                ? (Color2)(Color)value!
+                : new Color2(32, 32, 32);
 
             color = color.LightenPercent(-0.8f);
 
@@ -197,8 +212,13 @@ public partial class MainWindow : AppWindowBase
         else if (ActualThemeVariant == ThemeVariant.Light)
         {
             // Similar effect here
-            var color = this.TryFindResource("SolidBackgroundFillColorBase",
-                ThemeVariant.Light, out var value) ? (Color2)(Color)value! : new Color2(243, 243, 243);
+            var color = this.TryFindResource(
+                "SolidBackgroundFillColorBase",
+                ThemeVariant.Light,
+                out var value
+            )
+                ? (Color2)(Color)value!
+                : new Color2(243, 243, 243);
 
             color = color.LightenPercent(0.5f);
 

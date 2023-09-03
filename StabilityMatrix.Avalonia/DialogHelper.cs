@@ -218,6 +218,86 @@ public static class DialogHelper
         return dialog;
     }
 
+    /// <summary>
+    /// Create a dialog for displaying json
+    /// </summary>
+    public static BetterContentDialog CreateJsonDialog(
+        string json,
+        string? title = null,
+        string? subTitle = null
+    )
+    {
+        Dispatcher.UIThread.VerifyAccess();
+
+        // Setup text editor
+        var textEditor = new TextEditor
+        {
+            IsReadOnly = true,
+            WordWrap = true,
+            Options = { ShowColumnRulers = false, AllowScrollBelowDocument = false }
+        };
+        var registryOptions = new RegistryOptions(ThemeName.DarkPlus);
+        textEditor
+            .InstallTextMate(registryOptions)
+            .SetGrammar(registryOptions.GetScopeByLanguageId("json"));
+
+        var mainGrid = new StackPanel
+        {
+            Spacing = 8,
+            Margin = new Thickness(16),
+            Children = { textEditor }
+        };
+
+        if (subTitle is not null)
+        {
+            mainGrid.Children.Insert(
+                0,
+                new TextBlock
+                {
+                    Text = subTitle,
+                    FontSize = 18,
+                    FontWeight = FontWeight.Medium,
+                    Margin = new Thickness(0, 8),
+                }
+            );
+        }
+
+        var dialog = new BetterContentDialog
+        {
+            Title = title,
+            Content = mainGrid,
+            CloseButtonText = "Close",
+            IsPrimaryButtonEnabled = false,
+        };
+
+        // Try to deserialize to json element
+        try
+        {
+            // Deserialize to json element then re-serialize to ensure indentation
+            var jsonElement = JsonSerializer.Deserialize<JsonElement>(
+                json,
+                new JsonSerializerOptions
+                {
+                    AllowTrailingCommas = true,
+                    ReadCommentHandling = JsonCommentHandling.Skip
+                }
+            );
+            var formatted = JsonSerializer.Serialize(
+                jsonElement,
+                new JsonSerializerOptions { WriteIndented = true }
+            );
+
+            textEditor.Document.Text = formatted;
+        }
+        catch (JsonException)
+        {
+            // Otherwise just add the content as a code block
+            textEditor.Document.Text = json;
+        }
+
+        return dialog;
+    }
+
     public static BetterContentDialog CreatePromptErrorDialog(
         PromptError exception,
         string sourceText

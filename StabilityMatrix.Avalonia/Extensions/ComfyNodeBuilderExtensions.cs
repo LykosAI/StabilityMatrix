@@ -21,8 +21,8 @@ public static class ComfyNodeBuilderExtensions
             ComfyNodeBuilder.EmptyLatentImage(
                 "EmptyLatentImage",
                 batchSizeCardViewModel.BatchSize,
-                samplerCardViewModel.Width,
-                samplerCardViewModel.Height
+                samplerCardViewModel.Height,
+                samplerCardViewModel.Width
             )
         );
 

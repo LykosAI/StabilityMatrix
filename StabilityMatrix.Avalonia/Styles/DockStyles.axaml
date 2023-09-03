@@ -16,7 +16,10 @@
     </Style>
         
     <!-- Remove accent color from active dock bar -->
+    <Style Selector="ToolChromeControl">
+        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
+    </Style>
     <Style Selector="ToolChromeControl:active /template/ Grid#PART_Grip">
-        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}" />
     </Style>
 </Styles>

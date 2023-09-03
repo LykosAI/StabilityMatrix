@@ -10,6 +10,7 @@ using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.Tokens;
 using StabilityMatrix.Core.Services;
 using TextMateSharp.Grammars;
@@ -54,6 +55,43 @@ public record Prompt
     public void ValidateExtraNetworks(IModelIndexService indexService)
     {
         GetExtraNetworks(indexService);
+    }
+
+    /// <summary>
+    /// Get ExtraNetworks as local model files and weights.
+    /// </summary>
+    public IEnumerable<(
+        LocalModelFile ModelFile,
+        double? ModelWeight,
+        double? ClipWeight
+    )> GetExtraNetworksAsLocalModels(IModelIndexService indexService)
+    {
+        if (ExtraNetworks is null)
+        {
+            throw new InvalidOperationException(
+                "Prompt must be processed before calling GetExtraNetworksAsLocalModels"
+            );
+        }
+
+        foreach (var network in ExtraNetworks)
+        {
+            var sharedFolderType = network.Type.ConvertTo<SharedFolderType>();
+
+            if (!indexService.ModelIndex.TryGetValue(sharedFolderType, out var modelList))
+            {
+                throw new ApplicationException($"Model {network.Name} does not exist in index");
+            }
+
+            var localModel = modelList.FirstOrDefault(
+                m => m.FileNameWithoutExtension == network.Name
+            );
+            if (localModel == null)
+            {
+                throw new ApplicationException($"Model {network.Name} does not exist in index");
+            }
+
+            yield return (localModel, network.ModelWeight, network.ClipWeight);
+        }
     }
 
     private int GetSafeEndIndex(int index)

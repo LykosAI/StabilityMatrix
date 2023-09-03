@@ -12,35 +12,43 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(ModelCard))]
 public partial class ModelCardViewModel : LoadableViewModelBase
 {
-    [ObservableProperty] 
+    [ObservableProperty]
     private HybridModelFile? selectedModel;
-    
+
+    [ObservableProperty]
+    private bool isRefinerSelectionEnabled;
+
+    [ObservableProperty]
+    private HybridModelFile? selectedRefiner = HybridModelFile.None;
+
     [ObservableProperty]
     private HybridModelFile? selectedVae = HybridModelFile.Default;
-    
+
     [ObservableProperty]
     private bool isVaeSelectionEnabled;
-    
+
     public string? SelectedModelName => SelectedModel?.FileName;
-    
+
     public string? SelectedVaeName => SelectedVae?.FileName;
-    
+
     public IInferenceClientManager ClientManager { get; }
-    
+
     public ModelCardViewModel(IInferenceClientManager clientManager)
     {
         ClientManager = clientManager;
     }
-    
+
     /// <inheritdoc />
     public override JsonObject SaveStateToJsonObject()
     {
-        return SerializeModel(new ModelCardModel
-        {
-            SelectedModelName = SelectedModelName,
-            SelectedVaeName = SelectedVaeName,
-            IsVaeSelectionEnabled = IsVaeSelectionEnabled
-        });
+        return SerializeModel(
+            new ModelCardModel
+            {
+                SelectedModelName = SelectedModelName,
+                SelectedVaeName = SelectedVaeName,
+                IsVaeSelectionEnabled = IsVaeSelectionEnabled
+            }
+        );
     }
 
     /// <inheritdoc />
@@ -48,13 +56,15 @@ public partial class ModelCardViewModel : LoadableViewModelBase
     {
         var model = DeserializeModel<ModelCardModel>(state);
 
-        SelectedModel = model.SelectedModelName is null ? null 
+        SelectedModel = model.SelectedModelName is null
+            ? null
             : ClientManager.Models.FirstOrDefault(x => x.FileName == model.SelectedModelName);
-        
-        SelectedVae = model.SelectedVaeName is null ? HybridModelFile.Default
+
+        SelectedVae = model.SelectedVaeName is null
+            ? HybridModelFile.Default
             : ClientManager.VaeModels.FirstOrDefault(x => x.FileName == model.SelectedVaeName);
     }
-    
+
     internal class ModelCardModel
     {
         public string? SelectedModelName { get; init; }

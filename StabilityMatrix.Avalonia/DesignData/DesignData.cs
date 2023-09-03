@@ -440,7 +440,12 @@ The gallery images are often inpainted, but you will get something very similar 
         });
 
     public static InferenceTextToImageViewModel InferenceTextToImageViewModel =>
-        DialogFactory.Get<InferenceTextToImageViewModel>();
+        DialogFactory.Get<InferenceTextToImageViewModel>(vm =>
+        {
+            vm.OutputProgress.Value = 10;
+            vm.OutputProgress.Maximum = 30;
+            vm.OutputProgress.Text = "Sampler 10/30";
+        });
 
     public static InferenceImageUpscaleViewModel InferenceImageUpscaleViewModel =>
         DialogFactory.Get<InferenceImageUpscaleViewModel>();

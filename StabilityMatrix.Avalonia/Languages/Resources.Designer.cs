@@ -213,6 +213,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Model.
+        /// </summary>
+        public static string Label_Model {
+            get {
+                return ResourceManager.GetString("Label_Model", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Networks (Lora / LyCORIS).
         /// </summary>
         public static string Label_NetworksLoraOrLycoris {
@@ -227,6 +236,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_PackageType {
             get {
                 return ResourceManager.GetString("Label_PackageType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refiner.
+        /// </summary>
+        public static string Label_Refiner {
+            get {
+                return ResourceManager.GetString("Label_Refiner", resourceCulture);
             }
         }
         
@@ -290,6 +308,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_UnknownPackage {
             get {
                 return ResourceManager.GetString("Label_UnknownPackage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to VAE.
+        /// </summary>
+        public static string Label_VAE {
+            get {
+                return ResourceManager.GetString("Label_VAE", resourceCulture);
             }
         }
         

@@ -108,4 +108,13 @@
     <data name="Label_Height" xml:space="preserve">
         <value>Height</value>
     </data>
+    <data name="Label_Refiner" xml:space="preserve">
+        <value>Refiner</value>
+    </data>
+    <data name="Label_VAE" xml:space="preserve">
+        <value>VAE</value>
+    </data>
+    <data name="Label_Model" xml:space="preserve">
+        <value>Model</value>
+    </data>
 </root>

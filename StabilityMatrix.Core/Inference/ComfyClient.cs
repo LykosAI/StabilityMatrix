@@ -21,9 +21,9 @@ public class ComfyClient : InferenceClientBase
 
     // ReSharper disable once MemberCanBePrivate.Global
     public string ClientId { get; } = Guid.NewGuid().ToString();
-    
+
     public Uri BaseAddress { get; }
-    
+
     /// <summary>
     /// Optional local path to output images.
     /// </summary>
@@ -33,22 +33,22 @@ public class ComfyClient : InferenceClientBase
     /// Dictionary of ongoing prompt execution tasks
     /// </summary>
     public ConcurrentDictionary<string, ComfyTask> PromptTasks { get; } = new();
-    
+
     /// <summary>
     /// Current running prompt task
     /// </summary>
     private ComfyTask? currentPromptTask;
-    
+
     /// <summary>
     /// Event raised when a progress update is received from the server
     /// </summary>
     public event EventHandler<ComfyWebSocketProgressData>? ProgressUpdateReceived;
-    
+
     /// <summary>
     /// Event raised when a status update is received from the server
     /// </summary>
     public event EventHandler<ComfyWebSocketStatusData>? StatusUpdateReceived;
-    
+
     /// <summary>
     /// Event raised when a executing update is received from the server
     /// </summary>
@@ -58,7 +58,7 @@ public class ComfyClient : InferenceClientBase
     /// Event raised when a preview image is received from the server
     /// </summary>
     public event EventHandler<ComfyWebSocketImageData>? PreviewImageReceived;
-    
+
     public ComfyClient(IApiFactory apiFactory, Uri baseAddress)
     {
         comfyApi = apiFactory.CreateRefitClient<IComfyApi>(baseAddress);
@@ -75,7 +75,7 @@ public class ComfyClient : InferenceClientBase
         {
             ReconnectTimeout = TimeSpan.FromSeconds(30),
         };
-        
+
         webSocketClient.DisconnectionHappened.Subscribe(
             info => Logger.Info("Websocket Disconnected, ({Type})", info.Type)
         );
@@ -123,21 +123,17 @@ public class ComfyClient : InferenceClientBase
             return;
         }
 
-        Logger.Trace(
-            "Received json message: (Type = {Type}, Data = {Data})",
-            json.Type,
-            json.Data
-        );
-        
+        Logger.Trace("Received json message: (Type = {Type}, Data = {Data})", json.Type, json.Data);
+
         if (json.Type == ComfyWebSocketResponseType.Executing)
         {
             var executingData = json.GetDataAsType<ComfyWebSocketExecutingData>();
-            if (executingData is null)
+            if (executingData?.PromptId is null)
             {
                 Logger.Warn($"Could not parse executing data {json.Data}, skipping");
                 return;
             }
-            
+
             // When Node property is null, it means the prompt has finished executing
             // remove the task from the dictionary and set the result
             if (executingData.Node is null)
@@ -150,7 +146,9 @@ public class ComfyClient : InferenceClientBase
                 }
                 else
                 {
-                    Logger.Warn($"Could not find task for prompt {executingData.PromptId}, skipping");
+                    Logger.Warn(
+                        $"Could not find task for prompt {executingData.PromptId}, skipping"
+                    );
                 }
             }
             // Otherwise set the task's active node to the one received
@@ -161,7 +159,7 @@ public class ComfyClient : InferenceClientBase
                     task.RunningNode = executingData.Node;
                 }
             }
-            
+
             ExecutingUpdateReceived?.Invoke(this, executingData);
         }
         else if (json.Type == ComfyWebSocketResponseType.Status)
@@ -172,7 +170,7 @@ public class ComfyClient : InferenceClientBase
                 Logger.Warn($"Could not parse status data {json.Data}, skipping");
                 return;
             }
-            
+
             StatusUpdateReceived?.Invoke(this, statusData);
         }
         else if (json.Type == ComfyWebSocketResponseType.Progress)
@@ -183,10 +181,10 @@ public class ComfyClient : InferenceClientBase
                 Logger.Warn($"Could not parse progress data {json.Data}, skipping");
                 return;
             }
-            
+
             // Set for the current prompt task
             currentPromptTask?.OnProgressUpdate(progressData);
-            
+
             ProgressUpdateReceived?.Invoke(this, progressData);
         }
         else
@@ -201,16 +199,16 @@ public class ComfyClient : InferenceClientBase
     /// </summary>
     private void HandleBinaryMessage(byte[] data)
     {
-        if (data is not {Length: > 4})
+        if (data is not { Length: > 4 })
         {
             Logger.Warn("The input data is null or not long enough.");
             return;
         }
-        
+
         // The first 4 bytes is int32 of the message type
         // Subsequent 4 bytes following is int32 of the image format
         // The rest is the image data
-        
+
         // Read the image type from the first 4 bytes of the data.
         // Python's struct.pack(">I", type_num) will pack the data as a big-endian unsigned int
         /*var typeBytes = new byte[4];
@@ -221,11 +219,8 @@ public class ComfyClient : InferenceClientBase
         {
             Array.Reverse(typeBytes);
         }*/
-        
-        PreviewImageReceived?.Invoke(this, new ComfyWebSocketImageData
-        {
-            ImageBytes = data[8..],
-        });
+
+        PreviewImageReceived?.Invoke(this, new ComfyWebSocketImageData { ImageBytes = data[8..], });
     }
 
     public override async Task ConnectAsync(CancellationToken cancellationToken = default)
@@ -247,7 +242,7 @@ public class ComfyClient : InferenceClientBase
     {
         var request = new ComfyPromptRequest { ClientId = ClientId, Prompt = nodes };
         var result = await comfyApi.PostPrompt(request, cancellationToken).ConfigureAwait(false);
-        
+
         // Add task to dictionary and set it as the current task
         var task = new ComfyTask(result.PromptId);
         PromptTasks[result.PromptId] = task;
@@ -255,11 +250,11 @@ public class ComfyClient : InferenceClientBase
 
         return task;
     }
-    
+
     public async Task InterruptPromptAsync(CancellationToken cancellationToken = default)
     {
         await comfyApi.PostInterrupt(cancellationToken).ConfigureAwait(false);
-        
+
         // Set the current task to null, and remove it from the dictionary
         if (currentPromptTask is { } task)
         {
@@ -271,11 +266,13 @@ public class ComfyClient : InferenceClientBase
     }
 
     public async Task<Dictionary<string, List<ComfyImage>?>> GetImagesForExecutedPromptAsync(
-        string promptId, CancellationToken cancellationToken = default)
+        string promptId,
+        CancellationToken cancellationToken = default
+    )
     {
         // Get history for images
         var history = await comfyApi.GetHistory(promptId, cancellationToken).ConfigureAwait(false);
-        
+
         // Get the current prompt history
         var current = history[promptId];
 
@@ -286,13 +283,18 @@ public class ComfyClient : InferenceClientBase
         }
         return dict;
     }
-    
-    public async Task<Stream> GetImageStreamAsync(ComfyImage comfyImage, CancellationToken cancellationToken = default)
+
+    public async Task<Stream> GetImageStreamAsync(
+        ComfyImage comfyImage,
+        CancellationToken cancellationToken = default
+    )
     {
-        var response = await comfyApi.GetImage(comfyImage.FileName, comfyImage.SubFolder, comfyImage.Type, cancellationToken).ConfigureAwait(false);
+        var response = await comfyApi
+            .GetImage(comfyImage.FileName, comfyImage.SubFolder, comfyImage.Type, cancellationToken)
+            .ConfigureAwait(false);
         return response;
     }
-    
+
     /// <summary>
     /// Get a list of strings representing available model names
     /// </summary>
@@ -300,7 +302,7 @@ public class ComfyClient : InferenceClientBase
     {
         return GetNodeOptionNamesAsync("CheckpointLoaderSimple", "ckpt_name", cancellationToken);
     }
-    
+
     /// <summary>
     /// Get a list of strings representing available sampler names
     /// </summary>
@@ -315,9 +317,12 @@ public class ComfyClient : InferenceClientBase
     public async Task<List<string>?> GetNodeOptionNamesAsync(
         string nodeName,
         string optionName,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
-        var response = await comfyApi.GetObjectInfo(nodeName, cancellationToken).ConfigureAwait(false);
+        var response = await comfyApi
+            .GetObjectInfo(nodeName, cancellationToken)
+            .ConfigureAwait(false);
 
         var info = response[nodeName];
         return info.Input.GetRequiredValueAsNestedList(optionName);
@@ -325,7 +330,8 @@ public class ComfyClient : InferenceClientBase
 
     protected override void Dispose(bool disposing)
     {
-        if (isDisposed) return;
+        if (isDisposed)
+            return;
         webSocketClient.Dispose();
         isDisposed = true;
     }

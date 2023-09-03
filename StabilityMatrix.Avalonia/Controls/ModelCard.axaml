@@ -5,6 +5,7 @@
         xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
         xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
         xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+        xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
         x:DataType="inference:ModelCardViewModel">
     <Design.PreviewWith>
         <Panel Width="400" Height="200">
@@ -18,15 +19,15 @@
         <Setter Property="HorizontalAlignment" Value="Stretch"/>
         <Setter Property="Template">
             <ControlTemplate>
-                <controls:Card Padding="8">
-                    <Grid Margin="8" RowDefinitions="*,*" ColumnDefinitions="Auto,*,Auto">
+                <controls:Card Padding="12">
+                    <Grid RowDefinitions="*,*,*" ColumnDefinitions="Auto,*,Auto">
                         <!-- Model -->
                         <TextBlock
                             Grid.Column="0"
                             TextAlignment="Left"
                             VerticalAlignment="Center"
                             MinWidth="60"
-                            Text="Model" />
+                            Text="{x:Static lang:Resources.Label_Model}" />
                         <ui:FAComboBox
                             Grid.Row="0"
                             Grid.Column="1"
@@ -75,25 +76,51 @@
                             <Button.Flyout>
                                 <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
                                     <ui:ToggleMenuFlyoutItem
+                                        IsChecked="{Binding IsRefinerSelectionEnabled}"
+                                        Text="{x:Static lang:Resources.Label_Refiner}"/>
+                                    <ui:ToggleMenuFlyoutItem
                                         IsChecked="{Binding IsVaeSelectionEnabled}"
-                                        Text="VAE"/>
+                                        Text="{x:Static lang:Resources.Label_VAE}"/>
                                 </ui:FAMenuFlyout>
                             </Button.Flyout>
                         </Button>
                         
-                        <!-- VAE -->
+                        <!-- Refiner -->
                         <TextBlock
                             Grid.Column="0"
                             Grid.Row="1"
+                            MinWidth="60"
+                            IsVisible="{Binding IsRefinerSelectionEnabled}"
+                            Margin="0,8,0,0"
+                            TextAlignment="Left"
+                            VerticalAlignment="Center"
+                            Text="{x:Static lang:Resources.Label_Refiner}" />
+                        
+                        <ui:FAComboBox
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Margin="0,8,0,0"
+                            IsTextSearchEnabled="True"
+                            IsVisible="{Binding IsRefinerSelectionEnabled}"
+                            HorizontalAlignment="Stretch"
+                            ItemsSource="{Binding ClientManager.Models}"
+                            DisplayMemberBinding="{Binding ShortDisplayName}"
+                            SelectedItem="{Binding SelectedRefiner}" />
+                        
+                        <!-- VAE -->
+                        <TextBlock
+                            Grid.Column="0"
+                            Grid.Row="2"
                             MinWidth="60"
                             IsVisible="{Binding IsVaeSelectionEnabled}"
                             Margin="0,8,0,0"
                             TextAlignment="Left"
                             VerticalAlignment="Center"
-                            Text="VAE" />
+                            Text="{x:Static lang:Resources.Label_VAE}" />
                         
                         <ui:FAComboBox
-                            Grid.Row="1"
+                            Grid.Row="2"
                             Grid.Column="1"
                             Grid.ColumnSpan="2"
                             Margin="0,8,0,0"

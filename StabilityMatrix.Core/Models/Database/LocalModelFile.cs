@@ -22,7 +22,7 @@ public class LocalModelFile
     /// Optional connected model information.
     /// </summary>
     public ConnectedModelInfo? ConnectedModelInfo { get; set; }
-    
+
     /// <summary>
     /// Optional preview image relative path.
     /// </summary>
@@ -32,23 +32,28 @@ public class LocalModelFile
     /// File name of the relative path.
     /// </summary>
     public string FileName => Path.GetFileName(RelativePath);
-    
+
+    /// <summary>
+    /// File name of the relative path without extension.
+    /// </summary>
+    public string FileNameWithoutExtension => Path.GetFileNameWithoutExtension(RelativePath);
+
     public string GetFullPath(string rootModelDirectory)
     {
         return Path.Combine(rootModelDirectory, RelativePath);
     }
-    
+
     public string? GetPreviewImageFullPath(string rootModelDirectory)
     {
-        return PreviewImageRelativePath == null ? null 
+        return PreviewImageRelativePath == null
+            ? null
             : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
     }
-    
-    public string FullPathGlobal 
-        => GetFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
-    
-    public string? PreviewImageFullPathGlobal
-        => GetPreviewImageFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
+
+    public string FullPathGlobal => GetFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
+
+    public string? PreviewImageFullPathGlobal =>
+        GetPreviewImageFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
 
     protected bool Equals(LocalModelFile other)
     {
@@ -58,10 +63,13 @@ public class LocalModelFile
     /// <inheritdoc />
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj)) return false;
-        if (ReferenceEquals(this, obj)) return true;
-        if (obj.GetType() != this.GetType()) return false;
-        return Equals((LocalModelFile) obj);
+        if (ReferenceEquals(null, obj))
+            return false;
+        if (ReferenceEquals(this, obj))
+            return true;
+        if (obj.GetType() != this.GetType())
+            return false;
+        return Equals((LocalModelFile)obj);
     }
 
     /// <inheritdoc />

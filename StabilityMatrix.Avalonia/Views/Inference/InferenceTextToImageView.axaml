@@ -185,6 +185,10 @@
                             <Grid
                                 x:CompileBindings="False"
                                 DataContext="{Binding ElementName=Dock, Path=DataContext}">
+                                <controls:ImageGalleryCard
+                                    Grid.Row="0"
+                                    DataContext="{Binding ImageGalleryCardViewModel}" />
+                                
                                 <StackPanel 
                                     DataContext="{Binding OutputProgress}"
                                     Margin="2,1,2,4" 
@@ -194,15 +198,13 @@
                                         IsVisible="{Binding IsProgressVisible}"
                                         Maximum="{Binding Maximum}"
                                         Value="{Binding Value}" />
+                                    
                                     <TextBlock 
+                                        Margin="0,10,0,0"
                                         IsVisible="{Binding IsTextVisible}"
                                         TextAlignment="Center"
                                         Text="{Binding Text}"/>
                                 </StackPanel>
-
-                                <controls:ImageGalleryCard
-                                    Grid.Row="0"
-                                    DataContext="{Binding ImageGalleryCardViewModel}" />
                             </Grid>
                         </Tool>
                     </ToolDock>

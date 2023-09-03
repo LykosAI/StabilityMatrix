@@ -99,12 +99,9 @@ public partial class InferenceImageUpscaleViewModel : InferenceTabViewModelBase
     {
         using var _ = new CodeTimer();
 
-        var nodes = new NodeDictionary();
-        var builder = new ComfyNodeBuilder(nodes);
+        var builder = new ComfyNodeBuilder();
 
-        nodes.NormalizeConnectionTypes();
-
-        return (nodes, new[] { "?" });
+        return (builder.ToNodeDictionary(), new[] { "?" });
     }
 
     private void OnProgressUpdateReceived(object? sender, ComfyProgressUpdateEventArgs args)

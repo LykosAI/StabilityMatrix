@@ -107,7 +107,11 @@ public class Program
                     // Ensure permissions are set for unix
                     if (Compat.IsUnix)
                     {
-                        File.SetUnixFileMode(targetExe, (UnixFileMode) 0x755);
+                        File.SetUnixFileMode(targetExe, // 0755
+                            UnixFileMode.UserRead | UnixFileMode.UserWrite |
+                            UnixFileMode.UserExecute | UnixFileMode.GroupRead |
+                            UnixFileMode.GroupExecute | UnixFileMode.OtherRead |
+                            UnixFileMode.OtherExecute);
                     }
                     
                     // Start the new app

@@ -379,6 +379,8 @@ public partial class InferenceViewModel : PageViewModelBase
         try
         {
             await using var stream = await result.OpenWriteAsync();
+            stream.SetLength(0); // Overwrite fully
+
             await JsonSerializer.SerializeAsync(
                 stream,
                 document,
@@ -437,6 +439,8 @@ public partial class InferenceViewModel : PageViewModelBase
         try
         {
             await using var stream = projectFile.Info.OpenWrite();
+            stream.SetLength(0); // Overwrite fully
+
             await JsonSerializer.SerializeAsync(
                 stream,
                 document,

@@ -14,6 +14,8 @@ public class MockLiteDbContext : ILiteDbContext
     public ILiteCollectionAsync<CivitModel> CivitModels => throw new NotImplementedException();
     public ILiteCollectionAsync<CivitModelVersion> CivitModelVersions => throw new NotImplementedException();
     public ILiteCollectionAsync<CivitModelQueryCacheEntry> CivitModelQueryCache => throw new NotImplementedException();
+    public ILiteCollectionAsync<LocalModelFile> LocalModelFiles => throw new NotImplementedException();
+
     public Task<(CivitModel?, CivitModelVersion?)> FindCivitModelFromFileHashAsync(string hashBlake3)
     {
         return Task.FromResult<(CivitModel?, CivitModelVersion?)>((null, null));

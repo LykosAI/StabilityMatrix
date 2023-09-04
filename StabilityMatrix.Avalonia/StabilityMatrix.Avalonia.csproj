@@ -15,7 +15,7 @@
     
     <ItemGroup>
         <PackageReference Include="AsyncImageLoader.Avalonia" Version="3.0.0" />
-        <PackageReference Include="Avalonia" Version="11.0.2" />
+        <PackageReference Include="Avalonia" Version="11.0.4" />
         <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.0.0" />
         <PackageReference Include="Avalonia.Desktop" Version="11.0.2" />
         <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.2" />
@@ -39,7 +39,7 @@
         <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="7.0.8" />
         <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
-        <PackageReference Include="NLog" Version="5.2.2" />
+        <PackageReference Include="NLog" Version="5.2.3" />
         <PackageReference Include="NLog.Extensions.Logging" Version="5.3.2" />
         <PackageReference Include="Polly" Version="7.2.4" />
         <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
@@ -58,6 +58,10 @@
     
     <ItemGroup>
         <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\StabilityMatrix.Avalonia.Diagnostics\StabilityMatrix.Avalonia.Diagnostics.csproj" />
     </ItemGroup>
     
     <ItemGroup>
@@ -95,4 +99,10 @@
         <DependentUpon>Resources.resx</DependentUpon>
       </Compile>
     </ItemGroup>
+
+    <!-- set HUSKY to 0 to disable, or opt-in during CI by setting HUSKY to 1 -->
+    <Target Name="husky" BeforeTargets="Restore;CollectPackageReferences" Condition="'$(HUSKY)' == 1 Or ('$(HUSKY)' != 0 And '$(CI)' != 'true')">
+        <Exec Command="dotnet tool restore"  StandardOutputImportance="Low" StandardErrorImportance="High"/>
+        <Exec Command="dotnet husky install" StandardOutputImportance="Low" StandardErrorImportance="High" WorkingDirectory="../" />
+    </Target>
 </Project>

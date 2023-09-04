@@ -307,6 +307,18 @@
                                 Content="Add Tracked Download" />
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
+                    
+                    <ui:SettingsExpanderItem
+                        Margin="4,0,4,4"
+                        Content="Refresh Models Index"
+                        IconSource="SyncFolder">
+                        <ui:SettingsExpanderItem.Footer>
+                            <Button
+                                Margin="0,8"
+                                Command="{Binding DebugRefreshModelsIndexCommand}"
+                                Content="Refresh Index" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
 
                 </ui:SettingsExpander>
             </Grid>

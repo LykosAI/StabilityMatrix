@@ -97,7 +97,8 @@ public partial class InferenceViewModel : PageViewModelBase
             RunningPackage = args.CurrentPackagePair;
         };
 
-        MenuSaveAsCommand.WithNotificationErrorHandler(notificationService);
+        MenuSaveAsCommand.WithConditionalNotificationErrorHandler(notificationService);
+        MenuOpenProjectCommand.WithConditionalNotificationErrorHandler(notificationService);
     }
 
     private bool isFirstLoadComplete;

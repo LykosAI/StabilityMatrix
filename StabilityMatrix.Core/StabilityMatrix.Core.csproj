@@ -23,6 +23,7 @@
       <PackageReference Include="DeviceId.Windows.Wmi" Version="6.2.1" />
       <PackageReference Include="LiteDB" Version="5.0.16" />
       <PackageReference Include="LiteDB.Async" Version="0.1.6" />
+      <PackageReference Include="MetadataExtractor" Version="2.8.1" />
       <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
       <PackageReference Include="NLog" Version="5.2.2" />

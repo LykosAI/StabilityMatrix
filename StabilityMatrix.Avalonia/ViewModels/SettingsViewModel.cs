@@ -730,6 +730,28 @@ public partial class SettingsViewModel : PageViewModelBase
     }
 
     [RelayCommand]
+    private async Task DebugImageMetadata()
+    {
+        var provider = App.StorageProvider;
+        var files = await provider.OpenFilePickerAsync(new FilePickerOpenOptions());
+
+        if (files.Count == 0)
+            return;
+
+        var metadata = ImageMetadata.ParseFile(files[0].TryGetLocalPath()!);
+        var comfyJson = metadata.GetComfyMetadata();
+
+        if (comfyJson is null)
+        {
+            notificationService.Show("No Comfy metadata found", "");
+            return;
+        }
+
+        var dialog = DialogHelper.CreateJsonDialog(comfyJson);
+        await dialog.ShowAsync();
+    }
+
+    [RelayCommand]
     private async Task DebugRefreshModelsIndex()
     {
         await modelIndexService.RefreshIndex();

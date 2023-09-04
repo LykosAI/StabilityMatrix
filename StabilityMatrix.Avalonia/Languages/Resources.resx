@@ -117,4 +117,7 @@
     <data name="Label_Model" xml:space="preserve">
         <value>Model</value>
     </data>
+    <data name="Action_Connect" xml:space="preserve">
+        <value>Connect</value>
+    </data>
 </root>

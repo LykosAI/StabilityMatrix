@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
+using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -17,8 +20,11 @@ using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Database;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
@@ -38,6 +44,7 @@ public partial class InferenceViewModel : PageViewModelBase
     private readonly ServiceManager<ViewModelBase> vmFactory;
     private readonly IApiFactory apiFactory;
     private readonly IModelIndexService modelIndexService;
+    private readonly ILiteDbContext liteDbContext;
 
     public override string Title => "Inference";
     public override IconSource IconSource =>
@@ -71,7 +78,8 @@ public partial class InferenceViewModel : PageViewModelBase
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
         ISettingsManager settingsManager,
-        IModelIndexService modelIndexService
+        IModelIndexService modelIndexService,
+        ILiteDbContext liteDbContext
     )
     {
         this.vmFactory = vmFactory;
@@ -79,6 +87,7 @@ public partial class InferenceViewModel : PageViewModelBase
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
         this.modelIndexService = modelIndexService;
+        this.liteDbContext = liteDbContext;
 
         ClientManager = inferenceClientManager;
 
@@ -91,9 +100,61 @@ public partial class InferenceViewModel : PageViewModelBase
         MenuSaveAsCommand.WithNotificationErrorHandler(notificationService);
     }
 
-    public override void OnLoaded()
+    private bool isFirstLoadComplete;
+
+    public override async Task OnLoadedAsync()
     {
-        base.OnLoaded();
+        await base.OnLoadedAsync();
+
+        if (!Design.IsDesignMode && !isFirstLoadComplete)
+        {
+            // Load any open projects
+            var openProjects = await liteDbContext.InferenceProjects.FindAsync(p => p.IsOpen);
+
+            if (openProjects is not null)
+            {
+                foreach (var project in openProjects.OrderBy(p => p.CurrentTabIndex))
+                {
+                    var file = new FilePath(project.FilePath);
+
+                    if (!file.Exists)
+                    {
+                        // Remove from database
+                        await liteDbContext.InferenceProjects.DeleteAsync(project.Id);
+                    }
+
+                    try
+                    {
+                        if (file.Exists)
+                        {
+                            await AddTabFromFile(project.FilePath);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Warn(e, "Failed to open project file {FilePath}", project.FilePath);
+
+                        notificationService.Show(
+                            "Failed to open project file",
+                            $"[{e.GetType().Name}] {e.Message}",
+                            NotificationType.Error
+                        );
+
+                        // Set not open
+                        await liteDbContext.InferenceProjects.UpdateAsync(
+                            project with
+                            {
+                                IsOpen = false,
+                                IsSelected = false,
+                                CurrentTabIndex = -1
+                            }
+                        );
+                    }
+                }
+            }
+
+            isFirstLoadComplete = true;
+        }
 
         if (Tabs.Count == 0)
         {
@@ -101,7 +162,75 @@ public partial class InferenceViewModel : PageViewModelBase
         }
 
         // Start a model index update
-        modelIndexService.RefreshIndex().SafeFireAndForget();
+        await modelIndexService.RefreshIndex();
+    }
+
+    /// <summary>
+    /// Update the database with current tabs
+    /// </summary>
+    private async Task SyncTabStatesWithDatabase()
+    {
+        // Update the database with the current tabs
+        foreach (var (i, tab) in Tabs.ToImmutableArray().Enumerate())
+        {
+            if (tab.ProjectFile is not { } projectFile)
+            {
+                continue;
+            }
+
+            var entry = await liteDbContext.InferenceProjects.FindOneAsync(
+                p => p.FilePath == projectFile.ToString()
+            );
+
+            // Create if not found
+            entry ??= new InferenceProjectEntry
+            {
+                Id = Guid.NewGuid(),
+                FilePath = projectFile.ToString()
+            };
+
+            entry.IsOpen = tab == SelectedTab;
+            entry.CurrentTabIndex = i;
+
+            Logger.Trace(
+                "SyncTabStatesWithDatabase updated entry for tab '{Title}': {@Entry}",
+                tab.TabTitle,
+                entry
+            );
+            await liteDbContext.InferenceProjects.UpsertAsync(entry);
+        }
+    }
+
+    /// <summary>
+    /// Update the database with given tab
+    /// </summary>
+    private async Task SyncTabStateWithDatabase(InferenceTabViewModelBase tab)
+    {
+        if (tab.ProjectFile is not { } projectFile)
+        {
+            return;
+        }
+
+        var entry = await liteDbContext.InferenceProjects.FindOneAsync(
+            p => p.FilePath == projectFile.ToString()
+        );
+
+        // Create if not found
+        entry ??= new InferenceProjectEntry
+        {
+            Id = Guid.NewGuid(),
+            FilePath = projectFile.ToString()
+        };
+
+        entry.IsOpen = tab == SelectedTab;
+        entry.CurrentTabIndex = Tabs.IndexOf(tab);
+
+        Logger.Trace(
+            "SyncTabStatesWithDatabase updated entry for tab '{Title}': {@Entry}",
+            tab.TabTitle,
+            entry
+        );
+        await liteDbContext.InferenceProjects.UpsertAsync(entry);
     }
 
     /// <summary>
@@ -110,10 +239,14 @@ public partial class InferenceViewModel : PageViewModelBase
     [RelayCommand]
     private void AddTab()
     {
-        Tabs.Add(vmFactory.Get<InferenceTextToImageViewModel>());
+        var tab = vmFactory.Get<InferenceTextToImageViewModel>();
+        Tabs.Add(tab);
 
         // Set as new selected tab
         SelectedTabIndex = Tabs.Count - 1;
+
+        // Update the database with the current tab
+        SyncTabStateWithDatabase(tab).SafeFireAndForget();
     }
 
     /// <summary>
@@ -144,10 +277,13 @@ public partial class InferenceViewModel : PageViewModelBase
 
             // Remove the tab
             Tabs.RemoveAt(index);
-
-            // Dispose the view model
-            vm.Dispose();
         }
+
+        // Update the database with the current tab
+        SyncTabStateWithDatabase(vm).SafeFireAndForget();
+
+        // Dispose the view model
+        vm.Dispose();
     }
 
     /// <summary>
@@ -261,6 +397,9 @@ public partial class InferenceViewModel : PageViewModelBase
         // Update project file
         currentTab.ProjectFile = new FilePath(result.TryGetLocalPath()!);
 
+        // Update the database with the current tab
+        await SyncTabStateWithDatabase(currentTab);
+
         notificationService.Show(
             "Saved",
             $"Saved project to {result.Name}",
@@ -320,6 +459,50 @@ public partial class InferenceViewModel : PageViewModelBase
         );
     }
 
+    private async Task AddTabFromFile(FilePath file)
+    {
+        await using var stream = file.Info.OpenRead();
+
+        var document = await JsonSerializer.DeserializeAsync<InferenceProjectDocument>(stream);
+        if (document is null)
+        {
+            throw new ApplicationException(
+                "MenuOpenProject: Deserialize project file returned null"
+            );
+        }
+
+        if (document.State is null)
+        {
+            throw new ApplicationException("Project file does not have 'State' key");
+        }
+
+        InferenceTabViewModelBase vm;
+        if (document.ProjectType is InferenceProjectType.TextToImage)
+        {
+            // Get view model
+            var textToImage = vmFactory.Get<InferenceTextToImageViewModel>();
+            // Load state
+            textToImage.LoadStateFromJsonObject(document.State);
+            // Set the file backing the view model
+            textToImage.ProjectFile = file;
+            vm = textToImage;
+        }
+        else
+        {
+            throw new InvalidOperationException(
+                $"Unsupported project type: {document.ProjectType}"
+            );
+        }
+
+        Tabs.Add(vm);
+
+        // Set the selected tab to the newly opened tab
+        SelectedTab = vm;
+
+        // Update the database with the current tab
+        SyncTabStateWithDatabase(vm).SafeFireAndForget();
+    }
+
     /// <summary>
     /// Menu "Open Project" command.
     /// </summary>
@@ -357,44 +540,7 @@ public partial class InferenceViewModel : PageViewModelBase
 
         // Load from file
         var file = results[0];
-        await using var stream = await file.OpenReadAsync();
 
-        var document = await JsonSerializer.DeserializeAsync<InferenceProjectDocument>(stream);
-        if (document is null)
-        {
-            throw new ApplicationException(
-                "MenuOpenProject: Deserialize project file returned null"
-            );
-        }
-
-        if (document.State is null)
-        {
-            throw new ApplicationException(
-                "MenuOpenProject: Deserialize project file returned null state"
-            );
-        }
-
-        InferenceTabViewModelBase vm;
-        if (document.ProjectType is InferenceProjectType.TextToImage)
-        {
-            // Get view model
-            var textToImage = vmFactory.Get<InferenceTextToImageViewModel>();
-            // Load state
-            textToImage.LoadStateFromJsonObject(document.State);
-            // Set the file backing the view model
-            textToImage.ProjectFile = new FilePath(file.TryGetLocalPath()!);
-            vm = textToImage;
-        }
-        else
-        {
-            throw new InvalidOperationException(
-                $"Unsupported project type: {document.ProjectType}"
-            );
-        }
-
-        Tabs.Add(vm);
-
-        // Set the selected tab to the newly opened tab
-        SelectedTab = vm;
+        await AddTabFromFile(file.TryGetLocalPath()!);
     }
 }

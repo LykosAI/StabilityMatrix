@@ -13,17 +13,14 @@ namespace StabilityMatrix.Avalonia.Models;
 public class InferenceProjectDocument
 {
     [JsonIgnore]
-    private static readonly JsonSerializerOptions SerializerOptions = new()
-    {
-        IgnoreReadOnlyProperties = true,
-        WriteIndented = true,
-    };
-    
-    public int Version { get; set; } = 1;
-    
+    private static readonly JsonSerializerOptions SerializerOptions =
+        new() { IgnoreReadOnlyProperties = true, WriteIndented = true, };
+
+    public int Version { get; set; } = 2;
+
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public InferenceProjectType ProjectType { get; set; }
-    
+
     public JsonObject? State { get; set; }
 
     public static InferenceProjectDocument FromLoadable(IJsonLoadableState loadableModel)
@@ -33,9 +30,10 @@ public class InferenceProjectDocument
             ProjectType = loadableModel switch
             {
                 InferenceTextToImageViewModel => InferenceProjectType.TextToImage,
-                _ => throw new InvalidOperationException(
-                    $"Unknown loadable model type: {loadableModel.GetType()}"
-                )
+                _
+                    => throw new InvalidOperationException(
+                        $"Unknown loadable model type: {loadableModel.GetType()}"
+                    )
             },
             State = loadableModel.SaveStateToJsonObject()
         };

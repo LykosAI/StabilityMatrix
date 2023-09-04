@@ -17,7 +17,9 @@
                  <ResourceInclude Source="Styles/ThemeMaterials.axaml"/>
                  <ResourceInclude Source="Styles/Card.axaml"/>
                  <ResourceInclude Source="Controls/CodeCompletion/CompletionListThemes.axaml"/>
+                 <ResourceInclude Source="Styles/ContextMenuStyles.axaml"/>
              </ResourceDictionary.MergedDictionaries>
+             
              <x:Double x:Key="ContentDialogMaxWidth">700</x:Double>
              
              <SolidColorBrush x:Key="ToolTipBackground" Color="#1E1F22"/>

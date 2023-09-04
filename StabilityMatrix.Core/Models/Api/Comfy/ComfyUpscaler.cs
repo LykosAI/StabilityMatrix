@@ -1,10 +1,8 @@
 ﻿using System.Collections.Immutable;
 using System.Text.Json.Serialization;
-using StabilityMatrix.Core.Converters.Json;
 
 namespace StabilityMatrix.Core.Models.Api.Comfy;
 
-[JsonConverter(typeof(StringJsonConverter<ComfyUpscaler>))]
 public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
 {
     private static Dictionary<string, string> ConvertDict { get; } =
@@ -22,6 +20,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
             .Select(k => new ComfyUpscaler(k, ComfyUpscalerType.Latent))
             .ToImmutableArray();
 
+    [JsonIgnore]
     public string DisplayType
     {
         get
@@ -36,6 +35,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
         }
     }
 
+    [JsonIgnore]
     public string DisplayName
     {
         get
@@ -55,6 +55,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
         }
     }
 
+    [JsonIgnore]
     public string ShortDisplayName
     {
         get

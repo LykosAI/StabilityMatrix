@@ -6,7 +6,6 @@
                         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                         xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                        xmlns:id="using:Dock.Avalonia"
                         xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
                         xmlns:base="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="550"
@@ -17,8 +16,8 @@
                         Width="1100"
                         Height="750"
                         Title="Stability Matrix"
-                        id:DockProperties.IsDragEnabled="True" 
-                        id:DockProperties.IsDropEnabled="True"
+                        DockProperties.IsDragEnabled="True" 
+                        DockProperties.IsDropEnabled="True"
                         x:Class="StabilityMatrix.Avalonia.Views.MainWindow">
     
     <Grid RowDefinitions="Auto,Auto,*">

@@ -9,8 +9,11 @@ public class DownloadPackageVersionStep : IPackageStep
     private readonly string installPath;
     private readonly DownloadPackageVersionOptions downloadOptions;
 
-    public DownloadPackageVersionStep(BasePackage package, string installPath,
-        DownloadPackageVersionOptions downloadOptions)
+    public DownloadPackageVersionStep(
+        BasePackage package,
+        string installPath,
+        DownloadPackageVersionOptions downloadOptions
+    )
     {
         this.package = package;
         this.installPath = installPath;
@@ -19,6 +22,6 @@ public class DownloadPackageVersionStep : IPackageStep
 
     public Task ExecuteAsync(IProgress<ProgressReport>? progress = null) =>
         package.DownloadPackage(installPath, downloadOptions, progress);
-    
+
     public string ProgressTitle => "Downloading package...";
 }

@@ -4,8 +4,14 @@ namespace StabilityMatrix.Avalonia.Diagnostics.LogViewer.Core.Extensions;
 
 public static class LoggerExtensions
 {
-    public static void Emit(this ILogger logger, EventId eventId,
-        LogLevel logLevel, string message, Exception? exception = null, params object?[] args)
+    public static void Emit(
+        this ILogger logger,
+        EventId eventId,
+        LogLevel logLevel,
+        string message,
+        Exception? exception = null,
+        params object?[] args
+    )
     {
         if (logger is null)
             return;

@@ -21,52 +21,68 @@ public abstract class BasePackage
     public abstract string LicenseUrl { get; }
     public virtual string Disclaimer => string.Empty;
     public virtual bool OfferInOneClickInstaller => true;
-    
+
     /// <summary>
     /// Primary command to launch the package. 'Launch' buttons uses this.
     /// </summary>
     public abstract string LaunchCommand { get; }
-    
+
     /// <summary>
     /// Optional commands (e.g. 'config') that are on the launch button split drop-down.
     /// </summary>
     public virtual IReadOnlyList<string> ExtraLaunchCommands { get; } = Array.Empty<string>();
-    
+
     public abstract Uri PreviewImageUri { get; }
     public virtual bool ShouldIgnoreReleases => false;
     public virtual bool UpdateAvailable { get; set; }
 
-    public abstract Task DownloadPackage(string installLocation, DownloadPackageVersionOptions versionOptions,
-        IProgress<ProgressReport>? progress1);
+    public abstract Task DownloadPackage(
+        string installLocation,
+        DownloadPackageVersionOptions versionOptions,
+        IProgress<ProgressReport>? progress1
+    );
 
-    public abstract Task InstallPackage(string installLocation, TorchVersion torchVersion,
-        IProgress<ProgressReport>? progress = null);
-    
+    public abstract Task InstallPackage(
+        string installLocation,
+        TorchVersion torchVersion,
+        IProgress<ProgressReport>? progress = null
+    );
+
     public abstract Task RunPackage(string installedPackagePath, string command, string arguments);
-    
+
     public abstract Task<bool> CheckForUpdates(InstalledPackage package);
 
-    public abstract Task<InstalledPackageVersion> Update(InstalledPackage installedPackage,
-        TorchVersion torchVersion, IProgress<ProgressReport>? progress = null,
-        bool includePrerelease = false);
-    
-    public virtual IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods => new[]
-    {
-        SharedFolderMethod.Symlink,
-        SharedFolderMethod.Configuration,
-        SharedFolderMethod.None
-    };
+    public abstract Task<InstalledPackageVersion> Update(
+        InstalledPackage installedPackage,
+        TorchVersion torchVersion,
+        IProgress<ProgressReport>? progress = null,
+        bool includePrerelease = false
+    );
+
+    public virtual IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
+        new[]
+        {
+            SharedFolderMethod.Symlink,
+            SharedFolderMethod.Configuration,
+            SharedFolderMethod.None
+        };
 
     public abstract SharedFolderMethod RecommendedSharedFolderMethod { get; }
 
-    public abstract Task SetupModelFolders(DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod);
+    public abstract Task SetupModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    );
 
-    public abstract Task UpdateModelFolders(DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod);
+    public abstract Task UpdateModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    );
 
-    public abstract Task RemoveModelFolderLinks(DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod);
+    public abstract Task RemoveModelFolderLinks(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    );
 
     public abstract IEnumerable<TorchVersion> AvailableTorchVersions { get; }
 
@@ -77,7 +93,7 @@ public abstract class BasePackage
         {
             return AvailableTorchVersions.First();
         }
-        
+
         if (HardwareHelper.HasNvidiaGpu() && AvailableTorchVersions.Contains(TorchVersion.Cuda))
         {
             return TorchVersion.Cuda;
@@ -88,15 +104,17 @@ public abstract class BasePackage
             return TorchVersion.Rocm;
         }
 
-        if (HardwareHelper.PreferDirectML() &&
-            AvailableTorchVersions.Contains(TorchVersion.DirectMl))
+        if (
+            HardwareHelper.PreferDirectML()
+            && AvailableTorchVersions.Contains(TorchVersion.DirectMl)
+        )
         {
             return TorchVersion.DirectMl;
         }
 
         return TorchVersion.Cpu;
     }
-    
+
     /// <summary>
     /// Shuts down the subprocess, canceling any pending streams.
     /// </summary>
@@ -110,16 +128,20 @@ public abstract class BasePackage
 
     public abstract List<LaunchOptionDefinition> LaunchOptions { get; }
     public virtual string? ExtraLaunchArguments { get; set; } = null;
-    
+
     /// <summary>
     /// The shared folders that this package supports.
     /// Mapping of <see cref="SharedFolderType"/> to the relative paths from the package root.
     /// </summary>
     public virtual Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
-    
+
     public abstract Task<string> GetLatestVersion();
     public abstract Task<PackageVersionOptions> GetAllVersionOptions();
-    public abstract Task<IEnumerable<GitCommit>?> GetAllCommits(string branch, int page = 1, int perPage = 10);
+    public abstract Task<IEnumerable<GitCommit>?> GetAllCommits(
+        string branch,
+        int page = 1,
+        int perPage = 10
+    );
     public abstract Task<IEnumerable<Branch>> GetAllBranches();
     public abstract Task<IEnumerable<Release>> GetAllReleases();
     public event EventHandler<ProcessOutput>? ConsoleOutput;
@@ -127,44 +149,56 @@ public abstract class BasePackage
     public event EventHandler<string>? StartupComplete;
 
     public void OnConsoleOutput(ProcessOutput output) => ConsoleOutput?.Invoke(this, output);
-    public void OnExit(int exitCode) => Exited?.Invoke(this, exitCode);
-    public void OnStartupComplete(string url) => StartupComplete?.Invoke(this, url);
-    
-    public virtual PackageVersionType AvailableVersionTypes => ShouldIgnoreReleases
-        ? PackageVersionType.Commit
-        : PackageVersionType.GithubRelease | PackageVersionType.Commit;
-    
-    
-    
-    
-    
-    protected async Task InstallCudaTorch(PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null)
-    {
-        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CUDA",
-            isIndeterminate: true));
 
-        await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, OnConsoleOutput)
+    public void OnExit(int exitCode) => Exited?.Invoke(this, exitCode);
+
+    public void OnStartupComplete(string url) => StartupComplete?.Invoke(this, url);
+
+    public virtual PackageVersionType AvailableVersionTypes =>
+        ShouldIgnoreReleases
+            ? PackageVersionType.Commit
+            : PackageVersionType.GithubRelease | PackageVersionType.Commit;
+
+    protected async Task InstallCudaTorch(
+        PyVenvRunner venvRunner,
+        IProgress<ProgressReport>? progress = null
+    )
+    {
+        progress?.Report(
+            new ProgressReport(-1f, "Installing PyTorch for CUDA", isIndeterminate: true)
+        );
+
+        await venvRunner
+            .PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, OnConsoleOutput)
             .ConfigureAwait(false);
         await venvRunner.PipInstall("xformers", OnConsoleOutput).ConfigureAwait(false);
     }
-    
-    protected async Task InstallDirectMlTorch(PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null)
-    {
-        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for DirectML",
-            isIndeterminate: true));
 
-        await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, OnConsoleOutput)
+    protected async Task InstallDirectMlTorch(
+        PyVenvRunner venvRunner,
+        IProgress<ProgressReport>? progress = null
+    )
+    {
+        progress?.Report(
+            new ProgressReport(-1f, "Installing PyTorch for DirectML", isIndeterminate: true)
+        );
+
+        await venvRunner
+            .PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, OnConsoleOutput)
             .ConfigureAwait(false);
     }
-    
-    protected async Task InstallCpuTorch(PyVenvRunner venvRunner, IProgress<ProgressReport>? progress = null)
-    {
-        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CPU",
-            isIndeterminate: true));
 
-        await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, OnConsoleOutput)
+    protected async Task InstallCpuTorch(
+        PyVenvRunner venvRunner,
+        IProgress<ProgressReport>? progress = null
+    )
+    {
+        progress?.Report(
+            new ProgressReport(-1f, "Installing PyTorch for CPU", isIndeterminate: true)
+        );
+
+        await venvRunner
+            .PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, OnConsoleOutput)
             .ConfigureAwait(false);
     }
 }

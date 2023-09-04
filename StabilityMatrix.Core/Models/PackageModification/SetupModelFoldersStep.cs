@@ -9,8 +9,11 @@ public class SetupModelFoldersStep : IPackageStep
     private readonly SharedFolderMethod sharedFolderMethod;
     private readonly string installPath;
 
-    public SetupModelFoldersStep(BasePackage package, SharedFolderMethod sharedFolderMethod,
-        string installPath)
+    public SetupModelFoldersStep(
+        BasePackage package,
+        SharedFolderMethod sharedFolderMethod,
+        string installPath
+    )
     {
         this.package = package;
         this.sharedFolderMethod = sharedFolderMethod;
@@ -19,8 +22,9 @@ public class SetupModelFoldersStep : IPackageStep
 
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
     {
-        progress?.Report(new ProgressReport(-1f, "Setting up shared folder links...",
-            isIndeterminate: true));
+        progress?.Report(
+            new ProgressReport(-1f, "Setting up shared folder links...", isIndeterminate: true)
+        );
         await package.SetupModelFolders(installPath, sharedFolderMethod).ConfigureAwait(false);
     }
 

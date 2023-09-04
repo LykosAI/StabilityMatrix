@@ -21,7 +21,7 @@ public class ComfyUI : BaseGitPackage
     public override string DisplayName { get; set; } = "ComfyUI";
     public override string Author => "comfyanonymous";
     public override string LicenseType => "GPL-3.0";
-    public override string LicenseUrl => 
+    public override string LicenseUrl =>
         "https://github.com/comfyanonymous/ComfyUI/blob/master/LICENSE";
     public override string Blurb => "A powerful and modular stable diffusion GUI and backend";
     public override string LaunchCommand => "main.py";
@@ -32,77 +32,82 @@ public class ComfyUI : BaseGitPackage
     public override SharedFolderMethod RecommendedSharedFolderMethod =>
         SharedFolderMethod.Configuration;
 
-    public ComfyUI(IGithubApiCache githubApi, ISettingsManager settingsManager, IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper) :
-        base(githubApi, settingsManager, downloadService, prerequisiteHelper)
-    {
-    }
+    public ComfyUI(
+        IGithubApiCache githubApi,
+        ISettingsManager settingsManager,
+        IDownloadService downloadService,
+        IPrerequisiteHelper prerequisiteHelper
+    )
+        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
 
     // https://github.com/comfyanonymous/ComfyUI/blob/master/folder_paths.py#L11
-    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders => new()
-    {
-        [SharedFolderType.StableDiffusion] = new[] {"models/checkpoints"},
-        [SharedFolderType.Diffusers] = new[] {"models/diffusers"},
-        [SharedFolderType.Lora] = new[] {"models/loras"},
-        [SharedFolderType.CLIP] = new[] {"models/clip"},
-        [SharedFolderType.TextualInversion] = new[] {"models/embeddings"},
-        [SharedFolderType.VAE] = new[] {"models/vae"},
-        [SharedFolderType.ApproxVAE] = new[] {"models/vae_approx"},
-        [SharedFolderType.ControlNet] = new[] {"models/controlnet"},
-        [SharedFolderType.GLIGEN] = new[] {"models/gligen"},
-        [SharedFolderType.ESRGAN] = new[] {"models/upscale_models"},
-        [SharedFolderType.Hypernetwork] = new[] {"models/hypernetworks"},
-    };
-    
-    public override List<LaunchOptionDefinition> LaunchOptions => new List<LaunchOptionDefinition>
-    {
+    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
         {
-            Name = "VRAM",
-            Type = LaunchOptionType.Bool,
-            InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
+            [SharedFolderType.StableDiffusion] = new[] { "models/checkpoints" },
+            [SharedFolderType.Diffusers] = new[] { "models/diffusers" },
+            [SharedFolderType.Lora] = new[] { "models/loras" },
+            [SharedFolderType.CLIP] = new[] { "models/clip" },
+            [SharedFolderType.TextualInversion] = new[] { "models/embeddings" },
+            [SharedFolderType.VAE] = new[] { "models/vae" },
+            [SharedFolderType.ApproxVAE] = new[] { "models/vae_approx" },
+            [SharedFolderType.ControlNet] = new[] { "models/controlnet" },
+            [SharedFolderType.GLIGEN] = new[] { "models/gligen" },
+            [SharedFolderType.ESRGAN] = new[] { "models/upscale_models" },
+            [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
+        };
+
+    public override List<LaunchOptionDefinition> LaunchOptions =>
+        new List<LaunchOptionDefinition>
+        {
+            new()
             {
-                Level.Low => "--lowvram",
-                Level.Medium => "--normalvram",
-                _ => null
+                Name = "VRAM",
+                Type = LaunchOptionType.Bool,
+                InitialValue = HardwareHelper
+                    .IterGpuInfo()
+                    .Select(gpu => gpu.MemoryLevel)
+                    .Max() switch
+                {
+                    Level.Low => "--lowvram",
+                    Level.Medium => "--normalvram",
+                    _ => null
+                },
+                Options = { "--highvram", "--normalvram", "--lowvram", "--novram" }
             },
-            Options = { "--highvram", "--normalvram", "--lowvram", "--novram" }
-        },
-        new()
-        {
-            Name = "Use CPU only",
-            Type = LaunchOptionType.Bool,
-            InitialValue = !HardwareHelper.HasNvidiaGpu(),
-            Options = {"--cpu"}
-        },
-        new()
-        {
-            Name = "Disable Xformers",
-            Type = LaunchOptionType.Bool,
-            InitialValue = !HardwareHelper.HasNvidiaGpu(),
-            Options = { "--disable-xformers" }
-        },
-        new()
-        {
-            Name = "Auto-Launch",
-            Type = LaunchOptionType.Bool,
-            Options = { "--auto-launch" }
-        },
-        LaunchOptionDefinition.Extras
-    };
+            new()
+            {
+                Name = "Use CPU only",
+                Type = LaunchOptionType.Bool,
+                InitialValue = !HardwareHelper.HasNvidiaGpu(),
+                Options = { "--cpu" }
+            },
+            new()
+            {
+                Name = "Disable Xformers",
+                Type = LaunchOptionType.Bool,
+                InitialValue = !HardwareHelper.HasNvidiaGpu(),
+                Options = { "--disable-xformers" }
+            },
+            new()
+            {
+                Name = "Auto-Launch",
+                Type = LaunchOptionType.Bool,
+                Options = { "--auto-launch" }
+            },
+            LaunchOptionDefinition.Extras
+        };
 
     public override Task<string> GetLatestVersion() => Task.FromResult("master");
-    
-    public override IEnumerable<TorchVersion> AvailableTorchVersions => new[]
-    {
-        TorchVersion.Cpu,
-        TorchVersion.Cuda,
-        TorchVersion.DirectMl,
-        TorchVersion.Rocm
-    };
 
-    public override async Task InstallPackage(string installLocation,
-        TorchVersion torchVersion, IProgress<ProgressReport>? progress = null)
+    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
+        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm };
+
+    public override async Task InstallPackage(
+        string installLocation,
+        TorchVersion torchVersion,
+        IProgress<ProgressReport>? progress = null
+    )
     {
         await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
 
@@ -132,17 +137,21 @@ public class ComfyUI : BaseGitPackage
         }
 
         // Install requirements file
-        progress?.Report(new ProgressReport(-1, "Installing Package Requirements",
-            isIndeterminate: true));
+        progress?.Report(
+            new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true)
+        );
         Logger.Info("Installing requirements.txt");
         await venvRunner.PipInstall($"-r requirements.txt", OnConsoleOutput).ConfigureAwait(false);
 
-        progress?.Report(new ProgressReport(1, "Installing Package Requirements",
-            isIndeterminate: false));
+        progress?.Report(
+            new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false)
+        );
     }
 
-    private async Task AutoDetectAndInstallTorch(PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null)
+    private async Task AutoDetectAndInstallTorch(
+        PyVenvRunner venvRunner,
+        IProgress<ProgressReport>? progress = null
+    )
     {
         var gpus = HardwareHelper.IterGpuInfo().ToList();
         if (gpus.Any(g => g.IsNvidia))
@@ -163,14 +172,18 @@ public class ComfyUI : BaseGitPackage
         }
     }
 
-    public override async Task RunPackage(string installedPackagePath, string command, string arguments)
+    public override async Task RunPackage(
+        string installedPackagePath,
+        string command,
+        string arguments
+    )
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
             OnConsoleOutput(s);
-            
+
             if (s.Text.Contains("To see the GUI go to", StringComparison.OrdinalIgnoreCase))
             {
                 var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
@@ -191,14 +204,13 @@ public class ComfyUI : BaseGitPackage
 
         var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
-        VenvRunner?.RunDetached(
-            args.TrimEnd(), 
-            HandleConsoleOutput, 
-            HandleExit);
+        VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
     }
 
-    public override Task SetupModelFolders(DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod)
+    public override Task SetupModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    )
     {
         switch (sharedFolderMethod)
         {
@@ -223,19 +235,22 @@ public class ComfyUI : BaseGitPackage
             File.WriteAllText(extraPathsYamlPath, string.Empty);
         }
         var yaml = File.ReadAllText(extraPathsYamlPath);
-        var comfyModelPaths = deserializer.Deserialize<ComfyModelPathsYaml>(yaml) ??
-                              // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
-                              // cuz it can actually be null lol 
-                              new ComfyModelPathsYaml();
-        
+        var comfyModelPaths =
+            deserializer.Deserialize<ComfyModelPathsYaml>(yaml)
+            ??
+            // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+            // cuz it can actually be null lol
+            new ComfyModelPathsYaml();
+
         comfyModelPaths.StabilityMatrix ??= new ComfyModelPathsYaml.SmData();
         comfyModelPaths.StabilityMatrix.Checkpoints = Path.Combine(modelsDir, "StableDiffusion");
         comfyModelPaths.StabilityMatrix.Vae = Path.Combine(modelsDir, "VAE");
-        comfyModelPaths.StabilityMatrix.Loras = $"{Path.Combine(modelsDir, "Lora")}\n" +
-                                       $"{Path.Combine(modelsDir, "LyCORIS")}";
-        comfyModelPaths.StabilityMatrix.UpscaleModels = $"{Path.Combine(modelsDir, "ESRGAN")}\n" +
-                                              $"{Path.Combine(modelsDir, "RealESRGAN")}\n" +
-                                              $"{Path.Combine(modelsDir, "SwinIR")}";
+        comfyModelPaths.StabilityMatrix.Loras =
+            $"{Path.Combine(modelsDir, "Lora")}\n" + $"{Path.Combine(modelsDir, "LyCORIS")}";
+        comfyModelPaths.StabilityMatrix.UpscaleModels =
+            $"{Path.Combine(modelsDir, "ESRGAN")}\n"
+            + $"{Path.Combine(modelsDir, "RealESRGAN")}\n"
+            + $"{Path.Combine(modelsDir, "SwinIR")}";
         comfyModelPaths.StabilityMatrix.Embeddings = Path.Combine(modelsDir, "TextualInversion");
         comfyModelPaths.StabilityMatrix.Hypernetworks = Path.Combine(modelsDir, "Hypernetwork");
         comfyModelPaths.StabilityMatrix.Controlnet = Path.Combine(modelsDir, "ControlNet");
@@ -243,7 +258,7 @@ public class ComfyUI : BaseGitPackage
         comfyModelPaths.StabilityMatrix.Diffusers = Path.Combine(modelsDir, "Diffusers");
         comfyModelPaths.StabilityMatrix.Gligen = Path.Combine(modelsDir, "GLIGEN");
         comfyModelPaths.StabilityMatrix.VaeApprox = Path.Combine(modelsDir, "ApproxVAE");
-        
+
         var serializer = new SerializerBuilder()
             .WithNamingConvention(UnderscoredNamingConvention.Instance)
             .Build();
@@ -253,33 +268,39 @@ public class ComfyUI : BaseGitPackage
         return Task.CompletedTask;
     }
 
-    public override Task UpdateModelFolders(DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod) =>
-        SetupModelFolders(installDirectory, sharedFolderMethod);
+    public override Task UpdateModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    ) => SetupModelFolders(installDirectory, sharedFolderMethod);
 
-    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod)
+    public override Task RemoveModelFolderLinks(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    )
     {
         return sharedFolderMethod switch
         {
             SharedFolderMethod.Configuration => Task.CompletedTask,
             SharedFolderMethod.None => Task.CompletedTask,
-            SharedFolderMethod.Symlink => base.RemoveModelFolderLinks(installDirectory,
-                sharedFolderMethod),
+            SharedFolderMethod.Symlink
+                => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
             _ => Task.CompletedTask
         };
     }
 
-    private async Task InstallRocmTorch(PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null)
+    private async Task InstallRocmTorch(
+        PyVenvRunner venvRunner,
+        IProgress<ProgressReport>? progress = null
+    )
     {
-        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for ROCm",
-            isIndeterminate: true));
+        progress?.Report(
+            new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true)
+        );
 
-        await venvRunner.PipInstall("--upgrade pip wheel", OnConsoleOutput)
-            .ConfigureAwait(false);
+        await venvRunner.PipInstall("--upgrade pip wheel", OnConsoleOutput).ConfigureAwait(false);
 
-        await venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsRocm542, OnConsoleOutput)
+        await venvRunner
+            .PipInstall(PyVenvRunner.TorchPipInstallArgsRocm542, OnConsoleOutput)
             .ConfigureAwait(false);
     }
 

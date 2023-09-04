@@ -34,19 +34,29 @@ public partial class PackageCardViewModel : ProgressViewModel
     private readonly INavigationService navigationService;
     private readonly ServiceManager<ViewModelBase> vmFactory;
 
-    [ObservableProperty] private InstalledPackage? package;
-    [ObservableProperty] private string? cardImageSource;
-    [ObservableProperty] private bool isUpdateAvailable;
-    [ObservableProperty] private string? installedVersion;
-    [ObservableProperty] private bool isUnknownPackage;
-    
+    [ObservableProperty]
+    private InstalledPackage? package;
+
+    [ObservableProperty]
+    private string? cardImageSource;
+
+    [ObservableProperty]
+    private bool isUpdateAvailable;
+
+    [ObservableProperty]
+    private string? installedVersion;
+
+    [ObservableProperty]
+    private bool isUnknownPackage;
+
     public PackageCardViewModel(
         ILogger<PackageCardViewModel> logger,
         IPackageFactory packageFactory,
-        INotificationService notificationService, 
-        ISettingsManager settingsManager, 
+        INotificationService notificationService,
+        ISettingsManager settingsManager,
         INavigationService navigationService,
-        ServiceManager<ViewModelBase> vmFactory)
+        ServiceManager<ViewModelBase> vmFactory
+    )
     {
         this.logger = logger;
         this.packageFactory = packageFactory;
@@ -70,10 +80,9 @@ public partial class PackageCardViewModel : ProgressViewModel
         else
         {
             IsUnknownPackage = false;
-            
+
             var basePackage = packageFactory[value.PackageName];
-            CardImageSource = basePackage?.PreviewImageUri.ToString() 
-                              ?? Assets.NoImage.ToString();
+            CardImageSource = basePackage?.PreviewImageUri.ToString() ?? Assets.NoImage.ToString();
             InstalledVersion = value.Version?.DisplayVersion ?? "Unknown";
         }
     }
@@ -87,13 +96,13 @@ public partial class PackageCardViewModel : ProgressViewModel
     {
         if (Package == null)
             return;
-        
+
         settingsManager.Transaction(s => s.ActiveInstalledPackageId = Package.Id);
-        
+
         navigationService.NavigateTo<LaunchPageViewModel>(new BetterDrillInNavigationTransition());
         EventManager.Instance.OnPackageLaunchRequested(Package.Id);
     }
-    
+
     public async Task Uninstall()
     {
         if (Package?.LibraryPath == null)
@@ -104,7 +113,8 @@ public partial class PackageCardViewModel : ProgressViewModel
         var dialog = new ContentDialog
         {
             Title = "Are you sure?",
-            Content = "This will delete all folders in the package directory, including any generated images in that directory as well as any files you may have added.",
+            Content =
+                "This will delete all folders in the package directory, including any generated images in that directory as well as any files you may have added.",
             PrimaryButtonText = "Yes, delete it",
             CloseButtonText = "No, keep it",
             DefaultButton = ContentDialogButton.Primary
@@ -119,14 +129,20 @@ public partial class PackageCardViewModel : ProgressViewModel
 
             var packagePath = new DirectoryPath(settingsManager.LibraryDir, Package.LibraryPath);
             var deleteTask = packagePath.DeleteVerboseAsync(logger);
-                
-            var taskResult = await notificationService.TryAsync(deleteTask,
-                "Some files could not be deleted. Please close any open files in the package directory and try again.");
+
+            var taskResult = await notificationService.TryAsync(
+                deleteTask,
+                "Some files could not be deleted. Please close any open files in the package directory and try again."
+            );
             if (taskResult.IsSuccessful)
             {
-                notificationService.Show(new Notification("Success",
-                    $"Package {Package.DisplayName} uninstalled",
-                    NotificationType.Success));
+                notificationService.Show(
+                    new Notification(
+                        "Success",
+                        $"Package {Package.DisplayName} uninstalled",
+                        NotificationType.Success
+                    )
+                );
 
                 if (!IsUnknownPackage)
                 {
@@ -135,62 +151,74 @@ public partial class PackageCardViewModel : ProgressViewModel
                         settings.RemoveInstalledPackageAndUpdateActive(Package);
                     });
                 }
-                
+
                 EventManager.Instance.OnInstalledPackagesChanged();
             }
         }
     }
-    
+
     public async Task Update()
     {
-        if (Package is null || IsUnknownPackage) return;
-        
+        if (Package is null || IsUnknownPackage)
+            return;
+
         var basePackage = packageFactory[Package.PackageName!];
         if (basePackage == null)
         {
-            logger.LogWarning("Could not find package {SelectedPackagePackageName}", 
-                Package.PackageName);
-            notificationService.Show("Invalid Package type",
+            logger.LogWarning(
+                "Could not find package {SelectedPackagePackageName}",
+                Package.PackageName
+            );
+            notificationService.Show(
+                "Invalid Package type",
                 $"Package {Package.PackageName.ToRepr()} is not a valid package type",
-                NotificationType.Error);
+                NotificationType.Error
+            );
             return;
         }
 
         var packageName = Package.DisplayName ?? Package.PackageName ?? "";
-        
+
         Text = $"Updating {packageName}";
         IsIndeterminate = true;
-        
+
         var progressId = Guid.NewGuid();
-        EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
-            Package.DisplayName ?? Package.PackageName!,
-            new ProgressReport(0f, isIndeterminate: true, type: ProgressType.Update)));
+        EventManager.Instance.OnProgressChanged(
+            new ProgressItem(
+                progressId,
+                Package.DisplayName ?? Package.PackageName!,
+                new ProgressReport(0f, isIndeterminate: true, type: ProgressType.Update)
+            )
+        );
 
         try
         {
             var progress = new Progress<ProgressReport>(progress =>
             {
                 var percent = Convert.ToInt32(progress.Percentage);
-            
+
                 Value = percent;
                 IsIndeterminate = progress.IsIndeterminate;
                 Text = $"Updating {Package.DisplayName}";
-            
+
                 EventManager.Instance.OnGlobalProgressChanged(percent);
-                EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
-                    packageName, progress));
+                EventManager.Instance.OnProgressChanged(
+                    new ProgressItem(progressId, packageName, progress)
+                );
             });
 
-            var torchVersion = Package.PreferredTorchVersion ??
-                               basePackage.GetRecommendedTorchVersion();
-            
+            var torchVersion =
+                Package.PreferredTorchVersion ?? basePackage.GetRecommendedTorchVersion();
+
             var updateResult = await basePackage.Update(Package, torchVersion, progress);
-        
+
             settingsManager.UpdatePackageVersionNumber(Package.Id, updateResult);
-            notificationService.Show("Update complete",
+            notificationService.Show(
+                "Update complete",
                 $"{Package.DisplayName} has been updated to the latest version.",
-                NotificationType.Success);
-        
+                NotificationType.Success
+            );
+
             await using (settingsManager.BeginTransaction())
             {
                 Package.UpdateAvailable = false;
@@ -198,17 +226,30 @@ public partial class PackageCardViewModel : ProgressViewModel
             IsUpdateAvailable = false;
             InstalledVersion = updateResult.DisplayVersion ?? "Unknown";
 
-            EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
-                packageName,
-                new ProgressReport(1f, "Update complete", type: ProgressType.Update)));
+            EventManager.Instance.OnProgressChanged(
+                new ProgressItem(
+                    progressId,
+                    packageName,
+                    new ProgressReport(1f, "Update complete", type: ProgressType.Update)
+                )
+            );
         }
         catch (Exception e)
         {
             logger.LogError(e, "Error Updating Package ({PackageName})", basePackage.Name);
-            notificationService.ShowPersistent($"Error Updating {Package.DisplayName}", e.Message, NotificationType.Error);
-            EventManager.Instance.OnProgressChanged(new ProgressItem(progressId,
-                packageName,
-                new ProgressReport(0f, "Update failed", type: ProgressType.Update), Failed: true));
+            notificationService.ShowPersistent(
+                $"Error Updating {Package.DisplayName}",
+                e.Message,
+                NotificationType.Error
+            );
+            EventManager.Instance.OnProgressChanged(
+                new ProgressItem(
+                    progressId,
+                    packageName,
+                    new ProgressReport(0f, "Update failed", type: ProgressType.Update),
+                    Failed: true
+                )
+            );
         }
         finally
         {
@@ -220,27 +261,23 @@ public partial class PackageCardViewModel : ProgressViewModel
 
     public async Task Import()
     {
-        if (!IsUnknownPackage || Design.IsDesignMode) return;
+        if (!IsUnknownPackage || Design.IsDesignMode)
+            return;
 
         var viewModel = vmFactory.Get<PackageImportViewModel>(vm =>
         {
-            vm.PackagePath =
-                new DirectoryPath(Package?.FullPath ?? throw new InvalidOperationException());
+            vm.PackagePath = new DirectoryPath(
+                Package?.FullPath ?? throw new InvalidOperationException()
+            );
         });
 
         var dialog = new TaskDialog
         {
-            Content = new PackageImportDialog
-            {
-                DataContext = viewModel
-            },
+            Content = new PackageImportDialog { DataContext = viewModel },
             ShowProgressBar = false,
             Buttons = new List<TaskDialogButton>
             {
-                new(Resources.Action_Import, TaskDialogStandardResult.Yes)
-                {
-                    IsDefault = true
-                },
+                new(Resources.Action_Import, TaskDialogStandardResult.Yes) { IsDefault = true },
                 new(Resources.Action_Cancel, TaskDialogStandardResult.Cancel)
             }
         };
@@ -257,7 +294,9 @@ public partial class PackageCardViewModel : ProgressViewModel
 
                 await using (new MinimumDelay(200, 300))
                 {
-                    var result = await notificationService.TryAsync(viewModel.AddPackageWithCurrentInputs());
+                    var result = await notificationService.TryAsync(
+                        viewModel.AddPackageWithCurrentInputs()
+                    );
                     if (result.IsSuccessful)
                     {
                         EventManager.Instance.OnInstalledPackagesChanged();
@@ -269,18 +308,18 @@ public partial class PackageCardViewModel : ProgressViewModel
         };
 
         dialog.XamlRoot = App.VisualRoot;
-        
+
         await dialog.ShowAsync(true);
     }
-    
+
     public async Task OpenFolder()
     {
         if (string.IsNullOrWhiteSpace(Package?.FullPath))
             return;
-        
+
         await ProcessRunner.OpenFolderBrowser(Package.FullPath);
     }
-    
+
     private async Task<bool> HasUpdate()
     {
         if (Package == null || IsUnknownPackage || Design.IsDesignMode)
@@ -290,8 +329,9 @@ public partial class PackageCardViewModel : ProgressViewModel
         if (basePackage == null)
             return false;
 
-        var canCheckUpdate = Package.LastUpdateCheck == null ||
-                             Package.LastUpdateCheck < DateTime.Now.AddMinutes(-15);
+        var canCheckUpdate =
+            Package.LastUpdateCheck == null
+            || Package.LastUpdateCheck < DateTime.Now.AddMinutes(-15);
 
         if (!canCheckUpdate)
         {

@@ -20,7 +20,7 @@ public partial class EnvVarsViewModel : ContentDialogViewModelBase
     private ObservableCollection<EnvVarKeyPair> envVars = new();
 
     public DataGridCollectionView EnvVarsView => new(EnvVars);
-    
+
     [RelayCommand]
     private void AddRow()
     {

@@ -21,13 +21,13 @@ namespace StabilityMatrix.Core.Models.Packages;
 public abstract class BaseGitPackage : BasePackage
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
+
     protected readonly IGithubApiCache GithubApi;
     protected readonly ISettingsManager SettingsManager;
     protected readonly IDownloadService DownloadService;
     protected readonly IPrerequisiteHelper PrerequisiteHelper;
     public PyVenvRunner? VenvRunner;
-    
+
     /// <summary>
     /// URL of the hosted web page on launch
     /// </summary>
@@ -47,21 +47,23 @@ public abstract class BaseGitPackage : BasePackage
 
         if (!string.IsNullOrWhiteSpace(versionOptions.VersionTag))
         {
-            return
-                $"https://api.github.com/repos/{Author}/{Name}/zipball/{versionOptions.VersionTag}";
+            return $"https://api.github.com/repos/{Author}/{Name}/zipball/{versionOptions.VersionTag}";
         }
 
         if (!string.IsNullOrWhiteSpace(versionOptions.BranchName))
         {
-            return
-                $"https://api.github.com/repos/{Author}/{Name}/zipball/{versionOptions.BranchName}";
+            return $"https://api.github.com/repos/{Author}/{Name}/zipball/{versionOptions.BranchName}";
         }
-        
+
         throw new Exception("No download URL available");
     }
 
-    protected BaseGitPackage(IGithubApiCache githubApi, ISettingsManager settingsManager,
-        IDownloadService downloadService, IPrerequisiteHelper prerequisiteHelper)
+    protected BaseGitPackage(
+        IGithubApiCache githubApi,
+        ISettingsManager settingsManager,
+        IDownloadService downloadService,
+        IPrerequisiteHelper prerequisiteHelper
+    )
     {
         GithubApi = githubApi;
         SettingsManager = settingsManager;
@@ -71,51 +73,53 @@ public abstract class BaseGitPackage : BasePackage
 
     protected async Task<Release> GetLatestRelease(bool includePrerelease = false)
     {
-        var releases = await GithubApi
-            .GetAllReleases(Author, Name)
-            .ConfigureAwait(false);
+        var releases = await GithubApi.GetAllReleases(Author, Name).ConfigureAwait(false);
         return includePrerelease ? releases.First() : releases.First(x => !x.Prerelease);
     }
-    
+
     public override Task<IEnumerable<Branch>> GetAllBranches()
     {
         return GithubApi.GetAllBranches(Author, Name);
     }
-    
+
     public override Task<IEnumerable<Release>> GetAllReleases()
     {
         return GithubApi.GetAllReleases(Author, Name);
     }
-    
-    public override Task<IEnumerable<GitCommit>?> GetAllCommits(string branch, int page = 1, int perPage = 10)
+
+    public override Task<IEnumerable<GitCommit>?> GetAllCommits(
+        string branch,
+        int page = 1,
+        int perPage = 10
+    )
     {
         return GithubApi.GetAllCommits(Author, Name, branch, page, perPage);
     }
-    
+
     public override async Task<PackageVersionOptions> GetAllVersionOptions()
     {
         var packageVersionOptions = new PackageVersionOptions();
-        
+
         var allReleases = await GetAllReleases().ConfigureAwait(false);
         var releasesList = allReleases.ToList();
         if (releasesList.Any())
         {
-            packageVersionOptions.AvailableVersions = releasesList.Select(r =>
-                new PackageVersion
-                {
-                    TagName = r.TagName!,
-                    ReleaseNotesMarkdown = r.Body,
-                    IsPrerelease = r.Prerelease
-                });
+            packageVersionOptions.AvailableVersions = releasesList.Select(
+                r =>
+                    new PackageVersion
+                    {
+                        TagName = r.TagName!,
+                        ReleaseNotesMarkdown = r.Body,
+                        IsPrerelease = r.Prerelease
+                    }
+            );
         }
 
         // Branch mode
         var allBranches = await GetAllBranches().ConfigureAwait(false);
-        packageVersionOptions.AvailableBranches = allBranches.Select(b => new PackageVersion
-        {
-            TagName = $"{b.Name}",
-            ReleaseNotesMarkdown = string.Empty
-        });
+        packageVersionOptions.AvailableBranches = allBranches.Select(
+            b => new PackageVersion { TagName = $"{b.Name}", ReleaseNotesMarkdown = string.Empty }
+        );
 
         return packageVersionOptions;
     }
@@ -125,9 +129,10 @@ public abstract class BaseGitPackage : BasePackage
     /// </summary>
     [MemberNotNull(nameof(VenvRunner))]
     public async Task<PyVenvRunner> SetupVenv(
-        string installedPackagePath, 
+        string installedPackagePath,
         string venvName = "venv",
-        bool forceRecreate = false)
+        bool forceRecreate = false
+    )
     {
         var venvPath = Path.Combine(installedPackagePath, venvName);
         if (VenvRunner != null)
@@ -140,24 +145,25 @@ public abstract class BaseGitPackage : BasePackage
             WorkingDirectory = installedPackagePath,
             EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables,
         };
-        
+
         if (!VenvRunner.Exists() || forceRecreate)
         {
             await VenvRunner.Setup(forceRecreate).ConfigureAwait(false);
         }
         return VenvRunner;
     }
-    
+
     public override async Task<IEnumerable<Release>> GetReleaseTags()
     {
-        var allReleases = await GithubApi
-            .GetAllReleases(Author, Name)
-            .ConfigureAwait(false);
+        var allReleases = await GithubApi.GetAllReleases(Author, Name).ConfigureAwait(false);
         return allReleases;
     }
 
-    public override async Task DownloadPackage(string installLocation,
-        DownloadPackageVersionOptions versionOptions, IProgress<ProgressReport>? progress = null)
+    public override async Task DownloadPackage(
+        string installLocation,
+        DownloadPackageVersionOptions versionOptions,
+        IProgress<ProgressReport>? progress = null
+    )
     {
         var downloadUrl = GetDownloadUrl(versionOptions);
 
@@ -173,8 +179,11 @@ public abstract class BaseGitPackage : BasePackage
         progress?.Report(new ProgressReport(100, message: "Download Complete"));
     }
 
-    public override async Task InstallPackage(string installLocation,
-        TorchVersion torchVersion, IProgress<ProgressReport>? progress = null)
+    public override async Task InstallPackage(
+        string installLocation,
+        TorchVersion torchVersion,
+        IProgress<ProgressReport>? progress = null
+    )
     {
         await UnzipPackage(installLocation, progress).ConfigureAwait(false);
         File.Delete(DownloadLocation);
@@ -186,7 +195,7 @@ public abstract class BaseGitPackage : BasePackage
         var zipDirName = string.Empty;
         var totalEntries = zip.Entries.Count;
         var currentEntry = 0;
-        
+
         foreach (var entry in zip.Entries)
         {
             currentEntry++;
@@ -196,20 +205,26 @@ public abstract class BaseGitPackage : BasePackage
                 {
                     zipDirName = entry.FullName;
                 }
-        
-                var folderPath = Path.Combine(installLocation,
-                    entry.FullName.Replace(zipDirName, string.Empty));
+
+                var folderPath = Path.Combine(
+                    installLocation,
+                    entry.FullName.Replace(zipDirName, string.Empty)
+                );
                 Directory.CreateDirectory(folderPath);
                 continue;
             }
-        
-        
-            var destinationPath = Path.GetFullPath(Path.Combine(installLocation,
-                entry.FullName.Replace(zipDirName, string.Empty)));
+
+            var destinationPath = Path.GetFullPath(
+                Path.Combine(installLocation, entry.FullName.Replace(zipDirName, string.Empty))
+            );
             entry.ExtractToFile(destinationPath, true);
-        
-            progress?.Report(new ProgressReport(current: Convert.ToUInt64(currentEntry),
-                total: Convert.ToUInt64(totalEntries)));
+
+            progress?.Report(
+                new ProgressReport(
+                    current: Convert.ToUInt64(currentEntry),
+                    total: Convert.ToUInt64(totalEntries)
+                )
+            );
         }
 
         return Task.CompletedTask;
@@ -232,8 +247,9 @@ public abstract class BaseGitPackage : BasePackage
                 return UpdateAvailable;
             }
 
-            var allCommits = (await GetAllCommits(currentVersion.InstalledBranch)
-                .ConfigureAwait(false))?.ToList();
+            var allCommits = (
+                await GetAllCommits(currentVersion.InstalledBranch).ConfigureAwait(false)
+            )?.ToList();
             if (allCommits == null || !allCommits.Any())
             {
                 Logger.Warn("No commits found for {Package}", package.PackageName);
@@ -241,7 +257,6 @@ public abstract class BaseGitPackage : BasePackage
             }
             var latestCommitHash = allCommits.First().Sha;
             return latestCommitHash != currentVersion.InstalledCommitSha;
-
         }
         catch (ApiException e)
         {
@@ -250,34 +265,37 @@ public abstract class BaseGitPackage : BasePackage
         }
     }
 
-    public override async Task<InstalledPackageVersion> Update(InstalledPackage installedPackage,
-        TorchVersion torchVersion, IProgress<ProgressReport>? progress = null,
-        bool includePrerelease = false)
+    public override async Task<InstalledPackageVersion> Update(
+        InstalledPackage installedPackage,
+        TorchVersion torchVersion,
+        IProgress<ProgressReport>? progress = null,
+        bool includePrerelease = false
+    )
     {
-        if (installedPackage.Version == null) throw new NullReferenceException("Version is null");
+        if (installedPackage.Version == null)
+            throw new NullReferenceException("Version is null");
 
         if (installedPackage.Version.IsReleaseMode)
         {
             var releases = await GetAllReleases().ConfigureAwait(false);
             var latestRelease = releases.First(x => includePrerelease || !x.Prerelease);
 
-            await DownloadPackage(installedPackage.FullPath,
-                    new DownloadPackageVersionOptions {VersionTag = latestRelease.TagName},
-                    progress)
+            await DownloadPackage(
+                    installedPackage.FullPath,
+                    new DownloadPackageVersionOptions { VersionTag = latestRelease.TagName },
+                    progress
+                )
                 .ConfigureAwait(false);
 
             await InstallPackage(installedPackage.FullPath, torchVersion, progress)
                 .ConfigureAwait(false);
 
-            return new InstalledPackageVersion
-            {
-                InstalledReleaseVersion = latestRelease.TagName
-            };
+            return new InstalledPackageVersion { InstalledReleaseVersion = latestRelease.TagName };
         }
 
         // Commit mode
-        var allCommits = await GetAllCommits(
-            installedPackage.Version.InstalledBranch).ConfigureAwait(false);
+        var allCommits = await GetAllCommits(installedPackage.Version.InstalledBranch)
+            .ConfigureAwait(false);
         var latestCommit = allCommits?.First();
 
         if (latestCommit is null || string.IsNullOrEmpty(latestCommit.Sha))
@@ -285,8 +303,11 @@ public abstract class BaseGitPackage : BasePackage
             throw new Exception("No commits found for branch");
         }
 
-        await DownloadPackage(installedPackage.FullPath,
-                new DownloadPackageVersionOptions {CommitHash = latestCommit.Sha}, progress)
+        await DownloadPackage(
+                installedPackage.FullPath,
+                new DownloadPackageVersionOptions { CommitHash = latestCommit.Sha },
+                progress
+            )
             .ConfigureAwait(false);
         await InstallPackage(installedPackage.FullPath, torchVersion, progress)
             .ConfigureAwait(false);
@@ -298,29 +319,40 @@ public abstract class BaseGitPackage : BasePackage
         };
     }
 
-    public override Task SetupModelFolders(DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod)
+    public override Task SetupModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    )
     {
         if (sharedFolderMethod == SharedFolderMethod.Symlink && SharedFolders is { } folders)
         {
-            StabilityMatrix.Core.Helper.SharedFolders
-                .SetupLinks(folders, SettingsManager.ModelsDirectory, installDirectory);
+            StabilityMatrix.Core.Helper.SharedFolders.SetupLinks(
+                folders,
+                SettingsManager.ModelsDirectory,
+                installDirectory
+            );
         }
 
         return Task.CompletedTask;
     }
 
-    public override async Task UpdateModelFolders(DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod)
+    public override async Task UpdateModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    )
     {
         if (SharedFolders is not null && sharedFolderMethod == SharedFolderMethod.Symlink)
         {
-            await StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(this,
-                SettingsManager.ModelsDirectory, installDirectory).ConfigureAwait(false);
+            await StabilityMatrix.Core.Helper.SharedFolders
+                .UpdateLinksForPackage(this, SettingsManager.ModelsDirectory, installDirectory)
+                .ConfigureAwait(false);
         }
     }
 
-    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
+    public override Task RemoveModelFolderLinks(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    )
     {
         if (SharedFolders is not null && sharedFolderMethod == SharedFolderMethod.Symlink)
         {
@@ -340,7 +372,7 @@ public abstract class BaseGitPackage : BasePackage
         }
         process.StandardInput.WriteLine(input);
     }
-    
+
     public virtual async Task SendInputAsync(string input)
     {
         var process = VenvRunner?.Process;
@@ -361,7 +393,7 @@ public abstract class BaseGitPackage : BasePackage
             VenvRunner = null;
         }
     }
-    
+
     /// <inheritdoc />
     public override async Task WaitForShutdown()
     {

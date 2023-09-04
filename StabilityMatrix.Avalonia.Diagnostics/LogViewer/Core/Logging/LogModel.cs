@@ -13,11 +13,11 @@ public class LogModel
     public EventId EventId { get; set; }
 
     public object? State { get; set; }
-    
+
     public string? LoggerName { get; set; }
-    
+
     public string? CallerClassName { get; set; }
-    
+
     public string? CallerMemberName { get; set; }
 
     public string? Exception { get; set; }
@@ -26,8 +26,6 @@ public class LogModel
 
     #endregion
 
-    public string LoggerDisplayName => 
-        LoggerName?
-            .Split('.', StringSplitOptions.RemoveEmptyEntries)
-            .LastOrDefault() ?? "";
+    public string LoggerDisplayName =>
+        LoggerName?.Split('.', StringSplitOptions.RemoveEmptyEntries).LastOrDefault() ?? "";
 }

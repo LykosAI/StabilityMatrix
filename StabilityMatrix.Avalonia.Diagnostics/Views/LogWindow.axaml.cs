@@ -16,13 +16,18 @@ public partial class LogWindow : Window
     {
         return Attach(root, serviceProvider, new KeyGesture(Key.F11));
     }
-    
-    public static IDisposable Attach(TopLevel root, IServiceProvider serviceProvider, KeyGesture gesture)
+
+    public static IDisposable Attach(
+        TopLevel root,
+        IServiceProvider serviceProvider,
+        KeyGesture gesture
+    )
     {
         return (root ?? throw new ArgumentNullException(nameof(root))).AddDisposableHandler(
             KeyDownEvent,
             PreviewKeyDown,
-            RoutingStrategies.Tunnel);
+            RoutingStrategies.Tunnel
+        );
 
         void PreviewKeyDown(object? sender, KeyEventArgs e)
         {

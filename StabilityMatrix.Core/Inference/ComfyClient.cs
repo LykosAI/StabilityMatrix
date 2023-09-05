@@ -261,7 +261,7 @@ public class ComfyClient : InferenceClientBase
     public override async Task CloseAsync(CancellationToken cancellationToken = default)
     {
         await webSocketClient
-            .StopOrFail(WebSocketCloseStatus.NormalClosure, string.Empty)
+            .Stop(WebSocketCloseStatus.NormalClosure, string.Empty)
             .ConfigureAwait(false);
     }
 

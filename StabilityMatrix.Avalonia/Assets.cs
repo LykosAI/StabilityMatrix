@@ -31,6 +31,11 @@ internal static class Assets
     public static AvaloniaResource ThemeMatrixDarkJson => 
         new("avares://StabilityMatrix.Avalonia/Assets/ThemeMatrixDark.json");
 
+    private const UnixFileMode unix755 = UnixFileMode.UserRead | UnixFileMode.UserWrite |
+        UnixFileMode.UserExecute | UnixFileMode.GroupRead |
+        UnixFileMode.GroupExecute | UnixFileMode.OtherRead |
+        UnixFileMode.OtherExecute;
+
     [SupportedOSPlatform("windows")]
     [SupportedOSPlatform("linux")]
     [SupportedOSPlatform("macos")]
@@ -38,9 +43,9 @@ internal static class Assets
         (PlatformKind.Windows,
             new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/win-x64/7za.exe")),
         (PlatformKind.Linux | PlatformKind.X64,
-            new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/linux-x64/7zzs", (UnixFileMode) 0777)),
+            new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/linux-x64/7zzs", unix755)),
         (PlatformKind.MacOS | PlatformKind.Arm,
-            new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/macos-arm64/7zz", (UnixFileMode) 0x777)));
+            new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/macos-arm64/7zz", unix755)));
     
     [SupportedOSPlatform("windows")]
     [SupportedOSPlatform("linux")]

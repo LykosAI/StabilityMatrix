@@ -134,12 +134,15 @@ public partial class InferenceViewModel : PageViewModelBase
                     .Take(1)
                     .Subscribe(_ =>
                     {
-                        if (ConnectCommand.CanExecute(null))
+                        Dispatcher.UIThread.Post(() =>
                         {
-                            Logger.Trace("On package launch - starting connection");
-                            ConnectCommand.Execute(null);
-                        }
-                        IsWaitingForConnection = false;
+                            if (ConnectCommand.CanExecute(null))
+                            {
+                                Logger.Trace("On package launch - starting connection");
+                                ConnectCommand.Execute(null);
+                            }
+                            IsWaitingForConnection = false;
+                        });
                     });
             }
             else

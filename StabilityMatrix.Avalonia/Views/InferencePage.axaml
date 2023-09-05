@@ -79,9 +79,15 @@
                     
                     <!-- Connecting Progress -->
                     <controls:ProgressRing
-                        IsVisible="{Binding ClientManager.IsConnecting}"
                         BorderThickness="4"
-                        IsIndeterminate="True"/>
+                        IsIndeterminate="True">
+                        <controls:ProgressRing.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                                <Binding Path="ClientManager.IsConnecting" />
+                                <Binding Path="IsWaitingForConnection" />
+                            </MultiBinding>
+                        </controls:ProgressRing.IsVisible>
+                    </controls:ProgressRing>
                     <!-- Connecting Progress Text -->
                     <TextBlock
                         IsVisible="{Binding ClientManager.IsConnecting}"
@@ -108,6 +114,7 @@
                             <MultiBinding Converter="{x:Static BoolConverters.And}">
                                 <Binding Path="ClientManager.CanUserConnect" />
                                 <Binding Path="IsComfyRunning" />
+                                <Binding Path="!IsWaitingForConnection" />
                             </MultiBinding>
                         </Button.IsVisible>
                         <StackPanel Orientation="Horizontal">
@@ -126,6 +133,7 @@
                             <MultiBinding Converter="{x:Static BoolConverters.And}">
                                 <Binding Path="ClientManager.CanUserConnect" />
                                 <Binding Path="!IsComfyRunning" />
+                                <Binding Path="!IsWaitingForConnection" />
                             </MultiBinding>
                         </Button.IsVisible>
                         <StackPanel Orientation="Horizontal">

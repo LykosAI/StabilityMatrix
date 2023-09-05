@@ -15,7 +15,7 @@ namespace StabilityMatrix.Avalonia.Services;
 public class NavigationService : INavigationService
 {
     private Frame? _frame;
-    
+
     /// <inheritdoc />
     public void SetFrame(Frame frame)
     {
@@ -23,13 +23,16 @@ public class NavigationService : INavigationService
     }
 
     /// <inheritdoc />
-    public void NavigateTo<TViewModel>(NavigationTransitionInfo? transitionInfo = null) where TViewModel : ViewModelBase
+    public void NavigateTo<TViewModel>(
+        NavigationTransitionInfo? transitionInfo = null,
+        object? param = null
+    )
+        where TViewModel : ViewModelBase
     {
         if (_frame is null)
         {
             throw new InvalidOperationException("SetFrame was not called before NavigateTo.");
         }
-
 
         if (App.Services.GetService(typeof(ISettingsManager)) is ISettingsManager settingsManager)
         {
@@ -47,21 +50,27 @@ public class NavigationService : INavigationService
             }
         }
 
-        _frame.NavigateToType(typeof(TViewModel),
-            null,
+        _frame.NavigateToType(
+            typeof(TViewModel),
+            param,
             new FrameNavigationOptions
             {
                 IsNavigationStackEnabled = true,
                 TransitionInfoOverride = transitionInfo ?? new SuppressNavigationTransitionInfo()
-            });
-        
+            }
+        );
+
         if (!typeof(TViewModel).IsAssignableTo(typeof(PageViewModelBase)))
             return;
-        
-        if (App.Services.GetService(typeof(MainWindowViewModel)) is MainWindowViewModel mainViewModel)
+
+        if (
+            App.Services.GetService(typeof(MainWindowViewModel))
+            is MainWindowViewModel mainViewModel
+        )
         {
-            mainViewModel.SelectedCategory =
-                mainViewModel.Pages.FirstOrDefault(x => x.GetType() == typeof(TViewModel));
+            mainViewModel.SelectedCategory = mainViewModel.Pages.FirstOrDefault(
+                x => x.GetType() == typeof(TViewModel)
+            );
         }
     }
 
@@ -72,7 +81,7 @@ public class NavigationService : INavigationService
         {
             throw new InvalidOperationException("SetFrame was not called before NavigateTo.");
         }
-        
+
         if (App.Services.GetService(typeof(ISettingsManager)) is ISettingsManager settingsManager)
         {
             // Handle animation scale
@@ -88,12 +97,14 @@ public class NavigationService : INavigationService
                     break;
             }
         }
-        
-        _frame.NavigateFromObject(viewModel,
+
+        _frame.NavigateFromObject(
+            viewModel,
             new FrameNavigationOptions
             {
                 IsNavigationStackEnabled = true,
                 TransitionInfoOverride = transitionInfo ?? new SuppressNavigationTransitionInfo()
-            });
+            }
+        );
     }
 }

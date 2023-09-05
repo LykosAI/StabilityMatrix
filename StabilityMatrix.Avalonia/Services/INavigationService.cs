@@ -14,8 +14,12 @@ public interface INavigationService
     /// <summary>
     /// Navigate to the view of the given view model type.
     /// </summary>
-    void NavigateTo<TViewModel>(NavigationTransitionInfo? transitionInfo = null) where TViewModel : ViewModelBase;
-    
+    void NavigateTo<TViewModel>(
+        NavigationTransitionInfo? transitionInfo = null,
+        object? param = null
+    )
+        where TViewModel : ViewModelBase;
+
     /// <summary>
     /// Navigate to the view of the given view model.
     /// </summary>

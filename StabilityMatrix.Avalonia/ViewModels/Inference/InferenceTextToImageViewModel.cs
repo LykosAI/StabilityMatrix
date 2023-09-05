@@ -229,7 +229,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             LatentNodeConnection hiresLatent;
 
             // Select between latent upscale and normal upscale based on the upscale method
-            var selectedUpscaler = UpscalerCardViewModel.SelectedUpscaler!.Value;
+            var selectedUpscaler = HiresUpscalerCardViewModel.SelectedUpscaler!.Value;
 
             if (selectedUpscaler.Type == ComfyUpscalerType.None)
             {

@@ -250,7 +250,8 @@ public sealed class App : Application
                     provider.GetRequiredService<ISettingsManager>(),
                     provider.GetRequiredService<IDiscordRichPresenceService>(),
                     provider.GetRequiredService<ServiceManager<ViewModelBase>>(),
-                    provider.GetRequiredService<ITrackedDownloadService>()
+                    provider.GetRequiredService<ITrackedDownloadService>(),
+                    provider.GetRequiredService<IModelIndexService>()
                 )
                 {
                     Pages =
@@ -281,6 +282,7 @@ public sealed class App : Application
         services.AddTransient<EnvVarsViewModel>();
         services.AddTransient<ImageViewerViewModel>();
         services.AddTransient<PackageImportViewModel>();
+        services.AddTransient<InferenceConnectionHelpViewModel>();
 
         // Dialog view models (singleton)
         services.AddSingleton<FirstLaunchSetupViewModel>();
@@ -345,6 +347,7 @@ public sealed class App : Application
                     .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>)
                     .Register(provider.GetRequiredService<PackageImportViewModel>)
                     .Register(provider.GetRequiredService<SelectImageCardViewModel>)
+                    .Register(provider.GetRequiredService<InferenceConnectionHelpViewModel>)
         );
     }
 
@@ -385,6 +388,7 @@ public sealed class App : Application
         services.AddTransient<EnvVarsDialog>();
         services.AddTransient<ImageViewerDialog>();
         services.AddTransient<PackageImportDialog>();
+        services.AddTransient<InferenceConnectionHelpDialog>();
 
         // Controls
         services.AddTransient<RefreshBadge>();

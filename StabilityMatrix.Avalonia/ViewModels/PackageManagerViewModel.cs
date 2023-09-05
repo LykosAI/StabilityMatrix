@@ -21,6 +21,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
@@ -77,11 +78,14 @@ public partial class PackageManagerViewModel : PageViewModelBase
             .Or(unknown)
             .DeferUntilLoaded()
             .Bind(Packages)
-            .Transform(p => dialogFactory.Get<PackageCardViewModel>(vm =>
-            {
-                vm.Package = p;
-                vm.OnLoadedAsync().SafeFireAndForget();
-            }))
+            .Transform(
+                p =>
+                    dialogFactory.Get<PackageCardViewModel>(vm =>
+                    {
+                        vm.Package = p;
+                        vm.OnLoadedAsync().SafeFireAndForget();
+                    })
+            )
             .Bind(PackageCards)
             .Subscribe();
     }
@@ -100,18 +104,21 @@ public partial class PackageManagerViewModel : PageViewModelBase
     {
         if (Design.IsDesignMode)
             return;
-        
-        installedPackages.EditDiff(settingsManager.Settings.InstalledPackages, InstalledPackage.Comparer);
+
+        installedPackages.EditDiff(
+            settingsManager.Settings.InstalledPackages,
+            InstalledPackage.Comparer
+        );
 
         var currentUnknown = await Task.Run(IndexUnknownPackages);
         unknownInstalledPackages.Edit(s => s.Load(currentUnknown));
     }
 
-    public async Task ShowInstallDialog()
+    public async Task ShowInstallDialog(BasePackage? selectedPackage = null)
     {
         var viewModel = dialogFactory.Get<InstallerViewModel>();
         viewModel.AvailablePackages = packageFactory.GetAllAvailablePackages().ToImmutableArray();
-        viewModel.SelectedPackage = viewModel.AvailablePackages[0];
+        viewModel.SelectedPackage = selectedPackage ?? viewModel.AvailablePackages[0];
 
         var dialog = new BetterContentDialog
         {
@@ -129,22 +136,24 @@ public partial class PackageManagerViewModel : PageViewModelBase
     }
 
     private IEnumerable<UnknownInstalledPackage> IndexUnknownPackages()
-    {         
+    {
         var packageDir = new DirectoryPath(settingsManager.LibraryDir).JoinDir("Packages");
 
         if (!packageDir.Exists)
         {
             yield break;
         }
-        
+
         var currentPackages = settingsManager.Settings.InstalledPackages.ToImmutableArray();
-        
-        foreach (var subDir in packageDir.Info
-                     .EnumerateDirectories()
-                     .Select(info => new DirectoryPath(info)))
+
+        foreach (
+            var subDir in packageDir.Info
+                .EnumerateDirectories()
+                .Select(info => new DirectoryPath(info))
+        )
         {
             var expectedLibraryPath = $"Packages{Path.DirectorySeparatorChar}{subDir.Name}";
-            
+
             // Skip if the package is already installed
             if (currentPackages.Any(p => p.LibraryPath == expectedLibraryPath))
             {

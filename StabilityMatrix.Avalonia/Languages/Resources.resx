@@ -120,4 +120,13 @@
     <data name="Action_Connect" xml:space="preserve">
         <value>Connect</value>
     </data>
+    <data name="Label_ConnectingEllipsis" xml:space="preserve">
+        <value>Connecting...</value>
+    </data>
+    <data name="Action_Close" xml:space="preserve">
+        <value>Close</value>
+    </data>
+    <data name="Label_WaitingToConnectEllipsis" xml:space="preserve">
+        <value>Waiting to connect...</value>
+    </data>
 </root>

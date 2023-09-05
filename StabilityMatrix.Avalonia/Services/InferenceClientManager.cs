@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -33,12 +34,24 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     private readonly ILogger<InferenceClientManager> logger;
     private readonly IApiFactory apiFactory;
     private readonly IModelIndexService modelIndexService;
+    private readonly ISettingsManager settingsManager;
 
-    [ObservableProperty, NotifyPropertyChangedFor(nameof(IsConnected))]
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsConnected), nameof(CanUserConnect))]
     private ComfyClient? client;
 
     [MemberNotNullWhen(true, nameof(Client))]
     public bool IsConnected => Client is not null;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanUserConnect))]
+    private bool isConnecting;
+
+    /// <inheritdoc />
+    public bool CanUserConnect => !IsConnected && !IsConnecting;
+
+    /// <inheritdoc />
+    public bool CanUserDisconnect => IsConnected && !IsConnecting;
 
     private readonly SourceCache<HybridModelFile, string> modelsSource = new(p => p.GetId());
 
@@ -72,12 +85,14 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     public InferenceClientManager(
         ILogger<InferenceClientManager> logger,
         IApiFactory apiFactory,
-        IModelIndexService modelIndexService
+        IModelIndexService modelIndexService,
+        ISettingsManager settingsManager
     )
     {
         this.logger = logger;
         this.apiFactory = apiFactory;
         this.modelIndexService = modelIndexService;
+        this.settingsManager = settingsManager;
 
         modelsSource.Connect().DeferUntilLoaded().Bind(Models).Subscribe();
 
@@ -204,18 +219,41 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         schedulersSource.EditDiff(ComfyScheduler.Defaults, ComfyScheduler.Comparer);
     }
 
-    public async Task ConnectAsync()
+    private async Task ConnectAsyncImpl(Uri uri, CancellationToken cancellationToken = default)
     {
         if (IsConnected)
             return;
 
-        var tempClient = new ComfyClient(apiFactory, new Uri("http://127.0.0.1:8188"));
-        await tempClient.ConnectAsync();
-        Client = tempClient;
-        await LoadSharedPropertiesAsync();
+        IsConnecting = true;
+        try
+        {
+            logger.LogDebug("Connecting to {@Uri}...", uri);
+
+            var tempClient = new ComfyClient(apiFactory, uri);
+
+            await tempClient.ConnectAsync(cancellationToken);
+            Client = tempClient;
+            logger.LogDebug("Connected to {@Uri}", uri);
+
+            await LoadSharedPropertiesAsync();
+        }
+        finally
+        {
+            IsConnecting = false;
+        }
     }
 
-    public async Task ConnectAsync(PackagePair packagePair)
+    /// <inheritdoc />
+    public Task ConnectAsync(CancellationToken cancellationToken = default)
+    {
+        return ConnectAsyncImpl(new Uri("http://127.0.0.1:8188"), cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task ConnectAsync(
+        PackagePair packagePair,
+        CancellationToken cancellationToken = default
+    )
     {
         if (IsConnected)
             return;
@@ -225,17 +263,14 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             throw new ArgumentException("Base package is not ComfyUI", nameof(packagePair));
         }
 
-        var tempClient = new ComfyClient(apiFactory, new Uri("http://127.0.0.1:8188"));
+        // Get user defined host and port
+        var host = packagePair.InstalledPackage.GetLaunchArgsHost() ?? "127.0.0.1";
+        host = host.Replace("localhost", "127.0.0.1");
+        var port = packagePair.InstalledPackage.GetLaunchArgsPort() ?? "8188";
 
-        // Add output dir if available
-        if (packagePair.InstalledPackage.FullPath is { } path)
-        {
-            tempClient.OutputImagesDir = new DirectoryPath(path, "output");
-        }
+        var uri = new UriBuilder("http", host, int.Parse(port)).Uri;
 
-        await tempClient.ConnectAsync();
-        Client = tempClient;
-        await LoadSharedPropertiesAsync();
+        await ConnectAsyncImpl(uri, cancellationToken);
     }
 
     public async Task CloseAsync()

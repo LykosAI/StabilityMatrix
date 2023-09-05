@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
+using NLog;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -22,18 +25,21 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 [View(typeof(MainWindow))]
 public partial class MainWindowViewModel : ViewModelBase
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly IDiscordRichPresenceService discordRichPresenceService;
+    private readonly IModelIndexService modelIndexService;
     public string Greeting => "Welcome to Avalonia!";
-    
+
     [ObservableProperty]
     private PageViewModelBase? currentPage;
-    
-    [ObservableProperty] 
+
+    [ObservableProperty]
     private object? selectedCategory;
-    
+
     [ObservableProperty]
     private List<PageViewModelBase> pages = new();
 
@@ -44,16 +50,19 @@ public partial class MainWindowViewModel : ViewModelBase
     public UpdateViewModel UpdateViewModel { get; init; }
 
     public MainWindowViewModel(
-        ISettingsManager settingsManager, 
+        ISettingsManager settingsManager,
         IDiscordRichPresenceService discordRichPresenceService,
         ServiceManager<ViewModelBase> dialogFactory,
-        ITrackedDownloadService trackedDownloadService)
+        ITrackedDownloadService trackedDownloadService,
+        IModelIndexService modelIndexService
+    )
     {
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
         this.discordRichPresenceService = discordRichPresenceService;
         this.trackedDownloadService = trackedDownloadService;
-        
+        this.modelIndexService = modelIndexService;
+
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
     }
@@ -61,7 +70,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public override void OnLoaded()
     {
         base.OnLoaded();
-        
+
         // Set only if null, since this may be called again when content dialogs open
         CurrentPage ??= Pages.FirstOrDefault();
         SelectedCategory ??= Pages.FirstOrDefault();
@@ -72,24 +81,27 @@ public partial class MainWindowViewModel : ViewModelBase
         await base.OnLoadedAsync();
 
         // Skip if design mode
-        if (Design.IsDesignMode) return;
-        
+        if (Design.IsDesignMode)
+            return;
+
         if (!await EnsureDataDirectory())
         {
             // False if user exited dialog, shutdown app
             App.Shutdown();
             return;
         }
-        
+
         // Initialize Discord Rich Presence (this needs LibraryDir so is set here)
         discordRichPresenceService.UpdateState();
-        
+
         // Load in-progress downloads
         ProgressManagerViewModel.AddDownloads(trackedDownloadService.Downloads);
-        
+
         // Index checkpoints if we dont have
         Task.Run(() => settingsManager.IndexCheckpoints()).SafeFireAndForget();
-        
+
+        PreloadPages();
+
         if (!settingsManager.Settings.InstalledPackages.Any())
         {
             var viewModel = dialogFactory.Get<OneClickInstallViewModel>();
@@ -98,21 +110,58 @@ public partial class MainWindowViewModel : ViewModelBase
                 IsPrimaryButtonEnabled = false,
                 IsSecondaryButtonEnabled = false,
                 IsFooterVisible = false,
-                Content = new OneClickInstallDialog
-                {
-                    DataContext = viewModel
-                },
+                Content = new OneClickInstallDialog { DataContext = viewModel },
             };
 
             EventManager.Instance.OneClickInstallFinished += (_, skipped) =>
             {
                 dialog.Hide();
-                if (skipped) return;
-                
+                if (skipped)
+                    return;
+
                 EventManager.Instance.OnTeachingTooltipNeeded();
             };
 
             await dialog.ShowAsync();
+        }
+    }
+
+    private void PreloadPages()
+    {
+        // Preload pages with Preload attribute
+        foreach (
+            var page in Pages
+                .Concat(FooterPages)
+                .Where(p => p.GetType().GetCustomAttributes(typeof(PreloadAttribute), true).Any())
+        )
+        {
+            Dispatcher.UIThread
+                .InvokeAsync(
+                    async () =>
+                    {
+                        var stopwatch = Stopwatch.StartNew();
+
+                        // ReSharper disable once MethodHasAsyncOverload
+                        page.OnLoaded();
+                        await page.OnLoadedAsync();
+
+                        // Get view
+                        new ViewLocator().Build(page);
+
+                        Logger.Trace(
+                            $"Preloaded page {page.GetType().Name} in {stopwatch.Elapsed.TotalMilliseconds:F1}ms"
+                        );
+                    },
+                    DispatcherPriority.Background
+                )
+                .ContinueWith(task =>
+                {
+                    if (task.Exception is { } exception)
+                    {
+                        Logger.Error(exception, "Error preloading page");
+                        Debug.Fail(exception.Message);
+                    }
+                });
         }
     }
 
@@ -125,24 +174,25 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!settingsManager.TryFindLibrary())
         {
             var result = await ShowSelectDataDirectoryDialog();
-            if (!result) return false;
+            if (!result)
+                return false;
         }
-        
+
         // Try to find library again, should be found now
         if (!settingsManager.TryFindLibrary())
         {
             throw new Exception("Could not find library after setting path");
         }
-        
+
         // Tell LaunchPage to load any packages if they selected an existing directory
         EventManager.Instance.OnInstalledPackagesChanged();
-        
+
         // Check if there are old packages, if so show migration dialog
         // TODO: Migration dialog
 
         return true;
     }
-    
+
     /// <summary>
     /// Shows the select data directory dialog.
     /// </summary>
@@ -155,10 +205,7 @@ public partial class MainWindowViewModel : ViewModelBase
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
             IsFooterVisible = false,
-            Content = new SelectDataDirectoryDialog
-            {
-                DataContext = viewModel
-            }
+            Content = new SelectDataDirectoryDialog { DataContext = viewModel }
         };
 
         var result = await dialog.ShowAsync();
@@ -191,10 +238,7 @@ public partial class MainWindowViewModel : ViewModelBase
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
             IsFooterVisible = false,
-            Content = new UpdateDialog
-            {
-                DataContext = viewModel
-            }
+            Content = new UpdateDialog { DataContext = viewModel }
         };
 
         await dialog.ShowAsync();

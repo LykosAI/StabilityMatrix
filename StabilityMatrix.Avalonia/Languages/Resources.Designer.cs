@@ -69,6 +69,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Close.
+        /// </summary>
+        public static string Action_Close {
+            get {
+                return ResourceManager.GetString("Action_Close", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Connect.
         /// </summary>
         public static string Action_Connect {
@@ -155,6 +164,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Comments {
             get {
                 return ResourceManager.GetString("Label_Comments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connecting....
+        /// </summary>
+        public static string Label_ConnectingEllipsis {
+            get {
+                return ResourceManager.GetString("Label_ConnectingEllipsis", resourceCulture);
             }
         }
         
@@ -344,6 +362,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_VersionType {
             get {
                 return ResourceManager.GetString("Label_VersionType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting to connect....
+        /// </summary>
+        public static string Label_WaitingToConnectEllipsis {
+            get {
+                return ResourceManager.GetString("Label_WaitingToConnectEllipsis", resourceCulture);
             }
         }
         

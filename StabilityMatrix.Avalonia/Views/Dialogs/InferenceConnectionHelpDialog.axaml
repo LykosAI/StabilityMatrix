@@ -1,0 +1,68 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+                          xmlns:ui="using:FluentAvalonia.UI.Controls"
+                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
+                          xmlns:vmDialog="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+                          xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+                          d:DataContext="{x:Static mocks:DesignData.InferenceConnectionHelpViewModel}"
+                          x:DataType="vmDialog:InferenceConnectionHelpViewModel"
+                          mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="350"
+                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.InferenceConnectionHelpDialog">
+    <Grid RowDefinitions="*">
+        <StackPanel Spacing="8">
+            <TextBlock 
+                Theme="{DynamicResource SubtitleTextBlockStyle}"
+                Text="Welcome to Inference"/>
+            
+            <TextBlock 
+                Theme="{DynamicResource BodyTextBlockStyle}"
+                Text="ComfyUI must be running to use Inference"/>
+            
+            <ui:InfoBar
+                Severity="Informational"
+                VerticalAlignment="Center"
+                IsClosable="False"
+                IsOpen="{Binding IsInstallMode}"
+                IsVisible="{Binding IsInstallMode}"
+                Margin="0,4"
+                Title="Would you like to be directed to install ComfyUI now?"/>
+            
+            <ui:InfoBar
+                Severity="Informational"
+                VerticalAlignment="Center"
+                IsClosable="False"
+                IsOpen="{Binding IsLaunchMode}"
+                IsVisible="{Binding IsLaunchMode}"
+                Margin="0,4"
+                Title="Would you like to launch ComfyUI now?"/>
+            
+            <ComboBox
+                HorizontalAlignment="Stretch"
+                ItemsSource="{Binding InstalledPackages}"
+                SelectedItem="{Binding SelectedPackage}">
+                <ComboBox.Styles>
+                    <Style Selector="ComboBox /template/ ContentControl#ContentPresenter &gt; StackPanel &gt; TextBlock:nth-child(2)">
+                        <Setter Property="IsVisible" Value="False" />
+                    </Style>
+                </ComboBox.Styles>
+
+                <ComboBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type models:InstalledPackage}">
+                        <StackPanel Margin="10,0,0,0" VerticalAlignment="Top">
+                            <TextBlock
+                                Name="NameTextBlock"
+                                Margin="0,5,0,5"
+                                Text="{Binding DisplayName, Mode=OneWay}" />
+                            <TextBlock Text="{Binding FullPath, Mode=OneWay}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </StackPanel>
+    </Grid>
+</controls:UserControlBase>

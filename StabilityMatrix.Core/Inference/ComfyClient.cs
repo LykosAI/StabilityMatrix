@@ -235,6 +235,8 @@ public class ComfyClient : InferenceClientBase
 
         foreach (var (i, retryDelay) in delays.Enumerate())
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             try
             {
                 await webSocketClient.StartOrFail().ConfigureAwait(false);

@@ -9,6 +9,8 @@
     xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     d:DataContext="{x:Static mocks:DesignData.InferenceViewModel}"
     d:DesignHeight="650"
     d:DesignWidth="1000"
@@ -74,12 +76,66 @@
                     Orientation="Horizontal"
                     Spacing="8"
                     HorizontalAlignment="Right">
-                    <Button 
+                    
+                    <!-- Connecting Progress -->
+                    <controls:ProgressRing
+                        IsVisible="{Binding ClientManager.IsConnecting}"
+                        BorderThickness="4"
+                        IsIndeterminate="True"/>
+                    <!-- Connecting Progress Text -->
+                    <TextBlock
+                        IsVisible="{Binding ClientManager.IsConnecting}"
+                        VerticalAlignment="Center"
+                        Text="{x:Static lang:Resources.Label_ConnectingEllipsis}"/>
+                    <!-- Waiting to connect progress text -->
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Text="{x:Static lang:Resources.Label_WaitingToConnectEllipsis}">
+                        <Button.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="!ClientManager.IsConnecting" />
+                                <Binding Path="IsWaitingForConnection" />
+                            </MultiBinding>
+                        </Button.IsVisible>
+                    </TextBlock>
+
+                    <!-- Active connect (when Comfy is running) -->
+                    <Button
                         Padding="12,4"
-                        IsVisible="{Binding !ClientManager.IsConnected}"
                         Command="{Binding ConnectCommand}"
-                        Classes="success"
-                        Content="Connect"/>
+                        Classes="success">
+                        <Button.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="ClientManager.CanUserConnect" />
+                                <Binding Path="IsComfyRunning" />
+                            </MultiBinding>
+                        </Button.IsVisible>
+                        <StackPanel Orientation="Horizontal">
+                            <icons:Icon Value="fa-solid fa-circle-question"
+                                         Margin="0,0,8,0"
+                                         FontSize="14" />
+                            <TextBlock Text="{x:Static lang:Resources.Action_Connect}" />
+                        </StackPanel>
+                    </Button>
+                    
+                    <!-- Connect help -->
+                    <Button
+                        Padding="12,4"
+                        Command="{Binding ShowConnectionHelpCommand}">
+                        <Button.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="ClientManager.CanUserConnect" />
+                                <Binding Path="!IsComfyRunning" />
+                            </MultiBinding>
+                        </Button.IsVisible>
+                        <StackPanel Orientation="Horizontal">
+                            <icons:Icon Value="fa-solid fa-circle-question"
+                                        Margin="0,0,8,0"
+                                        FontSize="14" />
+                            <TextBlock Text="{x:Static lang:Resources.Action_Connect}" />
+                        </StackPanel>
+                    </Button>
+                    
                     <Button 
                         Classes="transparent" 
                         BorderThickness="0">

@@ -2,12 +2,15 @@
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -16,6 +19,7 @@ using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
@@ -26,6 +30,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
@@ -33,6 +38,7 @@ using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
+[Preload]
 [View(typeof(InferencePage))]
 public partial class InferenceViewModel : PageViewModelBase
 {
@@ -70,7 +76,13 @@ public partial class InferenceViewModel : PageViewModelBase
     private int selectedTabIndex;
 
     [ObservableProperty]
+    private bool isWaitingForConnection;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsComfyRunning))]
     private PackagePair? runningPackage;
+
+    public bool IsComfyRunning => RunningPackage?.BasePackage is ComfyUI;
 
     public InferenceViewModel(
         ServiceManager<ViewModelBase> vmFactory,
@@ -92,13 +104,60 @@ public partial class InferenceViewModel : PageViewModelBase
         ClientManager = inferenceClientManager;
 
         // Keep RunningPackage updated with the current package pair
-        EventManager.Instance.RunningPackageStatusChanged += (_, args) =>
-        {
-            RunningPackage = args.CurrentPackagePair;
-        };
+        EventManager.Instance.RunningPackageStatusChanged += OnRunningPackageStatusChanged;
 
         MenuSaveAsCommand.WithConditionalNotificationErrorHandler(notificationService);
         MenuOpenProjectCommand.WithConditionalNotificationErrorHandler(notificationService);
+    }
+
+    /// <summary>
+    /// Updates the RunningPackage property when the running package changes.
+    /// Also starts a connection to the backend if a new ComfyUI package is running.
+    /// And disconnects if the package is closed.
+    /// </summary>
+    private void OnRunningPackageStatusChanged(
+        object? sender,
+        RunningPackageStatusChangedEventArgs e
+    )
+    {
+        RunningPackage = e.CurrentPackagePair;
+
+        IDisposable? onStartupComplete = null;
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (e.CurrentPackagePair?.BasePackage is ComfyUI package)
+            {
+                IsWaitingForConnection = true;
+                onStartupComplete = Observable
+                    .FromEventPattern<string>(package, nameof(package.StartupComplete))
+                    .Take(1)
+                    .Subscribe(_ =>
+                    {
+                        if (ConnectCommand.CanExecute(null))
+                        {
+                            Logger.Trace("On package launch - starting connection");
+                            ConnectCommand.Execute(null);
+                        }
+                        IsWaitingForConnection = false;
+                    });
+            }
+            else
+            {
+                // Cancel any pending connection
+                if (ConnectCancelCommand.CanExecute(null))
+                {
+                    ConnectCancelCommand.Execute(null);
+                }
+                onStartupComplete?.Dispose();
+                onStartupComplete = null;
+                IsWaitingForConnection = false;
+
+                // Disconnect
+                Logger.Trace("On package close - disconnecting");
+                DisconnectCommand.Execute(null);
+            }
+        });
     }
 
     private bool isFirstLoadComplete;
@@ -109,6 +168,8 @@ public partial class InferenceViewModel : PageViewModelBase
 
         if (!Design.IsDesignMode && !isFirstLoadComplete)
         {
+            isFirstLoadComplete = true;
+
             // Load any open projects
             var openProjects = await liteDbContext.InferenceProjects.FindAsync(p => p.IsOpen);
 
@@ -153,8 +214,6 @@ public partial class InferenceViewModel : PageViewModelBase
                     }
                 }
             }
-
-            isFirstLoadComplete = true;
         }
 
         if (Tabs.Count == 0)
@@ -288,23 +347,34 @@ public partial class InferenceViewModel : PageViewModelBase
     }
 
     /// <summary>
-    /// Connect to the inference server.
+    /// Show the connection help dialog.
     /// </summary>
     [RelayCommand]
-    private async Task Connect()
+    private async Task ShowConnectionHelp()
+    {
+        var vm = vmFactory.Get<InferenceConnectionHelpViewModel>();
+        await vm.CreateDialog().ShowAsync();
+    }
+
+    /// <summary>
+    /// Connect to the inference server.
+    /// </summary>
+    [RelayCommand(IncludeCancelCommand = true)]
+    private async Task Connect(CancellationToken cancellationToken = default)
     {
         if (ClientManager.IsConnected)
+            return;
+
+        if (Design.IsDesignMode)
         {
-            notificationService.Show("Already connected", "ComfyUI backend is already connected");
+            await ClientManager.ConnectAsync(cancellationToken);
             return;
         }
-
-        // TODO: make address configurable
 
         if (RunningPackage is not null)
         {
             await notificationService.TryAsync(
-                ClientManager.ConnectAsync(RunningPackage),
+                ClientManager.ConnectAsync(RunningPackage, cancellationToken),
                 "Could not connect to backend"
             );
         }
@@ -317,8 +387,11 @@ public partial class InferenceViewModel : PageViewModelBase
     private async Task Disconnect()
     {
         if (!ClientManager.IsConnected)
+            return;
+
+        if (Design.IsDesignMode)
         {
-            notificationService.Show("Not connected", "ComfyUI backend is not connected");
+            await ClientManager.CloseAsync();
             return;
         }
 
@@ -416,10 +489,7 @@ public partial class InferenceViewModel : PageViewModelBase
     [RelayCommand(FlowExceptionsToTaskScheduler = true)]
     private async Task MenuSave()
     {
-        // Get the current tab
-        var currentTab = SelectedTab;
-
-        if (currentTab == null)
+        if (SelectedTab is not { } currentTab)
         {
             Logger.Info("MenuSaveProject: currentTab is null");
             return;
@@ -501,11 +571,9 @@ public partial class InferenceViewModel : PageViewModelBase
 
         Tabs.Add(vm);
 
-        // Set the selected tab to the newly opened tab
         SelectedTab = vm;
 
-        // Update the database with the current tab
-        SyncTabStateWithDatabase(vm).SafeFireAndForget();
+        await SyncTabStateWithDatabase(vm);
     }
 
     /// <summary>

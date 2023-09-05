@@ -573,6 +573,9 @@ The gallery images are often inpainted, but you will get something very similar 
             );
         });
 
+    public static InferenceConnectionHelpViewModel InferenceConnectionHelpViewModel =>
+        DialogFactory.Get<InferenceConnectionHelpViewModel>();
+
     public static SelectImageCardViewModel SelectImageCardViewModel =>
         DialogFactory.Get<SelectImageCardViewModel>();
 

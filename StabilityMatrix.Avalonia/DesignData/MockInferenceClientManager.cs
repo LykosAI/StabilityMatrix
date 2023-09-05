@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
@@ -10,7 +11,7 @@ using StabilityMatrix.Core.Models.Api.Comfy;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
-public class MockInferenceClientManager : ObservableObject, IInferenceClientManager
+public partial class MockInferenceClientManager : ObservableObject, IInferenceClientManager
 {
     public ComfyClient? Client { get; set; }
 
@@ -36,21 +37,38 @@ public class MockInferenceClientManager : ObservableObject, IInferenceClientMana
     public IObservableCollection<ComfyScheduler> Schedulers { get; } =
         new ObservableCollectionExtended<ComfyScheduler>(ComfyScheduler.Defaults);
 
-    public bool IsConnected { get; set; }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanUserConnect))]
+    private bool isConnected;
 
-    public Task ConnectAsync()
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanUserConnect))]
+    private bool isConnecting;
+
+    /// <inheritdoc />
+    public bool CanUserConnect => !IsConnected && !IsConnecting;
+
+    /// <inheritdoc />
+    public bool CanUserDisconnect => IsConnected && !IsConnecting;
+
+    public async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
-        return Task.CompletedTask;
+        IsConnecting = true;
+        await Task.Delay(5000, cancellationToken);
+
+        IsConnecting = false;
+        IsConnected = true;
     }
 
     /// <inheritdoc />
-    public Task ConnectAsync(PackagePair packagePair)
+    public Task ConnectAsync(PackagePair packagePair, CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
     }
 
     public Task CloseAsync()
     {
+        IsConnected = false;
         return Task.CompletedTask;
     }
 

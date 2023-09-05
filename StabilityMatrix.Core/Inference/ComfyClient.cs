@@ -1,13 +1,17 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using System.Net.WebSockets;
 using System.Text.Json;
 using NLog;
+using Polly.Contrib.WaitAndRetry;
 using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using Websocket.Client;
+using Websocket.Client.Exceptions;
 
 namespace StabilityMatrix.Core.Inference;
 
@@ -225,7 +229,31 @@ public class ComfyClient : InferenceClientBase
 
     public override async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
-        await webSocketClient.StartOrFail().ConfigureAwait(false);
+        var delays = Backoff
+            .DecorrelatedJitterBackoffV2(TimeSpan.FromMilliseconds(500), retryCount: 5)
+            .ToImmutableArray();
+
+        foreach (var (i, retryDelay) in delays.Enumerate())
+        {
+            try
+            {
+                await webSocketClient.StartOrFail().ConfigureAwait(false);
+                return;
+            }
+            catch (WebsocketException e)
+            {
+                Logger.Info(
+                    "Failed to connect to websocket, retrying in {RetryDelay} ({Message})",
+                    retryDelay,
+                    e.Message
+                );
+
+                if (i == delays.Length - 1)
+                {
+                    throw;
+                }
+            }
+        }
     }
 
     public override async Task CloseAsync(CancellationToken cancellationToken = default)

@@ -48,4 +48,15 @@ public class InferenceProjectDocument
             _ => throw new ArgumentOutOfRangeException(nameof(ProjectType), ProjectType, null)
         };
     }
+
+    public void VerifyVersion()
+    {
+        if (Version < 2)
+        {
+            throw new NotSupportedException(
+                $"Project was created in an earlier pre-release version of Stability Matrix and is no longer supported. "
+                    + $"Please create a new project."
+            );
+        }
+    }
 }

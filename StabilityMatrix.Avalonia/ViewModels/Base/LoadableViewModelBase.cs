@@ -114,10 +114,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
                     property.PropertyType,
                     jsonPropertyName.Name
                 );
-                if (property.GetValue(this) is string jsonPropertyNameValue)
-                {
-                    name = jsonPropertyNameValue;
-                }
+                name = jsonPropertyName.Name;
             }
 
             // Check if property is in the JSON object
@@ -227,10 +224,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
                     property.PropertyType,
                     jsonPropertyName.Name
                 );
-                if (property.GetValue(this) is string value)
-                {
-                    name = value;
-                }
+                name = jsonPropertyName.Name;
             }
 
             // For types that also implement IJsonLoadableState, defer to their implementation.

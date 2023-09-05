@@ -3,25 +3,28 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
-    xmlns:ui="using:FluentAvalonia.UI.Controls"
-    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    xmlns:fluentIcons="using:FluentIcons.FluentAvalonia"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
     d:DataContext="{x:Static mocks:DesignData.InferenceViewModel}"
     d:DesignHeight="650"
     d:DesignWidth="1000"
     x:DataType="vm:InferenceViewModel"
     mc:Ignorable="d">
-    
+
     <controls:UserControlBase.Resources>
-        <ui:CommandBarFlyout Placement="Right" x:Key="AddTabFlyout">
+        <converters:UriStringConverter x:Key="UriStringConverter" />
+        <ui:CommandBarFlyout x:Key="AddTabFlyout" Placement="Right">
             <!-- Note: unlike a regular CommandBar, primary items can be set as the xml content and don't need
                    to be wrapped in a <ui:CommandBarFlyout.PrimaryCommands> tag
-        -->
+            -->
             <!--<ui:CommandBarButton Label="Text to Image" ToolTip.Tip="Text to Image">
                 <ui:CommandBarButton.IconSource>
                     <controls:FASymbolIconSource Symbol="fa-solid fa-bolt"/>
@@ -30,57 +33,55 @@
             <ui:CommandBarButton Label="Save" ToolTip.Tip="Save" />
             <ui:CommandBarButton Label="Delete" ToolTip.Tip="Delete" />-->
             <ui:CommandBarFlyout.SecondaryCommands>
-                <ui:CommandBarButton 
-                    IconSource="FullScreenMaximize"
-                    Label="Text to Image" 
-                    Click="AddTabMenu_TextToImageButton_OnClick"
-                    ToolTip.Tip="Text to Image"/>
-                <ui:CommandBarButton 
-                    IsEnabled="False"
-                    IconSource="ImageCopy"
-                    Label="Image to Image"
-                    ToolTip.Tip="Image to Image"/>
                 <ui:CommandBarButton
+                    Click="AddTabMenu_TextToImageButton_OnClick"
+                    IconSource="FullScreenMaximize"
+                    Label="Text to Image"
+                    ToolTip.Tip="Text to Image" />
+                <ui:CommandBarButton
+                    IconSource="ImageCopy"
                     IsEnabled="False"
+                    Label="Image to Image"
+                    ToolTip.Tip="Image to Image" />
+                <ui:CommandBarButton
                     IconSource="ImageEdit"
+                    IsEnabled="False"
                     Label="Inpaint"
-                    ToolTip.Tip="Inpaint"/>
+                    ToolTip.Tip="Inpaint" />
             </ui:CommandBarFlyout.SecondaryCommands>
         </ui:CommandBarFlyout>
     </controls:UserControlBase.Resources>
-    
+
     <Grid>
-        <!--             AddTabButtonCommand="{Binding AddTabCommand}" -->
         <ui:TabView
             x:Name="TabView"
-            CanDragTabs="True"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
+            AddTabButtonClick="TabView_OnAddTabButtonClick"
+            CanDragTabs="True"
             CanReorderTabs="True"
             CloseButtonOverlayMode="Auto"
-            TabCloseRequested="TabView_OnTabCloseRequested"
-            AddTabButtonClick="TabView_OnAddTabButtonClick"
-            TabItems="{Binding Tabs}"
-            SelectedItem="{Binding SelectedTab}"
             SelectedIndex="{Binding SelectedTabIndex}"
+            SelectedItem="{Binding SelectedTab}"
+            TabCloseRequested="TabView_OnTabCloseRequested"
+            TabItems="{Binding Tabs}"
             TabWidthMode="SizeToContent">
             <ui:TabView.TabItemTemplate>
                 <DataTemplate DataType="{x:Type vmInference:InferenceTextToImageViewModel}">
-                    <ui:TabViewItem Header="{Binding TabTitle}"
-                                    IconSource="Document" 
-                                    Content="{Binding}" />
+                    <ui:TabViewItem
+                        Content="{Binding FallbackValue=''}"
+                        Header="{Binding TabTitle}"
+                        IconSource="Document" />
                 </DataTemplate>
             </ui:TabView.TabItemTemplate>
             <ui:TabView.TabStripFooter>
                 <StackPanel
+                    HorizontalAlignment="Right"
                     Orientation="Horizontal"
-                    Spacing="8"
-                    HorizontalAlignment="Right">
-                    
-                    <!-- Connecting Progress -->
-                    <controls:ProgressRing
-                        BorderThickness="4"
-                        IsIndeterminate="True">
+                    Spacing="2">
+
+                    <!--  Connecting Progress  -->
+                    <controls:ProgressRing BorderThickness="4" IsIndeterminate="True">
                         <controls:ProgressRing.IsVisible>
                             <MultiBinding Converter="{x:Static BoolConverters.Or}">
                                 <Binding Path="ClientManager.IsConnecting" />
@@ -88,15 +89,13 @@
                             </MultiBinding>
                         </controls:ProgressRing.IsVisible>
                     </controls:ProgressRing>
-                    <!-- Connecting Progress Text -->
+                    <!--  Connecting Progress Text  -->
                     <TextBlock
+                        VerticalAlignment="Center"
                         IsVisible="{Binding ClientManager.IsConnecting}"
-                        VerticalAlignment="Center"
-                        Text="{x:Static lang:Resources.Label_ConnectingEllipsis}"/>
-                    <!-- Waiting to connect progress text -->
-                    <TextBlock
-                        VerticalAlignment="Center"
-                        Text="{x:Static lang:Resources.Label_WaitingToConnectEllipsis}">
+                        Text="{x:Static lang:Resources.Label_ConnectingEllipsis}" />
+                    <!--  Waiting to connect progress text  -->
+                    <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Label_WaitingToConnectEllipsis}">
                         <Button.IsVisible>
                             <MultiBinding Converter="{x:Static BoolConverters.And}">
                                 <Binding Path="!ClientManager.IsConnecting" />
@@ -105,11 +104,11 @@
                         </Button.IsVisible>
                     </TextBlock>
 
-                    <!-- Active connect (when Comfy is running) -->
+                    <!--  Active connect (when Comfy is running)  -->
                     <Button
                         Padding="12,4"
-                        Command="{Binding ConnectCommand}"
-                        Classes="success">
+                        Classes="success"
+                        Command="{Binding ConnectCommand}">
                         <Button.IsVisible>
                             <MultiBinding Converter="{x:Static BoolConverters.And}">
                                 <Binding Path="ClientManager.CanUserConnect" />
@@ -118,17 +117,12 @@
                             </MultiBinding>
                         </Button.IsVisible>
                         <StackPanel Orientation="Horizontal">
-                            <icons:Icon Value="fa-solid fa-circle-question"
-                                         Margin="0,0,8,0"
-                                         FontSize="14" />
                             <TextBlock Text="{x:Static lang:Resources.Action_Connect}" />
                         </StackPanel>
                     </Button>
-                    
-                    <!-- Connect help -->
-                    <Button
-                        Padding="12,4"
-                        Command="{Binding ShowConnectionHelpCommand}">
+
+                    <!--  Connect help  -->
+                    <Button Padding="12,4" Command="{Binding ShowConnectionHelpCommand}">
                         <Button.IsVisible>
                             <MultiBinding Converter="{x:Static BoolConverters.And}">
                                 <Binding Path="ClientManager.CanUserConnect" />
@@ -137,34 +131,67 @@
                             </MultiBinding>
                         </Button.IsVisible>
                         <StackPanel Orientation="Horizontal">
-                            <icons:Icon Value="fa-solid fa-circle-question"
-                                        Margin="0,0,8,0"
-                                        FontSize="14" />
-                            <TextBlock Text="{x:Static lang:Resources.Action_Connect}" />
+                            <icons:Icon
+                                Margin="0,0,8,0"
+                                FontSize="14"
+                                Value="fa-solid fa-circle-question" />
+                            <TextBlock Text="{x:Static lang:Resources.Action_Launch}" />
                         </StackPanel>
                     </Button>
-                    
-                    <Button 
-                        Classes="transparent" 
-                        BorderThickness="0">
-                        <ui:SymbolIcon FontSize="18" Symbol="MoreVertical"/>
+
+                    <!--  Successful connection icon  -->
+                    <Button Classes="transparent-full">
+
+                        <Button.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Path="ClientManager.IsConnected" />
+                                <Binding Path="!ClientManager.IsConnecting" />
+                                <Binding Path="!IsWaitingForConnection" />
+                            </MultiBinding>
+                        </Button.IsVisible>
+
+                        <fluentIcons:SymbolIcon
+                            VerticalAlignment="Center"
+                            FontSize="18"
+                            Foreground="{DynamicResource ThemeGreyColor}"
+                            IsFilled="True"
+                            Symbol="PlugConnected" />
+
                         <Button.Flyout>
-                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
-                                <MenuItem Header="Open Project..."
-                                          Command="{Binding MenuOpenProjectCommand}"
-                                          InputGesture="Ctrl+O"/>
-                                <Separator/>
-                                <MenuItem Header="Save"
-                                          Command="{Binding MenuSaveCommand}"
-                                          InputGesture="Ctrl+S"/>
-                                <MenuItem Header="Save As..."
-                                          Command="{Binding MenuSaveAsCommand}"
-                                          InputGesture="Ctrl+Shift+S"/>
-                                <Separator IsVisible="{Binding ClientManager.IsConnected}"/>
-                                <MenuItem Header="Disconnect"
-                                          Command="{Binding DisconnectCommand}"
-                                          IsVisible="{Binding ClientManager.IsConnected}"/>
-                            </MenuFlyout>
+                            <ui:FAMenuFlyout Placement="BottomEdgeAlignedRight">
+                                <ui:MenuFlyoutItem
+                                    Command="{Binding DisconnectCommand}"
+                                    IsEnabled="False"
+                                    Text="{Binding ClientManager.Client.BaseAddress, Converter={StaticResource UriStringConverter}, FallbackValue=''}" />
+                                <ui:MenuFlyoutSeparator />
+                                <ui:MenuFlyoutItem Command="{Binding DisconnectCommand}" Text="Disconnect">
+                                    <ui:MenuFlyoutItem.IconSource>
+                                        <fluentIcons:SymbolIconSource Symbol="PlugDisconnected" />
+                                    </ui:MenuFlyoutItem.IconSource>
+                                </ui:MenuFlyoutItem>
+                            </ui:FAMenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+
+                    <!--  Menu  -->
+                    <Button Classes="transparent-full">
+                        <ui:SymbolIcon FontSize="18" Symbol="MoreVertical" />
+                        <Button.Flyout>
+                            <ui:FAMenuFlyout Placement="BottomEdgeAlignedRight">
+                                <ui:MenuFlyoutItem
+                                    Command="{Binding MenuOpenProjectCommand}"
+                                    InputGesture="Ctrl+O"
+                                    Text="Open Project..." />
+                                <ui:MenuFlyoutSeparator />
+                                <ui:MenuFlyoutItem
+                                    Command="{Binding MenuSaveCommand}"
+                                    InputGesture="Ctrl+S"
+                                    Text="Save" />
+                                <ui:MenuFlyoutItem
+                                    Command="{Binding MenuSaveAsCommand}"
+                                    InputGesture="Ctrl+Shift+S"
+                                    Text="Save As..." />
+                            </ui:FAMenuFlyout>
                         </Button.Flyout>
                     </Button>
                 </StackPanel>

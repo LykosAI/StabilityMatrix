@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AutoComplete.Builders;
@@ -25,9 +26,12 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Models.TagCompletion;
 
-public class CompletionProvider : ICompletionProvider
+public partial class CompletionProvider : ICompletionProvider
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    [GeneratedRegex(@"([\[\]()<>])")]
+    private static partial Regex BracketsRegex();
 
     private readonly ISettingsManager settingsManager;
     private readonly INotificationService notificationService;
@@ -40,10 +44,7 @@ public class CompletionProvider : ICompletionProvider
 
     public bool IsLoaded => searcher is not null;
 
-    public Func<ICompletionData, string>? PrepareInsertionText =>
-        settingsManager.Settings.IsCompletionRemoveUnderscoresEnabled
-            ? PrepareInsertionText_RemoveUnderscores
-            : null;
+    public Func<ICompletionData, string>? PrepareInsertionText { get; }
 
     public CompletionProvider(
         ISettingsManager settingsManager,
@@ -54,6 +55,8 @@ public class CompletionProvider : ICompletionProvider
         this.settingsManager = settingsManager;
         this.notificationService = notificationService;
         this.modelIndexService = modelIndexService;
+
+        PrepareInsertionText = PrepareInsertionText_Process;
 
         // Attach to load from set file on initial settings load
         settingsManager.Loaded += (_, _) => UpdateTagCompletionCsv();
@@ -86,10 +89,28 @@ public class CompletionProvider : ICompletionProvider
         }
     }
 
-    private static string PrepareInsertionText_RemoveUnderscores(ICompletionData data)
+    private string PrepareInsertionText_Process(ICompletionData data)
     {
-        // Only for tags, skip and return text for other completion data
-        return data is not TagCompletionData ? data.Text : data.Text.Replace("_", " ");
+        var text = data.Text;
+
+        // For tags and if enabled, replace underscores with spaces
+        if (
+            data is TagCompletionData
+            && settingsManager.Settings.IsCompletionRemoveUnderscoresEnabled
+        )
+        {
+            // Remove underscores
+            text = text.Replace("_", " ");
+        }
+
+        // (Only for non model types)
+        // For bracket type character, escape it
+        if (data is not ModelCompletionData)
+        {
+            text = BracketsRegex().Replace(text, @"\$1");
+        }
+
+        return text;
     }
 
     /// <inheritdoc />

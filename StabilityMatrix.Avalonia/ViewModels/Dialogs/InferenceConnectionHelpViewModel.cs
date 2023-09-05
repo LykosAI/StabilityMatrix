@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -88,15 +89,18 @@ public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBa
     [RelayCommand]
     private void NavigateToInstall()
     {
-        navigationService.NavigateTo<PackageManagerViewModel>(
-            param: new PackageManagerPage.PackageManagerNavigationOptions
-            {
-                OpenInstallerDialog = true,
-                InstallerSelectedPackage = packageFactory
-                    .GetAllAvailablePackages()
-                    .First(p => p is ComfyUI)
-            }
-        );
+        Dispatcher.UIThread.Post(() =>
+        {
+            navigationService.NavigateTo<PackageManagerViewModel>(
+                param: new PackageManagerPage.PackageManagerNavigationOptions
+                {
+                    OpenInstallerDialog = true,
+                    InstallerSelectedPackage = packageFactory
+                        .GetAllAvailablePackages()
+                        .First(p => p is ComfyUI)
+                }
+            );
+        });
     }
 
     /// <summary>
@@ -107,7 +111,10 @@ public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBa
     {
         if (SelectedPackage?.Id is { } id)
         {
-            EventManager.Instance.OnPackageLaunchRequested(id);
+            Dispatcher.UIThread.Post(() =>
+            {
+                EventManager.Instance.OnPackageLaunchRequested(id);
+            });
         }
     }
 
@@ -128,13 +135,5 @@ public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBa
         };
 
         return dialog;
-    }
-
-    /// <inheritdoc />
-    public override void OnLoaded()
-    {
-        base.OnLoaded();
-
-        // Check if
     }
 }

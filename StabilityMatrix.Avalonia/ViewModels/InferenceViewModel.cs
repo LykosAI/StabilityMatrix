@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Controls.Shapes;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -33,6 +34,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
+using Path = System.IO.Path;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
@@ -45,12 +47,12 @@ public partial class InferenceViewModel : PageViewModelBase
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly INotificationService notificationService;
 
-    // private readonly IRelayCommandFactory commandFactory;
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> vmFactory;
-    private readonly IApiFactory apiFactory;
     private readonly IModelIndexService modelIndexService;
     private readonly ILiteDbContext liteDbContext;
+
+    private bool isFirstLoadComplete;
 
     public override string Title => "Inference";
     public override IconSource IconSource =>
@@ -86,7 +88,6 @@ public partial class InferenceViewModel : PageViewModelBase
 
     public InferenceViewModel(
         ServiceManager<ViewModelBase> vmFactory,
-        IApiFactory apiFactory,
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
         ISettingsManager settingsManager,
@@ -95,7 +96,6 @@ public partial class InferenceViewModel : PageViewModelBase
     )
     {
         this.vmFactory = vmFactory;
-        this.apiFactory = apiFactory;
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
         this.modelIndexService = modelIndexService;
@@ -162,8 +162,6 @@ public partial class InferenceViewModel : PageViewModelBase
             }
         });
     }
-
-    private bool isFirstLoadComplete;
 
     public override async Task OnLoadedAsync()
     {
@@ -554,6 +552,8 @@ public partial class InferenceViewModel : PageViewModelBase
             throw new ApplicationException("Project file does not have 'State' key");
         }
 
+        document.VerifyVersion();
+
         InferenceTabViewModelBase vm;
         if (document.ProjectType is InferenceProjectType.TextToImage)
         {
@@ -615,8 +615,27 @@ public partial class InferenceViewModel : PageViewModelBase
         }
 
         // Load from file
-        var file = results[0];
+        var file = results[0].TryGetLocalPath()!;
 
-        await AddTabFromFile(file.TryGetLocalPath()!);
+        try
+        {
+            await AddTabFromFile(file);
+        }
+        catch (NotSupportedException e)
+        {
+            notificationService.ShowPersistent(
+                $"Unsupported Project Version",
+                $"[{Path.GetFileName(file)}] {e.Message}",
+                NotificationType.Error
+            );
+        }
+        catch (Exception e)
+        {
+            notificationService.ShowPersistent(
+                $"Failed to load Project",
+                $"[{Path.GetFileName(file)}] {e.Message}",
+                NotificationType.Error
+            );
+        }
     }
 }

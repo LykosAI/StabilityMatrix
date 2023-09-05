@@ -43,6 +43,7 @@
             
             <ComboBox
                 HorizontalAlignment="Stretch"
+                IsVisible="{Binding IsLaunchMode}"
                 ItemsSource="{Binding InstalledPackages}"
                 SelectedItem="{Binding SelectedPackage}">
                 <ComboBox.Styles>

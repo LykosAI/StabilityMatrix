@@ -29,59 +29,79 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
-
 public partial class InstallerViewModel : ContentDialogViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
+
     private readonly ISettingsManager settingsManager;
     private readonly IPyRunner pyRunner;
     private readonly IDownloadService downloadService;
     private readonly INotificationService notificationService;
     private readonly IPrerequisiteHelper prerequisiteHelper;
-    
-    [ObservableProperty] private BasePackage selectedPackage;
-    [ObservableProperty] private PackageVersion? selectedVersion;
 
-    [ObservableProperty] private IReadOnlyList<BasePackage>? availablePackages;
-    [ObservableProperty] private ObservableCollection<GitCommit>? availableCommits;
-    [ObservableProperty] private ObservableCollection<PackageVersion>? availableVersions;
-    
-    [ObservableProperty] private GitCommit? selectedCommit;
+    [ObservableProperty]
+    private BasePackage selectedPackage;
 
-    [ObservableProperty] private string? releaseNotes;
-    
+    [ObservableProperty]
+    private PackageVersion? selectedVersion;
+
+    [ObservableProperty]
+    private IReadOnlyList<BasePackage>? availablePackages;
+
+    [ObservableProperty]
+    private ObservableCollection<GitCommit>? availableCommits;
+
+    [ObservableProperty]
+    private ObservableCollection<PackageVersion>? availableVersions;
+
+    [ObservableProperty]
+    private GitCommit? selectedCommit;
+
+    [ObservableProperty]
+    private string? releaseNotes;
+
     // Version types (release or commit)
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ReleaseLabelText),
-        nameof(IsReleaseMode), nameof(SelectedVersion))]
+    [NotifyPropertyChangedFor(
+        nameof(ReleaseLabelText),
+        nameof(IsReleaseMode),
+        nameof(SelectedVersion)
+    )]
     private PackageVersionType selectedVersionType = PackageVersionType.Commit;
-    
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsReleaseModeAvailable))]
-    private PackageVersionType availableVersionTypes = 
+    private PackageVersionType availableVersionTypes =
         PackageVersionType.GithubRelease | PackageVersionType.Commit;
     public string ReleaseLabelText => IsReleaseMode ? "Version" : "Branch";
     public bool IsReleaseMode
     {
         get => SelectedVersionType == PackageVersionType.GithubRelease;
-        set => SelectedVersionType = value ? PackageVersionType.GithubRelease : PackageVersionType.Commit;
+        set =>
+            SelectedVersionType = value
+                ? PackageVersionType.GithubRelease
+                : PackageVersionType.Commit;
     }
 
-    public bool IsReleaseModeAvailable => AvailableVersionTypes.HasFlag(PackageVersionType.GithubRelease);
-    
-    [ObservableProperty] private bool showDuplicateWarning;
-    
-    [ObservableProperty] private string? installName;
-    
+    public bool IsReleaseModeAvailable =>
+        AvailableVersionTypes.HasFlag(PackageVersionType.GithubRelease);
+
+    [ObservableProperty]
+    private bool showDuplicateWarning;
+
+    [ObservableProperty]
+    private string? installName;
+
     public Base.ProgressViewModel InstallProgress { get; } = new();
 
     public InstallerViewModel(
         ISettingsManager settingsManager,
         IPackageFactory packageFactory,
         IPyRunner pyRunner,
-        IDownloadService downloadService, INotificationService notificationService,
-        IPrerequisiteHelper prerequisiteHelper)
+        IDownloadService downloadService,
+        INotificationService notificationService,
+        IPrerequisiteHelper prerequisiteHelper
+    )
     {
         this.settingsManager = settingsManager;
         this.pyRunner = pyRunner;
@@ -90,20 +110,23 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         this.prerequisiteHelper = prerequisiteHelper;
 
         // AvailablePackages and SelectedPackage
-        AvailablePackages = new ObservableCollection<BasePackage>(packageFactory.GetAllAvailablePackages());
+        AvailablePackages = new ObservableCollection<BasePackage>(
+            packageFactory.GetAllAvailablePackages()
+        );
         SelectedPackage = AvailablePackages[0];
     }
 
     public override void OnLoaded()
     {
-        if (AvailablePackages == null) return;
-        SelectedPackage = AvailablePackages[0];
+        if (AvailablePackages == null)
+            return;
         IsReleaseMode = !SelectedPackage.ShouldIgnoreReleases;
     }
-    
+
     public override async Task OnLoadedAsync()
     {
-        if (Design.IsDesignMode) return;
+        if (Design.IsDesignMode)
+            return;
         // Check for updates
         try
         {
@@ -111,19 +134,24 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             {
                 var versions = (await SelectedPackage.GetAllVersions()).ToList();
                 AvailableVersions = new ObservableCollection<PackageVersion>(versions);
-                if (!AvailableVersions.Any()) return;
+                if (!AvailableVersions.Any())
+                    return;
 
                 SelectedVersion = AvailableVersions[0];
             }
             else
             {
                 var branches = (await SelectedPackage.GetAllBranches()).ToList();
-                AvailableVersions = new ObservableCollection<PackageVersion>(branches.Select(b =>
-                    new PackageVersion
-                    {
-                        TagName = b.Name,
-                        ReleaseNotesMarkdown = b.Commit.Label
-                    }));
+                AvailableVersions = new ObservableCollection<PackageVersion>(
+                    branches.Select(
+                        b =>
+                            new PackageVersion
+                            {
+                                TagName = b.Name,
+                                ReleaseNotesMarkdown = b.Commit.Label
+                            }
+                    )
+                );
                 UpdateSelectedVersionToLatestMain();
             }
 
@@ -134,17 +162,24 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             Logger.Warn("Error getting versions: {Exception}", e.ToString());
         }
     }
-    
+
     [RelayCommand]
     private async Task Install()
     {
-        var result = await notificationService.TryAsync(ActuallyInstall(), "Could not install package");
+        var result = await notificationService.TryAsync(
+            ActuallyInstall(),
+            "Could not install package"
+        );
         if (result.IsSuccessful)
         {
-            notificationService.Show(new Notification(
-                $"Package {SelectedPackage.Name} installed successfully!",
-                "Success", NotificationType.Success));
-            OnPrimaryButtonClick();  
+            notificationService.Show(
+                new Notification(
+                    $"Package {SelectedPackage.Name} installed successfully!",
+                    "Success",
+                    NotificationType.Success
+                )
+            );
+            OnPrimaryButtonClick();
         }
         else
         {
@@ -160,29 +195,37 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             await dialog.ShowAsync();
         }
     }
-    
+
     private async Task ActuallyInstall()
     {
         if (string.IsNullOrWhiteSpace(InstallName))
         {
-            notificationService.Show(new Notification("Package name is empty", 
-                "Please enter a name for the package", NotificationType.Error));
+            notificationService.Show(
+                new Notification(
+                    "Package name is empty",
+                    "Please enter a name for the package",
+                    NotificationType.Error
+                )
+            );
             return;
         }
-        
+
         try
         {
             await InstallGitIfNecessary();
-        
+
             SelectedPackage.InstallLocation = Path.Combine(
-                settingsManager.LibraryDir, "Packages", InstallName);
+                settingsManager.LibraryDir,
+                "Packages",
+                InstallName
+            );
 
             if (!PyRunner.PipInstalled || !PyRunner.VenvInstalled)
             {
                 InstallProgress.Text = "Installing dependencies...";
                 InstallProgress.IsIndeterminate = true;
                 await pyRunner.Initialize();
-                
+
                 if (!PyRunner.PipInstalled)
                 {
                     await pyRunner.SetupPip();
@@ -196,32 +239,36 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             string version;
             if (IsReleaseMode)
             {
-                version = SelectedVersion?.TagName ?? 
-                          throw new NullReferenceException("Selected version is null");
-                
+                version =
+                    SelectedVersion?.TagName
+                    ?? throw new NullReferenceException("Selected version is null");
+
                 await DownloadPackage(version, false, null);
             }
             else
             {
-                version = SelectedCommit?.Sha ?? 
-                          throw new NullReferenceException("Selected commit is null");
-                
+                version =
+                    SelectedCommit?.Sha
+                    ?? throw new NullReferenceException("Selected commit is null");
+
                 await DownloadPackage(version, true, SelectedVersion!.TagName);
             }
-            
+
             await InstallPackage();
 
             InstallProgress.Text = "Setting up shared folder links...";
             await SelectedPackage.SetupModelFolders(SelectedPackage.InstallLocation);
             //sharedFolders.SetupLinksForPackage(SelectedPackage, SelectedPackage.InstallLocation);
-            
+
             InstallProgress.Text = "Done";
             InstallProgress.IsIndeterminate = false;
             InstallProgress.Value = 100;
             EventManager.Instance.OnGlobalProgressChanged(100);
 
-            var branch = SelectedVersionType == PackageVersionType.GithubRelease ? 
-                null : SelectedVersion!.TagName;
+            var branch =
+                SelectedVersionType == PackageVersionType.GithubRelease
+                    ? null
+                    : SelectedVersion!.TagName;
 
             var package = new InstalledPackage
             {
@@ -245,7 +292,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             InstallProgress.IsIndeterminate = false;
         }
     }
-    
+
     private void UpdateSelectedVersionToLatestMain()
     {
         if (AvailableVersions is null)
@@ -258,30 +305,30 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             var version = AvailableVersions.FirstOrDefault(x => x.TagName == "master");
             // If not found, try main
             version ??= AvailableVersions.FirstOrDefault(x => x.TagName == "main");
-        
+
             // If still not found, just use the first one
             version ??= AvailableVersions[0];
-        
+
             SelectedVersion = version;
         }
     }
-    
+
     private static string GetDisplayVersion(string version, string? branch)
     {
         return branch == null ? version : $"{branch}@{version[..7]}";
     }
-    
+
     private Task<string> DownloadPackage(string version, bool isCommitHash, string? branch)
     {
         InstallProgress.Text = "Downloading package...";
-        
+
         var progress = new Progress<ProgressReport>(progress =>
         {
             InstallProgress.IsIndeterminate = progress.IsIndeterminate;
             InstallProgress.Value = progress.Percentage;
-            EventManager.Instance.OnGlobalProgressChanged((int) progress.Percentage);
+            EventManager.Instance.OnGlobalProgressChanged((int)progress.Percentage);
         });
-        
+
         return SelectedPackage.DownloadPackage(version, isCommitHash, branch, progress);
     }
 
@@ -295,9 +342,9 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             {
                 InstallProgress.IsIndeterminate = progress.IsIndeterminate;
                 InstallProgress.Value = progress.Percentage;
-                EventManager.Instance.OnGlobalProgressChanged((int) progress.Percentage);
+                EventManager.Instance.OnGlobalProgressChanged((int)progress.Percentage);
             });
-        
+
             await SelectedPackage.InstallPackage(progress);
         }
         finally
@@ -305,32 +352,32 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             SelectedPackage.ConsoleOutput -= SelectedPackageOnConsoleOutput;
         }
     }
-    
+
     private void SelectedPackageOnConsoleOutput(object? sender, ProcessOutput e)
     {
         InstallProgress.Description = e.Text;
     }
-    
+
     [RelayCommand]
     private async Task ShowPreview()
     {
         var url = SelectedPackage.PreviewImageUri.ToString();
         var imageStream = await downloadService.GetImageStreamFromUrl(url);
         var bitmap = new Bitmap(imageStream);
-        
+
         var dialog = new ContentDialog
         {
             PrimaryButtonText = "Open in Browser",
             CloseButtonText = "Close",
             Content = new Image
             {
-                Source = bitmap, 
-                Stretch = Stretch.Uniform, 
+                Source = bitmap,
+                Stretch = Stretch.Uniform,
                 MaxHeight = 500,
                 HorizontalAlignment = HorizontalAlignment.Center
             }
         };
-        
+
         var result = await dialog.ShowAsync();
         if (result == ContentDialogResult.Primary)
         {
@@ -346,10 +393,11 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             SelectedVersionType = value;
         }
     }
-    
+
     // When changing branch / release modes, refresh
     // ReSharper disable once UnusedParameterInPartialMethod
-    partial void OnSelectedVersionTypeChanged(PackageVersionType value) => OnSelectedPackageChanged(SelectedPackage);
+    partial void OnSelectedVersionTypeChanged(PackageVersionType value) =>
+        OnSelectedPackageChanged(SelectedPackage);
 
     partial void OnSelectedPackageChanged(BasePackage value)
     {
@@ -360,36 +408,41 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         AvailableVersionTypes = SelectedPackage.ShouldIgnoreReleases
             ? PackageVersionType.Commit
             : PackageVersionType.GithubRelease | PackageVersionType.Commit;
-        
-        if (Design.IsDesignMode) return;
-        
-        Dispatcher.UIThread.InvokeAsync(async () =>
-        {
-            Logger.Debug($"Release mode: {IsReleaseMode}");
-            var versions = (await value.GetAllVersions(IsReleaseMode)).ToList();
-            
-            if (!versions.Any()) return;
 
-            AvailableVersions = new ObservableCollection<PackageVersion>(versions);
-            Logger.Debug($"Available versions: {string.Join(", ", AvailableVersions)}");
-            SelectedVersion = AvailableVersions[0];
-            ReleaseNotes = versions.First().ReleaseNotesMarkdown;
-            Logger.Debug($"Loaded release notes for {ReleaseNotes}");
-            
-            if (!IsReleaseMode)
+        if (Design.IsDesignMode)
+            return;
+
+        Dispatcher.UIThread
+            .InvokeAsync(async () =>
             {
-                var commits = (await value.GetAllCommits(SelectedVersion.TagName))?.ToList();
-                if (commits is null || commits.Count == 0) return;
-                
-                AvailableCommits = new ObservableCollection<GitCommit>(commits);
-                SelectedCommit = AvailableCommits[0];
-                UpdateSelectedVersionToLatestMain();
-            }
+                Logger.Debug($"Release mode: {IsReleaseMode}");
+                var versions = (await value.GetAllVersions(IsReleaseMode)).ToList();
 
-            InstallName = SelectedPackage.DisplayName;
-        }).SafeFireAndForget();
+                if (!versions.Any())
+                    return;
+
+                AvailableVersions = new ObservableCollection<PackageVersion>(versions);
+                Logger.Debug($"Available versions: {string.Join(", ", AvailableVersions)}");
+                SelectedVersion = AvailableVersions[0];
+                ReleaseNotes = versions.First().ReleaseNotesMarkdown;
+                Logger.Debug($"Loaded release notes for {ReleaseNotes}");
+
+                if (!IsReleaseMode)
+                {
+                    var commits = (await value.GetAllCommits(SelectedVersion.TagName))?.ToList();
+                    if (commits is null || commits.Count == 0)
+                        return;
+
+                    AvailableCommits = new ObservableCollection<GitCommit>(commits);
+                    SelectedCommit = AvailableCommits[0];
+                    UpdateSelectedVersionToLatestMain();
+                }
+
+                InstallName = SelectedPackage.DisplayName;
+            })
+            .SafeFireAndForget();
     }
-    
+
     private async Task InstallGitIfNecessary()
     {
         var progressHandler = new Progress<ProgressReport>(progress =>
@@ -417,42 +470,45 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
 
         await prerequisiteHelper.InstallAllIfNecessary(progressHandler);
     }
-    
+
     partial void OnInstallNameChanged(string? value)
     {
-        ShowDuplicateWarning =
-            settingsManager.Settings.InstalledPackages.Any(p =>
-                p.LibraryPath == $"Packages{Path.DirectorySeparatorChar}{value}");
+        ShowDuplicateWarning = settingsManager.Settings.InstalledPackages.Any(
+            p => p.LibraryPath == $"Packages{Path.DirectorySeparatorChar}{value}"
+        );
     }
-    
+
     partial void OnSelectedVersionChanged(PackageVersion? value)
     {
         ReleaseNotes = value?.ReleaseNotesMarkdown ?? string.Empty;
-        if (value == null) return;
-        
+        if (value == null)
+            return;
+
         SelectedCommit = null;
         AvailableCommits?.Clear();
-        
+
         if (!IsReleaseMode)
         {
             Task.Run(async () =>
-            {
-                try
                 {
-                    var hashes = await SelectedPackage.GetAllCommits(value.TagName);
-                    if (hashes is null) throw new Exception("No commits found");
-                    
-                    Dispatcher.UIThread.Post(() =>
+                    try
                     {
-                        AvailableCommits = new ObservableCollection<GitCommit>(hashes);
-                        SelectedCommit = AvailableCommits[0];
-                    });
-                }
-                catch (Exception e)
-                {
-                    Logger.Warn($"Error getting commits: {e.Message}");
-                }
-            }).SafeFireAndForget();
+                        var hashes = await SelectedPackage.GetAllCommits(value.TagName);
+                        if (hashes is null)
+                            throw new Exception("No commits found");
+
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            AvailableCommits = new ObservableCollection<GitCommit>(hashes);
+                            SelectedCommit = AvailableCommits[0];
+                        });
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Warn($"Error getting commits: {e.Message}");
+                    }
+                })
+                .SafeFireAndForget();
         }
     }
 }

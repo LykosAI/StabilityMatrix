@@ -15,14 +15,15 @@ public interface ISettingsManager
     string ModelsDirectory { get; }
     string DownloadsDirectory { get; }
     DirectoryPath TagsDirectory { get; }
-    
+    DirectoryPath ImagesDirectory { get; }
+
     Settings Settings { get; }
-    
+
     /// <summary>
     /// Event fired when the library directory is changed
     /// </summary>
     event EventHandler<string>? LibraryDirChanged;
-    
+
     /// <summary>
     /// Event fired when a property of Settings is changed
     /// </summary>
@@ -33,12 +34,12 @@ public interface ISettingsManager
     /// Will fire instantly if it is already set.
     /// </summary>
     void RegisterOnLibraryDirSet(Action<string> handler);
-    
+
     /// <summary>
     /// Event fired when Settings are loaded from disk
     /// </summary>
     event EventHandler? Loaded;
-    
+
     /// <summary>
     /// Return a SettingsTransaction that can be used to modify Settings
     /// Saves on Dispose.
@@ -62,17 +63,20 @@ public interface ISettingsManager
     /// Register a source observable object and property to be relayed to Settings
     /// </summary>
     void RelayPropertyFor<T, TValue>(
-        T source, 
+        T source,
         Expression<Func<T, TValue>> sourceProperty,
         Expression<Func<Settings, TValue>> settingsProperty,
-        bool setInitial = false) where T : INotifyPropertyChanged;
-    
+        bool setInitial = false
+    )
+        where T : INotifyPropertyChanged;
+
     /// <summary>
     /// Register an Action to be called on change of the settings property.
     /// </summary>
     void RegisterPropertyChangedHandler<T>(
         Expression<Func<Settings, T>> settingsProperty,
-        Action<T> onPropertyChanged);
+        Action<T> onPropertyChanged
+    );
 
     /// <summary>
     /// Attempts to locate and set the library path

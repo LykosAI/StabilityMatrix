@@ -20,10 +20,16 @@ public class SettingsManager : ISettingsManager
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly ReaderWriterLockSlim FileLock = new();
 
-    private static readonly string GlobalSettingsPath = Path.Combine(Compat.AppDataHome, "global.json");
-    
-    private readonly string? originalEnvPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
-    
+    private static readonly string GlobalSettingsPath = Path.Combine(
+        Compat.AppDataHome,
+        "global.json"
+    );
+
+    private readonly string? originalEnvPath = Environment.GetEnvironmentVariable(
+        "PATH",
+        EnvironmentVariableTarget.Process
+    );
+
     // Library properties
     public bool IsPortableMode { get; private set; }
     private string? libraryDir;
@@ -40,9 +46,9 @@ public class SettingsManager : ISettingsManager
         private set
         {
             var isChanged = libraryDir != value;
-            
+
             libraryDir = value;
-            
+
             // Only invoke if different
             if (isChanged)
             {
@@ -57,20 +63,22 @@ public class SettingsManager : ISettingsManager
     private string SettingsPath => Path.Combine(LibraryDir, "settings.json");
     public string ModelsDirectory => Path.Combine(LibraryDir, "Models");
     public string DownloadsDirectory => Path.Combine(LibraryDir, ".downloads");
-    
+
     public DirectoryPath TagsDirectory => new(LibraryDir, "Tags");
 
+    public DirectoryPath ImagesDirectory => new(LibraryDir, "Images");
+
     public Settings Settings { get; private set; } = new();
-    
+
     /// <inheritdoc />
     public event EventHandler<string>? LibraryDirChanged;
-    
+
     /// <inheritdoc />
     public event EventHandler<RelayPropertyChangedEventArgs>? SettingsPropertyChanged;
-    
+
     /// <inheritdoc />
     public event EventHandler? Loaded;
-    
+
     /// <inheritdoc />
     public void RegisterOnLibraryDirSet(Action<string> handler)
     {
@@ -81,7 +89,7 @@ public class SettingsManager : ISettingsManager
         }
 
         LibraryDirChanged += Handler;
-        
+
         return;
 
         void Handler(object? sender, string dir)
@@ -90,17 +98,19 @@ public class SettingsManager : ISettingsManager
             handler(dir);
         }
     }
-    
+
     /// <inheritdoc />
     public SettingsTransaction BeginTransaction()
     {
         if (!IsLibraryDirSet)
         {
-            throw new InvalidOperationException("LibraryDir not set when BeginTransaction was called");
+            throw new InvalidOperationException(
+                "LibraryDir not set when BeginTransaction was called"
+            );
         }
         return new SettingsTransaction(this, SaveSettingsAsync);
     }
-    
+
     /// <inheritdoc />
     public void Transaction(Action<Settings> func, bool ignoreMissingLibraryDir = false)
     {
@@ -117,85 +127,101 @@ public class SettingsManager : ISettingsManager
         func(transaction.Settings);
         transaction.Dispose();
     }
-    
+
     /// <inheritdoc />
     public void Transaction<TValue>(Expression<Func<Settings, TValue>> expression, TValue value)
     {
         if (expression.Body is not MemberExpression memberExpression)
         {
             throw new ArgumentException(
-                $"Expression must be a member expression, not {expression.Body.NodeType}");
+                $"Expression must be a member expression, not {expression.Body.NodeType}"
+            );
         }
 
         var propertyInfo = memberExpression.Member as PropertyInfo;
         if (propertyInfo == null)
         {
             throw new ArgumentException(
-                $"Expression member must be a property, not {memberExpression.Member.MemberType}");
+                $"Expression member must be a property, not {memberExpression.Member.MemberType}"
+            );
         }
-        
+
         var name = propertyInfo.Name;
-        
+
         // Set value
         using var transaction = BeginTransaction();
         propertyInfo.SetValue(transaction.Settings, value);
-        
+
         // Invoke property changed event
         SettingsPropertyChanged?.Invoke(this, new RelayPropertyChangedEventArgs(name));
     }
 
     /// <inheritdoc />
     public void RelayPropertyFor<T, TValue>(
-        T source, 
+        T source,
         Expression<Func<T, TValue>> sourceProperty,
         Expression<Func<Settings, TValue>> settingsProperty,
-        bool setInitial = false) where T : INotifyPropertyChanged
+        bool setInitial = false
+    )
+        where T : INotifyPropertyChanged
     {
         var sourceGetter = sourceProperty.Compile();
         var (propertyName, assigner) = Expressions.GetAssigner(sourceProperty);
         var sourceSetter = assigner.Compile();
-        
+
         var settingsGetter = settingsProperty.Compile();
         var (targetPropertyName, settingsAssigner) = Expressions.GetAssigner(settingsProperty);
         var settingsSetter = settingsAssigner.Compile();
-        
+
         var sourceTypeName = source.GetType().Name;
-        
+
         // Update source when settings change
         SettingsPropertyChanged += (sender, args) =>
         {
-            if (args.PropertyName != targetPropertyName) return;
-            
+            if (args.PropertyName != targetPropertyName)
+                return;
+
             // Skip if event is relay and the sender is the source, to prevent duplicate
-            if (args.IsRelay && ReferenceEquals(sender, source)) return;
-            
+            if (args.IsRelay && ReferenceEquals(sender, source))
+                return;
+
             Logger.Trace(
-                "[RelayPropertyFor] " +
-                "Settings.{TargetProperty:l} -> {SourceType:l}.{SourceProperty:l}", 
-                targetPropertyName, sourceTypeName, propertyName);
-            
+                "[RelayPropertyFor] "
+                    + "Settings.{TargetProperty:l} -> {SourceType:l}.{SourceProperty:l}",
+                targetPropertyName,
+                sourceTypeName,
+                propertyName
+            );
+
             sourceSetter(source, settingsGetter(Settings));
         };
-        
+
         // Set and Save settings when source changes
         source.PropertyChanged += (sender, args) =>
         {
-            if (args.PropertyName != propertyName) return;
-            
+            if (args.PropertyName != propertyName)
+                return;
+
             Logger.Trace(
-                "[RelayPropertyFor] " +
-                "{SourceType:l}.{SourceProperty:l} -> Settings.{TargetProperty:l}", 
-                sourceTypeName, propertyName, targetPropertyName);
-            
+                "[RelayPropertyFor] "
+                    + "{SourceType:l}.{SourceProperty:l} -> Settings.{TargetProperty:l}",
+                sourceTypeName,
+                propertyName,
+                targetPropertyName
+            );
+
             settingsSetter(Settings, sourceGetter(source));
-            
+
             // Save settings to file
             SaveSettingsAsync().SafeFireAndForget();
-            
+
             // Invoke property changed event, passing along sender
-            SettingsPropertyChanged?.Invoke(sender, new RelayPropertyChangedEventArgs(targetPropertyName, true));
+            SettingsPropertyChanged?.Invoke(
+                sender,
+                new RelayPropertyChangedEventArgs(targetPropertyName, true)
+            );
         };
-        
+
         // Set initial value if requested
         if (setInitial)
         {
@@ -206,28 +232,31 @@ public class SettingsManager : ISettingsManager
     /// <inheritdoc />
     public void RegisterPropertyChangedHandler<T>(
         Expression<Func<Settings, T>> settingsProperty,
-        Action<T> onPropertyChanged)
+        Action<T> onPropertyChanged
+    )
     {
         var settingsGetter = settingsProperty.Compile();
         var (propertyName, _) = Expressions.GetAssigner(settingsProperty);
-        
+
         // Invoke handler when settings change
         SettingsPropertyChanged += (_, args) =>
         {
-            if (args.PropertyName != propertyName) return;
-            
+            if (args.PropertyName != propertyName)
+                return;
+
             onPropertyChanged(settingsGetter(Settings));
         };
     }
-    
+
     /// <summary>
     /// Attempts to locate and set the library path
     /// Return true if found, false otherwise
     /// </summary>
     public bool TryFindLibrary(bool forceReload = false)
     {
-        if (IsLibraryDirSet && !forceReload) return true;
-        
+        if (IsLibraryDirSet && !forceReload)
+            return true;
+
         // 1. Check portable mode
         var appDir = Compat.AppCurrentDir;
         IsPortableMode = File.Exists(Path.Combine(appDir, "Data", ".sm-portable"));
@@ -238,18 +267,21 @@ public class SettingsManager : ISettingsManager
             LoadSettings();
             return true;
         }
-        
+
         // 2. Check %APPDATA%/StabilityMatrix/library.json
         FilePath libraryJsonFile = Compat.AppDataHome + "library.json";
-        if (!libraryJsonFile.Exists) return false;
-        
+        if (!libraryJsonFile.Exists)
+            return false;
+
         try
         {
             var libraryJson = libraryJsonFile.ReadAllText();
             var librarySettings = JsonSerializer.Deserialize<LibrarySettings>(libraryJson);
-            
-            if (!string.IsNullOrWhiteSpace(librarySettings?.LibraryPath)
-                && Directory.Exists(librarySettings?.LibraryPath))
+
+            if (
+                !string.IsNullOrWhiteSpace(librarySettings?.LibraryPath)
+                && Directory.Exists(librarySettings?.LibraryPath)
+            )
             {
                 LibraryDir = librarySettings.LibraryPath;
                 SetStaticLibraryPaths();
@@ -281,13 +313,16 @@ public class SettingsManager : ISettingsManager
         var libraryJsonFile = Compat.AppDataHome.JoinFile("library.json");
 
         var library = new LibrarySettings { LibraryPath = path };
-        var libraryJson = JsonSerializer.Serialize(library, new JsonSerializerOptions { WriteIndented = true });
+        var libraryJson = JsonSerializer.Serialize(
+            library,
+            new JsonSerializerOptions { WriteIndented = true }
+        );
         libraryJsonFile.WriteAllText(libraryJson);
-        
+
         // actually create the LibraryPath directory
         Directory.CreateDirectory(path);
-    } 
-    
+    }
+
     /// <summary>
     /// Enable and create settings files for portable mode
     /// Creates the ./Data directory and the `.sm-portable` marker file
@@ -309,18 +344,21 @@ public class SettingsManager : ISettingsManager
     /// </summary>
     public IEnumerable<InstalledPackage> GetOldInstalledPackages()
     {
-        var oldSettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "StabilityMatrix", "settings.json");
+        var oldSettingsPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "StabilityMatrix",
+            "settings.json"
+        );
 
         if (!File.Exists(oldSettingsPath))
             yield break;
-        
+
         var oldSettingsJson = File.ReadAllText(oldSettingsPath);
-        var oldSettings = JsonSerializer.Deserialize<Settings>(oldSettingsJson, new JsonSerializerOptions
-        {
-            Converters = { new JsonStringEnumConverter() }
-        });
-        
+        var oldSettings = JsonSerializer.Deserialize<Settings>(
+            oldSettingsJson,
+            new JsonSerializerOptions { Converters = { new JsonStringEnumConverter() } }
+        );
+
         // Absolute paths are old formats requiring migration
 #pragma warning disable CS0618
         var oldPackages = oldSettings?.InstalledPackages.Where(package => package.Path != null);
@@ -328,7 +366,7 @@ public class SettingsManager : ISettingsManager
 
         if (oldPackages == null)
             yield break;
-        
+
         foreach (var package in oldPackages)
         {
             yield return package;
@@ -337,24 +375,27 @@ public class SettingsManager : ISettingsManager
 
     public Guid GetOldActivePackageId()
     {
-        var oldSettingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "StabilityMatrix", "settings.json");
+        var oldSettingsPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "StabilityMatrix",
+            "settings.json"
+        );
 
         if (!File.Exists(oldSettingsPath))
             return default;
-        
+
         var oldSettingsJson = File.ReadAllText(oldSettingsPath);
-        var oldSettings = JsonSerializer.Deserialize<Settings>(oldSettingsJson, new JsonSerializerOptions
-        {
-            Converters = { new JsonStringEnumConverter() }
-        });
+        var oldSettings = JsonSerializer.Deserialize<Settings>(
+            oldSettingsJson,
+            new JsonSerializerOptions { Converters = { new JsonStringEnumConverter() } }
+        );
 
         if (oldSettings == null)
             return default;
-        
+
         return oldSettings.ActiveInstalledPackageId ?? default;
     }
-    
+
     public void AddPathExtension(string pathExtension)
     {
         Settings.PathExtensions ??= new List<string>();
@@ -366,13 +407,14 @@ public class SettingsManager : ISettingsManager
     {
         return string.Join(";", Settings.PathExtensions ?? new List<string>());
     }
-    
+
     /// <summary>
     /// Insert path extensions to the front of the PATH environment variable
     /// </summary>
     public void InsertPathExtensions()
     {
-        if (Settings.PathExtensions == null) return;
+        if (Settings.PathExtensions == null)
+            return;
         var toInsert = GetPathExtensionsAsString();
         // Append the original path, if any
         if (originalEnvPath != null)
@@ -397,21 +439,23 @@ public class SettingsManager : ISettingsManager
 
         SaveSettings();
     }
-    
+
     public void SetLastUpdateCheck(InstalledPackage package)
     {
-        var installedPackage = Settings.InstalledPackages.First(p => p.DisplayName == package.DisplayName);
+        var installedPackage = Settings.InstalledPackages.First(
+            p => p.DisplayName == package.DisplayName
+        );
         installedPackage.LastUpdateCheck = package.LastUpdateCheck;
         installedPackage.UpdateAvailable = package.UpdateAvailable;
         SaveSettings();
     }
-    
+
     public List<LaunchOption> GetLaunchArgs(Guid packageId)
     {
         var packageData = Settings.InstalledPackages.FirstOrDefault(x => x.Id == packageId);
         return packageData?.LaunchArgs ?? new();
     }
-    
+
     public void SaveLaunchArgs(Guid packageId, List<LaunchOption> launchArgs)
     {
         var packageData = Settings.InstalledPackages.FirstOrDefault(x => x.Id == packageId);
@@ -425,12 +469,17 @@ public class SettingsManager : ISettingsManager
         packageData.LaunchArgs = toSave;
         SaveSettings();
     }
-    
+
     public string? GetActivePackageHost()
     {
-        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == Settings.ActiveInstalledPackageId);
-        if (package == null) return null;
-        var hostOption = package.LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "host");
+        var package = Settings.InstalledPackages.FirstOrDefault(
+            x => x.Id == Settings.ActiveInstalledPackageId
+        );
+        if (package == null)
+            return null;
+        var hostOption = package.LaunchArgs?.FirstOrDefault(
+            x => x.Name.ToLowerInvariant() == "host"
+        );
         if (hostOption?.OptionValue != null)
         {
             return hostOption.OptionValue as string;
@@ -440,9 +489,14 @@ public class SettingsManager : ISettingsManager
 
     public string? GetActivePackagePort()
     {
-        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == Settings.ActiveInstalledPackageId);
-        if (package == null) return null;
-        var portOption = package.LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "port");
+        var package = Settings.InstalledPackages.FirstOrDefault(
+            x => x.Id == Settings.ActiveInstalledPackageId
+        );
+        if (package == null)
+            return null;
+        var portOption = package.LaunchArgs?.FirstOrDefault(
+            x => x.Name.ToLowerInvariant() == "port"
+        );
         if (portOption?.OptionValue != null)
         {
             return portOption.OptionValue as string;
@@ -463,11 +517,12 @@ public class SettingsManager : ISettingsManager
         }
         SaveSettings();
     }
-    
+
     public bool IsSharedFolderCategoryVisible(SharedFolderType type)
     {
         // False for default
-        if (type == 0) return false;
+        if (type == 0)
+            return false;
         return Settings.SharedFolderVisibleCategories?.HasFlag(type) ?? false;
     }
 
@@ -488,7 +543,7 @@ public class SettingsManager : ISettingsManager
 
     public void SetEulaAccepted()
     {
-        var globalSettings = new GlobalSettings {EulaAccepted = true};
+        var globalSettings = new GlobalSettings { EulaAccepted = true };
         var json = JsonSerializer.Serialize(globalSettings);
         File.WriteAllText(GlobalSettingsPath, json);
     }
@@ -504,11 +559,15 @@ public class SettingsManager : ISettingsManager
 
         var modelHashes = new HashSet<string>();
         var sharedModelDirectory = Path.Combine(LibraryDir, "Models");
-        
-        if (!Directory.Exists(sharedModelDirectory)) return;
-        
-        var connectedModelJsons = Directory.GetFiles(sharedModelDirectory, "*.cm-info.json",
-            SearchOption.AllDirectories);
+
+        if (!Directory.Exists(sharedModelDirectory))
+            return;
+
+        var connectedModelJsons = Directory.GetFiles(
+            sharedModelDirectory,
+            "*.cm-info.json",
+            SearchOption.AllDirectories
+        );
         foreach (var jsonFile in connectedModelJsons)
         {
             var json = File.ReadAllText(jsonFile);
@@ -521,7 +580,7 @@ public class SettingsManager : ISettingsManager
         }
 
         Transaction(s => s.InstalledModelHashes = modelHashes);
-        
+
         sw.Stop();
         Logger.Info($"Indexed {modelHashes.Count} checkpoints in {sw.ElapsedMilliseconds}ms");
     }
@@ -548,9 +607,10 @@ public class SettingsManager : ISettingsManager
             var modifiedDefaultSerializerOptions =
                 SystemTextJsonContentSerializer.GetDefaultJsonSerializerOptions();
             modifiedDefaultSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-            Settings =
-                JsonSerializer.Deserialize<Settings>(settingsContent,
-                    modifiedDefaultSerializerOptions)!;
+            Settings = JsonSerializer.Deserialize<Settings>(
+                settingsContent,
+                modifiedDefaultSerializerOptions
+            )!;
 
             Loaded?.Invoke(this, EventArgs.Empty);
         }
@@ -569,12 +629,15 @@ public class SettingsManager : ISettingsManager
             {
                 File.Create(SettingsPath).Close();
             }
-            
-            var json = JsonSerializer.Serialize(Settings, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                Converters = { new JsonStringEnumConverter() }
-            });
+
+            var json = JsonSerializer.Serialize(
+                Settings,
+                new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    Converters = { new JsonStringEnumConverter() }
+                }
+            );
             File.WriteAllText(SettingsPath, json);
         }
         finally
@@ -588,4 +651,3 @@ public class SettingsManager : ISettingsManager
         return Task.Run(SaveSettings);
     }
 }
-

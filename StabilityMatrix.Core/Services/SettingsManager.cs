@@ -67,6 +67,7 @@ public class SettingsManager : ISettingsManager
     public DirectoryPath TagsDirectory => new(LibraryDir, "Tags");
 
     public DirectoryPath ImagesDirectory => new(LibraryDir, "Images");
+    public DirectoryPath ImagesInferenceDirectory => ImagesDirectory.JoinDir("Inference");
 
     public Settings Settings { get; private set; } = new();
 

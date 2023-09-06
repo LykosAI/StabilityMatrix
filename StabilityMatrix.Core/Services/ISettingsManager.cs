@@ -16,6 +16,7 @@ public interface ISettingsManager
     string DownloadsDirectory { get; }
     DirectoryPath TagsDirectory { get; }
     DirectoryPath ImagesDirectory { get; }
+    DirectoryPath ImagesInferenceDirectory { get; }
 
     Settings Settings { get; }
 

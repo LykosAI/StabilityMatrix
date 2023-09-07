@@ -20,6 +20,8 @@ public class MockLiteDbContext : ILiteDbContext
         throw new NotImplementedException();
     public ILiteCollectionAsync<InferenceProjectEntry> InferenceProjects =>
         throw new NotImplementedException();
+    public ILiteCollectionAsync<LocalImageFile> LocalImageFiles =>
+        throw new NotImplementedException();
 
     public Task<(CivitModel?, CivitModelVersion?)> FindCivitModelFromFileHashAsync(
         string hashBlake3

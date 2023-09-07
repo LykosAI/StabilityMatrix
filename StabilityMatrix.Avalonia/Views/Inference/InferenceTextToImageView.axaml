@@ -65,7 +65,7 @@
                         x:Name="ConfigPane"
                         Alignment="Left"
                         Id="ConfigPane"
-                        Proportion="0.25">
+                        Proportion="0.2">
                         <Tool
                             x:Name="ConfigTool"
                             Title="Config"
@@ -85,7 +85,7 @@
                         x:Name="PromptPane"
                         Alignment="Right"
                         Id="PromptPane"
-                        Proportion="0.25">
+                        Proportion="0.3">
                         <Tool
                             x:Name="PromptTool"
                             Title="Prompt"
@@ -167,14 +167,14 @@
                         </Tool>
                     </ToolDock>
 
-                    <ProportionalDockSplitter x:Name="RightSplitter" Id="RightSplitter" />
+                    <ProportionalDockSplitter x:Name="MiddleRightSplitter" Id="MiddleRightSplitter" />
 
-                    <!--  Right Pane  -->
+                    <!--  Middle Right Pane  -->
                     <ToolDock
                         x:Name="ImageGalleryPane"
                         Alignment="Right"
                         Id="ImageGalleryPane"
-                        Proportion="0.35">
+                        Proportion="0.3">
                         <Tool
                             x:Name="ImageGalleryTool"
                             Title="Image Output"
@@ -205,6 +205,29 @@
                                         TextAlignment="Center"
                                         Text="{Binding Text}"/>
                                 </StackPanel>
+                            </Grid>
+                        </Tool>
+                    </ToolDock>
+                    
+                    <ProportionalDockSplitter x:Name="RightSplitter" Id="RightSplitter" />
+                    
+                    <!--  Right Pane  -->
+                    <ToolDock
+                        x:Name="ImageFolderPane"
+                        Alignment="Right"
+                        Id="ImageFolderPane"
+                        Proportion="0.2">
+                        <Tool
+                            x:Name="ImageFolderTool"
+                            x:DataType="Tool"
+                            Id="ImageFolderTool"
+                            CanClose="False">
+                            
+                            <Grid
+                                x:CompileBindings="False"
+                                DataContext="{Binding ElementName=Dock, Path=DataContext}">
+                                <controls:ImageFolderCard
+                                    DataContext="{Binding ImageFolderCardViewModel}" />
                             </Grid>
                         </Tool>
                     </ToolDock>

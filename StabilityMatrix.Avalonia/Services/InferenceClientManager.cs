@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
@@ -13,12 +8,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
-using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
-using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Services;
@@ -258,10 +251,16 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         if (IsConnected)
             return;
 
-        if (packagePair.BasePackage is not ComfyUI)
+        if (packagePair.BasePackage is not ComfyUI comfyPackage)
         {
             throw new ArgumentException("Base package is not ComfyUI", nameof(packagePair));
         }
+
+        // Setup image folder links
+        await comfyPackage.SetupInferenceOutputFolderLinks(
+            packagePair.InstalledPackage.FullPath
+                ?? throw new InvalidOperationException("Package does not have a Path")
+        );
 
         // Get user defined host and port
         var host = packagePair.InstalledPackage.GetLaunchArgsHost() ?? "127.0.0.1";

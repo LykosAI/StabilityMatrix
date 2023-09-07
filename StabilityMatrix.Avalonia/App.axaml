@@ -50,5 +50,6 @@
         <StyleInclude Source="Controls/FrameCarousel.axaml"/>
         <StyleInclude Source="Controls/CodeCompletion/CompletionWindow.axaml"/>
         <StyleInclude Source="Controls/SelectImageCard.axaml"/>
+        <StyleInclude Source="Controls/ImageFolderCard.axaml"/>
     </Application.Styles>
 </Application>

@@ -35,6 +35,8 @@ public class LiteDbContext : ILiteDbContext
         Database.GetCollection<LocalModelFile>("LocalModelFiles");
     public ILiteCollectionAsync<InferenceProjectEntry> InferenceProjects =>
         Database.GetCollection<InferenceProjectEntry>("InferenceProjects");
+    public ILiteCollectionAsync<LocalImageFile> LocalImageFiles =>
+        Database.GetCollection<LocalImageFile>("LocalImageFiles");
 
     public LiteDbContext(
         ILogger<LiteDbContext> logger,

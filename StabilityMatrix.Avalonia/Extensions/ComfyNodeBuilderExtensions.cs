@@ -266,7 +266,7 @@ public static class ComfyNodeBuilderExtensions
                 ClassType = "SaveImage",
                 Inputs = new Dictionary<string, object?>
                 {
-                    ["filename_prefix"] = "SM-Inference",
+                    ["filename_prefix"] = "Inference/TextToImage",
                     ["images"] = builder.Connections.Image
                 }
             }

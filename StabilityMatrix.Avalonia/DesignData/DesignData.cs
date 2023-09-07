@@ -104,6 +104,7 @@ public static class DesignData
             .AddSingleton<IDiscordRichPresenceService, MockDiscordRichPresenceService>()
             .AddSingleton<ICompletionProvider, MockCompletionProvider>()
             .AddSingleton<IModelIndexService, MockModelIndexService>()
+            .AddSingleton<IImageIndexService, MockImageIndexService>()
             .AddSingleton<ITrackedDownloadService, MockTrackedDownloadService>();
 
         // Placeholder services that nobody should need during design time
@@ -510,6 +511,9 @@ The gallery images are often inpainted, but you will get something very similar 
                 }
             );
         });
+
+    public static ImageFolderCardViewModel ImageFolderCardViewModel =>
+        DialogFactory.Get<ImageFolderCardViewModel>();
 
     public static PromptCardViewModel PromptCardViewModel =>
         DialogFactory.Get<PromptCardViewModel>(vm =>

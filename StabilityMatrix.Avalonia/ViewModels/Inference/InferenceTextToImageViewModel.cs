@@ -57,6 +57,9 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
     [JsonPropertyName("ImageGallery")]
     public ImageGalleryCardViewModel ImageGalleryCardViewModel { get; }
 
+    [JsonPropertyName("ImageFolder")]
+    public ImageFolderCardViewModel ImageFolderCardViewModel { get; }
+
     [JsonPropertyName("Prompt")]
     public PromptCardViewModel PromptCardViewModel { get; }
 
@@ -122,6 +125,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         });
 
         ImageGalleryCardViewModel = vmFactory.Get<ImageGalleryCardViewModel>();
+        ImageFolderCardViewModel = vmFactory.Get<ImageFolderCardViewModel>();
         PromptCardViewModel = vmFactory.Get<PromptCardViewModel>();
         HiresSamplerCardViewModel = vmFactory.Get<SamplerCardViewModel>(samplerCard =>
         {
@@ -475,6 +479,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             };
 
             await GenerateImageImpl(overrides, cancellationToken);
+            await ImageFolderCardViewModel.OnLoadedAsync();
         }
         catch (OperationCanceledException e)
         {

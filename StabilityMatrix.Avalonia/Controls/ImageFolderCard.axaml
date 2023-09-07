@@ -1,0 +1,62 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
+    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    x:DataType="vmInference:ImageFolderCardViewModel">
+
+    <Design.PreviewWith>
+        <Panel Width="600" Height="800">
+            <Grid MaxWidth="500" MaxHeight="700">
+                <controls:ImageFolderCard 
+                    DataContext="{x:Static mocks:DesignData.ImageFolderCardViewModel}" />
+            </Grid>
+        </Panel>
+    </Design.PreviewWith>
+
+
+    <!--<Style Selector="ListBox /template/ VirtualizingStackPanel">
+        <Setter Property="Orientation" Value="Horizontal" />
+    </Style>-->
+
+    <Style Selector="controls|ImageFolderCard">
+        <!--  Set Defaults  -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card
+                    Padding="8"
+                    HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                    VerticalAlignment="{TemplateBinding VerticalAlignment}"
+                    HorizontalContentAlignment="{TemplateBinding HorizontalAlignment}"
+                    VerticalContentAlignment="{TemplateBinding VerticalAlignment}">
+
+                    <ScrollViewer>
+                        <ItemsRepeater
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Stretch"
+                            ItemsSource="{Binding Items}">
+                            <ItemsRepeater.Layout>
+                                <UniformGridLayout
+                                    MinColumnSpacing="8"
+                                    MinRowSpacing="8"
+                                    MaximumRowsOrColumns="2"/>
+                            </ItemsRepeater.Layout>
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vmInference:ImageFolderCardItemViewModel}">
+                                    <controls:BetterAdvancedImage
+                                        MaxHeight="256"
+                                        CornerRadius="4"
+                                        Source="{Binding ImagePath}"
+                                        Stretch="Uniform"
+                                        StretchDirection="Both" />
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                    </ScrollViewer>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

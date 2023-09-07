@@ -307,6 +307,7 @@ public sealed class App : Application
         services.AddTransient<SamplerCardViewModel>();
         services.AddTransient<UpscalerCardViewModel>();
         services.AddTransient<ImageGalleryCardViewModel>();
+        services.AddTransient<ImageFolderCardViewModel>();
         services.AddTransient<PromptCardViewModel>();
         services.AddTransient<StackCardViewModel>();
         services.AddTransient<StackExpanderViewModel>();
@@ -337,6 +338,7 @@ public sealed class App : Application
                     .Register(provider.GetRequiredService<SeedCardViewModel>)
                     .Register(provider.GetRequiredService<SamplerCardViewModel>)
                     .Register(provider.GetRequiredService<ImageGalleryCardViewModel>)
+                    .Register(provider.GetRequiredService<ImageFolderCardViewModel>)
                     .Register(provider.GetRequiredService<PromptCardViewModel>)
                     .Register(provider.GetRequiredService<StackCardViewModel>)
                     .Register(provider.GetRequiredService<StackExpanderViewModel>)
@@ -369,6 +371,7 @@ public sealed class App : Application
 
         // Inference controls
         services.AddTransient<ImageGalleryCard>();
+        services.AddTransient<ImageFolderCard>();
         services.AddTransient<SeedCard>();
         services.AddTransient<SamplerCard>();
         services.AddTransient<PromptCard>();
@@ -434,6 +437,7 @@ public sealed class App : Application
         services.AddSingleton<ICompletionProvider, CompletionProvider>();
         services.AddSingleton<ITokenizerProvider, TokenizerProvider>();
         services.AddSingleton<IModelIndexService, ModelIndexService>();
+        services.AddSingleton<IImageIndexService, ImageIndexService>();
 
         services.AddSingleton<ITrackedDownloadService, TrackedDownloadService>();
         services.AddSingleton<IDisposable>(

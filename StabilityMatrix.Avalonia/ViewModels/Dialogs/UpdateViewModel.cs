@@ -114,7 +114,16 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         // On unix, we need to set the executable bit
         if (Compat.IsUnix)
         {
-            File.SetUnixFileMode(UpdateHelper.ExecutablePath, (UnixFileMode)0x755);
+            File.SetUnixFileMode(
+                UpdateHelper.ExecutablePath, // 0755
+                UnixFileMode.UserRead
+                    | UnixFileMode.UserWrite
+                    | UnixFileMode.UserExecute
+                    | UnixFileMode.GroupRead
+                    | UnixFileMode.GroupExecute
+                    | UnixFileMode.OtherRead
+                    | UnixFileMode.OtherExecute
+            );
         }
 
         UpdateText = "Update complete. Restarting Stability Matrix in 3 seconds...";

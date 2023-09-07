@@ -19,10 +19,15 @@ public class AddInstalledPackageStep : IPackageStep
 
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
     {
+        if (!string.IsNullOrWhiteSpace(newInstalledPackage.DisplayName))
+        {
+            settingsManager.PackageInstallsInProgress.Remove(newInstalledPackage.DisplayName);
+        }
+
         await using var transaction = settingsManager.BeginTransaction();
         transaction.Settings.InstalledPackages.Add(newInstalledPackage);
         transaction.Settings.ActiveInstalledPackageId = newInstalledPackage.Id;
     }
 
-    public string ProgressTitle => "Finishing up...";
+    public string ProgressTitle => $"{newInstalledPackage.DisplayName} Installed";
 }

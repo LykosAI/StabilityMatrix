@@ -13,6 +13,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Helper;
@@ -276,6 +277,12 @@ public static class DesignData
                     )
                 ),
                 new MockDownloadProgressItemViewModel("Test File 2.exe"),
+                new PackageInstallProgressItemViewModel(
+                    new PackageModificationRunner
+                    {
+                        CurrentProgress = new ProgressReport(0.5f, "Installing package...")
+                    }
+                )
             }
         );
 

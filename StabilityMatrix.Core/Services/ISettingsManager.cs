@@ -15,6 +15,7 @@ public interface ISettingsManager
     string ModelsDirectory { get; }
     string DownloadsDirectory { get; }
     Settings Settings { get; }
+    List<string> PackageInstallsInProgress { get; set; }
     event EventHandler<string>? LibraryDirChanged;
     event EventHandler<PropertyChangedEventArgs>? SettingsPropertyChanged;
 

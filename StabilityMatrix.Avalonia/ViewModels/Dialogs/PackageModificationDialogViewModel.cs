@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
@@ -25,17 +26,30 @@ public class PackageModificationDialogViewModel : ContentDialogProgressViewModel
         this.packageModificationRunner = packageModificationRunner;
         this.notificationService = notificationService;
         this.steps = steps;
+        CloseWhenFinished = true;
     }
-
-    public ConsoleViewModel Console { get; } = new();
 
     public override async Task OnLoadedAsync()
     {
+        await Console.Clear();
+        Console.Post(string.Join(Environment.NewLine, packageModificationRunner.ConsoleOutput));
+
         // idk why this is getting called twice
         if (!packageModificationRunner.IsRunning)
         {
+            EventManager.Instance.OnPackageInstallProgressAdded(packageModificationRunner);
             packageModificationRunner.ProgressChanged += PackageModificationRunnerOnProgressChanged;
             await packageModificationRunner.ExecuteSteps(steps.ToList());
+
+            var packageName = string.Empty;
+            var addPackageStep = steps.FirstOrDefault(step => step is AddInstalledPackageStep);
+            if (addPackageStep != null)
+            {
+                addPackageStep
+                    .GetType()
+                    .GetProperty("newInstalledPackage")
+                    ?.GetValue(addPackageStep, null);
+            }
 
             notificationService.Show(
                 "Package Install Completed",
@@ -43,7 +57,12 @@ public class PackageModificationDialogViewModel : ContentDialogProgressViewModel
                 NotificationType.Success
             );
 
-            OnCloseButtonClick();
+            EventManager.Instance.OnInstalledPackagesChanged();
+
+            if (CloseWhenFinished)
+            {
+                OnCloseButtonClick();
+            }
         }
     }
 

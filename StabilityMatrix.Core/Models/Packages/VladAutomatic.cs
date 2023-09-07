@@ -102,6 +102,12 @@ public class VladAutomatic : BaseGitPackage
             },
             new()
             {
+                Name = "Auto-Launch Web UI",
+                Type = LaunchOptionType.Bool,
+                Options = new() { "--autolaunch" }
+            },
+            new()
+            {
                 Name = "Force use of Intel OneAPI XPU backend",
                 Type = LaunchOptionType.Bool,
                 Options = new() { "--use-ipex" }

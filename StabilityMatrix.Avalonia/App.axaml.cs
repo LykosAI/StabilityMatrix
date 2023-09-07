@@ -47,6 +47,7 @@ using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
+using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Api;
@@ -346,7 +347,6 @@ public sealed class App : Application
         services.AddSingleton<BasePackage, VoltaML>();
         services.AddSingleton<BasePackage, InvokeAI>();
         services.AddSingleton<BasePackage, Fooocus>();
-        //services.AddSingleton<BasePackage, KohyaSs>();
     }
 
     private static IServiceCollection ConfigureServices()
@@ -372,7 +372,7 @@ public sealed class App : Application
         services.AddSingleton<IUpdateHelper, UpdateHelper>();
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IModelIndexService, ModelIndexService>();
-        services.AddSingleton<IPackageModificationRunner, PackageModificationRunner>();
+        services.AddTransient<IPackageModificationRunner, PackageModificationRunner>();
 
         services.AddSingleton<ITrackedDownloadService, TrackedDownloadService>();
         services.AddSingleton<IDisposable>(

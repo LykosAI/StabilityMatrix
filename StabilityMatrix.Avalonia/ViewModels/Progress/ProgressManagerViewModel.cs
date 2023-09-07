@@ -3,6 +3,7 @@ using System.Linq;
 using Avalonia.Collections;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -10,12 +11,13 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
-namespace StabilityMatrix.Avalonia.ViewModels;
+namespace StabilityMatrix.Avalonia.ViewModels.Progress;
 
 [View(typeof(ProgressManagerPage))]
 public partial class ProgressManagerViewModel : PageViewModelBase
@@ -24,8 +26,9 @@ public partial class ProgressManagerViewModel : PageViewModelBase
     
     public override string Title => "Download Manager";
     public override IconSource IconSource => new SymbolIconSource {Symbol = Symbol.ArrowCircleDown, IsFilled = true};
-
     public AvaloniaList<ProgressItemViewModelBase> ProgressItems { get; } = new();
+
+    [ObservableProperty] private bool isOpen;
 
     public ProgressManagerViewModel(
         ITrackedDownloadService trackedDownloadService,
@@ -35,8 +38,15 @@ public partial class ProgressManagerViewModel : PageViewModelBase
         
         // Attach to the event
         trackedDownloadService.DownloadAdded += TrackedDownloadService_OnDownloadAdded;
+        EventManager.Instance.PackageInstallProgressAdded += InstanceOnPackageInstallProgressAdded;
+        EventManager.Instance.ToggleProgressFlyout += (_, _) => IsOpen = !IsOpen;
     }
-    
+
+    private void InstanceOnPackageInstallProgressAdded(object? sender, IPackageModificationRunner runner)
+    {
+        AddPackageInstall(runner);
+    }
+
     private void TrackedDownloadService_OnDownloadAdded(object? sender, TrackedDownload e)
     {
         var vm = new DownloadProgressItemViewModel(e);
@@ -88,6 +98,17 @@ public partial class ProgressManagerViewModel : PageViewModelBase
             var vm = new DownloadProgressItemViewModel(download);
             ProgressItems.Add(vm);
         }
+    }
+
+    private void AddPackageInstall(IPackageModificationRunner packageModificationRunner)
+    {
+        if (ProgressItems.Any(vm => vm.Id == packageModificationRunner.Id))
+        {
+            return;
+        }
+
+        var vm = new PackageInstallProgressItemViewModel(packageModificationRunner);
+        ProgressItems.Add(vm);
     }
     
     private void ShowFailedNotification(string title, string message)

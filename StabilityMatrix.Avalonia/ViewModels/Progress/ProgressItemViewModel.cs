@@ -1,10 +1,8 @@
-﻿using System;
-using CommunityToolkit.Mvvm.ComponentModel;
-using StabilityMatrix.Avalonia.ViewModels.Base;
+﻿using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Progress;
 
-namespace StabilityMatrix.Avalonia.ViewModels;
+namespace StabilityMatrix.Avalonia.ViewModels.Progress;
 
 public class ProgressItemViewModel : ProgressItemViewModelBase
 {

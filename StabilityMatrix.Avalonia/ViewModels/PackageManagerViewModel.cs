@@ -163,8 +163,6 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
             await dialog.ShowAsync();
         }
-
-        await OnLoadedAsync();
     }
 
     private IEnumerable<UnknownInstalledPackage> IndexUnknownPackages()
@@ -188,6 +186,11 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
             // Skip if the package is already installed
             if (currentPackages.Any(p => p.LibraryPath == expectedLibraryPath))
+            {
+                continue;
+            }
+
+            if (settingsManager.PackageInstallsInProgress.Contains(subDir.Name))
             {
                 continue;
             }

@@ -215,6 +215,8 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             return Task.CompletedTask;
         }
 
+        var setPackageInstallingStep = new SetPackageInstallingStep(settingsManager, InstallName);
+
         var installLocation = Path.Combine(settingsManager.LibraryDir, "Packages", InstallName);
         var prereqStep = new SetupPrerequisitesStep(prerequisiteHelper, pyRunner);
 
@@ -270,6 +272,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
 
         var steps = new List<IPackageStep>
         {
+            setPackageInstallingStep,
             prereqStep,
             downloadStep,
             installStep,

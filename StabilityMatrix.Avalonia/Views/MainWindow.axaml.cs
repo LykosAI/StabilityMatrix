@@ -25,6 +25,7 @@ using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Processes;
 #if DEBUG
 using StabilityMatrix.Avalonia.Diagnostics.Views;
@@ -37,6 +38,8 @@ public partial class MainWindow : AppWindowBase
 {
     private readonly INotificationService notificationService;
     private readonly INavigationService navigationService;
+
+    private FlyoutBase? progressFlyout;
 
     [DesignOnly(true)]
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
@@ -62,6 +65,8 @@ public partial class MainWindow : AppWindowBase
 #endif
         TitleBar.ExtendsContentIntoTitleBar = true;
         TitleBar.TitleBarHitTestType = TitleBarHitTestType.Complex;
+
+        EventManager.Instance.ToggleProgressFlyout += (_, _) => progressFlyout?.Hide();
     }
 
     /// <inheritdoc />
@@ -231,6 +236,8 @@ public partial class MainWindow : AppWindowBase
         var item = sender as NavigationViewItem;
         var flyout = item!.ContextFlyout;
         flyout!.ShowAt(item);
+
+        progressFlyout = flyout;
     }
 
     private void FooterUpdateItem_OnTapped(object? sender, TappedEventArgs e)

@@ -5,10 +5,11 @@
              xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
              xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
              xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+             xmlns:base="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:DataType="dialogs:PackageModificationDialogViewModel"
+             x:DataType="base:ContentDialogProgressViewModelBase"
              x:Class="StabilityMatrix.Avalonia.Views.Dialogs.PackageModificationDialog">
-    <Grid Margin="8" RowDefinitions="Auto, Auto, Auto, *">
+    <Grid Margin="8" RowDefinitions="Auto, Auto, Auto, *, Auto, Auto">
         <TextBlock Grid.Row="0" Text="{Binding Text}"
                    FontSize="16"
                    TextAlignment="Center"
@@ -17,16 +18,19 @@
         <TextBlock Grid.Row="1" Text="{Binding Description}"
                    Margin="4"
                    TextWrapping="WrapWithOverflow"
+                   TextAlignment="Center"
                    IsVisible="{Binding !#Expander.IsExpanded}"/>
         
         <ProgressBar Grid.Row="2" Value="{Binding Value}"
                      Margin="8"
                      IsIndeterminate="{Binding IsIndeterminate}"/>
         
-        <Expander Grid.Row="3" Header="More Details" x:Name="Expander">
+        <Expander Grid.Row="3"
+                  Margin="8"
+                  Header="More Details" x:Name="Expander">
             <avaloniaEdit:TextEditor
                 x:Name="Console"
-                Margin="8,8,16,10"
+                Margin="8"
                 MaxHeight="400"
                 DataContext="{Binding Console}"
                 Document="{Binding Document}"
@@ -37,5 +41,15 @@
                 VerticalScrollBarVisibility="Auto"
                 WordWrap="True" />
         </Expander>
+        
+        <CheckBox Grid.Row="4" IsChecked="{Binding CloseWhenFinished}"
+                  HorizontalAlignment="Center"
+                  Margin="4" Content="Close dialog when finished"/>
+        
+        <Button Grid.Row="5" Content="Close"
+                FontSize="20"
+                Margin="8"
+                HorizontalAlignment="Center"
+                Command="{Binding OnCloseButtonClick}"/>
     </Grid>
 </controls:UserControlBase>

@@ -9,4 +9,6 @@ public interface IPackageModificationRunner
     ProgressReport CurrentProgress { get; set; }
     IPackageStep? CurrentStep { get; set; }
     event EventHandler<ProgressReport>? ProgressChanged;
+    List<string> ConsoleOutput { get; }
+    Guid Id { get; }
 }

@@ -3,7 +3,7 @@ using FluentAvalonia.UI.Controls;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
-public class ContentDialogProgressViewModelBase : ProgressViewModel
+public class ContentDialogProgressViewModelBase : ConsoleProgressViewModel
 {
     public event EventHandler<ContentDialogResult>? PrimaryButtonClick;
     public event EventHandler<ContentDialogResult>? SecondaryButtonClick;

@@ -18,6 +18,12 @@
     d:DesignWidth="1000"
     x:DataType="vm:InferenceViewModel"
     mc:Ignorable="d">
+    
+    <controls:UserControlBase.KeyBindings>
+        <KeyBinding Gesture="Ctrl+O" Command="{Binding MenuOpenProjectCommand}"/>
+        <KeyBinding Gesture="Ctrl+S" Command="{Binding MenuSaveCommand}"/>
+        <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding MenuSaveAsCommand}"/>
+    </controls:UserControlBase.KeyBindings>
 
     <controls:UserControlBase.Resources>
         <converters:UriStringConverter x:Key="UriStringConverter" />

@@ -38,6 +38,10 @@ public class ImageIndexService : IImageIndexService
     public async Task RefreshIndex(string subPath = "")
     {
         var imagesDir = settingsManager.ImagesDirectory;
+        if (!imagesDir.Exists)
+        {
+            return;
+        }
 
         // Start
         var stopwatch = Stopwatch.StartNew();

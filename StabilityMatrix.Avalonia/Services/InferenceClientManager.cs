@@ -271,6 +271,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         var uri = new UriBuilder("http", host, int.Parse(port)).Uri;
 
         await ConnectAsyncImpl(uri, cancellationToken);
+
+        // Set output path
+        Client!.OutputImagesDir = new DirectoryPath(packagePair.InstalledPackage.FullPath).JoinDir(
+            "output"
+        );
     }
 
     public async Task CloseAsync()

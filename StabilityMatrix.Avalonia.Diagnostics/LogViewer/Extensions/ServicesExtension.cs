@@ -15,7 +15,7 @@ public static class ServicesExtension
 {
     public static IServiceCollection AddLogViewer(this IServiceCollection services)
     {
-        services.AddSingleton<ILogDataStore, LogDataStore>();
+        services.AddSingleton<ILogDataStore>(Core.Logging.LogDataStore.Instance);
         services.AddSingleton<LogViewerControlViewModel>();
 
         return services;

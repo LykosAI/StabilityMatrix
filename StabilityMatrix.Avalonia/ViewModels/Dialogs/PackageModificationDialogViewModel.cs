@@ -41,16 +41,6 @@ public class PackageModificationDialogViewModel : ContentDialogProgressViewModel
             packageModificationRunner.ProgressChanged += PackageModificationRunnerOnProgressChanged;
             await packageModificationRunner.ExecuteSteps(steps.ToList());
 
-            var packageName = string.Empty;
-            var addPackageStep = steps.FirstOrDefault(step => step is AddInstalledPackageStep);
-            if (addPackageStep != null)
-            {
-                addPackageStep
-                    .GetType()
-                    .GetProperty("newInstalledPackage")
-                    ?.GetValue(addPackageStep, null);
-            }
-
             notificationService.Show(
                 "Package Install Completed",
                 "Package install completed successfully.",

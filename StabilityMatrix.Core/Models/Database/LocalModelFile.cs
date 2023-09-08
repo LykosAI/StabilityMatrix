@@ -22,7 +22,7 @@ public class LocalModelFile
     /// Optional connected model information.
     /// </summary>
     public ConnectedModelInfo? ConnectedModelInfo { get; set; }
-    
+
     /// <summary>
     /// Optional preview image relative path.
     /// </summary>
@@ -32,10 +32,11 @@ public class LocalModelFile
     {
         return Path.Combine(rootModelDirectory, RelativePath);
     }
-    
+
     public string? GetPreviewImageFullPath(string rootModelDirectory)
     {
-        return PreviewImageRelativePath == null ? null 
+        return PreviewImageRelativePath == null
+            ? null
             : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
     }
 

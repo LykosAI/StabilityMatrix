@@ -5,9 +5,14 @@ namespace StabilityMatrix.Avalonia.Diagnostics.LogViewer.Core.ViewModels;
 
 public class ObservableObject : INotifyPropertyChanged
 {
-    protected bool Set<TValue>(ref TValue field, TValue newValue, [CallerMemberName] string? propertyName = null)
+    protected bool Set<TValue>(
+        ref TValue field,
+        TValue newValue,
+        [CallerMemberName] string? propertyName = null
+    )
     {
-        if (EqualityComparer<TValue>.Default.Equals(field, newValue)) return false;
+        if (EqualityComparer<TValue>.Default.Equals(field, newValue))
+            return false;
         field = newValue;
         OnPropertyChanged(propertyName);
 
@@ -16,6 +21,6 @@ public class ObservableObject : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }

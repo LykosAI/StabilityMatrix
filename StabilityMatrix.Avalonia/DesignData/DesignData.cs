@@ -13,6 +13,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Helper;
@@ -20,6 +21,7 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
@@ -30,7 +32,8 @@ namespace StabilityMatrix.Avalonia.DesignData;
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public static class DesignData
 {
-    [NotNull] public static IServiceProvider? Services { get; set; }
+    [NotNull]
+    public static IServiceProvider? Services { get; set; }
 
     private static bool isInitialized;
 
@@ -44,38 +47,49 @@ public static class DesignData
         var services = new ServiceCollection();
 
         var activePackageId = Guid.NewGuid();
-        services.AddSingleton<ISettingsManager, MockSettingsManager>(_ => new MockSettingsManager
-        {
-            Settings =
-            {
-                InstalledPackages = new List<InstalledPackage>
+        services.AddSingleton<ISettingsManager, MockSettingsManager>(
+            _ =>
+                new MockSettingsManager
                 {
-                    new()
+                    Settings =
                     {
-                        Id = activePackageId,
-                        DisplayName = "My Installed Package",
-                        DisplayVersion = "v1.0.0",
-                        PackageName = "stable-diffusion-webui",
-                        PackageVersion = "v1.0.0",
-                        LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
-                        LastUpdateCheck = DateTimeOffset.Now
-                    },
-                    new()
-                    {
-                        Id = Guid.NewGuid(),
-                        DisplayName = "Comfy Diffusion WebUI Dev Branch Long Name",
-                        PackageName = "ComfyUI",
-                        DisplayVersion = "main@ab73d4a",
-                        LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
-                        LastUpdateCheck = DateTimeOffset.Now
+                        InstalledPackages = new List<InstalledPackage>
+                        {
+                            new()
+                            {
+                                Id = activePackageId,
+                                DisplayName = "My Installed Package",
+                                PackageName = "stable-diffusion-webui",
+                                Version = new InstalledPackageVersion
+                                {
+                                    InstalledReleaseVersion = "v1.0.0"
+                                },
+                                LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
+                                LastUpdateCheck = DateTimeOffset.Now
+                            },
+                            new()
+                            {
+                                Id = Guid.NewGuid(),
+                                DisplayName = "Comfy Diffusion WebUI Dev Branch Long Name",
+                                PackageName = "ComfyUI",
+                                Version = new InstalledPackageVersion
+                                {
+                                    InstalledBranch = "master",
+                                    InstalledCommitSha =
+                                        "abc12uwu345568972abaedf7g7e679a98879e879f87ga8"
+                                },
+                                LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
+                                LastUpdateCheck = DateTimeOffset.Now
+                            }
+                        },
+                        ActiveInstalledPackageId = activePackageId
                     }
-                },
-                ActiveInstalledPackageId = activePackageId
-            }
-        });
+                }
+        );
 
         // General services
-        services.AddLogging()
+        services
+            .AddLogging()
             .AddSingleton<INavigationService, NavigationService>()
             .AddSingleton<IPackageFactory, PackageFactory>()
             .AddSingleton<IUpdateHelper, UpdateHelper>()
@@ -90,7 +104,8 @@ public static class DesignData
             .AddSingleton<IHttpClientFactory, MockHttpClientFactory>()
             .AddSingleton<IDiscordRichPresenceService, MockDiscordRichPresenceService>()
             .AddSingleton<IModelIndexService, MockModelIndexService>()
-            .AddSingleton<ITrackedDownloadService, MockTrackedDownloadService>();
+            .AddSingleton<ITrackedDownloadService, MockTrackedDownloadService>()
+            .AddSingleton<IPackageModificationRunner, PackageModificationRunner>();
 
         // Placeholder services that nobody should need during design time
         services
@@ -122,26 +137,31 @@ public static class DesignData
         LaunchOptionsViewModel = Services.GetRequiredService<LaunchOptionsViewModel>();
         LaunchOptionsViewModel.Cards = new[]
         {
-            LaunchOptionCard.FromDefinition(new LaunchOptionDefinition
-            {
-                Name = "Host",
-                Type = LaunchOptionType.String,
-                Description = "The host name for the Web UI",
-                DefaultValue = "localhost",
-                Options = {"--host"}
-            }),
-            LaunchOptionCard.FromDefinition(new LaunchOptionDefinition
-            {
-                Name = "API",
-                Type = LaunchOptionType.Bool,
-                Options = {"--api"}
-            })
+            LaunchOptionCard.FromDefinition(
+                new LaunchOptionDefinition
+                {
+                    Name = "Host",
+                    Type = LaunchOptionType.String,
+                    Description = "The host name for the Web UI",
+                    DefaultValue = "localhost",
+                    Options = { "--host" }
+                }
+            ),
+            LaunchOptionCard.FromDefinition(
+                new LaunchOptionDefinition
+                {
+                    Name = "API",
+                    Type = LaunchOptionType.Bool,
+                    Options = { "--api" }
+                }
+            )
         };
         LaunchOptionsViewModel.UpdateFilterCards();
 
         InstallerViewModel = Services.GetRequiredService<InstallerViewModel>();
-        InstallerViewModel.AvailablePackages =
-            packageFactory.GetAllAvailablePackages().ToImmutableArray();
+        InstallerViewModel.AvailablePackages = packageFactory
+            .GetAllAvailablePackages()
+            .ToImmutableArray();
         InstallerViewModel.SelectedPackage = InstallerViewModel.AvailablePackages[0];
         InstallerViewModel.ReleaseNotes = "## Release Notes\nThis is a test release note.";
 
@@ -158,8 +178,9 @@ public static class DesignData
                     {
                         FilePath = "~/Models/StableDiffusion/electricity-light.safetensors",
                         Title = "Auroral Background",
-                        PreviewImagePath = "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/" +
-                                           "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
+                        PreviewImagePath =
+                            "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
+                            + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
                         ConnectedModel = new ConnectedModelInfo
                         {
                             VersionName = "Lightning Auroral",
@@ -174,11 +195,7 @@ public static class DesignData
                             }
                         }
                     },
-                    new()
-                    {
-                        FilePath = "~/Models/Lora/model.safetensors",
-                        Title = "Some model"
-                    },
+                    new() { FilePath = "~/Models/Lora/model.safetensors", Title = "Some model" },
                 },
             },
             new(settingsManager, downloadService, modelFinder)
@@ -200,11 +217,7 @@ public static class DesignData
                 },
                 CheckpointFiles = new AdvancedObservableList<CheckpointFile>
                 {
-                    new()
-                    {
-                        FilePath = "~/Models/Lora/lora_v2.pt",
-                        Title = "Best Lora v2",
-                    }
+                    new() { FilePath = "~/Models/Lora/lora_v2.pt", Title = "Best Lora v2", }
                 }
             }
         };
@@ -214,8 +227,8 @@ public static class DesignData
             folder.DisplayedCheckpointFiles = folder.CheckpointFiles;
         }
 
-        CheckpointBrowserViewModel.ModelCards = new
-            ObservableCollection<CheckpointBrowserCardViewModel>
+        CheckpointBrowserViewModel.ModelCards =
+            new ObservableCollection<CheckpointBrowserCardViewModel>
             {
                 dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
                 {
@@ -233,8 +246,9 @@ public static class DesignData
             {
                 FilePath = "~/Models/StableDiffusion/electricity-light.safetensors",
                 Title = "Auroral Background",
-                PreviewImagePath = "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/" +
-                                   "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
+                PreviewImagePath =
+                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
+                    + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
                 ConnectedModel = new ConnectedModelInfo
                 {
                     VersionName = "Lightning Auroral",
@@ -249,19 +263,28 @@ public static class DesignData
                     }
                 }
             },
-            new()
-            {
-                FilePath = "~/Models/Lora/model.safetensors",
-                Title = "Some model"
-            }
+            new() { FilePath = "~/Models/Lora/model.safetensors", Title = "Some model" }
         };
 
-        ProgressManagerViewModel.ProgressItems.AddRange(new ProgressItemViewModelBase[]
-        {
-            new ProgressItemViewModel(new ProgressItem(Guid.NewGuid(), "Test File.exe",
-                new ProgressReport(0.5f, "Downloading..."))),
-            new MockDownloadProgressItemViewModel("Test File 2.exe"),
-        });
+        ProgressManagerViewModel.ProgressItems.AddRange(
+            new ProgressItemViewModelBase[]
+            {
+                new ProgressItemViewModel(
+                    new ProgressItem(
+                        Guid.NewGuid(),
+                        "Test File.exe",
+                        new ProgressReport(0.5f, "Downloading...")
+                    )
+                ),
+                new MockDownloadProgressItemViewModel("Test File 2.exe"),
+                new PackageInstallProgressItemViewModel(
+                    new PackageModificationRunner
+                    {
+                        CurrentProgress = new ProgressReport(0.5f, "Installing package...")
+                    }
+                )
+            }
+        );
 
         UpdateViewModel = Services.GetRequiredService<UpdateViewModel>();
         UpdateViewModel.UpdateText =
@@ -272,9 +295,14 @@ public static class DesignData
         isInitialized = true;
     }
 
-    [NotNull] public static InstallerViewModel? InstallerViewModel { get; private set; }
-    [NotNull] public static LaunchOptionsViewModel? LaunchOptionsViewModel { get; private set; }
-    [NotNull] public static UpdateViewModel? UpdateViewModel { get; private set; }
+    [NotNull]
+    public static InstallerViewModel? InstallerViewModel { get; private set; }
+
+    [NotNull]
+    public static LaunchOptionsViewModel? LaunchOptionsViewModel { get; private set; }
+
+    [NotNull]
+    public static UpdateViewModel? UpdateViewModel { get; private set; }
 
     public static ServiceManager<ViewModelBase> DialogFactory =>
         Services.GetRequiredService<ServiceManager<ViewModelBase>>();
@@ -296,13 +324,15 @@ public static class DesignData
             var vm = Services.GetRequiredService<PackageManagerViewModel>();
 
             vm.SetPackages(settings.Settings.InstalledPackages);
-            vm.SetUnknownPackages(new InstalledPackage[]
-            {
-                UnknownInstalledPackage.FromDirectoryName("sd-unknown-with-long-name"),
-            });
-            
+            vm.SetUnknownPackages(
+                new InstalledPackage[]
+                {
+                    UnknownInstalledPackage.FromDirectoryName("sd-unknown-with-long-name"),
+                }
+            );
+
             vm.PackageCards[0].IsUpdateAvailable = true;
-            
+
             return vm;
         }
     }
@@ -328,7 +358,8 @@ public static class DesignData
                 new()
                 {
                     Name = "BB95 Furry Mix",
-                    Description = @"Introducing SnoutMix
+                    Description =
+                        @"Introducing SnoutMix
 A Mix of non-Furry and Furry models such as Furtastic and BB95Furry to create a great variety of anthro AI generation options, but bringing out more detail, still giving a lot of freedom to customise the human aspects, and having great backgrounds, with a focus on something more realistic. Works well with realistic character loras.
 The gallery images are often inpainted, but you will get something very similar if copying their data directly. They are inpainted using the same model, therefore all results are possible without anything custom/hidden-away. Controlnet Tiled is applied to enhance them further afterwards. Gallery images were made with same model but before it was renamed",
                     BaseModel = "SD 1.5",
@@ -355,19 +386,18 @@ The gallery images are often inpainted, but you will get something very similar 
                                 Fp = CivitModelFpType.fp32,
                                 Size = CivitModelSize.full
                             },
-                            Hashes = new CivitFileHashes
-                            {
-                                BLAKE3 = "ABCD"
-                            }
+                            Hashes = new CivitFileHashes { BLAKE3 = "ABCD" }
                         }
                     }
                 }
             };
-            var sampleViewModel =
-                new ModelVersionViewModel(new HashSet<string> {"ABCD"}, sampleCivitVersions[0]);
+            var sampleViewModel = new ModelVersionViewModel(
+                new HashSet<string> { "ABCD" },
+                sampleCivitVersions[0]
+            );
 
             // Sample data for dialogs
-            vm.Versions = new List<ModelVersionViewModel> {sampleViewModel};
+            vm.Versions = new List<ModelVersionViewModel> { sampleViewModel };
             vm.Title = sampleCivitVersions[0].Name;
             vm.Description = sampleCivitVersions[0].Description;
             vm.SelectedVersionViewModel = sampleViewModel;
@@ -403,20 +433,15 @@ The gallery images are often inpainted, but you will get something very similar 
             }
         });
 
-    public static EnvVarsViewModel EnvVarsViewModel => DialogFactory.Get<EnvVarsViewModel>(
-        viewModel =>
+    public static EnvVarsViewModel EnvVarsViewModel =>
+        DialogFactory.Get<EnvVarsViewModel>(viewModel =>
         {
-            viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>
-            {
-                new("UWU", "TRUE"),
-            };
+            viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair> { new("UWU", "TRUE"), };
         });
 
     public static PackageImportViewModel PackageImportViewModel =>
         DialogFactory.Get<PackageImportViewModel>();
 
-    public static RefreshBadgeViewModel RefreshBadgeViewModel => new()
-    {
-        State = ProgressState.Success
-    };
+    public static RefreshBadgeViewModel RefreshBadgeViewModel =>
+        new() { State = ProgressState.Success };
 }

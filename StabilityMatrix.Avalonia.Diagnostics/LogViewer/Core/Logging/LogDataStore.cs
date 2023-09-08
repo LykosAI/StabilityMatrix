@@ -6,7 +6,7 @@ namespace StabilityMatrix.Avalonia.Diagnostics.LogViewer.Core.Logging;
 public class LogDataStore : ILogDataStore
 {
     public static LogDataStore Instance { get; } = new();
-    
+
     #region Fields
 
     private static readonly SemaphoreSlim _semaphore = new(initialCount: 1);

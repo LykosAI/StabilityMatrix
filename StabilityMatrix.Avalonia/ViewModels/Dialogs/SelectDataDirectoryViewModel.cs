@@ -9,6 +9,7 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
@@ -23,33 +24,43 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     public static string DefaultInstallLocation => Compat.AppDataHome;
-    
+
     private readonly ISettingsManager settingsManager;
-    
+
     private const string ValidExistingDirectoryText = "Valid existing data directory found";
     private const string InvalidDirectoryText =
         "Directory must be empty or have a valid settings.json file";
     private const string NotEnoughFreeSpaceText = "Not enough free space on the selected drive";
-    private const string FatWarningText =
-        "FAT32 / exFAT drives are not supported at this time";
+    private const string FatWarningText = "FAT32 / exFAT drives are not supported at this time";
 
-    [ObservableProperty] private string dataDirectory = DefaultInstallLocation;
-    [ObservableProperty] private bool isPortableMode;
-    
-    [ObservableProperty] private string directoryStatusText = string.Empty;
-    [ObservableProperty] private bool isStatusBadgeVisible;
-    [ObservableProperty] private bool isDirectoryValid;
-    [ObservableProperty] private bool showFatWarning;
+    [ObservableProperty]
+    private string dataDirectory = DefaultInstallLocation;
 
-    public RefreshBadgeViewModel ValidatorRefreshBadge { get; } = new()
-    {
-        State = ProgressState.Inactive,
-        SuccessToolTipText = ValidExistingDirectoryText,
-        FailToolTipText = InvalidDirectoryText
-    };
-    
+    [ObservableProperty]
+    private bool isPortableMode;
+
+    [ObservableProperty]
+    private string directoryStatusText = string.Empty;
+
+    [ObservableProperty]
+    private bool isStatusBadgeVisible;
+
+    [ObservableProperty]
+    private bool isDirectoryValid;
+
+    [ObservableProperty]
+    private bool showFatWarning;
+
+    public RefreshBadgeViewModel ValidatorRefreshBadge { get; } =
+        new()
+        {
+            State = ProgressState.Inactive,
+            SuccessToolTipText = ValidExistingDirectoryText,
+            FailToolTipText = InvalidDirectoryText
+        };
+
     public bool HasOldData => settingsManager.GetOldInstalledPackages().Any();
-    
+
     public SelectDataDirectoryViewModel(ISettingsManager settingsManager)
     {
         this.settingsManager = settingsManager;
@@ -60,17 +71,17 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
     {
         ValidatorRefreshBadge.RefreshCommand.ExecuteAsync(null).SafeFireAndForget();
     }
-    
+
     // Revalidate on data directory change
     partial void OnDataDirectoryChanged(string value)
     {
         ValidatorRefreshBadge.RefreshCommand.ExecuteAsync(null).SafeFireAndForget();
     }
-    
+
     private async Task<bool> ValidateDataDirectory()
     {
         await using var delay = new MinimumDelay(100, 200);
-        
+
         ShowFatWarning = IsDriveFat(DataDirectory);
 
         // Doesn't exist, this is fine as a new install, hide badge
@@ -82,17 +93,17 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
         }
         // Otherwise check that a settings.json exists
         var settingsPath = Path.Combine(DataDirectory, "settings.json");
-        
+
         // settings.json exists: Try deserializing it
         if (File.Exists(settingsPath))
         {
             try
             {
                 var jsonText = await File.ReadAllTextAsync(settingsPath);
-                JsonSerializer.Deserialize<Settings>(jsonText, new JsonSerializerOptions
-                {
-                    Converters = { new JsonStringEnumConverter() }
-                });
+                JsonSerializer.Deserialize<Settings>(
+                    jsonText,
+                    new JsonSerializerOptions { Converters = { new JsonStringEnumConverter() } }
+                );
                 // If successful, show existing badge
                 IsStatusBadgeVisible = true;
                 IsDirectoryValid = true;
@@ -109,9 +120,9 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
                 return false;
             }
         }
-        
+
         // No settings.json
-        
+
         // Check if the directory is %APPDATA%\StabilityMatrix: hide badge and set directory valid
         if (DataDirectory == DefaultInstallLocation)
         {
@@ -119,7 +130,7 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
             IsDirectoryValid = true;
             return true;
         }
-        
+
         // Check if the directory is empty: hide badge and set directory to valid
         var isEmpty = !Directory.EnumerateFileSystemEntries(DataDirectory).Any();
         if (isEmpty)
@@ -135,21 +146,20 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
         DirectoryStatusText = InvalidDirectoryText;
         return false;
     }
-    
+
     private bool CanPickFolder => App.StorageProvider.CanPickFolder;
-    
+
     [RelayCommand(CanExecute = nameof(CanPickFolder))]
     private async Task ShowFolderBrowserDialog()
     {
         var provider = App.StorageProvider;
-        var result = await provider.OpenFolderPickerAsync(new FolderPickerOpenOptions
-        {
-            Title = "Select Data Folder",
-            AllowMultiple = false
-        });
-        
-        if (result.Count != 1) return;
-        
+        var result = await provider.OpenFolderPickerAsync(
+            new FolderPickerOpenOptions { Title = "Select Data Folder", AllowMultiple = false }
+        );
+
+        if (result.Count != 1)
+            return;
+
         DataDirectory = result[0].Path.LocalPath;
     }
 

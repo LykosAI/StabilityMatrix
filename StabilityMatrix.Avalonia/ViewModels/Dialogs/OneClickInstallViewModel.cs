@@ -26,14 +26,27 @@ public partial class OneClickInstallViewModel : ViewModelBase
     private readonly IPyRunner pyRunner;
     private readonly ISharedFolders sharedFolders;
     private const string DefaultPackageName = "stable-diffusion-webui";
-    
-    [ObservableProperty] private string headerText;
-    [ObservableProperty] private string subHeaderText;
-    [ObservableProperty] private string subSubHeaderText = string.Empty;
-    [ObservableProperty] private bool showInstallButton;
-    [ObservableProperty] private bool isIndeterminate;
-    [ObservableProperty] private ObservableCollection<BasePackage> allPackages;
-    [ObservableProperty] private BasePackage selectedPackage;
+
+    [ObservableProperty]
+    private string headerText;
+
+    [ObservableProperty]
+    private string subHeaderText;
+
+    [ObservableProperty]
+    private string subSubHeaderText = string.Empty;
+
+    [ObservableProperty]
+    private bool showInstallButton;
+
+    [ObservableProperty]
+    private bool isIndeterminate;
+
+    [ObservableProperty]
+    private ObservableCollection<BasePackage> allPackages;
+
+    [ObservableProperty]
+    private BasePackage selectedPackage;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsProgressBarVisible))]
@@ -41,9 +54,14 @@ public partial class OneClickInstallViewModel : ViewModelBase
 
     public bool IsProgressBarVisible => OneClickInstallProgress > 0 || IsIndeterminate;
 
-    public OneClickInstallViewModel(ISettingsManager settingsManager, IPackageFactory packageFactory,
-        IPrerequisiteHelper prerequisiteHelper, ILogger<OneClickInstallViewModel> logger, IPyRunner pyRunner,
-        ISharedFolders sharedFolders)
+    public OneClickInstallViewModel(
+        ISettingsManager settingsManager,
+        IPackageFactory packageFactory,
+        IPrerequisiteHelper prerequisiteHelper,
+        ILogger<OneClickInstallViewModel> logger,
+        IPyRunner pyRunner,
+        ISharedFolders sharedFolders
+    )
     {
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
@@ -55,9 +73,9 @@ public partial class OneClickInstallViewModel : ViewModelBase
         HeaderText = "Welcome to Stability Matrix!";
         SubHeaderText = "Choose your preferred interface and click Install to get started!";
         ShowInstallButton = true;
-        AllPackages =
-            new ObservableCollection<BasePackage>(this.packageFactory.GetAllAvailablePackages()
-                .Where(p => p.OfferInOneClickInstaller));
+        AllPackages = new ObservableCollection<BasePackage>(
+            this.packageFactory.GetAllAvailablePackages().Where(p => p.OfferInOneClickInstaller)
+        );
         SelectedPackage = AllPackages[0];
     }
 
@@ -75,7 +93,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
         EventManager.Instance.OnOneClickInstallFinished(true);
         return Task.CompletedTask;
     }
-    
+
     private async Task DoInstall()
     {
         HeaderText = $"Installing {SelectedPackage.DisplayName}";
@@ -83,11 +101,11 @@ public partial class OneClickInstallViewModel : ViewModelBase
         var progressHandler = new Progress<ProgressReport>(progress =>
         {
             SubHeaderText = $"{progress.Title} {progress.Percentage:N0}%";
-            
+
             IsIndeterminate = progress.IsIndeterminate;
             OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
         });
-        
+
         await prerequisiteHelper.InstallAllIfNecessary(progressHandler);
 
         SubHeaderText = "Installing prerequisites...";
@@ -104,36 +122,52 @@ public partial class OneClickInstallViewModel : ViewModelBase
         IsIndeterminate = false;
 
         var libraryDir = settingsManager.LibraryDir;
-        
+
         // get latest version & download & install
         SubHeaderText = "Getting latest version...";
-        var latestVersion = await SelectedPackage.GetLatestVersion();
-        SelectedPackage.InstallLocation =
-            Path.Combine(libraryDir, "Packages", SelectedPackage.Name);
-        SelectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
-        
-        await DownloadPackage(latestVersion);
-        await InstallPackage();
+        var installLocation = Path.Combine(libraryDir, "Packages", SelectedPackage.Name);
+
+        var downloadVersion = new DownloadPackageVersionOptions();
+        var installedVersion = new InstalledPackageVersion();
+
+        var versionOptions = await SelectedPackage.GetAllVersionOptions();
+        if (versionOptions.AvailableVersions != null && versionOptions.AvailableVersions.Any())
+        {
+            downloadVersion.VersionTag = versionOptions.AvailableVersions.First().TagName;
+            installedVersion.InstalledReleaseVersion = downloadVersion.VersionTag;
+        }
+        else
+        {
+            downloadVersion.BranchName = await SelectedPackage.GetLatestVersion();
+            installedVersion.InstalledBranch = downloadVersion.BranchName;
+        }
+
+        var torchVersion = SelectedPackage.GetRecommendedTorchVersion();
+
+        await DownloadPackage(installLocation, downloadVersion);
+        await InstallPackage(installLocation, torchVersion);
 
         SubHeaderText = "Setting up shared folder links...";
-        await SelectedPackage.SetupModelFolders(SelectedPackage.InstallLocation);
-        
+        var recommendedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
+        await SelectedPackage.SetupModelFolders(installLocation, recommendedSharedFolderMethod);
+
         var installedPackage = new InstalledPackage
         {
             DisplayName = SelectedPackage.DisplayName,
             LibraryPath = Path.Combine("Packages", SelectedPackage.Name),
             Id = Guid.NewGuid(),
             PackageName = SelectedPackage.Name,
-            PackageVersion = latestVersion,
-            DisplayVersion = latestVersion,
+            Version = installedVersion,
             LaunchCommand = SelectedPackage.LaunchCommand,
-            LastUpdateCheck = DateTimeOffset.Now
+            LastUpdateCheck = DateTimeOffset.Now,
+            PreferredTorchVersion = torchVersion,
+            PreferredSharedFolderMethod = recommendedSharedFolderMethod
         };
         await using var st = settingsManager.BeginTransaction();
         st.Settings.InstalledPackages.Add(installedPackage);
         st.Settings.ActiveInstalledPackageId = installedPackage.Id;
         EventManager.Instance.OnInstalledPackagesChanged();
-        
+
         HeaderText = "Installation complete!";
         SubSubHeaderText = string.Empty;
         OneClickInstallProgress = 100;
@@ -143,32 +177,34 @@ public partial class OneClickInstallViewModel : ViewModelBase
         await Task.Delay(1000);
         SubHeaderText = "Proceeding to Launch page in 1 second...";
         await Task.Delay(1000);
-        
+
         // should close dialog
         EventManager.Instance.OnOneClickInstallFinished(false);
     }
 
-    private async Task DownloadPackage(string version)
+    private async Task DownloadPackage(
+        string installLocation,
+        DownloadPackageVersionOptions versionOptions
+    )
     {
         SubHeaderText = "Downloading package...";
-        
+
         var progress = new Progress<ProgressReport>(progress =>
         {
             IsIndeterminate = progress.IsIndeterminate;
             OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
             EventManager.Instance.OnGlobalProgressChanged(OneClickInstallProgress);
         });
-        
-        await SelectedPackage.DownloadPackage(version, false, version, progress);
+
+        await SelectedPackage.DownloadPackage(installLocation, versionOptions, progress);
         SubHeaderText = "Download Complete";
         OneClickInstallProgress = 100;
     }
 
-    private async Task InstallPackage()
+    private async Task InstallPackage(string installLocation, TorchVersion torchVersion)
     {
-        SelectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
         SubHeaderText = "Downloading and installing package requirements...";
-        
+
         var progress = new Progress<ProgressReport>(progress =>
         {
             SubHeaderText = "Downloading and installing package requirements...";
@@ -176,7 +212,12 @@ public partial class OneClickInstallViewModel : ViewModelBase
             OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
             EventManager.Instance.OnGlobalProgressChanged(OneClickInstallProgress);
         });
-        
-        await SelectedPackage.InstallPackage(progress);
+
+        await SelectedPackage.InstallPackage(
+            installLocation,
+            torchVersion,
+            progress,
+            (output) => SubSubHeaderText = output.Text
+        );
     }
 }

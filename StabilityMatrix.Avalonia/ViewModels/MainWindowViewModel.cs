@@ -11,6 +11,7 @@ using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
@@ -27,13 +28,13 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly IDiscordRichPresenceService discordRichPresenceService;
     public string Greeting => "Welcome to Avalonia!";
-    
+
     [ObservableProperty]
     private PageViewModelBase? currentPage;
-    
-    [ObservableProperty] 
+
+    [ObservableProperty]
     private object? selectedCategory;
-    
+
     [ObservableProperty]
     private List<PageViewModelBase> pages = new();
 
@@ -44,16 +45,17 @@ public partial class MainWindowViewModel : ViewModelBase
     public UpdateViewModel UpdateViewModel { get; init; }
 
     public MainWindowViewModel(
-        ISettingsManager settingsManager, 
+        ISettingsManager settingsManager,
         IDiscordRichPresenceService discordRichPresenceService,
         ServiceManager<ViewModelBase> dialogFactory,
-        ITrackedDownloadService trackedDownloadService)
+        ITrackedDownloadService trackedDownloadService
+    )
     {
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
         this.discordRichPresenceService = discordRichPresenceService;
         this.trackedDownloadService = trackedDownloadService;
-        
+
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
     }
@@ -61,7 +63,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public override void OnLoaded()
     {
         base.OnLoaded();
-        
+
         // Set only if null, since this may be called again when content dialogs open
         CurrentPage ??= Pages.FirstOrDefault();
         SelectedCategory ??= Pages.FirstOrDefault();
@@ -72,24 +74,25 @@ public partial class MainWindowViewModel : ViewModelBase
         await base.OnLoadedAsync();
 
         // Skip if design mode
-        if (Design.IsDesignMode) return;
-        
+        if (Design.IsDesignMode)
+            return;
+
         if (!await EnsureDataDirectory())
         {
             // False if user exited dialog, shutdown app
             App.Shutdown();
             return;
         }
-        
+
         // Initialize Discord Rich Presence (this needs LibraryDir so is set here)
         discordRichPresenceService.UpdateState();
-        
+
         // Load in-progress downloads
         ProgressManagerViewModel.AddDownloads(trackedDownloadService.Downloads);
-        
+
         // Index checkpoints if we dont have
         Task.Run(() => settingsManager.IndexCheckpoints()).SafeFireAndForget();
-        
+
         if (!settingsManager.Settings.InstalledPackages.Any())
         {
             var viewModel = dialogFactory.Get<OneClickInstallViewModel>();
@@ -98,17 +101,15 @@ public partial class MainWindowViewModel : ViewModelBase
                 IsPrimaryButtonEnabled = false,
                 IsSecondaryButtonEnabled = false,
                 IsFooterVisible = false,
-                Content = new OneClickInstallDialog
-                {
-                    DataContext = viewModel
-                },
+                Content = new OneClickInstallDialog { DataContext = viewModel },
             };
 
             EventManager.Instance.OneClickInstallFinished += (_, skipped) =>
             {
                 dialog.Hide();
-                if (skipped) return;
-                
+                if (skipped)
+                    return;
+
                 EventManager.Instance.OnTeachingTooltipNeeded();
             };
 
@@ -125,24 +126,25 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!settingsManager.TryFindLibrary())
         {
             var result = await ShowSelectDataDirectoryDialog();
-            if (!result) return false;
+            if (!result)
+                return false;
         }
-        
+
         // Try to find library again, should be found now
         if (!settingsManager.TryFindLibrary())
         {
             throw new Exception("Could not find library after setting path");
         }
-        
+
         // Tell LaunchPage to load any packages if they selected an existing directory
         EventManager.Instance.OnInstalledPackagesChanged();
-        
+
         // Check if there are old packages, if so show migration dialog
         // TODO: Migration dialog
 
         return true;
     }
-    
+
     /// <summary>
     /// Shows the select data directory dialog.
     /// </summary>
@@ -155,10 +157,7 @@ public partial class MainWindowViewModel : ViewModelBase
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
             IsFooterVisible = false,
-            Content = new SelectDataDirectoryDialog
-            {
-                DataContext = viewModel
-            }
+            Content = new SelectDataDirectoryDialog { DataContext = viewModel }
         };
 
         var result = await dialog.ShowAsync();
@@ -191,10 +190,7 @@ public partial class MainWindowViewModel : ViewModelBase
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
             IsFooterVisible = false,
-            Content = new UpdateDialog
-            {
-                DataContext = viewModel
-            }
+            Content = new UpdateDialog { DataContext = viewModel }
         };
 
         await dialog.ShowAsync();

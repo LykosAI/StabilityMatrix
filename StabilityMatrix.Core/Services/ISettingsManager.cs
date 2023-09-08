@@ -15,6 +15,7 @@ public interface ISettingsManager
     string ModelsDirectory { get; }
     string DownloadsDirectory { get; }
     Settings Settings { get; }
+    List<string> PackageInstallsInProgress { get; set; }
     event EventHandler<string>? LibraryDirChanged;
     event EventHandler<PropertyChangedEventArgs>? SettingsPropertyChanged;
 
@@ -23,7 +24,7 @@ public interface ISettingsManager
     /// Will fire instantly if it is already set.
     /// </summary>
     void RegisterOnLibraryDirSet(Action<string> handler);
-    
+
     /// <inheritdoc />
     SettingsTransaction BeginTransaction();
 
@@ -35,14 +36,17 @@ public interface ISettingsManager
 
     /// <inheritdoc />
     void RelayPropertyFor<T, TValue>(
-        T source, 
+        T source,
         Expression<Func<T, TValue>> sourceProperty,
-        Expression<Func<Settings, TValue>> settingsProperty) where T : INotifyPropertyChanged;
+        Expression<Func<Settings, TValue>> settingsProperty
+    )
+        where T : INotifyPropertyChanged;
 
     /// <inheritdoc />
     void RegisterPropertyChangedHandler<T>(
         Expression<Func<Settings, T>> settingsProperty,
-        Action<T> onPropertyChanged);
+        Action<T> onPropertyChanged
+    );
 
     /// <summary>
     /// Attempts to locate and set the library path
@@ -76,7 +80,7 @@ public interface ISettingsManager
     /// </summary>
     void InsertPathExtensions();
 
-    void UpdatePackageVersionNumber(Guid id, string? newVersion);
+    void UpdatePackageVersionNumber(Guid id, InstalledPackageVersion? newVersion);
     void SetLastUpdateCheck(InstalledPackage package);
     List<LaunchOption> GetLaunchArgs(Guid packageId);
     void SaveLaunchArgs(Guid packageId, List<LaunchOption> launchArgs);

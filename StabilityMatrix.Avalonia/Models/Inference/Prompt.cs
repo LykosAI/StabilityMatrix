@@ -136,7 +136,13 @@ public record Prompt
             // Find start of network token, until then just add to output
             if (!token.Scopes.Contains("punctuation.definition.network.begin.prompt"))
             {
-                // Push both token and text
+                // Comments - ignore
+                if (token.Scopes.Any(s => s.Contains("comment.line")))
+                {
+                    continue;
+                }
+
+                // Normal tags - Push to output
                 outputTokens.Push(token);
                 outputText.Push(RawText[token.StartIndex..GetSafeEndIndex(token.EndIndex)]);
                 continue;

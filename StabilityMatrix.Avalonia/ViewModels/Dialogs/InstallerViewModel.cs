@@ -69,9 +69,11 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     private bool isAdvancedMode;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanInstall))]
     private bool showDuplicateWarning;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanInstall))]
     private string? installName;
 
     [ObservableProperty]
@@ -107,6 +109,8 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     public bool IsReleaseModeAvailable =>
         AvailableVersionTypes.HasFlag(PackageVersionType.GithubRelease);
     public bool ShowTorchVersionOptions => SelectedTorchVersion != TorchVersion.None;
+
+    public bool CanInstall => !string.IsNullOrWhiteSpace(InstallName) && !ShowDuplicateWarning;
 
     public ProgressViewModel InstallProgress { get; } = new();
     public IEnumerable<IPackageStep> Steps { get; set; }
@@ -303,7 +307,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             version ??= AvailableVersions.FirstOrDefault(x => x.TagName == "main");
 
             // If still not found, just use the first one
-            version ??= AvailableVersions[0];
+            version ??= AvailableVersions.FirstOrDefault();
 
             SelectedVersion = version;
         }
@@ -388,14 +392,14 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                         return;
 
                     AvailableCommits = new ObservableCollection<GitCommit>(commits);
-                    SelectedCommit = AvailableCommits[0];
+                    SelectedCommit = AvailableCommits.FirstOrDefault();
                     UpdateSelectedVersionToLatestMain();
                 }
 
                 InstallName = SelectedPackage.DisplayName;
                 LatestVersionText = IsReleaseMode
-                    ? $"Latest version: {SelectedVersion.TagName}"
-                    : $"Branch: {SelectedVersion.TagName}";
+                    ? $"Latest version: {SelectedVersion?.TagName}"
+                    : $"Branch: {SelectedVersion?.TagName}";
             })
             .SafeFireAndForget();
     }

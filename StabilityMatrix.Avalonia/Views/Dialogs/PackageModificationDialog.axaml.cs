@@ -43,7 +43,7 @@ public partial class PackageModificationDialog : UserControlBase
                 var editor = this.FindControl<TextEditor>("Console");
                 if (editor?.Document == null)
                     return;
-                var line = Math.Max(editor.Document.LineCount - 5, 1);
+                var line = Math.Max(editor.Document.LineCount - 1, 1);
                 editor.ScrollToLine(line);
             });
         };

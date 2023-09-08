@@ -13,8 +13,9 @@
         <TextBlock Grid.Row="0" Text="{Binding Text}"
                    FontSize="16"
                    Margin="4"
+                   TextWrapping="WrapWithOverflow"
                    TextAlignment="Center"
-                   HorizontalAlignment="Center"/>
+                   HorizontalAlignment="Stretch"/>
         
         <TextBlock Grid.Row="1" Text="{Binding Description}"
                    Margin="4"
@@ -49,7 +50,6 @@
         
         <Button Grid.Row="5" Content="Close"
                 FontSize="20"
-                Margin="8"
                 HorizontalAlignment="Center"
                 Command="{Binding OnCloseButtonClick}"/>
     </Grid>

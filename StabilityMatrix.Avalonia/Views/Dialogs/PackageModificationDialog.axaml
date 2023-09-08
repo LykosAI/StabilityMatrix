@@ -12,6 +12,7 @@
     <Grid Margin="8" RowDefinitions="Auto, Auto, Auto, *, Auto, Auto">
         <TextBlock Grid.Row="0" Text="{Binding Text}"
                    FontSize="16"
+                   Margin="4"
                    TextAlignment="Center"
                    HorizontalAlignment="Center"/>
         

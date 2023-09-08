@@ -605,6 +605,9 @@ public sealed class App : Application
             builder.ForLogger("System.*").WriteToNil(NLog.LogLevel.Warn);
             builder.ForLogger("Microsoft.*").WriteToNil(NLog.LogLevel.Warn);
             builder.ForLogger("Microsoft.Extensions.Http.*").WriteToNil(NLog.LogLevel.Warn);
+            builder
+                .ForLogger("StabilityMatrix.Avalonia.ViewModels.ConsoleViewModel")
+                .WriteToNil(NLog.LogLevel.Debug);
 
             builder.ForLogger().FilterMinLevel(NLog.LogLevel.Trace).WriteTo(debugTarget);
             builder.ForLogger().FilterMinLevel(NLog.LogLevel.Debug).WriteTo(fileTarget);

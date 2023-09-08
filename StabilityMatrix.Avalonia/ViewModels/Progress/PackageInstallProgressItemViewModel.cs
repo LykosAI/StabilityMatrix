@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -25,6 +26,8 @@ public partial class PackageInstallProgressItemViewModel : ProgressItemViewModel
         Progress.Text = packageModificationRunner.ConsoleOutput.LastOrDefault();
         Progress.IsIndeterminate = packageModificationRunner.CurrentProgress.IsIndeterminate;
 
+        Progress.Console.StartUpdates();
+
         Progress.Console.Post(
             string.Join(Environment.NewLine, packageModificationRunner.ConsoleOutput)
         );
@@ -39,7 +42,7 @@ public partial class PackageInstallProgressItemViewModel : ProgressItemViewModel
         Progress.IsIndeterminate = e.IsIndeterminate;
         Name = packageModificationRunner.CurrentStep?.ProgressTitle;
 
-        if (string.IsNullOrWhiteSpace(e.Message) || e.Message.Equals("Downloading..."))
+        if (string.IsNullOrWhiteSpace(e.Message) || e.Message.Contains("Downloading..."))
             return;
 
         Progress.Console.PostLine(e.Message);
@@ -51,8 +54,7 @@ public partial class PackageInstallProgressItemViewModel : ProgressItemViewModel
             && Progress.CloseWhenFinished
         )
         {
-            EventManager.Instance.OnInstalledPackagesChanged();
-            dialog?.Hide();
+            Dispatcher.UIThread.Post(() => dialog?.Hide());
         }
     }
 

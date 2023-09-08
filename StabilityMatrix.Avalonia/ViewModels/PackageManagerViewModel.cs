@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
@@ -38,7 +39,6 @@ public partial class PackageManagerViewModel : PageViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly IPackageFactory packageFactory;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
-    private readonly IPackageModificationRunner packageModificationRunner;
     private readonly INotificationService notificationService;
 
     public override string Title => "Packages";
@@ -65,14 +65,12 @@ public partial class PackageManagerViewModel : PageViewModelBase
         ISettingsManager settingsManager,
         IPackageFactory packageFactory,
         ServiceManager<ViewModelBase> dialogFactory,
-        IPackageModificationRunner packageModificationRunner,
         INotificationService notificationService
     )
     {
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         this.dialogFactory = dialogFactory;
-        this.packageModificationRunner = packageModificationRunner;
         this.notificationService = notificationService;
 
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
@@ -140,28 +138,17 @@ public partial class PackageManagerViewModel : PageViewModelBase
         var result = await dialog.ShowAsync();
         if (result == ContentDialogResult.Primary)
         {
+            var runner = new PackageModificationRunner();
             var steps = viewModel.Steps;
-            var packageModificationDialogViewModel = new PackageModificationDialogViewModel(
-                packageModificationRunner,
-                notificationService,
-                steps
+
+            EventManager.Instance.OnPackageInstallProgressAdded(runner);
+            await runner.ExecuteSteps(steps.ToList());
+            EventManager.Instance.OnInstalledPackagesChanged();
+            notificationService.Show(
+                "Package Install Complete",
+                $"{viewModel.InstallName} installed successfully",
+                NotificationType.Success
             );
-
-            dialog = new BetterContentDialog
-            {
-                MaxDialogWidth = 900,
-                MinDialogWidth = 900,
-                DefaultButton = ContentDialogButton.Close,
-                IsPrimaryButtonEnabled = false,
-                IsSecondaryButtonEnabled = false,
-                IsFooterVisible = false,
-                Content = new PackageModificationDialog
-                {
-                    DataContext = packageModificationDialogViewModel
-                }
-            };
-
-            await dialog.ShowAsync();
         }
     }
 

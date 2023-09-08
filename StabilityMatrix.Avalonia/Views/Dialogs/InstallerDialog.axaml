@@ -197,6 +197,7 @@
                 Content="Install"
                 Command="{Binding InstallCommand}"
                 FontSize="20"
+                IsEnabled="{Binding !ShowDuplicateWarning}"
                 HorizontalAlignment="Center"
                 Classes="success"
                 Margin="4,0,8,0"

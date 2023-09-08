@@ -94,7 +94,8 @@ public class Fooocus : BaseGitPackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
-        IProgress<ProgressReport>? progress = null
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
@@ -122,7 +123,7 @@ public class Fooocus : BaseGitPackage
         await venvRunner
             .PipInstall(
                 $"torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/{torchVersionStr}",
-                OnConsoleOutput
+                onConsoleOutput
             )
             .ConfigureAwait(false);
 
@@ -130,21 +131,22 @@ public class Fooocus : BaseGitPackage
             new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true)
         );
         await venvRunner
-            .PipInstall("-r requirements_versions.txt", OnConsoleOutput)
+            .PipInstall("-r requirements_versions.txt", onConsoleOutput)
             .ConfigureAwait(false);
     }
 
     public override async Task RunPackage(
         string installedPackagePath,
         string command,
-        string arguments
+        string arguments,
+        Action<ProcessOutput>? onConsoleOutput
     )
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
-            OnConsoleOutput(s);
+            onConsoleOutput?.Invoke(s);
 
             if (s.Text.Contains("Use the app with", StringComparison.OrdinalIgnoreCase))
             {

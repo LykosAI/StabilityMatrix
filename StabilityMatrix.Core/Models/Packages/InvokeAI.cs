@@ -150,7 +150,8 @@ public class InvokeAI : BaseGitPackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
-        IProgress<ProgressReport>? progress = null
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         // Setup venv
@@ -186,10 +187,10 @@ public class InvokeAI : BaseGitPackage
                 break;
         }
 
-        await venvRunner.PipInstall(pipCommandArgs, OnConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall(pipCommandArgs, onConsoleOutput).ConfigureAwait(false);
 
         await venvRunner
-            .PipInstall("rich packaging python-dotenv", OnConsoleOutput)
+            .PipInstall("rich packaging python-dotenv", onConsoleOutput)
             .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Configuring InvokeAI", isIndeterminate: true));
@@ -198,7 +199,8 @@ public class InvokeAI : BaseGitPackage
                 installLocation,
                 "invokeai-configure",
                 "--yes --skip-sd-weights",
-                false
+                false,
+                onConsoleOutput
             )
             .ConfigureAwait(false);
 
@@ -209,7 +211,8 @@ public class InvokeAI : BaseGitPackage
         InstalledPackage installedPackage,
         TorchVersion torchVersion,
         IProgress<ProgressReport>? progress = null,
-        bool includePrerelease = false
+        bool includePrerelease = false,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
@@ -260,7 +263,7 @@ public class InvokeAI : BaseGitPackage
                 break;
         }
 
-        await venvRunner.PipInstall(pipCommandArgs, OnConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall(pipCommandArgs, onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(1f, "Done!", isIndeterminate: false));
 
@@ -276,8 +279,9 @@ public class InvokeAI : BaseGitPackage
     public override Task RunPackage(
         string installedPackagePath,
         string command,
-        string arguments
-    ) => RunInvokeCommand(installedPackagePath, command, arguments, true);
+        string arguments,
+        Action<ProcessOutput>? onConsoleOutput
+    ) => RunInvokeCommand(installedPackagePath, command, arguments, true, onConsoleOutput);
 
     private async Task<string> GetUpdateVersion(
         InstalledPackage installedPackage,
@@ -304,7 +308,8 @@ public class InvokeAI : BaseGitPackage
         string installedPackagePath,
         string command,
         string arguments,
-        bool runDetached
+        bool runDetached,
+        Action<ProcessOutput>? onConsoleOutput
     )
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
@@ -344,7 +349,7 @@ public class InvokeAI : BaseGitPackage
         {
             void HandleConsoleOutput(ProcessOutput s)
             {
-                OnConsoleOutput(s);
+                onConsoleOutput?.Invoke(s);
 
                 if (!s.Text.Contains("running on", StringComparison.OrdinalIgnoreCase))
                     return;
@@ -369,7 +374,7 @@ public class InvokeAI : BaseGitPackage
             var result = await VenvRunner
                 .Run($"-c \"{code}\" {arguments}".TrimEnd())
                 .ConfigureAwait(false);
-            OnConsoleOutput(new ProcessOutput { Text = result.StandardOutput });
+            onConsoleOutput?.Invoke(new ProcessOutput { Text = result.StandardOutput });
         }
     }
 

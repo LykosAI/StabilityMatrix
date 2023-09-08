@@ -144,7 +144,8 @@ public class A3WebUI : BaseGitPackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
-        IProgress<ProgressReport>? progress = null
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
@@ -158,16 +159,17 @@ public class A3WebUI : BaseGitPackage
         switch (torchVersion)
         {
             case TorchVersion.Cpu:
-                await InstallCpuTorch(venvRunner, progress).ConfigureAwait(false);
+                await InstallCpuTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
                 break;
             case TorchVersion.Cuda:
-                await InstallCudaTorch(venvRunner, progress).ConfigureAwait(false);
+                await InstallCudaTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
                 break;
             case TorchVersion.Rocm:
-                await InstallRocmTorch(venvRunner, progress).ConfigureAwait(false);
+                await InstallRocmTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
                 break;
             case TorchVersion.DirectMl:
-                await InstallDirectMlTorch(venvRunner, progress).ConfigureAwait(false);
+                await InstallDirectMlTorch(venvRunner, progress, onConsoleOutput)
+                    .ConfigureAwait(false);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);
@@ -179,7 +181,7 @@ public class A3WebUI : BaseGitPackage
         );
         Logger.Info("Installing requirements_versions.txt");
         await venvRunner
-            .PipInstall($"-r requirements_versions.txt", OnConsoleOutput)
+            .PipInstall($"-r requirements_versions.txt", onConsoleOutput)
             .ConfigureAwait(false);
 
         progress?.Report(
@@ -203,14 +205,15 @@ public class A3WebUI : BaseGitPackage
     public override async Task RunPackage(
         string installedPackagePath,
         string command,
-        string arguments
+        string arguments,
+        Action<ProcessOutput>? onConsoleOutput
     )
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
-            OnConsoleOutput(s);
+            onConsoleOutput?.Invoke(s);
 
             if (!s.Text.Contains("Running on", StringComparison.OrdinalIgnoreCase))
                 return;
@@ -231,17 +234,18 @@ public class A3WebUI : BaseGitPackage
 
     private async Task InstallRocmTorch(
         PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         progress?.Report(
             new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true)
         );
 
-        await venvRunner.PipInstall("--upgrade pip wheel", OnConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         await venvRunner
-            .PipInstall(PyVenvRunner.TorchPipInstallArgsRocm511, OnConsoleOutput)
+            .PipInstall(PyVenvRunner.TorchPipInstallArgsRocm511, onConsoleOutput)
             .ConfigureAwait(false);
     }
 }

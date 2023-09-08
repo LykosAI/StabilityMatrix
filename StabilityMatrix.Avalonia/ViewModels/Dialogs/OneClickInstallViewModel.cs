@@ -126,7 +126,6 @@ public partial class OneClickInstallViewModel : ViewModelBase
         // get latest version & download & install
         SubHeaderText = "Getting latest version...";
         var installLocation = Path.Combine(libraryDir, "Packages", SelectedPackage.Name);
-        SelectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
 
         var downloadVersion = new DownloadPackageVersionOptions();
         var installedVersion = new InstalledPackageVersion();
@@ -204,7 +203,6 @@ public partial class OneClickInstallViewModel : ViewModelBase
 
     private async Task InstallPackage(string installLocation, TorchVersion torchVersion)
     {
-        SelectedPackage.ConsoleOutput += (_, output) => SubSubHeaderText = output.Text;
         SubHeaderText = "Downloading and installing package requirements...";
 
         var progress = new Progress<ProgressReport>(progress =>
@@ -215,6 +213,11 @@ public partial class OneClickInstallViewModel : ViewModelBase
             EventManager.Instance.OnGlobalProgressChanged(OneClickInstallProgress);
         });
 
-        await SelectedPackage.InstallPackage(installLocation, torchVersion, progress);
+        await SelectedPackage.InstallPackage(
+            installLocation,
+            torchVersion,
+            progress,
+            (output) => SubSubHeaderText = output.Text
+        );
     }
 }

@@ -178,14 +178,14 @@
 
                                 <StackPanel Grid.Row="0" Grid.Column="0">
                                     <TextBlock Margin="0,0" 
-                                               Text="{Binding Name, Mode=OneWay}" />
+                                               Text="{Binding Progress.Text, Mode=OneWay}" />
                                     
                                     <!--  non-indeterminate progress  -->
                                     <TextBlock
                                         Margin="0,4"
                                         MaxWidth="300"
                                         IsVisible="{Binding !Progress.IsIndeterminate}">
-                                        <Run Text="{Binding Progress.Text, Mode=OneWay}" />
+                                        <Run Text="{Binding Progress.Description, Mode=OneWay}" />
                                         <Run Text="{Binding Progress.Value, Mode=OneWay}" /><Run Text="%" />
                                     </TextBlock>
 
@@ -194,7 +194,7 @@
                                         Margin="0,4"
                                         MaxWidth="300"
                                         IsVisible="{Binding Progress.IsIndeterminate}"
-                                        Text="{Binding Progress.Text, Mode=OneWay}" />
+                                        Text="{Binding Progress.Description, Mode=OneWay}" />
                                 </StackPanel>
 
 

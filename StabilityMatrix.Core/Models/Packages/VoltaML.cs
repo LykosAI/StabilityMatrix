@@ -136,7 +136,8 @@ public class VoltaML : BaseGitPackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
-        IProgress<ProgressReport>? progress = null
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
@@ -153,7 +154,7 @@ public class VoltaML : BaseGitPackage
             new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true)
         );
         await venvRunner
-            .PipInstall("rich packaging python-dotenv", OnConsoleOutput)
+            .PipInstall("rich packaging python-dotenv", onConsoleOutput)
             .ConfigureAwait(false);
 
         progress?.Report(
@@ -164,7 +165,8 @@ public class VoltaML : BaseGitPackage
     public override async Task RunPackage(
         string installedPackagePath,
         string command,
-        string arguments
+        string arguments,
+        Action<ProcessOutput>? onConsoleOutput
     )
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
@@ -175,7 +177,7 @@ public class VoltaML : BaseGitPackage
 
         void HandleConsoleOutput(ProcessOutput s)
         {
-            OnConsoleOutput(s);
+            onConsoleOutput?.Invoke(s);
 
             if (s.Text.Contains("running on", StringComparison.OrdinalIgnoreCase))
             {

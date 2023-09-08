@@ -161,7 +161,8 @@ public class VladAutomatic : BaseGitPackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
-        IProgress<ProgressReport>? progress = null
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         progress?.Report(new ProgressReport(-1f, "Installing package...", isIndeterminate: true));
@@ -177,23 +178,23 @@ public class VladAutomatic : BaseGitPackage
             // Run initial install
             case TorchVersion.Cuda:
                 await venvRunner
-                    .CustomInstall("launch.py --use-cuda --debug --test", OnConsoleOutput)
+                    .CustomInstall("launch.py --use-cuda --debug --test", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             case TorchVersion.Rocm:
                 await venvRunner
-                    .CustomInstall("launch.py --use-rocm --debug --test", OnConsoleOutput)
+                    .CustomInstall("launch.py --use-rocm --debug --test", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             case TorchVersion.DirectMl:
                 await venvRunner
-                    .CustomInstall("launch.py --use-directml --debug --test", OnConsoleOutput)
+                    .CustomInstall("launch.py --use-directml --debug --test", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             default:
                 // CPU
                 await venvRunner
-                    .CustomInstall("launch.py --debug --test", OnConsoleOutput)
+                    .CustomInstall("launch.py --debug --test", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
         }
@@ -252,14 +253,15 @@ public class VladAutomatic : BaseGitPackage
     public override async Task RunPackage(
         string installedPackagePath,
         string command,
-        string arguments
+        string arguments,
+        Action<ProcessOutput>? onConsoleOutput
     )
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
-            OnConsoleOutput(s);
+            onConsoleOutput?.Invoke(s);
             if (s.Text.Contains("Running on local URL", StringComparison.OrdinalIgnoreCase))
             {
                 var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
@@ -287,7 +289,8 @@ public class VladAutomatic : BaseGitPackage
         InstalledPackage installedPackage,
         TorchVersion torchVersion,
         IProgress<ProgressReport>? progress = null,
-        bool includePrerelease = false
+        bool includePrerelease = false,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         if (installedPackage.Version is null)
@@ -313,7 +316,7 @@ public class VladAutomatic : BaseGitPackage
         venvRunner.EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables;
 
         await venvRunner
-            .CustomInstall("launch.py --upgrade --test", OnConsoleOutput)
+            .CustomInstall("launch.py --upgrade --test", onConsoleOutput)
             .ConfigureAwait(false);
 
         try

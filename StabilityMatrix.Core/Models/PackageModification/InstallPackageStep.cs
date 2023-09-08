@@ -1,5 +1,6 @@
 ﻿using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Core.Models.PackageModification;
 
@@ -18,11 +19,14 @@ public class InstallPackageStep : IPackageStep
 
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
     {
-        package.ConsoleOutput += (sender, output) =>
+        void OnConsoleOutput(ProcessOutput output)
         {
             progress?.Report(new ProgressReport { IsIndeterminate = true, Message = output.Text });
-        };
-        await package.InstallPackage(installPath, torchVersion, progress).ConfigureAwait(false);
+        }
+
+        await package
+            .InstallPackage(installPath, torchVersion, progress, OnConsoleOutput)
+            .ConfigureAwait(false);
     }
 
     public string ProgressTitle => "Installing package...";

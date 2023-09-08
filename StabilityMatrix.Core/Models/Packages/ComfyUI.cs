@@ -106,7 +106,8 @@ public class ComfyUI : BaseGitPackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
-        IProgress<ProgressReport>? progress = null
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
@@ -121,16 +122,17 @@ public class ComfyUI : BaseGitPackage
         switch (torchVersion)
         {
             case TorchVersion.Cpu:
-                await InstallCpuTorch(venvRunner, progress).ConfigureAwait(false);
+                await InstallCpuTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
                 break;
             case TorchVersion.Cuda:
-                await InstallCudaTorch(venvRunner, progress).ConfigureAwait(false);
+                await InstallCudaTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
                 break;
             case TorchVersion.Rocm:
-                await InstallRocmTorch(venvRunner, progress).ConfigureAwait(false);
+                await InstallRocmTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
                 break;
             case TorchVersion.DirectMl:
-                await InstallDirectMlTorch(venvRunner, progress).ConfigureAwait(false);
+                await InstallDirectMlTorch(venvRunner, progress, onConsoleOutput)
+                    .ConfigureAwait(false);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);
@@ -141,7 +143,7 @@ public class ComfyUI : BaseGitPackage
             new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true)
         );
         Logger.Info("Installing requirements.txt");
-        await venvRunner.PipInstall($"-r requirements.txt", OnConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall($"-r requirements.txt", onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(
             new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false)
@@ -175,14 +177,15 @@ public class ComfyUI : BaseGitPackage
     public override async Task RunPackage(
         string installedPackagePath,
         string command,
-        string arguments
+        string arguments,
+        Action<ProcessOutput>? onConsoleOutput
     )
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
-            OnConsoleOutput(s);
+            onConsoleOutput?.Invoke(s);
 
             if (s.Text.Contains("To see the GUI go to", StringComparison.OrdinalIgnoreCase))
             {
@@ -290,17 +293,18 @@ public class ComfyUI : BaseGitPackage
 
     private async Task InstallRocmTorch(
         PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         progress?.Report(
             new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true)
         );
 
-        await venvRunner.PipInstall("--upgrade pip wheel", OnConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         await venvRunner
-            .PipInstall(PyVenvRunner.TorchPipInstallArgsRocm542, OnConsoleOutput)
+            .PipInstall(PyVenvRunner.TorchPipInstallArgsRocm542, onConsoleOutput)
             .ConfigureAwait(false);
     }
 

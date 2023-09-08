@@ -12,7 +12,7 @@ using StabilityMatrix.Core.Models.Progress;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Progress;
 
-public partial class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
+public class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
 {
     private readonly IPackageModificationRunner packageModificationRunner;
     private BetterContentDialog? dialog;
@@ -38,8 +38,9 @@ public partial class PackageInstallProgressItemViewModel : ProgressItemViewModel
     private void PackageModificationRunnerOnProgressChanged(object? sender, ProgressReport e)
     {
         Progress.Value = e.Percentage;
-        Progress.Text = e.Message;
+        Progress.Description = e.Message;
         Progress.IsIndeterminate = e.IsIndeterminate;
+        Progress.Text = packageModificationRunner.CurrentStep?.ProgressTitle;
         Name = packageModificationRunner.CurrentStep?.ProgressTitle;
 
         if (string.IsNullOrWhiteSpace(e.Message) || e.Message.Contains("Downloading..."))

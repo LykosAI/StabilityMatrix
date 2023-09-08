@@ -45,10 +45,16 @@ public abstract class BasePackage
     public abstract Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
-        IProgress<ProgressReport>? progress = null
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null
     );
 
-    public abstract Task RunPackage(string installedPackagePath, string command, string arguments);
+    public abstract Task RunPackage(
+        string installedPackagePath,
+        string command,
+        string arguments,
+        Action<ProcessOutput>? onConsoleOutput
+    );
 
     public abstract Task<bool> CheckForUpdates(InstalledPackage package);
 
@@ -56,7 +62,8 @@ public abstract class BasePackage
         InstalledPackage installedPackage,
         TorchVersion torchVersion,
         IProgress<ProgressReport>? progress = null,
-        bool includePrerelease = false
+        bool includePrerelease = false,
+        Action<ProcessOutput>? onConsoleOutput = null
     );
 
     public virtual IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
@@ -144,11 +151,8 @@ public abstract class BasePackage
     );
     public abstract Task<IEnumerable<Branch>> GetAllBranches();
     public abstract Task<IEnumerable<Release>> GetAllReleases();
-    public event EventHandler<ProcessOutput>? ConsoleOutput;
     public event EventHandler<int>? Exited;
     public event EventHandler<string>? StartupComplete;
-
-    public void OnConsoleOutput(ProcessOutput output) => ConsoleOutput?.Invoke(this, output);
 
     public void OnExit(int exitCode) => Exited?.Invoke(this, exitCode);
 
@@ -161,7 +165,8 @@ public abstract class BasePackage
 
     protected async Task InstallCudaTorch(
         PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         progress?.Report(
@@ -169,14 +174,15 @@ public abstract class BasePackage
         );
 
         await venvRunner
-            .PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, OnConsoleOutput)
+            .PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, onConsoleOutput)
             .ConfigureAwait(false);
-        await venvRunner.PipInstall("xformers", OnConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall("xformers", onConsoleOutput).ConfigureAwait(false);
     }
 
     protected async Task InstallDirectMlTorch(
         PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         progress?.Report(
@@ -184,13 +190,14 @@ public abstract class BasePackage
         );
 
         await venvRunner
-            .PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, OnConsoleOutput)
+            .PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, onConsoleOutput)
             .ConfigureAwait(false);
     }
 
     protected async Task InstallCpuTorch(
         PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         progress?.Report(
@@ -198,7 +205,7 @@ public abstract class BasePackage
         );
 
         await venvRunner
-            .PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, OnConsoleOutput)
+            .PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, onConsoleOutput)
             .ConfigureAwait(false);
     }
 }

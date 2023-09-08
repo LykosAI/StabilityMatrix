@@ -255,7 +255,6 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         // Unpack sitecustomize.py to venv
         await UnpackSiteCustomize(packagePath.JoinDir("venv"));
 
-        basePackage.ConsoleOutput += OnProcessOutputReceived;
         basePackage.Exited += OnProcessExited;
         basePackage.StartupComplete += RunningPackageOnStartupComplete;
 
@@ -280,7 +279,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         // Use input command if provided, otherwise use package launch command
         command ??= basePackage.LaunchCommand;
 
-        await basePackage.RunPackage(packagePath, command, userArgsString);
+        await basePackage.RunPackage(packagePath, command, userArgsString, OnProcessOutputReceived);
         RunningPackage = basePackage;
 
         EventManager.Instance.OnRunningPackageStatusChanged(
@@ -465,7 +464,6 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
                 // Detach handlers
                 if (sender is BasePackage basePackage)
                 {
-                    basePackage.ConsoleOutput -= OnProcessOutputReceived;
                     basePackage.Exited -= OnProcessExited;
                     basePackage.StartupComplete -= RunningPackageOnStartupComplete;
                 }
@@ -485,7 +483,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     }
 
     // Callback for processes
-    private void OnProcessOutputReceived(object? sender, ProcessOutput output)
+    private void OnProcessOutputReceived(ProcessOutput output)
     {
         Console.Post(output);
         EventManager.Instance.OnScrollToBottomRequested();

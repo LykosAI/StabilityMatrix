@@ -7,6 +7,7 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
@@ -182,7 +183,8 @@ public abstract class BaseGitPackage : BasePackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
-        IProgress<ProgressReport>? progress = null
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         await UnzipPackage(installLocation, progress).ConfigureAwait(false);
@@ -269,7 +271,8 @@ public abstract class BaseGitPackage : BasePackage
         InstalledPackage installedPackage,
         TorchVersion torchVersion,
         IProgress<ProgressReport>? progress = null,
-        bool includePrerelease = false
+        bool includePrerelease = false,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         if (installedPackage.Version == null)

@@ -2,6 +2,7 @@
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -38,13 +39,19 @@ public class UnknownPackage : BasePackage
     public override Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
-        IProgress<ProgressReport>? progress = null
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         throw new NotImplementedException();
     }
 
-    public override Task RunPackage(string installedPackagePath, string command, string arguments)
+    public override Task RunPackage(
+        string installedPackagePath,
+        string command,
+        string arguments,
+        Action<ProcessOutput>? onConsoleOutput
+    )
     {
         throw new NotImplementedException();
     }
@@ -102,7 +109,8 @@ public class UnknownPackage : BasePackage
         InstalledPackage installedPackage,
         TorchVersion torchVersion,
         IProgress<ProgressReport>? progress = null,
-        bool includePrerelease = false
+        bool includePrerelease = false,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         throw new NotImplementedException();

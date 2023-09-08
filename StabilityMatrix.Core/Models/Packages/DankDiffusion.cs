@@ -1,6 +1,7 @@
 ﻿using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
@@ -29,7 +30,12 @@ public class DankDiffusion : BaseGitPackage
 
     public override Uri PreviewImageUri { get; }
 
-    public override Task RunPackage(string installedPackagePath, string command, string arguments)
+    public override Task RunPackage(
+        string installedPackagePath,
+        string command,
+        string arguments,
+        Action<ProcessOutput>? onConsoleOutput
+    )
     {
         throw new NotImplementedException();
     }

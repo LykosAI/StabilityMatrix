@@ -333,15 +333,15 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
         CancellationToken cancellationToken = default
     )
     {
-        if (!ClientManager.IsConnected)
-        {
-            notificationService.Show("Client not connected", "Please connect first");
-            return;
-        }
-
         // Validate the prompts
         if (!await PromptCardViewModel.ValidatePrompts())
         {
+            return;
+        }
+
+        if (!ClientManager.IsConnected)
+        {
+            notificationService.Show("Client not connected", "Please connect first");
             return;
         }
 

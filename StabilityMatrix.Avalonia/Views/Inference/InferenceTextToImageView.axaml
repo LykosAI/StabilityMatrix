@@ -85,7 +85,7 @@
                         x:Name="PromptPane"
                         Alignment="Right"
                         Id="PromptPane"
-                        Proportion="0.3">
+                        Proportion="0.25">
                         <Tool
                             x:Name="PromptTool"
                             Title="Prompt"
@@ -179,7 +179,7 @@
                         x:Name="ImageGalleryPane"
                         Alignment="Right"
                         Id="ImageGalleryPane"
-                        Proportion="0.3">
+                        Proportion="0.35">
                         <Tool
                             x:Name="ImageGalleryTool"
                             Title="Image Output"
@@ -221,7 +221,7 @@
                         x:Name="ImageFolderPane"
                         Alignment="Right"
                         Id="ImageFolderPane"
-                        Proportion="0.2">
+                        Proportion="0.1">
                         <Tool
                             x:Name="ImageFolderTool"
                             x:DataType="Tool"

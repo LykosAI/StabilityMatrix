@@ -92,6 +92,12 @@ public class FilePath : FileSystemPath, IPathObject
     /// <summary> Deletes the file </summary>
     public void Delete() => File.Delete(FullPath);
 
+    /// <summary> Deletes the file asynchronously </summary>
+    public Task DeleteAsync(CancellationToken ct = default)
+    {
+        return Task.Run(() => File.Delete(FullPath), ct);
+    }
+
     // Methods specific to files
 
     /// <summary> Read text </summary>

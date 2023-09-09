@@ -38,6 +38,9 @@ public class LocalImageFile
     /// </summary>
     public string FileNameWithoutExtension => Path.GetFileNameWithoutExtension(RelativePath);
 
+    public string GlobalFullPath =>
+        GlobalConfig.LibraryDir.JoinDir("Images").JoinFile(RelativePath);
+
     public string GetFullPath(string rootImageDirectory)
     {
         return Path.Combine(rootImageDirectory, RelativePath);

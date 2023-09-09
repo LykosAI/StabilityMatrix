@@ -406,13 +406,13 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             // Use local file path if available, otherwise use remote URL
             if (client.OutputImagesDir is { } outputPath)
             {
-                outputImages = images
+                outputImages = images!
                     .Select(i => new ImageSource(i.ToFilePath(outputPath)))
                     .ToList();
             }
             else
             {
-                outputImages = images
+                outputImages = images!
                     .Select(i => new ImageSource(i.ToUri(client.BaseAddress)))
                     .ToList();
             }

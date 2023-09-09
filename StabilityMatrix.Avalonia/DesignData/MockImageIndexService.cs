@@ -44,4 +44,10 @@ public class MockImageIndexService : IImageIndexService
     {
         throw new System.NotImplementedException();
     }
+
+    /// <inheritdoc />
+    public Task RemoveImage(LocalImageFile imageFile)
+    {
+        throw new System.NotImplementedException();
+    }
 }

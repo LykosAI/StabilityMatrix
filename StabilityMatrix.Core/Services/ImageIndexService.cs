@@ -114,4 +114,12 @@ public class ImageIndexService : IImageIndexService
     {
         RefreshIndex().SafeFireAndForget();
     }
+
+    /// <inheritdoc />
+    public async Task RemoveImage(LocalImageFile imageFile)
+    {
+        await liteDbContext.LocalImageFiles
+            .DeleteAsync(imageFile.RelativePath)
+            .ConfigureAwait(false);
+    }
 }

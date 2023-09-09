@@ -6,7 +6,9 @@
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:input="using:FluentAvalonia.UI.Input"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:dbModels="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
     x:DataType="vmInference:ImageFolderCardViewModel">
 
     <Design.PreviewWith>
@@ -55,7 +57,24 @@
                             <ItemsRepeater
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Stretch"
-                                ItemsSource="{Binding Items}">
+                                ItemsSource="{Binding LocalImages}">
+                                
+                                <ItemsRepeater.Resources>
+                                    <input:StandardUICommand 
+                                        x:Key="ImageClickCommand" 
+                                        Command="{Binding ImageClickCommand}"/>
+                                    <input:StandardUICommand 
+                                        x:Key="ImageDeleteCommand"
+                                        Label="Delete"
+                                        IconSource="Delete"
+                                        Command="{Binding ImageDeleteCommand}"/>
+                                    <input:StandardUICommand 
+                                        x:Key="ImageOpenCommand" 
+                                        Label="Open in Explorer"
+                                        IconSource="Folder"
+                                        Command="{Binding ImageOpenCommand}"/>
+                                </ItemsRepeater.Resources>
+                                
                                 <ItemsRepeater.Layout>
                                     <!--<WrapLayout HorizontalSpacing="2" VerticalSpacing="2" />-->
                                     <UniformGridLayout
@@ -65,25 +84,40 @@
                                         MinRowSpacing="2" />
                                 </ItemsRepeater.Layout>
                                 <ItemsRepeater.ItemTemplate>
-                                    <DataTemplate DataType="{x:Type vmInference:ImageFolderCardItemViewModel}">
+                                    <DataTemplate DataType="{x:Type dbModels:LocalImageFile}">
                                         <Button
+                                            Command="{StaticResource ImageClickCommand}"
+                                            CommandParameter="{Binding $self.DataContext}"
+                                            HotKey="{x:Null}"
                                             Padding="4"
                                             Classes="transparent-full"
-                                            ToolTip.Placement="Left"
                                             CornerRadius="8">
                                             
-                                            <ToolTip.Tip>
+                                            <Button.ContextFlyout>
+                                                <ui:FAMenuFlyout>
+                                                    <ui:MenuFlyoutItem 
+                                                        HotKey="{x:Null}"
+                                                        Command="{StaticResource ImageDeleteCommand}"
+                                                        CommandParameter="{Binding $self.DataContext}"/>
+                                                    <ui:MenuFlyoutItem 
+                                                        HotKey="{x:Null}"
+                                                        Command="{StaticResource ImageOpenCommand}"
+                                                        CommandParameter="{Binding $self.DataContext}"/>
+                                                </ui:FAMenuFlyout>
+                                            </Button.ContextFlyout>
+                                            
+                                            <!--<ToolTip.Tip>
                                                 <ToolTip>
                                                     <TextBlock Text="Test"/>
                                                 </ToolTip>
-                                            </ToolTip.Tip>
+                                            </ToolTip.Tip>-->
                                             
                                             <Border ClipToBounds="True" CornerRadius="8">
                                                 <Grid RowDefinitions="*,Auto">
                                                     <controls:BetterAdvancedImage
                                                         Width="150"
                                                         Height="190"
-                                                        Source="{Binding ImagePath}"
+                                                        Source="{Binding GlobalFullPath}"
                                                         Stretch="UniformToFill"
                                                         StretchDirection="Both" />
 
@@ -95,8 +129,10 @@
                                                         Material="{StaticResource ThemeDarkAcrylicMaterial}"
                                                         Opacity="0.9">
                                                         <TextBlock 
+                                                            FontSize="12"
+                                                            VerticalAlignment="Center"
                                                             TextTrimming="CharacterEllipsis"
-                                                            Text="{Binding LocalImageFile.FileName}"/>
+                                                            Text="{Binding FileNameWithoutExtension}"/>
                                                     </ExperimentalAcrylicBorder>
                                                 </Grid>
                                             </Border>

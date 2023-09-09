@@ -18,4 +18,9 @@ public interface IImageIndexService
     /// Refreshes the index of local images in the background
     /// </summary>
     void BackgroundRefreshIndex();
+
+    /// <summary>
+    /// Removes a local image from the database
+    /// </summary>
+    Task RemoveImage(LocalImageFile imageFile);
 }

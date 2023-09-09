@@ -348,7 +348,7 @@ public static class DialogHelper
         var textEditor = new TextEditor
         {
             IsReadOnly = true,
-            WordWrap = true,
+            WordWrap = false,
             IsEnabled = false,
             ShowLineNumbers = false,
             FontFamily = "Cascadia Code,Consolas,Menlo,Monospace",
@@ -382,6 +382,8 @@ public static class DialogHelper
                 textEditor
             }
         };
+
+        textEditor.ScrollToHorizontalOffset(errorLineEndOffset - errorLineOffset);
 
         var dialog = new BetterContentDialog
         {

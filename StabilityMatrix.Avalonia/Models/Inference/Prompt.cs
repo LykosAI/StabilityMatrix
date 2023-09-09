@@ -120,31 +120,33 @@ public record Prompt
 
         while (tokens.MoveNext())
         {
-            var token = tokens.Current;
+            var currentToken = tokens.Current;
 
             // For any invalid syntax, throw
-            if (token.Scopes.Any(s => s.Contains("invalid.illegal")))
+            if (currentToken.Scopes.Any(s => s.Contains("invalid.illegal")))
             {
                 // Generic
                 throw new PromptSyntaxError(
                     "Invalid Token",
-                    token.StartIndex,
-                    GetSafeEndIndex(token.EndIndex)
+                    currentToken.StartIndex,
+                    GetSafeEndIndex(currentToken.EndIndex)
                 );
             }
 
             // Find start of network token, until then just add to output
-            if (!token.Scopes.Contains("punctuation.definition.network.begin.prompt"))
+            if (!currentToken.Scopes.Contains("punctuation.definition.network.begin.prompt"))
             {
                 // Comments - ignore
-                if (token.Scopes.Any(s => s.Contains("comment.line")))
+                if (currentToken.Scopes.Any(s => s.Contains("comment.line")))
                 {
                     continue;
                 }
 
                 // Normal tags - Push to output
-                outputTokens.Push(token);
-                outputText.Push(RawText[token.StartIndex..GetSafeEndIndex(token.EndIndex)]);
+                outputTokens.Push(currentToken);
+                outputText.Push(
+                    RawText[currentToken.StartIndex..GetSafeEndIndex(currentToken.EndIndex)]
+                );
                 continue;
             }
 
@@ -152,22 +154,22 @@ public record Prompt
             if (!tokens.MoveNext())
             {
                 throw PromptSyntaxError.UnexpectedEndOfText(
-                    token.StartIndex,
-                    GetSafeEndIndex(token.EndIndex)
+                    currentToken.StartIndex,
+                    GetSafeEndIndex(currentToken.EndIndex)
                 );
             }
-            var networkTypeToken = tokens.Current;
+            currentToken = tokens.Current;
 
-            if (!networkTypeToken.Scopes.Contains("meta.embedded.network.type.prompt"))
+            if (!currentToken.Scopes.Contains("meta.embedded.network.type.prompt"))
             {
                 throw PromptSyntaxError.Network_ExpectedType(
-                    networkTypeToken.StartIndex,
-                    GetSafeEndIndex(networkTypeToken.EndIndex)
+                    currentToken.StartIndex,
+                    GetSafeEndIndex(currentToken.EndIndex)
                 );
             }
 
             var networkType = RawText[
-                networkTypeToken.StartIndex..GetSafeEndIndex(networkTypeToken.EndIndex)
+                currentToken.StartIndex..GetSafeEndIndex(currentToken.EndIndex)
             ];
 
             // Match network type
@@ -178,8 +180,8 @@ public record Prompt
                 "embedding" => PromptExtraNetworkType.Embedding,
                 _
                     => throw PromptValidationError.Network_UnknownType(
-                        networkTypeToken.StartIndex,
-                        GetSafeEndIndex(networkTypeToken.EndIndex)
+                        currentToken.StartIndex,
+                        GetSafeEndIndex(currentToken.EndIndex)
                     )
             };
 
@@ -187,16 +189,18 @@ public record Prompt
             if (!tokens.MoveNext())
             {
                 throw PromptSyntaxError.UnexpectedEndOfText(
-                    tokens.Current.StartIndex,
-                    GetSafeEndIndex(tokens.Current.EndIndex)
+                    currentToken.StartIndex,
+                    GetSafeEndIndex(currentToken.EndIndex)
                 );
             }
+            currentToken = tokens.Current;
+
             // Ensure next token is colon
-            if (!tokens.Current.Scopes.Contains("punctuation.separator.variable.prompt"))
+            if (!currentToken.Scopes.Contains("punctuation.separator.variable.prompt"))
             {
                 throw PromptSyntaxError.Network_ExpectedSeparator(
-                    tokens.Current.StartIndex,
-                    GetSafeEndIndex(tokens.Current.EndIndex)
+                    currentToken.StartIndex,
+                    GetSafeEndIndex(currentToken.EndIndex)
                 );
             }
 
@@ -204,22 +208,22 @@ public record Prompt
             if (!tokens.MoveNext())
             {
                 throw PromptSyntaxError.UnexpectedEndOfText(
-                    tokens.Current.StartIndex,
-                    GetSafeEndIndex(tokens.Current.EndIndex)
+                    currentToken.StartIndex,
+                    GetSafeEndIndex(currentToken.EndIndex)
                 );
             }
+            currentToken = tokens.Current;
 
-            var modelNameToken = tokens.Current;
-            if (!tokens.Current.Scopes.Contains("meta.embedded.network.model.prompt"))
+            if (!currentToken.Scopes.Contains("meta.embedded.network.model.prompt"))
             {
                 throw PromptSyntaxError.Network_ExpectedName(
-                    tokens.Current.StartIndex,
-                    GetSafeEndIndex(tokens.Current.EndIndex)
+                    currentToken.StartIndex,
+                    GetSafeEndIndex(currentToken.EndIndex)
                 );
             }
 
             var modelName = RawText[
-                modelNameToken.StartIndex..GetSafeEndIndex(modelNameToken.EndIndex)
+                currentToken.StartIndex..GetSafeEndIndex(currentToken.EndIndex)
             ];
 
             // If index service provided, validate model name
@@ -235,8 +239,8 @@ public record Prompt
                 {
                     throw PromptValidationError.Network_UnknownModel(
                         modelName,
-                        modelNameToken.StartIndex,
-                        GetSafeEndIndex(modelNameToken.EndIndex)
+                        currentToken.StartIndex,
+                        GetSafeEndIndex(currentToken.EndIndex)
                     );
                 }
             }
@@ -245,13 +249,13 @@ public record Prompt
             if (!tokens.MoveNext())
             {
                 throw PromptSyntaxError.UnexpectedEndOfText(
-                    tokens.Current.StartIndex,
-                    GetSafeEndIndex(tokens.Current.EndIndex)
+                    currentToken.StartIndex,
+                    GetSafeEndIndex(currentToken.EndIndex)
                 );
             }
 
             // If its a ending token instead, we can end here
-            if (tokens.Current.Scopes.Contains("punctuation.definition.network.end.prompt"))
+            if (currentToken.Scopes.Contains("punctuation.definition.network.end.prompt"))
             {
                 // If last entry on stack is a separator, remove it
                 if (
@@ -270,11 +274,11 @@ public record Prompt
             }
 
             // Ensure next token is colon
-            if (!tokens.Current.Scopes.Contains("punctuation.separator.variable.prompt"))
+            if (!currentToken.Scopes.Contains("punctuation.separator.variable.prompt"))
             {
                 throw PromptSyntaxError.Network_ExpectedSeparator(
-                    tokens.Current.StartIndex,
-                    GetSafeEndIndex(tokens.Current.EndIndex)
+                    currentToken.StartIndex,
+                    GetSafeEndIndex(currentToken.EndIndex)
                 );
             }
 
@@ -282,30 +286,30 @@ public record Prompt
             if (!tokens.MoveNext())
             {
                 throw PromptSyntaxError.UnexpectedEndOfText(
-                    tokens.Current.StartIndex,
-                    GetSafeEndIndex(tokens.Current.EndIndex)
+                    currentToken.StartIndex,
+                    GetSafeEndIndex(currentToken.EndIndex)
                 );
             }
+            currentToken = tokens.Current;
 
-            var modelWeightToken = tokens.Current;
-            if (!tokens.Current.Scopes.Contains("constant.numeric"))
+            if (!currentToken.Scopes.Contains("constant.numeric"))
             {
                 throw PromptSyntaxError.Network_ExpectedWeight(
-                    tokens.Current.StartIndex,
-                    GetSafeEndIndex(tokens.Current.EndIndex)
+                    currentToken.StartIndex,
+                    GetSafeEndIndex(currentToken.EndIndex)
                 );
             }
 
             var modelWeight = RawText[
-                modelWeightToken.StartIndex..GetSafeEndIndex(modelWeightToken.EndIndex)
+                currentToken.StartIndex..GetSafeEndIndex(currentToken.EndIndex)
             ];
 
             // Convert to double
             if (!double.TryParse(modelWeight, out var weight))
             {
                 throw PromptValidationError.Network_InvalidWeight(
-                    modelWeightToken.StartIndex,
-                    GetSafeEndIndex(modelWeightToken.EndIndex)
+                    currentToken.StartIndex,
+                    GetSafeEndIndex(currentToken.EndIndex)
                 );
             }
 
@@ -313,16 +317,17 @@ public record Prompt
             if (!tokens.MoveNext())
             {
                 throw PromptSyntaxError.UnexpectedEndOfText(
-                    tokens.Current.StartIndex,
-                    GetSafeEndIndex(tokens.Current.EndIndex)
+                    currentToken.StartIndex,
+                    GetSafeEndIndex(currentToken.EndIndex)
                 );
             }
-            var endToken = tokens.Current;
-            if (!endToken.Scopes.Contains("punctuation.definition.network.end.prompt"))
+            currentToken = tokens.Current;
+
+            if (!currentToken.Scopes.Contains("punctuation.definition.network.end.prompt"))
             {
                 throw PromptSyntaxError.UnexpectedEndOfText(
-                    endToken.StartIndex,
-                    GetSafeEndIndex(endToken.EndIndex)
+                    currentToken.StartIndex,
+                    GetSafeEndIndex(currentToken.EndIndex)
                 );
             }
 

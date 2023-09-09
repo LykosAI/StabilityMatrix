@@ -175,10 +175,10 @@
           }
         },
         {
-          "include": "#colon"
+          "include": "#comment"
         },
         {
-          "include": "#number"
+          "include": "#escape"
         },
         {
           "match": "[^\\s\\>]+",
@@ -214,6 +214,23 @@
       "match": "[^,:\\[\\]\\(\\)\\<\\> \\\\]+",
       "name": "meta.embedded"
     },
+    "invalid_reserved" : {
+      "name": "invalid.illegal.reserved.prompt",
+      "patterns": [
+        {
+          "match": ":",
+          "name": "invalid.illegal.reserved.prompt"
+        },
+        {
+          "match": "\\)",
+          "name": "invalid.illegal.mismatched.parenthesis.closing.prompt"
+        },
+        {
+          "match": "\\(",
+          "name": "invalid.illegal.mismatched.parenthesis.opening.prompt"
+        }
+      ]
+    },
     "value": {
       "patterns": [
         {
@@ -244,12 +261,7 @@
           "include": "#text"
         },
         {
-          "name": "invalid.illegal.mismatched.parenthesis.closing.prompt",
-          "match": "\\)"
-        },
-        {
-          "name": "invalid.illegal.mismatched.parenthesis.opening.prompt",
-          "match": "\\("
+          "include": "#invalid_reserved"
         }
       ]
     }

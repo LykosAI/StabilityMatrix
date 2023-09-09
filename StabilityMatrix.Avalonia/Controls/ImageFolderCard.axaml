@@ -2,16 +2,17 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:fluentAvalonia="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     x:DataType="vmInference:ImageFolderCardViewModel">
 
     <Design.PreviewWith>
         <Panel Width="600" Height="800">
             <Grid MaxWidth="500" MaxHeight="700">
-                <controls:ImageFolderCard 
-                    DataContext="{x:Static mocks:DesignData.ImageFolderCardViewModel}" />
+                <controls:ImageFolderCard DataContext="{x:Static mocks:DesignData.ImageFolderCardViewModel}" />
             </Grid>
         </Panel>
     </Design.PreviewWith>
@@ -23,6 +24,9 @@
 
     <Style Selector="controls|ImageFolderCard">
         <!--  Set Defaults  -->
+        <Setter Property="CornerRadius" Value="8" />
+
+        <!--  Template  -->
         <Setter Property="Template">
             <ControlTemplate>
                 <controls:Card
@@ -32,29 +36,76 @@
                     HorizontalContentAlignment="{TemplateBinding HorizontalAlignment}"
                     VerticalContentAlignment="{TemplateBinding VerticalAlignment}">
 
-                    <ScrollViewer>
-                        <ItemsRepeater
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Stretch"
-                            ItemsSource="{Binding Items}">
-                            <ItemsRepeater.Layout>
-                                <UniformGridLayout
-                                    MinColumnSpacing="8"
-                                    MinRowSpacing="8"
-                                    MaximumRowsOrColumns="2"/>
-                            </ItemsRepeater.Layout>
-                            <ItemsRepeater.ItemTemplate>
-                                <DataTemplate DataType="{x:Type vmInference:ImageFolderCardItemViewModel}">
-                                    <controls:BetterAdvancedImage
-                                        MaxHeight="256"
-                                        CornerRadius="4"
-                                        Source="{Binding ImagePath}"
-                                        Stretch="Uniform"
-                                        StretchDirection="Both" />
-                                </DataTemplate>
-                            </ItemsRepeater.ItemTemplate>
-                        </ItemsRepeater>
-                    </ScrollViewer>
+                    <Grid RowDefinitions="Auto,*">
+                        <TextBox
+                            x:Name="SearchBox"
+                            Margin="6,4,6,8"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Top"
+                            Watermark="Search...">
+                            <TextBox.InnerRightContent>
+                                <ui:SymbolIcon 
+                                    Margin="0,0,6,0"
+                                    FontSize="16"
+                                    Symbol="Find" />
+                            </TextBox.InnerRightContent>
+                        </TextBox>
+
+                        <ScrollViewer Grid.Row="1">
+                            <ItemsRepeater
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Stretch"
+                                ItemsSource="{Binding Items}">
+                                <ItemsRepeater.Layout>
+                                    <!--<WrapLayout HorizontalSpacing="2" VerticalSpacing="2" />-->
+                                    <UniformGridLayout
+                                        Orientation="Horizontal"
+                                        MaximumRowsOrColumns="2"
+                                        MinColumnSpacing="2"
+                                        MinRowSpacing="2" />
+                                </ItemsRepeater.Layout>
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type vmInference:ImageFolderCardItemViewModel}">
+                                        <Button
+                                            Padding="4"
+                                            Classes="transparent-full"
+                                            ToolTip.Placement="Left"
+                                            CornerRadius="8">
+                                            
+                                            <ToolTip.Tip>
+                                                <ToolTip>
+                                                    <TextBlock Text="Test"/>
+                                                </ToolTip>
+                                            </ToolTip.Tip>
+                                            
+                                            <Border ClipToBounds="True" CornerRadius="8">
+                                                <Grid RowDefinitions="*,Auto">
+                                                    <controls:BetterAdvancedImage
+                                                        Width="150"
+                                                        Height="190"
+                                                        Source="{Binding ImagePath}"
+                                                        Stretch="UniformToFill"
+                                                        StretchDirection="Both" />
+
+                                                    <ExperimentalAcrylicBorder
+                                                        Grid.Row="1"
+                                                        MinHeight="20"
+                                                        Padding="4,0,0,0"
+                                                        VerticalAlignment="Bottom"
+                                                        Material="{StaticResource ThemeDarkAcrylicMaterial}"
+                                                        Opacity="0.9">
+                                                        <TextBlock 
+                                                            TextTrimming="CharacterEllipsis"
+                                                            Text="{Binding LocalImageFile.FileName}"/>
+                                                    </ExperimentalAcrylicBorder>
+                                                </Grid>
+                                            </Border>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                        </ScrollViewer>
+                    </Grid>
                 </controls:Card>
             </ControlTemplate>
         </Setter>

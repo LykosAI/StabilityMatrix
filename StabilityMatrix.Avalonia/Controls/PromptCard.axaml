@@ -10,7 +10,7 @@
         xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
         x:DataType="vmInference:PromptCardViewModel">
     <Design.PreviewWith>
-        <Grid Height="600" Width="600">
+        <Grid Height="600" Width="460">
             <controls:PromptCard DataContext="{x:Static mocks:DesignData.PromptCardViewModel}"/>
         </Grid>
     </Design.PreviewWith>

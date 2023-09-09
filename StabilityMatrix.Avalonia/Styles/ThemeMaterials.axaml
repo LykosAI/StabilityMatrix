@@ -8,4 +8,12 @@
         TintOpacity="0.78"
         MaterialOpacity="0.9"
         BackgroundSource="Digger" />
+    
+    <ExperimentalAcrylicMaterial
+        x:Key="ThemeTransparentAcrylicMaterial"
+        FallbackColor="{DynamicResource ThemeBackgroundColor}"
+        TintColor="Black"
+        TintOpacity="0.7"
+        MaterialOpacity="0.5"
+        BackgroundSource="Digger" />
 </ResourceDictionary>

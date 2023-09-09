@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Http;
+using System.Text;
 using AvaloniaEdit.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
@@ -518,9 +519,19 @@ The gallery images are often inpainted, but you will get something very similar 
     public static PromptCardViewModel PromptCardViewModel =>
         DialogFactory.Get<PromptCardViewModel>(vm =>
         {
-            vm.PromptDocument.Text =
-                "house, (high quality), [example], BREAK\n\n<lora:details:0.8>";
-            vm.NegativePromptDocument.Text = "blurry, jpeg artifacts";
+            var builder = new StringBuilder();
+            builder.AppendLine("house, (high quality), [example], BREAK");
+            builder.AppendLine("# this is a comment");
+            builder.AppendLine(
+                "(detailed), [purple and orange lighting], looking pleased, (cinematic, god rays:0.8), "
+                    + "(8k, 4k, high res:1), (intricate), (unreal engine:1.2), (shaded:1.1), "
+                    + "(soft focus, detailed background), (horizontal lens flare), "
+                    + "(clear eyes)"
+            );
+            builder.AppendLine("<lora:details:0.8>, <lyco:some_model>");
+
+            vm.PromptDocument.Text = builder.ToString();
+            vm.NegativePromptDocument.Text = "embedding:EasyNegative, blurry, jpeg artifacts";
         });
 
     public static StackCardViewModel StackCardViewModel =>

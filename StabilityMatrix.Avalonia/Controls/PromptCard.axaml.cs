@@ -1,4 +1,5 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using AvaloniaEdit;
 using StabilityMatrix.Avalonia.Helpers;
@@ -28,6 +29,7 @@ public class PromptCard : TemplatedControl
             if (editor is not null)
             {
                 TextEditorConfigs.ConfigForPrompt(editor);
+                editor.TextArea.Margin = new Thickness(0, 0, 4, 0);
             }
         }
     }

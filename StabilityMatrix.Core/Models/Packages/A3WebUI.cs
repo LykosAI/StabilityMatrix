@@ -67,7 +67,7 @@ public class A3WebUI : BaseGitPackage
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "localhost",
-                Options = new() { "--host" }
+                Options = new() { "--server-name" }
             },
             new()
             {

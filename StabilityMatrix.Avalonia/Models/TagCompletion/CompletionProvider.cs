@@ -121,7 +121,10 @@ public partial class CompletionProvider : ICompletionProvider
                 onException: exception =>
                 {
                     const string title = "Failed to load tag completion file";
-                    Debug.Fail(title);
+                    if (Debugger.IsAttached)
+                    {
+                        Debug.Fail(title);
+                    }
                     Logger.Warn(exception, title);
                     notificationService.Show(
                         title + $" {path.Name}",

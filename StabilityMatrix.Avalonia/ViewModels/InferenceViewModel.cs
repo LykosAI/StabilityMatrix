@@ -474,8 +474,7 @@ public partial class InferenceViewModel : PageViewModelBase
         // Update project file
         currentTab.ProjectFile = new FilePath(result.TryGetLocalPath()!);
 
-        // Update the database with the current tab
-        await SyncTabStateWithDatabase(currentTab);
+        await SyncTabStatesWithDatabase();
 
         notificationService.Show(
             "Saved",
@@ -576,7 +575,7 @@ public partial class InferenceViewModel : PageViewModelBase
 
         SelectedTab = vm;
 
-        await SyncTabStateWithDatabase(vm);
+        await SyncTabStatesWithDatabase();
     }
 
     /// <summary>

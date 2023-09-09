@@ -280,7 +280,8 @@ public partial class CompletionProvider : ICompletionProvider
         var availableTypes = new[]
         {
             (PromptExtraNetworkType.Lora, "lora"),
-            (PromptExtraNetworkType.LyCORIS, "lyco")
+            (PromptExtraNetworkType.LyCORIS, "lyco"),
+            (PromptExtraNetworkType.Embedding, "embedding")
         };
 
         return availableTypes

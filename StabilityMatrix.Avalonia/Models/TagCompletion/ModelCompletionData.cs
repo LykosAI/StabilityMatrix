@@ -16,7 +16,6 @@ public class ModelCompletionData : CompletionData
         : base(text)
     {
         NetworkType = networkType;
-        // TODO: multi icons?
         Icon = CompletionIcons.Model;
         Description = networkType.GetStringValue();
     }

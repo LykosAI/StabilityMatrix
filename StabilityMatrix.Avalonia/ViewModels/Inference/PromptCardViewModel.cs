@@ -183,6 +183,17 @@ public partial class PromptCardViewModel : LoadableViewModelBase
     private async Task DebugShowTokens()
     {
         var prompt = GetPrompt();
+
+        try
+        {
+            prompt.Process();
+        }
+        catch (PromptError e)
+        {
+            await DialogHelper.CreatePromptErrorDialog(e, prompt.RawText).ShowAsync();
+            return;
+        }
+
         var tokens = prompt.TokenizeResult.Tokens;
 
         var builder = new StringBuilder();
@@ -194,17 +205,18 @@ public partial class PromptCardViewModel : LoadableViewModelBase
 
         try
         {
-            var networks = prompt.ExtraNetworks;
-
-            builder.AppendLine($"## Networks ({networks.Count}):");
-            builder.AppendLine("```csharp");
-            builder.AppendLine(
-                JsonSerializer.Serialize(
-                    networks,
-                    new JsonSerializerOptions() { WriteIndented = true, }
-                )
-            );
-            builder.AppendLine("```");
+            if (prompt.ExtraNetworks is { } networks)
+            {
+                builder.AppendLine($"## Networks ({networks.Count}):");
+                builder.AppendLine("```csharp");
+                builder.AppendLine(
+                    JsonSerializer.Serialize(
+                        networks,
+                        new JsonSerializerOptions() { WriteIndented = true, }
+                    )
+                );
+                builder.AppendLine("```");
+            }
 
             builder.AppendLine("## Formatted for server:");
             builder.AppendLine("```csharp");

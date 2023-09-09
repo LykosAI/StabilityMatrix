@@ -107,6 +107,13 @@ public class A3WebUI : BaseGitPackage
             },
             new()
             {
+                Name = "Auto Launch Web UI",
+                Type = LaunchOptionType.Bool,
+                InitialValue = false,
+                Options = new() { "--autolaunch" }
+            },
+            new()
+            {
                 Name = "Skip Torch CUDA Check",
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),

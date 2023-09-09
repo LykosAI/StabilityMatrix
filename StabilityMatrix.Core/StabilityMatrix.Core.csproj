@@ -16,6 +16,7 @@
     <ItemGroup>
       <PackageReference Include="AsyncAwaitBestPractices" Version="6.0.6" />
       <PackageReference Include="Blake3" Version="0.5.1" />
+      <PackageReference Include="Crc32.NET" Version="1.2.0" />
       <PackageReference Include="DeviceId" Version="6.3.0" />
       <PackageReference Include="DeviceId.Linux" Version="6.3.0" />
       <PackageReference Include="DeviceId.Mac" Version="6.2.0" />

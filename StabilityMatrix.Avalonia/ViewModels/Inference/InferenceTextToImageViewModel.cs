@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -17,6 +18,7 @@ using SkiaSharp;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
@@ -354,6 +356,19 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
 
         var (nodes, outputNodeNames) = BuildPrompt(overrides);
 
+        var generationInfo = new GenerationParameters
+        {
+            Seed = (ulong)seedCard.Seed,
+            Steps = SamplerCardViewModel.Steps,
+            CfgScale = SamplerCardViewModel.CfgScale,
+            Sampler = SamplerCardViewModel.SelectedSampler?.Name,
+            ModelName = ModelCardViewModel.SelectedModelName,
+            // TODO: ModelHash
+            PositivePrompt = PromptCardViewModel.PromptDocument.Text,
+            NegativePrompt = PromptCardViewModel.NegativePromptDocument.Text
+        };
+        var smproj = InferenceProjectDocument.FromLoadable(this);
+
         // Connect preview image handler
         client.PreviewImageReceived += OnPreviewImageReceived;
 
@@ -406,9 +421,26 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
             // Use local file path if available, otherwise use remote URL
             if (client.OutputImagesDir is { } outputPath)
             {
-                outputImages = images!
-                    .Select(i => new ImageSource(i.ToFilePath(outputPath)))
-                    .ToList();
+                outputImages = new List<ImageSource>();
+                foreach (var image in images)
+                {
+                    var filePath = image.ToFilePath(outputPath);
+                    var fileStream = new BinaryReader(filePath.Info.OpenRead());
+                    var bytes = fileStream.ReadBytes((int)filePath.Info.Length);
+                    var bytesWithMetadata = PngDataHelper.AddMetadata(
+                        bytes,
+                        generationInfo,
+                        smproj
+                    );
+                    fileStream.Close();
+                    fileStream.Dispose();
+
+                    await using var outputStream = filePath.Info.OpenWrite();
+                    await outputStream.WriteAsync(bytesWithMetadata);
+                    await outputStream.FlushAsync();
+
+                    outputImages.Add(new ImageSource(filePath));
+                }
             }
             else
             {
@@ -425,6 +457,12 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
                     .ToImmutableArray();
 
                 var grid = ImageProcessor.CreateImageGrid(loadedImages);
+                var gridBytes = grid.Encode().ToArray();
+                var gridBytesWithMetadata = PngDataHelper.AddMetadata(
+                    gridBytes,
+                    generationInfo,
+                    smproj
+                );
 
                 // Save to disk
                 var lastName = outputImages.Last().LocalFile?.Info.Name;
@@ -432,7 +470,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
 
                 await using (var fileStream = gridPath.Info.OpenWrite())
                 {
-                    await fileStream.WriteAsync(grid.Encode().ToArray(), cancellationToken);
+                    await fileStream.WriteAsync(gridBytesWithMetadata, cancellationToken);
                 }
 
                 // Insert to start of images

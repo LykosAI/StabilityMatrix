@@ -111,6 +111,11 @@
                                             HorizontalAlignment="Center"
                                             ColumnDefinitions="Auto,*,Auto"
                                             RowDefinitions="Auto,*">
+                                            <Grid.Styles>
+                                                <Style Selector="Button">
+                                                    <Setter Property="MinHeight" Value="32"/>
+                                                </Style>
+                                            </Grid.Styles>
                                             <Button
                                                 Grid.Row="1"
                                                 Margin="4,0"

@@ -167,11 +167,6 @@ public partial class SettingsViewModel : PageViewModelBase
         settingsManager.RelayPropertyFor(
             this,
             vm => vm.IsDiscordRichPresenceEnabled,
-            settings => settings.IsDiscordRichPresenceEnabled
-        );
-
-        settingsManager.RelayPropertyFor(
-            this,
             settings => settings.IsDiscordRichPresenceEnabled,
             true
         );

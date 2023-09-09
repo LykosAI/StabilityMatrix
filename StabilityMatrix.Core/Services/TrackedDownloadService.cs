@@ -2,7 +2,6 @@
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -18,7 +17,7 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
 
     private readonly ConcurrentDictionary<
         Guid,
-        (TrackedDownloadDownload, FileStream Stream)
+        (TrackedDownload Download, FileStream Stream)
     > downloads = new();
 
     public IEnumerable<TrackedDownload> Downloads => downloads.Values.Select(x => x.Download);

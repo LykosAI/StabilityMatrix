@@ -57,6 +57,28 @@ public static class PngDataHelper
         return finalImage.ToArray();
     }
 
+    public static byte[] RemoveMetadata(byte[] inputImage)
+    {
+        var firstTextIndex = SearchBytes(inputImage, Text);
+        if (firstTextIndex == -1)
+            return inputImage;
+
+        // Don't want the size bytes either
+        firstTextIndex -= 4;
+        var existingHeader = inputImage[..firstTextIndex];
+
+        // Go back 4 from the idat index because we need the length of the data
+        var idatIndex = SearchBytes(inputImage, Idat) - 4;
+
+        // Go forward 8 from the iend index because we need the crc
+        var iendIndex = SearchBytes(inputImage, Iend) + 8;
+
+        var actualImageData = inputImage[idatIndex..iendIndex];
+        var finalImage = existingHeader.Concat(actualImageData);
+
+        return finalImage.ToArray();
+    }
+
     private static byte[] GetTextChunk(string key, string value)
     {
         var textData = $"{key}\0{value}";

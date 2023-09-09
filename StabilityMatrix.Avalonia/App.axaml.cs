@@ -342,11 +342,12 @@ public sealed class App : Application
     internal static void ConfigurePackages(IServiceCollection services)
     {
         services.AddSingleton<BasePackage, A3WebUI>();
+        services.AddSingleton<BasePackage, Fooocus>();
         services.AddSingleton<BasePackage, VladAutomatic>();
+        services.AddSingleton<BasePackage, InvokeAI>();
         services.AddSingleton<BasePackage, ComfyUI>();
         services.AddSingleton<BasePackage, VoltaML>();
-        services.AddSingleton<BasePackage, InvokeAI>();
-        services.AddSingleton<BasePackage, Fooocus>();
+        services.AddSingleton<BasePackage, FooocusMre>();
     }
 
     private static IServiceCollection ConfigureServices()

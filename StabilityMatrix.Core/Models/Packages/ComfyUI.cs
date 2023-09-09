@@ -77,9 +77,16 @@ public class ComfyUI : BaseGitPackage
             },
             new()
             {
+                Name = "Enable DirectML",
+                Type = LaunchOptionType.Bool,
+                InitialValue = HardwareHelper.PreferDirectML(),
+                Options = { "--directml" }
+            },
+            new()
+            {
                 Name = "Use CPU only",
                 Type = LaunchOptionType.Bool,
-                InitialValue = !HardwareHelper.HasNvidiaGpu(),
+                InitialValue = !HardwareHelper.HasNvidiaGpu() && !HardwareHelper.HasAmdGpu(),
                 Options = { "--cpu" }
             },
             new()

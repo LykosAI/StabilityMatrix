@@ -54,7 +54,8 @@ public class A3WebUI : BaseGitPackage
             [SharedFolderType.Karlo] = new[] { "models/karlo" },
             [SharedFolderType.TextualInversion] = new[] { "embeddings" },
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
-            [SharedFolderType.ControlNet] = new[] { "models/ControlNet" }
+            [SharedFolderType.ControlNet] = new[] { "models/ControlNet" },
+            [SharedFolderType.Codeformer] = new[] { "models/Codeformer" },
         };
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
@@ -66,7 +67,7 @@ public class A3WebUI : BaseGitPackage
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "localhost",
-                Options = new() { "--host" }
+                Options = new() { "--server-name" }
             },
             new()
             {
@@ -103,6 +104,13 @@ public class A3WebUI : BaseGitPackage
                 Type = LaunchOptionType.Bool,
                 InitialValue = true,
                 Options = new() { "--api" }
+            },
+            new()
+            {
+                Name = "Auto Launch Web UI",
+                Type = LaunchOptionType.Bool,
+                InitialValue = false,
+                Options = new() { "--autolaunch" }
             },
             new()
             {

@@ -133,15 +133,15 @@ public record Prompt
                 );
             }
 
+            // Comments - ignore
+            if (currentToken.Scopes.Any(s => s.Contains("comment.line")))
+            {
+                continue;
+            }
+
             // Find start of network token, until then just add to output
             if (!currentToken.Scopes.Contains("punctuation.definition.network.begin.prompt"))
             {
-                // Comments - ignore
-                if (currentToken.Scopes.Any(s => s.Contains("comment.line")))
-                {
-                    continue;
-                }
-
                 // Normal tags - Push to output
                 outputTokens.Push(currentToken);
                 outputText.Push(
@@ -253,103 +253,109 @@ public record Prompt
                     GetSafeEndIndex(currentToken.EndIndex)
                 );
             }
+            currentToken = tokens.Current;
 
-            // If its a ending token instead, we can end here
-            if (currentToken.Scopes.Contains("punctuation.definition.network.end.prompt"))
+            double? weight = null;
+            // If its a ending token instead, we can end here, otherwise keep parsing for weight
+            if (!currentToken.Scopes.Contains("punctuation.definition.network.end.prompt"))
+            {
+                // Ensure next token is colon
+                if (!currentToken.Scopes.Contains("punctuation.separator.variable.prompt"))
+                {
+                    throw PromptSyntaxError.Network_ExpectedSeparator(
+                        currentToken.StartIndex,
+                        GetSafeEndIndex(currentToken.EndIndex)
+                    );
+                }
+
+                // Get model weight
+                if (!tokens.MoveNext())
+                {
+                    throw PromptSyntaxError.UnexpectedEndOfText(
+                        currentToken.StartIndex,
+                        GetSafeEndIndex(currentToken.EndIndex)
+                    );
+                }
+                currentToken = tokens.Current;
+
+                if (!currentToken.Scopes.Contains("constant.numeric"))
+                {
+                    throw PromptSyntaxError.Network_ExpectedWeight(
+                        currentToken.StartIndex,
+                        GetSafeEndIndex(currentToken.EndIndex)
+                    );
+                }
+
+                var modelWeight = RawText[
+                    currentToken.StartIndex..GetSafeEndIndex(currentToken.EndIndex)
+                ];
+
+                // Convert to double
+                if (!double.TryParse(modelWeight, out var weightValue))
+                {
+                    throw PromptValidationError.Network_InvalidWeight(
+                        currentToken.StartIndex,
+                        GetSafeEndIndex(currentToken.EndIndex)
+                    );
+                }
+                weight = weightValue;
+
+                // Expect end
+                if (!tokens.MoveNext())
+                {
+                    throw PromptSyntaxError.UnexpectedEndOfText(
+                        currentToken.StartIndex,
+                        GetSafeEndIndex(currentToken.EndIndex)
+                    );
+                }
+                currentToken = tokens.Current;
+
+                if (!currentToken.Scopes.Contains("punctuation.definition.network.end.prompt"))
+                {
+                    throw PromptSyntaxError.UnexpectedEndOfText(
+                        currentToken.StartIndex,
+                        GetSafeEndIndex(currentToken.EndIndex)
+                    );
+                }
+            }
+
+            // For embeddings, we add to the prompt, and not to the extra networks list
+            if (parsedNetworkType is PromptExtraNetworkType.Embedding)
+            {
+                // Push to output in Comfy format
+                // <embedding:model> -> embedding:model
+                // <embedding:model:weight> -> (embedding:model:weight)
+                outputTokens.Push(currentToken);
+
+                outputText.Push(
+                    weight is null
+                        ? $"embedding:{modelName}"
+                        : $"(embedding:{modelName}:{weight:F2})"
+                );
+            }
+            // Cleanups for separate extra networks
+            else
             {
                 // If last entry on stack is a separator, remove it
                 if (
-                    outputTokens.TryPeek(out var lastToken)
-                    && lastToken.Scopes.Contains("punctuation.separator.variable.prompt")
+                    outputTokens.TryPeek(out var lastToken2)
+                    && lastToken2.Scopes.Contains("punctuation.separator.variable.prompt")
                 )
                 {
                     outputTokens.Pop();
                     outputText.Pop();
                 }
 
+                // Add to output
                 promptExtraNetworks.Add(
-                    new PromptExtraNetwork { Type = parsedNetworkType, Name = modelName }
-                );
-                continue;
-            }
-
-            // Ensure next token is colon
-            if (!currentToken.Scopes.Contains("punctuation.separator.variable.prompt"))
-            {
-                throw PromptSyntaxError.Network_ExpectedSeparator(
-                    currentToken.StartIndex,
-                    GetSafeEndIndex(currentToken.EndIndex)
+                    new PromptExtraNetwork
+                    {
+                        Type = parsedNetworkType,
+                        Name = modelName,
+                        ModelWeight = weight
+                    }
                 );
             }
-
-            // Get model weight
-            if (!tokens.MoveNext())
-            {
-                throw PromptSyntaxError.UnexpectedEndOfText(
-                    currentToken.StartIndex,
-                    GetSafeEndIndex(currentToken.EndIndex)
-                );
-            }
-            currentToken = tokens.Current;
-
-            if (!currentToken.Scopes.Contains("constant.numeric"))
-            {
-                throw PromptSyntaxError.Network_ExpectedWeight(
-                    currentToken.StartIndex,
-                    GetSafeEndIndex(currentToken.EndIndex)
-                );
-            }
-
-            var modelWeight = RawText[
-                currentToken.StartIndex..GetSafeEndIndex(currentToken.EndIndex)
-            ];
-
-            // Convert to double
-            if (!double.TryParse(modelWeight, out var weight))
-            {
-                throw PromptValidationError.Network_InvalidWeight(
-                    currentToken.StartIndex,
-                    GetSafeEndIndex(currentToken.EndIndex)
-                );
-            }
-
-            // Expect end
-            if (!tokens.MoveNext())
-            {
-                throw PromptSyntaxError.UnexpectedEndOfText(
-                    currentToken.StartIndex,
-                    GetSafeEndIndex(currentToken.EndIndex)
-                );
-            }
-            currentToken = tokens.Current;
-
-            if (!currentToken.Scopes.Contains("punctuation.definition.network.end.prompt"))
-            {
-                throw PromptSyntaxError.UnexpectedEndOfText(
-                    currentToken.StartIndex,
-                    GetSafeEndIndex(currentToken.EndIndex)
-                );
-            }
-
-            // If last entry on stack is a separator, remove it
-            if (
-                outputTokens.TryPeek(out var lastToken2)
-                && lastToken2.Scopes.Contains("punctuation.separator.variable.prompt")
-            )
-            {
-                outputTokens.Pop();
-                outputText.Pop();
-            }
-
-            // Add to output
-            promptExtraNetworks.Add(
-                new PromptExtraNetwork
-                {
-                    Type = parsedNetworkType,
-                    Name = modelName,
-                    ModelWeight = weight
-                }
-            );
         }
 
         var processedText = string.Join("", outputText.Reverse());

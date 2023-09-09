@@ -68,7 +68,6 @@ public class ModelIndexService : IModelIndexService
         var added = 0;
 
         var newIndex = new Dictionary<SharedFolderType, List<LocalModelFile>>();
-
         foreach (
             var file in modelsDir.Info
                 .EnumerateFiles("*.*", SearchOption.AllDirectories)
@@ -132,13 +131,11 @@ public class ModelIndexService : IModelIndexService
             // Add to index
             var list = newIndex.GetOrAdd(sharedFolderType);
             list.Add(localModel);
-
             added++;
         }
 
         // Update index
         ModelIndex = newIndex;
-
         // Record end of actual indexing
         var indexEnd = stopwatch.Elapsed;
 

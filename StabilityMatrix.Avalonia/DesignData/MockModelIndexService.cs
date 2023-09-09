@@ -24,7 +24,5 @@ public class MockModelIndexService : IModelIndexService
     }
 
     /// <inheritdoc />
-    public void BackgroundRefreshIndex()
-    {
-    }
+    public void BackgroundRefreshIndex() { }
 }

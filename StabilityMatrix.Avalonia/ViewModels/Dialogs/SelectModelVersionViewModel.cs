@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -23,22 +24,37 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
     public required string Description { get; set; }
     public required string Title { get; set; }
 
-    [ObservableProperty] private Bitmap? previewImage;
-    [ObservableProperty] private ModelVersionViewModel? selectedVersionViewModel;
-    [ObservableProperty] private CivitFileViewModel? selectedFile;
-    [ObservableProperty] private bool isImportEnabled;
-    [ObservableProperty] private ObservableCollection<ImageSource> imageUrls = new();
-    [ObservableProperty] private bool canGoToNextImage;
-    [ObservableProperty] private bool canGoToPreviousImage;
-    
+    [ObservableProperty]
+    private Bitmap? previewImage;
+
+    [ObservableProperty]
+    private ModelVersionViewModel? selectedVersionViewModel;
+
+    [ObservableProperty]
+    private CivitFileViewModel? selectedFile;
+
+    [ObservableProperty]
+    private bool isImportEnabled;
+
+    [ObservableProperty]
+    private ObservableCollection<ImageSource> imageUrls = new();
+
+    [ObservableProperty]
+    private bool canGoToNextImage;
+
+    [ObservableProperty]
+    private bool canGoToPreviousImage;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DisplayedPageNumber))]
     private int selectedImageIndex;
 
     public int DisplayedPageNumber => SelectedImageIndex + 1;
 
-    public SelectModelVersionViewModel(ISettingsManager settingsManager,
-        IDownloadService downloadService)
+    public SelectModelVersionViewModel(
+        ISettingsManager settingsManager,
+        IDownloadService downloadService
+    )
     {
         this.settingsManager = settingsManager;
         this.downloadService = downloadService;
@@ -53,12 +69,14 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
     partial void OnSelectedVersionViewModelChanged(ModelVersionViewModel? value)
     {
         var nsfwEnabled = settingsManager.Settings.ModelBrowserNsfwEnabled;
-        var allImages = value?.ModelVersion?.Images?.Where(
-            img => nsfwEnabled || img.Nsfw == "None")?.Select(x => new ImageSource(x.Url)).ToList();
+        var allImages = value
+            ?.ModelVersion?.Images?.Where(img => nsfwEnabled || img.Nsfw == "None")
+            ?.Select(x => new ImageSource(x.Url))
+            .ToList();
 
         if (allImages == null || !allImages.Any())
         {
-            allImages = new List<ImageSource> {new(Assets.NoImage)};
+            allImages = new List<ImageSource> { new(Assets.NoImage) };
             CanGoToNextImage = false;
         }
         else
@@ -92,14 +110,16 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
 
     public void PreviousImage()
     {
-        if (SelectedImageIndex > 0) SelectedImageIndex--;
+        if (SelectedImageIndex > 0)
+            SelectedImageIndex--;
         CanGoToPreviousImage = SelectedImageIndex > 0;
         CanGoToNextImage = SelectedImageIndex < ImageUrls.Count - 1;
     }
 
     public void NextImage()
     {
-        if (SelectedImageIndex < ImageUrls.Count - 1) SelectedImageIndex++;
+        if (SelectedImageIndex < ImageUrls.Count - 1)
+            SelectedImageIndex++;
         CanGoToPreviousImage = SelectedImageIndex > 0;
         CanGoToNextImage = SelectedImageIndex < ImageUrls.Count - 1;
     }

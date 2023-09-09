@@ -18,6 +18,8 @@ public interface ISettingsManager
     DirectoryPath ImagesDirectory { get; }
     DirectoryPath ImagesInferenceDirectory { get; }
 
+    List<string> PackageInstallsInProgress { get; set; }
+
     Settings Settings { get; }
 
     /// <summary>
@@ -112,7 +114,7 @@ public interface ISettingsManager
     /// </summary>
     void InsertPathExtensions();
 
-    void UpdatePackageVersionNumber(Guid id, string? newVersion);
+    void UpdatePackageVersionNumber(Guid id, InstalledPackageVersion? newVersion);
     void SetLastUpdateCheck(InstalledPackage package);
     List<LaunchOption> GetLaunchArgs(Guid packageId);
     void SaveLaunchArgs(Guid packageId, List<LaunchOption> launchArgs);

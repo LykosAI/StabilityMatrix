@@ -17,6 +17,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Core.Api;
@@ -27,6 +28,7 @@ using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.Comfy;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
@@ -64,9 +66,11 @@ public static class DesignData
                             {
                                 Id = activePackageId,
                                 DisplayName = "My Installed Package",
-                                DisplayVersion = "v1.0.0",
                                 PackageName = "stable-diffusion-webui",
-                                PackageVersion = "v1.0.0",
+                                Version = new InstalledPackageVersion
+                                {
+                                    InstalledReleaseVersion = "v1.0.0"
+                                },
                                 LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
                                 LastUpdateCheck = DateTimeOffset.Now
                             },
@@ -75,7 +79,12 @@ public static class DesignData
                                 Id = Guid.NewGuid(),
                                 DisplayName = "Comfy Diffusion WebUI Dev Branch Long Name",
                                 PackageName = "ComfyUI",
-                                DisplayVersion = "main@ab73d4a",
+                                Version = new InstalledPackageVersion
+                                {
+                                    InstalledBranch = "master",
+                                    InstalledCommitSha =
+                                        "abc12uwu345568972abaedf7g7e679a98879e879f87ga8"
+                                },
                                 LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
                                 LastUpdateCheck = DateTimeOffset.Now
                             }
@@ -106,7 +115,8 @@ public static class DesignData
             .AddSingleton<ICompletionProvider, MockCompletionProvider>()
             .AddSingleton<IModelIndexService, MockModelIndexService>()
             .AddSingleton<IImageIndexService, MockImageIndexService>()
-            .AddSingleton<ITrackedDownloadService, MockTrackedDownloadService>();
+            .AddSingleton<ITrackedDownloadService, MockTrackedDownloadService>()
+            .AddSingleton<IPackageModificationRunner, PackageModificationRunner>();
 
         // Placeholder services that nobody should need during design time
         services
@@ -279,6 +289,12 @@ public static class DesignData
                     )
                 ),
                 new MockDownloadProgressItemViewModel("Test File 2.exe"),
+                new PackageInstallProgressItemViewModel(
+                    new PackageModificationRunner
+                    {
+                        CurrentProgress = new ProgressReport(0.5f, "Installing package...")
+                    }
+                )
             }
         );
 

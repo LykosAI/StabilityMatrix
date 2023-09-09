@@ -16,9 +16,12 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
     private readonly ISettingsManager settingsManager;
     private readonly IModelIndexService modelIndexService;
 
-    private readonly ConcurrentDictionary<Guid, (TrackedDownload, FileStream)> downloads = new();
+    private readonly ConcurrentDictionary<
+        Guid,
+        (TrackedDownloadDownload, FileStream Stream)
+    > downloads = new();
 
-    public IEnumerable<TrackedDownload> Downloads => downloads.Values.Select(x => x.Item1);
+    public IEnumerable<TrackedDownload> Downloads => downloads.Values.Select(x => x.Download);
 
     /// <inheritdoc />
     public event EventHandler<TrackedDownload>? DownloadAdded;

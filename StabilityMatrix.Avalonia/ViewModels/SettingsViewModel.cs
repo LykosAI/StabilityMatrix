@@ -167,6 +167,11 @@ public partial class SettingsViewModel : PageViewModelBase
         settingsManager.RelayPropertyFor(
             this,
             vm => vm.IsDiscordRichPresenceEnabled,
+            settings => settings.IsDiscordRichPresenceEnabled
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
             settings => settings.IsDiscordRichPresenceEnabled,
             true
         );
@@ -416,7 +421,6 @@ public partial class SettingsViewModel : PageViewModelBase
             NotificationType.Success
         );
     }
-
     #endregion
 
     #region System

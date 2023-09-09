@@ -63,6 +63,7 @@ public class SettingsManager : ISettingsManager
     private string SettingsPath => Path.Combine(LibraryDir, "settings.json");
     public string ModelsDirectory => Path.Combine(LibraryDir, "Models");
     public string DownloadsDirectory => Path.Combine(LibraryDir, ".downloads");
+    public List<string> PackageInstallsInProgress { get; set; } = new();
 
     public DirectoryPath TagsDirectory => new(LibraryDir, "Tags");
 
@@ -185,7 +186,6 @@ public class SettingsManager : ISettingsManager
             // Skip if event is relay and the sender is the source, to prevent duplicate
             if (args.IsRelay && ReferenceEquals(sender, source))
                 return;
-
             Logger.Trace(
                 "[RelayPropertyFor] "
                     + "Settings.{TargetProperty:l} -> {SourceType:l}.{SourceProperty:l}",
@@ -425,7 +425,7 @@ public class SettingsManager : ISettingsManager
         Environment.SetEnvironmentVariable("PATH", toInsert, EnvironmentVariableTarget.Process);
     }
 
-    public void UpdatePackageVersionNumber(Guid id, string? newVersion)
+    public void UpdatePackageVersionNumber(Guid id, InstalledPackageVersion? newVersion)
     {
         var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == id);
         if (package == null || newVersion == null)
@@ -433,11 +433,7 @@ public class SettingsManager : ISettingsManager
             return;
         }
 
-        package.PackageVersion = newVersion;
-        package.DisplayVersion = string.IsNullOrWhiteSpace(package.InstalledBranch)
-            ? newVersion
-            : $"{package.InstalledBranch}@{newVersion[..7]}";
-
+        package.Version = newVersion;
         SaveSettings();
     }
 

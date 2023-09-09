@@ -8,6 +8,7 @@ using System.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FuzzySharp;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper.Cache;

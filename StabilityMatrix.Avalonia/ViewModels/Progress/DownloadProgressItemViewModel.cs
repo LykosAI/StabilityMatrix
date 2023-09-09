@@ -4,13 +4,13 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Progress;
 
-namespace StabilityMatrix.Avalonia.ViewModels;
+namespace StabilityMatrix.Avalonia.ViewModels.Progress;
 
 public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
 {
     private readonly TrackedDownload download;
     
-    public DownloadProgressItemViewModel(TrackedDownload download)
+    public  DownloadProgressItemViewModel(TrackedDownload download)
     {
         this.download = download;
 

@@ -48,52 +48,68 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     private readonly ISharedFolders sharedFolders;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     protected readonly IPackageFactory PackageFactory;
-    
+
     // Regex to match if input contains a yes/no prompt,
     // i.e "Y/n", "yes/no". Case insensitive.
     // Separated by / or |.
     [GeneratedRegex(@"y(/|\|)n|yes(/|\|)no", RegexOptions.IgnoreCase)]
     private static partial Regex InputYesNoRegex();
-    
+
     public override string Title => "Launch";
-    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Rocket, IsFilled = true};
+    public override IconSource IconSource =>
+        new SymbolIconSource { Symbol = Symbol.Rocket, IsFilled = true };
 
     public ConsoleViewModel Console { get; } = new();
-    
-    [ObservableProperty] private bool launchButtonVisibility;
-    [ObservableProperty] private bool stopButtonVisibility;
-    [ObservableProperty] private bool isLaunchTeachingTipsOpen;
-    [ObservableProperty] private bool showWebUiButton;
-    
-    [ObservableProperty, NotifyPropertyChangedFor(nameof(SelectedBasePackage),
-         nameof(SelectedPackageExtraCommands))] 
-    private InstalledPackage? selectedPackage;
-    
-    [ObservableProperty] private ObservableCollection<InstalledPackage> installedPackages = new();
 
-    [ObservableProperty] private PackagePair? runningPackage;
+    [ObservableProperty]
+    private bool launchButtonVisibility;
+
+    [ObservableProperty]
+    private bool stopButtonVisibility;
+
+    [ObservableProperty]
+    private bool isLaunchTeachingTipsOpen;
+
+    [ObservableProperty]
+    private bool showWebUiButton;
+
+    [
+        ObservableProperty,
+        NotifyPropertyChangedFor(nameof(SelectedBasePackage), nameof(SelectedPackageExtraCommands))
+    ]
+    private InstalledPackage? selectedPackage;
+
+    [ObservableProperty]
+    private ObservableCollection<InstalledPackage> installedPackages = new();
+
+    [ObservableProperty]
+    private PackagePair? runningPackage;
 
     public virtual BasePackage? SelectedBasePackage =>
         PackageFactory.FindPackageByName(SelectedPackage?.PackageName);
-    
+
     public IEnumerable<string> SelectedPackageExtraCommands =>
         SelectedBasePackage?.ExtraLaunchCommands ?? Enumerable.Empty<string>();
-    
+
     // private bool clearingPackages;
     private string webUiUrl = string.Empty;
-    
+
     // Input info-bars
-    [ObservableProperty] private bool showManualInputPrompt;
-    [ObservableProperty] private bool showConfirmInputPrompt;
-    
+    [ObservableProperty]
+    private bool showManualInputPrompt;
+
+    [ObservableProperty]
+    private bool showConfirmInputPrompt;
+
     public LaunchPageViewModel(
-        ILogger<LaunchPageViewModel> logger, 
-        ISettingsManager settingsManager, 
+        ILogger<LaunchPageViewModel> logger,
+        ISettingsManager settingsManager,
         IPackageFactory packageFactory,
-        IPyRunner pyRunner, 
-        INotificationService notificationService, 
+        IPyRunner pyRunner,
+        INotificationService notificationService,
         ISharedFolders sharedFolders,
-        ServiceManager<ViewModelBase> dialogFactory)
+        ServiceManager<ViewModelBase> dialogFactory
+    )
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
@@ -102,11 +118,13 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         this.notificationService = notificationService;
         this.sharedFolders = sharedFolders;
         this.dialogFactory = dialogFactory;
-        
-        settingsManager.RelayPropertyFor(this, 
+
+        settingsManager.RelayPropertyFor(
+            this,
             vm => vm.SelectedPackage,
-            settings => settings.ActiveInstalledPackage);
-        
+            settings => settings.ActiveInstalledPackage
+        );
+
         EventManager.Instance.PackageLaunchRequested += OnPackageLaunchRequested;
         EventManager.Instance.OneClickInstallFinished += OnOneClickInstallFinished;
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
@@ -130,9 +148,11 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     {
         if (RunningPackage is not null)
         {
-            notificationService.Show("A package is already running",
+            notificationService.Show(
+                "A package is already running",
                 "Please stop the current package before launching another.",
-                NotificationType.Error);
+                NotificationType.Error
+            );
             return;
         }
 
@@ -143,15 +163,19 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     public override void OnLoaded()
     {
         // Ensure active package either exists or is null
-        settingsManager.Transaction(s =>
-        {
-            s.UpdateActiveInstalledPackage();
-        }, ignoreMissingLibraryDir: true);
-        
+        settingsManager.Transaction(
+            s =>
+            {
+                s.UpdateActiveInstalledPackage();
+            },
+            ignoreMissingLibraryDir: true
+        );
+
         // Load installed packages
-        InstalledPackages =
-            new ObservableCollection<InstalledPackage>(settingsManager.Settings.InstalledPackages);
-        
+        InstalledPackages = new ObservableCollection<InstalledPackage>(
+            settingsManager.Settings.InstalledPackages
+        );
+
         // Load active package
         SelectedPackage = settingsManager.Settings.ActiveInstalledPackage;
     }
@@ -165,15 +189,18 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     protected virtual async Task LaunchImpl(string? command)
     {
         IsLaunchTeachingTipsOpen = false;
-        
+
         var activeInstall = SelectedPackage;
         if (activeInstall == null)
         {
             // No selected package: error notification
-            notificationService.Show(new Notification(
-                message: "You must install and select a package before launching",
-                title: "No package selected",
-                type: NotificationType.Error));
+            notificationService.Show(
+                new Notification(
+                    message: "You must install and select a package before launching",
+                    title: "No package selected",
+                    type: NotificationType.Error
+                )
+            );
             return;
         }
 
@@ -186,11 +213,16 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         {
             logger.LogWarning(
                 "During launch, package name '{PackageName}' did not match a definition",
-                activeInstallName);
-            
-            notificationService.Show(new Notification("Package name invalid",
-                "Install package name did not match a definition. Please reinstall and let us know about this issue.",
-                NotificationType.Error));
+                activeInstallName
+            );
+
+            notificationService.Show(
+                new Notification(
+                    "Package name invalid",
+                    "Install package name did not match a definition. Please reinstall and let us know about this issue.",
+                    NotificationType.Error
+                )
+            );
             return;
         }
 
@@ -205,13 +237,13 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
                 .FromDefinitions(definitions, Array.Empty<LaunchOption>())
                 .ToImmutableArray();
 
-            var args = cards
-                .SelectMany(c => c.Options)
-                .ToList();
-            
-            logger.LogDebug("Setting initial launch args: {Args}", 
-                string.Join(", ", args.Select(o => o.ToArgString()?.ToRepr())));
-     
+            var args = cards.SelectMany(c => c.Options).ToList();
+
+            logger.LogDebug(
+                "Setting initial launch args: {Args}",
+                string.Join(", ", args.Select(o => o.ToArgString()?.ToRepr()))
+            );
+
             settingsManager.SaveLaunchArgs(activeInstall.Id, args);
         }
 
@@ -219,21 +251,23 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
 
         // Get path from package
         var packagePath = new DirectoryPath(settingsManager.LibraryDir, activeInstall.LibraryPath!);
-        
+
         // Unpack sitecustomize.py to venv
         await UnpackSiteCustomize(packagePath.JoinDir("venv"));
 
-        basePackage.ConsoleOutput += OnProcessOutputReceived;
         basePackage.Exited += OnProcessExited;
         basePackage.StartupComplete += RunningPackageOnStartupComplete;
-        
+
         // Clear console and start update processing
         await Console.StopUpdatesAsync();
         await Console.Clear();
         Console.StartUpdates();
 
         // Update shared folder links (in case library paths changed)
-        await basePackage.UpdateModelFolders(packagePath);
+        await basePackage.UpdateModelFolders(
+            packagePath,
+            activeInstall.PreferredSharedFolderMethod ?? basePackage.RecommendedSharedFolderMethod
+        );
 
         // Load user launch args from settings and convert to string
         var userArgs = settingsManager.GetLaunchArgs(activeInstall.Id);
@@ -241,13 +275,13 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
 
         // Join with extras, if any
         userArgsString = string.Join(" ", userArgsString, basePackage.ExtraLaunchArguments);
-        
+
         // Use input command if provided, otherwise use package launch command
         command ??= basePackage.LaunchCommand;
-        
-        await basePackage.RunPackage(packagePath, command, userArgsString);
+
+        await basePackage.RunPackage(packagePath, command, userArgsString, OnProcessOutputReceived);
         RunningPackage = new PackagePair(activeInstall, basePackage);
-        
+
         EventManager.Instance.OnRunningPackageStatusChanged(RunningPackage);
     }
 
@@ -292,12 +326,12 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         // Open a config page
         var userLaunchArgs = settingsManager.GetLaunchArgs(activeInstall.Id);
         var viewModel = dialogFactory.Get<LaunchOptionsViewModel>();
-        viewModel.Cards = LaunchOptionCard.FromDefinitions(definitions, userLaunchArgs)
+        viewModel.Cards = LaunchOptionCard
+            .FromDefinitions(definitions, userLaunchArgs)
             .ToImmutableArray();
-        
-        logger.LogDebug("Launching config dialog with cards: {CardsCount}", 
-            viewModel.Cards.Count);
-        
+
+        logger.LogDebug("Launching config dialog with cards: {CardsCount}", viewModel.Cards.Count);
+
         var dialog = new BetterContentDialog
         {
             ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
@@ -308,12 +342,9 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
             DefaultButton = ContentDialogButton.Primary,
             ContentMargin = new Thickness(32, 16),
             Padding = new Thickness(0, 16),
-            Content = new LaunchOptionsDialog
-            {
-                DataContext = viewModel,
-            }
+            Content = new LaunchOptionsDialog { DataContext = viewModel, }
         };
-        
+
         var result = await dialog.ShowAsync();
 
         if (result == ContentDialogResult.Primary)
@@ -323,7 +354,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
             settingsManager.SaveLaunchArgs(activeInstall.Id, args);
         }
     }
-    
+
     // Send user input to running package
     public async Task SendInput(string input)
     {
@@ -361,7 +392,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
 
         ShowConfirmInputPrompt = false;
     }
-    
+
     [RelayCommand]
     private async Task SendManualInput(string input)
     {
@@ -369,75 +400,87 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         Console.PostLine(input);
         await SendInput(input);
     }
-    
+
     public virtual async Task Stop()
     {
-        if (RunningPackage is null) return;
+        if (RunningPackage is null)
+            return;
         await RunningPackage.BasePackage.WaitForShutdown();
-        
         RunningPackage = null;
         ShowWebUiButton = false;
-        
+
         Console.PostLine($"{Environment.NewLine}Stopped process at {DateTimeOffset.Now}");
     }
 
     public void OpenWebUi()
     {
-        if (string.IsNullOrEmpty(webUiUrl)) return;
-        
-        notificationService.TryAsync(Task.Run(() => ProcessRunner.OpenUrl(webUiUrl)),
-        "Failed to open URL", $"{webUiUrl}");
+        if (string.IsNullOrEmpty(webUiUrl))
+            return;
+
+        notificationService.TryAsync(
+            Task.Run(() => ProcessRunner.OpenUrl(webUiUrl)),
+            "Failed to open URL",
+            $"{webUiUrl}"
+        );
     }
-    
+
     private void OnProcessExited(object? sender, int exitCode)
     {
         EventManager.Instance.OnRunningPackageStatusChanged(null);
-        Dispatcher.UIThread.InvokeAsync(async () =>
-        {
-            logger.LogTrace("Process exited ({Code}) at {Time:g}", 
-                exitCode, DateTimeOffset.Now);
-            
-            // Need to wait for streams to finish before detaching handlers
-            if (sender is BaseGitPackage {VenvRunner: not null} package)
+        Dispatcher.UIThread
+            .InvokeAsync(async () =>
             {
-                var process = package.VenvRunner.Process;
-                if (process is not null)
+                logger.LogTrace(
+                    "Process exited ({Code}) at {Time:g}",
+                    exitCode,
+                    DateTimeOffset.Now
+                );
+
+                // Need to wait for streams to finish before detaching handlers
+                if (sender is BaseGitPackage { VenvRunner: not null } package)
                 {
-                    // Max 5 seconds
-                    var ct = new CancellationTokenSource(5000).Token;
-                    try
+                    var process = package.VenvRunner.Process;
+                    if (process is not null)
                     {
-                        await process.WaitUntilOutputEOF(ct);
-                    }
-                    catch (OperationCanceledException e)
-                    {
-                        logger.LogWarning("Waiting for process EOF timed out: {Message}", e.Message);
+                        // Max 5 seconds
+                        var ct = new CancellationTokenSource(5000).Token;
+                        try
+                        {
+                            await process.WaitUntilOutputEOF(ct);
+                        }
+                        catch (OperationCanceledException e)
+                        {
+                            logger.LogWarning(
+                                "Waiting for process EOF timed out: {Message}",
+                                e.Message
+                            );
+                        }
                     }
                 }
-            }
-        
-            // Detach handlers
-            if (sender is BasePackage basePackage)
-            {
-                basePackage.ConsoleOutput -= OnProcessOutputReceived;
-                basePackage.Exited -= OnProcessExited;
-                basePackage.StartupComplete -= RunningPackageOnStartupComplete;
-            }
-            RunningPackage = null;
-            ShowWebUiButton = false;
-            
-            await Console.StopUpdatesAsync();
-            
-            // Need to reset cursor in case its in some weird position
-            // from progress bars
-            await Console.ResetWriteCursor();
-            Console.PostLine($"{Environment.NewLine}Process finished with exit code {exitCode}");
-            
-        }).SafeFireAndForget();
+
+                // Detach handlers
+                if (sender is BasePackage basePackage)
+                {
+                    basePackage.Exited -= OnProcessExited;
+                    basePackage.StartupComplete -= RunningPackageOnStartupComplete;
+                }
+                RunningPackage = null;
+                ShowWebUiButton = false;
+
+                await Console.StopUpdatesAsync();
+
+                // Need to reset cursor in case its in some weird position
+                // from progress bars
+                await Console.ResetWriteCursor();
+                Console.PostLine(
+                    $"{Environment.NewLine}Process finished with exit code {exitCode}"
+                );
+            })
+            .SafeFireAndForget();
     }
 
     // Callback for processes
-    private void OnProcessOutputReceived(object? sender, ProcessOutput output)
+    private void OnProcessOutputReceived(ProcessOutput output)
     {
         Console.Post(output);
         EventManager.Instance.OnScrollToBottomRequested();
@@ -447,7 +490,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     {
         OnLoaded();
     }
-    
+
     private void RunningPackageOnStartupComplete(object? sender, string e)
     {
         webUiUrl = e.Replace("0.0.0.0", "127.0.0.1");
@@ -462,39 +505,45 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
             if (e.CloseReason is WindowCloseReason.WindowClosing)
             {
                 e.Cancel = true;
-                
+
                 var dialog = CreateExitConfirmDialog();
-                Dispatcher.UIThread.InvokeAsync(async () =>
-                {
-                    if ((TaskDialogStandardResult)
-                        await dialog.ShowAsync(true) == TaskDialogStandardResult.Yes)
+                Dispatcher.UIThread
+                    .InvokeAsync(async () =>
                     {
-                        App.Services.GetRequiredService<MainWindow>().Hide();
-                        App.Shutdown();
-                    }
-                }).SafeFireAndForget();
+                        if (
+                            (TaskDialogStandardResult)await dialog.ShowAsync(true)
+                            == TaskDialogStandardResult.Yes
+                        )
+                        {
+                            App.Services.GetRequiredService<MainWindow>().Hide();
+                            App.Shutdown();
+                        }
+                    })
+                    .SafeFireAndForget();
             }
         }
     }
 
     private static TaskDialog CreateExitConfirmDialog()
     {
-        var dialog = DialogHelper.CreateTaskDialog("Confirm Exit",
-            "Are you sure you want to exit? This will also close the currently running package.");
+        var dialog = DialogHelper.CreateTaskDialog(
+            "Confirm Exit",
+            "Are you sure you want to exit? This will also close the currently running package."
+        );
 
         dialog.ShowProgressBar = false;
         dialog.FooterVisibility = TaskDialogFooterVisibility.Never;
-        
+
         dialog.Buttons = new List<TaskDialogButton>
         {
             new("Exit", TaskDialogStandardResult.Yes),
             TaskDialogButton.CancelButton
         };
         dialog.Buttons[0].IsDefault = true;
-        
+
         return dialog;
     }
-    
+
     public void Dispose()
     {
         RunningPackage?.BasePackage.Shutdown();
@@ -513,7 +562,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
             RunningPackage = null;
         }
         await Console.DisposeAsync();
-        
+
         GC.SuppressFinalize(this);
     }
 }

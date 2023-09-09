@@ -120,7 +120,7 @@
                             <controls:BetterFlyout Placement="RightEdgeAlignedBottom"
                                                    HorizontalScrollBarVisibility="Hidden"
                                                    VerticalScrollBarVisibility="Auto"
-                                                   Content="{Binding }" />
+                                                   Content="{Binding }"/>
                         </ui:NavigationViewItem.ContextFlyout>
                         <ui:NavigationViewItem.InfoBadge>
                             <ui:InfoBadge Value="{Binding ProgressItems.Count}"

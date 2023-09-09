@@ -17,10 +17,12 @@ using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -60,6 +62,27 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     [ObservableProperty]
     private string? releaseNotes;
 
+    [ObservableProperty]
+    private string latestVersionText = string.Empty;
+
+    [ObservableProperty]
+    private bool isAdvancedMode;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanInstall))]
+    private bool showDuplicateWarning;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanInstall))]
+    private string? installName;
+
+    [ObservableProperty]
+    private SharedFolderMethod selectedSharedFolderMethod;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowTorchVersionOptions))]
+    private TorchVersion selectedTorchVersion;
+
     // Version types (release or commit)
     [ObservableProperty]
     [NotifyPropertyChangedFor(
@@ -73,6 +96,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     [NotifyPropertyChangedFor(nameof(IsReleaseModeAvailable))]
     private PackageVersionType availableVersionTypes =
         PackageVersionType.GithubRelease | PackageVersionType.Commit;
+
     public string ReleaseLabelText => IsReleaseMode ? "Version" : "Branch";
     public bool IsReleaseMode
     {
@@ -82,17 +106,14 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                 ? PackageVersionType.GithubRelease
                 : PackageVersionType.Commit;
     }
-
     public bool IsReleaseModeAvailable =>
         AvailableVersionTypes.HasFlag(PackageVersionType.GithubRelease);
+    public bool ShowTorchVersionOptions => SelectedTorchVersion != TorchVersion.None;
 
-    [ObservableProperty]
-    private bool showDuplicateWarning;
+    public bool CanInstall => !string.IsNullOrWhiteSpace(InstallName) && !ShowDuplicateWarning;
 
-    [ObservableProperty]
-    private string? installName;
-
-    public Base.ProgressViewModel InstallProgress { get; } = new();
+    public ProgressViewModel InstallProgress { get; } = new();
+    public IEnumerable<IPackageStep> Steps { get; set; }
 
     public InstallerViewModel(
         ISettingsManager settingsManager,
@@ -130,27 +151,21 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         // Check for updates
         try
         {
+            var versionOptions = await SelectedPackage.GetAllVersionOptions();
             if (IsReleaseMode)
             {
-                var versions = (await SelectedPackage.GetAllVersions()).ToList();
-                AvailableVersions = new ObservableCollection<PackageVersion>(versions);
+                AvailableVersions = new ObservableCollection<PackageVersion>(
+                    versionOptions.AvailableVersions
+                );
                 if (!AvailableVersions.Any())
                     return;
 
-                SelectedVersion = AvailableVersions[0];
+                SelectedVersion = AvailableVersions.First(x => !x.IsPrerelease);
             }
             else
             {
-                var branches = (await SelectedPackage.GetAllBranches()).ToList();
                 AvailableVersions = new ObservableCollection<PackageVersion>(
-                    branches.Select(
-                        b =>
-                            new PackageVersion
-                            {
-                                TagName = b.Name,
-                                ReleaseNotesMarkdown = b.Commit.Label
-                            }
-                    )
+                    versionOptions.AvailableBranches
                 );
                 UpdateSelectedVersionToLatestMain();
             }
@@ -172,13 +187,6 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         );
         if (result.IsSuccessful)
         {
-            notificationService.Show(
-                new Notification(
-                    $"Package {SelectedPackage.Name} installed successfully!",
-                    "Success",
-                    NotificationType.Success
-                )
-            );
             OnPrimaryButtonClick();
         }
         else
@@ -196,7 +204,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         }
     }
 
-    private async Task ActuallyInstall()
+    private Task ActuallyInstall()
     {
         if (string.IsNullOrWhiteSpace(InstallName))
         {
@@ -207,90 +215,82 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                     NotificationType.Error
                 )
             );
-            return;
+            return Task.CompletedTask;
         }
 
-        try
+        var setPackageInstallingStep = new SetPackageInstallingStep(settingsManager, InstallName);
+
+        var installLocation = Path.Combine(settingsManager.LibraryDir, "Packages", InstallName);
+        var prereqStep = new SetupPrerequisitesStep(prerequisiteHelper, pyRunner);
+
+        var downloadOptions = new DownloadPackageVersionOptions();
+        var installedVersion = new InstalledPackageVersion();
+        if (IsReleaseMode)
         {
-            await InstallGitIfNecessary();
+            downloadOptions.VersionTag =
+                SelectedVersion?.TagName
+                ?? throw new NullReferenceException("Selected version is null");
 
-            SelectedPackage.InstallLocation = Path.Combine(
-                settingsManager.LibraryDir,
-                "Packages",
-                InstallName
-            );
-
-            if (!PyRunner.PipInstalled || !PyRunner.VenvInstalled)
-            {
-                InstallProgress.Text = "Installing dependencies...";
-                InstallProgress.IsIndeterminate = true;
-                await pyRunner.Initialize();
-
-                if (!PyRunner.PipInstalled)
-                {
-                    await pyRunner.SetupPip();
-                }
-                if (!PyRunner.VenvInstalled)
-                {
-                    await pyRunner.InstallPackage("virtualenv");
-                }
-            }
-
-            string version;
-            if (IsReleaseMode)
-            {
-                version =
-                    SelectedVersion?.TagName
-                    ?? throw new NullReferenceException("Selected version is null");
-
-                await DownloadPackage(version, false, null);
-            }
-            else
-            {
-                version =
-                    SelectedCommit?.Sha
-                    ?? throw new NullReferenceException("Selected commit is null");
-
-                await DownloadPackage(version, true, SelectedVersion!.TagName);
-            }
-
-            await InstallPackage();
-
-            InstallProgress.Text = "Setting up shared folder links...";
-            await SelectedPackage.SetupModelFolders(SelectedPackage.InstallLocation);
-            //sharedFolders.SetupLinksForPackage(SelectedPackage, SelectedPackage.InstallLocation);
-
-            InstallProgress.Text = "Done";
-            InstallProgress.IsIndeterminate = false;
-            InstallProgress.Value = 100;
-            EventManager.Instance.OnGlobalProgressChanged(100);
-
-            var branch =
-                SelectedVersionType == PackageVersionType.GithubRelease
-                    ? null
-                    : SelectedVersion!.TagName;
-
-            var package = new InstalledPackage
-            {
-                DisplayName = InstallName,
-                LibraryPath = Path.Combine("Packages", InstallName),
-                Id = Guid.NewGuid(),
-                PackageName = SelectedPackage.Name,
-                PackageVersion = version,
-                DisplayVersion = GetDisplayVersion(version, branch),
-                InstalledBranch = branch,
-                LaunchCommand = SelectedPackage.LaunchCommand,
-                LastUpdateCheck = DateTimeOffset.Now
-            };
-            await using var st = settingsManager.BeginTransaction();
-            st.Settings.InstalledPackages.Add(package);
-            st.Settings.ActiveInstalledPackageId = package.Id;
+            installedVersion.InstalledReleaseVersion = downloadOptions.VersionTag;
         }
-        finally
+        else
         {
-            InstallProgress.Value = 0;
-            InstallProgress.IsIndeterminate = false;
+            downloadOptions.CommitHash =
+                SelectedCommit?.Sha ?? throw new NullReferenceException("Selected commit is null");
+            installedVersion.InstalledBranch =
+                SelectedVersion?.TagName
+                ?? throw new NullReferenceException("Selected version is null");
+            installedVersion.InstalledCommitSha = downloadOptions.CommitHash;
         }
+
+        var downloadStep = new DownloadPackageVersionStep(
+            SelectedPackage,
+            installLocation,
+            downloadOptions
+        );
+        var installStep = new InstallPackageStep(
+            SelectedPackage,
+            SelectedTorchVersion,
+            installLocation
+        );
+        var setupModelFoldersStep = new SetupModelFoldersStep(
+            SelectedPackage,
+            SelectedSharedFolderMethod,
+            installLocation
+        );
+
+        var package = new InstalledPackage
+        {
+            DisplayName = InstallName,
+            LibraryPath = Path.Combine("Packages", InstallName),
+            Id = Guid.NewGuid(),
+            PackageName = SelectedPackage.Name,
+            Version = installedVersion,
+            LaunchCommand = SelectedPackage.LaunchCommand,
+            LastUpdateCheck = DateTimeOffset.Now,
+            PreferredTorchVersion = SelectedTorchVersion,
+            PreferredSharedFolderMethod = SelectedSharedFolderMethod
+        };
+
+        var addInstalledPackageStep = new AddInstalledPackageStep(settingsManager, package);
+
+        var steps = new List<IPackageStep>
+        {
+            setPackageInstallingStep,
+            prereqStep,
+            downloadStep,
+            installStep,
+            setupModelFoldersStep,
+            addInstalledPackageStep
+        };
+
+        Steps = steps;
+        return Task.CompletedTask;
+    }
+
+    public void Cancel()
+    {
+        OnCloseButtonClick();
     }
 
     private void UpdateSelectedVersionToLatestMain()
@@ -307,55 +307,9 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             version ??= AvailableVersions.FirstOrDefault(x => x.TagName == "main");
 
             // If still not found, just use the first one
-            version ??= AvailableVersions[0];
-
+            version ??= AvailableVersions.FirstOrDefault();
             SelectedVersion = version;
         }
-    }
-
-    private static string GetDisplayVersion(string version, string? branch)
-    {
-        return branch == null ? version : $"{branch}@{version[..7]}";
-    }
-
-    private Task<string> DownloadPackage(string version, bool isCommitHash, string? branch)
-    {
-        InstallProgress.Text = "Downloading package...";
-
-        var progress = new Progress<ProgressReport>(progress =>
-        {
-            InstallProgress.IsIndeterminate = progress.IsIndeterminate;
-            InstallProgress.Value = progress.Percentage;
-            EventManager.Instance.OnGlobalProgressChanged((int)progress.Percentage);
-        });
-
-        return SelectedPackage.DownloadPackage(version, isCommitHash, branch, progress);
-    }
-
-    private async Task InstallPackage()
-    {
-        InstallProgress.Text = "Installing package...";
-        SelectedPackage.ConsoleOutput += SelectedPackageOnConsoleOutput;
-        try
-        {
-            var progress = new Progress<ProgressReport>(progress =>
-            {
-                InstallProgress.IsIndeterminate = progress.IsIndeterminate;
-                InstallProgress.Value = progress.Percentage;
-                EventManager.Instance.OnGlobalProgressChanged((int)progress.Percentage);
-            });
-
-            await SelectedPackage.InstallPackage(progress);
-        }
-        finally
-        {
-            SelectedPackage.ConsoleOutput -= SelectedPackageOnConsoleOutput;
-        }
-    }
-
-    private void SelectedPackageOnConsoleOutput(object? sender, ProcessOutput e)
-    {
-        InstallProgress.Description = e.Text;
     }
 
     [RelayCommand]
@@ -408,7 +362,8 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         AvailableVersionTypes = SelectedPackage.ShouldIgnoreReleases
             ? PackageVersionType.Commit
             : PackageVersionType.GithubRelease | PackageVersionType.Commit;
-
+        SelectedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
+        SelectedTorchVersion = SelectedPackage.GetRecommendedTorchVersion();
         if (Design.IsDesignMode)
             return;
 
@@ -416,15 +371,14 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             .InvokeAsync(async () =>
             {
                 Logger.Debug($"Release mode: {IsReleaseMode}");
-                var versions = (await value.GetAllVersions(IsReleaseMode)).ToList();
+                var versionOptions = await value.GetAllVersionOptions();
 
-                if (!versions.Any())
-                    return;
+                AvailableVersions = IsReleaseMode
+                    ? new ObservableCollection<PackageVersion>(versionOptions.AvailableVersions)
+                    : new ObservableCollection<PackageVersion>(versionOptions.AvailableBranches);
 
-                AvailableVersions = new ObservableCollection<PackageVersion>(versions);
-                Logger.Debug($"Available versions: {string.Join(", ", AvailableVersions)}");
-                SelectedVersion = AvailableVersions[0];
-                ReleaseNotes = versions.First().ReleaseNotesMarkdown;
+                SelectedVersion = AvailableVersions.First(x => !x.IsPrerelease);
+                ReleaseNotes = SelectedVersion.ReleaseNotesMarkdown;
                 Logger.Debug($"Loaded release notes for {ReleaseNotes}");
 
                 if (!IsReleaseMode)
@@ -434,41 +388,16 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                         return;
 
                     AvailableCommits = new ObservableCollection<GitCommit>(commits);
-                    SelectedCommit = AvailableCommits[0];
+                    SelectedCommit = AvailableCommits.FirstOrDefault();
                     UpdateSelectedVersionToLatestMain();
                 }
 
                 InstallName = SelectedPackage.DisplayName;
+                LatestVersionText = IsReleaseMode
+                    ? $"Latest version: {SelectedVersion?.TagName}"
+                    : $"Branch: {SelectedVersion?.TagName}";
             })
             .SafeFireAndForget();
-    }
-
-    private async Task InstallGitIfNecessary()
-    {
-        var progressHandler = new Progress<ProgressReport>(progress =>
-        {
-            if (progress.Message != null && progress.Message.Contains("Downloading"))
-            {
-                InstallProgress.Text = $"Downloading prerequisites... {progress.Percentage:N0}%";
-            }
-            else if (progress.Type == ProgressType.Extract)
-            {
-                InstallProgress.Text = $"Installing git... {progress.Percentage:N0}%";
-            }
-            else if (progress.Title != null && progress.Title.Contains("Unpacking"))
-            {
-                InstallProgress.Text = $"Unpacking resources... {progress.Percentage:N0}%";
-            }
-            else
-            {
-                InstallProgress.Text = progress.Message;
-            }
-
-            InstallProgress.IsIndeterminate = progress.IsIndeterminate;
-            InstallProgress.Value = Convert.ToInt32(progress.Percentage);
-        });
-
-        await prerequisiteHelper.InstallAllIfNecessary(progressHandler);
     }
 
     partial void OnInstallNameChanged(string? value)

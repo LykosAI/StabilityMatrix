@@ -197,4 +197,4 @@ jobs:
           tag_name: v${{ github.event.inputs.version }}
           body: ${{ steps.release_notes.outputs.release_notes }}
           draft: ${{ github.event.inputs.github-release-draft == 'true' }}
-          prerelease: ${{ github.event.inputs.github-release-prerelease == 'true' }}
+          prerelease: ${{ github.event.inputs.github-release-prerelease == 'true' }} 

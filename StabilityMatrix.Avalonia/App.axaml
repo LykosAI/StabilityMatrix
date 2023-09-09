@@ -28,7 +28,8 @@
      </Application.Resources>
   
     <Application.Styles>
-        <styling:FluentAvaloniaTheme PreferUserAccentColor="True" UseSystemFontOnWindows="True" />
+        <styling:FluentAvaloniaTheme PreferUserAccentColor="True" UseSystemFontOnWindows="True"
+                                     TextVerticalAlignmentOverrideBehavior="Disabled"/>
         <StyleInclude Source="avares://Dock.Avalonia/Themes/DockFluentTheme.axaml" />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />

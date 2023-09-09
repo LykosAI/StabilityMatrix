@@ -1,249 +1,228 @@
 ﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-             xmlns:ui="using:FluentAvalonia.UI.Controls"
-             xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-             xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
-             xmlns:packages="clr-namespace:StabilityMatrix.Core.Models.Packages;assembly=StabilityMatrix.Core"
-             xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
-             xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
-             xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
-             xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
-             x:DataType="dialogs:InstallerViewModel"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
-             d:DataContext="{x:Static mocks:DesignData.InstallerViewModel}"
-             x:Class="StabilityMatrix.Avalonia.Views.Dialogs.InstallerDialog">
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:ui="using:FluentAvalonia.UI.Controls"
+                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                          xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+                          xmlns:packages="clr-namespace:StabilityMatrix.Core.Models.Packages;assembly=StabilityMatrix.Core"
+                          xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+                          xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
+                          x:DataType="dialogs:InstallerViewModel"
+                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="700"
+                          d:DataContext="{x:Static mocks:DesignData.InstallerViewModel}"
+                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.InstallerDialog">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,*">
-        <!-- Close button -->
-        <Grid HorizontalAlignment="Right">
-            <Button
-                Margin="0,8,8,0"
-                Classes="transparent"
-                IsEnabled="{Binding !InstallProgress.IsProgressVisible}"
-                Command="{Binding OnCloseButtonClick}"
-                icons:Attached.Icon="fa-solid fa-xmark"/>
+    <Grid MaxHeight="900"
+          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+          ColumnDefinitions="*,Auto">
+        <!-- Title and image -->
+        <Grid Grid.Row="0" Grid.Column="0"
+              Margin="16, 0, 0, 0"
+              RowDefinitions="Auto, Auto, Auto, Auto, Auto">
+            <TextBlock Grid.Row="0" Text="{Binding SelectedPackage.DisplayName}"
+                       FontSize="24"
+                       Margin="0, 16, 0, 4" />
+            <TextBlock Grid.Row="1" Text="{Binding SelectedPackage.Blurb}"
+                       Margin="0, 0, 0, 4" />
+            <TextBlock Grid.Row="2" Text="{Binding SelectedPackage.Disclaimer}"
+                       Margin="0, 0, 0, 4"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource ThemeRedColor}"
+                       IsVisible="{Binding SelectedPackage.Disclaimer, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            <controls:BetterAdvancedImage Grid.Row="4"
+                                          Margin="0, 12,0,0"
+                                          Source="{Binding SelectedPackage.PreviewImageUri}"
+                                          HorizontalAlignment="Center"
+                                          MaxHeight="300"
+                                          MaxWidth="600"
+                                          Stretch="UniformToFill" />
         </Grid>
-        <StackPanel
-            Grid.Row="1"
-            Margin="16,8,16,0"
-            Orientation="Vertical"
-            DataContext="{Binding InstallProgress}"
-            IsVisible="{Binding IsProgressVisible}">
 
-            <TextBlock
-                HorizontalAlignment="Center"
-                Padding="8"
-                Text="{Binding Text}" />
-            <ProgressBar
-                IsIndeterminate="{Binding IsIndeterminate}"
-                Maximum="100"
-                Width="500"
-                Value="{Binding Value}" />
-            <TextBlock
-                FontSize="10"
-                HorizontalAlignment="Center"
-                Padding="4"
-                Text="{Binding Description}"
-                TextWrapping="Wrap" />
-        </StackPanel>
+        <Grid Grid.Column="0" Grid.Row="2"
+              Grid.ColumnSpan="2"
+              Margin="16,0,16,0"
+              RowDefinitions="Auto, Auto, Auto, Auto"
+              HorizontalAlignment="Center"
+              ColumnDefinitions="Auto, Auto, Auto, Auto">
 
-        <Grid Grid.Row="2" HorizontalAlignment="Left" ColumnDefinitions="Auto,*,Auto">
-            <ListBox
-                Margin="8,16"
-                IsEnabled="{Binding !InstallProgress.IsProgressVisible}"
-                ItemsSource="{Binding AvailablePackages}"
-                SelectedItem="{Binding SelectedPackage, Mode=TwoWay}">
+            <Label Grid.Row="1" Grid.Column="0"
+                   Margin="8,0"
+                   Content="Display Name" />
+            <TextBox Grid.Row="2" Grid.Column="0"
+                     MinWidth="250"
+                     Margin="8,0"
+                     VerticalAlignment="Stretch"
+                     VerticalContentAlignment="Center"
+                     Text="{Binding InstallName, Mode=TwoWay}" />
 
-                <!--<ListView.Style>
-                    <Style TargetType="ListView">
-                        <Setter Property="Background" Value="#191919" />
-                    </Style>
-                </ListView.Style>-->
-
-                <ListBox.Template>
-                    <ControlTemplate>
-                        <!-- BorderBrush="{KeyboardFocusBorderColorBrush}" -->
-                        <Border
-                            BorderThickness="1"
-                            CornerRadius="5">
-                            <ItemsPresenter />
-                        </Border>
-                    </ControlTemplate>
-                </ListBox.Template>
-
-                <ListBox.ItemTemplate>
-                    <DataTemplate DataType="{x:Type packages:BasePackage}">
-                        <StackPanel Margin="8" VerticalAlignment="Top">
-                            <TextBlock Margin="0,5,0,5" Text="{Binding DisplayName}" />
-                            <TextBlock Margin="0,0,0,5" Text="{Binding ByAuthor}" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-
-            <StackPanel
-                MinWidth="400"
-                Grid.Column="1"
-                Margin="8,16,0,16"
-                Orientation="Vertical">
-                <TextBlock
-                    FontSize="24"
-                    FontWeight="Bold"
-                    Text="{Binding SelectedPackage.DisplayName, FallbackValue=Stable Diffusion Web UI}" />
-                <TextBlock FontSize="12" Text="{Binding SelectedPackage.ByAuthor, FallbackValue=by Automatic111}" />
-
-                <Button
-                    Background="Transparent"
-                    BorderBrush="Transparent"
-                    Command="{Binding ShowPreviewCommand}"
-                    Content="UI Preview"
-                    Padding="4"
-                    Margin="0,8,0,0">
-                    <!--<Button.Style>
-                        <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}">
-                            <Setter Property="Foreground">
-                                <Setter.Value>
-                                    <SolidColorBrush Color="{DynamicResource SystemAccentColorSecondary}" />
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </Button.Style>-->
-                </Button>
-
-                <ui:HyperlinkButton Padding="4"
-                                    NavigateUri="{Binding SelectedPackage.LicenseUrl}">
-                    <TextBlock TextWrapping="Wrap">
-                        <Run Text="{Binding SelectedPackage.LicenseType, Mode=OneWay}" />
-                        <Run Text="License" />
-                    </TextBlock>
-                </ui:HyperlinkButton>
-                
-                <ui:HyperlinkButton Padding="4"
-                                    NavigateUri="{Binding SelectedPackage.GithubUrl}">
-                    <TextBlock TextWrapping="Wrap">
-                        <Run Text="GitHub Page:" />
-                        <Run Text="{Binding SelectedPackage.GithubUrl, Mode=OneWay}" TextDecorations="Underline" />
-                    </TextBlock>
-                </ui:HyperlinkButton>
-                
-                <TextBlock Text="{Binding SelectedPackage.Disclaimer}"
-                           Padding="4"
-                           Foreground="OrangeRed"
-                           TextWrapping="Wrap"
-                           IsVisible="{Binding SelectedPackage.Disclaimer, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-
-                <StackPanel Orientation="Horizontal" Margin="0,8,0,0"
-                            IsVisible="{Binding IsReleaseModeAvailable}">
-                    <ToggleButton
-                        Content="Releases"
-                        IsChecked="{Binding IsReleaseMode}"
-                        IsEnabled="{Binding IsReleaseModeAvailable}" />
-                    <ToggleButton
-                        Content="Branches"
-                        IsChecked="{Binding !IsReleaseMode}"
-                        Margin="8,0,0,0" />
-                </StackPanel>
-
-                <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
-                    <StackPanel Orientation="Vertical">
-                        <Label Content="{Binding ReleaseLabelText}" />
-                        <ComboBox
-                            ItemsSource="{Binding AvailableVersions}"
-                            MinWidth="200"
-                            SelectedItem="{Binding SelectedVersion}">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate DataType="{x:Type models:PackageVersion}">
-                                    <StackPanel Margin="8,0,0,0" VerticalAlignment="Top">
-                                        <TextBlock
-                                            Margin="0,4,0,4"
-                                            Name="NameTextBlock"
-                                            Text="{Binding TagName}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
-
-                    <StackPanel
-                        Margin="8,0,0,0"
-                        Orientation="Vertical"
-                        IsVisible="{Binding !IsReleaseMode}">
-                        <Label Content="Commit" />
-                        <ComboBox
-                            ItemsSource="{Binding AvailableCommits}"
-                            MinWidth="100"
-                            SelectedItem="{Binding SelectedCommit}">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate DataType="{x:Type database:GitCommit}">
-                                    <StackPanel Margin="8,0,0,0" VerticalAlignment="Top">
-                                        <TextBlock
-                                            Margin="0,4,0,4"
-                                            Name="NameTextBlock"
-                                            Text="{Binding Sha}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
-                </StackPanel>
-
-                <Label Content="Display Name" Margin="0,16,0,0" />
-                <StackPanel Orientation="Horizontal" IsVisible="{Binding ShowDuplicateWarning}">
-                    <ui:SymbolIcon
-                        Foreground="{DynamicResource ThemeRedColor}"
+            <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4"
+                        Orientation="Horizontal"
                         Margin="8"
-                        Symbol="Alert" />
-                    <TextBlock
-                        Foreground="{DynamicResource ThemeRedColor}"
-                        Margin="0,8,8,8"
-                        TextAlignment="Left"
-                        TextWrapping="Wrap">
-                        <Run Text="An installation with this name already exists." />
-                        <LineBreak />
-                        <Run Text="Please choose a different name or select a different Install Location." />
-                    </TextBlock>
-                </StackPanel>
-                
-                <TextBox 
-                    Margin="0,0,0,8" 
-                    Text="{Binding InstallName, Mode=TwoWay}" />
-
-                <StackPanel Orientation="Horizontal">
-                    <Button
-                        Command="{Binding InstallCommand}"
-                        Content="Install"
-                        Classes="success"
-                        Height="50"
-                        IsEnabled="{Binding !ShowDuplicateWarning}"
-                        Margin="0,16,0,0"
-                        VerticalAlignment="Top"
-                        Width="100" />
-                    <controls:ProgressRing
-                        Height="25"
-                        IsIndeterminate="True"
-                        BorderThickness="4"
-                        Margin="8,16,0,0"
-                        VerticalAlignment="Center"
-                        IsVisible="{Binding InstallProgress.IsProgressVisible}"
-                        Width="25" />
-                    <TextBlock
-                        Margin="8,16,0,0"
-                        Text="Installing..."
-                        VerticalAlignment="Center"
-                        IsVisible="{Binding InstallProgress.IsProgressVisible}" />
-                </StackPanel>
+                        IsVisible="{Binding ShowDuplicateWarning}">
+                <ui:SymbolIcon
+                    Foreground="{DynamicResource ThemeRedColor}"
+                    Margin="0,0,8,0"
+                    Symbol="Alert" />
+                <TextBlock
+                    Foreground="{DynamicResource ThemeRedColor}"
+                    TextAlignment="Left"
+                    TextWrapping="Wrap">
+                    <Run Text="An installation with this name already exists." />
+                    <LineBreak />
+                    <Run Text="Please choose a different name or select a different Install Location." />
+                </TextBlock>
             </StackPanel>
-            <ScrollViewer Grid.Column="2"
-                          MaxWidth="300"
-                          Margin="16"
-                          MaxHeight="600">
-                <mdxaml:MarkdownScrollViewer
-                    Markdown="{Binding ReleaseNotes, Mode=OneWay}"/>
-            </ScrollViewer>
+
+            <!-- Version Selector -->
+            <Label Grid.Row="1" Grid.Column="1"
+                   Content="{Binding ReleaseLabelText}" />
+            <ui:FAComboBox Grid.Row="2" Grid.Column="1"
+                           ItemsSource="{Binding AvailableVersions}"
+                           MinWidth="250"
+                           VerticalAlignment="Stretch"
+                           SelectedItem="{Binding SelectedVersion}">
+                <ui:FAComboBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type models:PackageVersion}">
+                        <TextBlock
+                            Name="NameTextBlock"
+                            VerticalAlignment="Center"
+                            Text="{Binding TagName}" />
+                    </DataTemplate>
+                </ui:FAComboBox.ItemTemplate>
+            </ui:FAComboBox>
+            
+            <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4"
+                        HorizontalAlignment="Center"
+                        Orientation="Horizontal" Margin="0,8,0,8"
+                        IsVisible="{Binding IsReleaseModeAvailable}">
+                <ToggleButton
+                    Content="Releases"
+                    IsChecked="{Binding IsReleaseMode}"
+                    IsEnabled="{Binding IsReleaseModeAvailable}" />
+                <ToggleButton
+                    Content="Branches"
+                    IsChecked="{Binding !IsReleaseMode}"
+                    Margin="8,0,0,0" />
+            </StackPanel>
+
+            <!-- Advanced Options Button -->
+            <Button Grid.Row="2" Grid.Column="2" VerticalAlignment="Stretch"
+                    Margin="8,0">
+                <ui:SymbolIcon FontSize="16" Margin="4" Symbol="Settings" />
+                <Button.Flyout>
+                    <Flyout>
+                        <!-- Advanced Options -->
+                        <StackPanel Orientation="Vertical"
+                                    Margin="8"
+                                    IsVisible="{Binding !IsAdvancedMode}">
+
+                            <Label Content="Advanced Options"
+                                   FontSize="18"
+                                   HorizontalAlignment="Center"
+                                   Margin="8,0,8,8" />
+
+                            <Label Content="Commit"
+                                   Margin="0,0,0,4"
+                                   IsVisible="{Binding !IsReleaseMode}" />
+                            <ui:FAComboBox
+                                IsVisible="{Binding !IsReleaseMode}"
+                                ItemsSource="{Binding AvailableCommits}"
+                                MinWidth="200"
+                                MinHeight="38"
+                                SelectedItem="{Binding SelectedCommit}">
+                                <ui:FAComboBox.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type database:GitCommit}">
+                                        <TextBlock
+                                            Margin="8,4,0,4"
+                                            Name="NameTextBlock"
+                                            Text="{Binding ShortSha}" />
+                                    </DataTemplate>
+                                </ui:FAComboBox.ItemTemplate>
+                            </ui:FAComboBox>
+
+                            <Label Content="Shared Model Folder Strategy"
+                                   Margin="0,8,0,4" />
+                            <ui:FAComboBox
+                                ItemsSource="{Binding SelectedPackage.AvailableSharedFolderMethods}"
+                                MinWidth="200"
+                                MinHeight="38"
+                                SelectedItem="{Binding SelectedSharedFolderMethod}">
+                                <ui:FAComboBox.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type models:SharedFolderMethod}">
+                                        <TextBlock
+                                            Margin="8,4,0,4"
+                                            Text="{Binding }" />
+                                    </DataTemplate>
+                                </ui:FAComboBox.ItemTemplate>
+                            </ui:FAComboBox>
+                            
+                            <Label Content="PyTorch Version"
+                                   IsVisible="{Binding ShowTorchVersionOptions}"
+                                   Margin="0,8,0,4" />
+                            <ui:FAComboBox
+                                ItemsSource="{Binding SelectedPackage.AvailableTorchVersions}"
+                                MinWidth="200"
+                                MinHeight="38"
+                                IsVisible="{Binding ShowTorchVersionOptions}"
+                                SelectedItem="{Binding SelectedTorchVersion}">
+                                <ui:FAComboBox.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type models:TorchVersion}">
+                                        <TextBlock
+                                            Margin="8,4,0,4"
+                                            Text="{Binding }" />
+                                    </DataTemplate>
+                                </ui:FAComboBox.ItemTemplate>
+                            </ui:FAComboBox>
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
         </Grid>
+
+        <!-- Install Button -->
+        <UniformGrid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
+                     Columns="2"
+                     Margin="0,32,0,0"
+                     HorizontalAlignment="Center">
+            <Button
+                Content="Cancel"
+                Command="{Binding Cancel}"
+                FontSize="20"
+                HorizontalAlignment="Center"
+                Margin="8,0,4,0"
+                Padding="16, 8, 16, 8" />
+            <Button
+                Content="Install"
+                Command="{Binding InstallCommand}"
+                FontSize="20"
+                IsEnabled="{Binding CanInstall}"
+                HorizontalAlignment="Center"
+                Classes="success"
+                Margin="4,0,8,0"
+                Padding="16, 8, 16, 8" />
+        </UniformGrid>
+
+        <!-- Available Packages -->
+        <ListBox Grid.Column="1" Grid.Row="0"
+                 Margin="8, 16"
+                 ItemsSource="{Binding AvailablePackages}"
+                 SelectedItem="{Binding SelectedPackage}">
+            <ListBox.Template>
+                <ControlTemplate>
+                    <ItemsPresenter />
+                </ControlTemplate>
+            </ListBox.Template>
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type packages:BasePackage}">
+                    <StackPanel Margin="8">
+                        <TextBlock Text="{Binding DisplayName}" />
+                        <TextBlock Text="{Binding ByAuthor}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
     </Grid>
-    
+
 </controls:UserControlBase>

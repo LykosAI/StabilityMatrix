@@ -49,6 +49,7 @@ using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
+using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
@@ -62,6 +63,7 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Python;
@@ -437,6 +439,7 @@ public sealed class App : Application
         services.AddSingleton<ICompletionProvider, CompletionProvider>();
         services.AddSingleton<ITokenizerProvider, TokenizerProvider>();
         services.AddSingleton<IModelIndexService, ModelIndexService>();
+        services.AddTransient<IPackageModificationRunner, PackageModificationRunner>();
         services.AddSingleton<IImageIndexService, ImageIndexService>();
 
         services.AddSingleton<ITrackedDownloadService, TrackedDownloadService>();
@@ -485,7 +488,8 @@ public sealed class App : Application
             // if (string.IsNullOrWhiteSpace(githubApiKey))
             //     return client;
             //
-            // client.Credentials = new Credentials(githubApiKey);
+            // client.Credentials =
+            //     new Credentials("");
             return client;
         });
 
@@ -690,6 +694,9 @@ public sealed class App : Application
             builder.ForLogger("System.*").WriteToNil(NLog.LogLevel.Warn);
             builder.ForLogger("Microsoft.*").WriteToNil(NLog.LogLevel.Warn);
             builder.ForLogger("Microsoft.Extensions.Http.*").WriteToNil(NLog.LogLevel.Warn);
+            builder
+                .ForLogger("StabilityMatrix.Avalonia.ViewModels.ConsoleViewModel")
+                .WriteToNil(NLog.LogLevel.Debug);
 
             // Disable console trace logging by default
             builder

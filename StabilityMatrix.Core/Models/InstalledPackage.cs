@@ -6,7 +6,7 @@ namespace StabilityMatrix.Core.Models;
 /// <summary>
 /// Profile information for a user-installed package.
 /// </summary>
-public class InstalledPackage
+public class InstalledPackage : IJsonOnDeserialized
 {
     // Unique ID for the installation
     public Guid Id { get; set; }
@@ -18,9 +18,15 @@ public class InstalledPackage
     public string? PackageName { get; set; }
 
     // Package version
+    [Obsolete("Use Version instead. (Kept for migration)")]
     public string? PackageVersion { get; set; }
+
+    [Obsolete("Use Version instead. (Kept for migration)")]
     public string? InstalledBranch { get; set; }
+
+    [Obsolete("Use Version instead. (Kept for migration)")]
     public string? DisplayVersion { get; set; }
+    public InstalledPackageVersion? Version { get; set; }
 
     // Old type absolute path
     [Obsolete("Use LibraryPath instead. (Kept for migration)")]
@@ -41,8 +47,9 @@ public class InstalledPackage
     public string? LaunchCommand { get; set; }
     public List<LaunchOption>? LaunchArgs { get; set; }
     public DateTimeOffset? LastUpdateCheck { get; set; }
-
     public bool UpdateAvailable { get; set; }
+    public TorchVersion? PreferredTorchVersion { get; set; }
+    public SharedFolderMethod? PreferredSharedFolderMethod { get; set; }
 
     /// <summary>
     /// Get the launch args host option value.
@@ -218,4 +225,29 @@ public class InstalledPackage
     {
         return Id.GetHashCode();
     }
+
+#pragma warning disable CS0618 // Type or member is obsolete
+    public void OnDeserialized()
+    {
+        // Handle version migration
+        if (Version != null)
+            return;
+
+        if (
+            string.IsNullOrWhiteSpace(InstalledBranch) && !string.IsNullOrWhiteSpace(PackageVersion)
+        )
+        {
+            // release mode
+            Version = new InstalledPackageVersion { InstalledReleaseVersion = PackageVersion };
+        }
+        else if (!string.IsNullOrWhiteSpace(PackageVersion))
+        {
+            Version = new InstalledPackageVersion
+            {
+                InstalledBranch = InstalledBranch,
+                InstalledCommitSha = PackageVersion
+            };
+        }
+    }
+#pragma warning restore CS0618 // Type or member is obsolete
 }

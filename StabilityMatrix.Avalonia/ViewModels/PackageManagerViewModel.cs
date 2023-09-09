@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
@@ -21,6 +22,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
@@ -38,6 +40,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly IPackageFactory packageFactory;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
+    private readonly INotificationService notificationService;
 
     public override string Title => "Packages";
     public override IconSource IconSource =>
@@ -62,12 +65,14 @@ public partial class PackageManagerViewModel : PageViewModelBase
     public PackageManagerViewModel(
         ISettingsManager settingsManager,
         IPackageFactory packageFactory,
-        ServiceManager<ViewModelBase> dialogFactory
+        ServiceManager<ViewModelBase> dialogFactory,
+        INotificationService notificationService
     )
     {
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         this.dialogFactory = dialogFactory;
+        this.notificationService = notificationService;
 
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
 
@@ -122,7 +127,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
         var dialog = new BetterContentDialog
         {
-            MaxDialogWidth = 1100,
+            MaxDialogWidth = 900,
             MinDialogWidth = 900,
             DefaultButton = ContentDialogButton.Close,
             IsPrimaryButtonEnabled = false,
@@ -131,8 +136,21 @@ public partial class PackageManagerViewModel : PageViewModelBase
             Content = new InstallerDialog { DataContext = viewModel }
         };
 
-        await dialog.ShowAsync();
-        await OnLoadedAsync();
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            var runner = new PackageModificationRunner();
+            var steps = viewModel.Steps;
+
+            EventManager.Instance.OnPackageInstallProgressAdded(runner);
+            await runner.ExecuteSteps(steps.ToList());
+            EventManager.Instance.OnInstalledPackagesChanged();
+            notificationService.Show(
+                "Package Install Complete",
+                $"{viewModel.InstallName} installed successfully",
+                NotificationType.Success
+            );
+        }
     }
 
     private IEnumerable<UnknownInstalledPackage> IndexUnknownPackages()
@@ -156,6 +174,11 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
             // Skip if the package is already installed
             if (currentPackages.Any(p => p.LibraryPath == expectedLibraryPath))
+            {
+                continue;
+            }
+
+            if (settingsManager.PackageInstallsInProgress.Contains(subDir.Name))
             {
                 continue;
             }

@@ -54,7 +54,8 @@ public class A3WebUI : BaseGitPackage
             [SharedFolderType.Karlo] = new[] { "models/karlo" },
             [SharedFolderType.TextualInversion] = new[] { "embeddings" },
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
-            [SharedFolderType.ControlNet] = new[] { "models/ControlNet" }
+            [SharedFolderType.ControlNet] = new[] { "models/ControlNet" },
+            [SharedFolderType.Codeformer] = new[] { "models/Codeformer" },
         };
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]

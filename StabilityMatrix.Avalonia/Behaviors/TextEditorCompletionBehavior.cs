@@ -74,7 +74,6 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
 
         textEditor = editor;
         textEditor.TextArea.TextEntered += TextArea_TextEntered;
-        textEditor.TextArea.TextEntering += TextArea_TextEntering;
     }
 
     protected override void OnDetaching()
@@ -82,7 +81,6 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         base.OnDetaching();
 
         textEditor.TextArea.TextEntered -= TextArea_TextEntered;
-        textEditor.TextArea.TextEntering -= TextArea_TextEntering;
     }
 
     private CompletionWindow CreateCompletionWindow(TextArea textArea)
@@ -100,7 +98,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
 
     private void TextArea_TextEntered(object? sender, TextInputEventArgs e)
     {
-        if (!IsEnabled || e.Text is not { } triggerText)
+        if (!IsEnabled || CompletionProvider?.IsLoaded != true || e.Text is not { } triggerText)
             return;
 
         if (triggerText.All(IsCompletionChar))
@@ -148,35 +146,6 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
     private void HighlightTextSegment(ISegment segment)
     {
         textEditor.TextArea.Selection = Selection.Create(textEditor.TextArea, segment);
-    }
-
-    private void TextArea_TextEntering(object? sender, TextInputEventArgs e)
-    {
-        if (completionWindow is null)
-            return;
-
-        /*Dispatcher.UIThread.Post(() =>
-        {
-            // When completion window is open, parse and update token offsets
-            if (GetCaretToken(textEditor) is not { } tokenSegment)
-            {
-                Logger.Trace("Token segment not found");
-                return;
-            }
-
-            completionWindow.StartOffset = tokenSegment.Offset;
-            completionWindow.EndOffset = tokenSegment.EndOffset;
-        });*/
-
-        /*if (e.Text?.Length > 0) {
-            if (!char.IsLetterOrDigit(e.Text[0])) {
-                // Whenever a non-letter is typed while the completion window is open,
-                // insert the currently selected element.
-                completionWindow?.CompletionList.RequestInsertion(e);
-            }
-        }*/
-        // Do not set e.Handled=true.
-        // We still want to insert the character that was typed.
     }
 
     private static bool IsCompletionChar(char c)

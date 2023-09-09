@@ -80,7 +80,9 @@ public class ImageIndexService : IImageIndexService
             var localImage = new LocalImageFile
             {
                 RelativePath = relativePath,
-                ImageType = imageType
+                ImageType = imageType,
+                CreatedAt = file.Info.CreationTimeUtc,
+                LastModifiedAt = file.Info.LastWriteTimeUtc
             };
 
             // Insert into database

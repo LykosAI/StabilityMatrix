@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Reactive.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using DynamicData;
@@ -28,12 +26,6 @@ public partial class ImageFolderCardViewModel : ViewModelBase
         new(imageFile => imageFile.RelativePath);
 
     /// <summary>
-    /// Collection of image files to display
-    /// </summary>
-    public IObservableCollection<LocalImageFile> LocalImages { get; } =
-        new ObservableCollectionExtended<LocalImageFile>();
-
-    /// <summary>
     /// Collection of image items to display
     /// </summary>
     public IObservableCollection<ImageFolderCardItemViewModel> Items { get; } =
@@ -49,6 +41,8 @@ public partial class ImageFolderCardViewModel : ViewModelBase
         this.imageIndexService = imageIndexService;
         this.settingsManager = settingsManager;
 
+        var minDatetime = DateTimeOffset.FromUnixTimeMilliseconds(0);
+
         localImagesSource
             .Connect()
             .DeferUntilLoaded()
@@ -62,6 +56,7 @@ public partial class ImageFolderCardViewModel : ViewModelBase
                             : imageFile.GetFullPath(settingsManager.ImagesDirectory)
                     }
             )
+            .SortBy(x => x.LocalImageFile?.LastModifiedAt ?? minDatetime, SortDirection.Descending)
             .Bind(Items)
             .Subscribe();
     }

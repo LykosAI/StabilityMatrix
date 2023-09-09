@@ -738,16 +738,20 @@ public partial class SettingsViewModel : PageViewModelBase
             return;
 
         var metadata = ImageMetadata.ParseFile(files[0].TryGetLocalPath()!);
-        var comfyJson = metadata.GetComfyMetadata();
+        var textualTags = metadata.GetTextualData()?.ToArray();
 
-        if (comfyJson is null)
+        if (textualTags is null)
         {
-            notificationService.Show("No Comfy metadata found", "");
+            notificationService.Show("No textual data found", "");
             return;
         }
 
-        var dialog = DialogHelper.CreateJsonDialog(comfyJson);
-        await dialog.ShowAsync();
+        if (metadata.GetGenerationParameters() is { } parameters)
+        {
+            var parametersJson = JsonSerializer.Serialize(parameters);
+            var dialog = DialogHelper.CreateJsonDialog(parametersJson, "Generation Parameters");
+            await dialog.ShowAsync();
+        }
     }
 
     [RelayCommand]

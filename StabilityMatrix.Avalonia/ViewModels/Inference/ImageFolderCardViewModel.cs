@@ -216,12 +216,23 @@ public partial class ImageFolderCardViewModel : ViewModelBase
 
         var sourceFile = new FilePath(sourcePath);
 
+        var formatName = format.ToString();
+
         var storageFile = await App.StorageProvider.SaveFilePickerAsync(
             new FilePickerSaveOptions
             {
                 Title = "Export Image",
                 ShowOverwritePrompt = true,
-                SuggestedFileName = item.FileName
+                SuggestedFileName = item.FileNameWithoutExtension,
+                DefaultExtension = formatName.ToLowerInvariant(),
+                FileTypeChoices = new FilePickerFileType[]
+                {
+                    new(formatName)
+                    {
+                        Patterns = new[] { $"*.{formatName.ToLowerInvariant()}" },
+                        MimeTypes = new[] { $"image/{formatName.ToLowerInvariant()}" }
+                    }
+                }
             }
         );
 

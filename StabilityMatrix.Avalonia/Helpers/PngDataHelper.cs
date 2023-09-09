@@ -42,6 +42,9 @@ public static class PngDataHelper
             + $"Model hash: {generationParameters.ModelHash}, Model: {generationParameters.ModelName}";
         var paramsChunk = GetTextChunk("parameters", paramsData);
 
+        var paramsJson = JsonSerializer.Serialize(generationParameters);
+        var paramsJsonChunk = GetTextChunk("parameters-json", paramsJson);
+
         // Go back 4 from the idat index because we need the length of the data
         idatIndex -= 4;
 
@@ -50,8 +53,9 @@ public static class PngDataHelper
         var actualImageData = inputImage[idatIndex..iendIndex];
 
         var finalImage = existingData
-            .Concat(smprojChunk)
             .Concat(paramsChunk)
+            .Concat(paramsJsonChunk)
+            .Concat(smprojChunk)
             .Concat(actualImageData);
 
         return finalImage.ToArray();

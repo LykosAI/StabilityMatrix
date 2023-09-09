@@ -40,6 +40,26 @@
         }
       ]
     },
+    "weight": {
+      "begin": ":",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.separator.weight.prompt"
+        }
+      },
+      "end": "[\\)\\b]",
+      "name": "meta.structure.weight.prompt",
+      "patterns": [
+        {
+          "include": "#number",
+          "name": "constant.numeric.weight.prompt"
+        },
+        {
+          "match": "[^\\s\\)\\b]",
+          "name": "invalid.illegal.expected-weight-separator.prompt"
+        }
+      ]
+    },
     "parenthesized": {
       "begin": "\\(",
       "beginCaptures": {
@@ -56,10 +76,13 @@
       "name": "meta.structure.array.prompt",
       "patterns": [
         {
-          "include": "#colon"
+          "include": "#comment"
         },
         {
-          "include": "#number"
+          "include": "#escape"
+        },
+        {
+          "include": "#weight"
         },
         {
           "include": "#value"

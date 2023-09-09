@@ -1,6 +1,9 @@
-﻿root = true
+root = true
 
 [*.cs]
-max_line_length = 100
+max_line_length = 120
 csharp_style_var_for_built_in_types = true
 dotnet_sort_system_directives_first = true
+
+# ReSharper properties
+resharper_csharp_max_line_length = 120

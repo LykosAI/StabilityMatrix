@@ -1,12 +1,17 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
-using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
+using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -17,6 +22,7 @@ using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
+using SortDirection = DynamicData.Binding.SortDirection;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -137,9 +143,9 @@ public partial class ImageFolderCardViewModel : ViewModelBase
     /// Handles clicks to the image delete button
     /// </summary>
     [RelayCommand]
-    private async Task OnImageDelete(LocalImageFile item)
+    private async Task OnImageDelete(LocalImageFile? item)
     {
-        if (item.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
+        if (item?.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
         {
             return;
         }
@@ -160,16 +166,135 @@ public partial class ImageFolderCardViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Handles clicks to the image delete button
+    /// </summary>
+    [RelayCommand]
+    private async Task OnImageCopy(LocalImageFile? item)
+    {
+        if (item?.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
+        {
+            return;
+        }
+
+        var clipboard = App.Clipboard;
+
+        var dataObject = new DataObject();
+
+        // TODO: Not working currently
+        dataObject.Set(DataFormats.Files, $"file:///{imagePath}");
+
+        await clipboard.SetDataObjectAsync(dataObject);
+    }
+
+    /// <summary>
     /// Handles clicks to the image open-in-explorer button
     /// </summary>
     [RelayCommand]
-    private async Task OnImageOpen(LocalImageFile item)
+    private async Task OnImageOpen(LocalImageFile? item)
     {
-        if (item.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
+        if (item?.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
         {
             return;
         }
 
         await ProcessRunner.OpenFileBrowser(imagePath);
     }
+
+    /// <summary>
+    /// Handles clicks to the image export button
+    /// </summary>
+    private async Task ImageExportImpl(
+        LocalImageFile? item,
+        SKEncodedImageFormat format,
+        bool includeMetadata = false
+    )
+    {
+        if (item?.GetFullPath(settingsManager.ImagesDirectory) is not { } sourcePath)
+        {
+            return;
+        }
+
+        var sourceFile = new FilePath(sourcePath);
+
+        var storageFile = await App.StorageProvider.SaveFilePickerAsync(
+            new FilePickerSaveOptions
+            {
+                Title = "Export Image",
+                ShowOverwritePrompt = true,
+                SuggestedFileName = item.FileName
+            }
+        );
+
+        if (storageFile?.TryGetLocalPath() is not { } targetPath)
+        {
+            return;
+        }
+
+        var targetFile = new FilePath(targetPath);
+
+        try
+        {
+            if (format is SKEncodedImageFormat.Png)
+            {
+                // For include metadata, just copy the file
+                if (includeMetadata)
+                {
+                    await sourceFile.CopyToAsync(targetFile, true);
+                }
+                else
+                {
+                    // Otherwise read and strip the metadata
+                    var imageBytes = await sourceFile.ReadAllBytesAsync();
+
+                    imageBytes = PngDataHelper.RemoveMetadata(imageBytes);
+
+                    await targetFile.WriteAllBytesAsync(imageBytes);
+                }
+            }
+            else
+            {
+                await Task.Run(() =>
+                {
+                    using var fs = sourceFile.Info.OpenRead();
+                    var image = SKImage.FromEncodedData(fs);
+                    fs.Dispose();
+
+                    using var targetStream = targetFile.Info.OpenWrite();
+                    image.Encode(format, 100).SaveTo(targetStream);
+                });
+            }
+        }
+        catch (IOException e)
+        {
+            logger.LogWarning(e, "Failed to export image");
+            notificationService.ShowPersistent(
+                "Failed to export image",
+                e.Message,
+                NotificationType.Error
+            );
+            return;
+        }
+
+        notificationService.Show(
+            "Image Exported",
+            $"Saved to {targetPath}",
+            NotificationType.Success
+        );
+    }
+
+    [RelayCommand]
+    private Task OnImageExportPng(LocalImageFile? item) =>
+        ImageExportImpl(item, SKEncodedImageFormat.Png);
+
+    [RelayCommand]
+    private Task OnImageExportPngWithMetadata(LocalImageFile? item) =>
+        ImageExportImpl(item, SKEncodedImageFormat.Png, true);
+
+    [RelayCommand]
+    private Task OnImageExportJpeg(LocalImageFile? item) =>
+        ImageExportImpl(item, SKEncodedImageFormat.Jpeg);
+
+    [RelayCommand]
+    private Task OnImageExportWebp(LocalImageFile? item) =>
+        ImageExportImpl(item, SKEncodedImageFormat.Webp);
 }

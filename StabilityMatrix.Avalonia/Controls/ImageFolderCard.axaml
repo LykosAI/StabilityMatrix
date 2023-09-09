@@ -69,10 +69,31 @@
                                         IconSource="Delete"
                                         Command="{Binding ImageDeleteCommand}"/>
                                     <input:StandardUICommand 
+                                        x:Key="ImageCopyCommand"
+                                        Label="Copy"
+                                        IconSource="Copy"
+                                        Command="{Binding ImageCopyCommand}"/>
+                                    <input:StandardUICommand 
                                         x:Key="ImageOpenCommand" 
                                         Label="Open in Explorer"
                                         IconSource="Folder"
                                         Command="{Binding ImageOpenCommand}"/>
+                                    <input:StandardUICommand 
+                                        x:Key="ImageExportPngWithMetadataCommand" 
+                                        Label="Png with Metadata"
+                                        Command="{Binding ImageExportPngWithMetadataCommand}"/>
+                                    <input:StandardUICommand 
+                                        x:Key="ImageExportPngCommand" 
+                                        Label="Png"
+                                        Command="{Binding ImageExportPngCommand}"/>
+                                    <input:StandardUICommand 
+                                        x:Key="ImageExportJpegCommand" 
+                                        Label="Jpeg"
+                                        Command="{Binding ImageExportJpegCommand}"/>
+                                    <input:StandardUICommand 
+                                        x:Key="ImageExportWebpCommand" 
+                                        Label="Webp"
+                                        Command="{Binding ImageExportWebpCommand}"/>
                                 </ItemsRepeater.Resources>
                                 
                                 <ItemsRepeater.Layout>
@@ -94,6 +115,23 @@
                                             CornerRadius="8">
                                             
                                             <Button.ContextFlyout>
+                                                <!--<ui:CommandBarFlyout>
+                                                    <ui:CommandBarButton
+                                                        Command="{StaticResource ImageCopyCommand}"
+                                                        CommandParameter="{Binding $self.DataContext}"/>
+                                                    <ui:CommandBarButton
+                                                        Command="{StaticResource ImageDeleteCommand}"
+                                                        CommandParameter="{Binding $self.DataContext}"/>
+                                                    
+                                                    <ui:CommandBarFlyout.SecondaryCommands>
+                                                        <ui:CommandBarSeparator Margin="0,-4,0,0"/>
+                                                        <ui:CommandBarButton>
+                                                            <ui:CommandBarButton
+                                                                Command="{StaticResource ImageDeleteCommand}"
+                                                                CommandParameter="{Binding $self.DataContext}"/>
+                                                        </ui:CommandBarButton>
+                                                    </ui:CommandBarFlyout.SecondaryCommands>
+                                                </ui:CommandBarFlyout>-->
                                                 <ui:FAMenuFlyout>
                                                     <ui:MenuFlyoutItem 
                                                         HotKey="{x:Null}"
@@ -103,6 +141,24 @@
                                                         HotKey="{x:Null}"
                                                         Command="{StaticResource ImageOpenCommand}"
                                                         CommandParameter="{Binding $self.DataContext}"/>
+                                                    <ui:MenuFlyoutSubItem Text="Export" IconSource="Share">
+                                                        <ui:MenuFlyoutItem 
+                                                            HotKey="{x:Null}"
+                                                            Command="{StaticResource ImageExportPngWithMetadataCommand}"
+                                                            CommandParameter="{Binding $self.DataContext}"/>
+                                                        <ui:MenuFlyoutItem
+                                                            HotKey="{x:Null}"
+                                                            Command="{StaticResource ImageExportPngCommand}"
+                                                            CommandParameter="{Binding $self.DataContext}"/>
+                                                        <ui:MenuFlyoutItem
+                                                            HotKey="{x:Null}"
+                                                            Command="{StaticResource ImageExportJpegCommand}"
+                                                            CommandParameter="{Binding $self.DataContext}"/>
+                                                        <ui:MenuFlyoutItem
+                                                            HotKey="{x:Null}"
+                                                            Command="{StaticResource ImageExportWebpCommand}"
+                                                            CommandParameter="{Binding $self.DataContext}"/>
+                                                    </ui:MenuFlyoutSubItem>
                                                 </ui:FAMenuFlyout>
                                             </Button.ContextFlyout>
                                             

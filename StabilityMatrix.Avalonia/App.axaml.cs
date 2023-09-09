@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input.Platform;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform;
 using Avalonia.Platform.Storage;
@@ -86,6 +87,9 @@ public sealed class App : Application
 
     [NotNull]
     public static IStorageProvider? StorageProvider { get; private set; }
+
+    [NotNull]
+    public static IClipboard? Clipboard { get; private set; }
 
     // ReSharper disable once MemberCanBePrivate.Global
     [NotNull]
@@ -212,6 +216,7 @@ public sealed class App : Application
 
         VisualRoot = mainWindow;
         StorageProvider = mainWindow.StorageProvider;
+        Clipboard = mainWindow.Clipboard ?? throw new NullReferenceException("Clipboard is null");
 
         DesktopLifetime.MainWindow = mainWindow;
         DesktopLifetime.Exit += OnExit;

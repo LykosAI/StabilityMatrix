@@ -411,7 +411,7 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
 
             ImageGalleryCardViewModel.ImageSources.Clear();
 
-            if (!imageOutputs.TryGetValue(outputNodeNames[0], out var images))
+            if (!imageOutputs.TryGetValue(outputNodeNames[0], out var images) || images is null)
             {
                 // No images match
                 notificationService.Show("No output", "Did not receive any output images");

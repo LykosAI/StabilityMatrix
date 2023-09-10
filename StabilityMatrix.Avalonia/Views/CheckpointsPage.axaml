@@ -54,11 +54,11 @@
                     <controls:Card.ContextFlyout>
                         <ui:FAMenuFlyout>
                             <ui:MenuFlyoutItem Command="{Binding RenameCommand}" 
-                                               Text="Rename" IconSource="Rename" />
+                                               Text="{x:Static lang:Resources.Action_Rename}" IconSource="Rename" />
                             <ui:MenuFlyoutItem Command="{Binding DeleteCommand}" 
-                                               Text="Delete" IconSource="Delete" />
+                                               Text="{x:Static lang:Resources.Action_Delete}" IconSource="Delete" />
                             <ui:MenuFlyoutItem Command="{Binding OpenOnCivitAiCommand}" 
-                                               Text="Open on CivitAI" IconSource="Link"
+                                               Text="{x:Static lang:Resources.Action_OpenOnCivitAi}" IconSource="Link"
                                                IsVisible="{Binding IsConnectedModel}"/>
                         </ui:FAMenuFlyout>
                     </controls:Card.ContextFlyout>
@@ -135,7 +135,7 @@
                                         <ui:SymbolIcon
                                             Foreground="LightGreen"
                                             Symbol="CloudSyncComplete"
-                                            ToolTip.Tip="Connected Model" />
+                                            ToolTip.Tip="{x:Static lang:Resources.Label_ConnectedModel}" />
                                     </Button>
                                     <Button
                                         Background="Transparent"
@@ -152,7 +152,7 @@
                                         <ui:SymbolIcon
                                             Foreground="DimGray"
                                             Symbol="CloudOffline"
-                                            ToolTip.Tip="Local Model" />
+                                            ToolTip.Tip="{x:Static lang:Resources.Label_LocalModel}" />
                                     </Button>
                                 </Grid>
                                 <TextBlock
@@ -215,18 +215,18 @@
                 <!-- Right click menu for a checkpoint folder -->
                 <Expander.ContextFlyout>
                     <ui:FAMenuFlyout>
-                        <ui:MenuFlyoutItem Text="Show in Explorer" IconSource="Open"
+                        <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_ShowInExplorer}" IconSource="Open"
                                            Command="{Binding ShowInExplorerCommand}"
                                            CommandParameter="{Binding DirectoryPath}"/>
                         <!-- Only allow deletion of non-root folders (Parent is not null) -->
-                        <ui:MenuFlyoutItem Text="Delete" IconSource="Delete"
+                        <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_Delete}" IconSource="Delete"
                                            IsEnabled="{Binding ParentFolder, Converter={x:Static ObjectConverters.IsNotNull}}"
                                            IsVisible="{Binding ParentFolder, Converter={x:Static ObjectConverters.IsNotNull}}"
                                            Command="{Binding DeleteCommand}"/>
                         <ui:MenuFlyoutSeparator/>
-                        <ui:MenuFlyoutSubItem Text="New" IconSource="Add">
+                        <ui:MenuFlyoutSubItem Text="{x:Static lang:Resources.Action_New}" IconSource="Add">
                             <ui:MenuFlyoutSubItem.Items>
-                                <ui:MenuFlyoutItem Text="Folder" IconSource="OpenFolder"
+                                <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Label_Folder}" IconSource="OpenFolder"
                                                    Command="{Binding CreateSubFolderCommand}"/>
                             </ui:MenuFlyoutSubItem.Items>
                         </ui:MenuFlyoutSubItem>
@@ -284,7 +284,7 @@
                             Effect="{StaticResource TextDropShadowEffect}"
                             FontSize="24"
                             HorizontalAlignment="Center"
-                            Text="Drop file here to import"
+                            Text="{x:Static lang:Resources.Label_DropFileToImport}"
                             VerticalAlignment="Center"
                             IsVisible="{Binding IsCurrentDragTarget}" />
                         <StackPanel
@@ -358,12 +358,12 @@
     <Grid ColumnDefinitions="Auto,*" RowDefinitions="0.2*,*" Margin="4, 0">
         <!--  Top settings bar  -->
         <ToggleSwitch
-            OffContent="Import as Connected"
-            OnContent="Import as Connected"
+            OffContent="{x:Static lang:Resources.Label_ImportAsConnected}"
+            OnContent="{x:Static lang:Resources.Label_ImportAsConnected}"
             Grid.Column="0"
             IsChecked="{Binding IsImportAsConnected}"
             Margin="24,8"
-            ToolTip.Tip="Search for connected metadata on new local imports" />
+            ToolTip.Tip="{x:Static lang:Resources.Label_ImportAsConnectedExplanation}" />
         <StackPanel
             Grid.Column="1"
             Grid.Row="0"
@@ -372,7 +372,7 @@
             Margin="16,0"
             Orientation="Horizontal">
             <TextBox Margin="16, 16"
-                     Watermark="Search"
+                     Watermark="{x:Static lang:Resources.Action_Search}"
                      Height="16"
                      MinWidth="150"
                      Text="{Binding SearchFilter, Mode=TwoWay}"/>
@@ -382,15 +382,15 @@
                 BorderThickness="4"
                 IsIndeterminate="True"
                 IsVisible="{Binding IsIndexing}"/>
-            <TextBlock Text="Indexing..." FontSize="11"
+            <TextBlock Text="{x:Static lang:Resources.Label_Indexing}" FontSize="11"
                        VerticalAlignment="Center"
                        IsVisible="{Binding IsIndexing}"/>
             <Button 
                 Command="{Binding OpenModelsFolderCommand}">
-                <TextBlock Text="Models Folder"/>
+                <TextBlock Text="{x:Static lang:Resources.Label_ModelsFolder}"/>
             </Button>
             <DropDownButton
-                Content="Categories"
+                Content="{x:Static lang:Resources.Label_Categories}"
                 Margin="8"
                 VerticalAlignment="Center"
                 HorizontalAlignment="Right">

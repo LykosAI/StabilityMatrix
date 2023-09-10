@@ -20,4 +20,37 @@
     <data name="Label_Language" xml:space="preserve">
         <value>言語</value>
     </data>
+    <data name="Action_ExitApplication" xml:space="preserve">
+        <value>アプリケーションを終了する</value>
+    </data>
+    <data name="Action_Import" xml:space="preserve">
+        <value>インポート</value>
+    </data>
+    <data name="Action_Install" xml:space="preserve">
+        <value>インストール</value>
+    </data>
+    <data name="Action_Launch" xml:space="preserve">
+        <value>打ち上げる</value>
+    </data>
+    <data name="Action_Relaunch" xml:space="preserve">
+        <value>再起動する</value>
+    </data>
+    <data name="Action_Quit" xml:space="preserve">
+        <value>やめる</value>
+    </data>
+    <data name="Action_RelaunchLater" xml:space="preserve">
+        <value>後で再起動する</value>
+    </data>
+    <data name="Label_BecomeAPatron" xml:space="preserve">
+        <value>パトロンになる</value>
+    </data>
+    <data name="Label_Branches" xml:space="preserve">
+        <value>ブランチ</value>
+    </data>
+    <data name="Label_TimePeriod" xml:space="preserve">
+        <value>期間</value>
+    </data>
+    <data name="Label_Sort" xml:space="preserve">
+        <value>注文</value>
+    </data>
 </root>

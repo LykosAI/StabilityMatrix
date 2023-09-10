@@ -87,7 +87,10 @@
                     Spacing="2">
 
                     <!--  Connecting Progress  -->
-                    <controls:ProgressRing BorderThickness="4" IsIndeterminate="True">
+                    <controls:ProgressRing 
+                        Margin="4,0,0,0"
+                        BorderThickness="4" 
+                        IsIndeterminate="True">
                         <controls:ProgressRing.IsVisible>
                             <MultiBinding Converter="{x:Static BoolConverters.Or}">
                                 <Binding Path="ClientManager.IsConnecting" />

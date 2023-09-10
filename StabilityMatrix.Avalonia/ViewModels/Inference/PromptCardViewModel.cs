@@ -148,8 +148,8 @@ public partial class PromptCardViewModel : LoadableViewModelBase
                   Essentially they are text presets, so the position where you place them 
                   could make a difference. 
                   ```python
-                  embedding:model
-                  (embedding:model:weight)
+                  <embedding:model>
+                  <embedding:model:weight>
                   ```
                   
                   ## {Resources.Label_NetworksLoraOrLycoris}

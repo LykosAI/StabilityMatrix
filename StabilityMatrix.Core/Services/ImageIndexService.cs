@@ -1,8 +1,10 @@
 ﻿using System.Diagnostics;
+using System.Text.Json;
 using AsyncAwaitBestPractices;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
@@ -79,7 +81,22 @@ public class ImageIndexService : IImageIndexService
                 LocalImageFileType.Inference | LocalImageFileType.TextToImage;
 
             // Get metadata
-            var metadata = ImageMetadata.ParseFile(file);
+            using var reader = new BinaryReader(new FileStream(file.FullPath, FileMode.Open));
+            var metadata = ImageMetadata.ReadTextChunk(reader, "parameters-json");
+            GenerationParameters? genParams = null;
+
+            if (!string.IsNullOrWhiteSpace(metadata))
+            {
+                genParams = JsonSerializer.Deserialize<GenerationParameters>(metadata);
+            }
+            else
+            {
+                metadata = ImageMetadata.ReadTextChunk(reader, "parameters");
+                if (!string.IsNullOrWhiteSpace(metadata))
+                {
+                    GenerationParameters.TryParse(metadata, out genParams);
+                }
+            }
 
             var localImage = new LocalImageFile
             {
@@ -87,7 +104,7 @@ public class ImageIndexService : IImageIndexService
                 ImageType = imageType,
                 CreatedAt = file.Info.CreationTimeUtc,
                 LastModifiedAt = file.Info.LastWriteTimeUtc,
-                GenerationParameters = metadata.GetGenerationParameters()
+                GenerationParameters = genParams
             };
 
             // Insert into database

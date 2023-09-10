@@ -1,10 +1,10 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using Force.Crc32;
 using StabilityMatrix.Avalonia.Models;
-using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Avalonia.Helpers;
@@ -33,7 +33,7 @@ public static class PngDataHelper
         var existingData = inputImage[..textEndIndex];
 
         var smprojJson = JsonSerializer.Serialize(projectDocument);
-        var smprojChunk = GetTextChunk("smproj", smprojJson);
+        var smprojChunk = BuildTextChunk("smproj", smprojJson);
 
         var paramsData =
             $"{generationParameters.PositivePrompt}\nNegative prompt: {generationParameters.NegativePrompt}\n"
@@ -41,10 +41,10 @@ public static class PngDataHelper
             + $"CFG scale: {generationParameters.CfgScale}, Seed: {generationParameters.Seed}, "
             + $"Size: {imageWidth}x{imageHeight}, "
             + $"Model hash: {generationParameters.ModelHash}, Model: {generationParameters.ModelName}";
-        var paramsChunk = GetTextChunk("parameters", paramsData);
+        var paramsChunk = BuildTextChunk("parameters", paramsData);
 
         var paramsJson = JsonSerializer.Serialize(generationParameters);
-        var paramsJsonChunk = GetTextChunk("parameters-json", paramsJson);
+        var paramsJsonChunk = BuildTextChunk("parameters-json", paramsJson);
 
         // Go back 4 from the idat index because we need the length of the data
         idatIndex -= 4;
@@ -84,7 +84,7 @@ public static class PngDataHelper
         return finalImage.ToArray();
     }
 
-    private static byte[] GetTextChunk(string key, string value)
+    private static byte[] BuildTextChunk(string key, string value)
     {
         var textData = $"{key}\0{value}";
         var textDataLength = BitConverter.GetBytes(textData.Length).Reverse();

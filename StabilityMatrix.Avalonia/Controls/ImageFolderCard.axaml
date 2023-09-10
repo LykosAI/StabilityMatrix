@@ -162,11 +162,11 @@
                                                 </ui:FAMenuFlyout>
                                             </Button.ContextFlyout>
                                             
-                                            <!--<ToolTip.Tip>
+                                            <ToolTip.Tip>
                                                 <ToolTip>
-                                                    <TextBlock Text="Test"/>
+                                                    <TextBlock Text="{Binding GenerationParameters.PositivePrompt}"/>
                                                 </ToolTip>
-                                            </ToolTip.Tip>-->
+                                            </ToolTip.Tip>
                                             
                                             <Border ClipToBounds="True" CornerRadius="8">
                                                 <Grid RowDefinitions="*,Auto">

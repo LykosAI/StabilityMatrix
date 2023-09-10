@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
 using MetadataExtractor;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
@@ -11,6 +12,9 @@ public class ImageMetadata
 {
     private IReadOnlyList<Directory>? Directories { get; set; }
 
+    private static readonly byte[] Idat = { 0x49, 0x44, 0x41, 0x54 };
+    private static readonly byte[] Text = { 0x74, 0x45, 0x58, 0x74 };
+
     public static ImageMetadata ParseFile(FilePath path)
     {
         return new ImageMetadata { Directories = ImageMetadataReader.ReadMetadata(path) };
@@ -19,8 +23,8 @@ public class ImageMetadata
     public IEnumerable<Tag>? GetTextualData()
     {
         // Get the PNG-tEXt directory
-        return Directories?
-            .Where(d => d.Name == "PNG-tEXt")
+        return Directories
+            ?.Where(d => d.Name == "PNG-tEXt")
             .SelectMany(d => d.Tags)
             .Where(t => t.Name == "Textual Data");
     }
@@ -63,5 +67,35 @@ public class ImageMetadata
         }
 
         return null;
+    }
+
+    public static string ReadTextChunk(BinaryReader byteStream, string key)
+    {
+        // skip to end of png header stuff
+        byteStream.BaseStream.Position = 0x21;
+        while (byteStream.BaseStream.Position < byteStream.BaseStream.Length)
+        {
+            var chunkSize = BitConverter.ToInt32(byteStream.ReadBytes(4).Reverse().ToArray());
+            var chunkType = Encoding.UTF8.GetString(byteStream.ReadBytes(4));
+            if (chunkType == Encoding.UTF8.GetString(Idat))
+            {
+                return string.Empty;
+            }
+
+            if (chunkType == Encoding.UTF8.GetString(Text))
+            {
+                var textBytes = byteStream.ReadBytes(chunkSize);
+                var text = Encoding.UTF8.GetString(textBytes);
+                if (text.StartsWith($"{key}\0"))
+                {
+                    return text[(key.Length + 1)..];
+                }
+            }
+
+            // skip crc
+            byteStream.BaseStream.Position += 4;
+        }
+
+        return string.Empty;
     }
 }

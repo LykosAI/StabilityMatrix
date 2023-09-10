@@ -1,33 +1,28 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
-using System.Text.RegularExpressions;
+﻿using System.Text.Json;
 using MetadataExtractor;
-using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using Directory = MetadataExtractor.Directory;
 
-namespace StabilityMatrix.Avalonia.Helpers;
+namespace StabilityMatrix.Core.Helper;
 
-public partial class ImageMetadata
+public class ImageMetadata
 {
     private IReadOnlyList<Directory>? Directories { get; set; }
 
     public static ImageMetadata ParseFile(FilePath path)
     {
-        return new ImageMetadata() { Directories = ImageMetadataReader.ReadMetadata(path) };
+        return new ImageMetadata { Directories = ImageMetadataReader.ReadMetadata(path) };
     }
 
     public IEnumerable<Tag>? GetTextualData()
     {
         // Get the PNG-tEXt directory
-        if (Directories?.FirstOrDefault(d => d.Name == "PNG-tEXt") is not { } pngText)
-        {
-            return null;
-        }
-
-        // Expect the 'Textual Data' tag
-        return pngText.Tags.Where(tag => tag.Name == "Textual Data");
+        return Directories?
+            .Where(d => d.Name == "PNG-tEXt")
+            .SelectMany(d => d.Tags)
+            .Where(t => t.Name == "Textual Data");
     }
 
     public GenerationParameters? GetGenerationParameters()

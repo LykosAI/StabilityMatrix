@@ -2,6 +2,7 @@
 using AsyncAwaitBestPractices;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Database;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
@@ -77,12 +78,16 @@ public class ImageIndexService : IImageIndexService
             const LocalImageFileType imageType =
                 LocalImageFileType.Inference | LocalImageFileType.TextToImage;
 
+            // Get metadata
+            var metadata = ImageMetadata.ParseFile(file);
+
             var localImage = new LocalImageFile
             {
                 RelativePath = relativePath,
                 ImageType = imageType,
                 CreatedAt = file.Info.CreationTimeUtc,
-                LastModifiedAt = file.Info.LastWriteTimeUtc
+                LastModifiedAt = file.Info.LastWriteTimeUtc,
+                GenerationParameters = metadata.GetGenerationParameters()
             };
 
             // Insert into database

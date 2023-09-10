@@ -5,6 +5,7 @@ using System.Text.Json;
 using Force.Crc32;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
+using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Avalonia.Helpers;
 

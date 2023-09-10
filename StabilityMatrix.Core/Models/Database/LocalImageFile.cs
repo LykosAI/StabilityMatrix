@@ -29,6 +29,11 @@ public class LocalImageFile
     public DateTimeOffset LastModifiedAt { get; set; }
 
     /// <summary>
+    /// Generation parameters metadata of the file.
+    /// </summary>
+    public GenerationParameters? GenerationParameters { get; set; }
+
+    /// <summary>
     /// File name of the relative path.
     /// </summary>
     public string FileName => Path.GetFileName(RelativePath);

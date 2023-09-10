@@ -1,9 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
-namespace StabilityMatrix.Avalonia.Models.Inference;
+namespace StabilityMatrix.Core.Models;
 
 [JsonSerializable(typeof(GenerationParameters))]
 public partial class GenerationParameters

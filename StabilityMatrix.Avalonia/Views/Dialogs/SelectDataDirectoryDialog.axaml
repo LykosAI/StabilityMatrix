@@ -6,6 +6,7 @@
                           xmlns:ui="using:FluentAvalonia.UI.Controls"
                           xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                           xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
                           d:DataContext="{x:Static mocks:DesignData.SelectDataDirectoryViewModel}"
                           x:DataType="dialogs:SelectDataDirectoryViewModel"
                           x:CompileBindings="True"
@@ -26,7 +27,7 @@
                 Title="Welcome back! In this update, you can optionally choose a custom location to store all data. If you choose a new location, or opt to use Portable Mode, you'll be able to migrate your existing data on the next page."/>
         
             <Label
-                Content="Data Directory"
+                Content="{x:Static lang:Resources.Label_DataDirectory}"
                 FontSize="13"
                 Margin="0,16,0,0" />
             <Grid ColumnDefinitions="*,Auto">
@@ -50,14 +51,14 @@
             </Grid>
             
             <TextBlock
-                Text="This is where the model checkpoints, LORAs, web UIs, settings, etc. will be installed."
+                Text="{x:Static lang:Resources.Label_DataDirectoryExplanation}"
                 TextWrapping="Wrap"
                 Foreground="LightGray"
                 FontSize="12"
                 Margin="0,8,0,0" />
             
             <TextBlock
-                Text="You may encounter errors when using a FAT32 or exFAT drive. Select a different drive for a smoother experience."
+                Text="{x:Static lang:Resources.Label_FatWarning}"
                 TextWrapping="Wrap"
                 Foreground="Yellow"
                 IsVisible="{Binding ShowFatWarning}"
@@ -65,7 +66,7 @@
                 Margin="0,8,0,0" />
 
             <CheckBox
-                Content="Portable Mode"
+                Content="{x:Static lang:Resources.Label_PortableMode}"
                 IsChecked="{Binding IsPortableMode, Mode=TwoWay}"
                 Margin="0,32,0,0" />
 
@@ -75,7 +76,7 @@
                 FontSize="13"
                 Margin="0,8,0,0"
                 Padding="16"
-                Title="In Portable Mode, all data and settings will be stored in the same directory as the application. You will be able to move the application with its 'Data' folder to a different location or computer." />
+                Title="{x:Static lang:Resources.Label_PortableModeExplanation}" />
         
         </StackPanel>
 
@@ -94,7 +95,7 @@
         </StackPanel>
 
         <Button
-            Content="Continue"
+            Content="{x:Static lang:Resources.Action_Continue}"
             IsDefault="True"
             Command="{Binding OnPrimaryButtonClick}"
             FontSize="16"

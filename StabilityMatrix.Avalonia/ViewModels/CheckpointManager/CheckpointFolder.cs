@@ -118,19 +118,18 @@ public partial class CheckpointFolder : ViewModelBase
         checkpointFilesCache
             .Connect()
             .DeferUntilLoaded()
-            .SortBy(x => x.Title)
             .Bind(CheckpointFiles)
-            .Filter(
-                f =>
-                    f.FileName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
-                    || f.Title.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
-            )
             .Sort(
                 SortExpressionComparer<CheckpointFile>
                     .Descending(f => f.IsConnectedModel)
                     .ThenByAscending(
                         f => f.IsConnectedModel ? f.ConnectedModel!.ModelName : f.FileName
                     )
+            )
+            .Filter(
+                f =>
+                    f.FileName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+                    || f.Title.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
             )
             .Bind(DisplayedCheckpointFiles)
             .Subscribe();

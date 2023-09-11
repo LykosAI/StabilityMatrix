@@ -237,7 +237,7 @@
         <!-- Teaching Tip -->
         <ui:TeachingTip Grid.Row="0" Name="TeachingTip1"
                         Target="{Binding #AddPackagesButton}"
-                        Title="Add a package to get started!"
+                        Title="{x:Static lang:Resources.TeachingTip_AddPackageToGetStarted}"
                         PreferredPlacement="Top"
                         IsOpen="{Binding !Packages.Count}"/>
         

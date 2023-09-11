@@ -405,4 +405,16 @@
     <data name="Action_AddPackage" xml:space="preserve">
         <value>Add Package</value>
     </data>
+    <data name="TeachingTip_AddPackageToGetStarted" xml:space="preserve">
+        <value>Add a package to get started!</value>
+    </data>
+    <data name="Label_EnvVarsTable_Name" xml:space="preserve">
+        <value>Name</value>
+    </data>
+    <data name="Label_EnvVarsTable_Value" xml:space="preserve">
+        <value>Value</value>
+    </data>
+    <data name="Action_Remove" xml:space="preserve">
+        <value>Remove</value>
+    </data>
 </root>

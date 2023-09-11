@@ -258,6 +258,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Remove.
+        /// </summary>
+        public static string Action_Remove {
+            get {
+                return ResourceManager.GetString("Action_Remove", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Rename.
         /// </summary>
         public static string Action_Rename {
@@ -578,6 +587,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_EnvironmentVariables {
             get {
                 return ResourceManager.GetString("Label_EnvironmentVariables", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name.
+        /// </summary>
+        public static string Label_EnvVarsTable_Name {
+            get {
+                return ResourceManager.GetString("Label_EnvVarsTable_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value.
+        /// </summary>
+        public static string Label_EnvVarsTable_Value {
+            get {
+                return ResourceManager.GetString("Label_EnvVarsTable_Value", resourceCulture);
             }
         }
         
@@ -1172,6 +1199,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Progress_InstallingPrerequisites {
             get {
                 return ResourceManager.GetString("Progress_InstallingPrerequisites", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add a package to get started!.
+        /// </summary>
+        public static string TeachingTip_AddPackageToGetStarted {
+            get {
+                return ResourceManager.GetString("TeachingTip_AddPackageToGetStarted", resourceCulture);
             }
         }
         

@@ -186,6 +186,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open Web UI.
+        /// </summary>
+        public static string Action_OpenWebUI {
+            get {
+                return ResourceManager.GetString("Action_OpenWebUI", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Quit.
         /// </summary>
         public static string Action_Quit {
@@ -249,11 +258,47 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Send.
+        /// </summary>
+        public static string Action_Send {
+            get {
+                return ResourceManager.GetString("Action_Send", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Send Input.
+        /// </summary>
+        public static string Action_SendInput {
+            get {
+                return ResourceManager.GetString("Action_SendInput", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show in Explorer.
         /// </summary>
         public static string Action_ShowInExplorer {
             get {
                 return ResourceManager.GetString("Action_ShowInExplorer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stop.
+        /// </summary>
+        public static string Action_Stop {
+            get {
+                return ResourceManager.GetString("Action_Stop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Yes.
+        /// </summary>
+        public static string Action_Yes {
+            get {
+                return ResourceManager.GetString("Action_Yes", resourceCulture);
             }
         }
         
@@ -371,6 +416,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Commit {
             get {
                 return ResourceManager.GetString("Label_Commit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Confirm?.
+        /// </summary>
+        public static string Label_ConfirmQuestion {
+            get {
+                return ResourceManager.GetString("Label_ConfirmQuestion", resourceCulture);
             }
         }
         
@@ -546,6 +600,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Input.
+        /// </summary>
+        public static string Label_Input {
+            get {
+                return ResourceManager.GetString("Label_Input", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Input required.
+        /// </summary>
+        public static string Label_InputRequired {
+            get {
+                return ResourceManager.GetString("Label_InputRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An installation with this name already exists..
         /// </summary>
         public static string Label_InstallationWithThisNameExists {
@@ -686,6 +758,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_NextPage {
             get {
                 return ResourceManager.GetString("Label_NextPage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No.
+        /// </summary>
+        public static string Label_No {
+            get {
+                return ResourceManager.GetString("Label_No", resourceCulture);
             }
         }
         
@@ -983,6 +1064,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_VersionType {
             get {
                 return ResourceManager.GetString("Label_VersionType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Click Launch to get started!.
+        /// </summary>
+        public static string TeachingTip_ClickLaunchToGetStarted {
+            get {
+                return ResourceManager.GetString("TeachingTip_ClickLaunchToGetStarted", resourceCulture);
             }
         }
         

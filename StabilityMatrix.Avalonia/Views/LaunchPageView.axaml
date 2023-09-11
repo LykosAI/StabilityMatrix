@@ -11,6 +11,7 @@
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     d:DataContext="{x:Static mocks:DesignData.LaunchPageViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="700"
@@ -39,7 +40,7 @@
                         HorizontalAlignment="Left"
                         VerticalAlignment="Stretch"
                         Command="{Binding LaunchCommand}"
-                        Content="Launch" />
+                        Content="{x:Static lang:Resources.Action_Launch}" />
                     <SplitButton
                         Width="104"
                         IsVisible="{Binding !!SelectedBasePackage.ExtraLaunchCommands.Count, FallbackValue=False}"
@@ -47,7 +48,7 @@
                         HorizontalAlignment="Left"
                         VerticalAlignment="Stretch"
                         Command="{Binding LaunchCommand}"
-                        Content="Launch">
+                        Content="{x:Static lang:Resources.Action_Launch}">
                         <SplitButton.Flyout>
                             <ui:FAMenuFlyout 
                                 Placement="Bottom"
@@ -72,7 +73,7 @@
 
                 <ui:TeachingTip Grid.Row="0" Grid.Column="0" Name="TeachingTip1"
                                 Target="{Binding #LaunchButtonGrid}"
-                                Title="Click Launch to get started!"
+                                Title="{x:Static lang:Resources.TeachingTip_ClickLaunchToGetStarted}"
                                 PreferredPlacement="BottomRight"
                                 IsOpen="{Binding IsLaunchTeachingTipsOpen}"/>
                 
@@ -87,7 +88,7 @@
                         VerticalAlignment="Stretch"
                         Classes="danger"
                         Command="{Binding Stop}"
-                        Content="Stop"
+                        Content="{x:Static lang:Resources.Action_Stop}"
                         IsVisible="{Binding !SelectedBasePackage.ExtraLaunchCommands.Count, FallbackValue=False}" />
                     <Button
                         Width="104"
@@ -95,7 +96,7 @@
                         VerticalAlignment="Stretch"
                         Classes="danger"
                         Command="{Binding Stop}"
-                        Content="Stop"
+                        Content="{x:Static lang:Resources.Action_Stop}"
                         IsVisible="{Binding !!SelectedBasePackage.ExtraLaunchCommands.Count, FallbackValue=False}" />
                 </Grid>
                 
@@ -146,7 +147,7 @@
                 Width="48"
                 Margin="8,8,16,0"
                 IsChecked="{Binding ShowManualInputPrompt}"
-                ToolTip.Tip="Send Input"
+                ToolTip.Tip="{x:Static lang:Resources.Action_SendInput}"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Stretch"
                 FontSize="16">
@@ -172,7 +173,7 @@
                 <!-- Info bar for manual input -->
                 <ui:InfoBar 
                     Severity="Warning"
-                    Title="Input"
+                    Title="{x:Static lang:Resources.Label_Input}"
                     IsIconVisible="False"
                     IsClosable="False"
                     IsOpen="{Binding ShowManualInputPrompt, Mode=TwoWay}" 
@@ -180,7 +181,7 @@
                     <ui:InfoBar.ActionButton>
                         <Grid ColumnDefinitions="*,auto">
                             <TextBox Name="ManualInputBox" Margin="0,0,8,0" />
-                            <Button Grid.Column="1" Margin="0,0,8,0" Content="Send"
+                            <Button Grid.Column="1" Margin="0,0,8,0" Content="{x:Static lang:Resources.Action_Send}"
                                     Command="{Binding SendManualInputCommand}"
                                     CommandParameter="{Binding #ManualInputBox.Text}"/>
                         </Grid>
@@ -189,16 +190,16 @@
                 <!-- Info bar for auto prompts -->
                 <ui:InfoBar 
                     Severity="Warning"
-                    Title="Input required" 
+                    Title="{x:Static lang:Resources.Label_InputRequired}" 
                     IsOpen="{Binding ShowConfirmInputPrompt, Mode=TwoWay}" 
                     Margin="0"
-                    Message="Confirm?">
+                    Message="{x:Static lang:Resources.Label_ConfirmQuestion}">
                     <ui:InfoBar.ActionButton>
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button Classes="accent" Content="Yes" 
+                            <Button Classes="accent" Content="{x:Static lang:Resources.Action_Yes}" 
                                     Command="{Binding SendConfirmInputCommand}"
                                     CommandParameter="{StaticResource True}"/>
-                            <Button Content="No" Command="{Binding SendConfirmInputCommand}"
+                            <Button Content="{x:Static lang:Resources.Label_No}" Command="{Binding SendConfirmInputCommand}"
                                     CommandParameter="{StaticResource False}"/>
                         </StackPanel>
                     </ui:InfoBar.ActionButton>
@@ -212,7 +213,7 @@
             Margin="24,0,24,8"
             HorizontalAlignment="Stretch"
             Classes="success"
-            Content="Open Web UI"
+            Content="{x:Static lang:Resources.Action_OpenWebUI}"
             Command="{Binding OpenWebUi}"
             IsVisible="{Binding ShowWebUiButton}"
             FontSize="12" />

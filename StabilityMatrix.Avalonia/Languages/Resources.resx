@@ -330,4 +330,34 @@
     <data name="Label_LicenseAndOpenSourceNotices" xml:space="preserve">
         <value>License and Open Source Notices</value>
     </data>
+    <data name="TeachingTip_ClickLaunchToGetStarted" xml:space="preserve">
+        <value>Click Launch to get started!</value>
+    </data>
+    <data name="Action_Stop" xml:space="preserve">
+        <value>Stop</value>
+    </data>
+    <data name="Action_SendInput" xml:space="preserve">
+        <value>Send Input</value>
+    </data>
+    <data name="Label_Input" xml:space="preserve">
+        <value>Input</value>
+    </data>
+    <data name="Action_Send" xml:space="preserve">
+        <value>Send</value>
+    </data>
+    <data name="Label_InputRequired" xml:space="preserve">
+        <value>Input required</value>
+    </data>
+    <data name="Label_ConfirmQuestion" xml:space="preserve">
+        <value>Confirm?</value>
+    </data>
+    <data name="Action_Yes" xml:space="preserve">
+        <value>Yes</value>
+    </data>
+    <data name="Label_No" xml:space="preserve">
+        <value>No</value>
+    </data>
+    <data name="Action_OpenWebUI" xml:space="preserve">
+        <value>Open Web UI</value>
+    </data>
 </root>

@@ -416,30 +416,23 @@ public partial class CheckpointFolder : ViewModelBase
 
     public async Task FindConnectedMetadata()
     {
-        try
-        {
-            IsImportInProgress = true;
-            var files = CheckpointFiles
-                .Where(f => !f.IsConnectedModel)
-                .Select(f => f.FilePath)
-                .ToList();
+        IsImportInProgress = true;
+        var files = CheckpointFiles
+            .Where(f => !f.IsConnectedModel)
+            .Select(f => f.FilePath)
+            .ToList();
 
-            if (files.Any())
-            {
-                await ImportFilesAsync(files, true, false);
-            }
-            else
-            {
-                notificationService.Show(
-                    "Cannot Find Connected Metadata",
-                    "All files in this folder are already connected.",
-                    NotificationType.Warning
-                );
-            }
-        }
-        finally
+        if (files.Any())
         {
-            IsImportInProgress = false;
+            await ImportFilesAsync(files, true, false);
+        }
+        else
+        {
+            notificationService.Show(
+                "Cannot Find Connected Metadata",
+                "All files in this folder are already connected.",
+                NotificationType.Warning
+            );
         }
     }
 

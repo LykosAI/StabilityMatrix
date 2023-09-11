@@ -627,6 +627,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Installing.
+        /// </summary>
+        public static string Label_Installing {
+            get {
+                return ResourceManager.GetString("Label_Installing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Integrations.
         /// </summary>
         public static string Label_Integrations {
@@ -1068,6 +1077,51 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Download complete.
+        /// </summary>
+        public static string Progress_DownloadComplete {
+            get {
+                return ResourceManager.GetString("Progress_DownloadComplete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading package....
+        /// </summary>
+        public static string Progress_DownloadingPackage {
+            get {
+                return ResourceManager.GetString("Progress_DownloadingPackage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installation complete.
+        /// </summary>
+        public static string Progress_InstallationComplete {
+            get {
+                return ResourceManager.GetString("Progress_InstallationComplete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing package requirements....
+        /// </summary>
+        public static string Progress_InstallingPackageRequirements {
+            get {
+                return ResourceManager.GetString("Progress_InstallingPackageRequirements", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing prerequisites....
+        /// </summary>
+        public static string Progress_InstallingPrerequisites {
+            get {
+                return ResourceManager.GetString("Progress_InstallingPrerequisites", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Click Launch to get started!.
         /// </summary>
         public static string TeachingTip_ClickLaunchToGetStarted {
@@ -1077,11 +1131,38 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Choose your preferred interface and click Install to get started.
+        /// </summary>
+        public static string Text_OneClickInstaller_SubHeader {
+            get {
+                return ResourceManager.GetString("Text_OneClickInstaller_SubHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Proceeding to Launch page.
+        /// </summary>
+        public static string Text_ProceedingToLaunchPage {
+            get {
+                return ResourceManager.GetString("Text_ProceedingToLaunchPage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Relaunch is required for new language option to take effect.
         /// </summary>
         public static string Text_RelaunchRequiredToApplyLanguage {
             get {
                 return ResourceManager.GetString("Text_RelaunchRequiredToApplyLanguage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Welcome to Stability Matrix!.
+        /// </summary>
+        public static string Text_WelcomeToStabilityMatrix {
+            get {
+                return ResourceManager.GetString("Text_WelcomeToStabilityMatrix", resourceCulture);
             }
         }
     }

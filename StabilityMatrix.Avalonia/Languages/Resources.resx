@@ -360,4 +360,31 @@
     <data name="Action_OpenWebUI" xml:space="preserve">
         <value>Open Web UI</value>
     </data>
+    <data name="Text_WelcomeToStabilityMatrix" xml:space="preserve">
+        <value>Welcome to Stability Matrix!</value>
+    </data>
+    <data name="Text_OneClickInstaller_SubHeader" xml:space="preserve">
+        <value>Choose your preferred interface and click Install to get started</value>
+    </data>
+    <data name="Label_Installing" xml:space="preserve">
+        <value>Installing</value>
+    </data>
+    <data name="Text_ProceedingToLaunchPage" xml:space="preserve">
+        <value>Proceeding to Launch page</value>
+    </data>
+    <data name="Progress_DownloadingPackage" xml:space="preserve">
+        <value>Downloading package...</value>
+    </data>
+    <data name="Progress_DownloadComplete" xml:space="preserve">
+        <value>Download complete</value>
+    </data>
+    <data name="Progress_InstallationComplete" xml:space="preserve">
+        <value>Installation complete</value>
+    </data>
+    <data name="Progress_InstallingPrerequisites" xml:space="preserve">
+        <value>Installing prerequisites...</value>
+    </data>
+    <data name="Progress_InstallingPackageRequirements" xml:space="preserve">
+        <value>Installing package requirements...</value>
+    </data>
 </root>

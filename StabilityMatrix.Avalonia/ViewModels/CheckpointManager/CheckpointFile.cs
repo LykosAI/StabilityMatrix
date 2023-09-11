@@ -379,7 +379,10 @@ public partial class CheckpointFile : ViewModelBase
                 return false;
             if (x.GetType() != y.GetType())
                 return false;
-            return x.FilePath == y.FilePath;
+            return x.FilePath == y.FilePath
+                && x.ConnectedModel?.Hashes.BLAKE3 == y.ConnectedModel?.Hashes.BLAKE3
+                && x.ConnectedModel?.ThumbnailImageUrl == y.ConnectedModel?.ThumbnailImageUrl
+                && x.PreviewImagePath == y.PreviewImagePath;
         }
 
         public int GetHashCode(CheckpointFile obj)

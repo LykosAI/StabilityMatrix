@@ -56,7 +56,7 @@ public class InstalledPackage : IJsonOnDeserialized
     /// </summary>
     public string? GetLaunchArgsHost()
     {
-        var hostOption = LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "host");
+        var hostOption = LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "--host");
         if (hostOption?.OptionValue != null)
         {
             return hostOption.OptionValue as string;
@@ -69,7 +69,7 @@ public class InstalledPackage : IJsonOnDeserialized
     /// </summary>
     public string? GetLaunchArgsPort()
     {
-        var portOption = LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "port");
+        var portOption = LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "--port");
         if (portOption?.OptionValue != null)
         {
             return portOption.OptionValue as string;

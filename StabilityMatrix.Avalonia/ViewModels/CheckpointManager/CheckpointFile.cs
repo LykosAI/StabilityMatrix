@@ -56,7 +56,7 @@ public partial class CheckpointFile : ViewModelBase
 
     public ObservableCollection<string> Badges { get; set; } = new();
 
-    private static readonly string[] SupportedCheckpointExtensions =
+    public static readonly string[] SupportedCheckpointExtensions =
     {
         ".safetensors",
         ".pt",

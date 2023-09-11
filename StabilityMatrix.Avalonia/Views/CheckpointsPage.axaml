@@ -177,22 +177,18 @@
                                     TextTrimming="CharacterEllipsis"
                                     ToolTip.Tip="{Binding FileName}"
                                     VerticalAlignment="Bottom" />
-                                <ItemsControl
+                                <ItemsRepeater
                                     Grid.Column="3"
                                     Grid.ColumnSpan="2"
                                     Grid.Row="2"
                                     ItemTemplate="{StaticResource BadgeTemplate}"
                                     ItemsSource="{Binding Badges}"
                                     VerticalAlignment="Bottom">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel
-                                                HorizontalAlignment="Right"
-                                                Orientation="Horizontal"
-                                                VerticalAlignment="Bottom" />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                </ItemsControl>
+                                    
+                                        <ItemsRepeater.Layout>
+                                            <UniformGridLayout/>
+                                        </ItemsRepeater.Layout>
+                                </ItemsRepeater>
                             </Grid>
                         </StackPanel>
                         

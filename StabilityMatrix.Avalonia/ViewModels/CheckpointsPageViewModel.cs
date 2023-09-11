@@ -8,6 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData;
 using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Avalonia.Services;
@@ -32,6 +33,8 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     private readonly ModelFinder modelFinder;
     private readonly IDownloadService downloadService;
     private readonly INotificationService notificationService;
+    private readonly SourceCache<CheckpointFolder, string> checkpointFoldersCache =
+        new(x => x.Title);
 
     public override string Title => "Checkpoints";
 
@@ -65,11 +68,10 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     }
 
     [ObservableProperty]
-    private ObservableCollection<CheckpointManager.CheckpointFolder> checkpointFolders = new();
+    private ObservableCollection<CheckpointFolder> checkpointFolders = new();
 
     [ObservableProperty]
-    private ObservableCollection<CheckpointManager.CheckpointFolder> displayedCheckpointFolders =
-        new();
+    private ObservableCollection<CheckpointFolder> displayedCheckpointFolders = new();
 
     public CheckpointsPageViewModel(
         ISharedFolders sharedFolders,
@@ -97,16 +99,13 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         // Refresh search filter
         OnSearchFilterChanged(string.Empty);
 
-        Logger.Info(
-            $"Loaded {DisplayedCheckpointFolders.Count} checkpoint folders in {sw.ElapsedMilliseconds}ms"
-        );
-
         if (Design.IsDesignMode)
             return;
 
         IsLoading = CheckpointFolders.Count == 0;
         IsIndexing = CheckpointFolders.Count > 0;
-        await IndexFolders();
+        GetStuff();
+        //await IndexFolders();
         IsLoading = false;
         IsIndexing = false;
 
@@ -119,12 +118,15 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         var sw = Stopwatch.StartNew();
         if (string.IsNullOrWhiteSpace(SearchFilter))
         {
-            DisplayedCheckpointFolders = new ObservableCollection<CheckpointFolder>(
-                CheckpointFolders.Select(x =>
-                {
-                    x.SearchFilter = SearchFilter;
-                    return x;
-                })
+            checkpointFoldersCache.Edit(
+                s =>
+                    s.Load(
+                        CheckpointFolders.Select(x =>
+                        {
+                            x.SearchFilter = SearchFilter;
+                            return x;
+                        })
+                    )
             );
             sw.Stop();
             Logger.Info($"OnSearchFilterChanged in {sw.ElapsedMilliseconds}ms");
@@ -138,10 +140,11 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         {
             folder.SearchFilter = SearchFilter;
         }
+
+        checkpointFoldersCache.Edit(s => s.Load(filteredFolders));
+
         sw.Stop();
         Logger.Info($"ContainsSearchFilter in {sw.ElapsedMilliseconds}ms");
-
-        DisplayedCheckpointFolders = new ObservableCollection<CheckpointFolder>(filteredFolders);
     }
 
     partial void OnShowConnectedModelImagesChanged(bool value)
@@ -231,6 +234,99 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         {
             DisplayedCheckpointFolders = CheckpointFolders;
         }
+    }
+
+    private void GetStuff()
+    {
+        CheckpointFolders.Clear();
+        var allFiles = Directory.EnumerateFiles(
+            settingsManager.ModelsDirectory,
+            "*.*",
+            SearchOption.AllDirectories
+        );
+        foreach (var file in allFiles)
+        {
+            var extension = Path.GetExtension(file);
+            if (!CheckpointFile.SupportedCheckpointExtensions.Contains(extension))
+                continue;
+
+            var folder =
+                Path.GetDirectoryName(file)
+                    ?.Replace(
+                        $"{settingsManager.ModelsDirectory}{Path.DirectorySeparatorChar}",
+                        string.Empty
+                    ) ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(folder))
+                continue;
+
+            var isRootFolder = !folder.Contains(Path.DirectorySeparatorChar);
+            var rootFolderName = isRootFolder
+                ? folder
+                : folder.Split(Path.DirectorySeparatorChar).First();
+
+            var rootCheckpointFolder = CheckpointFolders.FirstOrDefault(
+                x => x.Title == rootFolderName
+            );
+            if (rootCheckpointFolder == null)
+            {
+                rootCheckpointFolder = new CheckpointFolder(
+                    settingsManager,
+                    downloadService,
+                    modelFinder,
+                    notificationService
+                )
+                {
+                    Title = rootFolderName,
+                    DirectoryPath = Path.Combine(settingsManager.ModelsDirectory, rootFolderName),
+                    IsExpanded = isRootFolder, // Top level folders expanded by default
+                };
+                CheckpointFolders.Add(rootCheckpointFolder);
+            }
+
+            if (isRootFolder)
+            {
+                rootCheckpointFolder.CheckpointFiles.Add(
+                    new CheckpointFile { Title = Path.GetFileName(file), FilePath = file }
+                );
+                continue;
+            }
+
+            // recursively add subfolders
+            var subFolderNames = folder.Split(Path.DirectorySeparatorChar).Skip(1);
+
+            foreach (var subFolderName in subFolderNames)
+            {
+                var subFolder = rootCheckpointFolder.SubFolders.FirstOrDefault(
+                    x => x.Title == subFolderName
+                );
+                if (subFolder == null)
+                {
+                    subFolder = new CheckpointFolder(
+                        settingsManager,
+                        downloadService,
+                        modelFinder,
+                        notificationService
+                    )
+                    {
+                        Title = subFolderName,
+                        DirectoryPath = Path.Combine(
+                            rootCheckpointFolder.DirectoryPath,
+                            subFolderName
+                        ),
+                        ParentFolder = rootCheckpointFolder
+                    };
+                    rootCheckpointFolder.SubFolders.Add(subFolder);
+                }
+                rootCheckpointFolder = subFolder;
+            }
+
+            rootCheckpointFolder.CheckpointFiles.Add(
+                new CheckpointFile { Title = Path.GetFileName(file), FilePath = file }
+            );
+        }
+
+        DisplayedCheckpointFolders = CheckpointFolders;
     }
 
     [RelayCommand]

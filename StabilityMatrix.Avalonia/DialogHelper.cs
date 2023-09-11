@@ -23,7 +23,11 @@ using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Services;
 using TextMateSharp.Grammars;
+using Process = FuzzySharp.Process;
 
 namespace StabilityMatrix.Avalonia;
 
@@ -298,9 +302,16 @@ public static class DialogHelper
         return dialog;
     }
 
+    /// <summary>
+    /// Create a dialog for displaying a prompt error
+    /// </summary>
+    /// <param name="exception">Target exception to display</param>
+    /// <param name="sourceText">Full text of the target Document</param>
+    /// <param name="modelIndexService">Optional model index service to look for similar names</param>
     public static BetterContentDialog CreatePromptErrorDialog(
         PromptError exception,
-        string sourceText
+        string sourceText,
+        IModelIndexService? modelIndexService = null
     )
     {
         Dispatcher.UIThread.VerifyAccess();
@@ -382,6 +393,41 @@ public static class DialogHelper
                 textEditor
             }
         };
+
+        // Check model typos
+        if (modelIndexService is not null && exception is PromptUnknownModelError unknownModelError)
+        {
+            var sharedFolderType = unknownModelError.ModelType.ConvertTo<SharedFolderType>();
+            if (modelIndexService.ModelIndex.TryGetValue(sharedFolderType, out var models))
+            {
+                var result = Process.ExtractOne(
+                    unknownModelError.ModelName,
+                    models.Select(m => m.FileNameWithoutExtension)
+                );
+
+                if (result.Score > 40)
+                {
+                    /*mainGrid.Children.Add(
+                        new TextBlock
+                        {
+                            Text = $"Did you mean: {result.Value}?",
+                            FontSize = 18,
+                            FontWeight = FontWeight.Medium,
+                            Margin = new Thickness(0, 8),
+                        }
+                    );*/
+
+                    mainGrid.Children.Add(
+                        new InfoBar
+                        {
+                            Title = $"Did you mean: {result.Value}?",
+                            IsClosable = false,
+                            IsOpen = true
+                        }
+                    );
+                }
+            }
+        }
 
         textEditor.ScrollToHorizontalOffset(errorLineEndOffset - errorLineOffset);
 

@@ -239,6 +239,7 @@ public record Prompt
                 {
                     throw PromptValidationError.Network_UnknownModel(
                         modelName,
+                        parsedNetworkType,
                         currentToken.StartIndex,
                         GetSafeEndIndex(currentToken.EndIndex)
                     );

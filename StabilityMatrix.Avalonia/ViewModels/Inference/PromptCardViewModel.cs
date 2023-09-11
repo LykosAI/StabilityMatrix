@@ -108,7 +108,7 @@ public partial class PromptCardViewModel : LoadableViewModelBase
         }
         catch (PromptError e)
         {
-            var dialog = DialogHelper.CreatePromptErrorDialog(e, promptText);
+            var dialog = DialogHelper.CreatePromptErrorDialog(e, promptText, modelIndexService);
             await dialog.ShowAsync();
             return false;
         }
@@ -120,7 +120,7 @@ public partial class PromptCardViewModel : LoadableViewModelBase
         }
         catch (PromptError e)
         {
-            var dialog = DialogHelper.CreatePromptErrorDialog(e, negPromptText);
+            var dialog = DialogHelper.CreatePromptErrorDialog(e, negPromptText, modelIndexService);
             await dialog.ShowAsync();
             return false;
         }
@@ -190,7 +190,9 @@ public partial class PromptCardViewModel : LoadableViewModelBase
         }
         catch (PromptError e)
         {
-            await DialogHelper.CreatePromptErrorDialog(e, prompt.RawText).ShowAsync();
+            await DialogHelper
+                .CreatePromptErrorDialog(e, prompt.RawText, modelIndexService)
+                .ShowAsync();
             return;
         }
 

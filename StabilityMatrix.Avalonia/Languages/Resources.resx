@@ -387,4 +387,22 @@
     <data name="Progress_InstallingPackageRequirements" xml:space="preserve">
         <value>Installing package requirements...</value>
     </data>
+    <data name="Action_OpenInExplorer" xml:space="preserve">
+        <value>Open in Explorer</value>
+    </data>
+    <data name="Action_OpenInFinder" xml:space="preserve">
+        <value>Open in Finder</value>
+    </data>
+    <data name="Action_Uninstall" xml:space="preserve">
+        <value>Uninstall</value>
+    </data>
+    <data name="Action_CheckForUpdates" xml:space="preserve">
+        <value>Check for Updates</value>
+    </data>
+    <data name="Action_Update" xml:space="preserve">
+        <value>Update</value>
+    </data>
+    <data name="Action_AddPackage" xml:space="preserve">
+        <value>Add Package</value>
+    </data>
 </root>

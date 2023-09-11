@@ -78,11 +78,29 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add Package.
+        /// </summary>
+        public static string Action_AddPackage {
+            get {
+                return ResourceManager.GetString("Action_AddPackage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string Action_Cancel {
             get {
                 return ResourceManager.GetString("Action_Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Check for Updates.
+        /// </summary>
+        public static string Action_CheckForUpdates {
+            get {
+                return ResourceManager.GetString("Action_CheckForUpdates", resourceCulture);
             }
         }
         
@@ -173,6 +191,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Action_New {
             get {
                 return ResourceManager.GetString("Action_New", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open in Explorer.
+        /// </summary>
+        public static string Action_OpenInExplorer {
+            get {
+                return ResourceManager.GetString("Action_OpenInExplorer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open in Finder.
+        /// </summary>
+        public static string Action_OpenInFinder {
+            get {
+                return ResourceManager.GetString("Action_OpenInFinder", resourceCulture);
             }
         }
         
@@ -290,6 +326,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Action_Stop {
             get {
                 return ResourceManager.GetString("Action_Stop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Uninstall.
+        /// </summary>
+        public static string Action_Uninstall {
+            get {
+                return ResourceManager.GetString("Action_Uninstall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Update.
+        /// </summary>
+        public static string Action_Update {
+            get {
+                return ResourceManager.GetString("Action_Update", resourceCulture);
             }
         }
         

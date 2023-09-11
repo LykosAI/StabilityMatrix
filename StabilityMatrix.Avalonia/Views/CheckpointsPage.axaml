@@ -139,7 +139,7 @@
                                         MaxHeight="48"
                                         MaxWidth="64"
                                         Padding="0"
-                                        ToolTip.Tip="Connected Model"
+                                        ToolTip.Tip="{x:Static lang:Resources.Label_ConnectedModel}"
                                         VerticalAlignment="Top"
                                         IsVisible="{Binding IsConnectedModel, Mode=OneWay}">
                                         <ui:SymbolIcon
@@ -156,7 +156,7 @@
                                         MaxHeight="48"
                                         MaxWidth="64"
                                         Padding="0"
-                                        ToolTip.Tip="Local Model"
+                                        ToolTip.Tip="{x:Static lang:Resources.Label_LocalModel}"
                                         VerticalAlignment="Top"
                                         IsVisible="{Binding !IsConnectedModel, Mode=OneWay}">
                                         <ui:SymbolIcon

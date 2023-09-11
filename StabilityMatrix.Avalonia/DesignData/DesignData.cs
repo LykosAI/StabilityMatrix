@@ -168,7 +168,7 @@ public static class DesignData
         // Checkpoints page
         CheckpointsPageViewModel.CheckpointFolders = new ObservableCollection<CheckpointFolder>
         {
-            new(settingsManager, downloadService, modelFinder)
+            new(settingsManager, downloadService, modelFinder, notificationService)
             {
                 Title = "StableDiffusion",
                 DirectoryPath = "Models/StableDiffusion",
@@ -198,18 +198,18 @@ public static class DesignData
                     new() { FilePath = "~/Models/Lora/model.safetensors", Title = "Some model" },
                 },
             },
-            new(settingsManager, downloadService, modelFinder)
+            new(settingsManager, downloadService, modelFinder, notificationService)
             {
                 Title = "Lora",
                 DirectoryPath = "Packages/Lora",
                 SubFolders = new AdvancedObservableList<CheckpointFolder>()
                 {
-                    new(settingsManager, downloadService, modelFinder)
+                    new(settingsManager, downloadService, modelFinder, notificationService)
                     {
                         Title = "StableDiffusion",
                         DirectoryPath = "Packages/Lora/Subfolder",
                     },
-                    new(settingsManager, downloadService, modelFinder)
+                    new(settingsManager, downloadService, modelFinder, notificationService)
                     {
                         Title = "Lora",
                         DirectoryPath = "Packages/StableDiffusion/Subfolder",

@@ -366,6 +366,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Find Connected Metadata.
+        /// </summary>
+        public static string Label_FindConnectedMetadata {
+            get {
+                return ResourceManager.GetString("Label_FindConnectedMetadata", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to First Page.
         /// </summary>
         public static string Label_FirstPage {
@@ -650,6 +659,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_SharedModelFolderStrategy {
             get {
                 return ResourceManager.GetString("Label_SharedModelFolderStrategy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show Model Images.
+        /// </summary>
+        public static string Label_ShowModelImages {
+            get {
+                return ResourceManager.GetString("Label_ShowModelImages", resourceCulture);
             }
         }
         

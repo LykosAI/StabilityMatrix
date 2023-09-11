@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
@@ -12,6 +13,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -28,9 +30,11 @@ public partial class CheckpointFolder : ViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly IDownloadService downloadService;
     private readonly ModelFinder modelFinder;
+    private readonly INotificationService notificationService;
+
     // ReSharper disable once FieldCanBeMadeReadOnly.Local
     private bool useCategoryVisibility;
-    
+
     /// <summary>
     /// Absolute path to the folder.
     /// </summary>
@@ -50,12 +54,14 @@ public partial class CheckpointFolder : ViewModelBase
     /// <summary>
     /// True if the category is enabled for the manager page.
     /// </summary>
-    [ObservableProperty] private bool isCategoryEnabled = true;
+    [ObservableProperty]
+    private bool isCategoryEnabled = true;
 
     /// <summary>
     /// True if currently expanded in the UI.
     /// </summary>
-    [ObservableProperty] private bool isExpanded = true;
+    [ObservableProperty]
+    private bool isExpanded = true;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsDragBlurEnabled))]
@@ -65,15 +71,16 @@ public partial class CheckpointFolder : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsDragBlurEnabled))]
     private bool isImportInProgress;
 
-    [ObservableProperty] private string searchFilter = string.Empty;
-    
+    [ObservableProperty]
+    private string searchFilter = string.Empty;
+
     public bool IsDragBlurEnabled => IsCurrentDragTarget || IsImportInProgress;
 
     public string TitleWithFilesCount =>
         CheckpointFiles.Any() || SubFolders.Any(f => f.CheckpointFiles.Any())
             ? $"{Title} ({CheckpointFiles.Count + SubFolders.Sum(folder => folder.CheckpointFiles.Count)})"
             : Title;
-    
+
     public ProgressViewModel Progress { get; } = new();
 
     public CheckpointFolder? ParentFolder { get; init; }
@@ -85,29 +92,33 @@ public partial class CheckpointFolder : ViewModelBase
         ISettingsManager settingsManager,
         IDownloadService downloadService,
         ModelFinder modelFinder,
-        bool useCategoryVisibility = true)
+        INotificationService notificationService,
+        bool useCategoryVisibility = true
+    )
     {
         this.settingsManager = settingsManager;
         this.downloadService = downloadService;
         this.modelFinder = modelFinder;
+        this.notificationService = notificationService;
         this.useCategoryVisibility = useCategoryVisibility;
-        
+
         CheckpointFiles.CollectionChanged += OnCheckpointFilesChanged;
         DisplayedCheckpointFiles = CheckpointFiles;
     }
-    
+
     /// <summary>
     /// When title is set, set the category enabled state from settings.
     /// </summary>
     // ReSharper disable once UnusedParameterInPartialMethod
     partial void OnTitleChanged(string value)
     {
-        if (!useCategoryVisibility) return;
-        
+        if (!useCategoryVisibility)
+            return;
+
         // Update folder type
         var result = Enum.TryParse(Title, out SharedFolderType type);
         FolderType = result ? type : new SharedFolderType();
-        
+
         IsCategoryEnabled = settingsManager.IsSharedFolderCategoryVisible(FolderType);
     }
 
@@ -119,8 +130,9 @@ public partial class CheckpointFolder : ViewModelBase
         }
         else
         {
-            var filteredFiles = CheckpointFiles.Where(y =>
-                y.FileName.Contains(value, StringComparison.OrdinalIgnoreCase));
+            var filteredFiles = CheckpointFiles.Where(
+                y => y.FileName.Contains(value, StringComparison.OrdinalIgnoreCase)
+            );
             DisplayedCheckpointFiles = new AdvancedObservableList<CheckpointFile>(filteredFiles);
         }
     }
@@ -130,13 +142,14 @@ public partial class CheckpointFolder : ViewModelBase
     /// </summary>
     partial void OnIsCategoryEnabledChanged(bool value)
     {
-        if (!useCategoryVisibility) return;
+        if (!useCategoryVisibility)
+            return;
         if (value != settingsManager.IsSharedFolderCategoryVisible(FolderType))
         {
             settingsManager.SetSharedFolderCategoryVisible(FolderType, value);
         }
     }
-    
+
     private void OnCheckpointFilesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         OnPropertyChanged(nameof(TitleWithFilesCount));
@@ -168,7 +181,7 @@ public partial class CheckpointFolder : ViewModelBase
     {
         await ProcessRunner.OpenFolderBrowser(path);
     }
-    
+
     [RelayCommand]
     private async Task Delete()
     {
@@ -181,7 +194,9 @@ public partial class CheckpointFolder : ViewModelBase
         }
 
         var dialog = DialogHelper.CreateTaskDialog(
-            "Are you sure you want to delete this folder?",directory);
+            "Are you sure you want to delete this folder?",
+            directory
+        );
 
         dialog.ShowProgressBar = false;
         dialog.Buttons = new List<TaskDialogButton>
@@ -189,7 +204,7 @@ public partial class CheckpointFolder : ViewModelBase
             TaskDialogButton.YesButton,
             TaskDialogButton.NoButton
         };
-        
+
         dialog.Closing += async (sender, e) =>
         {
             // We only want to use the deferral on the 'Yes' Button
@@ -204,7 +219,7 @@ public partial class CheckpointFolder : ViewModelBase
                 {
                     await directory.DeleteAsync(true);
                 }
-                
+
                 RemoveFromParentList();
                 deferral.Complete();
             }
@@ -214,12 +229,12 @@ public partial class CheckpointFolder : ViewModelBase
 
         await dialog.ShowAsync(true);
     }
-    
+
     [RelayCommand]
     private async Task CreateSubFolder()
     {
         Dispatcher.UIThread.VerifyAccess();
-        
+
         var textBox = new TextBox();
         var dialog = new ContentDialog
         {
@@ -235,52 +250,71 @@ public partial class CheckpointFolder : ViewModelBase
         if (result == ContentDialogResult.Primary)
         {
             var targetName = textBox.Text;
-            if (string.IsNullOrWhiteSpace(targetName)) return;
-            
+            if (string.IsNullOrWhiteSpace(targetName))
+                return;
+
             var subFolderPath = Path.Combine(DirectoryPath, targetName);
-            
+
             Directory.CreateDirectory(subFolderPath);
-            
-            SubFolders.Add(new CheckpointFolder(settingsManager, 
-                downloadService, modelFinder,
-                useCategoryVisibility: false)
-            {
-                Title = Path.GetFileName(subFolderPath),
-                DirectoryPath = subFolderPath,
-                FolderType = FolderType,
-                ParentFolder = this,
-                IsExpanded = false,
-            });
+
+            SubFolders.Add(
+                new CheckpointFolder(
+                    settingsManager,
+                    downloadService,
+                    modelFinder,
+                    notificationService,
+                    useCategoryVisibility: false
+                )
+                {
+                    Title = Path.GetFileName(subFolderPath),
+                    DirectoryPath = subFolderPath,
+                    FolderType = FolderType,
+                    ParentFolder = this,
+                    IsExpanded = false,
+                }
+            );
         }
     }
-    
+
     /// <summary>
     /// Imports files to the folder. Reports progress to instance properties.
     /// </summary>
-    public async Task ImportFilesAsync(IEnumerable<string> files, bool convertToConnected = false)
+    public async Task ImportFilesAsync(
+        IEnumerable<string> files,
+        bool convertToConnected = false,
+        bool copyFiles = true
+    )
     {
         try
         {
             Progress.Value = 0;
-            var copyPaths = files.ToDictionary(k => k, v => Path.Combine(DirectoryPath, Path.GetFileName(v)));
-            
+            var copyPaths = files.ToDictionary(
+                k => k,
+                v => Path.Combine(DirectoryPath, Path.GetFileName(v))
+            );
+
             var progress = new Progress<ProgressReport>(report =>
             {
                 Progress.IsIndeterminate = false;
                 Progress.Value = report.Percentage;
                 // For multiple files, add count
-                Progress.Text = copyPaths.Count > 1 ? $"Importing {report.Title} ({report.Message})" : $"Importing {report.Title}";
+                Progress.Text =
+                    copyPaths.Count > 1
+                        ? $"Importing {report.Title} ({report.Message})"
+                        : $"Importing {report.Title}";
             });
 
-            await FileTransfers.CopyFiles(copyPaths, progress);
-            
+            if (copyFiles)
+            {
+                await FileTransfers.CopyFiles(copyPaths, progress);
+            }
+
             // Hash files and convert them to connected model if found
             if (convertToConnected)
             {
                 var modelFilesCount = copyPaths.Count;
-                var modelFiles = copyPaths.Values
-                    .Select(path => new FilePath(path));
-                
+                var modelFiles = copyPaths.Values.Select(path => new FilePath(path));
+
                 // Holds tasks for model queries after hash
                 var modelQueryTasks = new List<Task<bool>>();
 
@@ -290,27 +324,33 @@ public partial class CheckpointFolder : ViewModelBase
                     {
                         Progress.IsIndeterminate = report.IsIndeterminate;
                         Progress.Value = report.Percentage;
-                        Progress.Text = modelFilesCount > 1 ? 
-                            $"Computing metadata for {modelFile.Name} ({i}/{modelFilesCount})" : 
-                            $"Computing metadata for {modelFile.Name}";
+                        Progress.Text =
+                            modelFilesCount > 1
+                                ? $"Computing metadata for {modelFile.Name} ({i}/{modelFilesCount})"
+                                : $"Computing metadata for {modelFile.Name}";
                     });
-                    
+
                     var hashBlake3 = await FileHash.GetBlake3Async(modelFile, hashProgress);
-                    
+
                     // Start a task to query the model in background
                     var queryTask = Task.Run(async () =>
                     {
                         var result = await modelFinder.LocalFindModel(hashBlake3);
                         result ??= await modelFinder.RemoteFindModel(hashBlake3);
 
-                        if (result is null) return false; // Not found
+                        if (result is null)
+                            return false; // Not found
 
                         var (model, version, file) = result.Value;
-                        
+
                         // Save connected model info json
                         var modelFileName = Path.GetFileNameWithoutExtension(modelFile.Info.Name);
                         var modelInfo = new ConnectedModelInfo(
-                            model, version, file, DateTimeOffset.UtcNow);
+                            model,
+                            version,
+                            file,
+                            DateTimeOffset.UtcNow
+                        );
                         await modelInfo.SaveJsonToDirectory(DirectoryPath, modelFileName);
 
                         // If available, save thumbnail
@@ -321,8 +361,15 @@ public partial class CheckpointFolder : ViewModelBase
                             if (imageExt is "jpg" or "jpeg" or "png")
                             {
                                 var imageDownloadPath = Path.GetFullPath(
-                                    Path.Combine(DirectoryPath, $"{modelFileName}.preview.{imageExt}"));
-                                await downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
+                                    Path.Combine(
+                                        DirectoryPath,
+                                        $"{modelFileName}.preview.{imageExt}"
+                                    )
+                                );
+                                await downloadService.DownloadToFileAsync(
+                                    image.Url,
+                                    imageDownloadPath
+                                );
                             }
                         }
 
@@ -330,29 +377,27 @@ public partial class CheckpointFolder : ViewModelBase
                     });
                     modelQueryTasks.Add(queryTask);
                 }
-                
+
                 // Set progress to indeterminate
                 Progress.IsIndeterminate = true;
                 Progress.Text = "Checking connected model information";
-                
+
                 // Wait for all model queries to finish
                 var modelQueryResults = await Task.WhenAll(modelQueryTasks);
-                
+
                 var successCount = modelQueryResults.Count(r => r);
                 var totalCount = modelQueryResults.Length;
                 var failCount = totalCount - successCount;
 
                 await IndexAsync();
-                
+
                 Progress.Value = 100;
                 Progress.Text = successCount switch
                 {
-                    0 when failCount > 0 =>
-                        "Import complete. No connected data found.",
-                    > 0 when failCount > 0 =>
-                        $"Import complete. Found connected data for {successCount} of {totalCount} models.",
-                    1 when failCount == 0 =>
-                        "Import complete. Found connected data for 1 model.",
+                    0 when failCount > 0 => "Import complete. No connected data found.",
+                    > 0 when failCount > 0
+                        => $"Import complete. Found connected data for {successCount} of {totalCount} models.",
+                    1 when failCount == 0 => "Import complete. Found connected data for 1 model.",
                     _ => $"Import complete. Found connected data for all {totalCount} models."
                 };
             }
@@ -369,38 +414,73 @@ public partial class CheckpointFolder : ViewModelBase
         }
     }
 
+    public async Task FindConnectedMetadata()
+    {
+        try
+        {
+            IsImportInProgress = true;
+            var files = CheckpointFiles
+                .Where(f => !f.IsConnectedModel)
+                .Select(f => f.FilePath)
+                .ToList();
+
+            if (files.Any())
+            {
+                await ImportFilesAsync(files, true, false);
+            }
+            else
+            {
+                notificationService.Show(
+                    "Cannot Find Connected Metadata",
+                    "All files in this folder are already connected.",
+                    NotificationType.Warning
+                );
+            }
+        }
+        finally
+        {
+            IsImportInProgress = false;
+        }
+    }
+
     /// <summary>
     /// Clears progress after a delay.
     /// </summary>
     private void DelayedClearProgress(TimeSpan delay)
     {
-        Task.Delay(delay).ContinueWith(_ =>
-        {
-            IsImportInProgress = false;
-            Progress.Value = 0;
-            Progress.IsIndeterminate = false;
-            Progress.Text = string.Empty;
-        });
+        Task.Delay(delay)
+            .ContinueWith(_ =>
+            {
+                IsImportInProgress = false;
+                Progress.Value = 0;
+                Progress.IsIndeterminate = false;
+                Progress.Text = string.Empty;
+            });
     }
-    
+
     /// <summary>
     /// Gets checkpoint files from folder index
     /// </summary>
-    private async Task<List<CheckpointFile>> GetCheckpointFilesAsync(IProgress<ProgressReport>? progress = default)
+    private async Task<List<CheckpointFile>> GetCheckpointFilesAsync(
+        IProgress<ProgressReport>? progress = default
+    )
     {
         if (!Directory.Exists(DirectoryPath))
         {
             return new List<CheckpointFile>();
         }
 
-        return await (progress switch
-        {
-            null => Task.Run(() =>
-                CheckpointFile.FromDirectoryIndex(DirectoryPath).ToList()),
-            
-            _ => Task.Run(() =>
-                CheckpointFile.FromDirectoryIndex(DirectoryPath, progress).ToList())
-        });
+        return await (
+            progress switch
+            {
+                null => Task.Run(() => CheckpointFile.FromDirectoryIndex(DirectoryPath).ToList()),
+
+                _
+                    => Task.Run(
+                        () => CheckpointFile.FromDirectoryIndex(DirectoryPath, progress).ToList()
+                    )
+            }
+        );
     }
 
     /// <summary>
@@ -413,8 +493,13 @@ public partial class CheckpointFolder : ViewModelBase
         foreach (var folder in Directory.GetDirectories(DirectoryPath))
         {
             // Create subfolder
-            var subFolder = new CheckpointFolder(settingsManager,
-                downloadService, modelFinder, useCategoryVisibility: false)
+            var subFolder = new CheckpointFolder(
+                settingsManager,
+                downloadService,
+                modelFinder,
+                notificationService,
+                useCategoryVisibility: false
+            )
             {
                 Title = Path.GetFileName(folder),
                 DirectoryPath = folder,
@@ -422,12 +507,14 @@ public partial class CheckpointFolder : ViewModelBase
                 ParentFolder = this,
                 IsExpanded = false, // Subfolders are collapsed by default
             };
-            
+
             await subFolder.IndexAsync(progress);
             SubFolders.Add(subFolder);
         }
-        
+
         CheckpointFiles.Clear();
-        CheckpointFiles.AddRange(await GetCheckpointFilesAsync());
+        var files = await GetCheckpointFilesAsync();
+        var orderedFiles = files.OrderByDescending(f => f.IsConnectedModel);
+        CheckpointFiles.AddRange(orderedFiles);
     }
 }

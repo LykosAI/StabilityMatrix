@@ -65,12 +65,12 @@
                     <Grid>
                         <!--  Main contents, hidden when IsLoading is true  -->
                         <StackPanel MinHeight="70">
-                            <Grid ColumnDefinitions="*,*,*,*,*" RowDefinitions="*,0.1*" IsVisible="{Binding !IsLoading}">
+                            <Grid ColumnDefinitions="*,*,*,*,*" RowDefinitions="*,Auto,0.1*" IsVisible="{Binding !IsLoading}">
                                 <StackPanel
                                     Grid.ColumnSpan="4"
                                     HorizontalAlignment="Left"
                                     IsEnabled="True"
-                                    Margin="4"
+                                    Margin="0,0,0,4"
                                     Orientation="Vertical">
                                     <!--  Tooltip for title and version  -->
                                     <ToolTip.Tip>
@@ -119,6 +119,16 @@
                                         TextWrapping="WrapWithOverflow"
                                         IsVisible="{Binding IsConnectedModel}" />
                                 </StackPanel>
+
+                                <controls:BetterAdvancedImage Grid.Row="1"
+                                                              Grid.Column="0" Grid.ColumnSpan="5"
+                                                              Margin="0,0,0,4"
+                                                              CornerRadius="4"
+                                                              Source="{Binding PreviewImagePath}"
+                                                              Stretch="UniformToFill"
+                                                              MaxHeight="250"
+                                                              IsVisible="{Binding $parent[ItemsControl].((vm:CheckpointsPageViewModel)DataContext).ShowConnectedModelImages}" />
+                                
                                 <Grid Grid.Column="4" Grid.Row="0">
                                     <Button
                                         Background="Transparent"
@@ -160,7 +170,7 @@
                                     Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                     Grid.Column="0"
                                     Grid.ColumnSpan="3"
-                                    Grid.Row="1"
+                                    Grid.Row="2"
                                     IsEnabled="True"
                                     Margin="4,4"
                                     Text="{Binding FileName}"
@@ -170,7 +180,7 @@
                                 <ItemsControl
                                     Grid.Column="3"
                                     Grid.ColumnSpan="2"
-                                    Grid.Row="1"
+                                    Grid.Row="2"
                                     ItemTemplate="{StaticResource BadgeTemplate}"
                                     ItemsSource="{Binding Badges}"
                                     VerticalAlignment="Bottom">
@@ -230,6 +240,9 @@
                                                    Command="{Binding CreateSubFolderCommand}"/>
                             </ui:MenuFlyoutSubItem.Items>
                         </ui:MenuFlyoutSubItem>
+                        <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Label_FindConnectedMetadata}" 
+                                           IconSource="Find"
+                                           Command="{Binding FindConnectedMetadata}"/>
                     </ui:FAMenuFlyout>
                 </Expander.ContextFlyout>
                 
@@ -355,15 +368,23 @@
         
     </controls:UserControlBase.Resources>
     
-    <Grid ColumnDefinitions="Auto,*" RowDefinitions="0.2*,*" Margin="4, 0">
+    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,*" Margin="4, 0">
         <!--  Top settings bar  -->
-        <ToggleSwitch
-            OffContent="{x:Static lang:Resources.Label_ImportAsConnected}"
-            OnContent="{x:Static lang:Resources.Label_ImportAsConnected}"
-            Grid.Column="0"
-            IsChecked="{Binding IsImportAsConnected}"
-            Margin="24,8"
-            ToolTip.Tip="{x:Static lang:Resources.Label_ImportAsConnectedExplanation}" />
+        <StackPanel Grid.Column="0" Grid.Row="0">
+            <ToggleSwitch
+                OffContent="{x:Static lang:Resources.Label_ImportAsConnected}"
+                OnContent="{x:Static lang:Resources.Label_ImportAsConnected}"
+                IsChecked="{Binding IsImportAsConnected}"
+                Margin="24,4,24,-4"
+                ToolTip.Tip="{x:Static lang:Resources.Label_ImportAsConnectedExplanation}" />
+            
+            <ToggleSwitch
+                OffContent="{x:Static lang:Resources.Label_ShowModelImages}"
+                OnContent="{x:Static lang:Resources.Label_ShowModelImages}"
+                IsChecked="{Binding ShowConnectedModelImages}"
+                Margin="24,-4,24,4" />
+        </StackPanel>
+        
         <StackPanel
             Grid.Column="1"
             Grid.Row="0"

@@ -10,6 +10,7 @@ namespace StabilityMatrix.Core.Models.FileInterfaces;
 public class FilePath : FileSystemPath, IPathObject
 {
     private FileInfo? _info;
+
     // ReSharper disable once MemberCanBePrivate.Global
     [JsonIgnore]
     public FileInfo Info => _info ??= new FileInfo(FullPath);
@@ -23,17 +24,16 @@ public class FilePath : FileSystemPath, IPathObject
             return Info.Attributes.HasFlag(FileAttributes.ReparsePoint);
         }
     }
-    
+
     [JsonIgnore]
     public bool Exists => Info.Exists;
-    
+
     [JsonIgnore]
     public string Name => Info.Name;
 
-    [JsonIgnore] 
-    public string NameWithoutExtension 
-        => Path.GetFileNameWithoutExtension(Info.Name);
-    
+    [JsonIgnore]
+    public string NameWithoutExtension => Path.GetFileNameWithoutExtension(Info.Name);
+
     /// <summary>
     /// Get the directory of the file.
     /// </summary>
@@ -44,8 +44,7 @@ public class FilePath : FileSystemPath, IPathObject
         {
             try
             {
-                return Info.Directory == null ? null
-                    : new DirectoryPath(Info.Directory);
+                return Info.Directory == null ? null : new DirectoryPath(Info.Directory);
             }
             catch (DirectoryNotFoundException)
             {
@@ -54,32 +53,31 @@ public class FilePath : FileSystemPath, IPathObject
         }
     }
 
-    public FilePath(string path) : base(path)
-    {
-    }
-    
-    public FilePath(FileInfo fileInfo) : base(fileInfo.FullName)
+    public FilePath(string path)
+        : base(path) { }
+
+    public FilePath(FileInfo fileInfo)
+        : base(fileInfo.FullName)
     {
         _info = fileInfo;
     }
-    
-    public FilePath(FileSystemPath path) : base(path)
-    {
-    }
-    
-    public FilePath(params string[] paths) : base(paths)
-    {
-    }
+
+    public FilePath(FileSystemPath path)
+        : base(path) { }
+
+    public FilePath(params string[] paths)
+        : base(paths) { }
 
     public long GetSize()
     {
         Info.Refresh();
         return Info.Length;
     }
-    
+
     public long GetSize(bool includeSymbolicLinks)
     {
-        if (!includeSymbolicLinks && IsSymbolicLink) return 0;
+        if (!includeSymbolicLinks && IsSymbolicLink)
+            return 0;
         return GetSize();
     }
 
@@ -87,51 +85,51 @@ public class FilePath : FileSystemPath, IPathObject
     {
         return Task.Run(() => GetSize(includeSymbolicLinks));
     }
-    
+
     /// <summary> Creates an empty file. </summary>
     public void Create() => File.Create(FullPath).Close();
-    
+
     /// <summary> Deletes the file </summary>
     public void Delete() => File.Delete(FullPath);
-    
+
     // Methods specific to files
-    
+
     /// <summary> Read text </summary>
     public string ReadAllText() => File.ReadAllText(FullPath);
-    
+
     /// <summary> Read text asynchronously </summary>
     public Task<string> ReadAllTextAsync(CancellationToken ct = default)
     {
         return File.ReadAllTextAsync(FullPath, ct);
     }
-    
+
     /// <summary> Write text </summary>
     public void WriteAllText(string text) => File.WriteAllText(FullPath, text, Encoding.UTF8);
-    
+
     /// <summary> Write text asynchronously </summary>
     public Task WriteAllTextAsync(string text, CancellationToken ct = default)
     {
         return File.WriteAllTextAsync(FullPath, text, Encoding.UTF8, ct);
     }
-    
+
     /// <summary> Read bytes </summary>
     public byte[] ReadAllBytes() => File.ReadAllBytes(FullPath);
-    
+
     /// <summary> Read bytes asynchronously </summary>
     public Task<byte[]> ReadAllBytesAsync(CancellationToken ct = default)
     {
         return File.ReadAllBytesAsync(FullPath, ct);
     }
-    
+
     /// <summary> Write bytes </summary>
     public void WriteAllBytes(byte[] bytes) => File.WriteAllBytes(FullPath, bytes);
-    
+
     /// <summary> Write bytes asynchronously </summary>
     public Task WriteAllBytesAsync(byte[] bytes, CancellationToken ct = default)
     {
         return File.WriteAllBytesAsync(FullPath, bytes, ct);
     }
-    
+
     /// <summary>
     /// Move the file to a directory.
     /// </summary>
@@ -141,7 +139,7 @@ public class FilePath : FileSystemPath, IPathObject
         // Return the new path
         return destinationFile;
     }
-    
+
     /// <summary>
     /// Move the file to a directory.
     /// </summary>
@@ -151,7 +149,7 @@ public class FilePath : FileSystemPath, IPathObject
         // Return the new path
         return directory.JoinFile(this);
     }
-    
+
     /// <summary>
     /// Move the file to a target path.
     /// </summary>
@@ -161,7 +159,7 @@ public class FilePath : FileSystemPath, IPathObject
         // Return the new path
         return destinationFile;
     }
-    
+
     /// <summary>
     /// Copy the file to a target path.
     /// </summary>
@@ -174,5 +172,6 @@ public class FilePath : FileSystemPath, IPathObject
 
     // Implicit conversions to and from string
     public static implicit operator string(FilePath path) => path.FullPath;
+
     public static implicit operator FilePath(string path) => new(path);
 }

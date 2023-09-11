@@ -69,4 +69,187 @@
     <data name="Label_DragAndDropCheckpointsHereToImport" xml:space="preserve">
         <value>Drag &amp; Drop checkpoints here to import</value>
     </data>
+    <data name="Label_UpdateAvailable" xml:space="preserve">
+        <value>Update Available</value>
+    </data>
+    <data name="Label_BecomeAPatron" xml:space="preserve">
+        <value>Become a Patron</value>
+    </data>
+    <data name="Label_JoinDiscord" xml:space="preserve">
+        <value>Join Discord Server</value>
+    </data>
+    <data name="Label_Downloads" xml:space="preserve">
+        <value>Downloads</value>
+    </data>
+    <data name="Action_Install" xml:space="preserve">
+        <value>Install</value>
+    </data>
+    <data name="Label_SkipSetup" xml:space="preserve">
+        <value>Skip first-time setup</value>
+    </data>
+    <data name="Label_UnexpectedErrorOccurred" xml:space="preserve">
+        <value>An unexpected error occurred</value>
+    </data>
+    <data name="Action_ExitApplication" xml:space="preserve">
+        <value>Exit Application</value>
+    </data>
+    <data name="Label_DisplayName" xml:space="preserve">
+        <value>Display Name</value>
+    </data>
+    <data name="Label_InstallationWithThisNameExists" xml:space="preserve">
+        <value>An installation with this name already exists.</value>
+    </data>
+    <data name="Label_PleaseChooseDifferentName" xml:space="preserve">
+        <value>Please choose a different name or select a different install location.</value>
+    </data>
+    <data name="Label_AdvancedOptions" xml:space="preserve">
+        <value>Advanced Options</value>
+    </data>
+    <data name="Label_Commit" xml:space="preserve">
+        <value>Commit</value>
+    </data>
+    <data name="Label_SharedModelFolderStrategy" xml:space="preserve">
+        <value>Shared Model Folder Strategy</value>
+    </data>
+    <data name="Label_PyTorchVersion" xml:space="preserve">
+        <value>PyTorch Version</value>
+    </data>
+    <data name="Label_CloseDialogWhenFinished" xml:space="preserve">
+        <value>Close dialog when finished</value>
+    </data>
+    <data name="Action_Close" xml:space="preserve">
+        <value>Close</value>
+    </data>
+    <data name="Label_DataDirectory" xml:space="preserve">
+        <value>Data Directory</value>
+    </data>
+    <data name="Label_DataDirectoryExplanation" xml:space="preserve">
+        <value>This is where model checkpoints, LORAs, web UIs, settings, etc. will be installed.</value>
+    </data>
+    <data name="Label_FatWarning" xml:space="preserve">
+        <value>You may encounter errors when using a FAT32 or exFAT drive. Select a different drive for a smoother experience.</value>
+    </data>
+    <data name="Label_PortableMode" xml:space="preserve">
+        <value>Portable Mode</value>
+    </data>
+    <data name="Label_PortableModeExplanation" xml:space="preserve">
+        <value>In Portable Mode, all data and settings will be stored in the same directory as the application. You will be able to move the application with its 'Data' folder to a different location or computer.</value>
+    </data>
+    <data name="Action_Continue" xml:space="preserve">
+        <value>Continue</value>
+    </data>
+    <data name="Label_PreviousImage" xml:space="preserve">
+        <value>Previous Image</value>
+    </data>
+    <data name="Label_NextImage" xml:space="preserve">
+        <value>Next Image</value>
+    </data>
+    <data name="Label_ModelDescription" xml:space="preserve">
+        <value>Model Description</value>
+    </data>
+    <data name="Label_NewVersionAvailable" xml:space="preserve">
+        <value>A new version of Stability Matrix is available!</value>
+    </data>
+    <data name="Label_ImportLatest" xml:space="preserve">
+        <value>Import Latest -</value>
+    </data>
+    <data name="Label_AllVersions" xml:space="preserve">
+        <value>All Versions</value>
+    </data>
+    <data name="Label_ModelSearchWatermark" xml:space="preserve">
+        <value>Search models, #tags, or @users</value>
+    </data>
+    <data name="Action_Search" xml:space="preserve">
+        <value>Search</value>
+    </data>
+    <data name="Label_Sort" xml:space="preserve">
+        <value>Sort</value>
+    </data>
+    <data name="Label_TimePeriod" xml:space="preserve">
+        <value>Period</value>
+    </data>
+    <data name="Label_ModelType" xml:space="preserve">
+        <value>Model Type</value>
+    </data>
+    <data name="Label_BaseModel" xml:space="preserve">
+        <value>Base Model</value>
+    </data>
+    <data name="Label_ShowNsfwContent" xml:space="preserve">
+        <value>Show NSFW Content</value>
+    </data>
+    <data name="Label_DataProvidedByCivitAi" xml:space="preserve">
+        <value>Data provided by CivitAI</value>
+    </data>
+    <data name="Label_Page" xml:space="preserve">
+        <value>Page</value>
+    </data>
+    <data name="Label_FirstPage" xml:space="preserve">
+        <value>First Page</value>
+    </data>
+    <data name="Label_PreviousPage" xml:space="preserve">
+        <value>Previous Page</value>
+    </data>
+    <data name="Label_NextPage" xml:space="preserve">
+        <value>Next Page</value>
+    </data>
+    <data name="Label_LastPage" xml:space="preserve">
+        <value>Last Page</value>
+    </data>
+    <data name="Action_Rename" xml:space="preserve">
+        <value>Rename</value>
+    </data>
+    <data name="Action_Delete" xml:space="preserve">
+        <value>Delete</value>
+    </data>
+    <data name="Action_OpenOnCivitAi" xml:space="preserve">
+        <value>Open on CivitAI</value>
+    </data>
+    <data name="Label_ConnectedModel" xml:space="preserve">
+        <value>Connected Model</value>
+    </data>
+    <data name="Label_LocalModel" xml:space="preserve">
+        <value>Local Model</value>
+    </data>
+    <data name="Action_ShowInExplorer" xml:space="preserve">
+        <value>Show in Explorer</value>
+    </data>
+    <data name="Action_New" xml:space="preserve">
+        <value>New</value>
+    </data>
+    <data name="Label_Folder" xml:space="preserve">
+        <value>Folder</value>
+    </data>
+    <data name="Label_DropFileToImport" xml:space="preserve">
+        <value>Drop file here to import</value>
+    </data>
+    <data name="Label_ImportAsConnected" xml:space="preserve">
+        <value>Import as Connected</value>
+    </data>
+    <data name="Label_ImportAsConnectedExplanation" xml:space="preserve">
+        <value>Search for connected metadata on new local imports</value>
+    </data>
+    <data name="Label_Indexing" xml:space="preserve">
+        <value>Indexing...</value>
+    </data>
+    <data name="Label_ModelsFolder" xml:space="preserve">
+        <value>Models Folder</value>
+    </data>
+    <data name="Label_Categories" xml:space="preserve">
+        <value>Categories</value>
+    </data>
+    <data name="Label_LetsGetStarted" xml:space="preserve">
+        <value>Let's get started</value>
+    </data>
+    <data name="Label_ReadAndAgree" xml:space="preserve">
+        <value>I have read and agree to the</value>
+    </data>
+    <data name="Label_LicenseAgreement" xml:space="preserve">
+        <value>License Agreement.</value>
+    </data>
+    <data name="Label_FindConnectedMetadata" xml:space="preserve">
+        <value>Find Connected Metadata</value>
+    </data>
+    <data name="Label_ShowModelImages" xml:space="preserve">
+        <value>Show Model Images</value>
+    </data>
 </root>

@@ -22,7 +22,8 @@
      </Application.Resources>
   
     <Application.Styles>
-        <styling:FluentAvaloniaTheme PreferUserAccentColor="True" UseSystemFontOnWindows="True" />
+        <styling:FluentAvaloniaTheme PreferUserAccentColor="True" UseSystemFontOnWindows="True"
+                                     TextVerticalAlignmentOverrideBehavior="Disabled"/>
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
         <StyleInclude Source="Styles/ProgressRing.axaml"/>

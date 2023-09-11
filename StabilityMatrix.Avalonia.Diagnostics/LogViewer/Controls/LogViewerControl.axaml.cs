@@ -8,8 +8,7 @@ namespace StabilityMatrix.Avalonia.Diagnostics.LogViewer.Controls;
 
 public partial class LogViewerControl : UserControl
 {
-    public LogViewerControl()
-        => InitializeComponent();
+    public LogViewerControl() => InitializeComponent();
 
     private ILogDataStoreImpl? vm;
     private LogModel? item;
@@ -17,7 +16,7 @@ public partial class LogViewerControl : UserControl
     protected override void OnDataContextChanged(EventArgs e)
     {
         base.OnDataContextChanged(e);
-        
+
         if (DataContext is null)
             return;
 
@@ -45,8 +44,9 @@ public partial class LogViewerControl : UserControl
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
     {
         base.OnDetachedFromLogicalTree(e);
-        
-        if (vm is null) return;
+
+        if (vm is null)
+            return;
         vm.DataStore.Entries.CollectionChanged -= OnCollectionChanged;
     }
 }

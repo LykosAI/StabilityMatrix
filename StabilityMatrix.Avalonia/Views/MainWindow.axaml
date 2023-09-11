@@ -8,6 +8,7 @@
                         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                         xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
                         xmlns:base="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
+                        xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="550"
                         d:DataContext="{x:Static mocks:DesignData.MainWindowViewModel}"
                         x:DataType="vm:MainWindowViewModel"
@@ -79,7 +80,7 @@
                 <StackPanel>
                     <!-- Update button -->
                     <ui:NavigationViewItem Name="FooterUpdateItem"
-                                           Content="Update Available"
+                                           Content="{x:Static lang:Resources.Label_UpdateAvailable}"
                                            IsVisible="{Binding IsUpdateAvailable}"
                                            IsEnabled="{Binding IsUpdateAvailable}"
                                            DataContext="{Binding UpdateViewModel}"
@@ -91,7 +92,7 @@
                     
                     <!-- Patreon -->
                     <ui:NavigationViewItem Name="PatreonPatreonItem"
-                                           Content="Become a Patron"
+                                           Content="{x:Static lang:Resources.Label_BecomeAPatron}"
                                            Tapped="PatreonPatreonItem_OnTapped">
                         <ui:NavigationViewItem.IconSource>
                             <controls:FASymbolIconSource Symbol="fa-brands fa-patreon"/>
@@ -100,7 +101,7 @@
                     
                     <!-- Discord -->
                     <ui:NavigationViewItem Name="FooterDiscordItem"
-                                           Content="Discord Server"
+                                           Content="{x:Static lang:Resources.Label_JoinDiscord}"
                                            Tapped="FooterDiscordItem_OnTapped">
                         <ui:NavigationViewItem.IconSource>
                             <controls:FASymbolIconSource Symbol="fa-brands fa-discord"/>
@@ -109,7 +110,7 @@
                     
                     <!-- Download flyout -->
                     <ui:NavigationViewItem Name="FooterDownloadItem"
-                                           Content="Downloads"
+                                           Content="{x:Static lang:Resources.Label_Downloads}"
                                            IconSource="{Binding IconSource}"
                                            DataContext="{Binding ProgressManagerViewModel}"
                                            IsVisible="{Binding !!ProgressItems.Count}"
@@ -118,7 +119,7 @@
                             <controls:BetterFlyout Placement="RightEdgeAlignedBottom"
                                                    HorizontalScrollBarVisibility="Hidden"
                                                    VerticalScrollBarVisibility="Auto"
-                                                   Content="{Binding }" />
+                                                   Content="{Binding }"/>
                         </ui:NavigationViewItem.ContextFlyout>
                         <ui:NavigationViewItem.InfoBadge>
                             <ui:InfoBadge Value="{Binding ProgressItems.Count}"

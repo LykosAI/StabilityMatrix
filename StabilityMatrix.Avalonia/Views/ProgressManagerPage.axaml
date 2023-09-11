@@ -11,11 +11,12 @@
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmBase="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
+    xmlns:progress="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Progress"
     MaxHeight="250"
     d:DataContext="{x:Static mocks:DesignData.ProgressManagerViewModel}"
     d:DesignHeight="250"
     d:DesignWidth="300"
-    x:DataType="vm:ProgressManagerViewModel"
+    x:DataType="progress:ProgressManagerViewModel"
     mc:Ignorable="d">
     <ScrollViewer>
         <Grid RowDefinitions="Auto, *">
@@ -117,7 +118,7 @@
                         </Border>
                     </DataTemplate>
 
-                    <DataTemplate DataType="{x:Type vm:ProgressItemViewModel}">
+                    <DataTemplate DataType="{x:Type progress:ProgressItemViewModel}">
                         <Border
                             Margin="4"
                             Padding="8"
@@ -143,6 +144,70 @@
                                         IsVisible="{Binding Progress.IsIndeterminate}"
                                         Text="{Binding Progress.Text, Mode=OneWay}" />
                                 </StackPanel>
+
+                                <ProgressBar
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Margin="0,8,0,4"
+                                    IsIndeterminate="{Binding Progress.IsIndeterminate}"
+                                    Value="{Binding Progress.Value, Mode=OneWay}">
+                                    <ProgressBar.Transitions>
+                                        <Transitions>
+                                            <DoubleTransition Property="Value" Duration="00:00:00.150">
+                                                <DoubleTransition.Easing>
+                                                    <SineEaseInOut />
+                                                </DoubleTransition.Easing>
+                                            </DoubleTransition>
+                                        </Transitions>
+                                    </ProgressBar.Transitions>
+                                </ProgressBar>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                    
+                    <DataTemplate DataType="{x:Type progress:PackageInstallProgressItemViewModel}">
+                        <Border
+                            Margin="4"
+                            Padding="8"
+                            Background="#22000000"
+                            BorderBrush="#33000000"
+                            BorderThickness="2"
+                            CornerRadius="8">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="*,Auto">
+
+                                <StackPanel Grid.Row="0" Grid.Column="0">
+                                    <TextBlock Margin="0,0" 
+                                               Text="{Binding Progress.Text, Mode=OneWay}" />
+                                    
+                                    <!--  non-indeterminate progress  -->
+                                    <TextBlock
+                                        Margin="0,4"
+                                        MaxWidth="300"
+                                        IsVisible="{Binding !Progress.IsIndeterminate}">
+                                        <Run Text="{Binding Progress.Description, Mode=OneWay}" />
+                                        <Run Text="{Binding Progress.Value, Mode=OneWay}" /><Run Text="%" />
+                                    </TextBlock>
+
+                                    <!--  indeterminate progress  -->
+                                    <TextBlock
+                                        Margin="0,4"
+                                        MaxWidth="300"
+                                        IsVisible="{Binding Progress.IsIndeterminate}"
+                                        Text="{Binding Progress.Description, Mode=OneWay}" />
+                                </StackPanel>
+
+
+                                <!--  Buttons  -->
+                                <Button
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    Margin="8,0"
+                                    ToolTip.Tip="Show Progress Dialog"
+                                    Command="{Binding ShowProgressDialog}"
+                                    Classes="transparent-full">
+                                    <ui:SymbolIcon Symbol="Open" />
+                                </Button>
 
                                 <ProgressBar
                                     Grid.Row="1"

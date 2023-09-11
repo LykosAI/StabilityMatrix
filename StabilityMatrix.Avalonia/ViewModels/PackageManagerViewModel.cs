@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
@@ -21,6 +22,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
@@ -37,6 +39,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly IPackageFactory packageFactory;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
+    private readonly INotificationService notificationService;
 
     public override string Title => "Packages";
     public override IconSource IconSource =>
@@ -61,12 +64,14 @@ public partial class PackageManagerViewModel : PageViewModelBase
     public PackageManagerViewModel(
         ISettingsManager settingsManager,
         IPackageFactory packageFactory,
-        ServiceManager<ViewModelBase> dialogFactory
+        ServiceManager<ViewModelBase> dialogFactory,
+        INotificationService notificationService
     )
     {
         this.settingsManager = settingsManager;
         this.packageFactory = packageFactory;
         this.dialogFactory = dialogFactory;
+        this.notificationService = notificationService;
 
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
 
@@ -77,11 +82,14 @@ public partial class PackageManagerViewModel : PageViewModelBase
             .Or(unknown)
             .DeferUntilLoaded()
             .Bind(Packages)
-            .Transform(p => dialogFactory.Get<PackageCardViewModel>(vm =>
-            {
-                vm.Package = p;
-                vm.OnLoadedAsync().SafeFireAndForget();
-            }))
+            .Transform(
+                p =>
+                    dialogFactory.Get<PackageCardViewModel>(vm =>
+                    {
+                        vm.Package = p;
+                        vm.OnLoadedAsync().SafeFireAndForget();
+                    })
+            )
             .Bind(PackageCards)
             .Subscribe();
     }
@@ -100,8 +108,11 @@ public partial class PackageManagerViewModel : PageViewModelBase
     {
         if (Design.IsDesignMode)
             return;
-        
-        installedPackages.EditDiff(settingsManager.Settings.InstalledPackages, InstalledPackage.Comparer);
+
+        installedPackages.EditDiff(
+            settingsManager.Settings.InstalledPackages,
+            InstalledPackage.Comparer
+        );
 
         var currentUnknown = await Task.Run(IndexUnknownPackages);
         unknownInstalledPackages.Edit(s => s.Load(currentUnknown));
@@ -115,7 +126,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
         var dialog = new BetterContentDialog
         {
-            MaxDialogWidth = 1100,
+            MaxDialogWidth = 900,
             MinDialogWidth = 900,
             DefaultButton = ContentDialogButton.Close,
             IsPrimaryButtonEnabled = false,
@@ -124,29 +135,49 @@ public partial class PackageManagerViewModel : PageViewModelBase
             Content = new InstallerDialog { DataContext = viewModel }
         };
 
-        await dialog.ShowAsync();
-        await OnLoadedAsync();
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            var runner = new PackageModificationRunner();
+            var steps = viewModel.Steps;
+
+            EventManager.Instance.OnPackageInstallProgressAdded(runner);
+            await runner.ExecuteSteps(steps.ToList());
+            EventManager.Instance.OnInstalledPackagesChanged();
+            notificationService.Show(
+                "Package Install Complete",
+                $"{viewModel.InstallName} installed successfully",
+                NotificationType.Success
+            );
+        }
     }
 
     private IEnumerable<UnknownInstalledPackage> IndexUnknownPackages()
-    {         
+    {
         var packageDir = new DirectoryPath(settingsManager.LibraryDir).JoinDir("Packages");
 
         if (!packageDir.Exists)
         {
             yield break;
         }
-        
+
         var currentPackages = settingsManager.Settings.InstalledPackages.ToImmutableArray();
-        
-        foreach (var subDir in packageDir.Info
-                     .EnumerateDirectories()
-                     .Select(info => new DirectoryPath(info)))
+
+        foreach (
+            var subDir in packageDir.Info
+                .EnumerateDirectories()
+                .Select(info => new DirectoryPath(info))
+        )
         {
             var expectedLibraryPath = $"Packages{Path.DirectorySeparatorChar}{subDir.Name}";
-            
+
             // Skip if the package is already installed
             if (currentPackages.Any(p => p.LibraryPath == expectedLibraryPath))
+            {
+                continue;
+            }
+
+            if (settingsManager.PackageInstallsInProgress.Contains(subDir.Name))
             {
                 continue;
             }

@@ -6,8 +6,8 @@ public class LogDataStore : Core.Logging.LogDataStore
 {
     #region Methods
 
-    public override async void AddEntry(Core.Logging.LogModel logModel)
-        => await Dispatcher.UIThread.InvokeAsync(() => base.AddEntry(logModel));
+    public override async void AddEntry(Core.Logging.LogModel logModel) =>
+        await Dispatcher.UIThread.InvokeAsync(() => base.AddEntry(logModel));
 
     #endregion
 }

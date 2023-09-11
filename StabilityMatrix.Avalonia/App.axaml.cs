@@ -47,6 +47,7 @@ using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
+using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Api;
@@ -57,6 +58,7 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Python;
@@ -340,11 +342,12 @@ public sealed class App : Application
     internal static void ConfigurePackages(IServiceCollection services)
     {
         services.AddSingleton<BasePackage, A3WebUI>();
+        services.AddSingleton<BasePackage, Fooocus>();
         services.AddSingleton<BasePackage, VladAutomatic>();
+        services.AddSingleton<BasePackage, InvokeAI>();
         services.AddSingleton<BasePackage, ComfyUI>();
         services.AddSingleton<BasePackage, VoltaML>();
-        services.AddSingleton<BasePackage, InvokeAI>();
-        services.AddSingleton<BasePackage, Fooocus>();
+        services.AddSingleton<BasePackage, FooocusMre>();
     }
 
     private static IServiceCollection ConfigureServices()
@@ -370,6 +373,7 @@ public sealed class App : Application
         services.AddSingleton<IUpdateHelper, UpdateHelper>();
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IModelIndexService, ModelIndexService>();
+        services.AddTransient<IPackageModificationRunner, PackageModificationRunner>();
 
         services.AddSingleton<ITrackedDownloadService, TrackedDownloadService>();
         services.AddSingleton<IDisposable>(
@@ -417,7 +421,8 @@ public sealed class App : Application
             // if (string.IsNullOrWhiteSpace(githubApiKey))
             //     return client;
             //
-            // client.Credentials = new Credentials(githubApiKey);
+            // client.Credentials =
+            //     new Credentials("");
             return client;
         });
 
@@ -601,6 +606,9 @@ public sealed class App : Application
             builder.ForLogger("System.*").WriteToNil(NLog.LogLevel.Warn);
             builder.ForLogger("Microsoft.*").WriteToNil(NLog.LogLevel.Warn);
             builder.ForLogger("Microsoft.Extensions.Http.*").WriteToNil(NLog.LogLevel.Warn);
+            builder
+                .ForLogger("StabilityMatrix.Avalonia.ViewModels.ConsoleViewModel")
+                .WriteToNil(NLog.LogLevel.Debug);
 
             builder.ForLogger().FilterMinLevel(NLog.LogLevel.Trace).WriteTo(debugTarget);
             builder.ForLogger().FilterMinLevel(NLog.LogLevel.Debug).WriteTo(fileTarget);

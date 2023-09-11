@@ -15,30 +15,36 @@ public static class ServicesExtension
 {
     public static IServiceCollection AddLogViewer(this IServiceCollection services)
     {
-        services.AddSingleton<ILogDataStore, LogDataStore>();
+        services.AddSingleton<ILogDataStore>(Core.Logging.LogDataStore.Instance);
         services.AddSingleton<LogViewerControlViewModel>();
 
         return services;
     }
-    
+
     public static IServiceCollection AddLogViewer(
-        this IServiceCollection services, 
-        Action<DataStoreLoggerConfiguration> configure)
+        this IServiceCollection services,
+        Action<DataStoreLoggerConfiguration> configure
+    )
     {
         services.AddSingleton<ILogDataStore>(Core.Logging.LogDataStore.Instance);
         services.AddSingleton<LogViewerControlViewModel>();
         services.Configure(configure);
-        
+
         return services;
     }
-    
-    public static ILoggingBuilder AddNLogTargets(this ILoggingBuilder builder, IConfiguration config)
+
+    public static ILoggingBuilder AddNLogTargets(
+        this ILoggingBuilder builder,
+        IConfiguration config
+    )
     {
         LogManager
             .Setup()
             // Register custom Target
-            .SetupExtensions(extensionBuilder =>
-                extensionBuilder.RegisterTarget<DataStoreLoggerTarget>("DataStoreLogger"));
+            .SetupExtensions(
+                extensionBuilder =>
+                    extensionBuilder.RegisterTarget<DataStoreLoggerTarget>("DataStoreLogger")
+            );
 
         /*builder
             .ClearProviders()
@@ -56,7 +62,11 @@ public static class ServicesExtension
         return builder;
     }
 
-    public static ILoggingBuilder AddNLogTargets(this ILoggingBuilder builder, IConfiguration config, Action<DataStoreLoggerConfiguration> configure)
+    public static ILoggingBuilder AddNLogTargets(
+        this ILoggingBuilder builder,
+        IConfiguration config,
+        Action<DataStoreLoggerConfiguration> configure
+    )
     {
         builder.AddNLogTargets(config);
         builder.Services.Configure(configure);

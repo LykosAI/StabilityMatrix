@@ -14,7 +14,7 @@ namespace StabilityMatrix.Avalonia.Views;
 public partial class LaunchPageView : UserControlBase
 {
     private const int LineOffset = 5;
-    
+
     public LaunchPageView()
     {
         InitializeComponent();
@@ -22,17 +22,18 @@ public partial class LaunchPageView : UserControlBase
         if (editor is not null)
         {
             var options = new RegistryOptions(ThemeName.DarkPlus);
-        
+
             // Config hyperlinks
             editor.TextArea.Options.EnableHyperlinks = true;
             editor.TextArea.Options.RequireControlModifierForHyperlinkClick = false;
             editor.TextArea.TextView.LinkTextForegroundBrush = Brushes.Coral;
-        
+
             var textMate = editor.InstallTextMate(options);
             var scope = options.GetScopeByLanguageId("log");
-        
-            if (scope is null) throw new InvalidOperationException("Scope is null");
-        
+
+            if (scope is null)
+                throw new InvalidOperationException("Scope is null");
+
             textMate.SetGrammar(scope);
             textMate.SetTheme(options.LoadTheme(ThemeName.DarkPlus));
         }
@@ -55,7 +56,8 @@ public partial class LaunchPageView : UserControlBase
         Dispatcher.UIThread.Invoke(() =>
         {
             var editor = this.FindControl<TextEditor>("Console");
-            if (editor?.Document == null) return;
+            if (editor?.Document == null)
+                return;
             var line = Math.Max(editor.Document.LineCount - LineOffset, 1);
             editor.ScrollToLine(line);
         });

@@ -6,6 +6,7 @@
                         xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
                         xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                         xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                        xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
                         d:DataContext="{x:Static mocks:DesignData.FirstLaunchSetupViewModel}"
                         x:DataType="vm:FirstLaunchSetupViewModel"
                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -28,7 +29,7 @@
             <Grid Margin="0,16,32,32" RowDefinitions="0.6*,0.4*">
                 <!--  Texts  -->
                 <StackPanel Margin="32,64,0,0">
-                    <TextBlock FontSize="24" Text="Let's get started" />
+                    <TextBlock FontSize="24" Text="{x:Static lang:Resources.Label_LetsGetStarted}" />
                     <!--  Loading icon and text  -->
                     <Grid Margin="0,8,0,0" ColumnDefinitions="0.15*,*">
                         <controls:RefreshBadge 
@@ -79,7 +80,7 @@
                             <TextBlock 
                                 VerticalAlignment="Top"
                                 FontSize="14"
-                                Text="I have read and agree to the"/>
+                                Text="{x:Static lang:Resources.Label_ReadAndAgree}"/>
                             
                             <ui:HyperlinkButton
                                 VerticalAlignment="Top"
@@ -87,7 +88,7 @@
                                 Margin="1,0,0,0"
                                 Classes="transparent"
                                 NavigateUri="https://lykos.ai/matrix/license"
-                                Content="License Agreement."
+                                Content="{x:Static lang:Resources.Label_LicenseAgreement}"
                                 Grid.Column="1" />
                         </Grid>
                     </CheckBox>
@@ -102,11 +103,11 @@
                 <Button
                     Classes="danger"
                     Click="QuitButton_OnClick"
-                    Content="Quit" />
+                    Content="{x:Static lang:Resources.Action_Quit}" />
                 <Button
                     Classes="info"
                     Click="ContinueButton_OnClick"
-                    Content="Continue"
+                    Content="{x:Static lang:Resources.Action_Continue}"
                     IsEnabled="{Binding EulaAccepted, Mode=OneWay}" />
             </UniformGrid>
 

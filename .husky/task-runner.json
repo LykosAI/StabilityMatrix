@@ -11,7 +11,7 @@
          "name": "Run xamlstyler",
          "group": "pre-commit",
          "command": "dotnet",
-         "args": [ "xstyler", "${staged}" ],
+         "args": [ "xstyler", "-f", "${staged}" ],
          "include": [ "**/*.axaml" ]
       }
    ]

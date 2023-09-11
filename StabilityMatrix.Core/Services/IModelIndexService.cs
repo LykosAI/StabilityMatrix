@@ -14,7 +14,7 @@ public interface IModelIndexService
     /// Get all models of the specified type from the existing index.
     /// </summary>
     Task<IReadOnlyList<LocalModelFile>> GetModelsOfType(SharedFolderType type);
-    
+
     /// <summary>
     /// Starts a background task to refresh the local model file index.
     /// </summary>

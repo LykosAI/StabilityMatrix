@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
+using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Avalonia.Services;
@@ -33,8 +32,6 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     private readonly ModelFinder modelFinder;
     private readonly IDownloadService downloadService;
     private readonly INotificationService notificationService;
-    private readonly SourceCache<CheckpointFolder, string> checkpointFoldersCache =
-        new(x => x.Title);
 
     public override string Title => "Checkpoints";
 
@@ -67,11 +64,14 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         }
     }
 
-    [ObservableProperty]
-    private ObservableCollection<CheckpointFolder> checkpointFolders = new();
+    public SourceCache<CheckpointFolder, string> CheckpointFoldersCache { get; } =
+        new(x => x.DirectoryPath);
 
-    [ObservableProperty]
-    private ObservableCollection<CheckpointFolder> displayedCheckpointFolders = new();
+    public IObservableCollection<CheckpointFolder> CheckpointFolders { get; } =
+        new ObservableCollectionExtended<CheckpointFolder>();
+
+    public IObservableCollection<CheckpointFolder> DisplayedCheckpointFolders { get; } =
+        new ObservableCollectionExtended<CheckpointFolder>();
 
     public CheckpointsPageViewModel(
         ISharedFolders sharedFolders,
@@ -86,12 +86,21 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         this.downloadService = downloadService;
         this.notificationService = notificationService;
         this.modelFinder = modelFinder;
+
+        CheckpointFoldersCache
+            .Connect()
+            .DeferUntilLoaded()
+            .SortBy(x => x.Title)
+            .Bind(CheckpointFolders)
+            .Filter(ContainsSearchFilter)
+            .Bind(DisplayedCheckpointFolders)
+            .Subscribe();
     }
 
     public override async Task OnLoadedAsync()
     {
         var sw = Stopwatch.StartNew();
-        DisplayedCheckpointFolders = CheckpointFolders;
+        // DisplayedCheckpointFolders = CheckpointFolders;
 
         // Set UI states
         IsImportAsConnected = settingsManager.Settings.IsImportAsConnected;
@@ -104,8 +113,8 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
         IsLoading = CheckpointFolders.Count == 0;
         IsIndexing = CheckpointFolders.Count > 0;
-        GetStuff();
-        //await IndexFolders();
+        // GetStuff();
+        IndexFolders();
         IsLoading = false;
         IsIndexing = false;
 
@@ -115,36 +124,12 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     // ReSharper disable once UnusedParameterInPartialMethod
     partial void OnSearchFilterChanged(string value)
     {
-        var sw = Stopwatch.StartNew();
-        if (string.IsNullOrWhiteSpace(SearchFilter))
+        foreach (var folder in CheckpointFolders)
         {
-            checkpointFoldersCache.Edit(
-                s =>
-                    s.Load(
-                        CheckpointFolders.Select(x =>
-                        {
-                            x.SearchFilter = SearchFilter;
-                            return x;
-                        })
-                    )
-            );
-            sw.Stop();
-            Logger.Info($"OnSearchFilterChanged in {sw.ElapsedMilliseconds}ms");
-            return;
+            folder.SearchFilter = value;
         }
 
-        sw.Restart();
-
-        var filteredFolders = CheckpointFolders.Where(ContainsSearchFilter).ToList();
-        foreach (var folder in filteredFolders)
-        {
-            folder.SearchFilter = SearchFilter;
-        }
-
-        checkpointFoldersCache.Edit(s => s.Load(filteredFolders));
-
-        sw.Stop();
-        Logger.Info($"ContainsSearchFilter in {sw.ElapsedMilliseconds}ms");
+        CheckpointFoldersCache.Refresh();
     }
 
     partial void OnShowConnectedModelImagesChanged(bool value)
@@ -158,10 +143,15 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         }
     }
 
-    private bool ContainsSearchFilter(CheckpointManager.CheckpointFolder folder)
+    private bool ContainsSearchFilter(CheckpointFolder folder)
     {
         if (folder == null)
             throw new ArgumentNullException(nameof(folder));
+
+        if (string.IsNullOrWhiteSpace(SearchFilter))
+        {
+            return true;
+        }
 
         // Check files in the current folder
         return folder.CheckpointFiles.Any(
@@ -169,18 +159,12 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             )
             ||
             // If no matching files were found in the current folder, check in all subfolders
-            folder.SubFolders.Any(subFolder => ContainsSearchFilter(subFolder));
+            folder.SubFolders.Any(ContainsSearchFilter);
     }
 
-    private async Task IndexFolders()
+    private void IndexFolders()
     {
         var modelsDirectory = settingsManager.ModelsDirectory;
-        // Get all folders within the shared folder root
-        if (string.IsNullOrWhiteSpace(modelsDirectory))
-        {
-            CheckpointFolders.Clear();
-            return;
-        }
 
         // Setup shared folders in case they're missing
         sharedFolders.SetupSharedModelFolders();
@@ -190,8 +174,15 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         var sw = Stopwatch.StartNew();
 
         // Index all folders
-        var indexTasks = folders
-            .Select(async f =>
+
+        foreach (var folder in folders)
+        {
+            // Get from cache or create new
+            if (CheckpointFoldersCache.Lookup(folder) is { HasValue: true } result)
+            {
+                result.Value.Index();
+            }
+            else
             {
                 var checkpointFolder = new CheckpointFolder(
                     settingsManager,
@@ -200,45 +191,21 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
                     notificationService
                 )
                 {
-                    Title = Path.GetFileName(f),
-                    DirectoryPath = f,
-                    IsExpanded = true, // Top level folders expanded by default
+                    Title = Path.GetFileName(folder),
+                    DirectoryPath = folder,
+                    IsExpanded = true // Top level folders expanded by default
                 };
-                await checkpointFolder.IndexAsync();
-                return checkpointFolder;
-            })
-            .ToList();
-
-        await Task.WhenAll(indexTasks);
+                checkpointFolder.Index();
+                CheckpointFoldersCache.AddOrUpdate(checkpointFolder);
+            }
+        }
 
         sw.Stop();
-        Logger.Info($"IndexFolders in {sw.ElapsedMilliseconds}ms");
-
-        // Set new observable collection, ordered by alphabetical order
-        CheckpointFolders = new ObservableCollection<CheckpointFolder>(
-            indexTasks.Select(t => t.Result).OrderBy(f => f.Title)
-        );
-
-        if (!string.IsNullOrWhiteSpace(SearchFilter))
-        {
-            var filtered = CheckpointFolders
-                .Where(x => x.CheckpointFiles.Any(y => y.FileName.Contains(SearchFilter)))
-                .Select(f =>
-                {
-                    f.SearchFilter = SearchFilter;
-                    return f;
-                });
-            DisplayedCheckpointFolders = new ObservableCollection<CheckpointFolder>(filtered);
-        }
-        else
-        {
-            DisplayedCheckpointFolders = CheckpointFolders;
-        }
+        Logger.Info($"IndexFolders in {sw.Elapsed.TotalMilliseconds:F1}ms");
     }
 
-    private void GetStuff()
+    /*private void GetStuff()
     {
-        CheckpointFolders.Clear();
         var allFiles = Directory.EnumerateFiles(
             settingsManager.ModelsDirectory,
             "*.*",
@@ -265,10 +232,13 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
                 ? folder
                 : folder.Split(Path.DirectorySeparatorChar).First();
 
-            var rootCheckpointFolder = CheckpointFolders.FirstOrDefault(
-                x => x.Title == rootFolderName
-            );
-            if (rootCheckpointFolder == null)
+            // Get from cache or create new
+            CheckpointFolder? rootCheckpointFolder;
+            if (checkpointFoldersCache.Lookup(folder) is {HasValue: true} result)
+            {
+                rootCheckpointFolder = result.Value;
+            }
+            else
             {
                 rootCheckpointFolder = new CheckpointFolder(
                     settingsManager,
@@ -281,7 +251,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
                     DirectoryPath = Path.Combine(settingsManager.ModelsDirectory, rootFolderName),
                     IsExpanded = isRootFolder, // Top level folders expanded by default
                 };
-                CheckpointFolders.Add(rootCheckpointFolder);
+                checkpointFoldersCache.AddOrUpdate(rootCheckpointFolder);
             }
 
             if (isRootFolder)
@@ -325,9 +295,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
                 new CheckpointFile { Title = Path.GetFileName(file), FilePath = file }
             );
         }
-
-        DisplayedCheckpointFolders = CheckpointFolders;
-    }
+    }*/
 
     [RelayCommand]
     private async Task OpenModelsFolder()

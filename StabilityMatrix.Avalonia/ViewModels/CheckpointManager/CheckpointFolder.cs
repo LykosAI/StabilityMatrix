@@ -11,8 +11,9 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData;
+using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
-using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Extensions;
@@ -31,6 +32,12 @@ public partial class CheckpointFolder : ViewModelBase
     private readonly IDownloadService downloadService;
     private readonly ModelFinder modelFinder;
     private readonly INotificationService notificationService;
+
+    public SourceCache<CheckpointFolder, string> SubFoldersCache { get; } =
+        new(x => x.DirectoryPath);
+
+    private readonly SourceCache<CheckpointFile, string> checkpointFilesCache =
+        new(x => x.FilePath);
 
     // ReSharper disable once FieldCanBeMadeReadOnly.Local
     private bool useCategoryVisibility;
@@ -84,9 +91,15 @@ public partial class CheckpointFolder : ViewModelBase
     public ProgressViewModel Progress { get; } = new();
 
     public CheckpointFolder? ParentFolder { get; init; }
-    public AdvancedObservableList<CheckpointFolder> SubFolders { get; init; } = new();
-    public AdvancedObservableList<CheckpointFile> CheckpointFiles { get; init; } = new();
-    public AdvancedObservableList<CheckpointFile> DisplayedCheckpointFiles { get; set; }
+
+    public IObservableCollection<CheckpointFolder> SubFolders { get; } =
+        new ObservableCollectionExtended<CheckpointFolder>();
+
+    public IObservableCollection<CheckpointFile> CheckpointFiles { get; } =
+        new ObservableCollectionExtended<CheckpointFile>();
+
+    public IObservableCollection<CheckpointFile> DisplayedCheckpointFiles { get; } =
+        new ObservableCollectionExtended<CheckpointFile>();
 
     public CheckpointFolder(
         ISettingsManager settingsManager,
@@ -102,8 +115,24 @@ public partial class CheckpointFolder : ViewModelBase
         this.notificationService = notificationService;
         this.useCategoryVisibility = useCategoryVisibility;
 
+        checkpointFilesCache
+            .Connect()
+            .DeferUntilLoaded()
+            .SortBy(x => x.Title)
+            .Bind(CheckpointFiles)
+            .Filter(f => f.Title.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase))
+            .Bind(DisplayedCheckpointFiles)
+            .Subscribe();
+
+        SubFoldersCache
+            .Connect()
+            .DeferUntilLoaded()
+            .SortBy(x => x.Title)
+            .Bind(SubFolders)
+            .Subscribe();
+
         CheckpointFiles.CollectionChanged += OnCheckpointFilesChanged;
-        DisplayedCheckpointFiles = CheckpointFiles;
+        // DisplayedCheckpointFiles = CheckpointFiles;
     }
 
     /// <summary>
@@ -124,17 +153,12 @@ public partial class CheckpointFolder : ViewModelBase
 
     partial void OnSearchFilterChanged(string value)
     {
-        if (string.IsNullOrEmpty(value))
+        foreach (var subFolder in SubFolders)
         {
-            DisplayedCheckpointFiles = CheckpointFiles;
+            subFolder.SearchFilter = value;
         }
-        else
-        {
-            var filteredFiles = CheckpointFiles.Where(
-                y => y.FileName.Contains(value, StringComparison.OrdinalIgnoreCase)
-            );
-            DisplayedCheckpointFiles = new AdvancedObservableList<CheckpointFile>(filteredFiles);
-        }
+
+        checkpointFilesCache.Refresh();
     }
 
     /// <summary>
@@ -389,7 +413,7 @@ public partial class CheckpointFolder : ViewModelBase
                 var totalCount = modelQueryResults.Length;
                 var failCount = totalCount - successCount;
 
-                await IndexAsync();
+                BackgroundIndex();
 
                 Progress.Value = 100;
                 Progress.Text = successCount switch
@@ -405,7 +429,7 @@ public partial class CheckpointFolder : ViewModelBase
             {
                 Progress.Text = "Import complete";
                 Progress.Value = 100;
-                await IndexAsync();
+                BackgroundIndex();
             }
         }
         finally
@@ -454,60 +478,67 @@ public partial class CheckpointFolder : ViewModelBase
     /// <summary>
     /// Gets checkpoint files from folder index
     /// </summary>
-    private async Task<List<CheckpointFile>> GetCheckpointFilesAsync(
-        IProgress<ProgressReport>? progress = default
-    )
+    private IEnumerable<CheckpointFile> GetCheckpointFiles()
     {
         if (!Directory.Exists(DirectoryPath))
         {
-            return new List<CheckpointFile>();
+            return Enumerable.Empty<CheckpointFile>();
         }
 
-        return await (
-            progress switch
-            {
-                null => Task.Run(() => CheckpointFile.FromDirectoryIndex(DirectoryPath).ToList()),
-
-                _
-                    => Task.Run(
-                        () => CheckpointFile.FromDirectoryIndex(DirectoryPath, progress).ToList()
-                    )
-            }
-        );
+        return CheckpointFile.FromDirectoryIndex(DirectoryPath);
     }
 
     /// <summary>
     /// Indexes the folder for checkpoint files and refreshes the CheckPointFiles collection.
     /// </summary>
-    public async Task IndexAsync(IProgress<ProgressReport>? progress = default)
+    public void BackgroundIndex()
     {
-        SubFolders.Clear();
+        Dispatcher.UIThread.Post(Index, DispatcherPriority.Background);
+    }
+
+    /// <summary>
+    /// Indexes the folder for checkpoint files and refreshes the CheckPointFiles collection.
+    /// </summary>
+    public void Index()
+    {
         // Get subfolders
         foreach (var folder in Directory.GetDirectories(DirectoryPath))
         {
-            // Create subfolder
-            var subFolder = new CheckpointFolder(
-                settingsManager,
-                downloadService,
-                modelFinder,
-                notificationService,
-                useCategoryVisibility: false
-            )
+            // Get from cache or create new
+            if (SubFoldersCache.Lookup(folder) is { HasValue: true } result)
             {
-                Title = Path.GetFileName(folder),
-                DirectoryPath = folder,
-                FolderType = FolderType, // Inherit our folder type
-                ParentFolder = this,
-                IsExpanded = false, // Subfolders are collapsed by default
-            };
-
-            await subFolder.IndexAsync(progress);
-            SubFolders.Add(subFolder);
+                result.Value.BackgroundIndex();
+            }
+            else
+            {
+                // Create subfolder
+                var subFolder = new CheckpointFolder(
+                    settingsManager,
+                    downloadService,
+                    modelFinder,
+                    notificationService,
+                    useCategoryVisibility: false
+                )
+                {
+                    Title = Path.GetFileName(folder),
+                    DirectoryPath = folder,
+                    FolderType = FolderType, // Inherit our folder type
+                    ParentFolder = this,
+                    IsExpanded = false, // Subfolders are collapsed by default
+                };
+                subFolder.BackgroundIndex();
+                SubFoldersCache.AddOrUpdate(subFolder);
+            }
         }
 
-        CheckpointFiles.Clear();
-        var files = await GetCheckpointFilesAsync();
-        var orderedFiles = files.OrderByDescending(f => f.IsConnectedModel);
-        CheckpointFiles.AddRange(orderedFiles);
+        // Index files
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                var files = GetCheckpointFiles();
+                checkpointFilesCache.EditDiff(files, CheckpointFile.FilePathComparer);
+            },
+            DispatcherPriority.Background
+        );
     }
 }

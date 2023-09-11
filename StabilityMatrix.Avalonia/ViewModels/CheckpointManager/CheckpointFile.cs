@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Data;
-using Blake3;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -367,4 +366,28 @@ public partial class CheckpointFile : ViewModelBase
 
         return CivitModelType.Unknown;
     }
+
+    private sealed class FilePathEqualityComparer : IEqualityComparer<CheckpointFile>
+    {
+        public bool Equals(CheckpointFile? x, CheckpointFile? y)
+        {
+            if (ReferenceEquals(x, y))
+                return true;
+            if (ReferenceEquals(x, null))
+                return false;
+            if (ReferenceEquals(y, null))
+                return false;
+            if (x.GetType() != y.GetType())
+                return false;
+            return x.FilePath == y.FilePath;
+        }
+
+        public int GetHashCode(CheckpointFile obj)
+        {
+            return obj.FilePath.GetHashCode();
+        }
+    }
+
+    public static IEqualityComparer<CheckpointFile> FilePathComparer { get; } =
+        new FilePathEqualityComparer();
 }

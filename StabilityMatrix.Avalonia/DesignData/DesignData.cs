@@ -5,7 +5,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Http;
-using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
@@ -166,15 +165,15 @@ public static class DesignData
         InstallerViewModel.SelectedPackage = InstallerViewModel.AvailablePackages[0];
         InstallerViewModel.ReleaseNotes = "## Release Notes\nThis is a test release note.";
 
-        // Checkpoints page
+        /*// Checkpoints page
         CheckpointsPageViewModel.CheckpointFolders =
-            new ObservableCollectionExtended<CheckpointFolder>
+            new CheckpointFolder[]
             {
                 new(settingsManager, downloadService, modelFinder, notificationService)
                 {
                     Title = "StableDiffusion",
                     DirectoryPath = "Models/StableDiffusion",
-                    CheckpointFiles = new AdvancedObservableList<CheckpointFile>
+                    CheckpointFiles = CheckpointFile[]
                     {
                         new()
                         {
@@ -208,7 +207,7 @@ public static class DesignData
                 {
                     Title = "Lora",
                     DirectoryPath = "Packages/Lora",
-                    SubFolders = new AdvancedObservableList<CheckpointFolder>()
+                    SubFolders = CheckpointFolder[]
                     {
                         new(settingsManager, downloadService, modelFinder, notificationService)
                         {
@@ -233,7 +232,7 @@ public static class DesignData
             folder.DisplayedCheckpointFiles = new AdvancedObservableList<CheckpointFile>(
                 folder.CheckpointFiles
             );
-        }
+        }*/
 
         CheckpointBrowserViewModel.ModelCards =
             new ObservableCollection<CheckpointBrowserCardViewModel>

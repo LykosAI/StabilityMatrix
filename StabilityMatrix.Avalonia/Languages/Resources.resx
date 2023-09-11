@@ -252,4 +252,82 @@
     <data name="Label_ShowModelImages" xml:space="preserve">
         <value>Show Model Images</value>
     </data>
+    <data name="Label_Appearance" xml:space="preserve">
+        <value>Appearance</value>
+    </data>
+    <data name="Label_Theme" xml:space="preserve">
+        <value>Theme</value>
+    </data>
+    <data name="Label_CheckpointManager" xml:space="preserve">
+        <value>Checkpoint Manager</value>
+    </data>
+    <data name="Label_RemoveSymlinksOnShutdown" xml:space="preserve">
+        <value>Remove shared checkpoints directory symbolic links on shutdown</value>
+    </data>
+    <data name="Label_RemoveSymlinksOnShutdown_Details" xml:space="preserve">
+        <value>Select this option if you're having problems moving Stability Matrix to another drive</value>
+    </data>
+    <data name="Label_ResetCheckpointsCache" xml:space="preserve">
+        <value>Reset Checkpoints Cache</value>
+    </data>
+    <data name="Label_ResetCheckpointsCache_Details" xml:space="preserve">
+        <value>Rebuilds the installed checkpoints cache. Use if checkpoints are incorrectly labeled in the Model Browser</value>
+    </data>
+    <data name="Label_PackageEnvironment" xml:space="preserve">
+        <value>Package Environment</value>
+    </data>
+    <data name="Action_Edit" xml:space="preserve">
+        <value>Edit</value>
+    </data>
+    <data name="Label_EnvironmentVariables" xml:space="preserve">
+        <value>Environment Variables</value>
+    </data>
+    <data name="Label_EmbeddedPython" xml:space="preserve">
+        <value>Embedded Python</value>
+    </data>
+    <data name="Action_CheckVersion" xml:space="preserve">
+        <value>Check Version</value>
+    </data>
+    <data name="Label_Integrations" xml:space="preserve">
+        <value>Integrations</value>
+    </data>
+    <data name="Label_DiscordRichPresence" xml:space="preserve">
+        <value>Discord Rich Presence</value>
+    </data>
+    <data name="Label_System" xml:space="preserve">
+        <value>System</value>
+    </data>
+    <data name="Label_AddToStartMenu" xml:space="preserve">
+        <value>Add Stability Matrix to the Start Menu</value>
+    </data>
+    <data name="Label_AddToStartMenu_Details" xml:space="preserve">
+        <value>Uses the current app location, you can run this again if you move the app</value>
+    </data>
+    <data name="Label_OnlyAvailableOnWindows" xml:space="preserve">
+        <value>Only available on Windows</value>
+    </data>
+    <data name="Action_AddForCurrentUser" xml:space="preserve">
+        <value>Add for Current User</value>
+    </data>
+    <data name="Action_AddForAllUsers" xml:space="preserve">
+        <value>Add for All Users</value>
+    </data>
+    <data name="Label_SelectNewDataDirectory" xml:space="preserve">
+        <value>Select new Data Directory</value>
+    </data>
+    <data name="Label_SelectNewDataDirectory_Details" xml:space="preserve">
+        <value>Does not move existing data</value>
+    </data>
+    <data name="Action_SelectDirectory" xml:space="preserve">
+        <value>Select Directory</value>
+    </data>
+    <data name="Label_About" xml:space="preserve">
+        <value>About</value>
+    </data>
+    <data name="Label_StabilityMatrix" xml:space="preserve">
+        <value>Stability Matrix</value>
+    </data>
+    <data name="Label_LicenseAndOpenSourceNotices" xml:space="preserve">
+        <value>License and Open Source Notices</value>
+    </data>
 </root>

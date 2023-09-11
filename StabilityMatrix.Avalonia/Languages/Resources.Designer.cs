@@ -60,11 +60,38 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add for All Users.
+        /// </summary>
+        public static string Action_AddForAllUsers {
+            get {
+                return ResourceManager.GetString("Action_AddForAllUsers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add for Current User.
+        /// </summary>
+        public static string Action_AddForCurrentUser {
+            get {
+                return ResourceManager.GetString("Action_AddForCurrentUser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cancel.
         /// </summary>
         public static string Action_Cancel {
             get {
                 return ResourceManager.GetString("Action_Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Check Version.
+        /// </summary>
+        public static string Action_CheckVersion {
+            get {
+                return ResourceManager.GetString("Action_CheckVersion", resourceCulture);
             }
         }
         
@@ -92,6 +119,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Action_Delete {
             get {
                 return ResourceManager.GetString("Action_Delete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit.
+        /// </summary>
+        public static string Action_Edit {
+            get {
+                return ResourceManager.GetString("Action_Edit", resourceCulture);
             }
         }
         
@@ -204,11 +240,47 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Select Directory.
+        /// </summary>
+        public static string Action_SelectDirectory {
+            get {
+                return ResourceManager.GetString("Action_SelectDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show in Explorer.
         /// </summary>
         public static string Action_ShowInExplorer {
             get {
                 return ResourceManager.GetString("Action_ShowInExplorer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to About.
+        /// </summary>
+        public static string Label_About {
+            get {
+                return ResourceManager.GetString("Label_About", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add Stability Matrix to the Start Menu.
+        /// </summary>
+        public static string Label_AddToStartMenu {
+            get {
+                return ResourceManager.GetString("Label_AddToStartMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Uses the current app location, you can run this again if you move the app.
+        /// </summary>
+        public static string Label_AddToStartMenu_Details {
+            get {
+                return ResourceManager.GetString("Label_AddToStartMenu_Details", resourceCulture);
             }
         }
         
@@ -227,6 +299,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_AllVersions {
             get {
                 return ResourceManager.GetString("Label_AllVersions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Appearance.
+        /// </summary>
+        public static string Label_Appearance {
+            get {
+                return ResourceManager.GetString("Label_Appearance", resourceCulture);
             }
         }
         
@@ -263,6 +344,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Categories {
             get {
                 return ResourceManager.GetString("Label_Categories", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Checkpoint Manager.
+        /// </summary>
+        public static string Label_CheckpointManager {
+            get {
+                return ResourceManager.GetString("Label_CheckpointManager", resourceCulture);
             }
         }
         
@@ -321,6 +411,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Discord Rich Presence.
+        /// </summary>
+        public static string Label_DiscordRichPresence {
+            get {
+                return ResourceManager.GetString("Label_DiscordRichPresence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Display Name.
         /// </summary>
         public static string Label_DisplayName {
@@ -353,6 +452,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_DropFileToImport {
             get {
                 return ResourceManager.GetString("Label_DropFileToImport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Embedded Python.
+        /// </summary>
+        public static string Label_EmbeddedPython {
+            get {
+                return ResourceManager.GetString("Label_EmbeddedPython", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Environment Variables.
+        /// </summary>
+        public static string Label_EnvironmentVariables {
+            get {
+                return ResourceManager.GetString("Label_EnvironmentVariables", resourceCulture);
             }
         }
         
@@ -438,6 +555,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Integrations.
+        /// </summary>
+        public static string Label_Integrations {
+            get {
+                return ResourceManager.GetString("Label_Integrations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Join Discord Server.
         /// </summary>
         public static string Label_JoinDiscord {
@@ -479,6 +605,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_LicenseAgreement {
             get {
                 return ResourceManager.GetString("Label_LicenseAgreement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to License and Open Source Notices.
+        /// </summary>
+        public static string Label_LicenseAndOpenSourceNotices {
+            get {
+                return ResourceManager.GetString("Label_LicenseAndOpenSourceNotices", resourceCulture);
             }
         }
         
@@ -551,6 +686,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_NextPage {
             get {
                 return ResourceManager.GetString("Label_NextPage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only available on Windows.
+        /// </summary>
+        public static string Label_OnlyAvailableOnWindows {
+            get {
+                return ResourceManager.GetString("Label_OnlyAvailableOnWindows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Package Environment.
+        /// </summary>
+        public static string Label_PackageEnvironment {
+            get {
+                return ResourceManager.GetString("Label_PackageEnvironment", resourceCulture);
             }
         }
         
@@ -654,6 +807,60 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Remove shared checkpoints directory symbolic links on shutdown.
+        /// </summary>
+        public static string Label_RemoveSymlinksOnShutdown {
+            get {
+                return ResourceManager.GetString("Label_RemoveSymlinksOnShutdown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select this option if you&apos;re having problems moving Stability Matrix to another drive.
+        /// </summary>
+        public static string Label_RemoveSymlinksOnShutdown_Details {
+            get {
+                return ResourceManager.GetString("Label_RemoveSymlinksOnShutdown_Details", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reset Checkpoints Cache.
+        /// </summary>
+        public static string Label_ResetCheckpointsCache {
+            get {
+                return ResourceManager.GetString("Label_ResetCheckpointsCache", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rebuilds the installed checkpoints cache. Use if checkpoints are incorrectly labeled in the Model Browser.
+        /// </summary>
+        public static string Label_ResetCheckpointsCache_Details {
+            get {
+                return ResourceManager.GetString("Label_ResetCheckpointsCache_Details", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select new Data Directory.
+        /// </summary>
+        public static string Label_SelectNewDataDirectory {
+            get {
+                return ResourceManager.GetString("Label_SelectNewDataDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Does not move existing data.
+        /// </summary>
+        public static string Label_SelectNewDataDirectory_Details {
+            get {
+                return ResourceManager.GetString("Label_SelectNewDataDirectory_Details", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Shared Model Folder Strategy.
         /// </summary>
         public static string Label_SharedModelFolderStrategy {
@@ -695,6 +902,33 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Sort {
             get {
                 return ResourceManager.GetString("Label_Sort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stability Matrix.
+        /// </summary>
+        public static string Label_StabilityMatrix {
+            get {
+                return ResourceManager.GetString("Label_StabilityMatrix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to System.
+        /// </summary>
+        public static string Label_System {
+            get {
+                return ResourceManager.GetString("Label_System", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Theme.
+        /// </summary>
+        public static string Label_Theme {
+            get {
+                return ResourceManager.GetString("Label_Theme", resourceCulture);
             }
         }
         

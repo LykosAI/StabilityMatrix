@@ -165,7 +165,11 @@ public partial class CheckpointFolder : ObservableObject
     /// <summary>
     /// Imports files to the folder. Reports progress to instance properties.
     /// </summary>
-    public async Task ImportFilesAsync(IEnumerable<string> files, bool convertToConnected = false)
+    public async Task ImportFilesAsync(
+        IEnumerable<string> files,
+        bool convertToConnected = false,
+        bool copyFiles = true
+    )
     {
         Progress.IsIndeterminate = true;
         Progress.IsProgressVisible = true;
@@ -185,7 +189,10 @@ public partial class CheckpointFolder : ObservableObject
                     : $"Importing {report.Title}";
         });
 
-        await FileTransfers.CopyFiles(copyPaths, progress);
+        if (copyFiles)
+        {
+            await FileTransfers.CopyFiles(copyPaths, progress);
+        }
 
         // Hash files and convert them to connected model if found
         if (convertToConnected)

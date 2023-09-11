@@ -246,4 +246,10 @@
     <data name="Label_LicenseAgreement" xml:space="preserve">
         <value>License Agreement.</value>
     </data>
+    <data name="Label_FindConnectedMetadata" xml:space="preserve">
+        <value>Find Connected Metadata</value>
+    </data>
+    <data name="Label_ShowModelImages" xml:space="preserve">
+        <value>Show Model Images</value>
+    </data>
 </root>

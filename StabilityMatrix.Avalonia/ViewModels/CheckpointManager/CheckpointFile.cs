@@ -45,14 +45,24 @@ public partial class CheckpointFile : ViewModelBase
     private ConnectedModelInfo? connectedModel;
     public bool IsConnectedModel => ConnectedModel != null;
 
-    [ObservableProperty] private bool isLoading;
-    [ObservableProperty] private CivitModelType modelType;
-    
+    [ObservableProperty]
+    private bool isLoading;
+
+    [ObservableProperty]
+    private CivitModelType modelType;
+
     public string FileName => Path.GetFileName(FilePath);
 
     public ObservableCollection<string> Badges { get; set; } = new();
 
-    private static readonly string[] SupportedCheckpointExtensions = { ".safetensors", ".pt", ".ckpt", ".pth", ".bin" };
+    public static readonly string[] SupportedCheckpointExtensions =
+    {
+        ".safetensors",
+        ".pt",
+        ".ckpt",
+        ".pth",
+        ".bin"
+    };
     private static readonly string[] SupportedImageExtensions = { ".png", ".jpg", ".jpeg" };
     private static readonly string[] SupportedMetadataExtensions = { ".json" };
 
@@ -78,10 +88,11 @@ public partial class CheckpointFile : ViewModelBase
         if (string.IsNullOrEmpty(FilePath))
         {
             throw new InvalidOperationException(
-                "Cannot get connected model info file path when FilePath is empty");
+                "Cannot get connected model info file path when FilePath is empty"
+            );
         }
-        var modelNameNoExt = Path.GetFileNameWithoutExtension((string?) FilePath);
-        var modelDir = Path.GetDirectoryName((string?) FilePath) ?? "";
+        var modelNameNoExt = Path.GetFileNameWithoutExtension((string?)FilePath);
+        var modelDir = Path.GetDirectoryName((string?)FilePath) ?? "";
         return Path.Combine(modelDir, $"{modelNameNoExt}.cm-info.json");
     }
 
@@ -125,7 +136,7 @@ public partial class CheckpointFile : ViewModelBase
     private async Task RenameAsync()
     {
         // Parent folder path
-        var parentPath = Path.GetDirectoryName((string?) FilePath) ?? "";
+        var parentPath = Path.GetDirectoryName((string?)FilePath) ?? "";
 
         var textFields = new TextBoxField[]
         {
@@ -134,18 +145,18 @@ public partial class CheckpointFile : ViewModelBase
                 Label = "File name",
                 Validator = text =>
                 {
-                    if (string.IsNullOrWhiteSpace(text)) throw new 
-                        DataValidationException("File name is required");
-                    
-                    if (File.Exists(Path.Combine(parentPath, text))) throw new 
-                        DataValidationException("File name already exists");
+                    if (string.IsNullOrWhiteSpace(text))
+                        throw new DataValidationException("File name is required");
+
+                    if (File.Exists(Path.Combine(parentPath, text)))
+                        throw new DataValidationException("File name already exists");
                 },
                 Text = FileName
             }
         };
 
         var dialog = DialogHelper.CreateTextEntryDialog("Rename Model", "", textFields);
-        
+
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)
         {
             var name = textFields[0].Text;
@@ -160,7 +171,10 @@ public partial class CheckpointFile : ViewModelBase
                 // If preview image exists, rename it too
                 if (PreviewImagePath != null && File.Exists(PreviewImagePath))
                 {
-                    var newPreviewImagePath = Path.Combine(parentPath, $"{nameNoExt}.preview{Path.GetExtension((string?) PreviewImagePath)}");
+                    var newPreviewImagePath = Path.Combine(
+                        parentPath,
+                        $"{nameNoExt}.preview{Path.GetExtension((string?)PreviewImagePath)}"
+                    );
                     File.Move(PreviewImagePath, newPreviewImagePath);
                     PreviewImagePath = newPreviewImagePath;
                 }
@@ -170,7 +184,10 @@ public partial class CheckpointFile : ViewModelBase
                     var cmInfoPath = Path.Combine(parentPath, $"{originalNameNoExt}.cm-info.json");
                     if (File.Exists(cmInfoPath))
                     {
-                        File.Move(cmInfoPath, Path.Combine(parentPath, $"{nameNoExt}.cm-info.json"));
+                        File.Move(
+                            cmInfoPath,
+                            Path.Combine(parentPath, $"{nameNoExt}.cm-info.json")
+                        );
                     }
                 }
             }
@@ -184,7 +201,8 @@ public partial class CheckpointFile : ViewModelBase
     [RelayCommand]
     private void OpenOnCivitAi()
     {
-        if (ConnectedModel?.ModelId == null) return;
+        if (ConnectedModel?.ModelId == null)
+            return;
         ProcessRunner.OpenUrl($"https://civitai.com/models/{ConnectedModel.ModelId}");
     }
 
@@ -195,22 +213,33 @@ public partial class CheckpointFile : ViewModelBase
     /// - {filename}.preview.{image-extensions} (preview image)
     /// - {filename}.cm-info.json (connected model info)
     /// </summary>
-    public static IEnumerable<CheckpointFile> FromDirectoryIndex(string directory, SearchOption searchOption = SearchOption.TopDirectoryOnly)
+    public static IEnumerable<CheckpointFile> FromDirectoryIndex(
+        string directory,
+        SearchOption searchOption = SearchOption.TopDirectoryOnly
+    )
     {
         foreach (var file in Directory.EnumerateFiles(directory, "*.*", searchOption))
         {
-            if (!SupportedCheckpointExtensions.Any(ext => 
-                    Path.GetExtension(file).Equals(ext, StringComparison.InvariantCultureIgnoreCase)))
+            if (
+                !SupportedCheckpointExtensions.Any(
+                    ext =>
+                        Path.GetExtension(file)
+                            .Equals(ext, StringComparison.InvariantCultureIgnoreCase)
+                )
+            )
                 continue;
-            
+
             var checkpointFile = new CheckpointFile
             {
                 Title = Path.GetFileNameWithoutExtension(file),
                 FilePath = Path.Combine(directory, file),
             };
-            
-            var jsonPath = Path.Combine(directory, $"{Path.GetFileNameWithoutExtension(file)}.cm-info.json");
-            if (File.Exists(jsonPath)) 
+
+            var jsonPath = Path.Combine(
+                directory,
+                $"{Path.GetFileNameWithoutExtension(file)}.cm-info.json"
+            );
+            if (File.Exists(jsonPath))
             {
                 var json = File.ReadAllText(jsonPath);
                 var connectedModelInfo = ConnectedModelInfo.FromJson(json);
@@ -218,32 +247,51 @@ public partial class CheckpointFile : ViewModelBase
             }
 
             checkpointFile.PreviewImagePath = SupportedImageExtensions
-                .Select(ext => Path.Combine(directory,
-                    $"{Path.GetFileNameWithoutExtension(file)}.preview{ext}")).Where(File.Exists)
+                .Select(
+                    ext =>
+                        Path.Combine(
+                            directory,
+                            $"{Path.GetFileNameWithoutExtension(file)}.preview{ext}"
+                        )
+                )
+                .Where(File.Exists)
                 .FirstOrDefault();
 
             yield return checkpointFile;
         }
     }
-    
+
     public static IEnumerable<CheckpointFile> GetAllCheckpointFiles(string modelsDirectory)
     {
-        foreach (var file in Directory.EnumerateFiles(modelsDirectory, "*.*", SearchOption.AllDirectories))
+        foreach (
+            var file in Directory.EnumerateFiles(
+                modelsDirectory,
+                "*.*",
+                SearchOption.AllDirectories
+            )
+        )
         {
-            if (!SupportedCheckpointExtensions.Any(ext => 
-                    Path.GetExtension(file).Equals(ext, StringComparison.InvariantCultureIgnoreCase)))
+            if (
+                !SupportedCheckpointExtensions.Any(
+                    ext =>
+                        Path.GetExtension(file)
+                            .Equals(ext, StringComparison.InvariantCultureIgnoreCase)
+                )
+            )
                 continue;
-            
+
             var checkpointFile = new CheckpointFile
             {
                 Title = Path.GetFileNameWithoutExtension(file),
                 FilePath = file,
             };
 
-            var jsonPath = Path.Combine(Path.GetDirectoryName(file) ?? "",
-                Path.GetFileNameWithoutExtension(file) + ".cm-info.json");
-            
-            if (File.Exists(jsonPath)) 
+            var jsonPath = Path.Combine(
+                Path.GetDirectoryName(file) ?? "",
+                Path.GetFileNameWithoutExtension(file) + ".cm-info.json"
+            );
+
+            if (File.Exists(jsonPath))
             {
                 var json = File.ReadAllText(jsonPath);
                 var connectedModelInfo = ConnectedModelInfo.FromJson(json);
@@ -252,8 +300,14 @@ public partial class CheckpointFile : ViewModelBase
             }
 
             checkpointFile.PreviewImagePath = SupportedImageExtensions
-                .Select(ext => Path.Combine(Path.GetDirectoryName(file) ?? "",
-                    $"{Path.GetFileNameWithoutExtension(file)}.preview{ext}")).Where(File.Exists)
+                .Select(
+                    ext =>
+                        Path.Combine(
+                            Path.GetDirectoryName(file) ?? "",
+                            $"{Path.GetFileNameWithoutExtension(file)}.preview{ext}"
+                        )
+                )
+                .Where(File.Exists)
                 .FirstOrDefault();
 
             yield return checkpointFile;
@@ -263,8 +317,11 @@ public partial class CheckpointFile : ViewModelBase
     /// <summary>
     /// Index with progress reporting.
     /// </summary>
-    public static IEnumerable<CheckpointFile> FromDirectoryIndex(string directory, IProgress<ProgressReport> progress,
-        SearchOption searchOption = SearchOption.TopDirectoryOnly)
+    public static IEnumerable<CheckpointFile> FromDirectoryIndex(
+        string directory,
+        IProgress<ProgressReport> progress,
+        SearchOption searchOption = SearchOption.TopDirectoryOnly
+    )
     {
         var current = 0ul;
         foreach (var checkpointFile in FromDirectoryIndex(directory, searchOption))
@@ -281,7 +338,7 @@ public partial class CheckpointFile : ViewModelBase
         {
             return CivitModelType.Checkpoint;
         }
-        
+
         if (filePath.Contains(SharedFolderType.ControlNet.ToString()))
         {
             return CivitModelType.Controlnet;
@@ -309,4 +366,31 @@ public partial class CheckpointFile : ViewModelBase
 
         return CivitModelType.Unknown;
     }
+
+    private sealed class FilePathEqualityComparer : IEqualityComparer<CheckpointFile>
+    {
+        public bool Equals(CheckpointFile? x, CheckpointFile? y)
+        {
+            if (ReferenceEquals(x, y))
+                return true;
+            if (ReferenceEquals(x, null))
+                return false;
+            if (ReferenceEquals(y, null))
+                return false;
+            if (x.GetType() != y.GetType())
+                return false;
+            return x.FilePath == y.FilePath
+                && x.ConnectedModel?.Hashes.BLAKE3 == y.ConnectedModel?.Hashes.BLAKE3
+                && x.ConnectedModel?.ThumbnailImageUrl == y.ConnectedModel?.ThumbnailImageUrl
+                && x.PreviewImagePath == y.PreviewImagePath;
+        }
+
+        public int GetHashCode(CheckpointFile obj)
+        {
+            return obj.FilePath.GetHashCode();
+        }
+    }
+
+    public static IEqualityComparer<CheckpointFile> FilePathComparer { get; } =
+        new FilePathEqualityComparer();
 }

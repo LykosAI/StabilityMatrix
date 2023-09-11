@@ -8,11 +8,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.4.0
 ### Added
 - New installable Package - [Fooocus-MRE](https://github.com/MoonRide303/Fooocus-MRE)
+- Added toggle to show connected model images in the Checkpoints tab
+- Added "Find Connected Metadata" option to the context menu of Checkpoint Folders in the Checkpoints tab to connect models that don't have any metadata
 ### Changed
 - Revamped package installer
   - Added "advanced options" section for commit, shared folder method, and pytorch options
   - Can be run in the background
   - Shows progress in the Downloads tab
+- Even more performance improvements for loading and searching the Checkpoints page
 ### Fixed
 - Fixed [#97](https://github.com/LykosAI/StabilityMatrix/issues/97) - Codeformer folder should now get linked correctly
 - Fixed [#106](https://github.com/LykosAI/StabilityMatrix/issues/106) - ComfyUI should now install correctly on Windows machines with an AMD GPU using DirectML

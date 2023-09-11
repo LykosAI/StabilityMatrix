@@ -407,16 +407,6 @@ public static class DialogHelper
 
                 if (result.Score > 40)
                 {
-                    /*mainGrid.Children.Add(
-                        new TextBlock
-                        {
-                            Text = $"Did you mean: {result.Value}?",
-                            FontSize = 18,
-                            FontWeight = FontWeight.Medium,
-                            Margin = new Thickness(0, 8),
-                        }
-                    );*/
-
                     mainGrid.Children.Add(
                         new InfoBar
                         {

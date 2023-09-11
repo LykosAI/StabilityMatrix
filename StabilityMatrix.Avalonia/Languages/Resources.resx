@@ -417,4 +417,13 @@
     <data name="Action_Remove" xml:space="preserve">
         <value>Remove</value>
     </data>
+    <data name="Label_Details" xml:space="preserve">
+        <value>Details</value>
+    </data>
+    <data name="Label_Callstack" xml:space="preserve">
+        <value>Callstack</value>
+    </data>
+    <data name="Label_InnerException" xml:space="preserve">
+        <value>Inner exception</value>
+    </data>
 </root>

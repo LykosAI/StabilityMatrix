@@ -447,6 +447,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Callstack.
+        /// </summary>
+        public static string Label_Callstack {
+            get {
+                return ResourceManager.GetString("Label_Callstack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Categories.
         /// </summary>
         public static string Label_Categories {
@@ -524,6 +533,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_DataProvidedByCivitAi {
             get {
                 return ResourceManager.GetString("Label_DataProvidedByCivitAi", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Details.
+        /// </summary>
+        public static string Label_Details {
+            get {
+                return ResourceManager.GetString("Label_Details", resourceCulture);
             }
         }
         
@@ -677,6 +695,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Indexing {
             get {
                 return ResourceManager.GetString("Label_Indexing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inner exception.
+        /// </summary>
+        public static string Label_InnerException {
+            get {
+                return ResourceManager.GetString("Label_InnerException", resourceCulture);
             }
         }
         

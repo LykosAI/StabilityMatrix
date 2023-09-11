@@ -112,18 +112,17 @@ public partial class PackageCardViewModel : ProgressViewModel
 
         var dialog = new ContentDialog
         {
-            Title = "Are you sure?",
-            Content =
-                "This will delete all folders in the package directory, including any generated images in that directory as well as any files you may have added.",
-            PrimaryButtonText = "Yes, delete it",
-            CloseButtonText = "No, keep it",
+            Title = Resources.Label_ConfirmDelete,
+            Content = Resources.Text_PackageUninstall_Details,
+            PrimaryButtonText = Resources.Action_OK,
+            CloseButtonText = Resources.Action_Cancel,
             DefaultButton = ContentDialogButton.Primary
         };
         var result = await dialog.ShowAsync();
 
         if (result == ContentDialogResult.Primary)
         {
-            Text = "Uninstalling...";
+            Text = Resources.Progress_UninstallingPackage;
             IsIndeterminate = true;
             Value = -1;
 
@@ -132,14 +131,14 @@ public partial class PackageCardViewModel : ProgressViewModel
 
             var taskResult = await notificationService.TryAsync(
                 deleteTask,
-                "Some files could not be deleted. Please close any open files in the package directory and try again."
+                Resources.Text_SomeFilesCouldNotBeDeleted
             );
             if (taskResult.IsSuccessful)
             {
                 notificationService.Show(
                     new Notification(
-                        "Success",
-                        $"Package {Package.DisplayName} uninstalled",
+                        Resources.Label_PackageUninstalled,
+                        Package.DisplayName,
                         NotificationType.Success
                     )
                 );
@@ -170,8 +169,8 @@ public partial class PackageCardViewModel : ProgressViewModel
                 Package.PackageName
             );
             notificationService.Show(
-                "Invalid Package type",
-                $"Package {Package.PackageName.ToRepr()} is not a valid package type",
+                Resources.Label_InvalidPackageType,
+                Package.PackageName.ToRepr(),
                 NotificationType.Error
             );
             return;
@@ -199,7 +198,7 @@ public partial class PackageCardViewModel : ProgressViewModel
 
                 Value = percent;
                 IsIndeterminate = progress.IsIndeterminate;
-                Text = $"Updating {Package.DisplayName}";
+                Text = string.Format(Resources.TextTemplate_UpdatingPackage, packageName);
 
                 EventManager.Instance.OnGlobalProgressChanged(percent);
                 EventManager.Instance.OnProgressChanged(
@@ -214,8 +213,8 @@ public partial class PackageCardViewModel : ProgressViewModel
 
             settingsManager.UpdatePackageVersionNumber(Package.Id, updateResult);
             notificationService.Show(
-                "Update complete",
-                $"{Package.DisplayName} has been updated to the latest version.",
+                Resources.Progress_UpdateComplete,
+                string.Format(Resources.TextTemplate_PackageUpdatedToLatest, packageName),
                 NotificationType.Success
             );
 
@@ -230,7 +229,11 @@ public partial class PackageCardViewModel : ProgressViewModel
                 new ProgressItem(
                     progressId,
                     packageName,
-                    new ProgressReport(1f, "Update complete", type: ProgressType.Update)
+                    new ProgressReport(
+                        1f,
+                        Resources.Progress_UpdateComplete,
+                        type: ProgressType.Update
+                    )
                 )
             );
         }
@@ -238,7 +241,7 @@ public partial class PackageCardViewModel : ProgressViewModel
         {
             logger.LogError(e, "Error Updating Package ({PackageName})", basePackage.Name);
             notificationService.ShowPersistent(
-                $"Error Updating {Package.DisplayName}",
+                string.Format(Resources.TextTemplate_ErrorUpdatingPackage, packageName),
                 e.Message,
                 NotificationType.Error
             );
@@ -246,7 +249,11 @@ public partial class PackageCardViewModel : ProgressViewModel
                 new ProgressItem(
                     progressId,
                     packageName,
-                    new ProgressReport(0f, "Update failed", type: ProgressType.Update),
+                    new ProgressReport(
+                        0f,
+                        Resources.Progress_UpdateFailed,
+                        type: ProgressType.Update
+                    ),
                     Failed: true
                 )
             );

@@ -426,4 +426,61 @@
     <data name="Label_InnerException" xml:space="preserve">
         <value>Inner exception</value>
     </data>
+    <data name="Label_SearchEllipsis" xml:space="preserve">
+        <value>Search...</value>
+    </data>
+    <data name="Action_OK" xml:space="preserve">
+        <value>OK</value>
+    </data>
+    <data name="Action_Retry" xml:space="preserve">
+        <value>Retry</value>
+    </data>
+    <data name="Label_PythonVersionInfo" xml:space="preserve">
+        <value>Python Version Info</value>
+    </data>
+    <data name="Action_Restart" xml:space="preserve">
+        <value>Restart</value>
+    </data>
+    <data name="Label_ConfirmDelete" xml:space="preserve">
+        <value>Confirm Delete</value>
+    </data>
+    <data name="Text_PackageUninstall_Details" xml:space="preserve">
+        <value>This will delete the package folder and all its contents, including any generated images and files you may have added.</value>
+    </data>
+    <data name="Progress_UninstallingPackage" xml:space="preserve">
+        <value>Uninstalling package...</value>
+    </data>
+    <data name="Label_PackageUninstalled" xml:space="preserve">
+        <value>Package Uninstalled</value>
+    </data>
+    <data name="Text_SomeFilesCouldNotBeDeleted" xml:space="preserve">
+        <value>Some files could not be deleted. Please close any open files in the package directory and try again.</value>
+    </data>
+    <data name="Label_InvalidPackageType" xml:space="preserve">
+        <value>Invalid Package type</value>
+    </data>
+    <data name="TextTemplate_UpdatingPackage" xml:space="preserve">
+        <value>Updating {0}</value>
+    </data>
+    <data name="Progress_UpdateComplete" xml:space="preserve">
+        <value>Update complete</value>
+    </data>
+    <data name="TextTemplate_PackageUpdatedToLatest" xml:space="preserve">
+        <value>{0} has been updated to the latest version</value>
+    </data>
+    <data name="TextTemplate_ErrorUpdatingPackage" xml:space="preserve">
+        <value>Error updating {0}</value>
+    </data>
+    <data name="Progress_UpdateFailed" xml:space="preserve">
+        <value>Update failed</value>
+    </data>
+    <data name="Action_OpenInBrowser" xml:space="preserve">
+        <value>Open in Browser</value>
+    </data>
+    <data name="Label_ErrorInstallingPackage" xml:space="preserve">
+        <value>Error installing package</value>
+    </data>
+    <data name="Label_Branch" xml:space="preserve">
+        <value>Branch</value>
+    </data>
 </root>

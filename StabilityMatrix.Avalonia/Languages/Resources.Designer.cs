@@ -195,6 +195,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to OK.
+        /// </summary>
+        public static string Action_OK {
+            get {
+                return ResourceManager.GetString("Action_OK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open in Browser.
+        /// </summary>
+        public static string Action_OpenInBrowser {
+            get {
+                return ResourceManager.GetString("Action_OpenInBrowser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open in Explorer.
         /// </summary>
         public static string Action_OpenInExplorer {
@@ -272,6 +290,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Action_Rename {
             get {
                 return ResourceManager.GetString("Action_Rename", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Restart.
+        /// </summary>
+        public static string Action_Restart {
+            get {
+                return ResourceManager.GetString("Action_Restart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retry.
+        /// </summary>
+        public static string Action_Retry {
+            get {
+                return ResourceManager.GetString("Action_Retry", resourceCulture);
             }
         }
         
@@ -438,6 +474,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Branch.
+        /// </summary>
+        public static string Label_Branch {
+            get {
+                return ResourceManager.GetString("Label_Branch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Branches.
         /// </summary>
         public static string Label_Branches {
@@ -488,6 +533,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Commit {
             get {
                 return ResourceManager.GetString("Label_Commit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Confirm Delete.
+        /// </summary>
+        public static string Label_ConfirmDelete {
+            get {
+                return ResourceManager.GetString("Label_ConfirmDelete", resourceCulture);
             }
         }
         
@@ -627,6 +681,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error installing package.
+        /// </summary>
+        public static string Label_ErrorInstallingPackage {
+            get {
+                return ResourceManager.GetString("Label_ErrorInstallingPackage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You may encounter errors when using a FAT32 or exFAT drive. Select a different drive for a smoother experience..
         /// </summary>
         public static string Label_FatWarning {
@@ -749,6 +812,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Integrations {
             get {
                 return ResourceManager.GetString("Label_Integrations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid Package type.
+        /// </summary>
+        public static string Label_InvalidPackageType {
+            get {
+                return ResourceManager.GetString("Label_InvalidPackageType", resourceCulture);
             }
         }
         
@@ -915,6 +987,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Package Uninstalled.
+        /// </summary>
+        public static string Label_PackageUninstalled {
+            get {
+                return ResourceManager.GetString("Label_PackageUninstalled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Page.
         /// </summary>
         public static string Label_Page {
@@ -965,6 +1046,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_PreviousPage {
             get {
                 return ResourceManager.GetString("Label_PreviousPage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Version Info.
+        /// </summary>
+        public static string Label_PythonVersionInfo {
+            get {
+                return ResourceManager.GetString("Label_PythonVersionInfo", resourceCulture);
             }
         }
         
@@ -1037,6 +1127,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_ResetCheckpointsCache_Details {
             get {
                 return ResourceManager.GetString("Label_ResetCheckpointsCache_Details", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search....
+        /// </summary>
+        public static string Label_SearchEllipsis {
+            get {
+                return ResourceManager.GetString("Label_SearchEllipsis", resourceCulture);
             }
         }
         
@@ -1230,6 +1329,33 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Uninstalling package....
+        /// </summary>
+        public static string Progress_UninstallingPackage {
+            get {
+                return ResourceManager.GetString("Progress_UninstallingPackage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Update complete.
+        /// </summary>
+        public static string Progress_UpdateComplete {
+            get {
+                return ResourceManager.GetString("Progress_UpdateComplete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Update failed.
+        /// </summary>
+        public static string Progress_UpdateFailed {
+            get {
+                return ResourceManager.GetString("Progress_UpdateFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add a package to get started!.
         /// </summary>
         public static string TeachingTip_AddPackageToGetStarted {
@@ -1257,6 +1383,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This will delete the package folder and all its contents, including any generated images and files you may have added..
+        /// </summary>
+        public static string Text_PackageUninstall_Details {
+            get {
+                return ResourceManager.GetString("Text_PackageUninstall_Details", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Proceeding to Launch page.
         /// </summary>
         public static string Text_ProceedingToLaunchPage {
@@ -1275,11 +1410,47 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Some files could not be deleted. Please close any open files in the package directory and try again..
+        /// </summary>
+        public static string Text_SomeFilesCouldNotBeDeleted {
+            get {
+                return ResourceManager.GetString("Text_SomeFilesCouldNotBeDeleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Welcome to Stability Matrix!.
         /// </summary>
         public static string Text_WelcomeToStabilityMatrix {
             get {
                 return ResourceManager.GetString("Text_WelcomeToStabilityMatrix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error updating {0}.
+        /// </summary>
+        public static string TextTemplate_ErrorUpdatingPackage {
+            get {
+                return ResourceManager.GetString("TextTemplate_ErrorUpdatingPackage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} has been updated to the latest version.
+        /// </summary>
+        public static string TextTemplate_PackageUpdatedToLatest {
+            get {
+                return ResourceManager.GetString("TextTemplate_PackageUpdatedToLatest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Updating {0}.
+        /// </summary>
+        public static string TextTemplate_UpdatingPackage {
+            get {
+                return ResourceManager.GetString("TextTemplate_UpdatingPackage", resourceCulture);
             }
         }
     }

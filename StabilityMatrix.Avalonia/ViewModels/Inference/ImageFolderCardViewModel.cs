@@ -133,7 +133,8 @@ public partial class ImageFolderCardViewModel : ViewModelBase
         }
 
         // Delete the file
-        var result = await notificationService.TryAsync(new FilePath(imagePath).DeleteAsync());
+        var imageFile = new FilePath(imagePath);
+        var result = await notificationService.TryAsync(imageFile.DeleteAsync());
 
         if (!result.IsSuccessful)
         {
@@ -149,7 +150,7 @@ public partial class ImageFolderCardViewModel : ViewModelBase
         // Invalidate cache
         if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
         {
-            loader.RemoveFromCache(imagePath);
+            loader.RemoveAllNamesFromCache(imageFile.Name);
         }
     }
 

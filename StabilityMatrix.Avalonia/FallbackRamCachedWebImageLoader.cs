@@ -75,12 +75,27 @@ public class FallbackRamCachedWebImageLoader : RamCachedWebImageLoader
         }
     }
 
-    public void RemoveFromCache(string url)
+    public void RemovePathFromCache(string filePath)
     {
-        // ConcurrentDictionary<string, Task<Bitmap?>> _memoryCache
         var cache =
             this.GetPrivateField<ConcurrentDictionary<string, Task<Bitmap?>>>("_memoryCache")
             ?? throw new NullReferenceException("Memory cache not found");
-        cache.TryRemove(url, out _);
+
+        cache.TryRemove(filePath, out _);
+    }
+
+    public void RemoveAllNamesFromCache(string fileName)
+    {
+        var cache =
+            this.GetPrivateField<ConcurrentDictionary<string, Task<Bitmap?>>>("_memoryCache")
+            ?? throw new NullReferenceException("Memory cache not found");
+
+        foreach (var (key, _) in cache)
+        {
+            if (Path.GetFileName(key) == fileName)
+            {
+                cache.TryRemove(key, out _);
+            }
+        }
     }
 }

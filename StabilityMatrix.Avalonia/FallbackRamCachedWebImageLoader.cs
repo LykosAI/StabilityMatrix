@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader.Loaders;
 using Avalonia.Media.Imaging;
+using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Avalonia;
 
@@ -14,15 +16,19 @@ public readonly record struct ImageLoadFailedEventArgs(string Url, Exception Exc
 public class FallbackRamCachedWebImageLoader : RamCachedWebImageLoader
 {
     private readonly WeakEventManager<ImageLoadFailedEventArgs> loadFailedEventManager = new();
-    
+
     public event EventHandler<ImageLoadFailedEventArgs> LoadFailed
     {
         add => loadFailedEventManager.AddEventHandler(value);
         remove => loadFailedEventManager.RemoveEventHandler(value);
     }
-    
-    protected void OnLoadFailed(string url, Exception exception) => loadFailedEventManager.RaiseEvent(
-        this, new ImageLoadFailedEventArgs(url, exception), nameof(LoadFailed));
+
+    protected void OnLoadFailed(string url, Exception exception) =>
+        loadFailedEventManager.RaiseEvent(
+            this,
+            new ImageLoadFailedEventArgs(url, exception),
+            nameof(LoadFailed)
+        );
 
     /// <summary>
     /// Attempts to load bitmap
@@ -44,17 +50,19 @@ public class FallbackRamCachedWebImageLoader : RamCachedWebImageLoader
                 return null;
             }
         }
-        
-        var internalOrCachedBitmap = 
+
+        var internalOrCachedBitmap =
             await LoadFromInternalAsync(url).ConfigureAwait(false)
             ?? await LoadFromGlobalCache(url).ConfigureAwait(false);
-        
-        if (internalOrCachedBitmap != null) return internalOrCachedBitmap;
+
+        if (internalOrCachedBitmap != null)
+            return internalOrCachedBitmap;
 
         try
         {
             var externalBytes = await LoadDataFromExternalAsync(url).ConfigureAwait(false);
-            if (externalBytes == null) return null;
+            if (externalBytes == null)
+                return null;
 
             using var memoryStream = new MemoryStream(externalBytes);
             var bitmap = new Bitmap(memoryStream);
@@ -67,4 +75,12 @@ public class FallbackRamCachedWebImageLoader : RamCachedWebImageLoader
         }
     }
 
+    public void RemoveFromCache(string url)
+    {
+        // ConcurrentDictionary<string, Task<Bitmap?>> _memoryCache
+        var cache =
+            this.GetPrivateField<ConcurrentDictionary<string, Task<Bitmap?>>>("_memoryCache")
+            ?? throw new NullReferenceException("Memory cache not found");
+        cache.TryRemove(url, out _);
+    }
 }

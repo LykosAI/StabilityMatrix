@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using AsyncImageLoader;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
@@ -63,25 +64,6 @@ public partial class ImageFolderCardViewModel : ViewModelBase
         this.imageIndexService = imageIndexService;
         this.settingsManager = settingsManager;
         this.notificationService = notificationService;
-
-        // var minDatetime = DateTimeOffset.FromUnixTimeMilliseconds(0);
-
-        /*localImagesSource
-            .Connect()
-            .DeferUntilLoaded()
-            .Transform(
-                imageFile =>
-                    new ImageFolderCardItemViewModel
-                    {
-                        LocalImageFile = imageFile,
-                        ImagePath = Design.IsDesignMode
-                            ? imageFile.RelativePath
-                            : imageFile.GetFullPath(settingsManager.ImagesDirectory)
-                    }
-            )
-            .SortBy(x => x.LocalImageFile?.LastModifiedAt ?? minDatetime, SortDirection.Descending)
-            .Bind(Items)
-            .Subscribe();*/
 
         localImagesSource
             .Connect()
@@ -163,6 +145,12 @@ public partial class ImageFolderCardViewModel : ViewModelBase
 
         // Remove from index
         await imageIndexService.RemoveImage(item);
+
+        // Invalidate cache
+        if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
+        {
+            loader.RemoveFromCache(imagePath);
+        }
     }
 
     /// <summary>

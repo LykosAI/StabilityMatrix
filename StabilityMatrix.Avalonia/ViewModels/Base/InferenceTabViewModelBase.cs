@@ -3,12 +3,11 @@ using System.Text.Json.Serialization;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Models;
-using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
-namespace StabilityMatrix.Avalonia.ViewModels.Inference;
+namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
 public abstract partial class InferenceTabViewModelBase : LoadableViewModelBase, IDisposable, IPersistentViewProvider
 {

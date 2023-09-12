@@ -4,6 +4,7 @@ using System.Diagnostics;
 using Avalonia.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
@@ -14,7 +15,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 public partial class EnvVarsViewModel : ContentDialogViewModelBase
 {
     [ObservableProperty]
-    private string title = "Environment Variables";
+    private string title = Resources.Label_EnvironmentVariables;
 
     [ObservableProperty, NotifyPropertyChangedFor(nameof(EnvVarsView))]
     private ObservableCollection<EnvVarKeyPair> envVars = new();

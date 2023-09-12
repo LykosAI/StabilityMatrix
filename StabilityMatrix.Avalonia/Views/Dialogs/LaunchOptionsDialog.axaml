@@ -8,6 +8,7 @@
                           xmlns:ui="using:FluentAvalonia.UI.Controls"
                           xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                           xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
                           d:DataContext="{x:Static mocks:DesignData.LaunchOptionsViewModel}"
                           x:DataType="dialogs:LaunchOptionsViewModel"
                           mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="650"
@@ -40,7 +41,7 @@
             <TextBox
                 HorizontalAlignment="Stretch"
                 Margin="8,0"
-                Watermark="Search..."
+                Watermark="{x:Static lang:Resources.Label_SearchEllipsis}"
                 Text="{Binding SearchText, Mode=TwoWay}"
                 VerticalAlignment="Top"
                 IsVisible="{Binding IsSearchBoxEnabled}"

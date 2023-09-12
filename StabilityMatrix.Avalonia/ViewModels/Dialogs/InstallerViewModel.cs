@@ -16,6 +16,7 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Helper;
@@ -24,7 +25,6 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
-using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
@@ -97,7 +97,8 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     private PackageVersionType availableVersionTypes =
         PackageVersionType.GithubRelease | PackageVersionType.Commit;
 
-    public string ReleaseLabelText => IsReleaseMode ? "Version" : "Branch";
+    public string ReleaseLabelText =>
+        IsReleaseMode ? Resources.Label_Version : Resources.Label_Branch;
     public bool IsReleaseMode
     {
         get => SelectedVersionType == PackageVersionType.GithubRelease;
@@ -183,7 +184,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     {
         var result = await notificationService.TryAsync(
             ActuallyInstall(),
-            "Could not install package"
+            Resources.Label_ErrorInstallingPackage
         );
         if (result.IsSuccessful)
         {
@@ -196,9 +197,9 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
 
             var dialog = new BetterContentDialog
             {
-                Title = "Error installing package",
+                Title = Resources.Label_ErrorInstallingPackage,
                 Content = ex.ToString(),
-                CloseButtonText = "Close"
+                CloseButtonText = Resources.Action_Close
             };
             await dialog.ShowAsync();
         }
@@ -321,8 +322,8 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
 
         var dialog = new ContentDialog
         {
-            PrimaryButtonText = "Open in Browser",
-            CloseButtonText = "Close",
+            PrimaryButtonText = Resources.Action_OpenInBrowser,
+            CloseButtonText = Resources.Action_Close,
             Content = new Image
             {
                 Source = bitmap,

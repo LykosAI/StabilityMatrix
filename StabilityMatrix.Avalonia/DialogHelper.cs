@@ -28,6 +28,7 @@ using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Services;
 using TextMateSharp.Grammars;
 using Process = FuzzySharp.Process;
+using StabilityMatrix.Avalonia.Languages;
 
 namespace StabilityMatrix.Avalonia;
 
@@ -118,8 +119,8 @@ public static class DialogHelper
         {
             Title = title,
             Content = grid,
-            PrimaryButtonText = "OK",
-            CloseButtonText = "Cancel",
+            PrimaryButtonText = Resources.Action_OK,
+            CloseButtonText = Resources.Action_Cancel,
             IsPrimaryButtonEnabled = true,
             PrimaryButtonCommand = primaryCommand,
             DefaultButton = ContentDialogButton.Primary
@@ -139,7 +140,7 @@ public static class DialogHelper
         {
             Title = title,
             Content = viewer,
-            CloseButtonText = "Close",
+            CloseButtonText = Resources.Action_Close,
             IsPrimaryButtonEnabled = false,
         };
     }

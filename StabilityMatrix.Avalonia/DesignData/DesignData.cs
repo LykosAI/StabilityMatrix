@@ -177,67 +177,74 @@ public static class DesignData
         InstallerViewModel.SelectedPackage = InstallerViewModel.AvailablePackages[0];
         InstallerViewModel.ReleaseNotes = "## Release Notes\nThis is a test release note.";
 
-        // Checkpoints page
-        CheckpointsPageViewModel.CheckpointFolders = new ObservableCollection<CheckpointFolder>
-        {
-            new(settingsManager, downloadService, modelFinder)
+        /*// Checkpoints page
+        CheckpointsPageViewModel.CheckpointFolders =
+            new CheckpointFolder[]
             {
-                Title = "StableDiffusion",
-                DirectoryPath = "Models/StableDiffusion",
-                CheckpointFiles = new AdvancedObservableList<CheckpointFile>
+                new(settingsManager, downloadService, modelFinder, notificationService)
                 {
-                    new()
+                    Title = "StableDiffusion",
+                    DirectoryPath = "Models/StableDiffusion",
+                    CheckpointFiles = CheckpointFile[]
                     {
-                        FilePath = "~/Models/StableDiffusion/electricity-light.safetensors",
-                        Title = "Auroral Background",
-                        PreviewImagePath =
-                            "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
-                            + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
-                        ConnectedModel = new ConnectedModelInfo
+                        new()
                         {
-                            VersionName = "Lightning Auroral",
-                            BaseModel = "SD 1.5",
-                            ModelName = "Auroral Background",
-                            ModelType = CivitModelType.Model,
-                            FileMetadata = new CivitFileMetadata
+                            FilePath = "~/Models/StableDiffusion/electricity-light.safetensors",
+                            Title = "Auroral Background",
+                            PreviewImagePath =
+                                "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
+                                + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
+                            ConnectedModel = new ConnectedModelInfo
                             {
-                                Format = CivitModelFormat.SafeTensor,
-                                Fp = CivitModelFpType.fp16,
-                                Size = CivitModelSize.pruned,
+                                VersionName = "Lightning Auroral",
+                                BaseModel = "SD 1.5",
+                                ModelName = "Auroral Background",
+                                ModelType = CivitModelType.Model,
+                                FileMetadata = new CivitFileMetadata
+                                {
+                                    Format = CivitModelFormat.SafeTensor,
+                                    Fp = CivitModelFpType.fp16,
+                                    Size = CivitModelSize.pruned,
+                                }
                             }
+                        },
+                        new()
+                        {
+                            FilePath = "~/Models/Lora/model.safetensors",
+                            Title = "Some model"
+                        },
+                    },
+                },
+                new(settingsManager, downloadService, modelFinder, notificationService)
+                {
+                    Title = "Lora",
+                    DirectoryPath = "Packages/Lora",
+                    SubFolders = CheckpointFolder[]
+                    {
+                        new(settingsManager, downloadService, modelFinder, notificationService)
+                        {
+                            Title = "StableDiffusion",
+                            DirectoryPath = "Packages/Lora/Subfolder",
+                        },
+                        new(settingsManager, downloadService, modelFinder, notificationService)
+                        {
+                            Title = "Lora",
+                            DirectoryPath = "Packages/StableDiffusion/Subfolder",
                         }
                     },
-                    new() { FilePath = "~/Models/Lora/model.safetensors", Title = "Some model" },
-                },
-            },
-            new(settingsManager, downloadService, modelFinder)
-            {
-                Title = "Lora",
-                DirectoryPath = "Packages/Lora",
-                SubFolders = new AdvancedObservableList<CheckpointFolder>()
-                {
-                    new(settingsManager, downloadService, modelFinder)
+                    CheckpointFiles = new AdvancedObservableList<CheckpointFile>
                     {
-                        Title = "StableDiffusion",
-                        DirectoryPath = "Packages/Lora/Subfolder",
-                    },
-                    new(settingsManager, downloadService, modelFinder)
-                    {
-                        Title = "Lora",
-                        DirectoryPath = "Packages/StableDiffusion/Subfolder",
+                        new() { FilePath = "~/Models/Lora/lora_v2.pt", Title = "Best Lora v2", }
                     }
-                },
-                CheckpointFiles = new AdvancedObservableList<CheckpointFile>
-                {
-                    new() { FilePath = "~/Models/Lora/lora_v2.pt", Title = "Best Lora v2", }
                 }
-            }
-        };
+            };
 
         foreach (var folder in CheckpointsPageViewModel.CheckpointFolders)
         {
-            folder.DisplayedCheckpointFiles = folder.CheckpointFiles;
-        }
+            folder.DisplayedCheckpointFiles = new AdvancedObservableList<CheckpointFile>(
+                folder.CheckpointFiles
+            );
+        }*/
 
         CheckpointBrowserViewModel.ModelCards =
             new ObservableCollection<CheckpointBrowserCardViewModel>

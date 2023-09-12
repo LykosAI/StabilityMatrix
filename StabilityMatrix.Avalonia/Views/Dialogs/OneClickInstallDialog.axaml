@@ -6,6 +6,7 @@
              xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
              xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
              xmlns:packages="clr-namespace:StabilityMatrix.Core.Models.Packages;assembly=StabilityMatrix.Core"
+             xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
              mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="700"
              x:DataType="dialogs:OneClickInstallViewModel"
              d:DataContext="{x:Static designData:DesignData.OneClickInstallViewModel}"
@@ -87,7 +88,7 @@
                     IsVisible="{Binding ShowInstallButton}"
                     HorizontalAlignment="Center">
             <Button 
-                    Content="Install"
+                    Content="{x:Static lang:Resources.Action_Install}"
                     Command="{Binding InstallCommand}"
                     FontSize="32"
                     HorizontalAlignment="Center"
@@ -95,7 +96,7 @@
                     Margin="16"
                     Padding="16, 8, 16, 8" />
             <Button Command="{Binding ToggleAdvancedModeCommand}"
-                    Content="Skip first-time setup"
+                    Content="{x:Static lang:Resources.Label_SkipSetup}"
                     FontSize="16"
                     HorizontalAlignment="Center"
                     Padding="16, 8, 16, 8"/>

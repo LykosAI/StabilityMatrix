@@ -6,6 +6,7 @@
              xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
              xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
              xmlns:base="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
+             xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="base:ContentDialogProgressViewModelBase"
              x:Class="StabilityMatrix.Avalonia.Views.Dialogs.PackageModificationDialog">
@@ -46,9 +47,9 @@
         
         <CheckBox Grid.Row="4" IsChecked="{Binding CloseWhenFinished}"
                   HorizontalAlignment="Center"
-                  Margin="4" Content="Close dialog when finished"/>
+                  Margin="4" Content="{x:Static lang:Resources.Label_CloseDialogWhenFinished}"/>
         
-        <Button Grid.Row="5" Content="Close"
+        <Button Grid.Row="5" Content="{x:Static lang:Resources.Action_Close}"
                 FontSize="20"
                 HorizontalAlignment="Center"
                 Command="{Binding OnCloseButtonClick}"/>

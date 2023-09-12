@@ -7,6 +7,7 @@
                           xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                           xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
                           xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
+                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
                           d:DataContext="{x:Static mocks:DesignData.UpdateViewModel}"
                           x:DataType="dialogs:UpdateViewModel"
                           mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="550"
@@ -20,7 +21,7 @@
         </TitleBar>-->
         
         <TextBlock Grid.Row="0" 
-                   Text="A new version of Stability Matrix is available!"
+                   Text="{x:Static lang:Resources.Label_NewVersionAvailable}"
                    HorizontalAlignment="Center"
                    FontWeight="Thin"
                    Margin="0,16,0,0"

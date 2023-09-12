@@ -38,6 +38,7 @@ public class Settings
     public bool ModelBrowserNsfwEnabled { get; set; }
     public bool IsNavExpanded { get; set; }
     public bool IsImportAsConnected { get; set; }
+    public bool ShowConnectedModelImages { get; set; }
     public SharedFolderType? SharedFolderVisibleCategories { get; set; } =
         SharedFolderType.StableDiffusion | SharedFolderType.Lora | SharedFolderType.LyCORIS;
 
@@ -64,7 +65,6 @@ public class Settings
     /// Whether the Inference Image Viewer shows pixel grids at high zoom levels
     /// </summary>
     public bool IsImageViewerPixelGridEnabled { get; set; } = true;
-
     public bool RemoveFolderLinksOnShutdown { get; set; }
 
     public bool IsDiscordRichPresenceEnabled { get; set; }

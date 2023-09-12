@@ -9,6 +9,7 @@
              xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointManager"
              xmlns:checkpointBrowser="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser"
              xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+             xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="700"
              x:DataType="viewModels:CheckpointBrowserViewModel"
              d:DataContext="{x:Static designData:DesignData.CheckpointBrowserViewModel}"
@@ -149,7 +150,7 @@
                             Margin="0,8,0,0">
                             <Button.Content>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Import Latest -" />
+                                    <TextBlock Text="{x:Static lang:Resources.Label_ImportLatest}" />
                                     <TextBlock Margin="4,0,0,0"
                                                Text="{Binding CivitModel.FullFilesSize}" />
                                 </StackPanel>
@@ -162,7 +163,7 @@
                                 IsEnabled="{Binding !IsImporting}"
                                 Command="{Binding ShowVersionDialogCommand}"
                                 CommandParameter="{Binding CivitModel}"
-                                Content="All Versions" />
+                                Content="{x:Static lang:Resources.Label_AllVersions}" />
                     </Grid>
                 </StackPanel>
             </controls:Card>
@@ -177,7 +178,7 @@
                 <TextBox
                     HorizontalAlignment="Stretch"
                     Margin="8,0,0,0"
-                    Watermark="Search models, #tags, or @users"
+                    Watermark="{x:Static lang:Resources.Label_ModelSearchWatermark}"
                     Text="{Binding SearchQuery, Mode=TwoWay}" />
 
                 <Button
@@ -197,7 +198,7 @@
                             IsVisible="{Binding SearchModelsCommand.IsRunning}"
                             MinWidth="16" />
                         <TextBlock
-                            Text="Search"
+                            Text="{x:Static lang:Resources.Action_Search}"
                             VerticalAlignment="Center"
                             IsVisible="{Binding !SearchModelsCommand.IsRunning}" />
                     </Grid>
@@ -205,7 +206,7 @@
             </Grid>
             <DockPanel>
                 <StackPanel Margin="4, 8" Orientation="Vertical">
-                    <Label Content="Sort" />
+                    <Label Content="{x:Static lang:Resources.Label_Sort}" />
                     <ComboBox
                         ItemsSource="{Binding AllSortModes}"
                         MinWidth="100"
@@ -213,7 +214,7 @@
                 </StackPanel>
 
                 <StackPanel Margin="4, 8" Orientation="Vertical">
-                    <Label Content="Period" />
+                    <Label Content="{x:Static lang:Resources.Label_TimePeriod}" />
                     <ComboBox
                         ItemsSource="{Binding AllCivitPeriods}"
                         MinWidth="100"
@@ -221,7 +222,7 @@
                 </StackPanel>
 
                 <StackPanel Margin="4, 8" Orientation="Vertical">
-                    <Label Content="Model Type" />
+                    <Label Content="{x:Static lang:Resources.Label_ModelType}" />
                     <ComboBox
                         ItemsSource="{Binding AllModelTypes}"
                         MinWidth="100"
@@ -229,7 +230,7 @@
                 </StackPanel>
                 
                 <StackPanel Margin="4, 8" Orientation="Vertical">
-                    <Label Content="Base Model" />
+                    <Label Content="{x:Static lang:Resources.Label_BaseModel}" />
                     <ComboBox
                         ItemsSource="{Binding BaseModelOptions}"
                         MinWidth="100"
@@ -238,7 +239,7 @@
                 
 
                 <CheckBox
-                    Content="Show NSFW Content"
+                    Content="{x:Static lang:Resources.Label_ShowNsfwContent}"
                     HorizontalAlignment="Right"
                     IsChecked="{Binding ShowNsfw, Mode=TwoWay}"
                     Margin="8,8,8,0" />
@@ -258,7 +259,7 @@
         <TextBlock
             Grid.Row="2"
             Margin="16,8"
-            Text="Data provided by CivitAI"
+            Text="{x:Static lang:Resources.Label_DataProvidedByCivitAi}"
             VerticalAlignment="Bottom" />
 
         <StackPanel
@@ -268,7 +269,7 @@
             Orientation="Vertical"
             IsVisible="{Binding HasSearched}">
             <TextBlock Margin="0,0,4,4" TextAlignment="Center">
-                <Run Text="Page" />
+                <Run Text="{x:Static lang:Resources.Label_Page}" />
                 <Run Text="{Binding CurrentPageNumber, FallbackValue=1}" />
                 <Run Text="/" />
                 <Run Text="{Binding TotalPages, FallbackValue=5}" />
@@ -277,26 +278,26 @@
                 <Button
                     Command="{Binding FirstPage}"
                     IsEnabled="{Binding CanGoToFirstPage}"
-                    ToolTip.Tip="First Page"
+                    ToolTip.Tip="{x:Static lang:Resources.Label_FirstPage}"
                     Margin="0,0,8,0">
                     <avalonia:Icon Value="fa-solid fa-backward-fast"/>
                 </Button>
                 <Button
                     Command="{Binding PreviousPage}"
-                    ToolTip.Tip="Previous Page"
+                    ToolTip.Tip="{x:Static lang:Resources.Label_PreviousPage}"
                     IsEnabled="{Binding CanGoToPreviousPage}"
                     Margin="0,0,8,0">
                     <avalonia:Icon Value="fa-solid fa-caret-left"/>
                 </Button>
                 <Button Command="{Binding NextPage}" 
                         IsEnabled="{Binding CanGoToNextPage}"
-                        ToolTip.Tip="Next Page"
+                        ToolTip.Tip="{x:Static lang:Resources.Label_NextPage}"
                         Margin="0,0,8,0">
                     <avalonia:Icon Value="fa-solid fa-caret-right"/>
                 </Button>
                 <Button
                     Command="{Binding LastPage}"
-                    ToolTip.Tip="Last Page"
+                    ToolTip.Tip="{x:Static lang:Resources.Label_LastPage}"
                     IsEnabled="{Binding CanGoToLastPage}">
                     <avalonia:Icon Value="fa-solid fa-forward-fast"/>
                 </Button>

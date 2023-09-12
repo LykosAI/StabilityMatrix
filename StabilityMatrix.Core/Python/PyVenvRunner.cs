@@ -201,17 +201,14 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         // Record output for errors
         var output = new StringBuilder();
 
-        var outputAction =
-            outputDataReceived == null
-                ? null
-                : new Action<ProcessOutput>(s =>
-                {
-                    Logger.Debug($"Pip output: {s.Text}");
-                    // Record to output
-                    output.Append(s.Text);
-                    // Forward to callback
-                    outputDataReceived(s);
-                });
+        var outputAction = new Action<ProcessOutput>(s =>
+        {
+            Logger.Debug($"Pip output: {s.Text}");
+            // Record to output
+            output.Append(s.Text);
+            // Forward to callback
+            outputDataReceived?.Invoke(s);
+        });
 
         SetPyvenvCfg(PyRunner.PythonDir);
         RunDetached($"-m pip install {args}", outputAction);
@@ -427,9 +424,18 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         if (Process is { HasExited: false })
         {
             Process.Kill();
-            await Process
-                .WaitForExitAsync(new CancellationTokenSource(1000).Token)
-                .ConfigureAwait(false);
+            try
+            {
+                await Process
+                    .WaitForExitAsync(new CancellationTokenSource(1000).Token)
+                    .ConfigureAwait(false);
+            }
+            catch (OperationCanceledException e)
+            {
+                Logger.Error(e, "Venv Process did not exit in time in DisposeAsync");
+
+                Process.CancelStreamReaders();
+            }
         }
 
         Process = null;

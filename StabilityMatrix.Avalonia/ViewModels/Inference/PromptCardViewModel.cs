@@ -172,7 +172,11 @@ public partial class PromptCardViewModel : LoadableViewModelBase
                   ```
                   """;
 
-        var dialog = DialogHelper.CreateMarkdownDialog(md, "Prompt Syntax");
+        var dialog = DialogHelper.CreateMarkdownDialog(
+            md,
+            "Prompt Syntax",
+            TextEditorPreset.Prompt
+        );
         dialog.MinDialogWidth = 800;
         dialog.MaxDialogHeight = 1000;
         dialog.MaxDialogWidth = 1000;

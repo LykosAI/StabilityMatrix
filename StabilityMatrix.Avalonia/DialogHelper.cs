@@ -9,6 +9,7 @@ using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit;
@@ -18,6 +19,7 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Markdown.Avalonia;
 using Markdown.Avalonia.SyntaxHigh.Extensions;
+using NLog;
 using Refit;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
@@ -29,11 +31,15 @@ using StabilityMatrix.Core.Services;
 using TextMateSharp.Grammars;
 using Process = FuzzySharp.Process;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Avalonia;
 
 public static class DialogHelper
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
     /// <summary>
     /// Create a generic textbox entry content dialog.
     /// </summary>
@@ -130,11 +136,52 @@ public static class DialogHelper
     /// <summary>
     /// Create a generic dialog for showing a markdown document
     /// </summary>
-    public static BetterContentDialog CreateMarkdownDialog(string markdown, string? title = null)
+    public static BetterContentDialog CreateMarkdownDialog(
+        string markdown,
+        string? title = null,
+        TextEditorPreset editorPreset = default
+    )
     {
         Dispatcher.UIThread.VerifyAccess();
 
         var viewer = new MarkdownScrollViewer { Markdown = markdown };
+
+        // Apply syntax highlighting to code blocks if preset is provided
+        if (editorPreset != default)
+        {
+            using var _ = CodeTimer.StartDebug();
+
+            var appliedCount = 0;
+
+            if (
+                viewer.GetLogicalDescendants().FirstOrDefault()?.GetLogicalDescendants() is
+                { } stackDescendants
+            )
+            {
+                foreach (var editor in stackDescendants.OfType<TextEditor>())
+                {
+                    TextEditorConfigs.Configure(editor, editorPreset);
+
+                    editor.FontFamily = "Cascadia Code,Consolas,Menlo,Monospace";
+                    editor.Margin = new Thickness(0);
+                    editor.Padding = new Thickness(4);
+                    editor.IsEnabled = false;
+
+                    if (editor.GetLogicalParent() is Border border)
+                    {
+                        border.BorderThickness = new Thickness(0);
+                        border.CornerRadius = new CornerRadius(4);
+                    }
+
+                    appliedCount++;
+                }
+            }
+
+            Logger.Log(
+                appliedCount > 0 ? LogLevel.Trace : LogLevel.Warn,
+                $"Applied syntax highlighting to {appliedCount} code blocks"
+            );
+        }
 
         return new BetterContentDialog
         {

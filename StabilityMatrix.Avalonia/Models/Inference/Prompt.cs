@@ -309,6 +309,7 @@ public record Prompt
                         GetSafeEndIndex(currentToken.EndIndex)
                     );
                 }
+
                 currentToken = tokens.Current;
 
                 if (!currentToken.Scopes.Contains("punctuation.definition.network.end.prompt"))

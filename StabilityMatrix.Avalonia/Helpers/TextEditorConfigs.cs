@@ -4,6 +4,7 @@ using Avalonia.Media;
 using AvaloniaEdit;
 using AvaloniaEdit.TextMate;
 using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Styles;
 using StabilityMatrix.Core.Extensions;
 using TextMateSharp.Grammars;
@@ -13,8 +14,16 @@ using TextMateSharp.Themes;
 
 namespace StabilityMatrix.Avalonia.Helpers;
 
-public class TextEditorConfigs
+public static class TextEditorConfigs
 {
+    public static void Configure(TextEditor editor, TextEditorPreset preset)
+    {
+        if (preset == TextEditorPreset.Prompt)
+        {
+            ConfigForPrompt(editor);
+        }
+    }
+
     public static void ConfigForPrompt(TextEditor editor)
     {
         const ThemeName themeName = ThemeName.DimmedMonokai;

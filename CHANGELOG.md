@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.4.1
 ### Fixed
 - Fixed deleting checkpoints not updating the visual grid until the page is refreshed
+- Fixed updates sometimes freezing on "Installing Requirements" step
 
 ## v2.4.0
 ### Added

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -28,6 +29,24 @@ public class CodeTimer : IDisposable
 
         // Add ourselves to the stack
         RunningTimers.Push(this);
+    }
+
+    /// <summary>
+    /// Starts a new timer and returns it if DEBUG is defined, otherwise returns an empty IDisposable
+    /// </summary>
+    /// <param name="postFix"></param>
+    /// <param name="callerName"></param>
+    /// <returns></returns>
+    public static IDisposable StartDebug(
+        string postFix = "",
+        [CallerMemberName] string callerName = ""
+    )
+    {
+#if DEBUG
+        return new CodeTimer(postFix, callerName);
+#else
+        return Disposable.Empty;
+#endif
     }
 
     /// <summary>

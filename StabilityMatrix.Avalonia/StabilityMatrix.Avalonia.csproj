@@ -75,6 +75,10 @@
     <ItemGroup>
         <AvaloniaResource Include="Assets\sitecustomize.py" />
     </ItemGroup>
+
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\Fonts\**" />
+    </ItemGroup>
     
     <ItemGroup>
       <!-- Only for win-64 -->

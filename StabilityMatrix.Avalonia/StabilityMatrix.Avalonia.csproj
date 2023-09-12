@@ -8,7 +8,7 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
-        <Version>2.4.0-dev.4</Version>
+        <Version>2.5.0-dev.1</Version>
         <InformationalVersion>$(Version)</InformationalVersion>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -58,15 +58,20 @@
         <PackageReference Include="Sylvan.Data" Version="0.2.12" />
         <PackageReference Include="Sylvan.Data.Csv" Version="1.3.3" />
         <PackageReference Include="TextMateSharp.Grammars" Version="1.0.55" />
+        <PackageReference Include="Dock.Avalonia" Version="11.0.0.1" />
+        <PackageReference Include="Dock.Model.Avalonia" Version="11.0.0.1" />
+        <PackageReference Include="MetadataExtractor" Version="2.8.1" />
     </ItemGroup>
 
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\Icon.ico" />
         <AvaloniaResource Include="Assets\Icon.png" />
-        <None Remove="Assets\ImagePrompt.tmLanguage.json" />
+    </ItemGroup>
+
+    <ItemGroup>
         <AvaloniaResource Include="Assets\ImagePrompt.tmLanguage.json" />
-        <None Remove="Assets\ThemeMatrixDark.json" />
+        <AvaloniaResource Include="Assets\ImagePrompt.tmLanguage.json" />
         <AvaloniaResource Include="Assets\ThemeMatrixDark.json" />
     </ItemGroup>
     

@@ -18,6 +18,7 @@ using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -338,8 +339,8 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         {
             ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
             IsPrimaryButtonEnabled = true,
-            PrimaryButtonText = "Save",
-            CloseButtonText = "Cancel",
+            PrimaryButtonText = Resources.Action_Save,
+            CloseButtonText = Resources.Action_Cancel,
             FullSizeDesired = true,
             DefaultButton = ContentDialogButton.Primary,
             ContentMargin = new Thickness(32, 16),

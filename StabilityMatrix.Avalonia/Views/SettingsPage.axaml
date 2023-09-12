@@ -24,11 +24,11 @@
                 <TextBlock
                     Margin="0,0,0,8"
                     FontWeight="Medium"
-                    Text="Appearance" />
+                    Text="{x:Static lang:Resources.Label_Appearance}" />
                 <ui:SettingsExpander
                     Grid.Row="1"
                     Margin="8,0,8,4"
-                    Header="Theme"
+                    Header="{x:Static lang:Resources.Label_Theme}"
                     IconSource="WeatherMoon">
                     <ui:SettingsExpander.Footer>
                         <ComboBox
@@ -58,12 +58,12 @@
                 <TextBlock
                     Margin="0,0,0,8"
                     FontWeight="Medium"
-                    Text="Checkpoint Manager" />
+                    Text="{x:Static lang:Resources.Label_CheckpointManager}" />
                 <ui:SettingsExpander
                     Grid.Row="1"
                     Margin="8,0"
-                    Description="Select this option if you're having problems moving Stability Matrix to another drive"
-                    Header="Remove shared checkpoints directory symbolic links on shutdown"
+                    Description="{x:Static lang:Resources.Label_RemoveSymlinksOnShutdown_Details}"
+                    Header="{x:Static lang:Resources.Label_RemoveSymlinksOnShutdown}"
                     IconSource="Folder">
                     <ui:SettingsExpander.Footer>
                         <CheckBox Margin="8" IsChecked="{Binding RemoveSymlinksOnShutdown}" />
@@ -72,11 +72,13 @@
                 <ui:SettingsExpander
                     Grid.Row="2"
                     Margin="8,4"
-                    Description="Rebuilds the installed checkpoints cache. Use if checkpoints are incorrectly labeled in the Model Browser."
-                    Header="Reset Checkpoints Cache"
+                    Description="{x:Static lang:Resources.Label_ResetCheckpointsCache_Details}"
+                    Header="{x:Static lang:Resources.Label_ResetCheckpointsCache}"
                     IconSource="Refresh">
                     <ui:SettingsExpander.Footer>
-                        <Button Command="{Binding ResetCheckpointCache}" Content="Reset Checkpoints Cache" />
+                        <Button 
+                            Command="{Binding ResetCheckpointCache}" 
+                            Content="{x:Static lang:Resources.Label_ResetCheckpointsCache}" />
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
             </Grid>
@@ -86,22 +88,24 @@
                 <TextBlock
                     Margin="0,0,0,8"
                     FontWeight="Medium"
-                    Text="Package Environment" />
+                    Text="{x:Static lang:Resources.Label_PackageEnvironment}" />
 
                 <ui:SettingsExpander
                     Grid.Row="1"
                     Margin="8,0"
-                    Header="Environment Variables"
+                    Header="{x:Static lang:Resources.Label_EnvironmentVariables}"
                     IconSource="OtherUser">
                     <ui:SettingsExpander.Footer>
-                        <Button Command="{Binding OpenEnvVarsDialogCommand}" Content="Edit" />
+                        <Button 
+                            Command="{Binding OpenEnvVarsDialogCommand}" 
+                            Content="{x:Static lang:Resources.Action_Edit}" />
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
 
                 <ui:SettingsExpander
                     Grid.Row="2"
                     Margin="8,4"
-                    Header="Embedded Python">
+                    Header="{x:Static lang:Resources.Label_EmbeddedPython}">
                     <ui:SettingsExpander.IconSource>
                         <controls:FASymbolIconSource Symbol="fa-brands fa-python" />
                     </ui:SettingsExpander.IconSource>
@@ -112,7 +116,7 @@
                                 IsEnabled="{Binding CheckPythonVersionCommand.IsRunning}"
                                 IsIndeterminate="True"
                                 IsVisible="{Binding CheckPythonVersionCommand.IsRunning}" />
-                            <Button Command="{Binding CheckPythonVersionCommand}" Content="Check Version" />
+                            <Button Command="{Binding CheckPythonVersionCommand}" Content="{x:Static lang:Resources.Action_CheckVersion}" />
                         </StackPanel>
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
@@ -123,11 +127,11 @@
                 <TextBlock
                     Margin="0,0,0,8"
                     FontWeight="Medium"
-                    Text="Integrations" />
+                    Text="{x:Static lang:Resources.Label_Integrations}" />
                 <ui:SettingsExpander
                     Grid.Row="1"
                     Margin="8,0,8,4"
-                    Header="Discord Rich Presence">
+                    Header="{x:Static lang:Resources.Label_DiscordRichPresence}">
                     <ui:SettingsExpander.IconSource>
                         <controls:FASymbolIconSource Symbol="fa-brands fa-discord" />
                     </ui:SettingsExpander.IconSource>
@@ -142,15 +146,14 @@
                 <TextBlock
                     Margin="0,0,0,8"
                     FontWeight="Medium"
-                    Text="System" />
+                    Text="{x:Static lang:Resources.Label_System}" />
                 <ui:SettingsExpander
                     Grid.Row="1"
                     Margin="8,0,8,4"
-                    Description="Uses the current app location, you can run this again if you move the app"
-                    Header="Add Stability Matrix to the Start Menu"
+                    Description="{x:Static lang:Resources.Label_AddToStartMenu_Details}"
+                    Header="{x:Static lang:Resources.Label_AddToStartMenu}"
                     IconSource="StarAdd"
-                    ToolTip.Tip="{OnPlatform Default='Only available on Windows',
-                                                 Windows={x:Null}}">
+                    ToolTip.Tip="{OnPlatform Default={x:Static lang:Resources.Label_OnlyAvailableOnWindows}, Windows={x:Null}}">
                     <ui:SettingsExpander.Footer>
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <controls:ProgressRing
@@ -167,15 +170,14 @@
 
                             <SplitButton
                                 Command="{Binding AddToStartMenuCommand}"
-                                Content="Add for Current User"
-                                IsEnabled="{OnPlatform Default=False,
-                                                           Windows=True}">
+                                Content="{x:Static lang:Resources.Action_AddForCurrentUser}"
+                                IsEnabled="{OnPlatform Default=False, Windows=True}">
                                 <SplitButton.Flyout>
                                     <ui:FAMenuFlyout Placement="Bottom">
                                         <ui:MenuFlyoutItem
                                             Command="{Binding AddToGlobalStartMenuCommand}"
                                             IconSource="Admin"
-                                            Text="Add for All Users" />
+                                            Text="{x:Static lang:Resources.Action_AddForAllUsers}" />
                                     </ui:FAMenuFlyout>
                                 </SplitButton.Flyout>
                             </SplitButton>
@@ -185,8 +187,8 @@
                 <ui:SettingsExpander
                     Grid.Row="2"
                     Margin="8,0"
-                    Description="Does not move existing data"
-                    Header="Select New Data Directory"
+                    Description="{x:Static lang:Resources.Label_SelectNewDataDirectory}"
+                    Header="{x:Static lang:Resources.Label_SelectNewDataDirectory_Details}"
                     IconSource="MoveToFolder">
                     <ui:SettingsExpander.Footer>
                         <Button Command="{Binding PickNewDataDirectory}">
@@ -199,7 +201,7 @@
                                 <TextBlock
                                     Grid.Column="1"
                                     VerticalAlignment="Center"
-                                    Text="Select Directory" />
+                                    Text="{x:Static lang:Resources.Action_SelectDirectory}" />
                             </Grid>
                         </Button>
                     </ui:SettingsExpander.Footer>
@@ -334,7 +336,7 @@
                         Margin="0,8"
                         FontSize="15"
                         FontWeight="Bold"
-                        Text="About" />
+                        Text="{x:Static lang:Resources.Label_About}" />
                     <Image
                         Width="112"
                         Height="112"
@@ -344,7 +346,7 @@
                     <TextBlock
                         Margin="8"
                         FontWeight="Medium"
-                        Text="Stability Matrix" />
+                        Text="{x:Static lang:Resources.Label_StabilityMatrix}" />
                     <Panel>
                         <Button
                             Name="VersionButton"
@@ -366,7 +368,7 @@
                             Margin="8"
                             HorizontalAlignment="Left"
                             Command="{Binding ShowLicensesDialogCommand}"
-                            Content="License and Open Source Notices" />
+                            Content="{x:Static lang:Resources.Label_LicenseAndOpenSourceNotices}" />
                     </StackPanel>
                 </StackPanel>
             </Grid>

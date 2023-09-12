@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -14,14 +15,17 @@ using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using FluentAvalonia.Interop;
 using FluentAvalonia.Styling;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media;
 using FluentAvalonia.UI.Media.Animation;
 using FluentAvalonia.UI.Windowing;
 using Microsoft.Extensions.DependencyInjection;
+using NLog;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -67,6 +71,8 @@ public partial class MainWindow : AppWindowBase
         TitleBar.TitleBarHitTestType = TitleBarHitTestType.Complex;
 
         EventManager.Instance.ToggleProgressFlyout += (_, _) => progressFlyout?.Hide();
+
+        EventManager.Instance.CultureChanged += (_, _) => SetDefaultFonts();
     }
 
     /// <inheritdoc />
@@ -132,6 +138,49 @@ public partial class MainWindow : AppWindowBase
         if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
         {
             loader.LoadFailed -= OnImageLoadFailed;
+        }
+    }
+
+    public void SetDefaultFonts()
+    {
+        var fonts = new List<string>();
+
+        try
+        {
+            if (Cultures.Current?.Name == "ja-JP")
+            {
+                fonts.Add(Assets.RegionalFontJapanese.UriPath.ToString());
+            }
+            else if (Compat.IsWindows)
+            {
+                if (OSVersionHelper.IsWindows11())
+                {
+                    fonts.Add("Segoe UI Variable Text");
+                }
+                else
+                {
+                    fonts.Add("Segoe UI");
+                }
+            }
+            else if (Compat.IsMacOS)
+            {
+                fonts.Add("San Francisco");
+                fonts.Add("Helvetica Neue");
+                fonts.Add("Helvetica");
+            }
+            else
+            {
+                Resources["ContentControlThemeFontFamily"] = FontFamily.Default;
+                return;
+            }
+
+            Resources["ContentControlThemeFontFamily"] = new FontFamily(string.Join(",", fonts));
+        }
+        catch (Exception e)
+        {
+            LogManager.GetCurrentClassLogger().Error(e);
+
+            Resources["ContentControlThemeFontFamily"] = FontFamily.Default;
         }
     }
 

@@ -237,9 +237,9 @@ public partial class SettingsViewModel : PageViewModelBase
         var dialog = new BetterContentDialog
         {
             Content = new EnvVarsDialog { DataContext = viewModel },
-            PrimaryButtonText = "Save",
+            PrimaryButtonText = Resources.Action_Save,
             IsPrimaryButtonEnabled = true,
-            CloseButtonText = "Cancel",
+            CloseButtonText = Resources.Action_Cancel,
         };
 
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)
@@ -274,14 +274,11 @@ public partial class SettingsViewModel : PageViewModelBase
         // Show dialog box
         var dialog = new ContentDialog
         {
-            Title = "Python version info",
+            Title = Resources.Label_PythonVersionInfo,
             Content = result,
-            PrimaryButtonText = "Ok",
+            PrimaryButtonText = Resources.Action_OK,
             IsPrimaryButtonEnabled = true
         };
-        dialog.Title = "Python version info";
-        dialog.Content = result;
-        dialog.PrimaryButtonText = "Ok";
         await dialog.ShowAsync();
     }
 
@@ -341,8 +338,8 @@ public partial class SettingsViewModel : PageViewModelBase
             Title =
                 "This will create a shortcut for Stability Matrix in the Start Menu for all users",
             Content = "You will be prompted for administrator privileges. Continue?",
-            PrimaryButtonText = "Yes",
-            CloseButtonText = "Cancel",
+            PrimaryButtonText = Resources.Action_Yes,
+            CloseButtonText = Resources.Action_Cancel,
             DefaultButton = ContentDialogButton.Primary
         };
 
@@ -434,7 +431,7 @@ public partial class SettingsViewModel : PageViewModelBase
             {
                 Title = "Restart required",
                 Content = "Stability Matrix must be restarted for the changes to take effect.",
-                PrimaryButtonText = "Restart",
+                PrimaryButtonText = Resources.Action_Restart,
                 DefaultButton = ContentDialogButton.Primary,
                 IsSecondaryButtonEnabled = false,
             };
@@ -510,8 +507,8 @@ public partial class SettingsViewModel : PageViewModelBase
         {
             DefaultButton = ContentDialogButton.Primary,
             Title = "Test title",
-            PrimaryButtonText = "OK",
-            CloseButtonText = "Close"
+            PrimaryButtonText = Resources.Action_OK,
+            CloseButtonText = Resources.Action_Close
         };
 
         var result = await dialog.ShowAsync();

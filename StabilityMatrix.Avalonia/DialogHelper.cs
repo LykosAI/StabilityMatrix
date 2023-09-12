@@ -13,6 +13,7 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Markdown.Avalonia;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Languages;
 
 namespace StabilityMatrix.Avalonia;
 
@@ -22,26 +23,24 @@ public static class DialogHelper
     /// Create a generic textbox entry content dialog.
     /// </summary>
     public static BetterContentDialog CreateTextEntryDialog(
-        string title, 
-        string description, 
-        IReadOnlyList<TextBoxField> textFields)
+        string title,
+        string description,
+        IReadOnlyList<TextBoxField> textFields
+    )
     {
         Dispatcher.UIThread.VerifyAccess();
 
         var stackPanel = new StackPanel();
         var grid = new Grid
         {
-            RowDefinitions = 
+            RowDefinitions =
             {
                 new RowDefinition(GridLength.Auto),
                 new RowDefinition(GridLength.Star)
             },
             Children =
             {
-                new TextBlock
-                {
-                    Text = description
-                },
+                new TextBlock { Text = description },
                 stackPanel
             }
         };
@@ -52,25 +51,24 @@ public static class DialogHelper
             firstTextBox.Focus();
             firstTextBox.CaretIndex = firstTextBox.Text?.LastIndexOf('.') ?? 0;
         };
-        
+
         // Disable primary button if any textboxes are invalid
-        var primaryCommand = new RelayCommand(delegate { },
+        var primaryCommand = new RelayCommand(
+            delegate { },
             () =>
             {
                 var invalidCount = textFields.Count(field => !field.IsValid);
                 Debug.WriteLine($"Checking can execute: {invalidCount} invalid fields");
                 return invalidCount == 0;
-            });
-        
+            }
+        );
+
         // Create textboxes
         foreach (var field in textFields)
         {
-            var label = new TextBlock
-            {
-                Text = field.Label
-            };
+            var label = new TextBlock { Text = field.Label };
             stackPanel.Children.Add(label);
-            
+
             var textBox = new TextBox
             {
                 [!TextBox.TextProperty] = new Binding("TextProperty"),
@@ -78,7 +76,7 @@ public static class DialogHelper
                 DataContext = field,
             };
             stackPanel.Children.Add(textBox);
-            
+
             // When IsValid property changes, update invalid count and primary button
             field.PropertyChanged += (_, args) =>
             {
@@ -87,10 +85,10 @@ public static class DialogHelper
                     primaryCommand.NotifyCanExecuteChanged();
                 }
             };
-            
+
             // Set initial value
             textBox.Text = field.Text;
-            
+
             // See if initial value is valid
             try
             {
@@ -101,13 +99,13 @@ public static class DialogHelper
                 field.IsValid = false;
             }
         }
-        
+
         return new BetterContentDialog
         {
             Title = title,
             Content = grid,
-            PrimaryButtonText = "OK",
-            CloseButtonText = "Cancel",
+            PrimaryButtonText = Resources.Action_OK,
+            CloseButtonText = Resources.Action_Cancel,
             IsPrimaryButtonEnabled = true,
             PrimaryButtonCommand = primaryCommand,
             DefaultButton = ContentDialogButton.Primary
@@ -121,20 +119,17 @@ public static class DialogHelper
     {
         Dispatcher.UIThread.VerifyAccess();
 
-        var viewer = new MarkdownScrollViewer
-        {
-            Markdown = markdown
-        };
-        
+        var viewer = new MarkdownScrollViewer { Markdown = markdown };
+
         return new BetterContentDialog
         {
             Title = title,
             Content = viewer,
-            CloseButtonText = "Close",
+            CloseButtonText = Resources.Action_Close,
             IsPrimaryButtonEnabled = false,
         };
     }
-    
+
     /// <summary>
     /// Create a simple title and description task dialog.
     /// Sets the XamlRoot to the current top level window.
@@ -142,23 +137,19 @@ public static class DialogHelper
     public static TaskDialog CreateTaskDialog(string title, string description)
     {
         Dispatcher.UIThread.VerifyAccess();
-        
+
         var content = new StackPanel
         {
             Children =
             {
                 new TextBlock
                 {
-                    Margin = new Thickness(0,0,0,8),
+                    Margin = new Thickness(0, 0, 0, 8),
                     FontSize = 16,
                     Text = title,
                     TextWrapping = TextWrapping.WrapWithOverflow,
                 },
-                new TextBlock
-                {
-                    Text = description,
-                    TextWrapping = TextWrapping.WrapWithOverflow,
-                }
+                new TextBlock { Text = description, TextWrapping = TextWrapping.WrapWithOverflow, }
             }
         };
 
@@ -176,16 +167,18 @@ public sealed class TextBoxField : INotifyPropertyChanged
 {
     // Label above the textbox
     public string Label { get; init; } = string.Empty;
+
     // Actual text value
     public string Text { get; set; } = string.Empty;
+
     // Watermark text
     public string Watermark { get; init; } = string.Empty;
-    
+
     /// <summary>
     /// Validation action on text changes. Throw exception if invalid.
     /// </summary>
     public Action<string>? Validator { get; init; }
-    
+
     public string TextProperty
     {
         get => Text;
@@ -206,7 +199,7 @@ public sealed class TextBoxField : INotifyPropertyChanged
             OnPropertyChanged();
         }
     }
-    
+
     // Default to true if no validator is provided
     private bool isValid;
     public bool IsValid

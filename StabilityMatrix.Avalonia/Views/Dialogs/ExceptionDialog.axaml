@@ -37,11 +37,11 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel DataContext="{Binding Exception}" Spacing="4">
                             <!--  Exception Message  -->
-                            <TextBlock Theme="{DynamicResource BodyStrongTextBlockStyle}" Text="Details" />
+                            <TextBlock Theme="{DynamicResource BodyStrongTextBlockStyle}" Text="{x:Static lang:Resources.Label_Details}" />
                             <SelectableTextBlock Text="{Binding Message}" Margin="0,0,0,8"
                                                  SelectionBrush="DodgerBlue"/>
                             <!--  Callstack  -->
-                            <TextBlock Theme="{DynamicResource BodyStrongTextBlockStyle}" Text="Callstack" />
+                            <TextBlock Theme="{DynamicResource BodyStrongTextBlockStyle}" Text="{x:Static lang:Resources.Label_Callstack}" />
                             <controls:Card 
                                 Margin="0,0,0,8"
                                 Background="{DynamicResource ComboBoxDropDownBackground}">
@@ -56,7 +56,7 @@
                             <TextBlock
                                 Theme="{DynamicResource BodyStrongTextBlockStyle}"
                                 IsVisible="{Binding InnerException, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                Text="Inner exception" />
+                                Text="{x:Static lang:Resources.Label_InnerException}" />
                             <controls:Card
                                 IsVisible="{Binding InnerException, Converter={x:Static ObjectConverters.IsNotNull}}"
                                 Background="{DynamicResource ComboBoxDropDownBackground}">

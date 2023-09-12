@@ -7,6 +7,7 @@
                           xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
                           xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
                           xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
                           d:DataContext="{x:Static mocks:DesignData.EnvVarsViewModel}"
                           x:DataType="dialogs:EnvVarsViewModel"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -48,11 +49,11 @@
                 <ui:CommandBar.PrimaryCommands>
                     <ui:CommandBarButton Width="45" Height="50" 
                                          IconSource="Add" 
-                                         Label="Save" 
+                                         Label="{x:Static lang:Resources.Action_Save}" 
                                          Command="{Binding AddRowCommand}"/>
                     <ui:CommandBarButton Width="45" Height="50" 
                                          IconSource="Remove" 
-                                         Label="Undo" 
+                                         Label="{x:Static lang:Resources.Action_Remove}" 
                                          CommandParameter="{Binding #EnvVarsGrid.SelectedIndex}"
                                          Command="{Binding RemoveSelectedRowCommand}">
                         <ui:CommandBarButton.IsEnabled>
@@ -81,13 +82,13 @@
                     <DataGridTextColumn x:DataType="models:EnvVarKeyPair" 
                                         Width="5*"
                                         FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
-                                        Header="Name" 
+                                        Header="{x:Static lang:Resources.Label_EnvVarsTable_Name}" 
                                         Binding="{Binding Key}" />
                     <DataGridTemplateColumn MinWidth="0" Width="1" CellTemplate="{StaticResource DataGridCellDividerTemplate}"/>
                     <DataGridTextColumn x:DataType="models:EnvVarKeyPair" 
                                         Width="5*"
                                         FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
-                                        Header="Value" 
+                                        Header="{x:Static lang:Resources.Label_EnvVarsTable_Value}" 
                                         Binding="{Binding Value}" />
                 </DataGrid.Columns>
             </DataGrid>

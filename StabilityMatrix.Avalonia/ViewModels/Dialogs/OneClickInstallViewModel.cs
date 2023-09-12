@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
@@ -70,8 +71,8 @@ public partial class OneClickInstallViewModel : ViewModelBase
         this.pyRunner = pyRunner;
         this.sharedFolders = sharedFolders;
 
-        HeaderText = "Welcome to Stability Matrix!";
-        SubHeaderText = "Choose your preferred interface and click Install to get started!";
+        HeaderText = Resources.Text_WelcomeToStabilityMatrix;
+        SubHeaderText = Resources.Text_OneClickInstaller_SubHeader;
         ShowInstallButton = true;
         AllPackages = new ObservableCollection<BasePackage>(
             this.packageFactory.GetAllAvailablePackages().Where(p => p.OfferInOneClickInstaller)
@@ -96,7 +97,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
 
     private async Task DoInstall()
     {
-        HeaderText = $"Installing {SelectedPackage.DisplayName}";
+        HeaderText = $"{Resources.Label_Installing} {SelectedPackage.DisplayName}";
 
         var progressHandler = new Progress<ProgressReport>(progress =>
         {
@@ -108,7 +109,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
 
         await prerequisiteHelper.InstallAllIfNecessary(progressHandler);
 
-        SubHeaderText = "Installing prerequisites...";
+        SubHeaderText = Resources.Progress_InstallingPrerequisites;
         IsIndeterminate = true;
         if (!PyRunner.PipInstalled)
         {
@@ -124,7 +125,6 @@ public partial class OneClickInstallViewModel : ViewModelBase
         var libraryDir = settingsManager.LibraryDir;
 
         // get latest version & download & install
-        SubHeaderText = "Getting latest version...";
         var installLocation = Path.Combine(libraryDir, "Packages", SelectedPackage.Name);
 
         var downloadVersion = new DownloadPackageVersionOptions();
@@ -147,7 +147,6 @@ public partial class OneClickInstallViewModel : ViewModelBase
         await DownloadPackage(installLocation, downloadVersion);
         await InstallPackage(installLocation, torchVersion);
 
-        SubHeaderText = "Setting up shared folder links...";
         var recommendedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
         await SelectedPackage.SetupModelFolders(installLocation, recommendedSharedFolderMethod);
 
@@ -168,15 +167,15 @@ public partial class OneClickInstallViewModel : ViewModelBase
         st.Settings.ActiveInstalledPackageId = installedPackage.Id;
         EventManager.Instance.OnInstalledPackagesChanged();
 
-        HeaderText = "Installation complete!";
+        HeaderText = Resources.Progress_InstallationComplete;
         SubSubHeaderText = string.Empty;
         OneClickInstallProgress = 100;
-        SubHeaderText = "Proceeding to Launch page in 3 seconds...";
-        await Task.Delay(1000);
-        SubHeaderText = "Proceeding to Launch page in 2 seconds...";
-        await Task.Delay(1000);
-        SubHeaderText = "Proceeding to Launch page in 1 second...";
-        await Task.Delay(1000);
+
+        for (var i = 0; i < 3; i++)
+        {
+            SubHeaderText = $"{Resources.Text_ProceedingToLaunchPage} ({i + 1}s)";
+            await Task.Delay(1000);
+        }
 
         // should close dialog
         EventManager.Instance.OnOneClickInstallFinished(false);
@@ -187,7 +186,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
         DownloadPackageVersionOptions versionOptions
     )
     {
-        SubHeaderText = "Downloading package...";
+        SubHeaderText = Resources.Progress_DownloadingPackage;
 
         var progress = new Progress<ProgressReport>(progress =>
         {
@@ -197,17 +196,15 @@ public partial class OneClickInstallViewModel : ViewModelBase
         });
 
         await SelectedPackage.DownloadPackage(installLocation, versionOptions, progress);
-        SubHeaderText = "Download Complete";
+        SubHeaderText = Resources.Progress_DownloadComplete;
         OneClickInstallProgress = 100;
     }
 
     private async Task InstallPackage(string installLocation, TorchVersion torchVersion)
     {
-        SubHeaderText = "Downloading and installing package requirements...";
-
         var progress = new Progress<ProgressReport>(progress =>
         {
-            SubHeaderText = "Downloading and installing package requirements...";
+            SubHeaderText = Resources.Progress_InstallingPackageRequirements;
             IsIndeterminate = progress.IsIndeterminate;
             OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
             EventManager.Instance.OnGlobalProgressChanged(OneClickInstallProgress);

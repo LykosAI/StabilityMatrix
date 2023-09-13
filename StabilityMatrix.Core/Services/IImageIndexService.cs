@@ -1,18 +1,27 @@
-﻿using StabilityMatrix.Core.Models.Database;
+﻿using DynamicData.Binding;
+using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Core.Services;
 
 public interface IImageIndexService
 {
+    IndexCollection<LocalImageFile, string> InferenceImages { get; }
+
     /// <summary>
     /// Gets a list of local images that start with the given path prefix
     /// </summary>
     Task<IReadOnlyList<LocalImageFile>> GetLocalImagesByPrefix(string pathPrefix);
 
     /// <summary>
-    /// Refreshes the index of local images
+    /// Refresh index for all collections
     /// </summary>
-    Task RefreshIndex(string subPath = "");
+    Task RefreshIndexForAllCollections();
+
+    Task RefreshIndex(IndexCollection<LocalImageFile, string> indexCollection);
+
+    void OnImageAdded(FilePath filePath);
 
     /// <summary>
     /// Refreshes the index of local images in the background

@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
 using AsyncAwaitBestPractices;
+using DynamicData;
+using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Helper;
@@ -16,6 +18,9 @@ public class ImageIndexService : IImageIndexService
     private readonly ILiteDbContext liteDbContext;
     private readonly ISettingsManager settingsManager;
 
+    /// <inheritdoc />
+    public IndexCollection<LocalImageFile, string> InferenceImages { get; }
+
     public ImageIndexService(
         ILogger<ImageIndexService> logger,
         ILiteDbContext liteDbContext,
@@ -25,6 +30,21 @@ public class ImageIndexService : IImageIndexService
         this.logger = logger;
         this.liteDbContext = liteDbContext;
         this.settingsManager = settingsManager;
+
+        InferenceImages = new IndexCollection<LocalImageFile, string>(
+            this,
+            file => file.RelativePath
+        )
+        {
+            RelativePath = "inference"
+        };
+
+        /*inferenceImagesSource
+            .Connect()
+            .DeferUntilLoaded()
+            .SortBy(file => file.LastModifiedAt, SortDirection.Descending)
+            .Bind(InferenceImages)
+            .Subscribe();*/
     }
 
     /// <inheritdoc />
@@ -37,8 +57,86 @@ public class ImageIndexService : IImageIndexService
             .ConfigureAwait(false);
     }
 
+    public async Task RefreshIndexForAllCollections()
+    {
+        await RefreshIndex(InferenceImages).ConfigureAwait(false);
+    }
+
+    public async Task RefreshIndex(IndexCollection<LocalImageFile, string> indexCollection)
+    {
+        if (indexCollection.RelativePath is not { } subPath)
+            return;
+
+        var imagesDir = settingsManager.ImagesDirectory;
+        var searchDir = imagesDir.JoinDir(indexCollection.RelativePath);
+        if (!searchDir.Exists)
+        {
+            return;
+        }
+
+        // Start
+        var stopwatch = Stopwatch.StartNew();
+        logger.LogInformation("Refreshing images index at {ImagesDir}...", imagesDir);
+
+        var added = 0;
+        var toAdd = new Queue<LocalImageFile>();
+
+        await Task.Run(() =>
+            {
+                foreach (
+                    var file in imagesDir.Info
+                        .EnumerateFiles("*.*", SearchOption.AllDirectories)
+                        .Where(
+                            info => LocalImageFile.SupportedImageExtensions.Contains(info.Extension)
+                        )
+                        .Select(info => new FilePath(info))
+                )
+                {
+                    /*var relativePath = Path.GetRelativePath(imagesDir, file);
+                    
+                    if (string.IsNullOrEmpty(relativePath))
+                    {
+                        continue;
+                    }*/
+
+                    var localImage = LocalImageFile.FromPath(file);
+
+                    toAdd.Enqueue(localImage);
+
+                    added++;
+                }
+            })
+            .ConfigureAwait(false);
+
+        var indexElapsed = stopwatch.Elapsed;
+
+        indexCollection.ItemsSource.EditDiff(toAdd, LocalImageFile.Comparer);
+
+        // End
+        stopwatch.Stop();
+        var editElapsed = stopwatch.Elapsed - indexElapsed;
+
+        logger.LogInformation(
+            "Image index updated for {Prefix} with {Entries} files, took {IndexDuration:F1}ms ({EditDuration:F1}ms edit)",
+            subPath,
+            added,
+            indexElapsed.TotalMilliseconds,
+            editElapsed.TotalMilliseconds
+        );
+    }
+
     /// <inheritdoc />
-    public async Task RefreshIndex(string subPath = "")
+    public void OnImageAdded(FilePath filePath)
+    {
+        var fullPath = settingsManager.ImagesDirectory.JoinDir(InferenceImages.RelativePath!);
+
+        if (!string.IsNullOrEmpty(Path.GetRelativePath(fullPath, filePath)))
+        {
+            InferenceImages.Add(LocalImageFile.FromPath(filePath));
+        }
+    }
+
+    /*public async Task RefreshIndex(IndexCollection<LocalImageFile, string> indexCollection)
     {
         var imagesDir = settingsManager.ImagesDirectory;
         if (!imagesDir.Exists)
@@ -129,12 +227,12 @@ public class ImageIndexService : IImageIndexService
             indexDuration.TotalMilliseconds,
             dbDuration.TotalMilliseconds
         );
-    }
+    }*/
 
     /// <inheritdoc />
     public void BackgroundRefreshIndex()
     {
-        RefreshIndex().SafeFireAndForget();
+        RefreshIndexForAllCollections().SafeFireAndForget();
     }
 
     /// <inheritdoc />

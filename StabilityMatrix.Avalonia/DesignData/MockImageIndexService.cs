@@ -1,12 +1,21 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
 public class MockImageIndexService : IImageIndexService
 {
+    /// <inheritdoc />
+    public IndexCollection<LocalImageFile, string> InferenceImages { get; } =
+        new IndexCollection<LocalImageFile, string>(null!, file => file.RelativePath)
+        {
+            RelativePath = "inference"
+        };
+
     /// <inheritdoc />
     public Task<IReadOnlyList<LocalImageFile>> GetLocalImagesByPrefix(string pathPrefix)
     {
@@ -34,10 +43,19 @@ public class MockImageIndexService : IImageIndexService
     }
 
     /// <inheritdoc />
-    public Task RefreshIndex(string subPath = "")
+    public Task RefreshIndexForAllCollections()
     {
         return Task.CompletedTask;
     }
+
+    /// <inheritdoc />
+    public Task RefreshIndex(IndexCollection<LocalImageFile, string> indexCollection)
+    {
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public void OnImageAdded(FilePath filePath) { }
 
     /// <inheritdoc />
     public void BackgroundRefreshIndex()

@@ -19,10 +19,16 @@ public partial class GenerationParameters
     public string? ModelName { get; set; }
 
     public static bool TryParse(
-        string text,
+        string? text,
         [NotNullWhen(true)] out GenerationParameters? generationParameters
     )
     {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            generationParameters = null;
+            return false;
+        }
+
         var lines = text.Split('\n');
 
         if (lines.LastOrDefault() is not { } lastLine)

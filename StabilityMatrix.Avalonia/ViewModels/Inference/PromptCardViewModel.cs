@@ -133,13 +133,13 @@ public partial class PromptCardViewModel : LoadableViewModelBase
     {
         var md = $"""
                   ## {Resources.Label_Emphasis}
-                  ```python
+                  ```prompt
                   (keyword)
-                  (keyword:weight)
+                  (keyword:1.0)
                   ```
                   
                   ## {Resources.Label_Deemphasis}
-                  ```python
+                  ```prompt
                   [keyword]
                   ```
                   
@@ -147,25 +147,25 @@ public partial class PromptCardViewModel : LoadableViewModelBase
                   They may be used in either the positive or negative prompts. 
                   Essentially they are text presets, so the position where you place them 
                   could make a difference. 
-                  ```python
+                  ```prompt
                   <embedding:model>
-                  <embedding:model:weight>
+                  <embedding:model:1.0>
                   ```
                   
                   ## {Resources.Label_NetworksLoraOrLycoris}
                   Unlike embeddings, network tags do not get tokenized to the model, 
                   so the position in the prompt where you place them does not matter.
-                  ```python
+                  ```prompt
                   <lora:model>
-                  <lora:model:weight>
+                  <lora:model:1.0>
                   <lyco:model>
-                  <lyco:model:weight>
+                  <lyco:model:1.0>
                   ```
                   
                   ## {Resources.Label_Comments}
                   Inline comments can be marked by a hashtag ‘#’. 
                   All text after a ‘#’ on a line will be disregarded during generation.
-                  ```c
+                  ```prompt
                   # comments
                   a red cat # also comments
                   detailed

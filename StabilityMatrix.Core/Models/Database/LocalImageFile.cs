@@ -1,4 +1,7 @@
 ﻿using LiteDB;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models.FileInterfaces;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace StabilityMatrix.Core.Models.Database;
 
@@ -51,6 +54,83 @@ public class LocalImageFile
         return Path.Combine(rootImageDirectory, RelativePath);
     }
 
+    public static LocalImageFile FromPath(FilePath filePath)
+    {
+        var relativePath = Path.GetRelativePath(
+            GlobalConfig.LibraryDir.JoinDir("Images"),
+            filePath
+        );
+
+        // TODO: Support other types
+        const LocalImageFileType imageType =
+            LocalImageFileType.Inference | LocalImageFileType.TextToImage;
+
+        // Get metadata
+        using var stream = new FileStream(
+            filePath.FullPath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read
+        );
+        using var reader = new BinaryReader(stream);
+        var metadata = ImageMetadata.ReadTextChunk(reader, "parameters-json");
+
+        GenerationParameters? genParams = null;
+
+        if (!string.IsNullOrWhiteSpace(metadata))
+        {
+            genParams = JsonSerializer.Deserialize<GenerationParameters>(metadata);
+        }
+        else
+        {
+            metadata = ImageMetadata.ReadTextChunk(reader, "parameters");
+            GenerationParameters.TryParse(metadata, out genParams);
+        }
+
+        return new LocalImageFile
+        {
+            RelativePath = relativePath,
+            ImageType = imageType,
+            CreatedAt = filePath.Info.CreationTimeUtc,
+            LastModifiedAt = filePath.Info.LastWriteTimeUtc,
+            GenerationParameters = genParams
+        };
+    }
+
     public static readonly HashSet<string> SupportedImageExtensions =
         new() { ".png", ".jpg", ".jpeg", ".webp" };
+
+    private sealed class LocalImageFileEqualityComparer : IEqualityComparer<LocalImageFile>
+    {
+        public bool Equals(LocalImageFile? x, LocalImageFile? y)
+        {
+            if (ReferenceEquals(x, y))
+                return true;
+            if (ReferenceEquals(x, null))
+                return false;
+            if (ReferenceEquals(y, null))
+                return false;
+            if (x.GetType() != y.GetType())
+                return false;
+            return x.RelativePath == y.RelativePath
+                && x.ImageType == y.ImageType
+                && x.CreatedAt.Equals(y.CreatedAt)
+                && x.LastModifiedAt.Equals(y.LastModifiedAt)
+                && Equals(x.GenerationParameters, y.GenerationParameters);
+        }
+
+        public int GetHashCode(LocalImageFile obj)
+        {
+            return HashCode.Combine(
+                obj.RelativePath,
+                obj.ImageType,
+                obj.CreatedAt,
+                obj.LastModifiedAt,
+                obj.GenerationParameters
+            );
+        }
+    }
+
+    public static IEqualityComparer<LocalImageFile> Comparer { get; } =
+        new LocalImageFileEqualityComparer();
 }

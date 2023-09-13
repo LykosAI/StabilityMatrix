@@ -224,7 +224,7 @@ public partial class InferenceViewModel : PageViewModelBase
         }
 
         // Start a model index update
-        await modelIndexService.RefreshIndex();
+        modelIndexService.BackgroundRefreshIndex();
     }
 
     /// <summary>

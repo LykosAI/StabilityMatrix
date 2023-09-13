@@ -9,6 +9,7 @@
     xmlns:input="using:FluentAvalonia.UI.Input"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     xmlns:dbModels="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
+    xmlns:animations="clr-namespace:StabilityMatrix.Avalonia.Animations"
     x:DataType="vmInference:ImageFolderCardViewModel">
 
     <Design.PreviewWith>
@@ -37,6 +38,12 @@
                     VerticalAlignment="{TemplateBinding VerticalAlignment}"
                     HorizontalContentAlignment="{TemplateBinding HorizontalAlignment}"
                     VerticalContentAlignment="{TemplateBinding VerticalAlignment}">
+                    
+                    <controls:Card.Styles>
+                        <Style Selector="ItemsRepeater">
+                            <Setter Property="animations:ItemsRepeaterArrangeAnimation.EnableItemsArrangeAnimation" Value="True"/>
+                        </Style>
+                    </controls:Card.Styles>
 
                     <Grid RowDefinitions="Auto,*">
                         <TextBox
@@ -53,10 +60,16 @@
                             </TextBox.InnerRightContent>
                         </TextBox>
 
-                        <ScrollViewer Grid.Row="1">
+                        <ScrollViewer 
+                            Grid.Row="1" 
+                            IsScrollInertiaEnabled="True"
+                            VerticalSnapPointsType="Mandatory"
+                            BringIntoViewOnFocusChange="False"
+                            HorizontalScrollBarVisibility="Disabled">
                             <ItemsRepeater
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Stretch"
+                                VerticalCacheLength="16"
                                 ItemsSource="{Binding LocalImages}">
                                 
                                 <ItemsRepeater.Resources>
@@ -107,6 +120,7 @@
                                 <ItemsRepeater.ItemTemplate>
                                     <DataTemplate DataType="{x:Type dbModels:LocalImageFile}">
                                         <Button
+                                            ToolTip.Placement="LeftEdgeAlignedTop"
                                             Command="{StaticResource ImageClickCommand}"
                                             CommandParameter="{Binding $self.DataContext}"
                                             HotKey="{x:Null}"
@@ -115,23 +129,6 @@
                                             CornerRadius="8">
                                             
                                             <Button.ContextFlyout>
-                                                <!--<ui:CommandBarFlyout>
-                                                    <ui:CommandBarButton
-                                                        Command="{StaticResource ImageCopyCommand}"
-                                                        CommandParameter="{Binding $self.DataContext}"/>
-                                                    <ui:CommandBarButton
-                                                        Command="{StaticResource ImageDeleteCommand}"
-                                                        CommandParameter="{Binding $self.DataContext}"/>
-                                                    
-                                                    <ui:CommandBarFlyout.SecondaryCommands>
-                                                        <ui:CommandBarSeparator Margin="0,-4,0,0"/>
-                                                        <ui:CommandBarButton>
-                                                            <ui:CommandBarButton
-                                                                Command="{StaticResource ImageDeleteCommand}"
-                                                                CommandParameter="{Binding $self.DataContext}"/>
-                                                        </ui:CommandBarButton>
-                                                    </ui:CommandBarFlyout.SecondaryCommands>
-                                                </ui:CommandBarFlyout>-->
                                                 <ui:FAMenuFlyout>
                                                     <ui:MenuFlyoutItem 
                                                         HotKey="{x:Null}"

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using AsyncImageLoader;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
@@ -36,18 +37,6 @@ public partial class ImageFolderCardViewModel : ViewModelBase
     private readonly INotificationService notificationService;
 
     /// <summary>
-    /// Source of image files to display
-    /// </summary>
-    private readonly SourceCache<LocalImageFile, string> localImagesSource =
-        new(imageFile => imageFile.RelativePath);
-
-    /// <summary>
-    /// Collection of image items to display
-    /// </summary>
-    public IObservableCollection<ImageFolderCardItemViewModel> Items { get; } =
-        new ObservableCollectionExtended<ImageFolderCardItemViewModel>();
-
-    /// <summary>
     /// Collection of local image files
     /// </summary>
     public IObservableCollection<LocalImageFile> LocalImages { get; } =
@@ -65,7 +54,7 @@ public partial class ImageFolderCardViewModel : ViewModelBase
         this.settingsManager = settingsManager;
         this.notificationService = notificationService;
 
-        localImagesSource
+        imageIndexService.InferenceImages.ItemsSource
             .Connect()
             .DeferUntilLoaded()
             .SortBy(file => file.LastModifiedAt, SortDirection.Descending)
@@ -78,14 +67,7 @@ public partial class ImageFolderCardViewModel : ViewModelBase
     {
         await base.OnLoadedAsync();
 
-        await imageIndexService.RefreshIndex("Inference");
-
-        var imageFiles = await imageIndexService.GetLocalImagesByPrefix("Inference");
-
-        localImagesSource.Edit(x =>
-        {
-            x.Load(imageFiles);
-        });
+        imageIndexService.RefreshIndexForAllCollections().SafeFireAndForget();
     }
 
     /// <summary>
@@ -141,11 +123,8 @@ public partial class ImageFolderCardViewModel : ViewModelBase
             return;
         }
 
-        // Remove from source
-        localImagesSource.Remove(item);
-
         // Remove from index
-        await imageIndexService.RemoveImage(item);
+        imageIndexService.InferenceImages.Remove(item);
 
         // Invalidate cache
         if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)

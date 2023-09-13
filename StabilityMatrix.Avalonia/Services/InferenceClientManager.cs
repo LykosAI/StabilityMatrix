@@ -263,9 +263,18 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         );
 
         // Get user defined host and port
-        var host = packagePair.InstalledPackage.GetLaunchArgsHost() ?? "127.0.0.1";
+        var host = packagePair.InstalledPackage.GetLaunchArgsHost();
+        if (string.IsNullOrWhiteSpace(host))
+        {
+            host = "127.0.0.1";
+        }
         host = host.Replace("localhost", "127.0.0.1");
-        var port = packagePair.InstalledPackage.GetLaunchArgsPort() ?? "8188";
+
+        var port = packagePair.InstalledPackage.GetLaunchArgsPort();
+        if (string.IsNullOrWhiteSpace(port))
+        {
+            port = "8188";
+        }
 
         var uri = new UriBuilder("http", host, int.Parse(port)).Uri;
 

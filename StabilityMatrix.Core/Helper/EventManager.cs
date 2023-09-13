@@ -1,4 +1,5 @@
-﻿using StabilityMatrix.Core.Models;
+﻿using System.Globalization;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Update;
@@ -26,6 +27,8 @@ public class EventManager
 
     public event EventHandler<IPackageModificationRunner>? PackageInstallProgressAdded;
     public event EventHandler? ToggleProgressFlyout;
+
+    public event EventHandler<CultureInfo>? CultureChanged;
 
     public void OnGlobalProgressChanged(int progress) =>
         GlobalProgressChanged?.Invoke(this, progress);
@@ -60,4 +63,6 @@ public class EventManager
         PackageInstallProgressAdded?.Invoke(this, runner);
 
     public void OnToggleProgressFlyout() => ToggleProgressFlyout?.Invoke(this, EventArgs.Empty);
+
+    public void OnCultureChanged(CultureInfo culture) => CultureChanged?.Invoke(this, culture);
 }

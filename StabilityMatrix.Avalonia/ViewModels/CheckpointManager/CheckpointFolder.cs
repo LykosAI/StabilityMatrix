@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -118,6 +119,12 @@ public partial class CheckpointFolder : ViewModelBase
         checkpointFilesCache
             .Connect()
             .DeferUntilLoaded()
+            .SubscribeMany(
+                file =>
+                    Observable
+                        .FromEventPattern<EventArgs>(file, nameof(ParentListRemoveRequested))
+                        .Subscribe(_ => checkpointFilesCache.Remove(file))
+            )
             .Bind(CheckpointFiles)
             .Sort(
                 SortExpressionComparer<CheckpointFile>

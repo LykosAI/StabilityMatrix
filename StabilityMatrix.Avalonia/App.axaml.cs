@@ -204,6 +204,8 @@ public sealed class App : Application
         };
         mainWindow.Closed += (_, _) => Shutdown();
 
+        mainWindow.SetDefaultFonts();
+
         VisualRoot = mainWindow;
         StorageProvider = mainWindow.StorageProvider;
 

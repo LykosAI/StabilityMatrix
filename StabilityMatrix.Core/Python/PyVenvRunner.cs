@@ -201,17 +201,14 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         // Record output for errors
         var output = new StringBuilder();
 
-        var outputAction =
-            outputDataReceived == null
-                ? null
-                : new Action<ProcessOutput>(s =>
-                {
-                    Logger.Debug($"Pip output: {s.Text}");
-                    // Record to output
-                    output.Append(s.Text);
-                    // Forward to callback
-                    outputDataReceived(s);
-                });
+        var outputAction = new Action<ProcessOutput>(s =>
+        {
+            Logger.Debug($"Pip output: {s.Text}");
+            // Record to output
+            output.Append(s.Text);
+            // Forward to callback
+            outputDataReceived?.Invoke(s);
+        });
 
         SetPyvenvCfg(PyRunner.PythonDir);
         RunDetached($"-m pip install {args}", outputAction);
@@ -225,7 +222,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
             );
         }
     }
-    
+
     /// <summary>
     /// Run a custom install command. Waits for the process to exit.
     /// workingDirectory defaults to RootPath.
@@ -309,8 +306,8 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         SetPyvenvCfg(PyRunner.PythonDir);
 
         Logger.Info(
-            "Launching venv process [{PythonPath}] " +
-            "in working directory [{WorkingDirectory}] with args {arguments.ToRepr()}",
+            "Launching venv process [{PythonPath}] "
+                + "in working directory [{WorkingDirectory}] with args {arguments.ToRepr()}",
             PythonPath,
             WorkingDirectory,
             arguments.ToRepr()
@@ -424,10 +421,21 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     /// </summary>
     public async ValueTask DisposeAsync()
     {
-        if (Process is not null)
+        if (Process is { HasExited: false })
         {
             Process.Kill();
-            await Process.WaitForExitAsync().ConfigureAwait(false);
+            try
+            {
+                await Process
+                    .WaitForExitAsync(new CancellationTokenSource(1000).Token)
+                    .ConfigureAwait(false);
+            }
+            catch (OperationCanceledException e)
+            {
+                Logger.Error(e, "Venv Process did not exit in time in DisposeAsync");
+
+                Process.CancelStreamReaders();
+            }
         }
 
         Process = null;

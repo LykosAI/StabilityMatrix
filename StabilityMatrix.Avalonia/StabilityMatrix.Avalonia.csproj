@@ -8,7 +8,7 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
-        <Version>2.3.3-dev.1</Version>
+        <Version>2.4.1-dev.1</Version>
         <InformationalVersion>$(Version)</InformationalVersion>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
     </PropertyGroup>
@@ -74,6 +74,10 @@
     
     <ItemGroup>
         <AvaloniaResource Include="Assets\sitecustomize.py" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\Fonts\**" />
     </ItemGroup>
     
     <ItemGroup>

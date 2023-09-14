@@ -39,12 +39,7 @@ public class ImageIndexService : IImageIndexService
             RelativePath = "inference"
         };
 
-        /*inferenceImagesSource
-            .Connect()
-            .DeferUntilLoaded()
-            .SortBy(file => file.LastModifiedAt, SortDirection.Descending)
-            .Bind(InferenceImages)
-            .Subscribe();*/
+        EventManager.Instance.ImageFileAdded += OnImageFileAdded;
     }
 
     /// <inheritdoc />
@@ -125,8 +120,7 @@ public class ImageIndexService : IImageIndexService
         );
     }
 
-    /// <inheritdoc />
-    public void OnImageAdded(FilePath filePath)
+    private void OnImageFileAdded(object? sender, FilePath filePath)
     {
         var fullPath = settingsManager.ImagesDirectory.JoinDir(InferenceImages.RelativePath!);
 

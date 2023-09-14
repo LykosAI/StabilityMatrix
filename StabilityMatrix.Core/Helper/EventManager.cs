@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Update;
@@ -31,6 +32,8 @@ public class EventManager
     public event EventHandler<CultureInfo>? CultureChanged;
 
     public event EventHandler? ModelIndexChanged;
+
+    public event EventHandler<FilePath>? ImageFileAdded;
 
     public void OnGlobalProgressChanged(int progress) =>
         GlobalProgressChanged?.Invoke(this, progress);
@@ -69,4 +72,6 @@ public class EventManager
     public void OnCultureChanged(CultureInfo culture) => CultureChanged?.Invoke(this, culture);
 
     public void OnModelIndexChanged() => ModelIndexChanged?.Invoke(this, EventArgs.Empty);
+
+    public void OnImageFileAdded(FilePath filePath) => ImageFileAdded?.Invoke(this, filePath);
 }

@@ -529,6 +529,11 @@ public class ComfyNodeBuilder
         public Size LatentSize { get; set; }
 
         public ImageNodeConnection? Image { get; set; }
+        public Size ImageSize { get; set; }
+
+        public List<NamedComfyNode> OutputNodes { get; } = new();
+
+        public IEnumerable<string> OutputNodeNames => OutputNodes.Select(n => n.Name);
 
         /// <summary>
         /// Gets the latent size scaled by a given factor

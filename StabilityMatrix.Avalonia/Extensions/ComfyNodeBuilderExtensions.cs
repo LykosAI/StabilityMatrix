@@ -253,11 +253,13 @@ public static class ComfyNodeBuilderExtensions
             var vaeDecoder = builder.Nodes.AddNamedNode(
                 ComfyNodeBuilder.VAEDecode(
                     "VAEDecode",
-                    builder.Connections.Latent!,
+                    builder.Connections.Latent
+                        ?? throw new InvalidOperationException("Latent source not set"),
                     builder.Connections.GetRefinerOrBaseVAE()
                 )
             );
             builder.Connections.Image = vaeDecoder.Output;
+            builder.Connections.ImageSize = builder.Connections.LatentSize;
         }
 
         var saveImage = builder.Nodes.AddNamedNode(
@@ -271,6 +273,8 @@ public static class ComfyNodeBuilderExtensions
                 }
             }
         );
+
+        builder.Connections.OutputNodes.Add(saveImage);
 
         return saveImage.Name;
     }

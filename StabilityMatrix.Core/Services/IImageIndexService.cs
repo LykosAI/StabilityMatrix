@@ -21,8 +21,6 @@ public interface IImageIndexService
 
     Task RefreshIndex(IndexCollection<LocalImageFile, string> indexCollection);
 
-    void OnImageAdded(FilePath filePath);
-
     /// <summary>
     /// Refreshes the index of local images in the background
     /// </summary>

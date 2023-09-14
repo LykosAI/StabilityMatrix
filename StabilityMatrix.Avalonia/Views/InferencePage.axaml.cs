@@ -6,6 +6,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
 
 namespace StabilityMatrix.Avalonia.Views;
@@ -47,8 +48,13 @@ public partial class InferencePage : UserControlBase
         addTabFlyout.ShowAt(AddButton);
     }
 
-    private void AddTabMenu_TextToImageButton_OnClick(object? sender, RoutedEventArgs e)
+    private void AddTabMenu_TextToImage_OnClick(object? sender, RoutedEventArgs e)
     {
-        (DataContext as InferenceViewModel)!.AddTabCommand.Execute(null);
+        (DataContext as InferenceViewModel)!.AddTab();
+    }
+
+    private void AddTabMenu_Upscale_OnClick(object? sender, RoutedEventArgs e)
+    {
+        (DataContext as InferenceViewModel)!.AddTab(InferenceProjectType.Upscale);
     }
 }

@@ -55,9 +55,6 @@ public class MockImageIndexService : IImageIndexService
     }
 
     /// <inheritdoc />
-    public void OnImageAdded(FilePath filePath) { }
-
-    /// <inheritdoc />
     public void BackgroundRefreshIndex()
     {
         throw new System.NotImplementedException();

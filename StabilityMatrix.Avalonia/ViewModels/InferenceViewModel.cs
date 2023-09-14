@@ -70,6 +70,8 @@ public partial class InferenceViewModel : PageViewModelBase
 
     public IInferenceClientManager ClientManager { get; }
 
+    public SharedState SharedState { get; }
+
     public ObservableCollection<InferenceTabViewModelBase> Tabs { get; } = new();
 
     [ObservableProperty]
@@ -93,7 +95,8 @@ public partial class InferenceViewModel : PageViewModelBase
         IInferenceClientManager inferenceClientManager,
         ISettingsManager settingsManager,
         IModelIndexService modelIndexService,
-        ILiteDbContext liteDbContext
+        ILiteDbContext liteDbContext,
+        SharedState sharedState
     )
     {
         this.vmFactory = vmFactory;
@@ -103,6 +106,7 @@ public partial class InferenceViewModel : PageViewModelBase
         this.liteDbContext = liteDbContext;
 
         ClientManager = inferenceClientManager;
+        SharedState = sharedState;
 
         // Keep RunningPackage updated with the current package pair
         EventManager.Instance.RunningPackageStatusChanged += OnRunningPackageStatusChanged;
@@ -240,8 +244,10 @@ public partial class InferenceViewModel : PageViewModelBase
                 continue;
             }
 
+            var projectPath = projectFile.ToString();
+
             var entry = await liteDbContext.InferenceProjects.FindOneAsync(
-                p => p.FilePath == projectFile.ToString()
+                p => p.FilePath == projectPath
             );
 
             // Create if not found
@@ -299,9 +305,14 @@ public partial class InferenceViewModel : PageViewModelBase
     /// When the + button on the tab control is clicked, add a new tab.
     /// </summary>
     [RelayCommand]
-    private void AddTab()
+    public void AddTab(InferenceProjectType type = InferenceProjectType.TextToImage)
     {
-        var tab = vmFactory.Get<InferenceTextToImageViewModel>();
+        if (type.ToViewModelType() is not { } vmType)
+        {
+            return;
+        }
+
+        var tab = (InferenceTabViewModelBase)vmFactory.Get(vmType);
         Tabs.Add(tab);
 
         // Set as new selected tab

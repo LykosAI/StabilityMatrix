@@ -40,7 +40,7 @@
             <ui:CommandBarButton Label="Delete" ToolTip.Tip="Delete" />-->
             <ui:CommandBarFlyout.SecondaryCommands>
                 <ui:CommandBarButton
-                    Click="AddTabMenu_TextToImageButton_OnClick"
+                    Click="AddTabMenu_TextToImage_OnClick"
                     IconSource="FullScreenMaximize"
                     Label="Text to Image"
                     ToolTip.Tip="Text to Image" />
@@ -54,6 +54,17 @@
                     IsEnabled="False"
                     Label="Inpaint"
                     ToolTip.Tip="Inpaint" />
+                <ui:CommandBarButton
+                    Click="AddTabMenu_Upscale_OnClick"
+                    IsEnabled="{Binding SharedState.IsDebugMode}"
+                    Label="Upscale"
+                    ToolTip.Tip="Upscale">
+                    <ui:CommandBarButton.IconSource>
+                        <fluentIcons:SymbolIconSource
+                            FontSize="10"
+                            Symbol="ResizeImage"/>
+                    </ui:CommandBarButton.IconSource>
+                </ui:CommandBarButton>
             </ui:CommandBarFlyout.SecondaryCommands>
         </ui:CommandBarFlyout>
     </controls:UserControlBase.Resources>

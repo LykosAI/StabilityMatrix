@@ -5,9 +5,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using DynamicData.Binding;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
+using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Avalonia.Services;
 
@@ -44,6 +46,13 @@ public interface IInferenceClientManager
     IObservableCollection<ComfySampler> Samplers { get; }
     IObservableCollection<ComfyUpscaler> Upscalers { get; }
     IObservableCollection<ComfyScheduler> Schedulers { get; }
+
+    Task CopyImageToInputAsync(FilePath imageFile, CancellationToken cancellationToken = default);
+
+    Task WriteImageToInputAsync(
+        ImageSource imageSource,
+        CancellationToken cancellationToken = default
+    );
 
     Task ConnectAsync(CancellationToken cancellationToken = default);
 

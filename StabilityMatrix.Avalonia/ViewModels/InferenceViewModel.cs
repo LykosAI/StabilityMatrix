@@ -41,7 +41,6 @@ using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
-[Preload]
 [View(typeof(InferencePage))]
 public partial class InferenceViewModel : PageViewModelBase
 {
@@ -224,7 +223,7 @@ public partial class InferenceViewModel : PageViewModelBase
 
         if (Tabs.Count == 0)
         {
-            AddTab();
+            AddTab(InferenceProjectType.TextToImage);
         }
 
         // Start a model index update
@@ -305,14 +304,16 @@ public partial class InferenceViewModel : PageViewModelBase
     /// When the + button on the tab control is clicked, add a new tab.
     /// </summary>
     [RelayCommand]
-    public void AddTab(InferenceProjectType type = InferenceProjectType.TextToImage)
+    public void AddTab(InferenceProjectType type)
     {
         if (type.ToViewModelType() is not { } vmType)
         {
             return;
         }
 
-        var tab = (InferenceTabViewModelBase)vmFactory.Get(vmType);
+        var tab =
+            vmFactory.Get(vmType) as InferenceTabViewModelBase
+            ?? throw new NullReferenceException($"Could not create view model of type {vmType}");
         Tabs.Add(tab);
 
         // Set as new selected tab

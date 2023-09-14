@@ -1,12 +1,14 @@
-﻿<controls:UserControlBase
+﻿<dock:DockUserControlBase
     x:Class="StabilityMatrix.Avalonia.Views.Inference.InferenceImageUpscaleView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dock="clr-namespace:StabilityMatrix.Avalonia.Controls.Dock"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:modelsInference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     d:DataContext="{x:Static mocks:DesignData.InferenceImageUpscaleViewModel}"
     d:DesignHeight="450"
@@ -34,19 +36,37 @@
                     Id="MainLayout"
                     Orientation="Horizontal">
 
-
-                    <ProportionalDock
-                        x:Name="LeftDockPane"
-                        Id="LeftDockLayout"
+                    <!--  Left Pane  -->
+                    <ProportionalDock 
+                        x:Name="LeftProportionalDock" 
+                        Id="LeftProportionalDock" 
                         Orientation="Vertical"
-                        Proportion="0.33">
+                        Proportion="0.2">
 
-                        <!--  Left Pane  -->
+                        <!-- Left Upper (Image Source) Pane -->
+                        <ToolDock
+                            x:Name="SourceImagePane"
+                            Alignment="Top"
+                            Id="SourceImagePane"
+                            Proportion="0.5">
+                            <Tool
+                                x:Name="SourceImageTool"
+                                Title="Source Image"
+                                x:DataType="Tool"
+                                CanClose="False"
+                                Id="SourceImageTool">
+                                <controls:SelectImageCard x:CompileBindings="False" DataContext="{Binding ElementName=Dock, Path=DataContext.SelectImageCardViewModel}" />
+                            </Tool>
+                        </ToolDock>
+                        
+                        <ProportionalDockSplitter Id="LeftProportionalDockSplitter" />
+                        
+                        <!--  Left Lower (Config) Pane  -->
                         <ToolDock
                             x:Name="ConfigPane"
-                            Alignment="Top"
+                            Alignment="Bottom"
                             Id="ConfigPane"
-                            Proportion="0.25">
+                            Proportion="0.5">
                             <Tool
                                 x:Name="ConfigTool"
                                 Title="Config"
@@ -67,21 +87,9 @@
                                     <StackPanel Grid.Row="2" Margin="0,6,0,0">
                                         <controls:Card Padding="8">
                                             <Grid
-                                                Grid.Row="4"
                                                 HorizontalAlignment="Center"
                                                 ColumnDefinitions="Auto,*,Auto"
                                                 RowDefinitions="Auto,*">
-                                                <Button
-                                                    Grid.Row="1"
-                                                    Margin="4,0"
-                                                    Padding="12,8"
-                                                    HorizontalAlignment="Left"
-                                                    icons:Attached.Icon="fa-solid fa-magnifying-glass-plus"
-                                                    Classes="transparent"
-                                                    Command="{Binding GenerateImageCommand}"
-                                                    CommandParameter="current_seed,hires_fix"
-                                                    ToolTip.Tip="Generate with Hires Scaling" />
-
                                                 <!--  Main Generate Button  -->
                                                 <Button
                                                     x:Name="GenerateButton"
@@ -91,6 +99,7 @@
                                                     HorizontalAlignment="Stretch"
                                                     Classes="accent"
                                                     Command="{Binding GenerateImageCommand}"
+                                                    CommandParameter="{x:Static modelsInference:GenerateFlags.None}"
                                                     IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}">
                                                     <Panel>
                                                         <TextBlock IsVisible="{Binding #GenerateButton.IsEnabled}" Text="Generate Image" />
@@ -107,55 +116,23 @@
                                                     icons:Attached.Icon="fa-solid fa-stop"
                                                     Command="{Binding GenerateImageCancelCommand}"
                                                     IsVisible="{Binding GenerateImageCommand.CanBeCanceled}" />
-
-                                                <Button
-                                                    Grid.Row="1"
-                                                    Grid.Column="2"
-                                                    Margin="4,0"
-                                                    Padding="12,8"
-                                                    HorizontalAlignment="Left"
-                                                    icons:Attached.Icon="fa-solid fa-repeat"
-                                                    Classes="transparent"
-                                                    Command="{Binding GenerateImageCommand}"
-                                                    CommandParameter="current_seed"
-                                                    ToolTip.Tip="Generate with current seed" />
                                             </Grid>
                                         </controls:Card>
                                     </StackPanel>
                                 </Grid>
                             </Tool>
                         </ToolDock>
-                        
-                        <ProportionalDockSplitter Id="LeftDockPaneSplitter" />
 
                     </ProportionalDock>
 
                     <ProportionalDockSplitter x:Name="LeftSplitter" Id="LeftSplitter" />
 
-                    <!--  Source Image Pane  -->
-                    <ToolDock
-                        x:Name="SourceImagePane"
-                        Alignment="Right"
-                        Id="SourceImagePane"
-                        Proportion="0.33">
-                        <Tool
-                            x:Name="SourceImageTool"
-                            Title="Source Image"
-                            x:DataType="Tool"
-                            CanClose="False"
-                            Id="SourceImageTool">
-                            <controls:SelectImageCard/>
-                        </Tool>
-                    </ToolDock>
-
-                    <ProportionalDockSplitter x:Name="RightSplitter" Id="RightSplitter" />
-
-                    <!--  Right Pane  -->
+                    <!--  Middle Right Pane  -->
                     <ToolDock
                         x:Name="ImageGalleryPane"
                         Alignment="Right"
                         Id="ImageGalleryPane"
-                        Proportion="0.33">
+                        Proportion="0.6">
                         <Tool
                             x:Name="ImageGalleryTool"
                             Title="Output Image"
@@ -184,10 +161,30 @@
                         </Tool>
                     </ToolDock>
 
+                    <ProportionalDockSplitter x:Name="RightSplitter" Id="RightSplitter" />
+
+                    <!--  Right Pane  -->
+                    <ToolDock
+                        x:Name="ImageFolderPane"
+                        Alignment="Right"
+                        Id="ImageFolderPane"
+                        Proportion="0.1">
+                        <Tool
+                            x:Name="ImageFolderTool"
+                            x:DataType="Tool"
+                            CanClose="False"
+                            Id="ImageFolderTool">
+
+                            <Grid x:CompileBindings="False" DataContext="{Binding ElementName=Dock, Path=DataContext}">
+                                <controls:ImageFolderCard DataContext="{Binding ImageFolderCardViewModel}" />
+                            </Grid>
+                        </Tool>
+                    </ToolDock>
+
                 </ProportionalDock>
             </RootDock>
 
         </DockControl>
     </Grid>
 
-</controls:UserControlBase>
+</dock:DockUserControlBase>

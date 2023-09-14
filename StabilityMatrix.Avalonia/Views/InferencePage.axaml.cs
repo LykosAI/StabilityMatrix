@@ -2,7 +2,6 @@
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using Avalonia.Input;
 using Avalonia.Interactivity;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Controls;
@@ -50,11 +49,13 @@ public partial class InferencePage : UserControlBase
 
     private void AddTabMenu_TextToImage_OnClick(object? sender, RoutedEventArgs e)
     {
-        (DataContext as InferenceViewModel)!.AddTab();
+        (DataContext as InferenceViewModel)!.AddTabCommand.Execute(
+            InferenceProjectType.TextToImage
+        );
     }
 
     private void AddTabMenu_Upscale_OnClick(object? sender, RoutedEventArgs e)
     {
-        (DataContext as InferenceViewModel)!.AddTab(InferenceProjectType.Upscale);
+        (DataContext as InferenceViewModel)!.AddTabCommand.Execute(InferenceProjectType.Upscale);
     }
 }

@@ -30,22 +30,13 @@ public class InferenceProjectDocument
             ProjectType = loadableModel switch
             {
                 InferenceTextToImageViewModel => InferenceProjectType.TextToImage,
+                InferenceImageUpscaleViewModel => InferenceProjectType.Upscale,
                 _
                     => throw new InvalidOperationException(
                         $"Unknown loadable model type: {loadableModel.GetType()}"
                     )
             },
             State = loadableModel.SaveStateToJsonObject()
-        };
-    }
-
-    public Type GetViewModelType()
-    {
-        return ProjectType switch
-        {
-            InferenceProjectType.TextToImage => typeof(InferenceTextToImageViewModel),
-            InferenceProjectType.Unknown => throw new InvalidOperationException(),
-            _ => throw new ArgumentOutOfRangeException(nameof(ProjectType), ProjectType, null)
         };
     }
 

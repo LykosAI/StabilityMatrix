@@ -1,79 +1,66 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.IO;
+using System.Diagnostics.CodeAnalysis;
+using System.Drawing;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
-using Avalonia.Media.Imaging;
+using Avalonia.Controls.Shapes;
 using Avalonia.Threading;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+using DynamicData.Binding;
 using NLog;
-using Refit;
-using SkiaSharp;
-using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Inference;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
-using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
-using StabilityMatrix.Core.Services;
+using Path = System.IO.Path;
+
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceImageUpscaleView), persistent: true)]
-public partial class InferenceImageUpscaleViewModel : InferenceTabViewModelBase
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly INotificationService notificationService;
-    private readonly ServiceManager<ViewModelBase> vmFactory;
-    private readonly IModelIndexService modelIndexService;
-
-    public IInferenceClientManager ClientManager { get; }
-
-    public ImageGalleryCardViewModel ImageGalleryCardViewModel { get; }
-    public StackCardViewModel StackCardViewModel { get; }
-
-    public UpscalerCardViewModel UpscalerCardViewModel =>
-        StackCardViewModel.GetCard<StackExpanderViewModel>().GetCard<UpscalerCardViewModel>();
 
     [JsonIgnore]
-    public ProgressViewModel OutputProgress { get; } = new();
+    public StackCardViewModel StackCardViewModel { get; }
 
-    [ObservableProperty]
-    [property: JsonIgnore]
-    private string? outputImageSource;
+    [JsonPropertyName("Upscaler")]
+    public UpscalerCardViewModel UpscalerCardViewModel { get; }
+
+    [JsonPropertyName("SelectImage")]
+    public SelectImageCardViewModel SelectImageCardViewModel { get; }
+
+    public bool IsUpscaleEnabled
+    {
+        get => StackCardViewModel.GetCard<StackExpanderViewModel>().IsEnabled;
+        set => StackCardViewModel.GetCard<StackExpanderViewModel>().IsEnabled = value;
+    }
 
     public InferenceImageUpscaleViewModel(
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
-        ServiceManager<ViewModelBase> vmFactory,
-        IModelIndexService modelIndexService
+        ServiceManager<ViewModelBase> vmFactory
     )
+        : base(vmFactory, inferenceClientManager, notificationService)
     {
         this.notificationService = notificationService;
-        this.vmFactory = vmFactory;
-        this.modelIndexService = modelIndexService;
-        ClientManager = inferenceClientManager;
 
-        // Get sub view models from service manager
-
-        var seedCard = vmFactory.Get<SeedCardViewModel>();
-        seedCard.GenerateNewSeed();
-
-        ImageGalleryCardViewModel = vmFactory.Get<ImageGalleryCardViewModel>();
+        UpscalerCardViewModel = vmFactory.Get<UpscalerCardViewModel>();
+        SelectImageCardViewModel = vmFactory.Get<SelectImageCardViewModel>();
 
         StackCardViewModel = vmFactory.Get<StackCardViewModel>();
-
         StackCardViewModel.AddCards(
             new LoadableViewModelBase[]
             {
@@ -81,61 +68,73 @@ public partial class InferenceImageUpscaleViewModel : InferenceTabViewModelBase
                 vmFactory.Get<StackExpanderViewModel>(stackExpander =>
                 {
                     stackExpander.Title = "Upscale";
-                    stackExpander.AddCards(
-                        new LoadableViewModelBase[]
-                        {
-                            // Post processing upscaler
-                            vmFactory.Get<UpscalerCardViewModel>(),
-                        }
-                    );
+                    stackExpander.AddCards(new LoadableViewModelBase[] { UpscalerCardViewModel });
                 })
             }
         );
 
-        // GenerateImageCommand.WithNotificationErrorHandler(notificationService);
+        // On any new images, copy to input dir
+        SelectImageCardViewModel
+            .WhenPropertyChanged(x => x.ImageSource)
+            .Subscribe(e =>
+            {
+                if (e.Value?.LocalFile?.FullPath is { } path)
+                {
+                    ClientManager.CopyImageToInputAsync(path).SafeFireAndForget();
+                }
+            });
     }
 
-    private (NodeDictionary prompt, string[] outputs) BuildPrompt()
+    /// <inheritdoc />
+    protected override void BuildPrompt(BuildPromptEventArgs args)
     {
-        using var _ = new CodeTimer();
+        base.BuildPrompt(args);
 
-        var builder = new ComfyNodeBuilder();
+        var builder = args.Builder;
+        var nodes = builder.Nodes;
 
-        return (builder.ToNodeDictionary(), new[] { "?" });
-    }
+        // Get source image
+        var sourceImage = SelectImageCardViewModel.ImageSource;
+        var sourceImageRelativePath = Path.Combine("Inference", sourceImage!.LocalFile!.Name);
+        var sourceImageSize =
+            SelectImageCardViewModel.CurrentBitmapSize
+            ?? throw new InvalidOperationException("Source image size is null");
 
-    private void OnProgressUpdateReceived(object? sender, ComfyProgressUpdateEventArgs args)
-    {
-        Dispatcher.UIThread.Post(() =>
+        // Set source size
+        builder.Connections.ImageSize = sourceImageSize;
+
+        // Load source
+        var loadImage = nodes.AddNamedNode(
+            ComfyNodeBuilder.LoadImage("LoadImage", sourceImageRelativePath)
+        );
+        builder.Connections.Image = loadImage.Output1;
+
+        // If upscale is enabled, add another upscale group
+        if (IsUpscaleEnabled)
         {
-            OutputProgress.Value = args.Value;
-            OutputProgress.Maximum = args.Maximum;
-            OutputProgress.IsIndeterminate = false;
+            var upscaleSize = builder.Connections.GetScaledImageSize(UpscalerCardViewModel.Scale);
 
-            OutputProgress.Text =
-                $"({args.Value} / {args.Maximum})"
-                + (args.RunningNode != null ? $" {args.RunningNode}" : "");
-        });
+            // Build group
+            var upscaleGroup = builder.Group_UpscaleToImage(
+                "Upscale",
+                builder.Connections.Image!,
+                UpscalerCardViewModel.SelectedUpscaler!.Value,
+                upscaleSize.Width,
+                upscaleSize.Height
+            );
+
+            // Set as the image output
+            builder.Connections.Image = upscaleGroup.Output;
+        }
+
+        builder.SetupOutputImage();
     }
 
-    private void OnPreviewImageReceived(object? sender, ComfyWebSocketImageData args)
-    {
-        Dispatcher.UIThread.Post(() =>
-        {
-            using var stream = new MemoryStream(args.ImageBytes);
-
-            var bitmap = new Bitmap(stream);
-
-            var currentImage = ImageGalleryCardViewModel.PreviewImage;
-
-            ImageGalleryCardViewModel.PreviewImage = bitmap;
-            ImageGalleryCardViewModel.IsPreviewOverlayEnabled = true;
-
-            currentImage?.Dispose();
-        });
-    }
-
-    private async Task GenerateImageImpl(CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    protected override async Task GenerateImageImpl(
+        GenerateOverrides overrides,
+        CancellationToken cancellationToken
+    )
     {
         if (!ClientManager.IsConnected)
         {
@@ -143,127 +142,29 @@ public partial class InferenceImageUpscaleViewModel : InferenceTabViewModelBase
             return;
         }
 
-        var client = ClientManager.Client;
-
-        var (nodes, outputNodeNames) = BuildPrompt();
-
-        // Connect preview image handler
-        client.PreviewImageReceived += OnPreviewImageReceived;
-
-        ComfyTask? promptTask = null;
-        try
+        if (SelectImageCardViewModel.ImageSource?.LocalFile?.FullPath is not { } path)
         {
-            // Register to interrupt if user cancels
-            cancellationToken.Register(() =>
-            {
-                Logger.Info("Cancelling prompt");
-                client
-                    .InterruptPromptAsync(new CancellationTokenSource(5000).Token)
-                    .SafeFireAndForget();
-            });
-
-            try
-            {
-                promptTask = await client.QueuePromptAsync(nodes, cancellationToken);
-            }
-            catch (ApiException e)
-            {
-                Logger.Warn(e, "Api exception while queuing prompt");
-                await DialogHelper.CreateApiExceptionDialog(e, "Api Error").ShowAsync();
-                return;
-            }
-
-            // Register progress handler
-            promptTask.ProgressUpdate += OnProgressUpdateReceived;
-
-            // Wait for prompt to finish
-            await promptTask.Task.WaitAsync(cancellationToken);
-            Logger.Trace($"Prompt task {promptTask.Id} finished");
-
-            // Get output images
-            var imageOutputs = await client.GetImagesForExecutedPromptAsync(
-                promptTask.Id,
-                cancellationToken
-            );
-
-            ImageGalleryCardViewModel.ImageSources.Clear();
-
-            var images = imageOutputs[outputNodeNames[0]];
-            if (images is null)
-                return;
-
-            List<ImageSource> outputImages;
-            // Use local file path if available, otherwise use remote URL
-            if (client.OutputImagesDir is { } outputPath)
-            {
-                outputImages = images
-                    .Select(i => new ImageSource(i.ToFilePath(outputPath)))
-                    .ToList();
-            }
-            else
-            {
-                outputImages = images
-                    .Select(i => new ImageSource(i.ToUri(client.BaseAddress)))
-                    .ToList();
-            }
-
-            // Download all images to make grid, if multiple
-            if (outputImages.Count > 1)
-            {
-                var loadedImages = outputImages
-                    .Select(i => SKImage.FromEncodedData(i.LocalFile?.Info.OpenRead()))
-                    .ToImmutableArray();
-
-                var grid = ImageProcessor.CreateImageGrid(loadedImages);
-
-                // Save to disk
-                var lastName = outputImages.Last().LocalFile?.Info.Name;
-                var gridPath = client.OutputImagesDir!.JoinFile($"grid-{lastName}");
-
-                await using (var fileStream = gridPath.Info.OpenWrite())
-                {
-                    await fileStream.WriteAsync(grid.Encode().ToArray(), cancellationToken);
-                }
-
-                // Insert to start of images
-                var gridImage = new ImageSource(gridPath);
-                // Preload
-                await gridImage.GetBitmapAsync();
-                ImageGalleryCardViewModel.ImageSources.Add(gridImage);
-            }
-
-            // Add rest of images
-            foreach (var img in outputImages)
-            {
-                // Preload
-                await img.GetBitmapAsync();
-                ImageGalleryCardViewModel.ImageSources.Add(img);
-            }
+            notificationService.Show("No image selected", "Please select an image first");
+            return;
         }
-        finally
+
+        await ClientManager.CopyImageToInputAsync(path, cancellationToken);
+
+        var buildPromptArgs = new BuildPromptEventArgs { Overrides = overrides };
+        BuildPrompt(buildPromptArgs);
+
+        var generationArgs = new ImageGenerationEventArgs
         {
-            // Disconnect progress handler
-            OutputProgress.Value = 0;
-            OutputProgress.Text = "";
-            ImageGalleryCardViewModel.PreviewImage?.Dispose();
-            ImageGalleryCardViewModel.PreviewImage = null;
-            ImageGalleryCardViewModel.IsPreviewOverlayEnabled = false;
+            Client = ClientManager.Client,
+            Nodes = buildPromptArgs.Builder.ToNodeDictionary(),
+            OutputNodeNames = buildPromptArgs.Builder.Connections.OutputNodeNames.ToArray(),
+            Parameters = new GenerationParameters
+            {
+                ModelName = UpscalerCardViewModel.SelectedUpscaler?.Name,
+            },
+            Project = InferenceProjectDocument.FromLoadable(this)
+        };
 
-            promptTask?.Dispose();
-            client.PreviewImageReceived -= OnPreviewImageReceived;
-        }
-    }
-
-    [RelayCommand(IncludeCancelCommand = true)]
-    private async Task GenerateImage(CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            await GenerateImageImpl(cancellationToken);
-        }
-        catch (OperationCanceledException e)
-        {
-            Logger.Debug($"[Image Upscale Canceled] {e.Message}");
-        }
+        await RunGeneration(generationArgs, cancellationToken);
     }
 }

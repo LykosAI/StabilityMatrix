@@ -77,6 +77,7 @@ public abstract partial class InferenceTabViewModelBase
         if (e.Data.GetDataFormats().Contains(DataFormats.Files))
         {
             e.Handled = true;
+            e.DragEffects = DragDropEffects.None;
             return;
         }
 
@@ -103,7 +104,10 @@ public abstract partial class InferenceTabViewModelBase
                         );
 
                         // Check project type matches
-                        if (project?.GetViewModelType() == GetType() && project.State is not null)
+                        if (
+                            project?.ProjectType.ToViewModelType() == GetType()
+                            && project.State is not null
+                        )
                         {
                             LoadStateFromJsonObject(project.State);
                         }

@@ -253,6 +253,44 @@ public class ComfyNodeBuilder
         };
     }
 
+    /// <summary>
+    /// Create a LoadImage node.
+    /// </summary>
+    /// <param name="name">Name of the node</param>
+    /// <param name="relativeInputPath">Path relative to the Comfy input directory</param>
+    public static NamedComfyNode<ImageNodeConnection, ImageMaskConnection> LoadImage(
+        string name,
+        string relativeInputPath
+    )
+    {
+        return new NamedComfyNode<ImageNodeConnection, ImageMaskConnection>(name)
+        {
+            ClassType = "LoadImage",
+            Inputs = new Dictionary<string, object?> { ["image"] = relativeInputPath }
+        };
+    }
+
+    public static NamedComfyNode<ImageNodeConnection> Sharpen(
+        string name,
+        ImageNodeConnection image,
+        int sharpenRadius,
+        double sigma,
+        double alpha
+    )
+    {
+        return new NamedComfyNode<ImageNodeConnection>(name)
+        {
+            ClassType = "Sharpen",
+            Inputs = new Dictionary<string, object?>
+            {
+                ["image"] = image.Data,
+                ["sharpen_radius"] = sharpenRadius,
+                ["sigma"] = sigma,
+                ["alpha"] = alpha
+            }
+        };
+    }
+
     public ImageNodeConnection Lambda_LatentToImage(
         LatentNodeConnection latent,
         VAENodeConnection vae
@@ -376,7 +414,7 @@ public class ComfyNodeBuilder
     /// <summary>
     /// Create a group node that scales a given image to image output
     /// </summary>
-    public NamedComfyNode<ImageNodeConnection> Group_UpscaleToImage(
+    public NamedComfyNode<ImageNodeConnection> Group_LatentUpscaleToImage(
         string name,
         LatentNodeConnection latent,
         VAENodeConnection vae,
@@ -416,6 +454,63 @@ public class ComfyNodeBuilder
                 $"{name}_ModelUpscale",
                 upscaleInfo.Name,
                 samplerImage.Output
+            );
+
+            // Since the model upscale is fixed to model (2x/4x), scale it again to the requested size
+            var resizedScaled = Nodes.AddNamedNode(
+                ImageScale(
+                    $"{name}_ImageScale",
+                    modelUpscaler.Output,
+                    "bilinear",
+                    height,
+                    width,
+                    false
+                )
+            );
+
+            // No need to convert back to latent space
+            return resizedScaled;
+        }
+
+        throw new InvalidOperationException($"Unknown upscaler type: {upscaleInfo.Type}");
+    }
+
+    /// <summary>
+    /// Create a group node that scales a given image to image output
+    /// </summary>
+    public NamedComfyNode<ImageNodeConnection> Group_UpscaleToImage(
+        string name,
+        ImageNodeConnection image,
+        ComfyUpscaler upscaleInfo,
+        int width,
+        int height
+    )
+    {
+        if (upscaleInfo.Type == ComfyUpscalerType.Latent)
+        {
+            return Nodes.AddNamedNode(
+                new NamedComfyNode<ImageNodeConnection>($"{name}_LatentUpscale")
+                {
+                    ClassType = "ImageScale",
+                    Inputs = new Dictionary<string, object?>
+                    {
+                        ["image"] = image,
+                        ["upscale_method"] = upscaleInfo.Name,
+                        ["width"] = width,
+                        ["height"] = height,
+                        ["crop"] = "disabled",
+                    }
+                }
+            );
+        }
+
+        if (upscaleInfo.Type == ComfyUpscalerType.ESRGAN)
+        {
+            // Do group upscale
+            var modelUpscaler = Group_UpscaleWithModel(
+                $"{name}_ModelUpscale",
+                upscaleInfo.Name,
+                image
             );
 
             // Since the model upscale is fixed to model (2x/4x), scale it again to the requested size
@@ -543,6 +638,17 @@ public class ComfyNodeBuilder
             return new Size(
                 (int)Math.Floor(LatentSize.Width * scale),
                 (int)Math.Floor(LatentSize.Height * scale)
+            );
+        }
+
+        /// <summary>
+        /// Gets the image size scaled by a given factor
+        /// </summary>
+        public Size GetScaledImageSize(double scale)
+        {
+            return new Size(
+                (int)Math.Floor(ImageSize.Width * scale),
+                (int)Math.Floor(ImageSize.Height * scale)
             );
         }
 

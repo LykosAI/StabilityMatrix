@@ -1,4 +1,4 @@
-﻿<controls:UserControlBase
+﻿<dock:DockUserControlBase
     x:Class="StabilityMatrix.Avalonia.Views.Inference.InferenceTextToImageView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -8,7 +8,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
-    x:Name="RootControl"
+    xmlns:dock="clr-namespace:StabilityMatrix.Avalonia.Controls.Dock"
+    xmlns:modelsInference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
     d:DataContext="{x:Static mocks:DesignData.InferenceTextToImageViewModel}"
     d:DesignHeight="800"
     d:DesignWidth="1000"
@@ -30,30 +31,6 @@
                 DefaultDockable="{Binding #MainLayout}"
                 Id="Root"
                 IsCollapsable="False">
-
-                <!--  Windows  -->
-                <!--<RootDock.Windows>
-                    <DockWindow
-                        x:Name="DockWindow"
-                        Width="250"
-                        Height="400"
-                        Id="DockWindow"
-                        Topmost="True"
-                        X="281"
-                        Y="233">
-                        <RootDock ActiveDockable="{Binding #ToolDock}" Window="{Binding #DockWindow}">
-                            <ToolDock x:Name="ToolDock">
-                                <Tool
-                                    x:Name="ToolWindow"
-                                    Title="Tool Window"
-                                    x:DataType="Tool"
-                                    Id="ToolWindow">
-                                    <TextBlock Text="{Binding Title}" />
-                                </Tool>
-                            </ToolDock>
-                        </RootDock>
-                    </DockWindow>
-                </RootDock.Windows>-->
 
                 <ProportionalDock
                     x:Name="MainLayout"
@@ -107,7 +84,6 @@
                                 <StackPanel Grid.Row="2" Margin="0,6,0,0">
                                     <controls:Card Padding="8">
                                         <Grid
-                                            Grid.Row="4"
                                             HorizontalAlignment="Center"
                                             ColumnDefinitions="Auto,*,Auto"
                                             RowDefinitions="Auto,*">
@@ -124,7 +100,7 @@
                                                 icons:Attached.Icon="fa-solid fa-magnifying-glass-plus"
                                                 Classes="transparent"
                                                 Command="{Binding GenerateImageCommand}"
-                                                CommandParameter="current_seed,hires_fix"
+                                                CommandParameter="{x:Static modelsInference:GenerateFlags.HiresFixAndUseCurrentSeed}"
                                                 ToolTip.Tip="Generate with Hires Scaling" />
 
                                             <!--  Main Generate Button  -->
@@ -136,6 +112,7 @@
                                                 HorizontalAlignment="Stretch"
                                                 Classes="accent"
                                                 Command="{Binding GenerateImageCommand}"
+                                                CommandParameter="{x:Static modelsInference:GenerateFlags.None}"
                                                 IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}">
                                                 <Panel>
                                                     <TextBlock IsVisible="{Binding #GenerateButton.IsEnabled}" Text="Generate Image" />
@@ -162,7 +139,7 @@
                                                 icons:Attached.Icon="fa-solid fa-repeat"
                                                 Classes="transparent"
                                                 Command="{Binding GenerateImageCommand}"
-                                                CommandParameter="current_seed"
+                                                CommandParameter="{x:Static modelsInference:GenerateFlags.UseCurrentSeed}"
                                                 ToolTip.Tip="Generate with current seed" />
                                         </Grid>
                                     </controls:Card>
@@ -242,4 +219,4 @@
 
         </DockControl>
     </Grid>
-</controls:UserControlBase>
+</dock:DockUserControlBase>

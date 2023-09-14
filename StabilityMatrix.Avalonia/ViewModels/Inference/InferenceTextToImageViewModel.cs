@@ -8,6 +8,7 @@ using DynamicData.Binding;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
@@ -257,7 +258,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase
             var upscaleSize = builder.Connections.GetScaledLatentSize(UpscalerCardViewModel.Scale);
 
             // Build group
-            var postUpscaleGroup = builder.Group_UpscaleToImage(
+            var postUpscaleGroup = builder.Group_LatentUpscaleToImage(
                 "PostUpscale",
                 builder.Connections.Latent!,
                 builder.Connections.GetRefinerOrBaseVAE(),
@@ -269,6 +270,8 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase
             // Set as the image output
             builder.Connections.Image = postUpscaleGroup.Output;
         }
+
+        builder.SetupOutputImage();
     }
 
     /// <inheritdoc />

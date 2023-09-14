@@ -42,8 +42,9 @@
                                 CornerRadius="4"
                                 VerticalAlignment="Stretch"
                                 VerticalContentAlignment="Stretch"
+                                CurrentImage="{Binding CurrentBitmap, Mode=OneWayToSource}"
                                 IsVisible="{Binding !IsSelectionAvailable}"
-                                Source="{Binding ImageSource.RemoteUrl}"/>
+                                Source="{Binding ImageSource}"/>
                             
                             <!-- Selection Prompt -->
                             <controls:LineDashFrame
@@ -52,6 +53,7 @@
                                 StrokeThickness="3"
                                 StrokeDashLine="6"
                                 StrokeDashSpace="6">
+                                
                                 <Grid 
                                     Cursor="Hand"
                                     RowDefinitions="*,Auto,Auto"

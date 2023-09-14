@@ -6,6 +6,8 @@ public class VAENodeConnection : NodeConnectionBase { }
 
 public class ImageNodeConnection : NodeConnectionBase { }
 
+public class ImageMaskConnection : NodeConnectionBase { }
+
 public class UpscaleModelNodeConnection : NodeConnectionBase { }
 
 public class ModelNodeConnection : NodeConnectionBase { }

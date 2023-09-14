@@ -13,6 +13,8 @@
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:base="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
+    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
     d:DataContext="{x:Static mocks:DesignData.InferenceViewModel}"
     d:DesignHeight="650"
     d:DesignWidth="1000"
@@ -56,7 +58,6 @@
                     ToolTip.Tip="Inpaint" />
                 <ui:CommandBarButton
                     Click="AddTabMenu_Upscale_OnClick"
-                    IsEnabled="{Binding SharedState.IsDebugMode}"
                     Label="Upscale"
                     ToolTip.Tip="Upscale">
                     <ui:CommandBarButton.IconSource>
@@ -84,7 +85,7 @@
             TabItems="{Binding Tabs}"
             TabWidthMode="SizeToContent">
             <ui:TabView.TabItemTemplate>
-                <DataTemplate DataType="{x:Type vmInference:InferenceTextToImageViewModel}">
+                <DataTemplate DataType="{x:Type base:InferenceTabViewModelBase}">
                     <ui:TabViewItem
                         Content="{Binding FallbackValue=''}"
                         Header="{Binding TabTitle}"

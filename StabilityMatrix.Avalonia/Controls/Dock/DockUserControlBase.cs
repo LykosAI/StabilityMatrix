@@ -1,6 +1,7 @@
 ﻿using System;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Threading;
 using Dock.Avalonia.Controls;
 using Dock.Model;
 using Dock.Model.Avalonia.Json;
@@ -14,7 +15,7 @@ namespace StabilityMatrix.Avalonia.Controls.Dock;
 /// </summary>
 public abstract class DockUserControlBase : DropTargetUserControlBase
 {
-    private DockControl _dock = null!;
+    protected DockControl? BaseDock;
     protected readonly AvaloniaDockSerializer DockSerializer = new();
     protected readonly DockState DockState = new();
 
@@ -23,27 +24,30 @@ public abstract class DockUserControlBase : DropTargetUserControlBase
     {
         base.OnApplyTemplate(e);
 
-        _dock =
+        BaseDock =
             this.FindControl<DockControl>("Dock")
             ?? throw new NullReferenceException("DockControl not found");
 
-        if (_dock.Layout is { } layout)
+        if (BaseDock.Layout is { } layout)
         {
-            DockState.Save(layout);
+            Dispatcher.UIThread.Post(() => DockState.Save(layout), DispatcherPriority.Background);
         }
     }
 
     protected virtual void LoadDockLayout(string data)
     {
+        if (BaseDock is null)
+            return;
+
         if (DockSerializer.Deserialize<IDock?>(data) is { } layout)
         {
-            _dock.Layout = layout;
+            BaseDock.Layout = layout;
             DockState.Restore(layout);
         }
     }
 
     protected virtual string SaveDockLayout()
     {
-        return DockSerializer.Serialize(_dock.Layout);
+        return BaseDock is null ? string.Empty : DockSerializer.Serialize(BaseDock.Layout);
     }
 }

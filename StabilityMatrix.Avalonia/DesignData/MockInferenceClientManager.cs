@@ -1,13 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData.Binding;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
+using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
@@ -50,6 +51,24 @@ public partial class MockInferenceClientManager : ObservableObject, IInferenceCl
 
     /// <inheritdoc />
     public bool CanUserDisconnect => IsConnected && !IsConnecting;
+
+    /// <inheritdoc />
+    public Task CopyImageToInputAsync(
+        FilePath imageFile,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task WriteImageToInputAsync(
+        ImageSource imageSource,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return Task.CompletedTask;
+    }
 
     public async Task ConnectAsync(CancellationToken cancellationToken = default)
     {

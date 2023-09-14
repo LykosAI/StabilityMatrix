@@ -34,6 +34,11 @@ public class ComfyClient : InferenceClientBase
     public DirectoryPath? OutputImagesDir { get; set; }
 
     /// <summary>
+    /// Optional local path to input images.
+    /// </summary>
+    public DirectoryPath? InputImagesDir { get; set; }
+
+    /// <summary>
     /// Dictionary of ongoing prompt execution tasks
     /// </summary>
     public ConcurrentDictionary<string, ComfyTask> PromptTasks { get; } = new();

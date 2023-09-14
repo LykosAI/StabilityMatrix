@@ -8,6 +8,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
+using SkiaSharp;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Inference;
@@ -229,6 +231,50 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         schedulersSource.EditDiff(ComfyScheduler.Defaults, ComfyScheduler.Comparer);
     }
 
+    /// <inheritdoc />
+    public async Task CopyImageToInputAsync(
+        FilePath imageFile,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (!IsConnected)
+            return;
+
+        if (Client.InputImagesDir is not { } inputImagesDir)
+        {
+            throw new InvalidOperationException("InputImagesDir is null");
+        }
+
+        var inferenceInputs = inputImagesDir.JoinDir("Inference");
+        inferenceInputs.Create();
+
+        var destination = inferenceInputs.JoinFile(imageFile.Name);
+
+        // Read to SKImage then write to file, to prevent errors from metadata
+        await using var imageStream = imageFile.Info.OpenRead();
+        using var image = SKImage.FromEncodedData(imageStream);
+        await using var destinationStream = destination.Info.OpenWrite();
+        image.Encode(SKEncodedImageFormat.Png, 100).SaveTo(destinationStream);
+    }
+
+    /// <inheritdoc />
+    public async Task WriteImageToInputAsync(
+        ImageSource imageSource,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (!IsConnected)
+            return;
+
+        if (Client.InputImagesDir is not { } inputImagesDir)
+        {
+            throw new InvalidOperationException("InputImagesDir is null");
+        }
+
+        var inferenceInputs = inputImagesDir.JoinDir("Inference");
+        inferenceInputs.Create();
+    }
+
     private async Task ConnectAsyncImpl(Uri uri, CancellationToken cancellationToken = default)
     {
         if (IsConnected)
@@ -297,10 +343,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         await ConnectAsyncImpl(uri, cancellationToken);
 
-        // Set output path
-        Client!.OutputImagesDir = new DirectoryPath(packagePair.InstalledPackage.FullPath).JoinDir(
-            "output"
-        );
+        var packageDir = new DirectoryPath(packagePair.InstalledPackage.FullPath);
+
+        // Set package paths
+        Client!.OutputImagesDir = packageDir.JoinDir("output");
+        Client!.InputImagesDir = packageDir.JoinDir("input");
     }
 
     public async Task CloseAsync()

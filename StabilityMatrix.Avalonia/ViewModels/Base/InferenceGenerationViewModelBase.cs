@@ -15,6 +15,7 @@ using SkiaSharp;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Helper;
@@ -315,40 +316,5 @@ public abstract partial class InferenceGenerationViewModelBase
     {
         public ComfyNodeBuilder Builder { get; } = new();
         public GenerateOverrides Overrides { get; set; } = new();
-    }
-
-    [Flags]
-    public enum GenerateFlags
-    {
-        None = 0,
-        HiresFixEnable = 1 << 1,
-        HiresFixDisable = 1 << 2,
-        UseCurrentSeed = 1 << 3,
-        UseRandomSeed = 1 << 4
-    }
-
-    public class GenerateOverrides
-    {
-        public bool? IsHiresFixEnabled { get; set; }
-        public bool? UseCurrentSeed { get; set; }
-
-        public static GenerateOverrides FromFlags(GenerateFlags flags)
-        {
-            var overrides = new GenerateOverrides()
-            {
-                IsHiresFixEnabled = flags.HasFlag(GenerateFlags.HiresFixEnable)
-                    ? true
-                    : flags.HasFlag(GenerateFlags.HiresFixDisable)
-                        ? false
-                        : null,
-                UseCurrentSeed = flags.HasFlag(GenerateFlags.UseCurrentSeed)
-                    ? true
-                    : flags.HasFlag(GenerateFlags.UseRandomSeed)
-                        ? false
-                        : null
-            };
-
-            return overrides;
-        }
     }
 }

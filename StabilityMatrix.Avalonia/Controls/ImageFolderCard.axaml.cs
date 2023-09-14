@@ -1,13 +1,12 @@
 ﻿using AsyncAwaitBestPractices;
-using Avalonia;
-using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-public class ImageFolderCard : TemplatedControl
+public class ImageFolderCard : DropTargetTemplatedControlBase
 {
     /// <inheritdoc />
     protected override void OnLoaded(RoutedEventArgs e)
@@ -24,5 +23,19 @@ public class ImageFolderCard : TemplatedControl
                 })
                 .SafeFireAndForget();
         }
+    }
+
+    /// <inheritdoc />
+    protected override void DropHandler(object? sender, DragEventArgs e)
+    {
+        base.DropHandler(sender, e);
+        e.Handled = true;
+    }
+
+    /// <inheritdoc />
+    protected override void DragOverHandler(object? sender, DragEventArgs e)
+    {
+        base.DragOverHandler(sender, e);
+        e.Handled = true;
     }
 }

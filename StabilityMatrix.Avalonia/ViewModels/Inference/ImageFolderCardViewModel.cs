@@ -65,7 +65,7 @@ public partial class ImageFolderCardViewModel : ViewModelBase
         var predicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
             .Throttle(TimeSpan.FromMilliseconds(50))!
             .Select<PropertyValue<ImageFolderCardViewModel, string>, Func<LocalImageFile, bool>>(
-                p => (LocalImageFile file) => SearchPredicate(file, p.Value)
+                p => file => SearchPredicate(file, p.Value)
             )
             .AsObservable();
 

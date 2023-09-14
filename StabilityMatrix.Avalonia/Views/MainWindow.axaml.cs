@@ -149,7 +149,10 @@ public partial class MainWindow : AppWindowBase
         {
             if (Cultures.Current?.Name == "ja-JP")
             {
-                fonts.Add(Assets.RegionalFontJapanese.UriPath.ToString());
+                var customFont = (Application.Current!.Resources["NotoSansJP"] as FontFamily)!;
+                Resources["ContentControlThemeFontFamily"] = customFont;
+                FontFamily = customFont;
+                return;
             }
             else if (Compat.IsWindows)
             {
@@ -171,16 +174,20 @@ public partial class MainWindow : AppWindowBase
             else
             {
                 Resources["ContentControlThemeFontFamily"] = FontFamily.Default;
+                FontFamily = FontFamily.Default;
                 return;
             }
 
-            Resources["ContentControlThemeFontFamily"] = new FontFamily(string.Join(",", fonts));
+            var fontString = new FontFamily(string.Join(",", fonts));
+            Resources["ContentControlThemeFontFamily"] = fontString;
+            FontFamily = fontString;
         }
         catch (Exception e)
         {
             LogManager.GetCurrentClassLogger().Error(e);
 
             Resources["ContentControlThemeFontFamily"] = FontFamily.Default;
+            FontFamily = FontFamily.Default;
         }
     }
 

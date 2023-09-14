@@ -134,6 +134,13 @@ public class A3WebUI : BaseGitPackage
                 InitialValue = HardwareHelper.HasAmdGpu(),
                 Options = new() { "--no-half" }
             },
+            new()
+            {
+                Name = "Skip SD Model Download",
+                Type = LaunchOptionType.Bool,
+                InitialValue = false,
+                Options = new() { "--no-download-sd-model" }
+            },
             LaunchOptionDefinition.Extras
         };
 

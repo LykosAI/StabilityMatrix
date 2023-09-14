@@ -9,6 +9,7 @@ using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
@@ -110,6 +111,22 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         schedulersSource.Connect().DeferUntilLoaded().Bind(Schedulers).Subscribe();
 
         ResetSharedProperties();
+
+        EventManager.Instance.ModelIndexChanged += (s, e) =>
+        {
+            logger.LogDebug("Model index changed, reloading shared properties for Inference");
+            if (IsConnected)
+            {
+                LoadSharedPropertiesAsync()
+                    .SafeFireAndForget(
+                        onException: ex => logger.LogError(ex, "Error loading shared properties")
+                    );
+            }
+            else
+            {
+                ResetSharedProperties();
+            }
+        };
     }
 
     private async Task LoadSharedPropertiesAsync()

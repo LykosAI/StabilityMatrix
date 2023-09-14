@@ -30,6 +30,8 @@ public class EventManager
 
     public event EventHandler<CultureInfo>? CultureChanged;
 
+    public event EventHandler? ModelIndexChanged;
+
     public void OnGlobalProgressChanged(int progress) =>
         GlobalProgressChanged?.Invoke(this, progress);
 
@@ -65,4 +67,6 @@ public class EventManager
     public void OnToggleProgressFlyout() => ToggleProgressFlyout?.Invoke(this, EventArgs.Empty);
 
     public void OnCultureChanged(CultureInfo culture) => CultureChanged?.Invoke(this, culture);
+
+    public void OnModelIndexChanged() => ModelIndexChanged?.Invoke(this, EventArgs.Empty);
 }

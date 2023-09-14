@@ -3,6 +3,7 @@ using AsyncAwaitBestPractices;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -152,6 +153,8 @@ public class ModelIndexService : IModelIndexService
             indexDuration.TotalMilliseconds,
             dbDuration.TotalMilliseconds
         );
+
+        EventManager.Instance.OnModelIndexChanged();
     }
 
     /// <inheritdoc />

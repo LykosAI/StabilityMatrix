@@ -16,9 +16,6 @@ internal static class Assets
     public static AvaloniaResource AppIconPng { get; } =
         new("avares://StabilityMatrix.Avalonia/Assets/Icon.png");
 
-    public static AvaloniaResource RegionalFontJapanese { get; } =
-        new("avares://StabilityMatrix.Avalonia/Assets/Fonts/NotoSansJP-Variable.ttf");
-
     /// <summary>
     /// Fixed image for models with no images.
     /// </summary>

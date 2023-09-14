@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Globalization;
+using System.Text.Json.Serialization;
 
 namespace StabilityMatrix.Core.Models.Settings;
 
@@ -8,7 +9,7 @@ public class Settings
     public int? Version { get; set; } = 1;
     public bool FirstLaunchSetupComplete { get; set; }
     public string? Theme { get; set; } = "Dark";
-    public string? Language { get; set; } = "en-US";
+    public string? Language { get; set; } = GetDefaultCulture().Name;
 
     public List<InstalledPackage> InstalledPackages { get; set; } = new();
 
@@ -102,5 +103,19 @@ public class Settings
         {
             ActiveInstalledPackageId = InstalledPackages[0].Id;
         }
+    }
+
+    /// <summary>
+    /// Return either the system default culture, if supported, or en-US
+    /// </summary>
+    /// <returns></returns>
+    public static CultureInfo GetDefaultCulture()
+    {
+        var supportedCultures = new[] { "en-US", "ja-JP" };
+
+        var systemCulture = CultureInfo.InstalledUICulture;
+        return supportedCultures.Contains(systemCulture.Name)
+            ? systemCulture
+            : new CultureInfo("en-US");
     }
 }

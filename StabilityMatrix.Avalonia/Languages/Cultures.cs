@@ -38,6 +38,14 @@ public static class Cultures
         return culture;
     }
 
+    public static void SetSupportedCultureOrDefault(string? cultureCode)
+    {
+        if (!TrySetSupportedCulture(cultureCode))
+        {
+            TrySetSupportedCulture(Default);
+        }
+    }
+
     public static bool TrySetSupportedCulture(string? cultureCode)
     {
         if (

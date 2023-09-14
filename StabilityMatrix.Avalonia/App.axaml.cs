@@ -222,7 +222,11 @@ public sealed class App : Application
 
         if (settingsManager.TryFindLibrary())
         {
-            Cultures.TrySetSupportedCulture(settingsManager.Settings.Language);
+            Cultures.SetSupportedCultureOrDefault(settingsManager.Settings.Language);
+        }
+        else
+        {
+            Cultures.TrySetSupportedCulture(Settings.GetDefaultCulture());
         }
 
         Services.GetRequiredService<ProgressManagerViewModel>().StartEventListener();

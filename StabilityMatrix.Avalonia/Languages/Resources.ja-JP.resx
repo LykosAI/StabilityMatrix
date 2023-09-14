@@ -118,67 +118,70 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Action_Launch" xml:space="preserve">
-    <value>打ち上げ</value>
+    <value>Launch</value>
+    <comment>In Japanese, the literal translation of &quot;launch&quot; can be misinterpreted as &quot;turning on the PC&quot;. After much deliberation, I decided that it would be easier to understand if &quot;launch&quot; were not translated.</comment>
   </data>
   <data name="Action_Quit" xml:space="preserve">
-    <value>やめる</value>
+    <value>終了</value>
   </data>
   <data name="Action_Save" xml:space="preserve">
     <value>保存</value>
   </data>
   <data name="Action_Cancel" xml:space="preserve">
-    <value>戻る</value>
+    <value>キャンセル</value>
   </data>
   <data name="Label_Language" xml:space="preserve">
     <value>言語</value>
   </data>
   <data name="Text_RelaunchRequiredToApplyLanguage" xml:space="preserve">
-    <value>新しい言語オプションを有効にするには、再起動が必要です。</value>
+    <value>言語を変更するにはRelaunchが必要です</value>
   </data>
   <data name="Action_Relaunch" xml:space="preserve">
-    <value>リローンチ</value>
+    <value>Relaunch</value>
   </data>
   <data name="Action_RelaunchLater" xml:space="preserve">
-    <value>後で再スタート</value>
+    <value>後でRelaunch</value>
   </data>
   <data name="Label_RelaunchRequired" xml:space="preserve">
-    <value>再起動が必要</value>
+    <value>Relaunch Required</value>
   </data>
   <data name="Label_UnknownPackage" xml:space="preserve">
-    <value>未知のパッケージ</value>
+    <value>Unknown Package</value>
   </data>
   <data name="Action_Import" xml:space="preserve">
-    <value>輸入</value>
+    <value>インポート</value>
   </data>
   <data name="Label_PackageType" xml:space="preserve">
     <value>パッケージタイプ</value>
   </data>
   <data name="Label_Version" xml:space="preserve">
-    <value>バージョン</value>
+    <value>Version</value>
   </data>
   <data name="Label_VersionType" xml:space="preserve">
-    <value>バージョン・タイプ</value>
+    <value>Version Type</value>
   </data>
   <data name="Label_Releases" xml:space="preserve">
-    <value>リリース</value>
+    <value>Releases</value>
   </data>
   <data name="Label_Branches" xml:space="preserve">
-    <value>枝</value>
+    <value>Branches</value>
   </data>
   <data name="Label_DragAndDropCheckpointsHereToImport" xml:space="preserve">
-    <value>チェックポイントをここにドラッグ＆ドロップしてインポート</value>
+    <value>インポートしたいcheckpointをここにドラッグ＆ドロップ</value>
+    <comment>checkpoint / embedding / LoRA are often used in the same way as the above words on Japanese information websites, so it is easier to understand them without translation.</comment>
   </data>
   <data name="Label_Emphasis" xml:space="preserve">
-    <value>強調</value>
+    <value>Emphasis</value>
+    <comment>The word has not been translated because it is not possible to guess what part of the UI it is used in. It is a little difficult to translate the word into Japanese, so I want to be careful not to change the meaning of the word.</comment>
   </data>
   <data name="Label_Deemphasis" xml:space="preserve">
-    <value>省略</value>
+    <value>Deemphasis</value>
   </data>
   <data name="Label_EmbeddingsOrTextualInversion" xml:space="preserve">
-    <value>エメベデイング / テキストの反転</value>
+    <value>Emebeddings / Textual Inversion</value>
   </data>
   <data name="Label_NetworksLoraOrLycoris" xml:space="preserve">
-    <value>ネットワーク（Lora / LyCORIS）</value>
+    <value>Networks (Lora / LyCORIS)</value>
   </data>
   <data name="Label_Comments" xml:space="preserve">
     <value>コメント</value>
@@ -187,40 +190,40 @@
     <value>高倍率でピクセルグリッドを表示</value>
   </data>
   <data name="Label_Steps" xml:space="preserve">
-    <value>ステップ</value>
+    <value>Steps</value>
   </data>
   <data name="Label_StepsBase" xml:space="preserve">
-    <value>ステップ - ベース</value>
+    <value>Steps - Base</value>
   </data>
   <data name="Label_StepsRefiner" xml:space="preserve">
-    <value>ステップ - リファイナー</value>
+    <value>Steps - Refiner</value>
   </data>
   <data name="Label_CFGScale" xml:space="preserve">
-    <value>CFGスケール</value>
+    <value>CFG Scale</value>
   </data>
   <data name="Label_DenoisingStrength" xml:space="preserve">
-    <value>ノイズ除去の強さ</value>
+    <value>Denoising Strength</value>
   </data>
   <data name="Label_Width" xml:space="preserve">
     <value>幅</value>
   </data>
   <data name="Label_Height" xml:space="preserve">
-    <value>高さ</value>
+    <value>高</value>
   </data>
   <data name="Label_Refiner" xml:space="preserve">
-    <value>リファイナー</value>
+    <value>Refiner</value>
   </data>
   <data name="Label_VAE" xml:space="preserve">
     <value>VAE</value>
   </data>
   <data name="Label_Model" xml:space="preserve">
-    <value>モデル</value>
+    <value>Model</value>
   </data>
   <data name="Action_Connect" xml:space="preserve">
     <value>接続</value>
   </data>
   <data name="Label_ConnectingEllipsis" xml:space="preserve">
-    <value>接続...</value>
+    <value>接続中...</value>
   </data>
   <data name="Action_Close" xml:space="preserve">
     <value>閉じる</value>
@@ -232,10 +235,10 @@
     <value>更新あり</value>
   </data>
   <data name="Label_BecomeAPatron" xml:space="preserve">
-    <value>パトロンになる</value>
+    <value>Patronになる</value>
   </data>
   <data name="Label_JoinDiscord" xml:space="preserve">
-    <value>Discordサーバーに参加する</value>
+    <value>Discordに参加</value>
   </data>
   <data name="Label_Downloads" xml:space="preserve">
     <value>ダウンロード</value>
@@ -244,7 +247,7 @@
     <value>インストール</value>
   </data>
   <data name="Label_SkipSetup" xml:space="preserve">
-    <value>初回セットアップをスキップする</value>
+    <value>セットアップをスキップする</value>
   </data>
   <data name="Label_UnexpectedErrorOccurred" xml:space="preserve">
     <value>予期せぬエラーが発生しました</value>
@@ -256,7 +259,7 @@
     <value>表示名</value>
   </data>
   <data name="Label_InstallationWithThisNameExists" xml:space="preserve">
-    <value>この名前のインストールはすでに存在する。</value>
+    <value>同じ名前のものが既に存在します。</value>
   </data>
   <data name="Label_PleaseChooseDifferentName" xml:space="preserve">
     <value>別の名前を選択するか、別のインストール場所を選択してください。</value>
@@ -268,28 +271,29 @@
     <value>コミット</value>
   </data>
   <data name="Label_SharedModelFolderStrategy" xml:space="preserve">
-    <value>共有モデルフォルダー戦略</value>
+    <value>Shared Model Folder Strategy</value>
   </data>
   <data name="Label_PyTorchVersion" xml:space="preserve">
     <value>PyTorchバージョン</value>
   </data>
   <data name="Label_CloseDialogWhenFinished" xml:space="preserve">
-    <value>終了したらダイアログを閉じる</value>
+    <value>終了時にダイアログを閉じる</value>
   </data>
   <data name="Label_DataDirectory" xml:space="preserve">
-    <value>データディレクトリ</value>
+    <value>データフォルダ</value>
+    <comment>I think there are many windows users, so I changed the word &quot;directory&quot; to &quot;folder&quot;.</comment>
   </data>
   <data name="Label_DataDirectoryExplanation" xml:space="preserve">
-    <value>ここにモデルのチェックポイント、LORA、ウェブUI、設定などがインストールされる。</value>
+    <value>ここにcheckpoint、LORA、Web UI、設定などがインストールされます。</value>
   </data>
   <data name="Label_FatWarning" xml:space="preserve">
-    <value>FAT32またはexFATドライブを使用するとエラーが発生する場合があります。他のドライブを選択することで、よりスムーズにご利用いただけます。</value>
+    <value>フォーマット形式がFAT32またはexFATのドライブを使用するとエラーが発生する場合があります。他のドライブを選択することで、よりスムーズにご利用いただけます。</value>
   </data>
   <data name="Label_PortableMode" xml:space="preserve">
-    <value>携帯モード</value>
+    <value>Portableモード</value>
   </data>
   <data name="Label_PortableModeExplanation" xml:space="preserve">
-    <value>ポータブルモードでは、すべてのデータと設定はアプリケーションと同じディレクトリに保存されます。Data」フォルダを持つアプリケーションを別の場所やコンピュータに移動することができます。</value>
+    <value>Portableモードでは、すべてのデータと設定はアプリケーションと同じフォルダに保存されます。アプリケーションと、その「Data」フォルダを一緒に移動させることで、別のフォルダや別のコンピュータに移すことができます。</value>
   </data>
   <data name="Action_Continue" xml:space="preserve">
     <value>続ける</value>
@@ -301,25 +305,25 @@
     <value>次の画像</value>
   </data>
   <data name="Label_ModelDescription" xml:space="preserve">
-    <value>モデル説明</value>
+    <value>Modelの説明</value>
   </data>
   <data name="Label_NewVersionAvailable" xml:space="preserve">
-    <value>安定性マトリックスの新バージョンが登場！</value>
+    <value>Stability Matrixがバージョンアップ！</value>
   </data>
   <data name="Label_ImportLatest" xml:space="preserve">
-    <value>最新のインポート</value>
+    <value>直近のインポート</value>
   </data>
   <data name="Label_AllVersions" xml:space="preserve">
     <value>すべてのバージョン</value>
   </data>
   <data name="Label_ModelSearchWatermark" xml:space="preserve">
-    <value>検索モデル、#タグ、または@ユーザー</value>
+    <value>検索 ( models, #tags, @users )</value>
   </data>
   <data name="Action_Search" xml:space="preserve">
     <value>検索</value>
   </data>
   <data name="Label_Sort" xml:space="preserve">
-    <value>注文</value>
+    <value>並び替え</value>
   </data>
   <data name="Label_TimePeriod" xml:space="preserve">
     <value>期間</value>
@@ -331,10 +335,10 @@
     <value>ベースモデル</value>
   </data>
   <data name="Label_ShowNsfwContent" xml:space="preserve">
-    <value>NSFWコンテンツを表示する</value>
+    <value>NSFWコンテンツを表示</value>
   </data>
   <data name="Label_DataProvidedByCivitAi" xml:space="preserve">
-    <value>データ提供：CivitAI</value>
+    <value>Data provided by CivitAI</value>
   </data>
   <data name="Label_Page" xml:space="preserve">
     <value>ページ</value>
@@ -361,52 +365,54 @@
     <value>CivitAIで開く</value>
   </data>
   <data name="Label_ConnectedModel" xml:space="preserve">
-    <value>接続モデル</value>
+    <value>メタデータ取得済みモデル</value>
+    <comment>i rewrited &quot;model got metadata&quot;. The reason for this is that when translated into Japanese, it was difficult to understand what the connection was to if only &quot;connected&quot; was used.</comment>
   </data>
   <data name="Label_LocalModel" xml:space="preserve">
     <value>ローカルモデル</value>
   </data>
   <data name="Action_ShowInExplorer" xml:space="preserve">
-    <value>エクスプローラーで表示</value>
+    <value>エクスプローラで表示</value>
   </data>
   <data name="Action_New" xml:space="preserve">
-    <value>新しい</value>
+    <value>New</value>
   </data>
   <data name="Label_Folder" xml:space="preserve">
     <value>フォルダ</value>
   </data>
   <data name="Label_DropFileToImport" xml:space="preserve">
-    <value>ここにファイルをドロップしてインポートする</value>
+    <value>ここにファイルをドロップしてインポート</value>
   </data>
   <data name="Label_ImportAsConnected" xml:space="preserve">
-    <value>接続済みとしてインポートする</value>
+    <value>インポート時にメタデータを自動検索</value>
+    <comment>&quot;metadata retrieval on import&quot;, This is also because it was difficult to understand what &quot;online&quot; means in Japanese.</comment>
   </data>
   <data name="Label_ImportAsConnectedExplanation" xml:space="preserve">
-    <value>新しいローカル・インポートで接続されたメタデータを検索する</value>
+    <value>ローカルからのインポート時にオンラインでメタデータを検索して適用します</value>
   </data>
   <data name="Label_Indexing" xml:space="preserve">
-    <value>インデックス...</value>
+    <value>インデックス作成中...</value>
   </data>
   <data name="Label_ModelsFolder" xml:space="preserve">
-    <value>モデルフォルダー</value>
+    <value>モデルフォルダ</value>
   </data>
   <data name="Label_Categories" xml:space="preserve">
-    <value>カテゴリー</value>
+    <value>カテゴリ</value>
   </data>
   <data name="Label_LetsGetStarted" xml:space="preserve">
-    <value>始めよう</value>
+    <value>さあ、始めよう</value>
   </data>
   <data name="Label_ReadAndAgree" xml:space="preserve">
-    <value>を読み、同意します。</value>
+    <value>次の約款を読み、同意します：</value>
   </data>
   <data name="Label_LicenseAgreement" xml:space="preserve">
-    <value>ライセンス契約。</value>
+    <value>使用許諾契約書</value>
   </data>
   <data name="Label_FindConnectedMetadata" xml:space="preserve">
-    <value>接続メタデータの検索</value>
+    <value>メタデータが見つかりました</value>
   </data>
   <data name="Label_ShowModelImages" xml:space="preserve">
-    <value>モデル画像を表示</value>
+    <value>モデルの見出し画像を表示</value>
   </data>
   <data name="Label_Appearance" xml:space="preserve">
     <value>外観</value>
@@ -415,22 +421,23 @@
     <value>テーマ</value>
   </data>
   <data name="Label_CheckpointManager" xml:space="preserve">
-    <value>チェックポイント・マネージャー</value>
+    <value>Checkpoint Manager</value>
   </data>
   <data name="Label_RemoveSymlinksOnShutdown" xml:space="preserve">
-    <value>シャットダウン時の共有チェックポイント・ディレクトリのシンボリックリンクの削除</value>
+    <value>checkpointフォルダにあるシンボリックリンクをソフトの終了時に削除</value>
   </data>
   <data name="Label_RemoveSymlinksOnShutdown_Details" xml:space="preserve">
-    <value>安定性マトリックスを別のドライブに移動する際に問題がある場合は、このオプションを選択します。</value>
+    <value>Stability Matrix を別のドライブに移動する際に問題が起きた場合、ここにチェック</value>
+    <comment>It may be better to use a variable like {0} for the app name</comment>
   </data>
   <data name="Label_ResetCheckpointsCache" xml:space="preserve">
-    <value>チェックポイント・キャッシュのリセット</value>
+    <value>Checkpointキャッシュのリセット</value>
   </data>
   <data name="Label_ResetCheckpointsCache_Details" xml:space="preserve">
-    <value>インストールされているチェックポイントキャッシュを再構築します。モデルブラウザでチェックポイントのラベルが正しくない場合に使用します。</value>
+    <value>checkpointsキャッシュを再構築します。Model Browserでcheckpointsのラベルが正しくない場合に使用してください</value>
   </data>
   <data name="Label_PackageEnvironment" xml:space="preserve">
-    <value>パッケージ環境</value>
+    <value>パッケージの環境</value>
   </data>
   <data name="Action_Edit" xml:space="preserve">
     <value>編集</value>
@@ -442,22 +449,22 @@
     <value>組み込みPython</value>
   </data>
   <data name="Action_CheckVersion" xml:space="preserve">
-    <value>チェック・バージョン</value>
+    <value>バージョンを確認</value>
   </data>
   <data name="Label_Integrations" xml:space="preserve">
     <value>統合</value>
   </data>
   <data name="Label_DiscordRichPresence" xml:space="preserve">
-    <value>不協和音の豊かな存在感</value>
+    <value>Discord Rich Presence</value>
   </data>
   <data name="Label_System" xml:space="preserve">
     <value>システム</value>
   </data>
   <data name="Label_AddToStartMenu" xml:space="preserve">
-    <value>スタートメニューに安定性マトリックスを追加</value>
+    <value>スタートメニューにStability Matrixを追加</value>
   </data>
   <data name="Label_AddToStartMenu_Details" xml:space="preserve">
-    <value>現在のアプリのロケーションを使用します。</value>
+    <value>現在のアプリの場所を使用します。アプリを移動すると、これを再度実行できます</value>
   </data>
   <data name="Label_OnlyAvailableOnWindows" xml:space="preserve">
     <value>Windowsのみ</value>
@@ -469,31 +476,31 @@
     <value>全ユーザーに追加</value>
   </data>
   <data name="Label_SelectNewDataDirectory" xml:space="preserve">
-    <value>新しいデータディレクトリを選択</value>
+    <value>新しいデータフォルダを選択</value>
   </data>
   <data name="Label_SelectNewDataDirectory_Details" xml:space="preserve">
-    <value>既存のデータは移動しない</value>
+    <value>既にあるデータは移動しません</value>
   </data>
   <data name="Action_SelectDirectory" xml:space="preserve">
-    <value>ディレクトリを選択</value>
+    <value>フォルダを選択</value>
   </data>
   <data name="Label_About" xml:space="preserve">
-    <value>について</value>
+    <value>About</value>
   </data>
   <data name="Label_StabilityMatrix" xml:space="preserve">
-    <value>安定性マトリックス</value>
+    <value>Stability Matrix</value>
   </data>
   <data name="Label_LicenseAndOpenSourceNotices" xml:space="preserve">
     <value>ライセンスとオープンソースに関する注意事項</value>
   </data>
   <data name="TeachingTip_ClickLaunchToGetStarted" xml:space="preserve">
-    <value>Launchをクリックして開始する！</value>
+    <value>&quot;Launch&quot;をクリックして始めよう！</value>
   </data>
   <data name="Action_Stop" xml:space="preserve">
     <value>ストップ</value>
   </data>
   <data name="Action_SendInput" xml:space="preserve">
-    <value>送信入力</value>
+    <value>インプットを送信</value>
   </data>
   <data name="Label_Input" xml:space="preserve">
     <value>インプット</value>
@@ -505,7 +512,7 @@
     <value>入力が必要</value>
   </data>
   <data name="Label_ConfirmQuestion" xml:space="preserve">
-    <value>確認は？</value>
+    <value>これでいい？</value>
   </data>
   <data name="Action_Yes" xml:space="preserve">
     <value>はい</value>
@@ -514,34 +521,34 @@
     <value>いいえ</value>
   </data>
   <data name="Action_OpenWebUI" xml:space="preserve">
-    <value>オープンWeb UI</value>
+    <value>Web UIを開く</value>
   </data>
   <data name="Text_WelcomeToStabilityMatrix" xml:space="preserve">
-    <value>スタビリティ・マトリックスへようこそ！</value>
+    <value>Stability Matrixへようこそ！</value>
   </data>
   <data name="Text_OneClickInstaller_SubHeader" xml:space="preserve">
-    <value>お好みのインターフェイスを選択し、インストールをクリックして開始します。</value>
+    <value>好きなUIをインストールして始めよう</value>
   </data>
   <data name="Label_Installing" xml:space="preserve">
-    <value>インストール</value>
+    <value>インストール中</value>
   </data>
   <data name="Text_ProceedingToLaunchPage" xml:space="preserve">
-    <value>打ち上げページに進む</value>
+    <value>Launchページに進む</value>
   </data>
   <data name="Progress_DownloadingPackage" xml:space="preserve">
-    <value>パッケージのダウンロード...</value>
+    <value>パッケージをダウンロード中...</value>
   </data>
   <data name="Progress_DownloadComplete" xml:space="preserve">
     <value>ダウンロード完了</value>
   </data>
   <data name="Progress_InstallationComplete" xml:space="preserve">
-    <value>設置完了</value>
+    <value>インストール完了</value>
   </data>
   <data name="Progress_InstallingPrerequisites" xml:space="preserve">
-    <value>前提条件のインストール...</value>
+    <value>前提ライブラリのインストール中...</value>
   </data>
   <data name="Progress_InstallingPackageRequirements" xml:space="preserve">
-    <value>パッケージ要件のインストール...</value>
+    <value>パッケージに必要なライブラリのインストール中...</value>
   </data>
   <data name="Action_OpenInExplorer" xml:space="preserve">
     <value>エクスプローラで開く</value>
@@ -553,7 +560,7 @@
     <value>アンインストール</value>
   </data>
   <data name="Action_CheckForUpdates" xml:space="preserve">
-    <value>アップデートの確認</value>
+    <value>アップデートを確認</value>
   </data>
   <data name="Action_Update" xml:space="preserve">
     <value>更新</value>
@@ -562,13 +569,13 @@
     <value>パッケージの追加</value>
   </data>
   <data name="TeachingTip_AddPackageToGetStarted" xml:space="preserve">
-    <value>パッケージを追加して始めましょう！</value>
+    <value>パッケージを追加して始めよう！</value>
   </data>
   <data name="Label_EnvVarsTable_Name" xml:space="preserve">
     <value>名称</value>
   </data>
   <data name="Label_EnvVarsTable_Value" xml:space="preserve">
-    <value>価値</value>
+    <value>Value</value>
   </data>
   <data name="Action_Remove" xml:space="preserve">
     <value>削除</value>
@@ -598,7 +605,7 @@
     <value>リスタート</value>
   </data>
   <data name="Label_ConfirmDelete" xml:space="preserve">
-    <value>削除の確認</value>
+    <value>削除の再確認</value>
   </data>
   <data name="Text_PackageUninstall_Details" xml:space="preserve">
     <value>これにより、生成された画像や追加したファイルを含め、パッケージフォルダとそのすべてのコンテンツが削除されます。</value>
@@ -610,7 +617,7 @@
     <value>パッケージのアンインストール</value>
   </data>
   <data name="Text_SomeFilesCouldNotBeDeleted" xml:space="preserve">
-    <value>一部のファイルを削除できませんでした。パッケージディレクトリで開いているファイルをすべて閉じてから、もう一度やり直してください。</value>
+    <value>一部のファイルを削除できませんでした。該当のディレクトリ内にあるファイルで開いていたものを全て閉じて、もう一度試してください。</value>
   </data>
   <data name="Label_InvalidPackageType" xml:space="preserve">
     <value>無効なパッケージタイプ</value>
@@ -637,6 +644,7 @@
     <value>パッケージのインストールエラー</value>
   </data>
   <data name="Label_Branch" xml:space="preserve">
-    <value>支店</value>
+    <value>Branch</value>
+    <comment>For Japanese engineers who use git on a daily basis, it is easier to understand terms used in git as they are in English.</comment>
   </data>
 </root>

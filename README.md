@@ -68,6 +68,14 @@ Multi-Platform Package Manager for Stable Diffusion
 </p>
 
 
+## Localization
+Stability Matrix is now available in the following languages, thanks to our community contributors:
+- 🇺🇸 English
+- 🇯🇵 日本語 
+  - kgmkm_mkgm
+
+If you would like to contribute a translation, please create an issue or contact us on Discord. Include an email where we'll send an invite to our [POEditor](https://poeditor.com/) project.
+
 ## License
 
 This repository maintains the latest source code release for Stability Matrix, and is licensed under the [GNU Affero General Public License](https://www.gnu.org/licenses/agpl-3.0.en.html). Binaries and executable releases are licensed under the [End User License Agreement](https://lykos.ai/license).

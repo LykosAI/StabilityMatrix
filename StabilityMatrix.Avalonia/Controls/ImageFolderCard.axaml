@@ -10,6 +10,7 @@
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     xmlns:dbModels="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
     xmlns:animations="clr-namespace:StabilityMatrix.Avalonia.Animations"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     x:DataType="vmInference:ImageFolderCardViewModel">
 
     <Design.PreviewWith>
@@ -48,10 +49,11 @@
                     <Grid RowDefinitions="Auto,*">
                         <TextBox
                             x:Name="SearchBox"
+                            Text="{Binding SearchQuery}"
                             Margin="6,4,6,8"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Top"
-                            Watermark="Search...">
+                            Watermark="{x:Static lang:Resources.Label_SearchEllipsis}">
                             <TextBox.InnerRightContent>
                                 <ui:SymbolIcon 
                                     Margin="0,0,6,0"
@@ -78,7 +80,7 @@
                                         Command="{Binding ImageClickCommand}"/>
                                     <input:StandardUICommand 
                                         x:Key="ImageDeleteCommand"
-                                        Label="Delete"
+                                        Label="{x:Static lang:Resources.Action_Delete}"
                                         IconSource="Delete"
                                         Command="{Binding ImageDeleteCommand}"/>
                                     <input:StandardUICommand 
@@ -88,7 +90,7 @@
                                         Command="{Binding ImageCopyCommand}"/>
                                     <input:StandardUICommand 
                                         x:Key="ImageOpenCommand" 
-                                        Label="Open in Explorer"
+                                        Label="{OnPlatform Default={x:Static lang:Resources.Action_OpenInExplorer}, macOS={x:Static lang:Resources.Action_OpenInFinder}}"
                                         IconSource="Folder"
                                         Command="{Binding ImageOpenCommand}"/>
                                     <input:StandardUICommand 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader;
@@ -7,9 +8,13 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using FuzzySharp;
+using FuzzySharp.PreProcess;
+using FuzzySharp.SimilarityRatio.Scorer.Composite;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
@@ -36,6 +41,9 @@ public partial class ImageFolderCardViewModel : ViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly INotificationService notificationService;
 
+    [ObservableProperty]
+    private string? searchQuery;
+
     /// <summary>
     /// Collection of local image files
     /// </summary>
@@ -54,12 +62,55 @@ public partial class ImageFolderCardViewModel : ViewModelBase
         this.settingsManager = settingsManager;
         this.notificationService = notificationService;
 
+        var predicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
+            .Throttle(TimeSpan.FromMilliseconds(50))!
+            .Select<PropertyValue<ImageFolderCardViewModel, string>, Func<LocalImageFile, bool>>(
+                p => (LocalImageFile file) => SearchPredicate(file, p.Value)
+            )
+            .AsObservable();
+
         imageIndexService.InferenceImages.ItemsSource
             .Connect()
             .DeferUntilLoaded()
+            .Filter(predicate)
             .SortBy(file => file.LastModifiedAt, SortDirection.Descending)
             .Bind(LocalImages)
             .Subscribe();
+    }
+
+    private static bool SearchPredicate(LocalImageFile file, string? query)
+    {
+        if (
+            string.IsNullOrWhiteSpace(query)
+            || file.FileName.Contains(query, StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            return true;
+        }
+
+        // File name
+        var filenameScore = Fuzz.WeightedRatio(query, file.FileName, PreprocessMode.Full);
+        if (filenameScore > 80)
+        {
+            return true;
+        }
+
+        // Generation params
+        if (file.GenerationParameters is { } parameters)
+        {
+            if (
+                parameters.Seed.ToString().StartsWith(query, StringComparison.OrdinalIgnoreCase)
+                || parameters.Sampler is { } sampler
+                    && sampler.StartsWith(query, StringComparison.OrdinalIgnoreCase)
+                || parameters.ModelName is { } modelName
+                    && modelName.StartsWith(query, StringComparison.OrdinalIgnoreCase)
+            )
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <inheritdoc />

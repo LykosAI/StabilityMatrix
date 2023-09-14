@@ -12,7 +12,7 @@ namespace StabilityMatrix.Avalonia.Controls.Dock;
 /// Base for Dock controls
 /// Expects a <see cref="DockControl"/> named "Dock" in the XAML
 /// </summary>
-public abstract class DockUserControlBase : UserControlBase
+public abstract class DockUserControlBase : DropTargetUserControlBase
 {
     private DockControl _dock = null!;
     protected readonly AvaloniaDockSerializer DockSerializer = new();
@@ -22,10 +22,11 @@ public abstract class DockUserControlBase : UserControlBase
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
-        
-        _dock = this.FindControl<DockControl>("Dock") 
-                ?? throw new NullReferenceException("DockControl not found");
-        
+
+        _dock =
+            this.FindControl<DockControl>("Dock")
+            ?? throw new NullReferenceException("DockControl not found");
+
         if (_dock.Layout is { } layout)
         {
             DockState.Save(layout);
@@ -40,7 +41,7 @@ public abstract class DockUserControlBase : UserControlBase
             DockState.Restore(layout);
         }
     }
-    
+
     protected virtual string SaveDockLayout()
     {
         return DockSerializer.Serialize(_dock.Layout);

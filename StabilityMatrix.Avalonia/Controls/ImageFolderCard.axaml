@@ -39,11 +39,11 @@
                     HorizontalContentAlignment="{TemplateBinding HorizontalAlignment}"
                     VerticalContentAlignment="{TemplateBinding VerticalAlignment}">
                     
-                    <controls:Card.Styles>
+                    <!--<controls:Card.Styles>
                         <Style Selector="ItemsRepeater">
                             <Setter Property="animations:ItemsRepeaterArrangeAnimation.EnableItemsArrangeAnimation" Value="True"/>
                         </Style>
-                    </controls:Card.Styles>
+                    </controls:Card.Styles>-->
 
                     <Grid RowDefinitions="Auto,*">
                         <TextBox
@@ -127,6 +127,12 @@
                                             Padding="4"
                                             Classes="transparent-full"
                                             CornerRadius="8">
+                                            
+                                            <Interaction.Behaviors>
+                                                <BehaviorCollection>
+                                                    <ContextDragBehavior HorizontalDragThreshold="3" VerticalDragThreshold="3"/>
+                                                </BehaviorCollection>
+                                            </Interaction.Behaviors>
                                             
                                             <Button.ContextFlyout>
                                                 <ui:FAMenuFlyout>

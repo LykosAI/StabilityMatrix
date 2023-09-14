@@ -38,7 +38,9 @@ using InferenceTextToImageView = StabilityMatrix.Avalonia.Views.Inference.Infere
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceTextToImageView), persistent: true)]
-public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
+public partial class InferenceTextToImageViewModel
+    : InferenceTabViewModelBase,
+        IImageGalleryComponent
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -421,6 +423,88 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
                 notificationService.Show("No output", "Did not receive any output images");
                 return;
             }
+
+            List<ImageSource> outputImages;
+            // Use local file path if available, otherwise use remote URL
+            if (client.OutputImagesDir is { } outputPath)
+            {
+                outputImages = new List<ImageSource>();
+                foreach (var image in images)
+                {
+                    var filePath = image.ToFilePath(outputPath);
+
+                    var bytesWithMetadata = PngDataHelper.AddMetadata(
+                        await filePath.ReadAllBytesAsync(),
+                        generationInfo,
+                        smproj
+                    );
+
+                    /*await using (var readStream = filePath.Info.OpenWrite())
+                    {
+                        using (var reader = new BinaryReader(readStream))
+                        {
+
+                        }
+                    }*/
+
+                    await using (var outputStream = filePath.Info.OpenWrite())
+                    {
+                        await outputStream.WriteAsync(bytesWithMetadata);
+                        await outputStream.FlushAsync();
+                    }
+
+                    outputImages.Add(new ImageSource(filePath));
+
+                    imageIndexService.OnImageAdded(filePath);
+                }
+            }
+            else
+            {
+                outputImages = images!
+                    .Select(i => new ImageSource(i.ToUri(client.BaseAddress)))
+                    .ToList();
+            }
+
+            // Download all images to make grid, if multiple
+            if (outputImages.Count > 1)
+            {
+                var loadedImages = outputImages
+                    .Select(i => SKImage.FromEncodedData(i.LocalFile?.Info.OpenRead()))
+                    .ToImmutableArray();
+
+                var grid = ImageProcessor.CreateImageGrid(loadedImages);
+                var gridBytes = grid.Encode().ToArray();
+                var gridBytesWithMetadata = PngDataHelper.AddMetadata(
+                    gridBytes,
+                    generationInfo,
+                    smproj
+                );
+
+                // Save to disk
+                var lastName = outputImages.Last().LocalFile?.Info.Name;
+                var gridPath = client.OutputImagesDir!.JoinFile($"grid-{lastName}");
+
+                await using (var fileStream = gridPath.Info.OpenWrite())
+                {
+                    await fileStream.WriteAsync(gridBytesWithMetadata, cancellationToken);
+                }
+
+                // Insert to start of images
+                var gridImage = new ImageSource(gridPath);
+                // Preload
+                await gridImage.GetBitmapAsync();
+                ImageGalleryCardViewModel.ImageSources.Add(gridImage);
+
+                imageIndexService.OnImageAdded(gridPath);
+            }
+
+            // Add rest of images
+            foreach (var img in outputImages)
+            {
+                // Preload
+                await img.GetBitmapAsync();
+                ImageGalleryCardViewModel.ImageSources.Add(img);
+            }
         }
         finally
         {
@@ -433,91 +517,6 @@ public partial class InferenceTextToImageViewModel : InferenceTabViewModelBase
 
             promptTask?.Dispose();
             client.PreviewImageReceived -= OnPreviewImageReceived;
-        }
-    }
-
-    private async Task ProcessOutputs(IReadOnlyList<ComfyImage> images)
-    {
-        List<ImageSource> outputImages;
-        // Use local file path if available, otherwise use remote URL
-        if (client.OutputImagesDir is { } outputPath)
-        {
-            outputImages = new List<ImageSource>();
-            foreach (var image in images)
-            {
-                var filePath = image.ToFilePath(outputPath);
-
-                var bytesWithMetadata = PngDataHelper.AddMetadata(
-                    await filePath.ReadAllBytesAsync(),
-                    generationInfo,
-                    smproj
-                );
-
-                /*await using (var readStream = filePath.Info.OpenWrite())
-                {
-                    using (var reader = new BinaryReader(readStream))
-                    {
-
-                    }
-                }*/
-
-                await using (var outputStream = filePath.Info.OpenWrite())
-                {
-                    await outputStream.WriteAsync(bytesWithMetadata);
-                    await outputStream.FlushAsync();
-                }
-
-                outputImages.Add(new ImageSource(filePath));
-
-                imageIndexService.OnImageAdded(filePath);
-            }
-        }
-        else
-        {
-            outputImages = images!
-                .Select(i => new ImageSource(i.ToUri(client.BaseAddress)))
-                .ToList();
-        }
-
-        // Download all images to make grid, if multiple
-        if (outputImages.Count > 1)
-        {
-            var loadedImages = outputImages
-                .Select(i => SKImage.FromEncodedData(i.LocalFile?.Info.OpenRead()))
-                .ToImmutableArray();
-
-            var grid = ImageProcessor.CreateImageGrid(loadedImages);
-            var gridBytes = grid.Encode().ToArray();
-            var gridBytesWithMetadata = PngDataHelper.AddMetadata(
-                gridBytes,
-                generationInfo,
-                smproj
-            );
-
-            // Save to disk
-            var lastName = outputImages.Last().LocalFile?.Info.Name;
-            var gridPath = client.OutputImagesDir!.JoinFile($"grid-{lastName}");
-
-            await using (var fileStream = gridPath.Info.OpenWrite())
-            {
-                await fileStream.WriteAsync(gridBytesWithMetadata, cancellationToken);
-            }
-
-            // Insert to start of images
-            var gridImage = new ImageSource(gridPath);
-            // Preload
-            await gridImage.GetBitmapAsync();
-            ImageGalleryCardViewModel.ImageSources.Add(gridImage);
-
-            imageIndexService.OnImageAdded(gridPath);
-        }
-
-        // Add rest of images
-        foreach (var img in outputImages)
-        {
-            // Preload
-            await img.GetBitmapAsync();
-            ImageGalleryCardViewModel.ImageSources.Add(img);
         }
     }
 

@@ -54,6 +54,34 @@ public class LocalImageFile
         return Path.Combine(rootImageDirectory, RelativePath);
     }
 
+    public (
+        string? Parameters,
+        string? ParametersJson,
+        string? SMProject,
+        string? ComfyNodes
+    ) ReadMetadata()
+    {
+        using var stream = new FileStream(
+            GlobalFullPath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read
+        );
+        using var reader = new BinaryReader(stream);
+
+        var parameters = ImageMetadata.ReadTextChunk(reader, "parameters");
+        var parametersJson = ImageMetadata.ReadTextChunk(reader, "parameters-json");
+        var smProject = ImageMetadata.ReadTextChunk(reader, "smproj");
+        var comfyNodes = ImageMetadata.ReadTextChunk(reader, "prompt");
+
+        return (
+            string.IsNullOrEmpty(parameters) ? null : parameters,
+            string.IsNullOrEmpty(parametersJson) ? null : parametersJson,
+            string.IsNullOrEmpty(smProject) ? null : smProject,
+            string.IsNullOrEmpty(comfyNodes) ? null : comfyNodes
+        );
+    }
+
     public static LocalImageFile FromPath(FilePath filePath)
     {
         var relativePath = Path.GetRelativePath(

@@ -39,7 +39,6 @@
                 </ui:SettingsExpander>
                 <ui:SettingsExpander
                     Grid.Row="2"
-                    IsVisible="{Binding SharedState.IsDebugMode}"
                     Margin="8,0,8,4"
                     Header="{x:Static lang:Resources.Label_Language}"
                     IconSource="Character">

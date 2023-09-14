@@ -18,6 +18,7 @@
                  <ResourceInclude Source="Styles/Card.axaml"/>
              </ResourceDictionary.MergedDictionaries>
              <x:Double x:Key="ContentDialogMaxWidth">700</x:Double>
+             <FontFamily x:Key="NotoSansJP">avares://StabilityMatrix.Avalonia/Assets/Fonts/NotoSansJP#Noto Sans JP</FontFamily>
          </ResourceDictionary>
      </Application.Resources>
   

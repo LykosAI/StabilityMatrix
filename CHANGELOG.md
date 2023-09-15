@@ -8,8 +8,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.4.3
 ### Added
 - Added "--no-download-sd-model" launch argument option for Stable Diffusion Web UI
+- Added Chinese (Simplified) and Chinese (Traditional) UI language options, thanks to jimlovewine for the translations
 ### Changed
 - Package updates now use the new progress dialog with console output
+### Fixed
+- Updated Japanese translation for some terms
 
 ## v2.4.2
 ### Added

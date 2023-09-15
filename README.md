@@ -74,6 +74,8 @@ Stability Matrix is now available in the following languages, thanks to our comm
 - 🇺🇸 English
 - 🇯🇵 日本語 
   - kgmkm_mkgm
+- 🇨🇳 中文（简体，繁体）
+  - jimlovewine
 
 If you would like to contribute a translation, please create an issue or contact us on Discord. Include an email where we'll send an invite to our [POEditor](https://poeditor.com/) project.
 

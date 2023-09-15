@@ -13,9 +13,10 @@ node("Diligence") {
     
     try {
         stage('PreBuild') {
-            sh "cd StabilityMatrix"
-            sh "rm ./StabilityMatrix.Avalonia/Languages/Resources.zh-Hans.resx"
-            sh "rm ./StabilityMatrix.Avalonia/Languages/Resources.zh-Hant.resx"
+            dir('StabilityMatrix') {
+                sh "rm ./StabilityMatrix.Avalonia/Languages/Resources.zh-Hans.resx"
+                sh "rm ./StabilityMatrix.Avalonia/Languages/Resources.zh-Hant.resx"
+            }
         }
     
         stage('Test') {

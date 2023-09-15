@@ -12,10 +12,9 @@ node("Diligence") {
     }
     
     try {
-        stage('Build') {
-            sh "dotnet build StabilityMatrix.Core -r linux-x64 -c Release -p:ExcludeAssets=\"all\" -p:SatelliteResourceLanguages=\"en\" --no-self-contained"
-            sh "dotnet build StabilityMatrix.Avalonia -r linux-x64 -c Release -p:ExcludeAssets=\"all\" -p:SatelliteResourceLanguages=\"en\" --no-self-contained"
-            sh "dotnet build StabilityMatrix.Tests -r linux-x64 -c Release -p:ExcludeAssets=\"all\" -p:SatelliteResourceLanguages=\"en\" --no-self-contained"
+        stage('PreBuild') {
+            sh "rm ./StabilityMatrix.Avalonia/Languages/Resources.zh-Hans.resx"
+            sh "rm ./StabilityMatrix.Avalonia/Languages/Resources.zh-Hant.resx"
         }
     
         stage('Test') {

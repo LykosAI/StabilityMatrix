@@ -43,7 +43,7 @@ node("Diligence") {
         }
     } finally {
         stage('Cleanup') {
-            // cleanWs()
+            cleanWs()
         }
     }
 

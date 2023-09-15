@@ -251,10 +251,16 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         var destination = inferenceInputs.JoinFile(imageFile.Name);
 
         // Read to SKImage then write to file, to prevent errors from metadata
-        await using var imageStream = imageFile.Info.OpenRead();
-        using var image = SKImage.FromEncodedData(imageStream);
-        await using var destinationStream = destination.Info.OpenWrite();
-        image.Encode(SKEncodedImageFormat.Png, 100).SaveTo(destinationStream);
+        await Task.Run(
+            () =>
+            {
+                using var imageStream = imageFile.Info.OpenRead();
+                using var image = SKImage.FromEncodedData(imageStream);
+                using var destinationStream = destination.Info.OpenWrite();
+                image.Encode(SKEncodedImageFormat.Png, 100).SaveTo(destinationStream);
+            },
+            cancellationToken
+        );
     }
 
     /// <inheritdoc />

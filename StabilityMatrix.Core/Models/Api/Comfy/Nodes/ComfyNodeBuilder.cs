@@ -270,7 +270,7 @@ public class ComfyNodeBuilder
         };
     }
 
-    public static NamedComfyNode<ImageNodeConnection> Sharpen(
+    public static NamedComfyNode<ImageNodeConnection> ImageSharpen(
         string name,
         ImageNodeConnection image,
         int sharpenRadius,
@@ -280,7 +280,7 @@ public class ComfyNodeBuilder
     {
         return new NamedComfyNode<ImageNodeConnection>(name)
         {
-            ClassType = "Sharpen",
+            ClassType = "ImageSharpen",
             Inputs = new Dictionary<string, object?>
             {
                 ["image"] = image.Data,

@@ -327,6 +327,7 @@ public sealed class App : Application
         services.AddTransient<ModelCardViewModel>();
         services.AddTransient<BatchSizeCardViewModel>();
         services.AddTransient<SelectImageCardViewModel>();
+        services.AddTransient<SharpenCardViewModel>();
 
         // Dialog factory
         services.AddSingleton<ServiceManager<ViewModelBase>>(
@@ -363,6 +364,7 @@ public sealed class App : Application
                     .Register(provider.GetRequiredService<PackageImportViewModel>)
                     .Register(provider.GetRequiredService<SelectImageCardViewModel>)
                     .Register(provider.GetRequiredService<InferenceConnectionHelpViewModel>)
+                    .Register(provider.GetRequiredService<SharpenCardViewModel>)
         );
     }
 
@@ -394,6 +396,7 @@ public sealed class App : Application
         services.AddTransient<ModelCard>();
         services.AddTransient<BatchSizeCard>();
         services.AddTransient<SelectImageCard>();
+        services.AddTransient<SharpenCard>();
         services.AddSingleton<NewCheckpointsPage>();
 
         // Dialogs

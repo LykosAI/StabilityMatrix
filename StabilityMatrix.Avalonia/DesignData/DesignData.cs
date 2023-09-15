@@ -611,6 +611,9 @@ The gallery images are often inpainted, but you will get something very similar 
             );
         });
 
+    public static SharpenCardViewModel SharpenCardViewModel =>
+        DialogFactory.Get<SharpenCardViewModel>();
+
     public static InferenceConnectionHelpViewModel InferenceConnectionHelpViewModel =>
         DialogFactory.Get<InferenceConnectionHelpViewModel>();
 

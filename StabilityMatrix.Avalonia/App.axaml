@@ -55,6 +55,7 @@
         <StyleInclude Source="Controls/CodeCompletion/CompletionWindow.axaml"/>
         <StyleInclude Source="Controls/SelectImageCard.axaml"/>
         <StyleInclude Source="Controls/ImageFolderCard.axaml"/>
+        <StyleInclude Source="Controls/SharpenCard.axaml"/>
         
         <Style Selector="DockControl">
             <Setter Property="(DockProperties.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />

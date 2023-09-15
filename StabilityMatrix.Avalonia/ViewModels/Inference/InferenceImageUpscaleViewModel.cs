@@ -39,6 +39,9 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
     [JsonPropertyName("Upscaler")]
     public UpscalerCardViewModel UpscalerCardViewModel { get; }
 
+    [JsonPropertyName("Sharpen")]
+    public SharpenCardViewModel SharpenCardViewModel { get; }
+
     [JsonPropertyName("SelectImage")]
     public SelectImageCardViewModel SelectImageCardViewModel { get; }
 
@@ -46,6 +49,12 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
     {
         get => StackCardViewModel.GetCard<StackExpanderViewModel>().IsEnabled;
         set => StackCardViewModel.GetCard<StackExpanderViewModel>().IsEnabled = value;
+    }
+
+    public bool IsSharpenEnabled
+    {
+        get => StackCardViewModel.GetCard<StackExpanderViewModel>(1).IsEnabled;
+        set => StackCardViewModel.GetCard<StackExpanderViewModel>(1).IsEnabled = value;
     }
 
     public InferenceImageUpscaleViewModel(
@@ -58,6 +67,7 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
         this.notificationService = notificationService;
 
         UpscalerCardViewModel = vmFactory.Get<UpscalerCardViewModel>();
+        SharpenCardViewModel = vmFactory.Get<SharpenCardViewModel>();
         SelectImageCardViewModel = vmFactory.Get<SelectImageCardViewModel>();
 
         StackCardViewModel = vmFactory.Get<StackCardViewModel>();
@@ -69,6 +79,12 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
                 {
                     stackExpander.Title = "Upscale";
                     stackExpander.AddCards(new LoadableViewModelBase[] { UpscalerCardViewModel });
+                }),
+                // Sharpen
+                vmFactory.Get<StackExpanderViewModel>(stackExpander =>
+                {
+                    stackExpander.Title = "Sharpen";
+                    stackExpander.AddCards(new LoadableViewModelBase[] { SharpenCardViewModel });
                 })
             }
         );
@@ -125,6 +141,23 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
 
             // Set as the image output
             builder.Connections.Image = upscaleGroup.Output;
+        }
+
+        // If sharpen is enabled, add another sharpen group
+        if (IsSharpenEnabled)
+        {
+            var sharpenGroup = nodes.AddNamedNode(
+                ComfyNodeBuilder.ImageSharpen(
+                    "Sharpen",
+                    builder.Connections.Image,
+                    SharpenCardViewModel.SharpenRadius,
+                    SharpenCardViewModel.Sigma,
+                    SharpenCardViewModel.Alpha
+                )
+            );
+
+            // Set as the image output
+            builder.Connections.Image = sharpenGroup.Output;
         }
 
         builder.SetupOutputImage();

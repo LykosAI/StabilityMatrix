@@ -11,12 +11,7 @@ node("Diligence") {
         git branch: env.BRANCH_NAME, credentialsId: 'Ionite', url: "https://github.com/${author}/${repoName}.git"
     }
     
-    try {
-        stage('Build') {
-            sh "dotnet build StabilityMatrix.sln -r linux-x64 -c Release"
-            sh "cp -R ./StabilityMatrix.Tests/bin/Release/net7.0/zh-Hans ./StabilityMatrix.Tests/bin/Release/net7.0/zh-hans"
-        }
-    
+    try {    
         stage('Test') {
             sh "dotnet test StabilityMatrix.Tests"
         }

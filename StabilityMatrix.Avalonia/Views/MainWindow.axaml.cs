@@ -154,7 +154,8 @@ public partial class MainWindow : AppWindowBase
                 FontFamily = customFont;
                 return;
             }
-            else if (Compat.IsWindows)
+
+            if (Compat.IsWindows)
             {
                 if (OSVersionHelper.IsWindows11())
                 {

@@ -134,16 +134,16 @@
     <value>言語</value>
   </data>
   <data name="Text_RelaunchRequiredToApplyLanguage" xml:space="preserve">
-    <value>言語を変更するにはRelaunchが必要です</value>
+    <value>言語を変更するにはアプリの再起動が必要です</value>
   </data>
   <data name="Action_Relaunch" xml:space="preserve">
-    <value>Relaunch</value>
+    <value>再起動</value>
   </data>
   <data name="Action_RelaunchLater" xml:space="preserve">
-    <value>後でRelaunch</value>
+    <value>後で再起動</value>
   </data>
   <data name="Label_RelaunchRequired" xml:space="preserve">
-    <value>Relaunch Required</value>
+    <value>再起動が必要です</value>
   </data>
   <data name="Label_UnknownPackage" xml:space="preserve">
     <value>Unknown Package</value>
@@ -235,7 +235,7 @@
     <value>更新あり</value>
   </data>
   <data name="Label_BecomeAPatron" xml:space="preserve">
-    <value>Patronになる</value>
+    <value>Patreonになる</value>
   </data>
   <data name="Label_JoinDiscord" xml:space="preserve">
     <value>Discordに参加</value>
@@ -424,7 +424,7 @@
     <value>Checkpoint Manager</value>
   </data>
   <data name="Label_RemoveSymlinksOnShutdown" xml:space="preserve">
-    <value>checkpointフォルダにあるシンボリックリンクをソフトの終了時に削除</value>
+    <value>checkpointフォルダ内のシンボリックリンクをシャットダウンか再起動時に削除</value>
   </data>
   <data name="Label_RemoveSymlinksOnShutdown_Details" xml:space="preserve">
     <value>Stability Matrix を別のドライブに移動する際に問題が起きた場合、ここにチェック</value>

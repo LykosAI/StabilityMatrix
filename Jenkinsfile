@@ -11,12 +11,7 @@ node("Diligence") {
         git branch: env.BRANCH_NAME, credentialsId: 'Ionite', url: "https://github.com/${author}/${repoName}.git"
     }
     
-    try {
-        stage('PreBuild') {
-            sh "rm ./StabilityMatrix.Avalonia/Languages/Resources.zh-Hans.resx"
-            sh "rm ./StabilityMatrix.Avalonia/Languages/Resources.zh-Hant.resx"
-        }
-    
+    try {    
         stage('Test') {
             sh "dotnet test StabilityMatrix.Tests"
         }

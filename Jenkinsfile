@@ -13,9 +13,9 @@ node("Diligence") {
     
     try {
         stage('Build') {
-            sh "dotnet build StabilityMatrix.Core -r linux-x64 --no-self-contained -c Release -p:ExcludeAssets=\"all\""
-            sh "dotnet build StabilityMatrix.Avalonia -r linux-x64 --no-self-contained -c Release -p:ExcludeAssets=\"all\""
-            sh "dotnet build StabilityMatrix.Tests --no-self-contained -r linux-x64 -c Release -p:ExcludeAssets=\"all\""
+            sh "dotnet build StabilityMatrix.Core -r linux-x64 -c Release -p:ExcludeAssets=\"all\" -p:SatelliteResourceLanguages=\"en\" --no-self-contained"
+            sh "dotnet build StabilityMatrix.Avalonia -r linux-x64 -c Release -p:ExcludeAssets=\"all\" -p:SatelliteResourceLanguages=\"en\" --no-self-contained"
+            sh "dotnet build StabilityMatrix.Tests -r linux-x64 -c Release -p:ExcludeAssets=\"all\" -p:SatelliteResourceLanguages=\"en\" --no-self-contained"
         }
     
         stage('Test') {

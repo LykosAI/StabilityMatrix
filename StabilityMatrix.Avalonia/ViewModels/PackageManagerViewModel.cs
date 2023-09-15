@@ -139,7 +139,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
         var result = await dialog.ShowAsync();
         if (result == ContentDialogResult.Primary)
         {
-            var runner = new PackageModificationRunner();
+            var runner = new PackageModificationRunner { ShowDialogOnStart = true };
             var steps = viewModel.Steps;
 
             EventManager.Instance.OnPackageInstallProgressAdded(runner);

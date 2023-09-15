@@ -261,8 +261,8 @@
                 <ui:SettingsExpander
                     Grid.Row="2"
                     Margin="8,0"
-                    Description="{x:Static lang:Resources.Label_SelectNewDataDirectory}"
-                    Header="{x:Static lang:Resources.Label_SelectNewDataDirectory_Details}"
+                    Description="{x:Static lang:Resources.Label_SelectNewDataDirectory_Details}"
+                    Header="{x:Static lang:Resources.Label_SelectNewDataDirectory}"
                     IconSource="MoveToFolder">
                     <ui:SettingsExpander.Footer>
                         <Button Command="{Binding PickNewDataDirectory}">

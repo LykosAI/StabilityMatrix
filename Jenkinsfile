@@ -11,7 +11,13 @@ node("Diligence") {
         git branch: env.BRANCH_NAME, credentialsId: 'Ionite', url: "https://github.com/${author}/${repoName}.git"
     }
     
-    try {    
+    try {
+        stage('Build') {
+            sh "dotnet build StabilityMatrix.Core -r linux-x64 -c Release -p:ExcludeAssets=\"all\""
+            sh "dotnet build StabilityMatrix.Avalonia -r linux-x64 -c Release -p:ExcludeAssets=\"all\""
+            sh "dotnet build StabilityMatrix.Avalonia.Diagnostics -r linux-x64 -c Release -p:ExcludeAssets=\"all\""
+        }
+    
         stage('Test') {
             sh "dotnet test StabilityMatrix.Tests"
         }

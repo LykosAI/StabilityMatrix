@@ -13,6 +13,7 @@ node("Diligence") {
     
     try {
         stage('PreBuild') {
+            cd "StabilityMatrix"
             sh "rm ./StabilityMatrix.Avalonia/Languages/Resources.zh-Hans.resx"
             sh "rm ./StabilityMatrix.Avalonia/Languages/Resources.zh-Hant.resx"
         }

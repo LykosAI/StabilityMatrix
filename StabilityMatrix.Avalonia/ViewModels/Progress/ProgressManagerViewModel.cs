@@ -129,7 +129,10 @@ public partial class ProgressManagerViewModel : PageViewModelBase
 
         var vm = new PackageInstallProgressItemViewModel(packageModificationRunner);
         ProgressItems.Add(vm);
-        await vm.ShowProgressDialog();
+        if (packageModificationRunner.ShowDialogOnStart)
+        {
+            await vm.ShowProgressDialog();
+        }
     }
 
     private void ShowFailedNotification(string title, string message)

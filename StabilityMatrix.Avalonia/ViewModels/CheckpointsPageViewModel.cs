@@ -97,8 +97,10 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             .Subscribe();
     }
 
-    public override async Task OnLoadedAsync()
+    public override void OnLoaded()
     {
+        base.OnLoaded();
+
         var sw = Stopwatch.StartNew();
         // DisplayedCheckpointFolders = CheckpointFolders;
 

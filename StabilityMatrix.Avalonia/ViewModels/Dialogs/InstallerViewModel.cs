@@ -63,9 +63,6 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     private string? releaseNotes;
 
     [ObservableProperty]
-    private string latestVersionText = string.Empty;
-
-    [ObservableProperty]
     private bool isAdvancedMode;
 
     [ObservableProperty]
@@ -97,6 +94,10 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     private PackageVersionType availableVersionTypes =
         PackageVersionType.GithubRelease | PackageVersionType.Commit;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanInstall))]
+    private bool isLoading;
+
     public string ReleaseLabelText =>
         IsReleaseMode ? Resources.Label_Version : Resources.Label_Branch;
     public bool IsReleaseMode
@@ -111,7 +112,8 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         AvailableVersionTypes.HasFlag(PackageVersionType.GithubRelease);
     public bool ShowTorchVersionOptions => SelectedTorchVersion != TorchVersion.None;
 
-    public bool CanInstall => !string.IsNullOrWhiteSpace(InstallName) && !ShowDuplicateWarning;
+    public bool CanInstall =>
+        !string.IsNullOrWhiteSpace(InstallName) && !ShowDuplicateWarning && !IsLoading;
 
     public ProgressViewModel InstallProgress { get; } = new();
     public IEnumerable<IPackageStep> Steps { get; set; }
@@ -153,6 +155,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         // Check for updates
         try
         {
+            IsLoading = true;
             var versionOptions = await SelectedPackage.GetAllVersionOptions();
             if (IsReleaseMode)
             {
@@ -177,6 +180,10 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         catch (Exception e)
         {
             Logger.Warn("Error getting versions: {Exception}", e.ToString());
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
 
@@ -357,6 +364,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
 
     partial void OnSelectedPackageChanged(BasePackage value)
     {
+        IsLoading = true;
         ReleaseNotes = string.Empty;
         AvailableVersions?.Clear();
         AvailableCommits?.Clear();
@@ -398,9 +406,8 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                 }
 
                 InstallName = SelectedPackage.DisplayName;
-                LatestVersionText = IsReleaseMode
-                    ? $"Latest version: {SelectedVersion?.TagName}"
-                    : $"Branch: {SelectedVersion?.TagName}";
+
+                IsLoading = false;
             })
             .SafeFireAndForget();
     }

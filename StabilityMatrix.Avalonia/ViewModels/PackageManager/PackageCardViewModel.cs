@@ -18,6 +18,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -181,60 +182,24 @@ public partial class PackageCardViewModel : ProgressViewModel
         Text = $"Updating {packageName}";
         IsIndeterminate = true;
 
-        var progressId = Guid.NewGuid();
-        EventManager.Instance.OnProgressChanged(
-            new ProgressItem(
-                progressId,
-                Package.DisplayName ?? Package.PackageName!,
-                new ProgressReport(0f, isIndeterminate: true, type: ProgressType.Update)
-            )
-        );
-
         try
         {
-            var progress = new Progress<ProgressReport>(progress =>
+            var runner = new PackageModificationRunner
             {
-                var percent = Convert.ToInt32(progress.Percentage);
+                ModificationCompleteMessage = $"{packageName} Update Complete"
+            };
+            var updatePackageStep = new UpdatePackageStep(settingsManager, Package, basePackage);
+            var steps = new List<IPackageStep> { updatePackageStep };
 
-                Value = percent;
-                IsIndeterminate = progress.IsIndeterminate;
-                Text = string.Format(Resources.TextTemplate_UpdatingPackage, packageName);
+            EventManager.Instance.OnPackageInstallProgressAdded(runner);
+            await runner.ExecuteSteps(steps);
 
-                EventManager.Instance.OnGlobalProgressChanged(percent);
-                EventManager.Instance.OnProgressChanged(
-                    new ProgressItem(progressId, packageName, progress)
-                );
-            });
-
-            var torchVersion =
-                Package.PreferredTorchVersion ?? basePackage.GetRecommendedTorchVersion();
-
-            var updateResult = await basePackage.Update(Package, torchVersion, progress);
-
-            settingsManager.UpdatePackageVersionNumber(Package.Id, updateResult);
+            IsUpdateAvailable = false;
+            InstalledVersion = Package.Version?.DisplayVersion ?? "Unknown";
             notificationService.Show(
                 Resources.Progress_UpdateComplete,
                 string.Format(Resources.TextTemplate_PackageUpdatedToLatest, packageName),
                 NotificationType.Success
-            );
-
-            await using (settingsManager.BeginTransaction())
-            {
-                Package.UpdateAvailable = false;
-            }
-            IsUpdateAvailable = false;
-            InstalledVersion = updateResult.DisplayVersion ?? "Unknown";
-
-            EventManager.Instance.OnProgressChanged(
-                new ProgressItem(
-                    progressId,
-                    packageName,
-                    new ProgressReport(
-                        1f,
-                        Resources.Progress_UpdateComplete,
-                        type: ProgressType.Update
-                    )
-                )
             );
         }
         catch (Exception e)
@@ -244,18 +209,6 @@ public partial class PackageCardViewModel : ProgressViewModel
                 string.Format(Resources.TextTemplate_ErrorUpdatingPackage, packageName),
                 e.Message,
                 NotificationType.Error
-            );
-            EventManager.Instance.OnProgressChanged(
-                new ProgressItem(
-                    progressId,
-                    packageName,
-                    new ProgressReport(
-                        0f,
-                        Resources.Progress_UpdateFailed,
-                        type: ProgressType.Update
-                    ),
-                    Failed: true
-                )
             );
         }
         finally

@@ -11,4 +11,5 @@ public interface IPackageModificationRunner
     event EventHandler<ProgressReport>? ProgressChanged;
     List<string> ConsoleOutput { get; }
     Guid Id { get; }
+    bool ShowDialogOnStart { get; init; }
 }

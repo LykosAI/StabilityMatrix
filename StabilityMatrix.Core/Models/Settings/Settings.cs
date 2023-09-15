@@ -91,9 +91,20 @@ public class Settings
     /// <returns></returns>
     public static CultureInfo GetDefaultCulture()
     {
-        var supportedCultures = new[] { "en-US", "ja-JP" };
+        var supportedCultures = new[] { "en-US", "ja-JP", "zh-Hans", "zh-Hant" };
 
         var systemCulture = CultureInfo.InstalledUICulture;
+
+        if (systemCulture.Name.StartsWith("zh-Hans", StringComparison.OrdinalIgnoreCase))
+        {
+            return new CultureInfo("zh-Hans");
+        }
+
+        if (systemCulture.Name.StartsWith("zh-Hant"))
+        {
+            return new CultureInfo("zh-Hant");
+        }
+
         return supportedCultures.Contains(systemCulture.Name)
             ? systemCulture
             : new CultureInfo("en-US");

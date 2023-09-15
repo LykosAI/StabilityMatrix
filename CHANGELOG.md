@@ -5,6 +5,15 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.4.3
+### Added
+- Added "--no-download-sd-model" launch argument option for Stable Diffusion Web UI
+- Added Chinese (Simplified) and Chinese (Traditional) UI language options, thanks to jimlovewine for the translations
+### Changed
+- Package updates now use the new progress dialog with console output
+### Fixed
+- Updated Japanese translation for some terms
+
 ## v2.4.2
 ### Added
 - Added Japanese UI language option, thanks to kgmkm_mkgm for the translation

@@ -25,11 +25,18 @@ public class PackageModificationRunner : IPackageModificationRunner
         }
 
         progress.Report(
-            new ProgressReport(1f, message: "Package Install Complete", isIndeterminate: false)
+            new ProgressReport(
+                1f,
+                message: ModificationCompleteMessage ?? "Package Install Complete",
+                isIndeterminate: false
+            )
         );
 
         IsRunning = false;
     }
+
+    public string? ModificationCompleteMessage { get; init; }
+    public bool ShowDialogOnStart { get; init; }
 
     public bool IsRunning { get; set; }
     public ProgressReport CurrentProgress { get; set; }

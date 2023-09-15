@@ -12,6 +12,11 @@ node("Diligence") {
     }
     
     try {
+        stage('Build') {
+            sh "dotnet build StabilityMatrix.sln"
+            sh "cp -R ./StabilityMatrix.Tests/bin/Debug/net7.0/zh-Hans ./StabilityMatrix.Tests/bin/Debug/net7.0/zh-hans"
+        }
+    
         stage('Test') {
             sh "dotnet test StabilityMatrix.Tests"
         }

@@ -2,6 +2,7 @@
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using JsonSerializer = System.Text.Json.JsonSerializer;
+using Size = System.Drawing.Size;
 
 namespace StabilityMatrix.Core.Models.Database;
 
@@ -35,6 +36,11 @@ public class LocalImageFile
     /// Generation parameters metadata of the file.
     /// </summary>
     public GenerationParameters? GenerationParameters { get; set; }
+
+    /// <summary>
+    /// Dimensions of the image
+    /// </summary>
+    public Size? ImageSize { get; set; }
 
     /// <summary>
     /// File name of the relative path.
@@ -101,6 +107,9 @@ public class LocalImageFile
             FileShare.Read
         );
         using var reader = new BinaryReader(stream);
+
+        var imageSize = ImageMetadata.GetImageSize(reader);
+
         var metadata = ImageMetadata.ReadTextChunk(reader, "parameters-json");
 
         GenerationParameters? genParams = null;
@@ -121,7 +130,8 @@ public class LocalImageFile
             ImageType = imageType,
             CreatedAt = filePath.Info.CreationTimeUtc,
             LastModifiedAt = filePath.Info.LastWriteTimeUtc,
-            GenerationParameters = genParams
+            GenerationParameters = genParams,
+            ImageSize = imageSize
         };
     }
 

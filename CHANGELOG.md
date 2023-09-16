@@ -6,8 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.4.4
+### Added
+- Added button to toggle automatic scrolling of console output
 ### Fixed
 - Fixed [#130](https://github.com/LykosAI/StabilityMatrix/issues/130) ComfyUI extra_model_paths.yaml file being overwritten on each launch
+- Fixed some package updates not showing any console output
+- Fixed auto-close of update dialog when package update is complete 
 
 ## v2.4.3
 ### Added

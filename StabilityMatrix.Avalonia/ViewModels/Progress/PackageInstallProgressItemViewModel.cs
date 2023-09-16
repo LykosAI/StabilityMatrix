@@ -51,7 +51,9 @@ public class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
 
         if (
             e is { Message: not null, Percentage: >= 100 }
-            && e.Message.Contains("Package Install Complete")
+            && e.Message.Contains(
+                packageModificationRunner.ModificationCompleteMessage ?? "Package Install Complete"
+            )
             && Progress.CloseWhenFinished
         )
         {

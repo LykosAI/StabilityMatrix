@@ -290,7 +290,7 @@ public abstract class BaseGitPackage : BasePackage
                 )
                 .ConfigureAwait(false);
 
-            await InstallPackage(installedPackage.FullPath, torchVersion, progress)
+            await InstallPackage(installedPackage.FullPath, torchVersion, progress, onConsoleOutput)
                 .ConfigureAwait(false);
 
             return new InstalledPackageVersion { InstalledReleaseVersion = latestRelease.TagName };
@@ -312,7 +312,7 @@ public abstract class BaseGitPackage : BasePackage
                 progress
             )
             .ConfigureAwait(false);
-        await InstallPackage(installedPackage.FullPath, torchVersion, progress)
+        await InstallPackage(installedPackage.FullPath, torchVersion, progress, onConsoleOutput)
             .ConfigureAwait(false);
 
         return new InstalledPackageVersion

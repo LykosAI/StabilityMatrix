@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Drawing;
 using System.Reflection;
 using AsyncAwaitBestPractices;
 using Avalonia;
@@ -11,6 +12,7 @@ using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using Brushes = Avalonia.Media.Brushes;
 
 namespace StabilityMatrix.Avalonia.Controls;
 

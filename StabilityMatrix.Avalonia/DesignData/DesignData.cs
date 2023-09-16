@@ -609,6 +609,9 @@ The gallery images are often inpainted, but you will get something very similar 
                     "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"
                 )
             );
+            vm.FileNameText = "TextToImage_00041.png";
+            vm.FileSizeText = "2.4 MB";
+            vm.ImageSizeText = "1280 x 1792";
         });
 
     public static SharpenCardViewModel SharpenCardViewModel =>

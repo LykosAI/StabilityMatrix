@@ -1,67 +1,94 @@
-﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
-                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                          xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
-                          xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
-                          VerticalContentAlignment="Stretch"
-                          HorizontalContentAlignment="Stretch"
-                          d:DataContext="{x:Static mocks:DesignData.ImageViewerViewModel}"
-                          x:DataType="vmDialogs:ImageViewerViewModel"
-                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.ImageViewerDialog">
-    
-    <Grid RowDefinitions="*,Auto" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-        
-        <controls:AdvancedImageBox
-            SizeMode="Fit"
-            Image="{Binding ImageSource.BitmapAsync^}"/>
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.ImageViewerDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    HorizontalContentAlignment="Stretch"
+    VerticalContentAlignment="Stretch"
+    d:DataContext="{x:Static mocks:DesignData.ImageViewerViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="vmDialogs:ImageViewerViewModel"
+    mc:Ignorable="d">
 
-        <!-- Close button -->
-        <Grid 
+    <Grid
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        RowDefinitions="*,Auto">
+
+        <controls:AdvancedImageBox Image="{Binding ImageSource.BitmapAsync^}" SizeMode="Fit" />
+
+        <!--  Close button  -->
+        <Grid
             Grid.Row="0"
-            VerticalAlignment="Top"
-            HorizontalAlignment="Right">
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top">
             <Button
                 Margin="0,8,8,0"
+                icons:Attached.Icon="fa-solid fa-xmark"
                 Classes="transparent"
-                Command="{Binding OnCloseButtonClick}"
-                icons:Attached.Icon="fa-solid fa-xmark"/>
+                Command="{Binding OnCloseButtonClick}" />
         </Grid>
-        
-        <!-- Footer -->
-        <ExperimentalAcrylicBorder
+
+        <!--  Footer  -->
+        <Border
+            Grid.Row="1"
+            MinHeight="20"
+            Background="Transparent"
+            VerticalAlignment="Bottom"
+            Opacity="0.9">
+            <UniformGrid Margin="4" Columns="3">
+                <TextBlock
+                    HorizontalAlignment="Left"
+                    FontSize="13"
+                    Text="{Binding ImageSizeText}" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="13"
+                    Text="{Binding FileNameText}"
+                    TextAlignment="Center" />
+                <TextBlock
+                    HorizontalAlignment="Right"
+                    FontSize="13"
+                    Text="{Binding FileSizeText}" />
+            </UniformGrid>
+        </Border>
+        <!--<ExperimentalAcrylicBorder
             Grid.Row="1"
             MinHeight="20"
             Padding="4,0,0,0"
             VerticalAlignment="Bottom"
-            Material="{StaticResource ThemeDarkAcrylicMaterial}"
+            Material="{StaticResource ThemeTransparentAcrylicMaterial}"
             Opacity="0.9">
-            <UniformGrid Columns="3">
-                <TextBlock 
-                    FontSize="12"
-                    VerticalAlignment="Center"
+            <UniformGrid Columns="3" Margin="4">
+                <TextBlock
+                    FontSize="13"
+                    HorizontalAlignment="Left"
                     Text="{Binding ImageSizeText}"/>
-                <TextBlock 
-                    FontSize="12"
-                    VerticalAlignment="Center"
+                <TextBlock
+                    FontSize="13"
+                    HorizontalAlignment="Center"
+                    TextAlignment="Center"
                     Text="{Binding FileNameText}"/>
-                <TextBlock 
-                    FontSize="12"
-                    VerticalAlignment="Center"
+                <TextBlock
+                    FontSize="13"
+                    HorizontalAlignment="Right"
                     Text="{Binding FileSizeText}"/>
             </UniformGrid>
-        </ExperimentalAcrylicBorder>
-        
-        <!-- The preview tracker -->
-        <!--<Image 
+        </ExperimentalAcrylicBorder>-->
+
+        <!--  The preview tracker  -->
+        <!--<Image
             MinHeight="100"
             MinWidth="100"
             RenderOptions.BitmapInterpolationMode="HighQuality"
             Source="{Binding #MainImageBox.TrackerImage}"
             HorizontalAlignment="Left"
-            VerticalAlignment="Bottom"/> -->
+            VerticalAlignment="Bottom"/>-->
     </Grid>
 </controls:UserControlBase>

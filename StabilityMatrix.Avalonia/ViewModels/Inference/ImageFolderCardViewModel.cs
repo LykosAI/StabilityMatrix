@@ -148,7 +148,11 @@ public partial class ImageFolderCardViewModel : ViewModelBase
             {
                 Width = 1000,
                 Height = 1000,
-                DataContext = new ImageViewerViewModel { ImageSource = image }
+                DataContext = new ImageViewerViewModel
+                {
+                    ImageSource = image,
+                    LocalImageFile = item
+                }
             }
         };
 

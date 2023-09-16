@@ -678,6 +678,15 @@ public class AdvancedImageBox : TemplatedControl
         set => SetValue(TrackerImageAutoZoomProperty, value);
     }
 
+    public static readonly StyledProperty<bool> IsTrackerImageEnabledProperty =
+        AvaloniaProperty.Register<AdvancedImageBox, bool>("IsTrackerImageEnabled");
+
+    public bool IsTrackerImageEnabled
+    {
+        get => GetValue(IsTrackerImageEnabledProperty);
+        set => SetValue(IsTrackerImageEnabledProperty, value);
+    }
+
     public bool IsHorizontalBarVisible
     {
         get
@@ -1350,7 +1359,7 @@ public class AdvancedImageBox : TemplatedControl
                 _pointerPosition.X - destSize.Width / 2,
                 _pointerPosition.Y - destSize.Height / 2
             );
-            context.DrawImage(_trackerImage, new Rect(destPos, destSize));
+            context.DrawImage(_trackerImage!, new Rect(destPos, destSize));
         }
 
         //SkiaContext.SkCanvas.dr

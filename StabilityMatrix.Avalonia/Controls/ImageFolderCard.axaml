@@ -11,6 +11,7 @@
     xmlns:dbModels="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
     xmlns:animations="clr-namespace:StabilityMatrix.Avalonia.Animations"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:behaviors="clr-namespace:StabilityMatrix.Avalonia.Behaviors"
     x:DataType="vmInference:ImageFolderCardViewModel">
 
     <Design.PreviewWith>
@@ -132,7 +133,7 @@
                                             
                                             <Interaction.Behaviors>
                                                 <BehaviorCollection>
-                                                    <ContextDragBehavior HorizontalDragThreshold="3" VerticalDragThreshold="3"/>
+                                                    <ContextDragBehavior HorizontalDragThreshold="6" VerticalDragThreshold="6"/>
                                                 </BehaviorCollection>
                                             </Interaction.Behaviors>
                                             
@@ -168,9 +169,7 @@
                                             </Button.ContextFlyout>
                                             
                                             <ToolTip.Tip>
-                                                <ToolTip>
-                                                    <TextBlock Text="{Binding GenerationParameters.PositivePrompt}"/>
-                                                </ToolTip>
+                                                <TextBlock Text="{Binding GenerationParameters.PositivePrompt}"/>
                                             </ToolTip.Tip>
                                             
                                             <Border ClipToBounds="True" CornerRadius="8">

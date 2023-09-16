@@ -31,10 +31,9 @@ public partial class ImageViewerViewModel : ContentDialogViewModelBase
 
     partial void OnLocalImageFileChanged(LocalImageFile? value)
     {
-        ImageSource?.Dispose();
-        if (value?.GlobalFullPath is { } path)
+        if (value?.ImageSize is { IsEmpty: false } size)
         {
-            ImageSource = new ImageSource(path);
+            ImageSizeText = $"{size.Width} x {size.Height}";
         }
     }
 
@@ -44,11 +43,6 @@ public partial class ImageViewerViewModel : ContentDialogViewModelBase
         {
             FileNameText = localFile.Name;
             FileSizeText = Size.FormatBase10Bytes(localFile.GetSize(true));
-
-            if (LocalImageFile?.GenerationParameters is { Width: > 0, Height: > 0 } parameters)
-            {
-                ImageSizeText = $"{parameters.Width} x {parameters.Height}";
-            }
         }
     }
 }

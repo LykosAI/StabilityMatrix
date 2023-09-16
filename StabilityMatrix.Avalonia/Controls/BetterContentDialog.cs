@@ -5,6 +5,7 @@ using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
@@ -95,6 +96,8 @@ public class BetterContentDialog : ContentDialog
     }
     #endregion
 
+    private FABorder? backgroundPart;
+
     protected override Type StyleKeyOverride { get; } = typeof(ContentDialog);
 
     public static readonly StyledProperty<bool> IsFooterVisibleProperty = AvaloniaProperty.Register<
@@ -156,9 +159,43 @@ public class BetterContentDialog : ContentDialog
         set => SetValue(ContentMarginProperty, value);
     }
 
+    public static readonly StyledProperty<bool> CloseOnClickOutsideProperty =
+        AvaloniaProperty.Register<BetterContentDialog, bool>("CloseOnClickOutside");
+
+    /// <summary>
+    /// Whether to close the dialog when clicking outside of it (on the blurred background)
+    /// </summary>
+    public bool CloseOnClickOutside
+    {
+        get => GetValue(CloseOnClickOutsideProperty);
+        set => SetValue(CloseOnClickOutsideProperty, value);
+    }
+
     public BetterContentDialog()
     {
         AddHandler(LoadedEvent, OnLoaded);
+    }
+
+    /// <inheritdoc />
+    protected override void OnPointerPressed(PointerPressedEventArgs e)
+    {
+        base.OnPointerPressed(e);
+
+        if (CloseOnClickOutside)
+        {
+            if (e.Source is Popup || backgroundPart is null)
+                return;
+
+            var point = e.GetPosition(this);
+
+            if (
+                !backgroundPart.Bounds.Contains(point)
+                && (Content as Control)?.DataContext is ContentDialogViewModelBase vm
+            )
+            {
+                vm.OnCloseButtonClick();
+            }
+        }
     }
 
     private void TryBindButtons()
@@ -243,10 +280,10 @@ public class BetterContentDialog : ContentDialog
     {
         base.OnApplyTemplate(e);
 
-        var background = e.NameScope.Find<FABorder>("BackgroundElement");
-        if (background is not null)
+        backgroundPart = e.NameScope.Find<FABorder>("BackgroundElement");
+        if (backgroundPart is not null)
         {
-            background.Margin = ContentMargin;
+            backgroundPart.Margin = ContentMargin;
         }
     }
 

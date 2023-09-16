@@ -639,4 +639,7 @@
   <data name="Label_Branch" xml:space="preserve">
     <value>Branch</value>
   </data>
+  <data name="Label_AutoScrollToEnd" xml:space="preserve">
+    <value>Automatically scroll to end of console output</value>
+  </data>
 </root>

@@ -465,6 +465,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Automatically scroll to end of console output.
+        /// </summary>
+        public static string Label_AutoScrollToEnd {
+            get {
+                return ResourceManager.GetString("Label_AutoScrollToEnd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Base Model.
         /// </summary>
         public static string Label_BaseModel {

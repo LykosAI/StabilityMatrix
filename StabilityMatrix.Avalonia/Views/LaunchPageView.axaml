@@ -12,6 +12,7 @@
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     d:DataContext="{x:Static mocks:DesignData.LaunchPageViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="700"
@@ -25,7 +26,7 @@
     </controls:UserControlBase.Resources>
 
     <Grid RowDefinitions="Auto,*,Auto">
-        <Grid ColumnDefinitions="Auto,*,Auto"
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto"
               Margin="0,8,0, 8">
             <Grid ColumnDefinitions="0.8*,0.2*" Margin="16,8,0,0">
                 <!-- Use split if extra commands, otherwise normal launch button -->
@@ -144,6 +145,18 @@
             <!-- Keyboard button to show manual input info bar -->
             <ToggleButton
                 Grid.Column="2"
+                Width="48"
+                Margin="8,8,0,0"
+                IsChecked="{Binding AutoScrollToEnd}"
+                ToolTip.Tip="{x:Static lang:Resources.Label_AutoScrollToEnd}"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Stretch"
+                FontSize="16">
+                <avalonia:Icon Value="fa-solid fa-arrow-down-wide-short" />
+            </ToggleButton>
+            
+            <ToggleButton
+                Grid.Column="3"
                 Width="48"
                 Margin="8,8,16,0"
                 IsChecked="{Binding ShowManualInputPrompt}"

@@ -86,6 +86,9 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     [ObservableProperty]
     private BasePackage? runningPackage;
 
+    [ObservableProperty]
+    private bool autoScrollToEnd;
+
     public virtual BasePackage? SelectedBasePackage =>
         PackageFactory.FindPackageByName(SelectedPackage?.PackageName);
 
@@ -126,6 +129,12 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
             settings => settings.ActiveInstalledPackage
         );
 
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.AutoScrollToEnd,
+            settings => settings.AutoScrollLaunchConsoleToEnd
+        );
+
         EventManager.Instance.PackageLaunchRequested += OnPackageLaunchRequested;
         EventManager.Instance.OneClickInstallFinished += OnOneClickInstallFinished;
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
@@ -161,6 +170,14 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         LaunchAsync().SafeFireAndForget();
     }
 
+    partial void OnAutoScrollToEndChanged(bool value)
+    {
+        if (value)
+        {
+            EventManager.Instance.OnScrollToBottomRequested();
+        }
+    }
+
     public override void OnLoaded()
     {
         // Ensure active package either exists or is null
@@ -179,6 +196,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
 
         // Load active package
         SelectedPackage = settingsManager.Settings.ActiveInstalledPackage;
+        AutoScrollToEnd = settingsManager.Settings.AutoScrollLaunchConsoleToEnd;
     }
 
     [RelayCommand]
@@ -487,7 +505,11 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     private void OnProcessOutputReceived(ProcessOutput output)
     {
         Console.Post(output);
-        EventManager.Instance.OnScrollToBottomRequested();
+
+        if (AutoScrollToEnd)
+        {
+            EventManager.Instance.OnScrollToBottomRequested();
+        }
     }
 
     private void OnOneClickInstallFinished(object? sender, bool e)

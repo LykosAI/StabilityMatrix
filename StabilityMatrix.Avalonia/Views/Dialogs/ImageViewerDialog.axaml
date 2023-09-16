@@ -12,10 +12,48 @@
                           x:DataType="vmDialogs:ImageViewerViewModel"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                           x:Class="StabilityMatrix.Avalonia.Views.Dialogs.ImageViewerDialog">
-    <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+    
+    <Grid RowDefinitions="*,Auto" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+        
         <controls:AdvancedImageBox
             SizeMode="Fit"
             Image="{Binding ImageSource.BitmapAsync^}"/>
+
+        <!-- Close button -->
+        <Grid 
+            Grid.Row="0"
+            VerticalAlignment="Top"
+            HorizontalAlignment="Right">
+            <Button
+                Margin="0,8,8,0"
+                Classes="transparent"
+                Command="{Binding OnCloseButtonClick}"
+                icons:Attached.Icon="fa-solid fa-xmark"/>
+        </Grid>
+        
+        <!-- Footer -->
+        <ExperimentalAcrylicBorder
+            Grid.Row="1"
+            MinHeight="20"
+            Padding="4,0,0,0"
+            VerticalAlignment="Bottom"
+            Material="{StaticResource ThemeDarkAcrylicMaterial}"
+            Opacity="0.9">
+            <UniformGrid Columns="3">
+                <TextBlock 
+                    FontSize="12"
+                    VerticalAlignment="Center"
+                    Text="{Binding ImageSizeText}"/>
+                <TextBlock 
+                    FontSize="12"
+                    VerticalAlignment="Center"
+                    Text="{Binding FileNameText}"/>
+                <TextBlock 
+                    FontSize="12"
+                    VerticalAlignment="Center"
+                    Text="{Binding FileSizeText}"/>
+            </UniformGrid>
+        </ExperimentalAcrylicBorder>
         
         <!-- The preview tracker -->
         <!--<Image 
@@ -25,16 +63,5 @@
             Source="{Binding #MainImageBox.TrackerImage}"
             HorizontalAlignment="Left"
             VerticalAlignment="Bottom"/> -->
-        
-        <!-- Close button -->
-        <Grid 
-            VerticalAlignment="Top"
-            HorizontalAlignment="Right">
-            <Button
-                Margin="0,8,8,0"
-                Classes="transparent"
-                Command="{Binding OnCloseButtonClick}"
-                icons:Attached.Icon="fa-solid fa-xmark"/>
-        </Grid>
     </Grid>
 </controls:UserControlBase>

@@ -1,6 +1,8 @@
-﻿using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
+﻿using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 
 namespace StabilityMatrix.Avalonia.Views.Dialogs;
 
@@ -11,8 +13,10 @@ public partial class ImageViewerDialog : UserControl
         InitializeComponent();
     }
 
-    private void InitializeComponent()
+    /// <inheritdoc />
+    protected override void OnKeyDown(KeyEventArgs e)
     {
-        AvaloniaXamlLoader.Load(this);
+        // Handle up/down presses for navigation
+        base.OnKeyDown(e);
     }
 }

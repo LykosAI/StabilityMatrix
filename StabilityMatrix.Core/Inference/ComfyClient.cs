@@ -80,9 +80,11 @@ public class ComfyClient : InferenceClientBase
             Path = "/ws",
             Query = $"clientId={ClientId}"
         }.Uri;
+
         webSocketClient = new WebsocketClient(wsUri)
         {
-            ReconnectTimeout = TimeSpan.FromSeconds(30),
+            Name = "ComfyClient",
+            ReconnectTimeout = TimeSpan.FromSeconds(30)
         };
 
         webSocketClient.DisconnectionHappened.Subscribe(

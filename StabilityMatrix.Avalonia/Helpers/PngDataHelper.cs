@@ -27,6 +27,9 @@ public static class PngDataHelper
         var imageWidth = BitConverter.ToInt32(imageWidthBytes.Reverse().ToArray());
         var imageHeight = BitConverter.ToInt32(imageHeightBytes.Reverse().ToArray());
 
+        generationParameters.Width = imageWidth;
+        generationParameters.Height = imageHeight;
+
         var idatIndex = SearchBytes(inputImage, Idat);
         var iendIndex = SearchBytes(inputImage, Iend);
 

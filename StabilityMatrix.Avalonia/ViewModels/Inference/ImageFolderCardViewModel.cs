@@ -142,6 +142,7 @@ public partial class ImageFolderCardViewModel : ViewModelBase
             MaxDialogHeight = 1000,
             FullSizeDesired = true,
             IsFooterVisible = false,
+            CloseOnClickOutside = true,
             ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
             Content = new ImageViewerDialog
             {

@@ -88,32 +88,6 @@ public static class PngDataHelper
         return finalImage.ToArray();
     }
 
-    public static Size GetImageSize(byte[] inputImage)
-    {
-        var imageWidthBytes = inputImage[0x10..0x14];
-        var imageHeightBytes = inputImage[0x14..0x18];
-        var imageWidth = BitConverter.ToInt32(imageWidthBytes.Reverse().ToArray());
-        var imageHeight = BitConverter.ToInt32(imageHeightBytes.Reverse().ToArray());
-
-        return new Size(imageWidth, imageHeight);
-    }
-
-    public static Size GetImageSize(BinaryReader reader)
-    {
-        var oldPosition = reader.BaseStream.Position;
-
-        reader.BaseStream.Position = 0x10;
-        var imageWidthBytes = reader.ReadBytes(4);
-        var imageHeightBytes = reader.ReadBytes(4);
-
-        var imageWidth = BitConverter.ToInt32(imageWidthBytes.Reverse().ToArray());
-        var imageHeight = BitConverter.ToInt32(imageHeightBytes.Reverse().ToArray());
-
-        reader.BaseStream.Position = oldPosition;
-
-        return new Size(imageWidth, imageHeight);
-    }
-
     private static byte[] BuildTextChunk(string key, string value)
     {
         var textData = $"{key}\0{value}";

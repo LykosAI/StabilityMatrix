@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.4.4
 ### Fixed
-- Fixed ComfyUI extra_model_paths.yaml file being overwritten on each launch
+- Fixed [#130](https://github.com/LykosAI/StabilityMatrix/issues/130) ComfyUI extra_model_paths.yaml file being overwritten on each launch
 
 ## v2.4.3
 ### Added

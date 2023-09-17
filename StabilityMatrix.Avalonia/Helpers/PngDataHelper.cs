@@ -91,8 +91,9 @@ public static class PngDataHelper
     private static byte[] BuildTextChunk(string key, string value)
     {
         var textData = $"{key}\0{value}";
-        var textDataLength = BitConverter.GetBytes(textData.Length).Reverse();
-        var textDataBytes = Text.Concat(Encoding.UTF8.GetBytes(textData)).ToArray();
+        var dataBytes = Encoding.UTF8.GetBytes(textData);
+        var textDataLength = BitConverter.GetBytes(dataBytes.Length).Reverse();
+        var textDataBytes = Text.Concat(dataBytes).ToArray();
         var crc = BitConverter.GetBytes(Crc32Algorithm.Compute(textDataBytes));
 
         return textDataLength.Concat(textDataBytes).Concat(crc).ToArray();

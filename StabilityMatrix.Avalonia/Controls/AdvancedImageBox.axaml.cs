@@ -22,11 +22,11 @@ using AsyncAwaitBestPractices;
 using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
@@ -45,7 +45,7 @@ public class AdvancedImageBox : TemplatedControl
 {
     #region Bindable Base
     /// <summary>
-    ///     Multicast event for property change notifications.
+    /// Multicast event for property change notifications.
     /// </summary>
     private PropertyChangedEventHandler? _propertyChanged;
 
@@ -136,13 +136,14 @@ public class AdvancedImageBox : TemplatedControl
                     16,
                     20,
                     24,
+                    // 10 increments
                     30,
                     40,
                     50,
                     60,
                     70,
+                    // 100 increments
                     100,
-                    150,
                     200,
                     300,
                     400,
@@ -150,10 +151,20 @@ public class AdvancedImageBox : TemplatedControl
                     600,
                     700,
                     800,
+                    // 400 increments
                     1200,
                     1600,
+                    2000,
+                    2400,
+                    // 800 increments
                     3200,
-                    6400
+                    4000,
+                    4800,
+                    // 1000 increments
+                    5800,
+                    6800,
+                    7800,
+                    8800
                 }
             );
 
@@ -481,7 +492,7 @@ public class AdvancedImageBox : TemplatedControl
     public ContentPresenter ViewPort { get; private set; }
 
     // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-    public bool IsLoaded => ViewPort is not null;
+    public bool IsViewPortLoaded => ViewPort is not null;
 
     public Vector Offset
     {
@@ -611,17 +622,66 @@ public class AdvancedImageBox : TemplatedControl
     public Bitmap? Image
     {
         get => GetValue(ImageProperty);
-        set
-        {
-            SetValue(ImageProperty, value);
+        set => SetValue(ImageProperty, value);
+    }
 
-            if (value is null)
+    /// <inheritdoc />
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+
+        if (change.Property == ImageProperty)
+        {
+            var (oldImage, newImage) = change.GetOldAndNewValue<Bitmap?>();
+
+            Vector? offsetBackup = null;
+
+            if (newImage is null)
             {
                 SelectNone();
             }
-
-            if (ViewPort is not null)
+            else if (IsViewPortLoaded)
             {
+                if (oldImage is null)
+                {
+                    ZoomToFit();
+                    RestoreSizeMode();
+                }
+                else if (newImage.Size != oldImage.Size)
+                {
+                    offsetBackup = Offset;
+
+                    var zoomFactorScale =
+                        (float)GetZoomLevelToFit(newImage) / GetZoomLevelToFit(oldImage);
+                    var imageScale = newImage.Size / oldImage.Size;
+
+                    Debug.WriteLine($"Image scale: {imageScale}");
+
+                    /*var oldScaledSize = oldImage.Size * ZoomFactor;
+                    var newScaledSize = newImage.Size * ZoomFactor;
+                    
+                    Debug.WriteLine($"Old scaled {oldScaledSize} -> new scaled {newScaledSize}");*/
+
+                    var currentZoom = Zoom;
+                    var currentFactor = ZoomFactor;
+                    // var currentOffset = Offset;
+
+                    // Scale zoom and offset to new size
+                    Zoom = (int)Math.Floor(Zoom * zoomFactorScale);
+                    /*Offset = new Vector(
+                        Offset.X * imageScale.X,
+                        Offset.Y * imageScale.Y
+                    );*/
+
+                    Debug.WriteLine($"Zoom changed from {currentZoom} to {Zoom}");
+                    Debug.WriteLine($"Zoom factor changed from {currentFactor} to {ZoomFactor}");
+                }
+
+                if (offsetBackup is not null)
+                {
+                    Offset = offsetBackup.Value;
+                }
+
                 UpdateViewPort();
                 TriggerRender();
             }
@@ -859,7 +919,7 @@ public class AdvancedImageBox : TemplatedControl
     public static readonly StyledProperty<bool> InvertMousePanProperty = AvaloniaProperty.Register<
         AdvancedImageBox,
         bool
-    >(nameof(InvertMousePan), false);
+    >(nameof(InvertMousePan));
 
     /// <summary>
     /// Gets or sets if mouse pan is inverted
@@ -887,7 +947,7 @@ public class AdvancedImageBox : TemplatedControl
     public static readonly StyledProperty<SizeModes> SizeModeProperty = AvaloniaProperty.Register<
         AdvancedImageBox,
         SizeModes
-    >(nameof(SizeMode), SizeModes.Normal);
+    >(nameof(SizeMode));
 
     /// <summary>
     /// Gets or sets the image size mode
@@ -900,7 +960,7 @@ public class AdvancedImageBox : TemplatedControl
             SetValue(SizeModeProperty, value);
 
             // Run changed if loaded
-            if (IsLoaded)
+            if (IsViewPortLoaded)
             {
                 SizeModeChanged();
             }
@@ -1068,42 +1128,37 @@ public class AdvancedImageBox : TemplatedControl
     /// <summary>
     /// Gets the zoom to fit level which shows all the image
     /// </summary>
-    public int ZoomLevelToFit
+    public int ZoomLevelToFit => Image is null ? 100 : GetZoomLevelToFit(Image);
+
+    private int GetZoomLevelToFit(IImage image)
     {
-        get
+        double zoom;
+        double aspectRatio;
+
+        if (image.Size.Width > image.Size.Height)
         {
-            if (!IsImageLoaded)
-                return 100;
-            var image = Image!;
+            aspectRatio = ViewPortSize.Width / image.Size.Width;
+            zoom = aspectRatio * 100.0;
 
-            double zoom;
-            double aspectRatio;
-
-            if (image.Size.Width > image.Size.Height)
-            {
-                aspectRatio = ViewPortSize.Width / image.Size.Width;
-                zoom = aspectRatio * 100.0;
-
-                if (ViewPortSize.Height < image.Size.Height * zoom / 100.0)
-                {
-                    aspectRatio = ViewPortSize.Height / image.Size.Height;
-                    zoom = aspectRatio * 100.0;
-                }
-            }
-            else
+            if (ViewPortSize.Height < image.Size.Height * zoom / 100.0)
             {
                 aspectRatio = ViewPortSize.Height / image.Size.Height;
                 zoom = aspectRatio * 100.0;
-
-                if (ViewPortSize.Width < image.Size.Width * zoom / 100.0)
-                {
-                    aspectRatio = ViewPortSize.Width / image.Size.Width;
-                    zoom = aspectRatio * 100.0;
-                }
             }
-
-            return (int)zoom;
         }
+        else
+        {
+            aspectRatio = ViewPortSize.Height / image.Size.Height;
+            zoom = aspectRatio * 100.0;
+
+            if (ViewPortSize.Width < image.Size.Width * zoom / 100.0)
+            {
+                aspectRatio = ViewPortSize.Width / image.Size.Width;
+                zoom = aspectRatio * 100.0;
+            }
+        }
+
+        return (int)zoom;
     }
 
     /// <summary>
@@ -1135,7 +1190,7 @@ public class AdvancedImageBox : TemplatedControl
     }
 
     public static readonly StyledProperty<int> PixelGridZoomThresholdProperty =
-        AvaloniaProperty.Register<AdvancedImageBox, int>(nameof(PixelGridZoomThreshold), 15);
+        AvaloniaProperty.Register<AdvancedImageBox, int>(nameof(PixelGridZoomThreshold), 13);
 
     /// <summary>
     /// Minimum size of zoomed pixel's before the pixel grid will be drawn
@@ -1147,10 +1202,7 @@ public class AdvancedImageBox : TemplatedControl
     }
 
     public static readonly StyledProperty<SelectionModes> SelectionModeProperty =
-        AvaloniaProperty.Register<AdvancedImageBox, SelectionModes>(
-            nameof(SelectionMode),
-            SelectionModes.None
-        );
+        AvaloniaProperty.Register<AdvancedImageBox, SelectionModes>(nameof(SelectionMode));
 
     public static readonly StyledProperty<bool> IsPixelGridEnabledProperty =
         AvaloniaProperty.Register<AdvancedImageBox, bool>("IsPixelGridEnabled", true);
@@ -1246,10 +1298,6 @@ public class AdvancedImageBox : TemplatedControl
     #endregion
 
     #region Constructor
-    public AdvancedImageBox()
-    {
-        // InitializeComponent();
-    }
 
     /// <inheritdoc />
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
@@ -1260,12 +1308,14 @@ public class AdvancedImageBox : TemplatedControl
         AffectsRender<AdvancedImageBox>(ShowGridProperty);
 
         HorizontalScrollBar =
-            e.NameScope.Find<ScrollBar>("HorizontalScrollBar")
+            e.NameScope.Find<ScrollBar>("PART_HorizontalScrollBar")
             ?? throw new NullReferenceException();
         VerticalScrollBar =
-            e.NameScope.Find<ScrollBar>("VerticalScrollBar") ?? throw new NullReferenceException();
+            e.NameScope.Find<ScrollBar>("PART_VerticalScrollBar")
+            ?? throw new NullReferenceException();
         ViewPort =
-            e.NameScope.Find<ContentPresenter>("ViewPort") ?? throw new NullReferenceException();
+            e.NameScope.Find<ContentPresenter>("PART_ViewPort")
+            ?? throw new NullReferenceException();
 
         SizeModeChanged();
 
@@ -1299,9 +1349,47 @@ public class AdvancedImageBox : TemplatedControl
         InvalidateVisual();
     }
 
+    private void RenderBackgroundGrid(DrawingContext context)
+    {
+        var size = GridCellSize;
+
+        var square1Drawing = new GeometryDrawing
+        {
+            Brush = GridColorAlternate,
+            Geometry = new RectangleGeometry(new Rect(0.0, 0.0, size, size))
+        };
+
+        var square2Drawing = new GeometryDrawing
+        {
+            Brush = GridColorAlternate,
+            Geometry = new RectangleGeometry(new Rect(size, size, size, size))
+        };
+
+        var drawingGroup = new DrawingGroup { Children = { square1Drawing, square2Drawing } };
+
+        var tileBrush = new DrawingBrush(drawingGroup)
+        {
+            AlignmentX = AlignmentX.Left,
+            AlignmentY = AlignmentY.Top,
+            DestinationRect = new RelativeRect(new Size(2 * size, 2 * size), RelativeUnit.Absolute),
+            Stretch = Stretch.None,
+            TileMode = TileMode.Tile,
+        };
+
+        context.FillRectangle(GridColor, Bounds);
+        context.FillRectangle(tileBrush, Bounds);
+    }
+
     public override void Render(DrawingContext context)
     {
         base.Render(context);
+
+        var gridCellSize = GridCellSize;
+
+        if (ShowGrid & gridCellSize > 0 && (!IsHorizontalBarVisible || !IsVerticalBarVisible))
+        {
+            RenderBackgroundGrid(context);
+        }
 
         var zoomFactor = ZoomFactor;
 
@@ -1310,9 +1398,8 @@ public class AdvancedImageBox : TemplatedControl
             && SizeMode == SizeModes.Normal
             && zoomFactor > PixelGridZoomThreshold;
 
-        var viewPortSize = ViewPortSize;
         // Draw Grid
-        var gridCellSize = GridCellSize;
+        /*var viewPortSize = ViewPortSize;
         if (ShowGrid & gridCellSize > 0 && (!IsHorizontalBarVisible || !IsVerticalBarVisible))
         {
             // draw the background
@@ -1332,7 +1419,7 @@ public class AdvancedImageBox : TemplatedControl
                 if (Equals(firstRowColor, currentColor))
                     currentColor = ReferenceEquals(currentColor, gridColor) ? altColor : gridColor;
             }
-        }
+        }*/
         /*else
         {
             context.FillRectangle(Background, new Rect(0, 0, Viewport.Width, Viewport.Height));
@@ -1555,99 +1642,6 @@ public class AdvancedImageBox : TemplatedControl
             return;
         _startMousePosition = location;
     }
-
-    private void ViewPortOnPointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (e.Handled || _isPanning || _isSelecting || Image is null)
-            return;
-
-        var pointer = e.GetCurrentPoint(this);
-
-        if (SelectionMode != SelectionModes.None)
-        {
-            if (
-                !(
-                    pointer.Properties.IsLeftButtonPressed
-                        && (SelectWithMouseButtons & MouseButtons.LeftButton) != 0
-                    || pointer.Properties.IsMiddleButtonPressed
-                        && (SelectWithMouseButtons & MouseButtons.MiddleButton) != 0
-                    || pointer.Properties.IsRightButtonPressed
-                        && (SelectWithMouseButtons & MouseButtons.RightButton) != 0
-                )
-            )
-                return;
-            IsSelecting = true;
-        }
-        else
-        {
-            if (
-                !(
-                    pointer.Properties.IsLeftButtonPressed
-                        && (PanWithMouseButtons & MouseButtons.LeftButton) != 0
-                    || pointer.Properties.IsMiddleButtonPressed
-                        && (PanWithMouseButtons & MouseButtons.MiddleButton) != 0
-                    || pointer.Properties.IsRightButtonPressed
-                        && (PanWithMouseButtons & MouseButtons.RightButton) != 0
-                )
-                || !AutoPan
-                || SizeMode != SizeModes.Normal
-            )
-                return;
-
-            IsPanning = true;
-        }
-
-        var location = pointer.Position;
-
-        if (location.X > ViewPortSize.Width)
-            return;
-        if (location.Y > ViewPortSize.Height)
-            return;
-        _startMousePosition = location;
-    }
-
-    /*protected override void OnPointerPressed(PointerPressedEventArgs e)
-    {
-        base.OnPointerPressed(e);
-        
-        if (e.Handled
-            || _isPanning
-            || _isSelecting
-            || Image is null) return;
-
-        var pointer = e.GetCurrentPoint(this);
-
-        if (SelectionMode != SelectionModes.None)
-        {
-            if (!(
-                    pointer.Properties.IsLeftButtonPressed && (SelectWithMouseButtons & MouseButtons.LeftButton) != 0 ||
-                    pointer.Properties.IsMiddleButtonPressed && (SelectWithMouseButtons & MouseButtons.MiddleButton) != 0 ||
-                    pointer.Properties.IsRightButtonPressed && (SelectWithMouseButtons & MouseButtons.RightButton) != 0
-                )
-               ) return;
-            IsSelecting = true;
-        }
-        else
-        {
-            if (!(
-                    pointer.Properties.IsLeftButtonPressed && (PanWithMouseButtons & MouseButtons.LeftButton) != 0 ||
-                    pointer.Properties.IsMiddleButtonPressed && (PanWithMouseButtons & MouseButtons.MiddleButton) != 0 ||
-                    pointer.Properties.IsRightButtonPressed && (PanWithMouseButtons & MouseButtons.RightButton) != 0
-                )
-                || !AutoPan
-                || SizeMode != SizeModes.Normal
-
-               ) return;
-
-            IsPanning = true;
-        }
-
-        var location = pointer.Position;
-
-        if (location.X > ViewPortSize.Width) return;
-        if (location.Y > ViewPortSize.Height) return;
-        _startMousePosition = location;
-    }*/
 
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
@@ -2639,15 +2633,15 @@ public class AdvancedImageBox : TemplatedControl
                 var offset = Offset;
                 var viewPort = GetImageViewPort();
                 var zoomFactor = ZoomFactor;
-                var sourceLeft = (offset.X / zoomFactor);
-                var sourceTop = (offset.Y / zoomFactor);
-                var sourceWidth = (viewPort.Width / zoomFactor);
-                var sourceHeight = (viewPort.Height / zoomFactor);
+                var sourceLeft = offset.X / zoomFactor;
+                var sourceTop = offset.Y / zoomFactor;
+                var sourceWidth = viewPort.Width / zoomFactor;
+                var sourceHeight = viewPort.Height / zoomFactor;
 
-                return new(sourceLeft, sourceTop, sourceWidth, sourceHeight);
+                return new Rect(sourceLeft, sourceTop, sourceWidth, sourceHeight);
         }
 
-        return new(0, 0, image.Size.Width, image.Size.Height);
+        return new Rect(0, 0, image.Size.Width, image.Size.Height);
     }
 
     /// <summary>
@@ -2662,8 +2656,8 @@ public class AdvancedImageBox : TemplatedControl
 
         double xOffset = 0;
         double yOffset = 0;
-        double width = 0;
-        double height = 0;
+        double width;
+        double height;
 
         switch (SizeMode)
         {

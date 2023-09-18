@@ -1,36 +1,32 @@
 ﻿<Styles
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:mocks="using:StabilityMatrix.Avalonia.DesignData"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:mocks="using:StabilityMatrix.Avalonia.DesignData"
     x:DataType="controls:AdvancedImageBox">
-    
+
     <Design.PreviewWith>
         <Panel Width="600" Height="800">
-            <controls:AdvancedImageBox
-                Source="https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/fb99d197-2c3d-49d2-ba21-d7aa7dbc46d1/width=2000"/>  
+            <controls:AdvancedImageBox Source="https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/fb99d197-2c3d-49d2-ba21-d7aa7dbc46d1/width=2000" />
         </Panel>
     </Design.PreviewWith>
 
     <Style Selector="controls|AdvancedImageBox">
         <!--  Set Defaults  -->
-        <Setter Property="Focusable" Value="True"/>
-        <Setter Property="HorizontalAlignment" Value="Stretch"/>
-        <Setter Property="VerticalAlignment" Value="Stretch"/>
+        <Setter Property="Focusable" Value="True" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
         <Setter Property="Template">
             <ControlTemplate>
-                <Grid 
-                    HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
-                    VerticalAlignment="{TemplateBinding VerticalAlignment}">
-
+                <Grid HorizontalAlignment="{TemplateBinding HorizontalAlignment}" VerticalAlignment="{TemplateBinding VerticalAlignment}">
                     <ContentPresenter
-                        Name="ViewPort"
+                        Name="PART_ViewPort"
                         Grid.Row="0"
                         Grid.Column="0"
                         Background="Transparent" />
 
                     <ScrollBar
-                        Name="VerticalScrollBar"
+                        Name="PART_VerticalScrollBar"
                         Grid.Row="0"
                         Grid.Column="0"
                         HorizontalAlignment="Right"
@@ -38,11 +34,11 @@
                         Maximum="0"
                         Minimum="0"
                         Orientation="Vertical"
-                        ViewportSize="{Binding ElementName=ViewPort, Path=Bounds.Height}"
+                        ViewportSize="{Binding ElementName=PART_ViewPort, Path=Bounds.Height}"
                         Visibility="Auto" />
 
                     <ScrollBar
-                        Name="HorizontalScrollBar"
+                        Name="PART_HorizontalScrollBar"
                         Grid.Row="0"
                         Grid.Column="0"
                         VerticalAlignment="Bottom"
@@ -50,7 +46,7 @@
                         Maximum="0"
                         Minimum="0"
                         Orientation="Horizontal"
-                        ViewportSize="{Binding ElementName=ViewPort, Path=Bounds.Width}"
+                        ViewportSize="{Binding ElementName=PART_ViewPort, Path=Bounds.Width}"
                         Visibility="Auto" />
 
                     <!--<Border

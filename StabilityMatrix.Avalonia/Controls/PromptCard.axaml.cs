@@ -4,6 +4,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using AvaloniaEdit;
 using AvaloniaEdit.Editing;
+using AvaloniaEdit.Utils;
 using StabilityMatrix.Avalonia.Helpers;
 
 namespace StabilityMatrix.Avalonia.Controls;
@@ -35,11 +36,20 @@ public class PromptCard : TemplatedControl
 
                 if (editor.TextArea.ActiveInputHandler is TextAreaInputHandler inputHandler)
                 {
-                    inputHandler.KeyBindings.Add(
-                        new KeyBinding
+                    // Add some aliases for editor shortcuts
+                    inputHandler.KeyBindings.AddRange(
+                        new KeyBinding[]
                         {
-                            Command = ApplicationCommands.Cut,
-                            Gesture = new KeyGesture(Key.Delete, KeyModifiers.Shift)
+                            new()
+                            {
+                                Command = ApplicationCommands.Cut,
+                                Gesture = new KeyGesture(Key.Delete, KeyModifiers.Shift)
+                            },
+                            new()
+                            {
+                                Command = ApplicationCommands.Paste,
+                                Gesture = new KeyGesture(Key.Insert, KeyModifiers.Shift)
+                            }
                         }
                     );
                 }

@@ -1,10 +1,11 @@
 ﻿using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
+using StabilityMatrix.Avalonia.Controls;
 
 namespace StabilityMatrix.Avalonia.Views.Dialogs;
 
-public partial class ImageViewerDialog : UserControl
+public partial class ImageViewerDialog : UserControlBase
 {
     public static readonly StyledProperty<bool> IsFooterEnabledProperty = AvaloniaProperty.Register<
         ImageViewerDialog,
@@ -25,10 +26,9 @@ public partial class ImageViewerDialog : UserControl
         InitializeComponent();
     }
 
-    /// <inheritdoc />
-    protected override void OnKeyDown(KeyEventArgs e)
+    private void InfoButton_OnTapped(object? sender, TappedEventArgs e)
     {
-        // Handle up/down presses for navigation
-        base.OnKeyDown(e);
+        var infoTip = InfoTeachingTip;
+        infoTip.IsOpen = true;
     }
 }

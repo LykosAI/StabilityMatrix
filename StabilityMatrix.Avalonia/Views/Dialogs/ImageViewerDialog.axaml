@@ -5,8 +5,10 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
     HorizontalContentAlignment="Stretch"
     VerticalContentAlignment="Stretch"
@@ -17,20 +19,72 @@
     mc:Ignorable="d">
 
     <controls:UserControlBase.KeyBindings>
-        <KeyBinding Gesture="Up" Command="{Binding NavigateNextCommand}"/>
-        <KeyBinding Gesture="Right" Command="{Binding NavigateNextCommand}"/>
-        <KeyBinding Gesture="Down" Command="{Binding NavigatePreviousCommand}"/>
-        <KeyBinding Gesture="Left" Command="{Binding NavigatePreviousCommand}"/>
+        <KeyBinding Command="{Binding NavigateNextCommand}" Gesture="Up" />
+        <KeyBinding Command="{Binding NavigateNextCommand}" Gesture="Right" />
+        <KeyBinding Command="{Binding NavigatePreviousCommand}" Gesture="Down" />
+        <KeyBinding Command="{Binding NavigatePreviousCommand}" Gesture="Left" />
     </controls:UserControlBase.KeyBindings>
+
+    <!--<controls:UserControlBase.ContextFlyout>
+        <controls:BetterFlyout
+            Placement="Left">
+            <StackPanel>
+                <TextBlock Text="{Binding LocalImageFile.GenerationParameters.PositivePrompt}"/>
+                <TextBlock Text="{Binding LocalImageFile.GenerationParameters.NegativePrompt}"/>
+            </StackPanel>
+        </controls:BetterFlyout>
+    </controls:UserControlBase.ContextFlyout>-->
     
+    <controls:UserControlBase.Styles>
+        <Style Selector="SelectableTextBlock">
+            <Setter Property="TextWrapping" Value="WrapWithOverflow"/>
+            <Setter Property="SelectionBrush" Value="{DynamicResource CompletionSelectionForegroundBrush}"/>
+        </Style>
+    </controls:UserControlBase.Styles>
+
     <Grid
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch"
         RowDefinitions="*,Auto">
 
-        <controls:AdvancedImageBox 
-            Image="{Binding ImageSource.BitmapAsync^}" 
-            SizeMode="Fit" />
+        <controls:AdvancedImageBox Image="{Binding ImageSource.BitmapAsync^}" SizeMode="Fit" />
+
+        <!--  Info button  -->
+        <Button
+            Name="InfoButton"
+            Grid.Row="0"
+            Margin="0,8,8,0"
+            Padding="8"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            icons:Attached.Icon="fa-solid fa-info"
+            Classes="transparent-full"
+            IsEnabled="{Binding HasGenerationParameters}"
+            Tapped="InfoButton_OnTapped" />
+
+        <ui:TeachingTip
+            Name="InfoTeachingTip"
+            Grid.Row="0"
+            MinWidth="100"
+            PreferredPlacement="LeftBottom"
+            Target="{Binding #InfoButton}">
+            <StackPanel Spacing="4" Margin="4,0" DataContext="{Binding LocalImageFile.GenerationParameters}">
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Text="Prompt" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <SelectableTextBlock
+                        Grid.Row="1"
+                        Text="{Binding PositivePrompt}" />
+                </Grid>
+                
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Text="Negative Prompt" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <SelectableTextBlock
+                        Grid.Row="1"
+                        Text="{Binding NegativePrompt}" />
+                </Grid>
+            </StackPanel>
+
+        </ui:TeachingTip>
 
         <!--  Close button  -->
         <Grid
@@ -75,20 +129,20 @@
             Padding="4,0,4,0"
             VerticalAlignment="Bottom"
             Material="{StaticResource ThemeDarkAcrylicMaterial}">
-            <UniformGrid Columns="3" Margin="4">
+            <UniformGrid Margin="4" Columns="3">
                 <TextBlock
-                    FontSize="13"
                     HorizontalAlignment="Left"
-                    Text="{Binding ImageSizeText}"/>
-                <TextBlock
                     FontSize="13"
+                    Text="{Binding ImageSizeText}" />
+                <TextBlock
                     HorizontalAlignment="Center"
-                    TextAlignment="Center"
-                    Text="{Binding FileNameText}"/>
-                <TextBlock
                     FontSize="13"
+                    Text="{Binding FileNameText}"
+                    TextAlignment="Center" />
+                <TextBlock
                     HorizontalAlignment="Right"
-                    Text="{Binding FileSizeText}"/>
+                    FontSize="13"
+                    Text="{Binding FileSizeText}" />
             </UniformGrid>
         </ExperimentalAcrylicBorder>
 

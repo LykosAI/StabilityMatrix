@@ -17,6 +17,7 @@ public partial class ImageViewerViewModel : ContentDialogViewModelBase
     private ImageSource? imageSource;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasGenerationParameters))]
     private LocalImageFile? localImageFile;
 
     [ObservableProperty]
@@ -30,6 +31,11 @@ public partial class ImageViewerViewModel : ContentDialogViewModelBase
 
     [ObservableProperty]
     private string? imageSizeText;
+
+    /// <summary>
+    /// Whether local generation parameters are available.
+    /// </summary>
+    public bool HasGenerationParameters => LocalImageFile?.GenerationParameters is not null;
 
     public event EventHandler<DirectionalNavigationEventArgs>? NavigationRequested;
 

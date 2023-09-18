@@ -19,6 +19,7 @@
                  <ResourceInclude Source="Styles/Card.axaml"/>
                  <ResourceInclude Source="Controls/CodeCompletion/CompletionListThemes.axaml"/>
                  <ResourceInclude Source="Styles/ContextMenuStyles.axaml"/>
+                 <ResourceInclude Source="Controls/EditorFlyouts.axaml"/>
              </ResourceDictionary.MergedDictionaries>
              
              <idcr:ControlRecycling x:Key="ControlRecyclingKey" />

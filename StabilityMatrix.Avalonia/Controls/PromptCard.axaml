@@ -7,7 +7,6 @@
     xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     x:DataType="vmInference:PromptCardViewModel">
     <Design.PreviewWith>
@@ -21,30 +20,6 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <controls:Card Padding="12" HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
-                    <controls:Card.Resources>
-                        <!--<ui:TextCommandBarFlyout x:Key="EditorFlyout"/>-->
-                        <ui:FAMenuFlyout x:Key="EditorFlyout">
-                            <ui:MenuFlyoutItem
-                                Text="Paste"
-                                IconSource="Paste"
-                                HotKey="Ctrl+V"
-                                Command="{Binding EditorPasteCommand}"
-                                CommandParameter="{Binding $parent[avaloniaEdit:TextEditor]}"/>
-                            <ui:MenuFlyoutItem
-                                Text="Copy"
-                                IconSource="Copy"
-                                HotKey="Ctrl+C"
-                                Command="{Binding EditorCopyCommand}"
-                                CommandParameter="{Binding $parent[avaloniaEdit:TextEditor]}"/>
-                            <ui:MenuFlyoutItem
-                                Text="Cut"
-                                IconSource="Cut"
-                                HotKey="Ctrl+X"
-                                Command="{Binding EditorCutCommand}"
-                                CommandParameter="{Binding $parent[avaloniaEdit:TextEditor]}"/>
-                        </ui:FAMenuFlyout>
-                    </controls:Card.Resources>
-
                     <controls:Card.Styles>
                         <Style Selector="avaloniaEdit|TextEditor">
                             <Setter Property="Margin" Value="0,8,0,8" />
@@ -54,8 +29,7 @@
                             <Setter Property="ShowLineNumbers" Value="True" />
                             <Setter Property="WordWrap" Value="True" />
                             <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
-                            <Setter Property="ContextFlyout" Value="{StaticResource EditorFlyout}" />
-                            <!--<Setter Property="Background" Value="{DynamicResource ScrollBarTrackStroke}" />-->
+                            <Setter Property="ContextFlyout" Value="{StaticResource EditorContextFlyout}" />
                         </Style>
                     </controls:Card.Styles>
 

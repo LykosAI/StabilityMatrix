@@ -41,6 +41,7 @@ using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
+[Preload]
 [View(typeof(InferencePage))]
 public partial class InferenceViewModel : PageViewModelBase
 {

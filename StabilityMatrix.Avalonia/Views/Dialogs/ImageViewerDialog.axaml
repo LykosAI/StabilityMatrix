@@ -18,7 +18,9 @@
 
     <controls:UserControlBase.KeyBindings>
         <KeyBinding Gesture="Up" Command="{Binding NavigateNextCommand}"/>
+        <KeyBinding Gesture="Right" Command="{Binding NavigateNextCommand}"/>
         <KeyBinding Gesture="Down" Command="{Binding NavigatePreviousCommand}"/>
+        <KeyBinding Gesture="Left" Command="{Binding NavigatePreviousCommand}"/>
     </controls:UserControlBase.KeyBindings>
     
     <Grid

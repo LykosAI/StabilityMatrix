@@ -28,26 +28,20 @@
                                 Text="Paste"
                                 IconSource="Paste"
                                 HotKey="Ctrl+V"
-                                Command="{x:Static avaloniaEdit:ApplicationCommands.Paste}">
-                                <ui:MenuFlyoutItem.CommandParameter>
-                                    <MultiBinding>
-                                        <Binding Source="{x:Null}"/>
-                                        <ReflectionBinding Path="$parent[avaloniaEdit:TextEditor].TextArea"/>
-                                    </MultiBinding>
-                                </ui:MenuFlyoutItem.CommandParameter>
-                            </ui:MenuFlyoutItem>
+                                Command="{Binding EditorPasteCommand}"
+                                CommandParameter="{Binding $parent[avaloniaEdit:TextEditor]}"/>
                             <ui:MenuFlyoutItem
                                 Text="Copy"
                                 IconSource="Copy"
                                 HotKey="Ctrl+C"
-                                Command="{x:Static avaloniaEdit:ApplicationCommands.Copy}"
-                                CommandParameter="{Binding $parent[avaloniaEdit:TextEditor;1].TextArea}"/>
+                                Command="{Binding EditorCopyCommand}"
+                                CommandParameter="{Binding $parent[avaloniaEdit:TextEditor]}"/>
                             <ui:MenuFlyoutItem
                                 Text="Cut"
                                 IconSource="Cut"
                                 HotKey="Ctrl+X"
-                                Command="{x:Static avaloniaEdit:ApplicationCommands.Cut}"
-                                CommandParameter="{Binding $parent[avaloniaEdit:TextEditor;1].TextArea}"/>
+                                Command="{Binding EditorCutCommand}"
+                                CommandParameter="{Binding $parent[avaloniaEdit:TextEditor]}"/>
                         </ui:FAMenuFlyout>
                     </controls:Card.Resources>
 

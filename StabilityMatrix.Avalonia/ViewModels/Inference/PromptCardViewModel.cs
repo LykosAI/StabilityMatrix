@@ -9,6 +9,7 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
+using AvaloniaEdit.Editing;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Avalonia.Controls;
@@ -243,6 +244,24 @@ public partial class PromptCardViewModel : LoadableViewModelBase
         dialog.MaxDialogHeight = 1000;
         dialog.MaxDialogWidth = 1000;
         await dialog.ShowAsync();
+    }
+
+    [RelayCommand]
+    private void EditorCopy(TextEditor? textEditor)
+    {
+        textEditor?.Copy();
+    }
+
+    [RelayCommand]
+    private void EditorPaste(TextEditor? textEditor)
+    {
+        textEditor?.Paste();
+    }
+
+    [RelayCommand]
+    private void EditorCut(TextEditor? textEditor)
+    {
+        textEditor?.Cut();
     }
 
     /// <inheritdoc />

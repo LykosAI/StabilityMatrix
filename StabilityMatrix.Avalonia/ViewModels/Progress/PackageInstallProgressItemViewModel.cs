@@ -42,6 +42,7 @@ public class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
         Progress.IsIndeterminate = e.IsIndeterminate;
         Progress.Text = packageModificationRunner.CurrentStep?.ProgressTitle;
         Name = packageModificationRunner.CurrentStep?.ProgressTitle;
+        Failed = packageModificationRunner.Failed;
 
         if (string.IsNullOrWhiteSpace(e.Message) || e.Message.Contains("Downloading..."))
             return;
@@ -58,6 +59,12 @@ public class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
         )
         {
             Dispatcher.UIThread.Post(() => dialog?.Hide());
+        }
+
+        if (Failed)
+        {
+            Progress.Text = "Package Modification Failed";
+            Name = "Package Modification Failed";
         }
     }
 

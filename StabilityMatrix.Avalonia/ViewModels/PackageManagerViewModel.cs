@@ -144,12 +144,16 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
             EventManager.Instance.OnPackageInstallProgressAdded(runner);
             await runner.ExecuteSteps(steps.ToList());
-            EventManager.Instance.OnInstalledPackagesChanged();
-            notificationService.Show(
-                "Package Install Complete",
-                $"{viewModel.InstallName} installed successfully",
-                NotificationType.Success
-            );
+
+            if (!runner.Failed)
+            {
+                EventManager.Instance.OnInstalledPackagesChanged();
+                notificationService.Show(
+                    "Package Install Complete",
+                    $"{viewModel.InstallName} installed successfully",
+                    NotificationType.Success
+                );
+            }
         }
     }
 

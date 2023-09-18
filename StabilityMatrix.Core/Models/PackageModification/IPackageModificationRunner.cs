@@ -13,4 +13,5 @@ public interface IPackageModificationRunner
     Guid Id { get; }
     bool ShowDialogOnStart { get; init; }
     string? ModificationCompleteMessage { get; init; }
+    bool Failed { get; set; }
 }

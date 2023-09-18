@@ -8,10 +8,12 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using FluentAvalonia.UI.Navigation;
 using FuzzySharp;
 using FuzzySharp.PreProcess;
 using FuzzySharp.SimilarityRatio.Scorer.Composite;
@@ -132,9 +134,50 @@ public partial class ImageFolderCardViewModel : ViewModelBase
             return;
         }
 
+        var currentIndex = LocalImages.IndexOf(item);
+
         var image = new ImageSource(new FilePath(imagePath));
+
         // Preload
         await image.GetBitmapAsync();
+
+        var vm = new ImageViewerViewModel { ImageSource = image, LocalImageFile = item };
+
+        using var onNext = Observable
+            .FromEventPattern<DirectionalNavigationEventArgs>(
+                vm,
+                nameof(ImageViewerViewModel.NavigationRequested)
+            )
+            .Subscribe(ctx =>
+            {
+                Dispatcher.UIThread
+                    .InvokeAsync(async () =>
+                    {
+                        var sender = (ImageViewerViewModel)ctx.Sender!;
+                        var newIndex = currentIndex + (ctx.EventArgs.IsNext ? 1 : -1);
+
+                        if (newIndex >= 0 && newIndex < LocalImages.Count)
+                        {
+                            var newImage = LocalImages[newIndex];
+                            var newImageSource = new ImageSource(
+                                new FilePath(newImage.GetFullPath(settingsManager.ImagesDirectory))
+                            );
+
+                            // Preload
+                            await newImageSource.GetBitmapAsync();
+
+                            var oldImageSource = sender.ImageSource;
+
+                            sender.ImageSource = newImageSource;
+                            sender.LocalImageFile = newImage;
+
+                            // oldImageSource?.Dispose();
+
+                            currentIndex = newIndex;
+                        }
+                    })
+                    .SafeFireAndForget();
+            });
 
         var dialog = new BetterContentDialog
         {
@@ -148,11 +191,7 @@ public partial class ImageFolderCardViewModel : ViewModelBase
             {
                 Width = 1000,
                 Height = 1000,
-                DataContext = new ImageViewerViewModel
-                {
-                    ImageSource = image,
-                    LocalImageFile = item
-                }
+                DataContext = vm
             }
         };
 

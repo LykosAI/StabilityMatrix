@@ -72,7 +72,7 @@
                             <ItemsRepeater
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Stretch"
-                                VerticalCacheLength="16"
+                                VerticalCacheLength="8"
                                 ItemsSource="{Binding LocalImages}">
                                 
                                 <ItemsRepeater.Resources>

@@ -1,4 +1,6 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
@@ -29,6 +31,8 @@ public partial class ImageViewerViewModel : ContentDialogViewModelBase
     [ObservableProperty]
     private string? imageSizeText;
 
+    public event EventHandler<DirectionalNavigationEventArgs>? NavigationRequested;
+
     partial void OnLocalImageFileChanged(LocalImageFile? value)
     {
         if (value?.ImageSize is { IsEmpty: false } size)
@@ -44,5 +48,17 @@ public partial class ImageViewerViewModel : ContentDialogViewModelBase
             FileNameText = localFile.Name;
             FileSizeText = Size.FormatBase10Bytes(localFile.GetSize(true));
         }
+    }
+
+    [RelayCommand]
+    private void OnNavigateNext()
+    {
+        NavigationRequested?.Invoke(this, DirectionalNavigationEventArgs.Up);
+    }
+
+    [RelayCommand]
+    private void OnNavigatePrevious()
+    {
+        NavigationRequested?.Invoke(this, DirectionalNavigationEventArgs.Down);
     }
 }

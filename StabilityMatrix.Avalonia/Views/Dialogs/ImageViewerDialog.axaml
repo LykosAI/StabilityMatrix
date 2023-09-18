@@ -16,27 +16,37 @@
     x:DataType="vmDialogs:ImageViewerViewModel"
     mc:Ignorable="d">
 
+    <controls:UserControlBase.KeyBindings>
+        <KeyBinding Gesture="Up" Command="{Binding NavigateNextCommand}"/>
+        <KeyBinding Gesture="Down" Command="{Binding NavigatePreviousCommand}"/>
+    </controls:UserControlBase.KeyBindings>
+    
     <Grid
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch"
         RowDefinitions="*,Auto">
 
-        <controls:AdvancedImageBox Image="{Binding ImageSource.BitmapAsync^}" SizeMode="Fit" />
+        <controls:AdvancedImageBox 
+            Image="{Binding ImageSource.BitmapAsync^}" 
+            SizeMode="Fit" />
 
         <!--  Close button  -->
         <Grid
             Grid.Row="0"
             HorizontalAlignment="Right"
             VerticalAlignment="Top">
-            <Button
-                Margin="0,8,8,0"
-                icons:Attached.Icon="fa-solid fa-xmark"
-                Classes="transparent"
-                Command="{Binding OnCloseButtonClick}" />
+            <UniformGrid Rows="3">
+                <Button
+                    Margin="0,8,8,0"
+                    Padding="8"
+                    icons:Attached.Icon="fa-solid fa-xmark"
+                    Classes="transparent-full"
+                    Command="{Binding OnCloseButtonClick}" />
+            </UniformGrid>
         </Grid>
 
         <!--  Footer  -->
-        <Border
+        <!--<Border
             Grid.Row="1"
             MinHeight="20"
             Background="Transparent"
@@ -57,14 +67,12 @@
                     FontSize="13"
                     Text="{Binding FileSizeText}" />
             </UniformGrid>
-        </Border>
-        <!--<ExperimentalAcrylicBorder
+        </Border>-->
+        <ExperimentalAcrylicBorder
             Grid.Row="1"
-            MinHeight="20"
-            Padding="4,0,0,0"
+            Padding="4,0,4,0"
             VerticalAlignment="Bottom"
-            Material="{StaticResource ThemeTransparentAcrylicMaterial}"
-            Opacity="0.9">
+            Material="{StaticResource ThemeDarkAcrylicMaterial}">
             <UniformGrid Columns="3" Margin="4">
                 <TextBlock
                     FontSize="13"
@@ -80,7 +88,7 @@
                     HorizontalAlignment="Right"
                     Text="{Binding FileSizeText}"/>
             </UniformGrid>
-        </ExperimentalAcrylicBorder>-->
+        </ExperimentalAcrylicBorder>
 
         <!--  The preview tracker  -->
         <!--<Image

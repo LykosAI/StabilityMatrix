@@ -21,16 +21,35 @@ public class PackageModificationRunner : IPackageModificationRunner
         foreach (var step in steps)
         {
             CurrentStep = step;
-            await step.ExecuteAsync(progress).ConfigureAwait(false);
+            try
+            {
+                await step.ExecuteAsync(progress).ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                progress.Report(
+                    new ProgressReport(
+                        1f,
+                        title: "Error modifying package",
+                        message: $"Error: {e}",
+                        isIndeterminate: false
+                    )
+                );
+                Failed = true;
+                break;
+            }
         }
 
-        progress.Report(
-            new ProgressReport(
-                1f,
-                message: ModificationCompleteMessage ?? "Package Install Complete",
-                isIndeterminate: false
-            )
-        );
+        if (!Failed)
+        {
+            progress.Report(
+                new ProgressReport(
+                    1f,
+                    message: ModificationCompleteMessage ?? "Package Install Complete",
+                    isIndeterminate: false
+                )
+            );
+        }
 
         IsRunning = false;
     }
@@ -39,6 +58,7 @@ public class PackageModificationRunner : IPackageModificationRunner
     public bool ShowDialogOnStart { get; init; }
 
     public bool IsRunning { get; set; }
+    public bool Failed { get; set; }
     public ProgressReport CurrentProgress { get; set; }
     public IPackageStep? CurrentStep { get; set; }
     public List<string> ConsoleOutput { get; } = new();

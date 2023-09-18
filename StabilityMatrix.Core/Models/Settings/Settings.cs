@@ -56,6 +56,8 @@ public class Settings
 
     public float AnimationScale { get; set; } = 1.0f;
 
+    public bool AutoScrollLaunchConsoleToEnd { get; set; } = true;
+
     public void RemoveInstalledPackageAndUpdateActive(InstalledPackage package)
     {
         RemoveInstalledPackageAndUpdateActive(package.Id);

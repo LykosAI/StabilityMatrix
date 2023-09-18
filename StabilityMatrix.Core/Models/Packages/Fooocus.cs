@@ -85,11 +85,9 @@ public class Fooocus : BaseGitPackage
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
 
-    public override async Task<string> GetLatestVersion()
-    {
-        var release = await GetLatestRelease().ConfigureAwait(false);
-        return release.TagName!;
-    }
+    public override Task<string> GetLatestVersion() => Task.FromResult("main");
+
+    public override bool ShouldIgnoreReleases => true;
 
     public override async Task InstallPackage(
         string installLocation,

@@ -9,8 +9,10 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using YamlDotNet.Serialization.TypeInspectors;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -233,11 +235,6 @@ public class ComfyUI : BaseGitPackage
         var extraPathsYamlPath = installDirectory + "extra_model_paths.yaml";
         var modelsDir = SettingsManager.ModelsDirectory;
 
-        var deserializer = new DeserializerBuilder()
-            .WithNamingConvention(UnderscoredNamingConvention.Instance)
-            .IgnoreUnmatchedProperties()
-            .Build();
-
         var exists = File.Exists(extraPathsYamlPath);
         if (!exists)
         {
@@ -245,34 +242,87 @@ public class ComfyUI : BaseGitPackage
             File.WriteAllText(extraPathsYamlPath, string.Empty);
         }
         var yaml = File.ReadAllText(extraPathsYamlPath);
-        var comfyModelPaths =
-            deserializer.Deserialize<ComfyModelPathsYaml>(yaml)
-            ??
-            // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
-            // cuz it can actually be null lol
-            new ComfyModelPathsYaml();
+        using var sr = new StringReader(yaml);
+        var yamlStream = new YamlStream();
+        yamlStream.Load(sr);
 
-        comfyModelPaths.StabilityMatrix ??= new ComfyModelPathsYaml.SmData();
-        comfyModelPaths.StabilityMatrix.Checkpoints = Path.Combine(modelsDir, "StableDiffusion");
-        comfyModelPaths.StabilityMatrix.Vae = Path.Combine(modelsDir, "VAE");
-        comfyModelPaths.StabilityMatrix.Loras =
-            $"{Path.Combine(modelsDir, "Lora")}\n" + $"{Path.Combine(modelsDir, "LyCORIS")}";
-        comfyModelPaths.StabilityMatrix.UpscaleModels =
-            $"{Path.Combine(modelsDir, "ESRGAN")}\n"
-            + $"{Path.Combine(modelsDir, "RealESRGAN")}\n"
-            + $"{Path.Combine(modelsDir, "SwinIR")}";
-        comfyModelPaths.StabilityMatrix.Embeddings = Path.Combine(modelsDir, "TextualInversion");
-        comfyModelPaths.StabilityMatrix.Hypernetworks = Path.Combine(modelsDir, "Hypernetwork");
-        comfyModelPaths.StabilityMatrix.Controlnet = Path.Combine(modelsDir, "ControlNet");
-        comfyModelPaths.StabilityMatrix.Clip = Path.Combine(modelsDir, "CLIP");
-        comfyModelPaths.StabilityMatrix.Diffusers = Path.Combine(modelsDir, "Diffusers");
-        comfyModelPaths.StabilityMatrix.Gligen = Path.Combine(modelsDir, "GLIGEN");
-        comfyModelPaths.StabilityMatrix.VaeApprox = Path.Combine(modelsDir, "ApproxVAE");
+        if (!yamlStream.Documents.Any())
+        {
+            yamlStream.Documents.Add(new YamlDocument(new YamlMappingNode()));
+        }
+
+        var root = yamlStream.Documents[0].RootNode;
+        if (root is not YamlMappingNode mappingNode)
+        {
+            throw new Exception("Invalid extra_model_paths.yaml");
+        }
+        // check if we have a child called "stability_matrix"
+        var stabilityMatrixNode = mappingNode.Children.FirstOrDefault(
+            c => c.Key.ToString() == "stability_matrix"
+        );
+
+        if (stabilityMatrixNode.Key != null)
+        {
+            if (stabilityMatrixNode.Value is not YamlMappingNode nodeValue)
+                return Task.CompletedTask;
+
+            nodeValue.Children["checkpoints"] = Path.Combine(modelsDir, "StableDiffusion");
+            nodeValue.Children["vae"] = Path.Combine(modelsDir, "VAE");
+            nodeValue.Children["loras"] =
+                $"{Path.Combine(modelsDir, "Lora")}\n" + $"{Path.Combine(modelsDir, "LyCORIS")}";
+            nodeValue.Children["upscale_models"] =
+                $"{Path.Combine(modelsDir, "ESRGAN")}\n"
+                + $"{Path.Combine(modelsDir, "RealESRGAN")}\n"
+                + $"{Path.Combine(modelsDir, "SwinIR")}";
+            nodeValue.Children["embeddings"] = Path.Combine(modelsDir, "TextualInversion");
+            nodeValue.Children["hypernetworks"] = Path.Combine(modelsDir, "Hypernetwork");
+            nodeValue.Children["controlnet"] = Path.Combine(modelsDir, "ControlNet");
+            nodeValue.Children["clip"] = Path.Combine(modelsDir, "CLIP");
+            nodeValue.Children["diffusers"] = Path.Combine(modelsDir, "Diffusers");
+            nodeValue.Children["gligen"] = Path.Combine(modelsDir, "GLIGEN");
+            nodeValue.Children["vae_approx"] = Path.Combine(modelsDir, "ApproxVAE");
+        }
+        else
+        {
+            stabilityMatrixNode = new KeyValuePair<YamlNode, YamlNode>(
+                new YamlScalarNode("stability_matrix"),
+                new YamlMappingNode
+                {
+                    { "checkpoints", Path.Combine(modelsDir, "StableDiffusion") },
+                    { "vae", Path.Combine(modelsDir, "VAE") },
+                    {
+                        "loras",
+                        $"{Path.Combine(modelsDir, "Lora")}\n{Path.Combine(modelsDir, "LyCORIS")}"
+                    },
+                    {
+                        "upscale_models",
+                        $"{Path.Combine(modelsDir, "ESRGAN")}\n{Path.Combine(modelsDir, "RealESRGAN")}\n{Path.Combine(modelsDir, "SwinIR")}"
+                    },
+                    { "embeddings", Path.Combine(modelsDir, "TextualInversion") },
+                    { "hypernetworks", Path.Combine(modelsDir, "Hypernetwork") },
+                    { "controlnet", Path.Combine(modelsDir, "ControlNet") },
+                    { "clip", Path.Combine(modelsDir, "CLIP") },
+                    { "diffusers", Path.Combine(modelsDir, "Diffusers") },
+                    { "gligen", Path.Combine(modelsDir, "GLIGEN") },
+                    { "vae_approx", Path.Combine(modelsDir, "ApproxVAE") }
+                }
+            );
+        }
+
+        var newRootNode = new YamlMappingNode();
+        foreach (
+            var child in mappingNode.Children.Where(c => c.Key.ToString() != "stability_matrix")
+        )
+        {
+            newRootNode.Children.Add(child);
+        }
+
+        newRootNode.Children.Add(stabilityMatrixNode);
 
         var serializer = new SerializerBuilder()
             .WithNamingConvention(UnderscoredNamingConvention.Instance)
             .Build();
-        var yamlData = serializer.Serialize(comfyModelPaths);
+        var yamlData = serializer.Serialize(newRootNode);
         File.WriteAllText(extraPathsYamlPath, yamlData);
 
         return Task.CompletedTask;

@@ -50,23 +50,31 @@
         <controls:AdvancedImageBox Image="{Binding ImageSource.BitmapAsync^}" SizeMode="Fit" />
 
         <!--  Info button  -->
-        <Button
-            Name="InfoButton"
+        <Grid
             Grid.Row="0"
-            Margin="0,8,8,0"
-            Padding="8"
             HorizontalAlignment="Left"
-            VerticalAlignment="Top"
-            icons:Attached.Icon="fa-solid fa-info"
-            Classes="transparent-full"
-            IsEnabled="{Binding HasGenerationParameters}"
-            Tapped="InfoButton_OnTapped" />
+            VerticalAlignment="Top">
+            <Button
+                Name="InfoButton"
+                Grid.Row="0"
+                Margin="8,8,0,0"
+                Padding="8"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                icons:Attached.Icon="fa-solid fa-info"
+                Classes="transparent-full"
+                IsEnabled="{Binding HasGenerationParameters}"
+                Tapped="InfoButton_OnTapped" />
+        </Grid>
+
 
         <ui:TeachingTip
             Name="InfoTeachingTip"
             Grid.Row="0"
             MinWidth="100"
             PreferredPlacement="LeftBottom"
+            PlacementMargin="16,0,16,0"
+            TailVisibility="Collapsed"
             Target="{Binding #InfoButton}">
             <StackPanel Spacing="4" Margin="4,0" DataContext="{Binding LocalImageFile.GenerationParameters}">
                 <Grid RowDefinitions="Auto,*">
@@ -91,14 +99,12 @@
             Grid.Row="0"
             HorizontalAlignment="Right"
             VerticalAlignment="Top">
-            <UniformGrid Rows="3">
-                <Button
-                    Margin="0,8,8,0"
-                    Padding="8"
-                    icons:Attached.Icon="fa-solid fa-xmark"
-                    Classes="transparent-full"
-                    Command="{Binding OnCloseButtonClick}" />
-            </UniformGrid>
+            <Button
+                Margin="0,8,8,0"
+                Padding="8"
+                icons:Attached.Icon="fa-solid fa-xmark"
+                Classes="transparent-full"
+                Command="{Binding OnCloseButtonClick}" />
         </Grid>
 
         <!--  Footer  -->

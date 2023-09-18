@@ -28,7 +28,6 @@ public partial class ImageViewerDialog : UserControlBase
 
     private void InfoButton_OnTapped(object? sender, TappedEventArgs e)
     {
-        var infoTip = InfoTeachingTip;
-        infoTip.IsOpen = true;
+        InfoTeachingTip.IsOpen ^= true;
     }
 }

@@ -1,12 +1,18 @@
 ﻿using System;
+using Avalonia;
+using Avalonia.Controls.Primitives;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FluentAvalonia.Core;
+using Microsoft.Extensions.DependencyInjection;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Database;
+using Size = StabilityMatrix.Core.Helper.Size;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
@@ -66,5 +72,35 @@ public partial class ImageViewerViewModel : ContentDialogViewModelBase
     private void OnNavigatePrevious()
     {
         NavigationRequested?.Invoke(this, DirectionalNavigationEventArgs.Down);
+    }
+
+    public BetterContentDialog GetDialog()
+    {
+        var margins = new Thickness(64, 32);
+
+        var mainWindowSize = App.Services.GetService<MainWindow>()?.ClientSize;
+        var dialogSize = new global::Avalonia.Size(
+            Math.Floor((mainWindowSize?.Width * 0.6 ?? 1000) - margins.Horizontal()),
+            Math.Floor((mainWindowSize?.Height ?? 1000) - margins.Vertical())
+        );
+
+        var dialog = new BetterContentDialog
+        {
+            MaxDialogWidth = dialogSize.Width,
+            MaxDialogHeight = dialogSize.Height,
+            ContentMargin = margins,
+            FullSizeDesired = true,
+            IsFooterVisible = false,
+            CloseOnClickOutside = true,
+            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            Content = new ImageViewerDialog
+            {
+                Width = dialogSize.Width,
+                Height = dialogSize.Height,
+                DataContext = this
+            }
+        };
+
+        return dialog;
     }
 }

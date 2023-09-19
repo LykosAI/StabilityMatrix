@@ -4,9 +4,11 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader;
+using Avalonia;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Layout;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -15,6 +17,7 @@ using DynamicData;
 using DynamicData.Binding;
 using FuzzySharp;
 using FuzzySharp.PreProcess;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
@@ -23,6 +26,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Database;
@@ -177,23 +181,7 @@ public partial class ImageFolderCardViewModel : ViewModelBase
                     .SafeFireAndForget();
             });
 
-        var dialog = new BetterContentDialog
-        {
-            MaxDialogWidth = 1000,
-            MaxDialogHeight = 1000,
-            FullSizeDesired = true,
-            IsFooterVisible = false,
-            CloseOnClickOutside = true,
-            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            Content = new ImageViewerDialog
-            {
-                Width = 1000,
-                Height = 1000,
-                DataContext = vm
-            }
-        };
-
-        await dialog.ShowAsync();
+        await vm.GetDialog().ShowAsync();
     }
 
     /// <summary>

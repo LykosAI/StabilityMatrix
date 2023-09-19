@@ -34,7 +34,7 @@
                     <!-- Background frame -->
                     <ExperimentalAcrylicBorder
                         VerticalAlignment="Stretch"
-                        Material="{StaticResource ThemeDarkAcrylicMaterial}"
+                        Material="{StaticResource OpaqueDarkAcrylicMaterial}"
                         CornerRadius="4">
                         <Panel>
                             <!-- Image -->

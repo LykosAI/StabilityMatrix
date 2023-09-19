@@ -186,7 +186,7 @@
                                                         MinHeight="20"
                                                         Padding="4,0,0,0"
                                                         VerticalAlignment="Bottom"
-                                                        Material="{StaticResource ThemeDarkAcrylicMaterial}"
+                                                        Material="{StaticResource OpaqueDarkAcrylicMaterial}"
                                                         Opacity="0.9">
                                                         <TextBlock 
                                                             FontSize="12"

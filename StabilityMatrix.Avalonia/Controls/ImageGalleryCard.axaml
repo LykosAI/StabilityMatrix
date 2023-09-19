@@ -36,7 +36,7 @@
                             VerticalAlignment="Stretch"
                             CornerRadius="4"
                             Margin="0,0,0,4"
-                            Material="{StaticResource ThemeDarkAcrylicMaterial}">
+                            Material="{StaticResource OpaqueDarkAcrylicMaterial}">
                             <Grid x:Name="MainGrid">
                                 <Grid.Styles>
                                     <Style Selector="controls|AdvancedImageBox">

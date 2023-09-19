@@ -134,7 +134,7 @@
             Grid.Row="1"
             Padding="4,0,4,0"
             VerticalAlignment="Bottom"
-            Material="{StaticResource ThemeDarkAcrylicMaterial}">
+            Material="{StaticResource OpaqueDarkAcrylicMaterial}">
             <UniformGrid Margin="4" Columns="3">
                 <TextBlock
                     HorizontalAlignment="Left"

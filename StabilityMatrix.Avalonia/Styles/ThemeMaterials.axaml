@@ -2,6 +2,14 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sty="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia">
     
+    <ExperimentalAcrylicMaterial
+        x:Key="OpaqueDarkAcrylicMaterial"
+        FallbackColor="#1E1F22"
+        TintColor="Black"
+        TintOpacity="0.78"
+        MaterialOpacity="0.9"
+        BackgroundSource="None" />
+    
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Default">
             <ExperimentalAcrylicMaterial

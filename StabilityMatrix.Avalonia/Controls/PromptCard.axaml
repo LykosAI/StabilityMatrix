@@ -79,7 +79,7 @@
                                 Grid.ColumnSpan="2"
                                 VerticalAlignment="Stretch"
                                 CornerRadius="4"
-                                Material="{StaticResource ThemeDarkAcrylicMaterial}">
+                                Material="{StaticResource OpaqueDarkAcrylicMaterial}">
 
                                 <avaloniaEdit:TextEditor
                                     x:Name="PromptEditor"
@@ -119,7 +119,7 @@
                                 Grid.Row="1"
                                 VerticalAlignment="Stretch"
                                 CornerRadius="4"
-                                Material="{StaticResource ThemeDarkAcrylicMaterial}">
+                                Material="{StaticResource OpaqueDarkAcrylicMaterial}">
 
                                 <avaloniaEdit:TextEditor
                                     x:Name="NegativePromptEditor"

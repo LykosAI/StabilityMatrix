@@ -87,7 +87,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     private BasePackage? runningPackage;
 
     [ObservableProperty]
-    private bool autoScrollToEnd;
+    private bool autoScrollToEnd = true;
 
     public virtual BasePackage? SelectedBasePackage =>
         PackageFactory.FindPackageByName(SelectedPackage?.PackageName);

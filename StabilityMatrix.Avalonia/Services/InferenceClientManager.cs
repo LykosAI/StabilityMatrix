@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
@@ -112,7 +113,10 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         schedulersSource.Connect().DeferUntilLoaded().Bind(Schedulers).Subscribe();
 
-        ResetSharedProperties();
+        settingsManager.RegisterOnLibraryDirSet(_ =>
+        {
+            Dispatcher.UIThread.Post(ResetSharedProperties, DispatcherPriority.Background);
+        });
 
         EventManager.Instance.ModelIndexChanged += (s, e) =>
         {

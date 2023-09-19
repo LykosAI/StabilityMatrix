@@ -213,8 +213,14 @@ public class SettingsManager : ISettingsManager
 
             settingsSetter(Settings, sourceGetter(source));
 
-            // Save settings to file
-            SaveSettingsAsync().SafeFireAndForget();
+            if (IsLibraryDirSet)
+            {
+                SaveSettingsAsync().SafeFireAndForget();
+            }
+            else
+            {
+                Logger.Warn("[RelayPropertyFor] LibraryDir not set when saving");
+            }
 
             // Invoke property changed event, passing along sender
             SettingsPropertyChanged?.Invoke(

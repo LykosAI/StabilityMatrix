@@ -51,7 +51,17 @@ public class ModelIndexService : IModelIndexService
     /// <inheritdoc />
     public async Task RefreshIndex()
     {
-        var modelsDir = new DirectoryPath(settingsManager.ModelsDirectory);
+        if (!settingsManager.IsLibraryDirSet)
+        {
+            logger.LogTrace("Model index refresh skipped, library directory not set");
+            return;
+        }
+
+        if (new DirectoryPath(settingsManager.ModelsDirectory) is not { Exists: true } modelsDir)
+        {
+            logger.LogTrace("Model index refresh skipped, model directory does not exist");
+            return;
+        }
 
         // Start
         var stopwatch = Stopwatch.StartNew();

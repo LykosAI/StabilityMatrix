@@ -118,9 +118,13 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             Dispatcher.UIThread.Post(ResetSharedProperties, DispatcherPriority.Background);
         });
 
-        EventManager.Instance.ModelIndexChanged += (s, e) =>
+        EventManager.Instance.ModelIndexChanged += (_, _) =>
         {
             logger.LogDebug("Model index changed, reloading shared properties for Inference");
+
+            if (!settingsManager.IsLibraryDirSet)
+                return;
+
             if (IsConnected)
             {
                 LoadSharedPropertiesAsync()

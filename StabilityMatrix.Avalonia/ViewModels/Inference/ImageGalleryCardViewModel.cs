@@ -59,11 +59,14 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
     {
         this.vmFactory = vmFactory;
 
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.IsPixelGridEnabled,
-            settings => settings.IsImageViewerPixelGridEnabled,
-            true
+        IsPixelGridEnabled = settingsManager.Settings.IsImageViewerPixelGridEnabled;
+
+        settingsManager.RegisterPropertyChangedHandler(
+            s => s.IsImageViewerPixelGridEnabled,
+            newValue =>
+            {
+                IsPixelGridEnabled = newValue;
+            }
         );
 
         ImageSources.CollectionChanged += OnImageSourcesItemsChanged;

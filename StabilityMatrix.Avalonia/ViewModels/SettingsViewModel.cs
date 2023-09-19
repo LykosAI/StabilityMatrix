@@ -107,7 +107,7 @@ public partial class SettingsViewModel : PageViewModelBase
     private bool isCompletionRemoveUnderscoresEnabled;
 
     [ObservableProperty]
-    private bool isImageViewerPixelGridEnabled;
+    private bool isImageViewerPixelGridEnabled = true;
 
     // Integrations section
     [ObservableProperty]

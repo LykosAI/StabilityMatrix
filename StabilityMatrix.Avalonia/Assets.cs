@@ -5,6 +5,7 @@ using System.Runtime.Versioning;
 using Avalonia.Platform;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Avalonia;
 

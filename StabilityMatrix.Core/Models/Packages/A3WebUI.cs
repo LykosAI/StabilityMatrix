@@ -56,6 +56,8 @@ public class A3WebUI : BaseGitPackage
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
             [SharedFolderType.ControlNet] = new[] { "models/ControlNet" },
             [SharedFolderType.Codeformer] = new[] { "models/Codeformer" },
+            [SharedFolderType.LDSR] = new[] { "models/LDSR" },
+            [SharedFolderType.AfterDetailer] = new[] { "models/adetailer" }
         };
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]

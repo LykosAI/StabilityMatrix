@@ -2,11 +2,15 @@
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -43,6 +47,70 @@ public abstract partial class InferenceTabViewModelBase
 
     /// <inheritdoc />
     Control? IPersistentViewProvider.AttachedPersistentView { get; set; }
+
+    #region Weak Events
+
+    private WeakEventManager<LoadViewStateEventArgs>? loadViewStateRequestedEventManager;
+
+    public event EventHandler<LoadViewStateEventArgs> LoadViewStateRequested
+    {
+        add
+        {
+            loadViewStateRequestedEventManager ??= new WeakEventManager<LoadViewStateEventArgs>();
+            loadViewStateRequestedEventManager.AddEventHandler(value);
+        }
+        remove => loadViewStateRequestedEventManager?.RemoveEventHandler(value);
+    }
+
+    protected void LoadViewState(LoadViewStateEventArgs args) =>
+        loadViewStateRequestedEventManager?.RaiseEvent(this, args, nameof(LoadViewStateRequested));
+
+    private WeakEventManager<SaveViewStateEventArgs>? saveViewStateRequestedEventManager;
+
+    public event EventHandler<SaveViewStateEventArgs> SaveViewStateRequested
+    {
+        add
+        {
+            saveViewStateRequestedEventManager ??= new WeakEventManager<SaveViewStateEventArgs>();
+            saveViewStateRequestedEventManager.AddEventHandler(value);
+        }
+        remove => saveViewStateRequestedEventManager?.RemoveEventHandler(value);
+    }
+
+    protected async Task<ViewState> SaveViewState()
+    {
+        var eventArgs = new SaveViewStateEventArgs();
+        saveViewStateRequestedEventManager?.RaiseEvent(
+            this,
+            eventArgs,
+            nameof(SaveViewStateRequested)
+        );
+
+        if (eventArgs.StateTask is not { } stateTask)
+        {
+            throw new InvalidOperationException(
+                "SaveViewStateRequested event handler did not set the StateTask property"
+            );
+        }
+
+        return await stateTask;
+    }
+
+    #endregion
+
+    [RelayCommand]
+    private async Task DebugSaveViewState()
+    {
+        var state = await SaveViewState();
+        if (state.DockLayout is { } layout)
+        {
+            await DialogHelper.CreateJsonDialog(layout).ShowAsync();
+        }
+        else
+        {
+            await DialogHelper.CreateTaskDialog("Failed", "No layout data").ShowAsync();
+        }
+    }
 
     protected virtual void Dispose(bool disposing)
     {

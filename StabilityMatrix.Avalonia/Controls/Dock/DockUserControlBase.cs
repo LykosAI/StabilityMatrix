@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
@@ -6,6 +10,8 @@ using Dock.Avalonia.Controls;
 using Dock.Model;
 using Dock.Model.Avalonia.Json;
 using Dock.Model.Core;
+using StabilityMatrix.Avalonia.Models.Inference;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 
 namespace StabilityMatrix.Avalonia.Controls.Dock;
 
@@ -34,7 +40,43 @@ public abstract class DockUserControlBase : DropTargetUserControlBase
         }
     }
 
-    protected virtual void LoadDockLayout(string data)
+    /// <inheritdoc />
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+
+        // Attach handlers for view state saving and loading
+        if (DataContext is InferenceTabViewModelBase vm)
+        {
+            vm.SaveViewStateRequested += (_, args) =>
+            {
+                var saveTcs = new TaskCompletionSource<ViewState>();
+
+                Dispatcher.UIThread.Post(() =>
+                {
+                    var state = new ViewState { DockLayout = SaveDockLayout() };
+                    saveTcs.SetResult(state);
+                });
+
+                args.StateTask ??= saveTcs.Task;
+            };
+
+            vm.LoadViewStateRequested += (_, args) =>
+            {
+                if (args.State.DockLayout is { } layout)
+                {
+                    LoadDockLayout(layout);
+                }
+            };
+        }
+    }
+
+    protected void LoadDockLayout(JsonObject data)
+    {
+        LoadDockLayout(data.ToJsonString());
+    }
+
+    protected void LoadDockLayout(string data)
     {
         if (BaseDock is null)
             return;
@@ -46,8 +88,8 @@ public abstract class DockUserControlBase : DropTargetUserControlBase
         }
     }
 
-    protected virtual string SaveDockLayout()
+    protected string? SaveDockLayout()
     {
-        return BaseDock is null ? string.Empty : DockSerializer.Serialize(BaseDock.Layout);
+        return BaseDock is null ? null : DockSerializer.Serialize(BaseDock.Layout);
     }
 }

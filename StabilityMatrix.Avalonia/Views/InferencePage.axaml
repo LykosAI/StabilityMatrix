@@ -217,6 +217,7 @@
                                 <ui:MenuFlyoutSeparator IsVisible="{Binding SharedState.IsDebugMode}" />
                                 
                                 <ui:MenuFlyoutItem
+                                    IsVisible="{Binding SharedState.IsDebugMode}"
                                     Command="{Binding SelectedTab.DebugSaveViewStateCommand}"
                                     Text="Show Dock State" />
                                 

@@ -48,26 +48,42 @@ public abstract class DockUserControlBase : DropTargetUserControlBase
         // Attach handlers for view state saving and loading
         if (DataContext is InferenceTabViewModelBase vm)
         {
-            vm.SaveViewStateRequested += (_, args) =>
-            {
-                var saveTcs = new TaskCompletionSource<ViewState>();
+            vm.SaveViewStateRequested += DataContext_OnSaveViewStateRequested;
+            vm.LoadViewStateRequested += DataContext_OnLoadViewStateRequested;
+        }
+    }
 
-                Dispatcher.UIThread.Post(() =>
-                {
-                    var state = new ViewState { DockLayout = SaveDockLayout() };
-                    saveTcs.SetResult(state);
-                });
+    /// <inheritdoc />
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
 
-                args.StateTask ??= saveTcs.Task;
-            };
+        // Detach handlers for view state saving and loading
+        if (DataContext is InferenceTabViewModelBase vm)
+        {
+            vm.SaveViewStateRequested -= DataContext_OnSaveViewStateRequested;
+            vm.LoadViewStateRequested -= DataContext_OnLoadViewStateRequested;
+        }
+    }
 
-            vm.LoadViewStateRequested += (_, args) =>
-            {
-                if (args.State.DockLayout is { } layout)
-                {
-                    LoadDockLayout(layout);
-                }
-            };
+    private void DataContext_OnSaveViewStateRequested(object? sender, SaveViewStateEventArgs args)
+    {
+        var saveTcs = new TaskCompletionSource<ViewState>();
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            var state = new ViewState { DockLayout = SaveDockLayout() };
+            saveTcs.SetResult(state);
+        });
+
+        args.StateTask ??= saveTcs.Task;
+    }
+
+    private void DataContext_OnLoadViewStateRequested(object? sender, LoadViewStateEventArgs args)
+    {
+        if (args.State.DockLayout is { } layout)
+        {
+            LoadDockLayout(layout);
         }
     }
 

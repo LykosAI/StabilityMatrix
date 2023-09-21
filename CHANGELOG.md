@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.4.6
 ### Added
 - LDSR / ADetailer shared folder links for Automatic1111 Package
+### Changed
+- Made Dark Mode background slightly lighter
 
 ## v2.4.5
 ### Fixed

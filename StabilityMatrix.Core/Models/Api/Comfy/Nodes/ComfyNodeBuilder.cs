@@ -584,7 +584,7 @@ public class ComfyNodeBuilder
                     $"{name}_LoraLoader_{i + 1}",
                     model,
                     clip,
-                    loraNetwork.ModelFile.FileName,
+                    loraNetwork.ModelFile.RelativePathFromSharedFolder,
                     loraNetwork.ModelWeight ?? 1,
                     loraNetwork.ClipWeight ?? 1
                 )

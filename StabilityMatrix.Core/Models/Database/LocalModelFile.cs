@@ -1,4 +1,5 @@
 ﻿using LiteDB;
+using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Core.Models.Database;
 
@@ -37,6 +38,12 @@ public class LocalModelFile
     /// File name of the relative path without extension.
     /// </summary>
     public string FileNameWithoutExtension => Path.GetFileNameWithoutExtension(RelativePath);
+
+    /// <summary>
+    /// Relative file path from the shared folder type model directory.
+    /// </summary>
+    public string RelativePathFromSharedFolder =>
+        Path.GetRelativePath(SharedFolderType.GetStringValue(), RelativePath);
 
     public string GetFullPath(string rootModelDirectory)
     {

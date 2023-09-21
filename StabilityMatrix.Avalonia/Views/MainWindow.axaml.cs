@@ -265,11 +265,11 @@ public partial class MainWindow : AppWindowBase
                 out var value
             )
                 ? (Color2)(Color)value!
-                : new Color2(32, 32, 32);
+                : new Color2(30, 31, 34);
 
-            color = color.LightenPercent(-0.8f);
+            color = color.LightenPercent(-0.5f);
 
-            Background = new ImmutableSolidColorBrush(color, 0.8);
+            Background = new ImmutableSolidColorBrush(color, 0.72);
         }
         else if (ActualThemeVariant == ThemeVariant.Light)
         {

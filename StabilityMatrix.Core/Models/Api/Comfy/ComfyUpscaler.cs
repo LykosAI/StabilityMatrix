@@ -87,6 +87,12 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
     private static Uri HuggingFaceRoot { get; } = new("https://huggingface.co/LykosAI/Upscalers/");
 
     /// <summary>
+    /// Static root of huggingface upscalers at the main branch
+    /// </summary>
+    private static Uri HuggingFaceRootMain { get; } =
+        new("https://huggingface.co/LykosAI/Upscalers/blob/main/");
+
+    /// <summary>
     /// Default remote downloadable models
     /// </summary>
     public static IReadOnlyList<ComfyUpscaler> DefaultDownloadableModels { get; } =
@@ -105,7 +111,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                     InfoUrl = new Uri("https://github.com/xinntao/ESRGAN"),
                     Author = "xinntao",
                     LicenseType = "Apache 2.0",
-                    LicenseUrl = new Uri(HuggingFaceRoot, "RealESRGAN/LICENSE.txt"),
+                    LicenseUrl = new Uri(HuggingFaceRootMain, "RealESRGAN/LICENSE.txt"),
                     ContextType = SharedFolderType.RealESRGAN
                 }
             },
@@ -122,7 +128,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                     InfoUrl = new Uri("https://github.com/xinntao/ESRGAN"),
                     Author = "xinntao",
                     LicenseType = "Apache 2.0",
-                    LicenseUrl = new Uri(HuggingFaceRoot, "RealESRGAN/LICENSE.txt"),
+                    LicenseUrl = new Uri(HuggingFaceRootMain, "RealESRGAN/LICENSE.txt"),
                     ContextType = SharedFolderType.RealESRGAN
                 }
             },
@@ -139,7 +145,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                     InfoUrl = new Uri("https://github.com/xinntao/ESRGAN"),
                     Author = "xinntao",
                     LicenseType = "Apache 2.0",
-                    LicenseUrl = new Uri(HuggingFaceRoot, "RealESRGAN/LICENSE.txt"),
+                    LicenseUrl = new Uri(HuggingFaceRootMain, "RealESRGAN/LICENSE.txt"),
                     ContextType = SharedFolderType.RealESRGAN
                 }
             },
@@ -156,7 +162,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                     InfoUrl = new Uri("https://github.com/xinntao/ESRGAN"),
                     Author = "xinntao",
                     LicenseType = "Apache 2.0",
-                    LicenseUrl = new Uri(HuggingFaceRoot, "RealESRGAN/LICENSE.txt"),
+                    LicenseUrl = new Uri(HuggingFaceRootMain, "RealESRGAN/LICENSE.txt"),
                     ContextType = SharedFolderType.RealESRGAN
                 }
             },
@@ -173,7 +179,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                     InfoUrl = new Uri("https://github.com/JingyunLiang/SwinIR"),
                     Author = "JingyunLiang",
                     LicenseType = "Apache 2.0",
-                    LicenseUrl = new Uri(HuggingFaceRoot, "SwinIR/LICENSE.txt"),
+                    LicenseUrl = new Uri(HuggingFaceRootMain, "SwinIR/LICENSE.txt"),
                     ContextType = SharedFolderType.SwinIR
                 }
             },
@@ -190,7 +196,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                     InfoUrl = new Uri("https://github.com/Kim2091"),
                     Author = "Kim2091",
                     LicenseType = "CC BY-NC-SA 4.0",
-                    LicenseUrl = new Uri(HuggingFaceRoot, "UltraMix/LICENSE.txt"),
+                    LicenseUrl = new Uri(HuggingFaceRootMain, "UltraMix/LICENSE.txt"),
                     ContextType = SharedFolderType.ESRGAN
                 }
             },
@@ -207,7 +213,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                     InfoUrl = new Uri("https://github.com/Kim2091"),
                     Author = "Kim2091",
                     LicenseType = "CC BY-NC-SA 4.0",
-                    LicenseUrl = new Uri(HuggingFaceRoot, "UltraMix/LICENSE.txt"),
+                    LicenseUrl = new Uri(HuggingFaceRootMain, "UltraMix/LICENSE.txt"),
                     ContextType = SharedFolderType.ESRGAN
                 }
             },
@@ -224,7 +230,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                     InfoUrl = new Uri("https://github.com/Kim2091"),
                     Author = "Kim2091",
                     LicenseType = "CC BY-NC-SA 4.0",
-                    LicenseUrl = new Uri(HuggingFaceRoot, "UltraMix/LICENSE.txt"),
+                    LicenseUrl = new Uri(HuggingFaceRootMain, "UltraMix/LICENSE.txt"),
                     ContextType = SharedFolderType.ESRGAN
                 }
             }

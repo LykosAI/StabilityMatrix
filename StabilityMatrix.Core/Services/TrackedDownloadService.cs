@@ -139,10 +139,19 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
         // On successes, run the continuation action
         if (e == ProgressState.Success)
         {
-            if (download.ContextAction is CivitPostDownloadContextAction action)
+            if (download.ContextAction is not null)
             {
                 logger.LogDebug("Running context action for {Download}", download.FileName);
-                action.Invoke(settingsManager, modelIndexService);
+            }
+
+            switch (download.ContextAction)
+            {
+                case CivitPostDownloadContextAction action:
+                    action.Invoke(settingsManager, modelIndexService);
+                    break;
+                case ModelPostDownloadContextAction action:
+                    action.Invoke(modelIndexService);
+                    break;
             }
         }
     }

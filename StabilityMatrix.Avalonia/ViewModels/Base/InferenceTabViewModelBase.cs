@@ -9,6 +9,7 @@ using Avalonia.Input;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -109,6 +110,22 @@ public abstract partial class InferenceTabViewModelBase
         else
         {
             await DialogHelper.CreateTaskDialog("Failed", "No layout data").ShowAsync();
+        }
+    }
+
+    [RelayCommand]
+    private async Task DebugLoadViewState()
+    {
+        var textFields = new TextBoxField[] { new() { Label = "Json Data" } };
+
+        var dialog = DialogHelper.CreateTextEntryDialog("Load Dock State", "", textFields);
+        var result = await dialog.ShowAsync();
+
+        if (result == ContentDialogResult.Primary && textFields[0].Text is { } json)
+        {
+            LoadViewState(
+                new LoadViewStateEventArgs { State = new ViewState { DockLayout = json } }
+            );
         }
     }
 

@@ -180,6 +180,12 @@ public abstract partial class InferenceGenerationViewModelBase
             var filePath in images.Select(image => image.ToFilePath(args.Client.OutputImagesDir!))
         )
         {
+            if (!filePath.Exists)
+            {
+                Logger.Warn($"Image file {filePath} does not exist");
+                continue;
+            }
+
             var bytesWithMetadata = PngDataHelper.AddMetadata(
                 await filePath.ReadAllBytesAsync(),
                 args.Parameters!,
@@ -201,7 +207,13 @@ public abstract partial class InferenceGenerationViewModelBase
         if (outputImages.Count > 1)
         {
             var loadedImages = outputImages
-                .Select(i => SKImage.FromEncodedData(i.LocalFile?.Info.OpenRead()))
+                .Select(i => i.LocalFile)
+                .Where(f => f is { Exists: true })
+                .Select(f =>
+                {
+                    using var stream = f!.Info.OpenRead();
+                    return SKImage.FromEncodedData(stream);
+                })
                 .ToImmutableArray();
 
             var grid = ImageProcessor.CreateImageGrid(loadedImages);

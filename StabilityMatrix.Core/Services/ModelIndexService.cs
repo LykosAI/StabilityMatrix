@@ -38,6 +38,11 @@ public class ModelIndexService : IModelIndexService
         await liteDbContext.LocalModelFiles.DeleteAllAsync().ConfigureAwait(false);
     }
 
+    public IEnumerable<LocalModelFile> GetFromModelIndex(SharedFolderType types)
+    {
+        return ModelIndex.Where(kvp => (kvp.Key & types) != 0).SelectMany(kvp => kvp.Value);
+    }
+
     /// <inheritdoc />
     public async Task<IReadOnlyList<LocalModelFile>> GetModelsOfType(SharedFolderType type)
     {

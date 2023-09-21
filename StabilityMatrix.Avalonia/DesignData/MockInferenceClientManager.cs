@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -27,12 +28,7 @@ public partial class MockInferenceClientManager : ObservableObject, IInferenceCl
 
     public IObservableCollection<ComfyUpscaler> Upscalers { get; } =
         new ObservableCollectionExtended<ComfyUpscaler>(
-            new ComfyUpscaler[]
-            {
-                new("nearest-exact", ComfyUpscalerType.Latent),
-                new("bicubic", ComfyUpscalerType.Latent),
-                new("ESRGAN-4x", ComfyUpscalerType.ESRGAN)
-            }
+            ComfyUpscaler.Defaults.Concat(ComfyUpscaler.DefaultDownloadableModels)
         );
 
     public IObservableCollection<ComfyScheduler> Schedulers { get; } =

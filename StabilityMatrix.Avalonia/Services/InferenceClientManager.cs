@@ -71,6 +71,9 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
     private readonly SourceCache<ComfyUpscaler, string> latentUpscalersSource = new(p => p.Name);
 
+    private readonly SourceCache<ComfyUpscaler, string> downloadableUpscalersSource =
+        new(p => p.Name);
+
     public IObservableCollection<ComfyUpscaler> Upscalers { get; } =
         new ObservableCollectionExtended<ComfyUpscaler>();
 
@@ -107,6 +110,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         latentUpscalersSource
             .Connect()
             .Or(modelUpscalersSource.Connect())
+            .Or(downloadableUpscalersSource.Connect())
             .DeferUntilLoaded()
             .Bind(Upscalers)
             .Subscribe();
@@ -207,36 +211,42 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     private void ResetSharedProperties()
     {
         // Load local models
-        modelIndexService
-            .GetModelsOfType(SharedFolderType.StableDiffusion)
-            .ContinueWith(task =>
-            {
-                modelsSource.EditDiff(
-                    task.Result.Select(HybridModelFile.FromLocal),
-                    HybridModelFile.Comparer
-                );
-            })
-            .SafeFireAndForget();
+        modelsSource.EditDiff(
+            modelIndexService
+                .GetFromModelIndex(SharedFolderType.StableDiffusion)
+                .Select(HybridModelFile.FromLocal),
+            HybridModelFile.Comparer
+        );
 
         // Load local VAE models
-        modelIndexService
-            .GetModelsOfType(SharedFolderType.VAE)
-            .ContinueWith(task =>
-            {
-                vaeModelsSource.EditDiff(
-                    task.Result.Select(HybridModelFile.FromLocal),
-                    HybridModelFile.Comparer
-                );
-            })
-            .SafeFireAndForget();
+        vaeModelsSource.EditDiff(
+            modelIndexService
+                .GetFromModelIndex(SharedFolderType.VAE)
+                .Select(HybridModelFile.FromLocal),
+            HybridModelFile.Comparer
+        );
 
         samplersSource.EditDiff(ComfySampler.Defaults, ComfySampler.Comparer);
 
         latentUpscalersSource.EditDiff(ComfyUpscaler.Defaults, ComfyUpscaler.Comparer);
 
-        modelUpscalersSource.Clear();
-
         schedulersSource.EditDiff(ComfyScheduler.Defaults, ComfyScheduler.Comparer);
+
+        // Load Upscalers
+        modelUpscalersSource.EditDiff(
+            modelIndexService
+                .GetFromModelIndex(
+                    SharedFolderType.ESRGAN | SharedFolderType.RealESRGAN | SharedFolderType.SwinIR
+                )
+                .Select(m => new ComfyUpscaler(m.FileName, ComfyUpscalerType.ESRGAN)),
+            ComfyUpscaler.Comparer
+        );
+
+        // Remote upscalers
+        var remoteUpscalers = ComfyUpscaler.DefaultDownloadableModels.Where(
+            u => !modelUpscalersSource.Lookup(u.Name).HasValue
+        );
+        downloadableUpscalersSource.EditDiff(remoteUpscalers, ComfyUpscaler.Comparer);
     }
 
     /// <inheritdoc />

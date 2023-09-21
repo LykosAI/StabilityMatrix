@@ -207,7 +207,7 @@
                                 <ui:MenuFlyoutItem
                                     Command="{Binding MenuSaveCommand}"
                                     InputGesture="Ctrl+S"
-                                    Text="Save" />
+                                    Text="{x:Static lang:Resources.Action_Save}" />
                                 <ui:MenuFlyoutItem
                                     Command="{Binding MenuSaveAsCommand}"
                                     InputGesture="Ctrl+Shift+S"
@@ -218,8 +218,13 @@
                                 
                                 <ui:MenuFlyoutItem
                                     IsVisible="{Binding SharedState.IsDebugMode}"
-                                    Command="{Binding SelectedTab.DebugSaveViewStateCommand}"
+                                    Command="{Binding SelectedTab.DebugSaveViewStateCommand, FallbackValue={x:Null}}"
                                     Text="Show Dock State" />
+                                
+                                <ui:MenuFlyoutItem
+                                    IsVisible="{Binding SharedState.IsDebugMode}"
+                                    Command="{Binding SelectedTab.DebugLoadViewStateCommand, FallbackValue={x:Null}}"
+                                    Text="Load Dock State" />
                                 
                             </ui:FAMenuFlyout>
                         </Button.Flyout>

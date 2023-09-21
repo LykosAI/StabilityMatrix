@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
@@ -15,6 +16,12 @@ public class MockModelIndexService : IModelIndexService
     public Task RefreshIndex()
     {
         return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public IEnumerable<LocalModelFile> GetFromModelIndex(SharedFolderType types)
+    {
+        return Array.Empty<LocalModelFile>();
     }
 
     /// <inheritdoc />

@@ -7,5 +7,6 @@ public enum ComfyUpscalerType
 {
     None,
     Latent,
-    ESRGAN
+    ESRGAN,
+    DownloadableModel
 }

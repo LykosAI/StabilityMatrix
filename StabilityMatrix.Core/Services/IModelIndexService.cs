@@ -13,6 +13,11 @@ public interface IModelIndexService
     Task RefreshIndex();
 
     /// <summary>
+    /// Get all models of the specified type from the existing (in-memory) index.
+    /// </summary>
+    IEnumerable<LocalModelFile> GetFromModelIndex(SharedFolderType types);
+
+    /// <summary>
     /// Get all models of the specified type from the existing index.
     /// </summary>
     Task<IReadOnlyList<LocalModelFile>> GetModelsOfType(SharedFolderType type);

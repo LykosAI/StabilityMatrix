@@ -70,17 +70,27 @@ public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBa
 
         InstalledPackages = comfyPackages;
 
-        // If there are none, use install mode
+        // If no comfy packages, install mode, otherwise launch mode
         if (comfyPackages.Length == 0)
         {
             IsInstallMode = true;
         }
-        // Otherwise launch mode
         else
         {
-            SelectedPackage = this.settingsManager.Settings.ActiveInstalledPackage;
-            SelectedPackage ??= comfyPackages[0];
             IsLaunchMode = true;
+
+            // Use active package if its comfy, otherwise use the first comfy type
+            if (
+                this.settingsManager.Settings.ActiveInstalledPackage is
+                { PackageName: "ComfyUI" } activePackage
+            )
+            {
+                SelectedPackage = activePackage;
+            }
+            else
+            {
+                SelectedPackage ??= comfyPackages[0];
+            }
         }
     }
 
@@ -130,7 +140,7 @@ public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBa
             PrimaryButtonCommand = IsInstallMode
                 ? NavigateToInstallCommand
                 : LaunchSelectedPackageCommand,
-            PrimaryButtonText = IsInstallMode ? "Install" : "Launch",
+            PrimaryButtonText = IsInstallMode ? Resources.Action_Install : Resources.Action_Launch,
             CloseButtonText = Resources.Action_Close,
             DefaultButton = ContentDialogButton.Primary
         };

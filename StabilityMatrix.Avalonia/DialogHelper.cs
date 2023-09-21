@@ -319,6 +319,7 @@ public static class DialogHelper
             Title = title,
             Content = mainGrid,
             CloseButtonText = "Close",
+            PrimaryButtonText = "Copy",
             IsPrimaryButtonEnabled = false,
         };
 
@@ -346,6 +347,13 @@ public static class DialogHelper
             // Otherwise just add the content as a code block
             textEditor.Document.Text = json;
         }
+
+        dialog.PrimaryButtonCommand = new AsyncRelayCommand(async () =>
+        {
+            // Copy the json to clipboard
+            var clipboard = App.Clipboard;
+            await clipboard.SetTextAsync(textEditor.Document.Text);
+        });
 
         return dialog;
     }

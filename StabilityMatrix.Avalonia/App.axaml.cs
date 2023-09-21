@@ -296,6 +296,7 @@ public sealed class App : Application
         services.AddTransient<ImageViewerViewModel>();
         services.AddTransient<PackageImportViewModel>();
         services.AddTransient<InferenceConnectionHelpViewModel>();
+        services.AddTransient<DownloadResourceViewModel>();
 
         // Dialog view models (singleton)
         services.AddSingleton<FirstLaunchSetupViewModel>();
@@ -365,6 +366,7 @@ public sealed class App : Application
                     .Register(provider.GetRequiredService<SelectImageCardViewModel>)
                     .Register(provider.GetRequiredService<InferenceConnectionHelpViewModel>)
                     .Register(provider.GetRequiredService<SharpenCardViewModel>)
+                    .Register(provider.GetRequiredService<DownloadResourceViewModel>)
         );
     }
 
@@ -408,6 +410,7 @@ public sealed class App : Application
         services.AddTransient<ImageViewerDialog>();
         services.AddTransient<PackageImportDialog>();
         services.AddTransient<InferenceConnectionHelpDialog>();
+        services.AddTransient<DownloadResourceDialog>();
 
         // Controls
         services.AddTransient<RefreshBadge>();

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
@@ -98,12 +99,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         vaeModelsDefaults.AddOrUpdate(HybridModelFile.Default);
 
-        vaeModelsDefaults
-            .Connect()
-            .Or(vaeModelsSource.Connect())
-            .DeferUntilLoaded()
-            .Bind(VaeModels)
-            .Subscribe();
+        vaeModelsDefaults.Connect().Or(vaeModelsSource.Connect()).Bind(VaeModels).Subscribe();
 
         samplersSource.Connect().DeferUntilLoaded().Bind(Samplers).Subscribe();
 
@@ -111,7 +107,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             .Connect()
             .Or(modelUpscalersSource.Connect())
             .Or(downloadableUpscalersSource.Connect())
-            .DeferUntilLoaded()
+            .Sort(
+                SortExpressionComparer<ComfyUpscaler>
+                    .Ascending(f => f.Type)
+                    .ThenByAscending(f => f.Name)
+            )
             .Bind(Upscalers)
             .Subscribe();
 
@@ -129,16 +129,14 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             if (!settingsManager.IsLibraryDirSet)
                 return;
 
+            ResetSharedProperties();
+
             if (IsConnected)
             {
                 LoadSharedPropertiesAsync()
                     .SafeFireAndForget(
                         onException: ex => logger.LogError(ex, "Error loading shared properties")
                     );
-            }
-            else
-            {
-                ResetSharedProperties();
             }
         };
     }

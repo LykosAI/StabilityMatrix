@@ -614,6 +614,14 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.ImageSizeText = "1280 x 1792";
         });
 
+    public static DownloadResourceViewModel DownloadResourceViewModel =>
+        DialogFactory.Get<DownloadResourceViewModel>(vm =>
+        {
+            vm.FileName = ComfyUpscaler.DefaultDownloadableModels[0].Name;
+            vm.FileSize = Convert.ToInt64(2 * Size.GiB);
+            vm.Resource = ComfyUpscaler.DefaultDownloadableModels[0].DownloadableResource!.Value;
+        });
+
     public static SharpenCardViewModel SharpenCardViewModel =>
         DialogFactory.Get<SharpenCardViewModel>();
 

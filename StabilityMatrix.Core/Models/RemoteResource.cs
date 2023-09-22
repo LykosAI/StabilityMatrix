@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace StabilityMatrix.Avalonia.Models;
+﻿namespace StabilityMatrix.Core.Models;
 
 /// <summary>
 /// Defines a remote downloadable resource.

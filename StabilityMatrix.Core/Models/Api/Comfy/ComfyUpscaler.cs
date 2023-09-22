@@ -103,7 +103,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                 DownloadableResource = new RemoteResource(
                     new Uri(
                         HuggingFaceRoot,
-                        "/resolve/28a279ec60b5c47c9f39381dcaa997b9402ac09d/RealESRGAN/RealESRGAN_x2plus.pth"
+                        "resolve/28a279ec60b5c47c9f39381dcaa997b9402ac09d/RealESRGAN/RealESRGAN_x2plus.pth"
                     ),
                     "49fafd45f8fd7aa8d31ab2a22d14d91b536c34494a5cfe31eb5d89c2fa266abb"
                 )
@@ -120,7 +120,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                 DownloadableResource = new RemoteResource(
                     new Uri(
                         HuggingFaceRoot,
-                        "/resolve/28a279ec60b5c47c9f39381dcaa997b9402ac09d/RealESRGAN/RealESRGAN_x4plus.pth"
+                        "resolve/28a279ec60b5c47c9f39381dcaa997b9402ac09d/RealESRGAN/RealESRGAN_x4plus.pth"
                     ),
                     "4fa0d38905f75ac06eb49a7951b426670021be3018265fd191d2125df9d682f1"
                 )
@@ -137,7 +137,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                 DownloadableResource = new RemoteResource(
                     new Uri(
                         HuggingFaceRoot,
-                        "/resolve/28a279ec60b5c47c9f39381dcaa997b9402ac09d/RealESRGAN/RealESRGAN_x4plus_anime_6B.pth"
+                        "resolve/28a279ec60b5c47c9f39381dcaa997b9402ac09d/RealESRGAN/RealESRGAN_x4plus_anime_6B.pth"
                     ),
                     "f872d837d3c90ed2e05227bed711af5671a6fd1c9f7d7e91c911a61f155e99da"
                 )
@@ -154,7 +154,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                 DownloadableResource = new RemoteResource(
                     new Uri(
                         HuggingFaceRoot,
-                        "/resolve/28a279ec60b5c47c9f39381dcaa997b9402ac09d/RealESRGAN/RealESRGAN_x4plus_anime_6B.pth"
+                        "resolve/28a279ec60b5c47c9f39381dcaa997b9402ac09d/RealESRGAN/RealESRGAN_x4plus_anime_6B.pth"
                     ),
                     "f872d837d3c90ed2e05227bed711af5671a6fd1c9f7d7e91c911a61f155e99da"
                 )
@@ -171,7 +171,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                 DownloadableResource = new RemoteResource(
                     new Uri(
                         HuggingFaceRoot,
-                        "/resolve/4f813cc283de5cd66fe253bc05e66ca76bf68c51/SwinIR/SwinIR_4x.pth"
+                        "resolve/4f813cc283de5cd66fe253bc05e66ca76bf68c51/SwinIR/SwinIR_4x.pth"
                     ),
                     "99adfa91350a84c99e946c1eb3d8fce34bc28f57d807b09dc8fe40a316328c0a"
                 )
@@ -188,7 +188,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                 DownloadableResource = new RemoteResource(
                     new Uri(
                         HuggingFaceRoot,
-                        "/resolve/6a1d697dd18f8c4ff031f26e6dc523ada419517d/UltraMix/4x-UltraMix_Smooth.pth"
+                        "resolve/6a1d697dd18f8c4ff031f26e6dc523ada419517d/UltraMix/4x-UltraMix_Smooth.pth"
                     ),
                     "7deeeac95ce7c28d616933b789f51642d169b200a6638edfb1c57ccecd903cd0"
                 )
@@ -205,7 +205,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                 DownloadableResource = new RemoteResource(
                     new Uri(
                         HuggingFaceRoot,
-                        "/resolve/6a1d697dd18f8c4ff031f26e6dc523ada419517d/UltraMix/4x-UltraMix_Restore.pth"
+                        "resolve/6a1d697dd18f8c4ff031f26e6dc523ada419517d/UltraMix/4x-UltraMix_Restore.pth"
                     ),
                     "e8982b435557baeea5a08066aede41a9b3c8a6512c8688dab6d326e91ba82fa3"
                 )
@@ -222,7 +222,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
                 DownloadableResource = new RemoteResource(
                     new Uri(
                         HuggingFaceRoot,
-                        "/resolve/6a1d697dd18f8c4ff031f26e6dc523ada419517d/UltraMix/4x-UltraMix_Balanced.pth"
+                        "resolve/6a1d697dd18f8c4ff031f26e6dc523ada419517d/UltraMix/4x-UltraMix_Balanced.pth"
                     ),
                     "e23ca000107aae95ec9b8d7d1bf150f7884f1361cd9d669bdf824d72529f0e26"
                 )

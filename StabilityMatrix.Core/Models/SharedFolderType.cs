@@ -28,4 +28,5 @@ public enum SharedFolderType
     CLIP = 1 << 18,
     ScuNET = 1 << 19,
     GLIGEN = 1 << 20,
+    AfterDetailer = 1 << 21
 }

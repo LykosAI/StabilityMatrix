@@ -5,6 +5,12 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.4.6
+### Added
+- LDSR / ADetailer shared folder links for Automatic1111 Package
+### Changed
+- Made Dark Mode background slightly lighter
+
 ## v2.4.5
 ### Fixed
 - Fixed "Library Dir not set" error on launch

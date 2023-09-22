@@ -44,10 +44,10 @@ namespace StabilityMatrix.Avalonia.Controls.CodeCompletion;
 public class CompletionList : TemplatedControl
 {
     private CompletionListBox? _listBox;
-    
+
     public CompletionList()
     {
-        DoubleTapped += OnDoubleTapped;
+        AddHandler(DoubleTappedEvent, OnDoubleTapped);
     }
 
     /// <summary>
@@ -75,8 +75,10 @@ public class CompletionList : TemplatedControl
     /// <summary>
     /// Dependency property for <see cref="FooterText" />.
     /// </summary>
-    public static readonly StyledProperty<string?> FooterTextProperty = AvaloniaProperty.Register<CompletionList, string?>(
-        "FooterText", "Press Enter to insert, Tab to replace");
+    public static readonly StyledProperty<string?> FooterTextProperty = AvaloniaProperty.Register<
+        CompletionList,
+        string?
+    >("FooterText", "Press Enter to insert, Tab to replace");
 
     /// <summary>
     /// Gets/Sets the text displayed in the footer of the completion list.
@@ -92,7 +94,7 @@ public class CompletionList : TemplatedControl
     /// an entry to be completed.
     /// </summary>
     public event EventHandler<InsertionRequestEventArgs>? InsertionRequested;
-    
+
     /// <summary>
     /// Raised when the completion list indicates that it should be closed.
     /// </summary>
@@ -101,16 +103,23 @@ public class CompletionList : TemplatedControl
     /// <summary>
     /// Raises the InsertionRequested event.
     /// </summary>
-    public void RequestInsertion(ICompletionData item, RoutedEventArgs triggeringEvent, string? appendText = null)
+    public void RequestInsertion(
+        ICompletionData item,
+        RoutedEventArgs triggeringEvent,
+        string? appendText = null
+    )
     {
-        InsertionRequested?.Invoke(this, new InsertionRequestEventArgs
-        {
-            Item = item,
-            TriggeringEvent = triggeringEvent,
-            AppendText = appendText
-        });
+        InsertionRequested?.Invoke(
+            this,
+            new InsertionRequestEventArgs
+            {
+                Item = item,
+                TriggeringEvent = triggeringEvent,
+                AppendText = appendText
+            }
+        );
     }
-    
+
     /// <summary>
     /// Raises the CloseRequested event.
     /// </summary>
@@ -149,12 +158,8 @@ public class CompletionList : TemplatedControl
     /// mapped to strings that will be appended to the completion when selected.
     /// The string may be empty.
     /// </summary>
-    public Dictionary<Key, string> CompletionAcceptKeys { get; init; } = new()
-    {
-        [Key.Enter] = "",
-        [Key.Tab] = "",
-        [Key.OemComma] = ",",
-    };
+    public Dictionary<Key, string> CompletionAcceptKeys { get; init; } =
+        new() { [Key.Enter] = "", [Key.Tab] = "" };
 
     /// <summary>
     /// Gets the scroll viewer used in this list box.
@@ -167,7 +172,7 @@ public class CompletionList : TemplatedControl
     /// Gets the list to which completion data can be added.
     /// </summary>
     public IList<ICompletionData> CompletionData => _completionData;
-    
+
     public ObservableCollection<ICompletionData> FilteredCompletionData { get; } = new();
 
     /// <inheritdoc/>
@@ -221,11 +226,13 @@ public class CompletionList : TemplatedControl
                 break;
             default:
                 // Check insertion keys
-                if (CompletionAcceptKeys.TryGetValue(e.Key, out var appendText) 
-                    && CurrentList?.Count > 0)
+                if (
+                    CompletionAcceptKeys.TryGetValue(e.Key, out var appendText)
+                    && CurrentList?.Count > 0
+                )
                 {
                     e.Handled = true;
-                    
+
                     if (SelectedItem is { } item)
                     {
                         RequestInsertion(item, e, appendText);
@@ -244,7 +251,7 @@ public class CompletionList : TemplatedControl
     {
         //TODO TEST
         if (
-            ((AvaloniaObject?) e.Source)
+            ((AvaloniaObject?)e.Source)
                 .VisualAncestorsAndSelf()
                 .TakeWhile(obj => obj != this)
                 .Any(obj => obj is ListBoxItem)
@@ -302,7 +309,7 @@ public class CompletionList : TemplatedControl
     }
 
     // SelectItem gets called twice for every typed character (once from FormatLine), this helps execute SelectItem only once
-    private string _currentText;
+    private string? _currentText;
 
     private ObservableCollection<ICompletionData>? _currentList;
 
@@ -319,12 +326,12 @@ public class CompletionList : TemplatedControl
         }
 
         using var _ = new CodeTimer();
-        
+
         if (_listBox == null)
         {
             ApplyTemplate();
         }
-        
+
         if (IsFiltering)
         {
             SelectItemFilteringLive(text, fullUpdate);
@@ -333,14 +340,17 @@ public class CompletionList : TemplatedControl
         {
             SelectItemWithStart(text);
         }
-        
+
         _currentText = text;
     }
 
-    private IReadOnlyList<ICompletionData> FilterItems(IEnumerable<ICompletionData> items, string query)
+    private IReadOnlyList<ICompletionData> FilterItems(
+        IEnumerable<ICompletionData> items,
+        string query
+    )
     {
         using var _ = new CodeTimer();
-        
+
         // Order first by quality, then by priority
         var matchingItems = items
             .Select(item => new { Item = item, Quality = GetMatchQuality(item.Text, query) })
@@ -352,37 +362,41 @@ public class CompletionList : TemplatedControl
 
         return matchingItems;
     }
-    
+
     /// <summary>
     /// Filters CompletionList items to show only those matching given query, and selects the best match.
     /// </summary>
     private void SelectItemFilteringLive(string query, bool fullUpdate = false)
     {
         var listToFilter = _completionData;
-        
+
         // if the user just typed one more character, don't filter all data but just filter what we are already displaying
-        if (!fullUpdate 
+        if (
+            !fullUpdate
             && FilteredCompletionData.Count > 0
             && !string.IsNullOrEmpty(_currentText)
             && !string.IsNullOrEmpty(query)
-            && query.StartsWith(_currentText, StringComparison.Ordinal))
+            && query.StartsWith(_currentText, StringComparison.Ordinal)
+        )
         {
             listToFilter = FilteredCompletionData;
         }
-        
+
         var matchingItems = FilterItems(listToFilter, query);
-        
+
         // Close if no items match
         if (matchingItems.Count == 0)
         {
             RequestClose();
             return;
         }
-        
+
         // Fast path if both only 1 item, and item is the same
-        if (FilteredCompletionData.Count == 1 
+        if (
+            FilteredCompletionData.Count == 1
             && matchingItems.Count == 1
-            && FilteredCompletionData[0] == matchingItems[0])
+            && FilteredCompletionData[0] == matchingItems[0]
+        )
         {
             // Just update the character highlighting
             matchingItems[0].UpdateCharHighlighting(query);
@@ -397,7 +411,7 @@ public class CompletionList : TemplatedControl
                 item.UpdateCharHighlighting(query);
                 FilteredCompletionData.Add(item);
             }
-            
+
             // Set index to 0 if not already
             if (_listBox != null && _listBox.SelectedIndex != 0)
             {
@@ -405,22 +419,25 @@ public class CompletionList : TemplatedControl
             }
         }
     }
-    
+
     /// <summary>
     /// Filters CompletionList items to show only those matching given query, and selects the best match.
     /// </summary>
     private void SelectItemFiltering(string query, bool fullUpdate = false)
     {
-        if (_listBox is null) throw new NullReferenceException("ListBox not set");
-        
+        if (_listBox is null)
+            throw new NullReferenceException("ListBox not set");
+
         var listToFilter = _completionData;
-        
+
         // if the user just typed one more character, don't filter all data but just filter what we are already displaying
-        if (!fullUpdate 
+        if (
+            !fullUpdate
             && _currentList != null
             && !string.IsNullOrEmpty(_currentText)
             && !string.IsNullOrEmpty(query)
-            && query.StartsWith(_currentText, StringComparison.Ordinal))
+            && query.StartsWith(_currentText, StringComparison.Ordinal)
+        )
         {
             listToFilter = _currentList;
         }
@@ -432,14 +449,14 @@ public class CompletionList : TemplatedControl
             .OrderByDescending(x => x.Quality)
             .ThenByDescending(x => x.Item.Priority)
             .ToImmutableArray();
-        
+
         /*var matchingItems =
             from item in listToFilter
             let quality = GetMatchQuality(item.Text, query)
             where quality > 0
             orderby quality
             select new { Item = item, Quality = quality };*/
-        
+
         var suggestedItem =
             _listBox.SelectedIndex != -1 ? (ICompletionData)_listBox.SelectedItem! : null;
 
@@ -461,13 +478,13 @@ public class CompletionList : TemplatedControl
                 bestPriority = priority;
                 bestQuality = quality;
             }
-            
+
             // Add to listbox
             listBoxItems.Add(matchingItem.Item);
-            
+
             // Update the character highlighting
             matchingItem.Item.UpdateCharHighlighting(query);
-            
+
             i++;
         }
 
@@ -534,7 +551,7 @@ public class CompletionList : TemplatedControl
         {
             throw new NullReferenceException("ListBox not set");
         }
-        
+
         if (index < 0)
         {
             _listBox.ClearSelection();
@@ -554,7 +571,7 @@ public class CompletionList : TemplatedControl
             }
         }
     }
-    
+
     private void SelectIndex(int index)
     {
         if (_listBox is null)
@@ -562,8 +579,9 @@ public class CompletionList : TemplatedControl
             throw new NullReferenceException("ListBox not set");
         }
 
-        if (index == _listBox.SelectedIndex) return;
-        
+        if (index == _listBox.SelectedIndex)
+            return;
+
         if (index < 0)
         {
             _listBox.ClearSelection();
@@ -573,7 +591,7 @@ public class CompletionList : TemplatedControl
             _listBox.SelectedIndex = index;
         }
     }
-    
+
     private int GetMatchQuality(string itemText, string query)
     {
         if (itemText == null)
@@ -623,7 +641,7 @@ public class CompletionList : TemplatedControl
 
         return -1;
     }
-    
+
     private static bool CamelCaseMatch(string text, string query)
     {
         // We take the first letter of the text regardless of whether or not it's upper case so we match

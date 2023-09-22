@@ -1,14 +1,14 @@
 ﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this
 // software and associated documentation files (the "Software"), to deal in the Software
 // without restriction, including without limitation the rights to use, copy, modify, merge,
 // publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
 // to whom the Software is furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all copies or
 // substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 // INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
 // PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
@@ -28,7 +28,7 @@ namespace StabilityMatrix.Avalonia.Controls.CodeCompletion;
 /// </summary>
 public class CompletionListBox : ListBox
 {
-    internal ScrollViewer ScrollViewer;
+    internal ScrollViewer? ScrollViewer;
 
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
@@ -55,7 +55,9 @@ public class CompletionListBox : ListBox
             value = value.CoerceValue(0, ItemCount - VisibleItemCount);
             if (ScrollViewer != null)
             {
-                ScrollViewer.Offset = ScrollViewer.Offset.WithY((double)value / ItemCount * ScrollViewer.Extent.Height);
+                ScrollViewer.Offset = ScrollViewer.Offset.WithY(
+                    (double)value / ItemCount * ScrollViewer.Extent.Height
+                );
             }
         }
     }
@@ -73,8 +75,11 @@ public class CompletionListBox : ListBox
             }
             return Math.Max(
                 3,
-                (int)Math.Ceiling(ItemCount * ScrollViewer.Viewport.Height
-                                  / ScrollViewer.Extent.Height));
+                (int)
+                    Math.Ceiling(
+                        ItemCount * ScrollViewer.Viewport.Height / ScrollViewer.Extent.Height
+                    )
+            );
         }
     }
 
@@ -96,7 +101,10 @@ public class CompletionListBox : ListBox
         if (index < 0)
             index = 0;
         SelectedIndex = index;
-        ScrollIntoView(SelectedItem);
+        if (SelectedItem is { } item)
+        {
+            ScrollIntoView(item);
+        }
     }
 
     /// <summary>

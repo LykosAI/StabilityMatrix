@@ -21,6 +21,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
@@ -227,12 +228,7 @@ public partial class ImageFolderCardViewModel : ViewModelBase
 
         var clipboard = App.Clipboard;
 
-        var dataObject = new DataObject();
-
-        // TODO: Not working currently
-        dataObject.Set(DataFormats.Files, $"file:///{imagePath}");
-
-        await clipboard.SetDataObjectAsync(dataObject);
+        await clipboard.SetFileDataObjectAsync(imagePath);
     }
 
     /// <summary>

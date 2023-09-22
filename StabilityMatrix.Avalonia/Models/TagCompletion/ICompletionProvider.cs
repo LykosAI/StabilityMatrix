@@ -9,9 +9,9 @@ namespace StabilityMatrix.Avalonia.Models.TagCompletion;
 public interface ICompletionProvider
 {
     /// <summary>
-    /// Whether the completion provider is loaded.
+    /// Currently available completion types.
     /// </summary>
-    bool IsLoaded { get; }
+    CompletionType AvailableCompletionTypes { get; }
 
     /// <summary>
     /// Optional function to transform the text to be inserted

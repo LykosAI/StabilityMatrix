@@ -10,7 +10,7 @@ namespace StabilityMatrix.Avalonia.DesignData;
 public class MockCompletionProvider : ICompletionProvider
 {
     /// <inheritdoc />
-    public bool IsLoaded => false;
+    public CompletionType AvailableCompletionTypes { get; set; }
 
     /// <inheritdoc />
     public Func<ICompletionData, string>? PrepareInsertionText { get; } = data => data.Text;

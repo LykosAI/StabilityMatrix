@@ -100,9 +100,9 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
     {
         Logger.ConditionalTrace($"Text entered: {e.Text.ToRepr()}");
 
-        if (!IsEnabled || CompletionProvider?.IsLoaded != true)
+        if (!IsEnabled || CompletionProvider is null)
         {
-            Logger.ConditionalTrace("Skipping, not enabled or not loaded");
+            Logger.ConditionalTrace("Skipping, not enabled");
             return;
         }
 
@@ -141,7 +141,18 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         // Get the segment of the token the caret is currently in
         if (GetCaretCompletionToken() is not { } completionRequest)
         {
-            Logger.Trace("Token segment not found");
+            Logger.ConditionalTrace("Token segment not found");
+            return;
+        }
+
+        // If type is not available, skip
+        if (!CompletionProvider.AvailableCompletionTypes.HasFlag(completionRequest.Type))
+        {
+            Logger.ConditionalTrace(
+                "Skipping, completion type {CompletionType} not available in {AvailableTypes}",
+                completionRequest.Type,
+                CompletionProvider.AvailableCompletionTypes
+            );
             return;
         }
 

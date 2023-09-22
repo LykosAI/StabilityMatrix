@@ -42,7 +42,19 @@ public partial class CompletionProvider : ICompletionProvider
 
     private InMemoryIndexSearcher? searcher;
 
-    public bool IsLoaded => searcher is not null;
+    /// <inheritdoc />
+    public CompletionType AvailableCompletionTypes
+    {
+        get
+        {
+            var types = CompletionType.ExtraNetwork | CompletionType.ExtraNetworkType;
+            if (searcher is not null)
+            {
+                types |= CompletionType.Tag;
+            }
+            return types;
+        }
+    }
 
     public Func<ICompletionData, string>? PrepareInsertionText { get; }
 

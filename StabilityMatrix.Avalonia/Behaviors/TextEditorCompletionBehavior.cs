@@ -98,46 +98,70 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
 
     private void TextArea_TextEntered(object? sender, TextInputEventArgs e)
     {
-        if (!IsEnabled || CompletionProvider?.IsLoaded != true || e.Text is not { } triggerText)
+        Logger.ConditionalTrace($"Text entered: {e.Text.ToRepr()}");
+
+        if (!IsEnabled || CompletionProvider?.IsLoaded != true)
+        {
+            Logger.ConditionalTrace("Skipping, not enabled or not loaded");
             return;
+        }
 
-        if (triggerText.All(IsCompletionChar))
+        if (e.Text is not { } triggerText)
         {
-            // Create completion window if its not already created
-            if (completionWindow == null)
+            Logger.ConditionalTrace("Skipping, null trigger text");
+            return;
+        }
+
+        if (!triggerText.All(IsCompletionChar))
+        {
+            if (completionWindow is { } window)
             {
-                // Get the segment of the token the caret is currently in
-                if (GetCaretCompletionToken() is not { } completionRequest)
-                {
-                    Logger.Trace("Token segment not found");
-                    return;
-                }
-
-                var tokenSegment = completionRequest.Segment;
-
-                var token = textEditor.Document.GetText(tokenSegment);
-                Logger.Trace("Using token {Token} ({@Segment})", token, tokenSegment);
-
-                completionWindow = CreateCompletionWindow(textEditor.TextArea);
-                completionWindow.StartOffset = tokenSegment.Offset;
-                completionWindow.EndOffset = tokenSegment.EndOffset;
-
-                completionWindow.UpdateQuery(completionRequest);
-
-                completionWindow.Closed += delegate
-                {
-                    completionWindow = null;
-                };
-
-                completionWindow.Show();
+                // Disallowed chars, close completion window if its open
+                Logger.ConditionalTrace(
+                    $"Closing completion window: '{triggerText}' not a valid completion char"
+                );
+                window.Close();
+                completionWindow = null;
             }
+            else
+            {
+                Logger.ConditionalTrace($"Skipping, invalid trigger text: {triggerText.ToRepr()}");
+            }
+            return;
         }
-        else
+
+        // If window already open, skip since handled by completion window
+        // Unless this is an end char, where we'll open a new window
+        if (completionWindow != null && !triggerText.All(IsCompletionEndChar))
         {
-            // Disallowed chars, close completion window if its open
-            Logger.Trace($"Closing completion window: '{triggerText}' not a valid completion char");
-            completionWindow?.Close();
+            Logger.ConditionalTrace("Skipping, completion window already open");
+            return;
         }
+
+        // Get the segment of the token the caret is currently in
+        if (GetCaretCompletionToken() is not { } completionRequest)
+        {
+            Logger.Trace("Token segment not found");
+            return;
+        }
+
+        var tokenSegment = completionRequest.Segment;
+
+        var token = textEditor.Document.GetText(tokenSegment);
+        Logger.Trace("Using token {Token} ({@Segment})", token, tokenSegment);
+
+        completionWindow = CreateCompletionWindow(textEditor.TextArea);
+        completionWindow.StartOffset = tokenSegment.Offset;
+        completionWindow.EndOffset = tokenSegment.EndOffset;
+
+        completionWindow.UpdateQuery(completionRequest);
+
+        completionWindow.Closed += delegate
+        {
+            completionWindow = null;
+        };
+
+        completionWindow.Show();
     }
 
     /// <summary>
@@ -152,6 +176,12 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
     {
         const string extraAllowedChars = "._-:<";
         return char.IsLetterOrDigit(c) || extraAllowedChars.Contains(c);
+    }
+
+    private static bool IsCompletionEndChar(char c)
+    {
+        const string endChars = ":";
+        return endChars.Contains(c);
     }
 
     /// <summary>

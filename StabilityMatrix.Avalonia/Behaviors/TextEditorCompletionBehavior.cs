@@ -170,19 +170,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
 
         if (!triggerText.All(IsCompletionChar))
         {
-            if (completionWindow is { } window)
-            {
-                // Disallowed chars, close completion window if its open
-                Logger.ConditionalTrace(
-                    $"Closing completion window: '{triggerText}' not a valid completion char"
-                );
-                window.Hide();
-                window.Close();
-            }
-            else
-            {
-                Logger.ConditionalTrace($"Skipping, invalid trigger text: {triggerText.ToRepr()}");
-            }
+            Logger.ConditionalTrace($"Skipping, invalid trigger text: {triggerText.ToRepr()}");
             return;
         }
 

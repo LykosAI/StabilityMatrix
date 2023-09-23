@@ -162,7 +162,6 @@ public class CompletionWindow : CompletionWindowBase
     private void CompletionList_InsertionRequested(object? sender, InsertionRequestEventArgs e)
     {
         Hide();
-        Close();
 
         // The window must close before Complete() is called.
         // If the Complete callback pushes stacked input handlers, we don't want to pop those when the CC window closes.
@@ -178,7 +177,6 @@ public class CompletionWindow : CompletionWindowBase
     private void CompletionList_CloseRequested(object? sender, EventArgs e)
     {
         Hide();
-        Close();
     }
 
     private void AttachEvents()

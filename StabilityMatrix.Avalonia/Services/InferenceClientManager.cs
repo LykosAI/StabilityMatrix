@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
@@ -312,9 +311,14 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             await tempClient.ConnectAsync(cancellationToken);
             logger.LogDebug("Connected to {@Uri}", uri);
 
-            await LoadSharedPropertiesAsync();
-
             Client = tempClient;
+
+            await LoadSharedPropertiesAsync();
+        }
+        catch (Exception)
+        {
+            Client = null;
+            throw;
         }
         finally
         {

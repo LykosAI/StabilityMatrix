@@ -176,8 +176,8 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
                 Logger.ConditionalTrace(
                     $"Closing completion window: '{triggerText}' not a valid completion char"
                 );
+                window.Hide();
                 window.Close();
-                completionWindow = null;
             }
             else
             {
@@ -186,14 +186,14 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
             return;
         }
 
-        Dispatcher.UIThread.Post(InvokeManualCompletion, DispatcherPriority.Background);
+        InvokeManualCompletion();
     }
 
     private void TextArea_KeyDown(object? sender, KeyEventArgs e)
     {
         if (e is { Key: Key.Space, KeyModifiers: KeyModifiers.Control })
         {
-            Dispatcher.UIThread.Post(InvokeManualCompletion, DispatcherPriority.Background);
+            InvokeManualCompletion();
             e.Handled = true;
         }
     }

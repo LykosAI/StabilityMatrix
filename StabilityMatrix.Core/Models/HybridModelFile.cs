@@ -14,24 +14,23 @@ public record HybridModelFile
     /// Singleton instance of <see cref="HybridModelFile"/> that represents use of a default model.
     /// </summary>
     public static HybridModelFile Default { get; } = FromRemote("@default");
-    
+
     /// <summary>
     /// Singleton instance of <see cref="HybridModelFile"/> that represents no model.
     /// </summary>
     public static HybridModelFile None { get; } = FromRemote("@none");
-    
+
     private string? RemoteName { get; init; }
-    
+
     public LocalModelFile? Local { get; init; }
 
     [MemberNotNullWhen(true, nameof(RemoteName))]
     [MemberNotNullWhen(false, nameof(Local))]
     [JsonIgnore]
     public bool IsRemote => RemoteName != null;
-    
+
     [JsonIgnore]
-    public string FileName => IsRemote 
-        ? RemoteName : Local.FileName;
+    public string FileName => IsRemote ? RemoteName : Local.RelativePathFromSharedFolder;
 
     [JsonIgnore]
     public string ShortDisplayName
@@ -47,44 +46,42 @@ public record HybridModelFile
             {
                 return "Default";
             }
-            
+
             return Path.GetFileNameWithoutExtension(FileName);
         }
     }
 
     public static HybridModelFile FromLocal(LocalModelFile local)
     {
-        return new HybridModelFile
-        {
-            Local = local
-        };
+        return new HybridModelFile { Local = local };
     }
-    
+
     public static HybridModelFile FromRemote(string remoteName)
     {
-        return new HybridModelFile
-        {
-            RemoteName = remoteName
-        };
+        return new HybridModelFile { RemoteName = remoteName };
     }
 
     public string GetId()
     {
         return $"{FileName};{IsNone};{IsDefault}";
     }
-    
+
     private sealed class RemoteNameLocalEqualityComparer : IEqualityComparer<HybridModelFile>
     {
         public bool Equals(HybridModelFile? x, HybridModelFile? y)
         {
-            if (ReferenceEquals(x, y)) return true;
-            if (ReferenceEquals(x, null)) return false;
-            if (ReferenceEquals(y, null)) return false;
-            if (x.GetType() != y.GetType()) return false;
+            if (ReferenceEquals(x, y))
+                return true;
+            if (ReferenceEquals(x, null))
+                return false;
+            if (ReferenceEquals(y, null))
+                return false;
+            if (x.GetType() != y.GetType())
+                return false;
 
-            return Equals(x.FileName, y.FileName) 
-                   && x.IsNone == y.IsNone 
-                   && x.IsDefault == y.IsDefault;
+            return Equals(x.FileName, y.FileName)
+                && x.IsNone == y.IsNone
+                && x.IsDefault == y.IsDefault;
         }
 
         public int GetHashCode(HybridModelFile obj)
@@ -92,16 +89,17 @@ public record HybridModelFile
             return HashCode.Combine(obj.IsNone, obj.IsDefault, obj.FileName);
         }
     }
-    
+
     /// <summary>
     /// Whether this instance is the default model.
     /// </summary>
     public bool IsDefault => ReferenceEquals(this, Default);
-    
+
     /// <summary>
     /// Whether this instance is no model.
     /// </summary>
     public bool IsNone => ReferenceEquals(this, None);
-    
-    public static IEqualityComparer<HybridModelFile> Comparer { get; } = new RemoteNameLocalEqualityComparer();
+
+    public static IEqualityComparer<HybridModelFile> Comparer { get; } =
+        new RemoteNameLocalEqualityComparer();
 }

@@ -101,7 +101,7 @@ public partial class MainWindowViewModel : ViewModelBase
         Task.Run(() => settingsManager.IndexCheckpoints()).SafeFireAndForget();
 
         PreloadPages();
-        if (!settingsManager.Settings.InstalledPackages.Any())
+        if (Program.Args.DebugOneClickInstall || !settingsManager.Settings.InstalledPackages.Any())
         {
             var viewModel = dialogFactory.Get<OneClickInstallViewModel>();
             var dialog = new BetterContentDialog

@@ -12,6 +12,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
+using FluentAvalonia.Core;
 using NLog;
 using Polly.Contrib.WaitAndRetry;
 using Projektanker.Icons.Avalonia;
@@ -45,6 +46,7 @@ public class Program
     {
         Args.DebugExceptionDialog = args.Contains("--debug-exception-dialog");
         Args.DebugSentry = args.Contains("--debug-sentry");
+        Args.DebugOneClickInstall = args.Contains("--debug-one-click-install");
         Args.NoSentry = args.Contains("--no-sentry");
         Args.NoWindowChromeEffects = args.Contains("--no-window-chrome-effects");
         Args.ResetWindowPosition = args.Contains("--reset-window-position");

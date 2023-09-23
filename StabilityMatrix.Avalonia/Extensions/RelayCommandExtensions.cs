@@ -48,7 +48,7 @@ public static class RelayCommandExtensions
                 && senderCommand.ExecutionTask is { Exception: { } exception }
             )
             {
-                onError(exception);
+                onError(exception.InnerException ?? exception);
             }
         };
 
@@ -80,6 +80,10 @@ public static class RelayCommandExtensions
                 && senderCommand.ExecutionTask is { Exception: { } exception }
             )
             {
+                if (exception.InnerException != null)
+                {
+                    throw exception.InnerException;
+                }
                 throw exception;
             }
         };

@@ -310,10 +310,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             var tempClient = new ComfyClient(apiFactory, uri);
 
             await tempClient.ConnectAsync(cancellationToken);
-            Client = tempClient;
             logger.LogDebug("Connected to {@Uri}", uri);
 
             await LoadSharedPropertiesAsync();
+
+            Client = tempClient;
         }
         finally
         {

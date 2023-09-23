@@ -1,9 +1,11 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Threading;
 using Avalonia.Xaml.Interactivity;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
@@ -74,6 +76,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
 
         textEditor = editor;
         textEditor.TextArea.TextEntered += TextArea_TextEntered;
+        textEditor.TextArea.KeyDown += TextArea_KeyDown;
     }
 
     protected override void OnDetaching()
@@ -81,6 +84,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         base.OnDetaching();
 
         textEditor.TextArea.TextEntered -= TextArea_TextEntered;
+        textEditor.TextArea.KeyDown -= TextArea_KeyDown;
     }
 
     private CompletionWindow CreateCompletionWindow(TextArea textArea)
@@ -94,6 +98,58 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
             CompletionList = { IsFiltering = true }
         };
         return window;
+    }
+
+    public void InvokeManualCompletion()
+    {
+        if (CompletionProvider is null)
+        {
+            throw new NullReferenceException("CompletionProvider is null");
+        }
+
+        // If window already open, skip since handled by completion window
+        // Unless this is an end char, where we'll open a new window
+        if (completionWindow is { IsOpen: true })
+        {
+            Logger.ConditionalTrace("Skipping, completion window already open");
+            return;
+        }
+
+        // Get the segment of the token the caret is currently in
+        if (GetCaretCompletionToken() is not { } completionRequest)
+        {
+            Logger.ConditionalTrace("Token segment not found");
+            return;
+        }
+
+        // If type is not available, skip
+        if (!CompletionProvider.AvailableCompletionTypes.HasFlag(completionRequest.Type))
+        {
+            Logger.ConditionalTrace(
+                "Skipping, completion type {CompletionType} not available in {AvailableTypes}",
+                completionRequest.Type,
+                CompletionProvider.AvailableCompletionTypes
+            );
+            return;
+        }
+
+        var tokenSegment = completionRequest.Segment;
+
+        var token = textEditor.Document.GetText(tokenSegment);
+        Logger.ConditionalTrace("Using token {Token} ({@Segment})", token, tokenSegment);
+
+        completionWindow = CreateCompletionWindow(textEditor.TextArea);
+        completionWindow.StartOffset = tokenSegment.Offset;
+        completionWindow.EndOffset = tokenSegment.EndOffset;
+
+        completionWindow.UpdateQuery(completionRequest);
+
+        completionWindow.Closed += (_, _) =>
+        {
+            completionWindow = null;
+        };
+
+        completionWindow.Show();
     }
 
     private void TextArea_TextEntered(object? sender, TextInputEventArgs e)
@@ -130,49 +186,16 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
             return;
         }
 
-        // If window already open, skip since handled by completion window
-        // Unless this is an end char, where we'll open a new window
-        if (completionWindow != null && !triggerText.All(IsCompletionEndChar))
+        Dispatcher.UIThread.Post(InvokeManualCompletion, DispatcherPriority.Background);
+    }
+
+    private void TextArea_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e is { Key: Key.Space, KeyModifiers: KeyModifiers.Control })
         {
-            Logger.ConditionalTrace("Skipping, completion window already open");
-            return;
+            Dispatcher.UIThread.Post(InvokeManualCompletion, DispatcherPriority.Background);
+            e.Handled = true;
         }
-
-        // Get the segment of the token the caret is currently in
-        if (GetCaretCompletionToken() is not { } completionRequest)
-        {
-            Logger.ConditionalTrace("Token segment not found");
-            return;
-        }
-
-        // If type is not available, skip
-        if (!CompletionProvider.AvailableCompletionTypes.HasFlag(completionRequest.Type))
-        {
-            Logger.ConditionalTrace(
-                "Skipping, completion type {CompletionType} not available in {AvailableTypes}",
-                completionRequest.Type,
-                CompletionProvider.AvailableCompletionTypes
-            );
-            return;
-        }
-
-        var tokenSegment = completionRequest.Segment;
-
-        var token = textEditor.Document.GetText(tokenSegment);
-        Logger.Trace("Using token {Token} ({@Segment})", token, tokenSegment);
-
-        completionWindow = CreateCompletionWindow(textEditor.TextArea);
-        completionWindow.StartOffset = tokenSegment.Offset;
-        completionWindow.EndOffset = tokenSegment.EndOffset;
-
-        completionWindow.UpdateQuery(completionRequest);
-
-        completionWindow.Closed += delegate
-        {
-            completionWindow = null;
-        };
-
-        completionWindow.Show();
     }
 
     /// <summary>

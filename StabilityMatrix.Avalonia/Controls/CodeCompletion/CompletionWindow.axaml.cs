@@ -1,14 +1,14 @@
 ﻿// Copyright (c) 2014 AlphaSierraPapa for the SharpDevelop Team
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this
 // software and associated documentation files (the "Software"), to deal in the Software
 // without restriction, including without limitation the rights to use, copy, modify, merge,
 // publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
 // to whom the Software is furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all copies or
 // substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 // INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
 // PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
@@ -40,10 +40,10 @@ public class CompletionWindow : CompletionWindowBase
 {
     private readonly ICompletionProvider completionProvider;
     private readonly ITokenizerProvider tokenizerProvider;
-    
+
     private PopupWithCustomPosition? _toolTip;
     private ContentControl? _toolTipContent;
-    
+
     /// <summary>
     /// Max number of items in the completion list.
     /// </summary>
@@ -53,7 +53,7 @@ public class CompletionWindow : CompletionWindowBase
     /// Gets the completion list used in this completion window.
     /// </summary>
     public CompletionList CompletionList { get; } = new();
-    
+
     /// <summary>
     /// Whether selection tooltips are shown.
     /// </summary>
@@ -63,13 +63,15 @@ public class CompletionWindow : CompletionWindowBase
     /// Creates a new code completion window.
     /// </summary>
     public CompletionWindow(
-        TextArea textArea, 
+        TextArea textArea,
         ICompletionProvider completionProvider,
-        ITokenizerProvider tokenizerProvider) : base(textArea)
+        ITokenizerProvider tokenizerProvider
+    )
+        : base(textArea)
     {
         this.completionProvider = completionProvider;
         this.tokenizerProvider = tokenizerProvider;
-        
+
         CloseAutomatically = true;
         MaxHeight = 225;
         Width = 350;
@@ -77,7 +79,7 @@ public class CompletionWindow : CompletionWindowBase
         // prevent user from resizing window to 0x0
         MinHeight = 15;
         MinWidth = 30;
-        
+
         _toolTipContent = new ContentControl();
         _toolTipContent.Classes.Add("ToolTip");
 
@@ -113,9 +115,11 @@ public class CompletionWindow : CompletionWindowBase
     private void CompletionList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         // Skip if tooltip not enabled
-        if (!IsSelectionTooltipEnabled) return;
-        
-        if (_toolTipContent == null || _toolTip == null) return;
+        if (!IsSelectionTooltipEnabled)
+            return;
+
+        if (_toolTipContent == null || _toolTip == null)
+            return;
 
         var item = CompletionList.SelectedItem;
         if (item?.Description is { } descriptionText)
@@ -157,21 +161,22 @@ public class CompletionWindow : CompletionWindowBase
 
     private void CompletionList_InsertionRequested(object? sender, InsertionRequestEventArgs e)
     {
-        Hide();
-        
+        Close();
+
         // The window must close before Complete() is called.
         // If the Complete callback pushes stacked input handlers, we don't want to pop those when the CC window closes.
         var length = EndOffset - StartOffset;
         e.Item.Complete(
-            TextArea, 
-            new AnchorSegment(TextArea.Document, StartOffset, length), 
+            TextArea,
+            new AnchorSegment(TextArea.Document, StartOffset, length),
             e,
-            completionProvider.PrepareInsertionText);
+            completionProvider.PrepareInsertionText
+        );
     }
-    
+
     private void CompletionList_CloseRequested(object? sender, EventArgs e)
     {
-        Hide();
+        Close();
     }
 
     private void AttachEvents()
@@ -208,14 +213,17 @@ public class CompletionWindow : CompletionWindowBase
 
     private void TextArea_PreviewTextInput(object? sender, TextInputEventArgs e)
     {
-        e.Handled = RaiseEventPair(this, null, TextInputEvent,
-            new TextInputEventArgs { Text = e.Text });
+        e.Handled = RaiseEventPair(
+            this,
+            null,
+            TextInputEvent,
+            new TextInputEventArgs { Text = e.Text }
+        );
     }
 
     private void TextArea_MouseWheel(object? sender, PointerWheelEventArgs e)
     {
-        e.Handled = RaiseEventPair(GetScrollEventTarget(),
-            null, PointerWheelChangedEvent, e);
+        e.Handled = RaiseEventPair(GetScrollEventTarget(), null, PointerWheelChangedEvent, e);
     }
 
     private Control GetScrollEventTarget()
@@ -279,11 +287,11 @@ public class CompletionWindow : CompletionWindowBase
                 {
                     return;
                 }
-                
+
                 // CompletionList.SelectItem(newText);
                 Dispatcher.UIThread.Post(() => UpdateQuery(lastRequest with { Text = newText }));
                 // UpdateQuery(newText);
-                
+
                 IsVisible = CompletionList.ListBox!.ItemCount != 0;
             }
         }
@@ -291,31 +299,33 @@ public class CompletionWindow : CompletionWindowBase
 
     private TextCompletionRequest? lastSearchRequest;
     private int lastCompletionLength;
-    
+
     /// <summary>
     /// Update the completion window's current search term.
     /// </summary>
     public void UpdateQuery(TextCompletionRequest completionRequest)
     {
         var searchTerm = completionRequest.Text;
-        
+
         // Fast path if the search term starts with the last search term
         // and the last completion count was less than the max list length
         // (such we won't get new results by searching again)
-        if (lastSearchRequest is not null
+        if (
+            lastSearchRequest is not null
             && completionRequest.Type == lastSearchRequest.Type
-            && searchTerm.StartsWith(lastSearchRequest.Text) 
-            && lastCompletionLength < MaxListLength)
+            && searchTerm.StartsWith(lastSearchRequest.Text)
+            && lastCompletionLength < MaxListLength
+        )
         {
             CompletionList.SelectItem(searchTerm);
             lastSearchRequest = completionRequest;
             return;
         }
-        
+
         var results = completionProvider.GetCompletions(completionRequest, MaxListLength, true);
         CompletionList.CompletionData.Clear();
         CompletionList.CompletionData.AddRange(results);
-        
+
         CompletionList.SelectItem(searchTerm, true);
 
         lastSearchRequest = completionRequest;

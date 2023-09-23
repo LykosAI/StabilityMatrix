@@ -57,6 +57,7 @@
         <StyleInclude Source="Controls/SelectImageCard.axaml"/>
         <StyleInclude Source="Controls/ImageFolderCard.axaml"/>
         <StyleInclude Source="Controls/SharpenCard.axaml"/>
+        <StyleInclude Source="Controls/Paginator.axaml"/>
         
         <Style Selector="DockControl">
             <Setter Property="(DockProperties.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />

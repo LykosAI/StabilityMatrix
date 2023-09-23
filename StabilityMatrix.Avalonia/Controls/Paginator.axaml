@@ -1,0 +1,62 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters">
+    <Design.PreviewWith>
+        <controls:Paginator TotalPages="5" CurrentPageNumber="1" />
+    </Design.PreviewWith>
+    
+    <Style Selector="controls|Paginator">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <StackPanel
+                    Margin="8"
+                    HorizontalAlignment="Center"
+                    Orientation="Vertical">
+                    <TextBlock Margin="0,0,4,4" TextAlignment="Center">
+                        <Run Text="{x:Static lang:Resources.Label_Page}" />
+                        <Run Text="{TemplateBinding CurrentPageNumber, Converter={x:Static converters:StringFormatConverters.Decimal}}" />
+                        <Run Text="/" />
+                        <Run Text="{TemplateBinding TotalPages, Converter={x:Static converters:StringFormatConverters.Decimal}}" />
+                    </TextBlock>
+                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                        <Button
+                            Margin="0,0,8,0"
+                            IsEnabled="{TemplateBinding CanNavBack}"
+                            Command="{TemplateBinding FirstPageCommand}"
+                            ToolTip.ShowDelay="1000"
+                            ToolTip.Tip="{x:Static lang:Resources.Label_FirstPage}">
+                            <icons:Icon Value="fa-solid fa-backward-fast" />
+                        </Button>
+                        <Button
+                            Margin="0,0,8,0"
+                            IsEnabled="{TemplateBinding CanNavBack}"
+                            Command="{TemplateBinding PreviousPageCommand}"
+                            ToolTip.ShowDelay="1000"
+                            ToolTip.Tip="{x:Static lang:Resources.Label_PreviousPage}">
+                            <icons:Icon Value="fa-solid fa-caret-left" />
+                        </Button>
+                        <Button
+                            Margin="0,0,8,0"
+                            IsEnabled="{TemplateBinding CanNavForward}"
+                            Command="{TemplateBinding NextPageCommand}"
+                            ToolTip.ShowDelay="1000"
+                            ToolTip.Tip="{x:Static lang:Resources.Label_NextPage}">
+                            <icons:Icon Value="fa-solid fa-caret-right" />
+                        </Button>
+                        <Button 
+                            Command="{TemplateBinding LastPageCommand}" 
+                            IsEnabled="{TemplateBinding CanNavForward}"
+                            ToolTip.ShowDelay="1000"
+                            ToolTip.Tip="{x:Static lang:Resources.Label_LastPage}">
+                            <icons:Icon Value="fa-solid fa-forward-fast" />
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

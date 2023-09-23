@@ -38,7 +38,7 @@
       <PackageReference Include="Refit.HttpClientFactory" Version="7.0.0" />
       <PackageReference Include="RockLib.Reflection.Optimized" Version="2.0.0" />
       <PackageReference Include="Salaros.ConfigParser" Version="0.3.8" />
-      <PackageReference Include="Semver" Version="3.0.0-beta.0" />
+      <PackageReference Include="Semver" Version="3.0.0-beta.1" />
       <PackageReference Include="Sentry.NLog" Version="3.33.1" />
       <PackageReference Include="SharpCompress" Version="0.33.0" />
       <PackageReference Include="Websocket.Client" Version="4.6.1" />

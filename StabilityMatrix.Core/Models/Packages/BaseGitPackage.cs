@@ -101,19 +101,22 @@ public abstract class BaseGitPackage : BasePackage
     {
         var packageVersionOptions = new PackageVersionOptions();
 
-        var allReleases = await GetAllReleases().ConfigureAwait(false);
-        var releasesList = allReleases.ToList();
-        if (releasesList.Any())
+        if (!ShouldIgnoreReleases)
         {
-            packageVersionOptions.AvailableVersions = releasesList.Select(
-                r =>
-                    new PackageVersion
-                    {
-                        TagName = r.TagName!,
-                        ReleaseNotesMarkdown = r.Body,
-                        IsPrerelease = r.Prerelease
-                    }
-            );
+            var allReleases = await GetAllReleases().ConfigureAwait(false);
+            var releasesList = allReleases.ToList();
+            if (releasesList.Any())
+            {
+                packageVersionOptions.AvailableVersions = releasesList.Select(
+                    r =>
+                        new PackageVersion
+                        {
+                            TagName = r.TagName!,
+                            ReleaseNotesMarkdown = r.Body,
+                            IsPrerelease = r.Prerelease
+                        }
+                );
+            }
         }
 
         // Branch mode

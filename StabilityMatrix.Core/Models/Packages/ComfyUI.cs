@@ -31,6 +31,7 @@ public class ComfyUI : BaseGitPackage
     public override Uri PreviewImageUri =>
         new("https://github.com/comfyanonymous/ComfyUI/raw/master/comfyui_screenshot.png");
     public override bool ShouldIgnoreReleases => true;
+    public override bool IsInferenceCompatible => true;
     public override SharedFolderMethod RecommendedSharedFolderMethod =>
         SharedFolderMethod.Configuration;
 

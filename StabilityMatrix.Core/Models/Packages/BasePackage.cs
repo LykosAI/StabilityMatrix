@@ -36,6 +36,8 @@ public abstract class BasePackage
     public virtual bool ShouldIgnoreReleases => false;
     public virtual bool UpdateAvailable { get; set; }
 
+    public virtual bool IsInferenceCompatible => false;
+
     public abstract Task DownloadPackage(
         string installLocation,
         DownloadPackageVersionOptions versionOptions,

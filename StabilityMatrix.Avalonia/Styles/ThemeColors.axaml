@@ -36,6 +36,8 @@
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Default">
             <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="#AAAAAA"/>
+            <SolidColorBrush x:Key="ThemeDarkAccentForegroundBrush" Color="#AAAAAA"/>
+            <SolidColorBrush x:Key="ThemeDarkAccentBackgroundBrush" Color="#686868"/>
             <SolidColorBrush x:Key="RegionColor" Color="#AAAAAA"/>
             
             <SolidColorBrush x:Key="CompletionBorderBrush" Color="#43454A"/>
@@ -49,6 +51,8 @@
         
         <ResourceDictionary x:Key="Dark">
             <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="#282828"/>
+            <SolidColorBrush x:Key="ThemeDarkAccentForegroundBrush" Color="#AAAAAA"/>
+            <SolidColorBrush x:Key="ThemeDarkAccentBackgroundBrush" Color="#252525"/>
             <SolidColorBrush x:Key="RegionColor" Color="#282828"/>
             
             <SolidColorBrush x:Key="CompletionBorderBrush" Color="#43454A"/>
@@ -62,6 +66,8 @@
         
         <ResourceDictionary x:Key="{x:Static sty:FluentAvaloniaTheme.HighContrastTheme}">
             <SolidColorBrush x:Key="ThemeBackgroundBrush" Color="#AAAAAA"/>
+            <SolidColorBrush x:Key="ThemeDarkAccentForegroundBrush" Color="#AAAAAA"/>
+            <SolidColorBrush x:Key="ThemeDarkAccentBackgroundBrush" Color="#686868"/>
             <SolidColorBrush x:Key="RegionColor" Color="#AAAAAA"/>
             
             <SolidColorBrush x:Key="CompletionBorderBrush" Color="#43454A"/>

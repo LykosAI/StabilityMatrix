@@ -188,19 +188,19 @@
                                                         Stretch="UniformToFill"
                                                         StretchDirection="Both" />
 
-                                                    <ExperimentalAcrylicBorder
+                                                    <Border
                                                         Grid.Row="1"
+                                                        Classes="theme-dark"
                                                         MinHeight="20"
                                                         Padding="4,0,0,0"
                                                         VerticalAlignment="Bottom"
-                                                        Material="{StaticResource OpaqueDarkAcrylicMaterial}"
                                                         Opacity="0.9">
                                                         <TextBlock 
                                                             FontSize="12"
                                                             VerticalAlignment="Center"
                                                             TextTrimming="CharacterEllipsis"
                                                             Text="{Binding FileNameWithoutExtension}"/>
-                                                    </ExperimentalAcrylicBorder>
+                                                    </Border>
                                                 </Grid>
                                             </Border>
                                         </Button>

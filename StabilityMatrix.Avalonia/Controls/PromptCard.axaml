@@ -73,13 +73,13 @@
 
                             </StackPanel>
 
-                            <ExperimentalAcrylicBorder
+                            <Border
                                 Grid.Row="1"
                                 Grid.Column="0"
                                 Grid.ColumnSpan="2"
+                                Classes="theme-dark"
                                 VerticalAlignment="Stretch"
-                                CornerRadius="4"
-                                Material="{StaticResource OpaqueDarkAcrylicMaterial}">
+                                CornerRadius="4">
 
                                 <avaloniaEdit:TextEditor
                                     x:Name="PromptEditor"
@@ -94,7 +94,7 @@
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>
 
-                            </ExperimentalAcrylicBorder>
+                            </Border>
                         </Grid>
 
                         <GridSplitter
@@ -115,11 +115,11 @@
                                     Value="fa-solid fa-caret-down" />
                             </StackPanel>
 
-                            <ExperimentalAcrylicBorder
+                            <Border
                                 Grid.Row="1"
+                                Classes="theme-dark"
                                 VerticalAlignment="Stretch"
-                                CornerRadius="4"
-                                Material="{StaticResource OpaqueDarkAcrylicMaterial}">
+                                CornerRadius="4">
 
                                 <avaloniaEdit:TextEditor
                                     x:Name="NegativePromptEditor"
@@ -135,7 +135,7 @@
                                 </avaloniaEdit:TextEditor>
 
 
-                            </ExperimentalAcrylicBorder>
+                            </Border>
                         </Grid>
                     </Grid>
                 </controls:Card>

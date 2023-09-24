@@ -50,7 +50,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly ILiteDbContext liteDbContext;
     private readonly INotificationService notificationService;
-    private const int MaxModelsPerPage = 14;
+    private const int MaxModelsPerPage = 20;
     private LRUCache<
         int /* model id */
         ,
@@ -446,19 +446,15 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
                 connectedModels = connectedModels.Where(c => c.ModelType == SelectedModelType);
             }
 
-            modelRequest = new CivitModelsRequest
-            {
-                CommaSeparatedModelIds = string.Join(
-                    ",",
-                    connectedModels
-                        .Select(c => c.ConnectedModel!.ModelId)
-                        .GroupBy(m => m)
-                        .Select(g => g.First())
-                ),
-                Types =
-                    SelectedModelType == CivitModelType.All ? null : new[] { SelectedModelType },
-                Page = CurrentPageNumber,
-            };
+            modelRequest.CommaSeparatedModelIds = string.Join(
+                ",",
+                connectedModels
+                    .Select(c => c.ConnectedModel!.ModelId)
+                    .GroupBy(m => m)
+                    .Select(g => g.First())
+            );
+            modelRequest.Sort = null;
+            modelRequest.Period = null;
         }
 
         // See if query is cached

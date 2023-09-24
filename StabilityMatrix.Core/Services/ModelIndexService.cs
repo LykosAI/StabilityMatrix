@@ -81,8 +81,11 @@ public class ModelIndexService : IModelIndexService
                 Path.DirectorySeparatorChar,
                 StringSplitOptions.RemoveEmptyEntries
             )[0];
-            // Convert to enum
-            var sharedFolderType = Enum.Parse<SharedFolderType>(sharedFolderName, true);
+            // Try Convert to enum
+            if (!Enum.TryParse<SharedFolderType>(sharedFolderName, out var sharedFolderType))
+            {
+                continue;
+            }
 
             var localModel = new LocalModelFile
             {

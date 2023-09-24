@@ -168,56 +168,60 @@ public partial class InferenceViewModel : PageViewModelBase
         });
     }
 
-    public override async Task OnLoadedAsync()
+    public override void OnLoaded()
     {
-        await base.OnLoadedAsync();
-
         if (!Design.IsDesignMode && !isFirstLoadComplete)
         {
             isFirstLoadComplete = true;
+            OnInitialLoad().SafeFireAndForget();
+        }
 
-            // Load any open projects
-            var openProjects = await liteDbContext.InferenceProjects.FindAsync(p => p.IsOpen);
+        modelIndexService.BackgroundRefreshIndex();
+    }
 
-            if (openProjects is not null)
+    private async Task OnInitialLoad()
+    {
+        // Load any open projects
+        var openProjects = await liteDbContext.InferenceProjects.FindAsync(p => p.IsOpen);
+
+        if (openProjects is not null)
+        {
+            foreach (var project in openProjects.OrderBy(p => p.CurrentTabIndex))
             {
-                foreach (var project in openProjects.OrderBy(p => p.CurrentTabIndex))
+                var file = new FilePath(project.FilePath);
+
+                if (!file.Exists)
                 {
-                    var file = new FilePath(project.FilePath);
+                    // Remove from database
+                    await liteDbContext.InferenceProjects.DeleteAsync(project.Id);
+                }
 
-                    if (!file.Exists)
+                try
+                {
+                    if (file.Exists)
                     {
-                        // Remove from database
-                        await liteDbContext.InferenceProjects.DeleteAsync(project.Id);
+                        await AddTabFromFile(project.FilePath);
                     }
+                }
+                catch (Exception e)
+                {
+                    Logger.Warn(e, "Failed to open project file {FilePath}", project.FilePath);
 
-                    try
-                    {
-                        if (file.Exists)
+                    notificationService.Show(
+                        "Failed to open project file",
+                        $"[{e.GetType().Name}] {e.Message}",
+                        NotificationType.Error
+                    );
+
+                    // Set not open
+                    await liteDbContext.InferenceProjects.UpdateAsync(
+                        project with
                         {
-                            await AddTabFromFile(project.FilePath);
+                            IsOpen = false,
+                            IsSelected = false,
+                            CurrentTabIndex = -1
                         }
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Warn(e, "Failed to open project file {FilePath}", project.FilePath);
-
-                        notificationService.Show(
-                            "Failed to open project file",
-                            $"[{e.GetType().Name}] {e.Message}",
-                            NotificationType.Error
-                        );
-
-                        // Set not open
-                        await liteDbContext.InferenceProjects.UpdateAsync(
-                            project with
-                            {
-                                IsOpen = false,
-                                IsSelected = false,
-                                CurrentTabIndex = -1
-                            }
-                        );
-                    }
+                    );
                 }
             }
         }
@@ -226,9 +230,6 @@ public partial class InferenceViewModel : PageViewModelBase
         {
             AddTab(InferenceProjectType.TextToImage);
         }
-
-        // Start a model index update
-        modelIndexService.BackgroundRefreshIndex();
     }
 
     /// <summary>
@@ -305,7 +306,7 @@ public partial class InferenceViewModel : PageViewModelBase
     /// When the + button on the tab control is clicked, add a new tab.
     /// </summary>
     [RelayCommand]
-    public void AddTab(InferenceProjectType type)
+    private void AddTab(InferenceProjectType type)
     {
         if (type.ToViewModelType() is not { } vmType)
         {

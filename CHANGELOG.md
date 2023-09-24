@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.5.0
+### Added
+- Added option to change the Shared Folder method for packages using the three-dots menu on the Packages page
 ### Changed
 - Model Browser page size is now 20 instead of 14  
 ### Fixed

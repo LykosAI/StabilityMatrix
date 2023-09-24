@@ -168,6 +168,7 @@ public partial class SettingsViewModel : PageViewModelBase
     {
         if (oldValue is null || newValue.Name == Cultures.Current.Name)
             return;
+
         // Set locale
         if (AvailableLanguages.Contains(newValue))
         {

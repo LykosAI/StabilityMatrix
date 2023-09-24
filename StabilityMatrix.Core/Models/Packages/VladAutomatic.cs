@@ -262,7 +262,7 @@ public class VladAutomatic : BaseGitPackage
         void HandleConsoleOutput(ProcessOutput s)
         {
             onConsoleOutput?.Invoke(s);
-            if (s.Text.Contains("Running on local URL", StringComparison.OrdinalIgnoreCase))
+            if (s.Text.Contains("Local URL", StringComparison.OrdinalIgnoreCase))
             {
                 var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
                 var match = regex.Match(s.Text);

@@ -17,6 +17,7 @@ using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Inference;
@@ -39,6 +40,7 @@ public abstract partial class InferenceGenerationViewModelBase
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly INotificationService notificationService;
+    private readonly ServiceManager<ViewModelBase> vmFactory;
 
     [JsonPropertyName("ImageGallery")]
     public ImageGalleryCardViewModel ImageGalleryCardViewModel { get; }
@@ -60,6 +62,7 @@ public abstract partial class InferenceGenerationViewModelBase
     )
     {
         this.notificationService = notificationService;
+        this.vmFactory = vmFactory;
 
         ClientManager = inferenceClientManager;
 
@@ -273,16 +276,30 @@ public abstract partial class InferenceGenerationViewModelBase
         CancellationToken cancellationToken = default
     )
     {
+        var overrides = GenerateOverrides.FromFlags(options);
+
         try
         {
-            var overrides = GenerateOverrides.FromFlags(options);
-
             await GenerateImageImpl(overrides, cancellationToken);
         }
         catch (OperationCanceledException)
         {
             Logger.Debug($"Image Generation Canceled");
         }
+    }
+
+    /// <summary>
+    /// Shows a prompt and return false if client not connected
+    /// </summary>
+    protected async Task<bool> CheckClientConnectedWithPrompt()
+    {
+        if (ClientManager.IsConnected)
+            return true;
+
+        var vm = vmFactory.Get<InferenceConnectionHelpViewModel>();
+        await vm.CreateDialog().ShowAsync();
+
+        return ClientManager.IsConnected;
     }
 
     /// <summary>

@@ -286,9 +286,8 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase
             return;
         }
 
-        if (!ClientManager.IsConnected)
+        if (!await CheckClientConnectedWithPrompt() || !ClientManager.IsConnected)
         {
-            notificationService.Show("Client not connected", "Please connect first");
             return;
         }
 

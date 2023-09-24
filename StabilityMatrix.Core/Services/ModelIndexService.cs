@@ -175,6 +175,10 @@ public class ModelIndexService : IModelIndexService
     /// <inheritdoc />
     public void BackgroundRefreshIndex()
     {
-        RefreshIndex().SafeFireAndForget();
+        Task.Run(async () => await RefreshIndex().ConfigureAwait(false))
+            .SafeFireAndForget(ex =>
+            {
+                logger.LogError(ex, "Error in background model indexing");
+            });
     }
 }

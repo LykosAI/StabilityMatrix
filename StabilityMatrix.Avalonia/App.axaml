@@ -42,6 +42,7 @@
         <StyleInclude Source="Styles/SplitButtonStyles.axaml"/>
         <StyleInclude Source="Styles/ToggleButtonStyles.axaml"/>
         <StyleInclude Source="Styles/DockStyles.axaml"/>
+        <StyleInclude Source="Styles/BorderStyles.axaml"/>
         <StyleInclude Source="Controls/SeedCard.axaml"/>
         <StyleInclude Source="Controls/SamplerCard.axaml"/>
         <StyleInclude Source="Controls/ImageGalleryCard.axaml"/>

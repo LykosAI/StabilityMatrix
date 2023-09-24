@@ -642,4 +642,7 @@
   <data name="Label_AutoScrollToEnd" xml:space="preserve">
     <value>Automatically scroll to end of console output</value>
   </data>
+  <data name="Label_SharedModelStrategyShort" xml:space="preserve">
+    <value>Model Sharing</value>
+  </data>
 </root>

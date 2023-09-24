@@ -116,7 +116,6 @@
                                     <!--<WrapLayout HorizontalSpacing="2" VerticalSpacing="2" />-->
                                     <UniformGridLayout
                                         Orientation="Horizontal"
-                                        MaximumRowsOrColumns="2"
                                         MinColumnSpacing="2"
                                         MinRowSpacing="2" />
                                 </ItemsRepeater.Layout>

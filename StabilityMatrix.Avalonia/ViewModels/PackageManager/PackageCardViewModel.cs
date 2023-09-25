@@ -105,35 +105,40 @@ public partial class PackageCardViewModel : ProgressViewModel
 
     public override async Task OnLoadedAsync()
     {
-        if (Package == null)
+        if (
+            Design.IsDesignMode
+            || !settingsManager.IsLibraryDirSet
+            || Package is not { } currentPackage
+        )
             return;
 
-        if (!settingsManager.IsLibraryDirSet)
-            return;
-
-        // Migrate old packages with no preferred shared folder method
-        if (Package.PreferredSharedFolderMethod is null)
+        if (
+            packageFactory.FindPackageByName(currentPackage.PackageName)
+            is { } basePackage
+                and not UnknownPackage
+        )
         {
-            var basePackage = packageFactory[Package.PackageName!]!;
-            Package.PreferredSharedFolderMethod = basePackage.RecommendedSharedFolderMethod;
-        }
+            // Migrate old packages with null preferred shared folder method
+            currentPackage.PreferredSharedFolderMethod ??=
+                basePackage.RecommendedSharedFolderMethod;
 
-        switch (Package.PreferredSharedFolderMethod)
-        {
-            case SharedFolderMethod.Configuration:
-                IsSharedModelConfig = true;
-                break;
-            case SharedFolderMethod.Symlink:
-                IsSharedModelSymlink = true;
-                break;
-            case SharedFolderMethod.None:
-                IsSharedModelDisabled = true;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
+            switch (currentPackage.PreferredSharedFolderMethod)
+            {
+                case SharedFolderMethod.Configuration:
+                    IsSharedModelConfig = true;
+                    break;
+                case SharedFolderMethod.Symlink:
+                    IsSharedModelSymlink = true;
+                    break;
+                case SharedFolderMethod.None:
+                    IsSharedModelDisabled = true;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
 
-        IsUpdateAvailable = await HasUpdate();
+            IsUpdateAvailable = await HasUpdate();
+        }
     }
 
     public void Launch()

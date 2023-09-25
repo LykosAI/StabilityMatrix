@@ -105,10 +105,34 @@ public partial class PackageCardViewModel : ProgressViewModel
 
     public override async Task OnLoadedAsync()
     {
-        IsSharedModelSymlink = Package?.PreferredSharedFolderMethod == SharedFolderMethod.Symlink;
+        if (Package == null)
+            return;
+
+        if (!settingsManager.IsLibraryDirSet)
+            return;
+
+        IsSharedModelSymlink = Package.PreferredSharedFolderMethod == SharedFolderMethod.Symlink;
         IsSharedModelConfig =
-            Package?.PreferredSharedFolderMethod == SharedFolderMethod.Configuration;
-        IsSharedModelDisabled = Package?.PreferredSharedFolderMethod == SharedFolderMethod.None;
+            Package.PreferredSharedFolderMethod == SharedFolderMethod.Configuration;
+        IsSharedModelDisabled = Package.PreferredSharedFolderMethod == SharedFolderMethod.None;
+
+        if (Package.PreferredSharedFolderMethod == null)
+        {
+            var basePackage = packageFactory[Package.PackageName!];
+            switch (basePackage?.RecommendedSharedFolderMethod)
+            {
+                case SharedFolderMethod.Symlink:
+                    IsSharedModelSymlink = true;
+                    break;
+                case SharedFolderMethod.Configuration:
+                    IsSharedModelConfig = true;
+                    break;
+                case SharedFolderMethod.None:
+                    IsSharedModelDisabled = true;
+                    break;
+            }
+        }
+
         IsUpdateAvailable = await HasUpdate();
     }
 

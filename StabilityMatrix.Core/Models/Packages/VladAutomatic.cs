@@ -171,7 +171,7 @@ public class VladAutomatic : BaseGitPackage
         venvRunner.WorkingDirectory = installLocation;
         venvRunner.EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables;
 
-        await venvRunner.Setup(true).ConfigureAwait(false);
+        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
         switch (torchVersion)
         {

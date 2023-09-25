@@ -3,6 +3,7 @@ using StabilityMatrix.Avalonia.Diagnostics.LogViewer;
 using StabilityMatrix.Avalonia.Diagnostics.LogViewer.Extensions;
 #endif
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -16,10 +17,15 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Primitives;
+using Avalonia.Input.Platform;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,28 +42,36 @@ using Polly.Timeout;
 using Refit;
 using Sentry;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
+using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
+using StabilityMatrix.Avalonia.Views.Inference;
+using StabilityMatrix.Avalonia.Views.Settings;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Database;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Settings;
@@ -66,6 +80,7 @@ using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
 using Application = Avalonia.Application;
 using DrawingColor = System.Drawing.Color;
+using InferenceTextToImageView = StabilityMatrix.Avalonia.Views.Inference.InferenceTextToImageView;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace StabilityMatrix.Avalonia;
@@ -80,6 +95,9 @@ public sealed class App : Application
 
     [NotNull]
     public static IStorageProvider? StorageProvider { get; private set; }
+
+    [NotNull]
+    public static IClipboard? Clipboard { get; private set; }
 
     // ReSharper disable once MemberCanBePrivate.Global
     [NotNull]
@@ -208,6 +226,7 @@ public sealed class App : Application
 
         VisualRoot = mainWindow;
         StorageProvider = mainWindow.StorageProvider;
+        Clipboard = mainWindow.Clipboard ?? throw new NullReferenceException("Clipboard is null");
 
         DesktopLifetime.MainWindow = mainWindow;
         DesktopLifetime.Exit += OnExit;
@@ -237,10 +256,13 @@ public sealed class App : Application
         services
             .AddSingleton<PackageManagerViewModel>()
             .AddSingleton<SettingsViewModel>()
+            .AddSingleton<InferenceSettingsViewModel>()
             .AddSingleton<CheckpointBrowserViewModel>()
             .AddSingleton<CheckpointsPageViewModel>()
             .AddSingleton<NewCheckpointsPageViewModel>()
             .AddSingleton<LaunchPageViewModel>()
+            .AddSingleton<ProgressManagerViewModel>()
+            .AddSingleton<InferenceViewModel>()
             .AddSingleton<ProgressManagerViewModel>();
 
         services.AddSingleton<MainWindowViewModel>(
@@ -249,12 +271,14 @@ public sealed class App : Application
                     provider.GetRequiredService<ISettingsManager>(),
                     provider.GetRequiredService<IDiscordRichPresenceService>(),
                     provider.GetRequiredService<ServiceManager<ViewModelBase>>(),
-                    provider.GetRequiredService<ITrackedDownloadService>()
+                    provider.GetRequiredService<ITrackedDownloadService>(),
+                    provider.GetRequiredService<IModelIndexService>()
                 )
                 {
                     Pages =
                     {
                         provider.GetRequiredService<LaunchPageViewModel>(),
+                        provider.GetRequiredService<InferenceViewModel>(),
                         provider.GetRequiredService<PackageManagerViewModel>(),
                         provider.GetRequiredService<CheckpointsPageViewModel>(),
                         provider.GetRequiredService<CheckpointBrowserViewModel>(),
@@ -277,7 +301,10 @@ public sealed class App : Application
         services.AddTransient<LaunchOptionsViewModel>();
         services.AddTransient<ExceptionViewModel>();
         services.AddTransient<EnvVarsViewModel>();
+        services.AddTransient<ImageViewerViewModel>();
         services.AddTransient<PackageImportViewModel>();
+        services.AddTransient<InferenceConnectionHelpViewModel>();
+        services.AddTransient<DownloadResourceViewModel>();
 
         // Dialog view models (singleton)
         services.AddSingleton<FirstLaunchSetupViewModel>();
@@ -286,6 +313,8 @@ public sealed class App : Application
         // Other transients (usually sub view models)
         services.AddTransient<CheckpointFolder>();
         services.AddTransient<CheckpointFile>();
+        services.AddTransient<InferenceTextToImageViewModel>();
+        services.AddTransient<InferenceImageUpscaleViewModel>();
         services.AddTransient<CheckpointBrowserCardViewModel>();
         services.AddTransient<PackageCardViewModel>();
 
@@ -294,6 +323,20 @@ public sealed class App : Application
 
         // Controls
         services.AddTransient<RefreshBadgeViewModel>();
+
+        // Inference controls
+        services.AddTransient<SeedCardViewModel>();
+        services.AddTransient<SamplerCardViewModel>();
+        services.AddTransient<UpscalerCardViewModel>();
+        services.AddTransient<ImageGalleryCardViewModel>();
+        services.AddTransient<ImageFolderCardViewModel>();
+        services.AddTransient<PromptCardViewModel>();
+        services.AddTransient<StackCardViewModel>();
+        services.AddTransient<StackExpanderViewModel>();
+        services.AddTransient<ModelCardViewModel>();
+        services.AddTransient<BatchSizeCardViewModel>();
+        services.AddTransient<SelectImageCardViewModel>();
+        services.AddTransient<SharpenCardViewModel>();
 
         // Dialog factory
         services.AddSingleton<ServiceManager<ViewModelBase>>(
@@ -313,8 +356,25 @@ public sealed class App : Application
                     .Register(provider.GetRequiredService<ExceptionViewModel>)
                     .Register(provider.GetRequiredService<EnvVarsViewModel>)
                     .Register(provider.GetRequiredService<ProgressManagerViewModel>)
+                    .Register(provider.GetRequiredService<InferenceTextToImageViewModel>)
+                    .Register(provider.GetRequiredService<InferenceImageUpscaleViewModel>)
+                    .Register(provider.GetRequiredService<SeedCardViewModel>)
+                    .Register(provider.GetRequiredService<SamplerCardViewModel>)
+                    .Register(provider.GetRequiredService<ImageGalleryCardViewModel>)
+                    .Register(provider.GetRequiredService<ImageFolderCardViewModel>)
+                    .Register(provider.GetRequiredService<PromptCardViewModel>)
+                    .Register(provider.GetRequiredService<StackCardViewModel>)
+                    .Register(provider.GetRequiredService<StackExpanderViewModel>)
+                    .Register(provider.GetRequiredService<UpscalerCardViewModel>)
+                    .Register(provider.GetRequiredService<ModelCardViewModel>)
+                    .Register(provider.GetRequiredService<BatchSizeCardViewModel>)
+                    .Register(provider.GetRequiredService<ImageViewerViewModel>)
                     .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>)
                     .Register(provider.GetRequiredService<PackageImportViewModel>)
+                    .Register(provider.GetRequiredService<SelectImageCardViewModel>)
+                    .Register(provider.GetRequiredService<InferenceConnectionHelpViewModel>)
+                    .Register(provider.GetRequiredService<SharpenCardViewModel>)
+                    .Register(provider.GetRequiredService<DownloadResourceViewModel>)
         );
     }
 
@@ -325,8 +385,28 @@ public sealed class App : Application
         services.AddSingleton<LaunchPageView>();
         services.AddSingleton<PackageManagerPage>();
         services.AddSingleton<SettingsPage>();
+        services.AddSingleton<InferenceSettingsPage>();
         services.AddSingleton<CheckpointBrowserPage>();
         services.AddSingleton<ProgressManagerPage>();
+        services.AddSingleton<InferencePage>();
+
+        // Inference tabs
+        services.AddTransient<InferenceTextToImageView>();
+        services.AddTransient<InferenceImageUpscaleView>();
+
+        // Inference controls
+        services.AddTransient<ImageGalleryCard>();
+        services.AddTransient<ImageFolderCard>();
+        services.AddTransient<SeedCard>();
+        services.AddTransient<SamplerCard>();
+        services.AddTransient<PromptCard>();
+        services.AddTransient<StackCard>();
+        services.AddTransient<StackExpander>();
+        services.AddTransient<UpscalerCard>();
+        services.AddTransient<ModelCard>();
+        services.AddTransient<BatchSizeCard>();
+        services.AddTransient<SelectImageCard>();
+        services.AddTransient<SharpenCard>();
         services.AddSingleton<NewCheckpointsPage>();
 
         // Dialogs
@@ -335,7 +415,10 @@ public sealed class App : Application
         services.AddTransient<UpdateDialog>();
         services.AddTransient<ExceptionDialog>();
         services.AddTransient<EnvVarsDialog>();
+        services.AddTransient<ImageViewerDialog>();
         services.AddTransient<PackageImportDialog>();
+        services.AddTransient<InferenceConnectionHelpDialog>();
+        services.AddTransient<DownloadResourceDialog>();
 
         // Controls
         services.AddTransient<RefreshBadge>();
@@ -378,8 +461,12 @@ public sealed class App : Application
         services.AddSingleton<IPyRunner, PyRunner>();
         services.AddSingleton<IUpdateHelper, UpdateHelper>();
         services.AddSingleton<INavigationService, NavigationService>();
+        services.AddSingleton<IInferenceClientManager, InferenceClientManager>();
+        services.AddSingleton<ICompletionProvider, CompletionProvider>();
+        services.AddSingleton<ITokenizerProvider, TokenizerProvider>();
         services.AddSingleton<IModelIndexService, ModelIndexService>();
         services.AddTransient<IPackageModificationRunner, PackageModificationRunner>();
+        services.AddSingleton<IImageIndexService, ImageIndexService>();
 
         services.AddSingleton<ITrackedDownloadService, TrackedDownloadService>();
         services.AddSingleton<IDisposable>(
@@ -450,6 +537,15 @@ public sealed class App : Application
             ContentSerializer = new SystemTextJsonContentSerializer(jsonSerializerOptions)
         };
 
+        // Refit settings for IApiFactory
+        var defaultSystemTextJsonSettings =
+            SystemTextJsonContentSerializer.GetDefaultJsonSerializerOptions();
+        defaultSystemTextJsonSettings.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        var apiFactoryRefitSettings = new RefitSettings
+        {
+            ContentSerializer = new SystemTextJsonContentSerializer(defaultSystemTextJsonSettings),
+        };
+
         // HTTP Policies
         var retryStatusCodes = new[]
         {
@@ -505,6 +601,18 @@ public sealed class App : Application
         services
             .AddHttpClient("A3Client")
             .AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));
+
+        /*services.AddHttpClient("IComfyApi")
+            .AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));*/
+
+        // Add Refit client factory
+        services.AddSingleton<IApiFactory, ApiFactory>(
+            provider =>
+                new ApiFactory(provider.GetRequiredService<IHttpClientFactory>())
+                {
+                    RefitSettings = apiFactoryRefitSettings,
+                }
+        );
 
         ConditionalAddLogViewer(services);
 
@@ -616,6 +724,11 @@ public sealed class App : Application
                 .ForLogger("StabilityMatrix.Avalonia.ViewModels.ConsoleViewModel")
                 .WriteToNil(NLog.LogLevel.Debug);
 
+            // Disable console trace logging by default
+            builder
+                .ForLogger("StabilityMatrix.Avalonia.ViewModels.ConsoleViewModel")
+                .WriteToNil(NLog.LogLevel.Debug);
+
             builder.ForLogger().FilterMinLevel(NLog.LogLevel.Trace).WriteTo(debugTarget);
             builder.ForLogger().FilterMinLevel(NLog.LogLevel.Debug).WriteTo(fileTarget);
 
@@ -647,6 +760,69 @@ public sealed class App : Application
         LogManager.ReconfigExistingLoggers();
 
         return LogManager.Configuration;
+    }
+
+    /// <summary>
+    /// Opens a dialog to save the current view as a screenshot.
+    /// </summary>
+    /// <remarks>Only available in debug builds.</remarks>
+    [Conditional("DEBUG")]
+    internal static void DebugSaveScreenshot(int dpi = 96)
+    {
+        const int scale = 2;
+        dpi *= scale;
+
+        var results = new List<MemoryStream>();
+        var targets = new List<Visual?> { VisualRoot };
+
+        foreach (var visual in targets.Where(x => x != null))
+        {
+            var rect = new Rect(visual!.Bounds.Size);
+
+            var pixelSize = new PixelSize((int)rect.Width * scale, (int)rect.Height * scale);
+            var dpiVector = new Vector(dpi, dpi);
+
+            var ms = new MemoryStream();
+
+            using (var bitmap = new RenderTargetBitmap(pixelSize, dpiVector))
+            {
+                bitmap.Render(visual);
+                bitmap.Save(ms);
+            }
+
+            results.Add(ms);
+        }
+
+        Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            var dest = await StorageProvider.SaveFilePickerAsync(
+                new FilePickerSaveOptions()
+                {
+                    SuggestedFileName = "screenshot.png",
+                    ShowOverwritePrompt = true
+                }
+            );
+
+            if (dest?.TryGetLocalPath() is { } localPath)
+            {
+                var localFile = new FilePath(localPath);
+                foreach (var (i, stream) in results.Enumerate())
+                {
+                    var name = localFile.NameWithoutExtension;
+                    if (results.Count > 1)
+                    {
+                        name += $"_{i + 1}";
+                    }
+
+                    localFile = localFile.Directory!.JoinFile(name + ".png");
+                    localFile.Create();
+
+                    await using var fileStream = localFile.Info.OpenWrite();
+                    stream.Seek(0, SeekOrigin.Begin);
+                    await stream.CopyToAsync(fileStream);
+                }
+            }
+        });
     }
 
     [Conditional("DEBUG")]

@@ -12,6 +12,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
+using FluentAvalonia.Core;
 using NLog;
 using Polly.Contrib.WaitAndRetry;
 using Projektanker.Icons.Avalonia;
@@ -30,6 +31,9 @@ namespace StabilityMatrix.Avalonia;
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class Program
 {
+    private static Logger? _logger;
+    private static Logger Logger => _logger ??= LogManager.GetCurrentClassLogger();
+
     public static AppArgs Args { get; } = new();
 
     public static bool IsDebugBuild { get; private set; }
@@ -42,6 +46,7 @@ public class Program
     {
         Args.DebugExceptionDialog = args.Contains("--debug-exception-dialog");
         Args.DebugSentry = args.Contains("--debug-sentry");
+        Args.DebugOneClickInstall = args.Contains("--debug-one-click-install");
         Args.NoSentry = args.Contains("--no-sentry");
         Args.NoWindowChromeEffects = args.Contains("--no-window-chrome-effects");
         Args.ResetWindowPosition = args.Contains("--reset-window-position");
@@ -61,6 +66,8 @@ public class Program
         {
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         }
+
+        TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
         // Configure Sentry
         if (!Args.NoSentry && (!Debugger.IsAttached || Args.DebugSentry))
@@ -168,6 +175,17 @@ public class Program
         });
     }
 
+    private static void TaskScheduler_UnobservedTaskException(
+        object? sender,
+        UnobservedTaskExceptionEventArgs e
+    )
+    {
+        if (e.Exception is Exception ex)
+        {
+            Logger.Error(ex, "Unobserved task exception");
+        }
+    }
+
     private static void CurrentDomain_UnhandledException(
         object sender,
         UnhandledExceptionEventArgs e
@@ -176,9 +194,7 @@ public class Program
         if (e.ExceptionObject is not Exception ex)
             return;
 
-        var logger = LogManager.GetCurrentClassLogger();
-        logger.Fatal(ex, "Unhandled {Type}: {Message}", ex.GetType().Name, ex.Message);
-
+        Logger.Fatal(ex, "Unhandled {Type}: {Message}", ex.GetType().Name, ex.Message);
         if (SentrySdk.IsEnabled)
         {
             SentrySdk.CaptureException(ex);

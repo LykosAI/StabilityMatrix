@@ -45,8 +45,15 @@ public class SettingsManager : ISettingsManager
         }
         private set
         {
+            var isChanged = libraryDir != value;
+
             libraryDir = value;
-            LibraryDirChanged?.Invoke(this, value);
+
+            // Only invoke if different
+            if (isChanged)
+            {
+                LibraryDirChanged?.Invoke(this, value);
+            }
         }
     }
     public bool IsLibraryDirSet => !string.IsNullOrWhiteSpace(libraryDir);
@@ -58,10 +65,21 @@ public class SettingsManager : ISettingsManager
     public string DownloadsDirectory => Path.Combine(LibraryDir, ".downloads");
     public List<string> PackageInstallsInProgress { get; set; } = new();
 
+    public DirectoryPath TagsDirectory => new(LibraryDir, "Tags");
+
+    public DirectoryPath ImagesDirectory => new(LibraryDir, "Images");
+    public DirectoryPath ImagesInferenceDirectory => ImagesDirectory.JoinDir("Inference");
+
     public Settings Settings { get; private set; } = new();
 
+    /// <inheritdoc />
     public event EventHandler<string>? LibraryDirChanged;
-    public event EventHandler<PropertyChangedEventArgs>? SettingsPropertyChanged;
+
+    /// <inheritdoc />
+    public event EventHandler<RelayPropertyChangedEventArgs>? SettingsPropertyChanged;
+
+    /// <inheritdoc />
+    public event EventHandler? Loaded;
 
     /// <inheritdoc />
     public void RegisterOnLibraryDirSet(Action<string> handler)
@@ -137,14 +155,15 @@ public class SettingsManager : ISettingsManager
         propertyInfo.SetValue(transaction.Settings, value);
 
         // Invoke property changed event
-        SettingsPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        SettingsPropertyChanged?.Invoke(this, new RelayPropertyChangedEventArgs(name));
     }
 
     /// <inheritdoc />
     public void RelayPropertyFor<T, TValue>(
         T source,
         Expression<Func<T, TValue>> sourceProperty,
-        Expression<Func<Settings, TValue>> settingsProperty
+        Expression<Func<Settings, TValue>> settingsProperty,
+        bool setInitial = false
     )
         where T : INotifyPropertyChanged
     {
@@ -159,11 +178,14 @@ public class SettingsManager : ISettingsManager
         var sourceTypeName = source.GetType().Name;
 
         // Update source when settings change
-        SettingsPropertyChanged += (_, args) =>
+        SettingsPropertyChanged += (sender, args) =>
         {
-            if (args.PropertyName != propertyName)
+            if (args.PropertyName != targetPropertyName)
                 return;
 
+            // Skip if event is relay and the sender is the source, to prevent duplicate
+            if (args.IsRelay && ReferenceEquals(sender, source))
+                return;
             Logger.Trace(
                 "[RelayPropertyFor] "
                     + "Settings.{TargetProperty:l} -> {SourceType:l}.{SourceProperty:l}",
@@ -176,7 +198,7 @@ public class SettingsManager : ISettingsManager
         };
 
         // Set and Save settings when source changes
-        source.PropertyChanged += (_, args) =>
+        source.PropertyChanged += (sender, args) =>
         {
             if (args.PropertyName != propertyName)
                 return;
@@ -200,9 +222,18 @@ public class SettingsManager : ISettingsManager
                 Logger.Warn("[RelayPropertyFor] LibraryDir not set when saving");
             }
 
-            // Invoke property changed event
-            SettingsPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            // Invoke property changed event, passing along sender
+            SettingsPropertyChanged?.Invoke(
+                sender,
+                new RelayPropertyChangedEventArgs(targetPropertyName, true)
+            );
         };
+
+        // Set initial value if requested
+        if (setInitial)
+        {
+            sourceSetter(source, settingsGetter(Settings));
+        }
     }
 
     /// <inheritdoc />
@@ -228,8 +259,11 @@ public class SettingsManager : ISettingsManager
     /// Attempts to locate and set the library path
     /// Return true if found, false otherwise
     /// </summary>
-    public bool TryFindLibrary()
+    public bool TryFindLibrary(bool forceReload = false)
     {
+        if (IsLibraryDirSet && !forceReload)
+            return true;
+
         // 1. Check portable mode
         var appDir = Compat.AppCurrentDir;
         IsPortableMode = File.Exists(Path.Combine(appDir, "Data", ".sm-portable"));
@@ -580,6 +614,8 @@ public class SettingsManager : ISettingsManager
                 settingsContent,
                 modifiedDefaultSerializerOptions
             )!;
+
+            Loaded?.Invoke(this, EventArgs.Empty);
         }
         finally
         {

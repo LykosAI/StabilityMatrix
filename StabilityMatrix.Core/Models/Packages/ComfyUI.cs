@@ -31,6 +31,7 @@ public class ComfyUI : BaseGitPackage
     public override Uri PreviewImageUri =>
         new("https://github.com/comfyanonymous/ComfyUI/raw/master/comfyui_screenshot.png");
     public override bool ShouldIgnoreReleases => true;
+    public override bool IsInferenceCompatible => true;
     public override SharedFolderMethod RecommendedSharedFolderMethod =>
         SharedFolderMethod.Configuration;
 
@@ -64,6 +65,20 @@ public class ComfyUI : BaseGitPackage
         {
             new()
             {
+                Name = "Host",
+                Type = LaunchOptionType.String,
+                DefaultValue = "127.0.0.1",
+                Options = { "--listen" }
+            },
+            new()
+            {
+                Name = "Port",
+                Type = LaunchOptionType.String,
+                DefaultValue = "8188",
+                Options = { "--port" }
+            },
+            new()
+            {
                 Name = "VRAM",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper
@@ -76,6 +91,18 @@ public class ComfyUI : BaseGitPackage
                     _ => null
                 },
                 Options = { "--highvram", "--normalvram", "--lowvram", "--novram" }
+            },
+            new()
+            {
+                Name = "Preview Method",
+                Type = LaunchOptionType.Bool,
+                InitialValue = "--preview-method auto",
+                Options =
+                {
+                    "--preview-method auto",
+                    "--preview-method latent2rgb",
+                    "--preview-method taesd"
+                }
             },
             new()
             {
@@ -97,6 +124,12 @@ public class ComfyUI : BaseGitPackage
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),
                 Options = { "--disable-xformers" }
+            },
+            new()
+            {
+                Name = "Disable upcasting of attention",
+                Type = LaunchOptionType.Bool,
+                Options = { "--dont-upcast-attention" }
             },
             new()
             {
@@ -398,6 +431,19 @@ public class ComfyUI : BaseGitPackage
 
         await venvRunner
             .PipInstall(PyVenvRunner.TorchPipInstallArgsRocm542, onConsoleOutput)
+            .ConfigureAwait(false);
+    }
+
+    public async Task SetupInferenceOutputFolderLinks(DirectoryPath installDirectory)
+    {
+        var inferenceDir = installDirectory.JoinDir("output", "Inference");
+
+        var sharedInferenceDir = SettingsManager.ImagesInferenceDirectory;
+
+        await Task.Run(() =>
+            {
+                Helper.SharedFolders.CreateLinkOrJunctionWithMove(sharedInferenceDir, inferenceDir);
+            })
             .ConfigureAwait(false);
     }
 

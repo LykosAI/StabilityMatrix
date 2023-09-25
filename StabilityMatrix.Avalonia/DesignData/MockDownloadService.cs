@@ -9,18 +9,38 @@ namespace StabilityMatrix.Avalonia.DesignData;
 
 public class MockDownloadService : IDownloadService
 {
-    public Task DownloadToFileAsync(string downloadUrl, string downloadPath, IProgress<ProgressReport>? progress = null,
-        string? httpClientName = null, CancellationToken cancellationToken = default)
+    public Task DownloadToFileAsync(
+        string downloadUrl,
+        string downloadPath,
+        IProgress<ProgressReport>? progress = null,
+        string? httpClientName = null,
+        CancellationToken cancellationToken = default
+    )
     {
         return Task.CompletedTask;
     }
 
     /// <inheritdoc />
-    public Task ResumeDownloadToFileAsync(string downloadUrl, string downloadPath, long existingFileSize,
-        IProgress<ProgressReport>? progress = null, string? httpClientName = null,
-        CancellationToken cancellationToken = default)
+    public Task ResumeDownloadToFileAsync(
+        string downloadUrl,
+        string downloadPath,
+        long existingFileSize,
+        IProgress<ProgressReport>? progress = null,
+        string? httpClientName = null,
+        CancellationToken cancellationToken = default
+    )
     {
         return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task<long> GetFileSizeAsync(
+        string downloadUrl,
+        string? httpClientName = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return Task.FromResult(0L);
     }
 
     public Task<Stream> GetImageStreamFromUrl(string url)

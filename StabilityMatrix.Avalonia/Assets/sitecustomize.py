@@ -6,6 +6,7 @@ so we can prompt the user to enter something.
 """
 
 import sys
+import json
 
 # Application Program Command escape sequence
 # This wraps messages sent to the parent process.
@@ -20,11 +21,13 @@ def send_apc(msg: str):
     sys.stdout.write(esc_apc + esc_prefix + msg + esc_st)
     sys.stdout.flush()
 
+def send_apc_json(type: str, data: str):
+    """Send an APC Json message."""
+    send_apc(json.dumps({"type": type, "data": data}))
 
 def send_apc_input(prompt: str):
     """Apc message for input() prompt."""
-    send_apc('{"type":"input","data":"' + str(prompt) + '"}')
-
+    send_apc_json("input", prompt)
 
 def audit(event: str, *args):
     """Main audit hook function."""

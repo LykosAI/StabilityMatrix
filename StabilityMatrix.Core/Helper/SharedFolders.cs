@@ -1,4 +1,5 @@
-﻿using NLog;
+﻿using System.Diagnostics.CodeAnalysis;
+using NLog;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
@@ -22,7 +23,7 @@ public class SharedFolders : ISharedFolders
     }
 
     // Platform redirect for junctions / symlinks
-    private static void CreateLinkOrJunction(string junctionDir, string targetDir, bool overwrite)
+    public static void CreateLinkOrJunction(string junctionDir, string targetDir, bool overwrite)
     {
         if (Compat.IsWindows)
         {
@@ -34,6 +35,49 @@ public class SharedFolders : ISharedFolders
             new DirectoryPath(junctionDir).Parent?.Create();
             Directory.CreateSymbolicLink(junctionDir, targetDir);
         }
+    }
+
+    /// <summary>
+    /// Creates a junction link from the source to the destination.
+    /// Moves destination files to source if they exist.
+    /// </summary>
+    /// <param name="sourceDir">Shared source (i.e. "Models/")</param>
+    /// <param name="destinationDir">Destination (i.e. "webui/models/lora")</param>
+    public static void CreateLinkOrJunctionWithMove(
+        DirectoryPath sourceDir,
+        DirectoryPath destinationDir
+    )
+    {
+        // Create source folder if it doesn't exist
+        if (!sourceDir.Exists)
+        {
+            Logger.Info($"Creating junction source {sourceDir}");
+            sourceDir.Create();
+        }
+        // Delete the destination folder if it exists
+        if (destinationDir.Exists)
+        {
+            // Copy all files from destination to source
+            Logger.Info($"Copying files from {destinationDir} to {sourceDir}");
+            foreach (var file in destinationDir.Info.EnumerateFiles())
+            {
+                var sourceFile = sourceDir + file;
+                var destinationFile = destinationDir + file;
+                // Skip name collisions
+                if (File.Exists(sourceFile))
+                {
+                    Logger.Warn(
+                        $"Skipping file {file.FullName} because it already exists in {sourceDir}"
+                    );
+                    continue;
+                }
+                destinationFile.Info.MoveTo(sourceFile);
+            }
+            Logger.Info($"Deleting junction target {destinationDir}");
+            destinationDir.Delete(true);
+        }
+        Logger.Info($"Creating junction link from {sourceDir} to {destinationDir}");
+        CreateLinkOrJunction(destinationDir, sourceDir, true);
     }
 
     public static void SetupLinks(

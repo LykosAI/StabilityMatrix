@@ -14,7 +14,6 @@ using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Progress;
-using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -100,7 +99,7 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
             try
             {
                 var jsonText = await File.ReadAllTextAsync(settingsPath);
-                JsonSerializer.Deserialize<Settings>(
+                var _ = JsonSerializer.Deserialize<Core.Models.Settings.Settings>(
                     jsonText,
                     new JsonSerializerOptions { Converters = { new JsonStringEnumConverter() } }
                 );

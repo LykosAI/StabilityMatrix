@@ -1,0 +1,18 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <StackPanel Margin="16" Spacing="4" Height="400" Width="300">
+            <Border Padding="16">
+                <TextBlock Text="Default Test"/>
+            </Border>
+            <Border Padding="16" Classes="theme-dark">
+                <TextBlock Text="theme-dark Test"/>
+            </Border>
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <!-- Add Styles Here -->
+    <Style Selector="Border.theme-dark">
+        <Setter Property="Background" Value="{DynamicResource ThemeDarkAccentBackgroundBrush}"/>
+    </Style>
+</Styles>

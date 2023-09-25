@@ -17,6 +17,8 @@
                         Width="1100"
                         Height="750"
                         Title="Stability Matrix"
+                        DockProperties.IsDragEnabled="True" 
+                        DockProperties.IsDropEnabled="True"
                         x:Class="StabilityMatrix.Avalonia.Views.MainWindow">
     
     <Grid RowDefinitions="Auto,Auto,*">

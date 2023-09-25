@@ -53,4 +53,19 @@ public static class DictionaryExtensions
         sb.Append('}');
         return sb.ToString();
     }
+    
+    /// <summary>
+    /// Get or add a value to a dictionary.
+    /// </summary>
+    public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key) 
+        where TValue : new()
+    {
+        if (!dict.TryGetValue(key, out var val))
+        {
+            val = new TValue();
+            dict.Add(key, val);
+        }
+
+        return val;
+    }
 }

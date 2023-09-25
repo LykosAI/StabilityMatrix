@@ -84,7 +84,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     private ObservableCollection<InstalledPackage> installedPackages = new();
 
     [ObservableProperty]
-    private BasePackage? runningPackage;
+    private PackagePair? runningPackage;
 
     [ObservableProperty]
     private bool autoScrollToEnd = true;
@@ -299,11 +299,9 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         command ??= basePackage.LaunchCommand;
 
         await basePackage.RunPackage(packagePath, command, userArgsString, OnProcessOutputReceived);
-        RunningPackage = basePackage;
+        RunningPackage = new PackagePair(activeInstall, basePackage);
 
-        EventManager.Instance.OnRunningPackageStatusChanged(
-            new PackagePair(activeInstall, basePackage)
-        );
+        EventManager.Instance.OnRunningPackageStatusChanged(RunningPackage);
     }
 
     // Unpacks sitecustomize.py to the target venv
@@ -379,9 +377,9 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     // Send user input to running package
     public async Task SendInput(string input)
     {
-        if (RunningPackage is BaseGitPackage package)
+        if (RunningPackage?.BasePackage is BaseGitPackage gitPackage)
         {
-            var venv = package.VenvRunner;
+            var venv = gitPackage.VenvRunner;
             var process = venv?.Process;
             if (process is not null)
             {
@@ -426,8 +424,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     {
         if (RunningPackage is null)
             return;
-        await RunningPackage.WaitForShutdown();
-
+        await RunningPackage.BasePackage.WaitForShutdown();
         RunningPackage = null;
         ShowWebUiButton = false;
 
@@ -572,7 +569,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
 
     public void Dispose()
     {
-        RunningPackage?.Shutdown();
+        RunningPackage?.BasePackage.Shutdown();
         RunningPackage = null;
 
         Console.Dispose();
@@ -584,7 +581,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     {
         if (RunningPackage is not null)
         {
-            await RunningPackage.WaitForShutdown();
+            await RunningPackage.BasePackage.WaitForShutdown();
             RunningPackage = null;
         }
         await Console.DisposeAsync();

@@ -1,0 +1,68 @@
+﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sty="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia">
+    
+    <ExperimentalAcrylicMaterial
+        x:Key="OpaqueDarkAcrylicMaterial"
+        FallbackColor="#1E1F22"
+        TintColor="Black"
+        TintOpacity="0.78"
+        MaterialOpacity="0.9"
+        BackgroundSource="None" />
+    
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Default">
+            <ExperimentalAcrylicMaterial
+                x:Key="ThemeDarkAcrylicMaterial"
+                FallbackColor="{DynamicResource ThemeBackgroundColor}"
+                TintColor="Black"
+                TintOpacity="0.78"
+                MaterialOpacity="0.9"
+                BackgroundSource="Digger" />
+    
+            <ExperimentalAcrylicMaterial
+                x:Key="ThemeTransparentAcrylicMaterial"
+                FallbackColor="{DynamicResource ThemeBackgroundColor}"
+                TintColor="{DynamicResource ThemeBackgroundColor}"
+                TintOpacity="0.7"
+                MaterialOpacity="0.5"
+                BackgroundSource="Digger" />
+        </ResourceDictionary>
+        
+        <ResourceDictionary x:Key="Dark">
+            <ExperimentalAcrylicMaterial
+                x:Key="ThemeDarkAcrylicMaterial"
+                FallbackColor="{DynamicResource ThemeBackgroundColor}"
+                TintColor="Black"
+                TintOpacity="0.78"
+                MaterialOpacity="0.9"
+                BackgroundSource="Digger" />
+    
+            <ExperimentalAcrylicMaterial
+                x:Key="ThemeTransparentAcrylicMaterial"
+                FallbackColor="{DynamicResource ThemeBackgroundColor}"
+                TintColor="Black"
+                TintOpacity="0.7"
+                MaterialOpacity="0.5"
+                BackgroundSource="Digger" />
+        </ResourceDictionary>
+        
+        <ResourceDictionary x:Key="{x:Static sty:FluentAvaloniaTheme.HighContrastTheme}">
+            <ExperimentalAcrylicMaterial
+                x:Key="ThemeDarkAcrylicMaterial"
+                FallbackColor="{DynamicResource ThemeBackgroundColor}"
+                TintColor="Black"
+                TintOpacity="0.78"
+                MaterialOpacity="0.9"
+                BackgroundSource="Digger" />
+    
+            <ExperimentalAcrylicMaterial
+                x:Key="ThemeTransparentAcrylicMaterial"
+                FallbackColor="{DynamicResource ThemeBackgroundColor}"
+                TintColor="Black"
+                TintOpacity="0.7"
+                MaterialOpacity="0.5"
+                BackgroundSource="Digger" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

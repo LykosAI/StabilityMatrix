@@ -1,6 +1,9 @@
 ﻿using System.Diagnostics;
+using AsyncAwaitBestPractices;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Database;
+using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -12,6 +15,9 @@ public class ModelIndexService : IModelIndexService
     private readonly ILogger<ModelIndexService> logger;
     private readonly ILiteDbContext liteDbContext;
     private readonly ISettingsManager settingsManager;
+
+    public Dictionary<SharedFolderType, List<LocalModelFile>> ModelIndex { get; private set; } =
+        new();
 
     public ModelIndexService(
         ILogger<ModelIndexService> logger,
@@ -32,6 +38,11 @@ public class ModelIndexService : IModelIndexService
         await liteDbContext.LocalModelFiles.DeleteAllAsync().ConfigureAwait(false);
     }
 
+    public IEnumerable<LocalModelFile> GetFromModelIndex(SharedFolderType types)
+    {
+        return ModelIndex.Where(kvp => (kvp.Key & types) != 0).SelectMany(kvp => kvp.Value);
+    }
+
     /// <inheritdoc />
     public async Task<IReadOnlyList<LocalModelFile>> GetModelsOfType(SharedFolderType type)
     {
@@ -45,7 +56,17 @@ public class ModelIndexService : IModelIndexService
     /// <inheritdoc />
     public async Task RefreshIndex()
     {
-        var modelsDir = new DirectoryPath(settingsManager.ModelsDirectory);
+        if (!settingsManager.IsLibraryDirSet)
+        {
+            logger.LogTrace("Model index refresh skipped, library directory not set");
+            return;
+        }
+
+        if (new DirectoryPath(settingsManager.ModelsDirectory) is not { Exists: true } modelsDir)
+        {
+            logger.LogTrace("Model index refresh skipped, model directory does not exist");
+            return;
+        }
 
         // Start
         var stopwatch = Stopwatch.StartNew();
@@ -62,6 +83,7 @@ public class ModelIndexService : IModelIndexService
 
         var added = 0;
 
+        var newIndex = new Dictionary<SharedFolderType, List<LocalModelFile>>();
         foreach (
             var file in modelsDir.Info
                 .EnumerateFiles("*.*", SearchOption.AllDirectories)
@@ -95,7 +117,7 @@ public class ModelIndexService : IModelIndexService
 
             // Try to find a connected model info
             var jsonPath = file.Directory!.JoinFile(
-                new FilePath(file.NameWithoutExtension, ".cm-info.json")
+                new FilePath($"{file.NameWithoutExtension}.cm-info.json")
             );
 
             if (jsonPath.Exists)
@@ -125,9 +147,14 @@ public class ModelIndexService : IModelIndexService
             // Insert into database
             await localModelFiles.InsertAsync(localModel).ConfigureAwait(false);
 
+            // Add to index
+            var list = newIndex.GetOrAdd(sharedFolderType);
+            list.Add(localModel);
             added++;
         }
 
+        // Update index
+        ModelIndex = newIndex;
         // Record end of actual indexing
         var indexEnd = stopwatch.Elapsed;
 
@@ -144,8 +171,17 @@ public class ModelIndexService : IModelIndexService
             indexDuration.TotalMilliseconds,
             dbDuration.TotalMilliseconds
         );
+
+        EventManager.Instance.OnModelIndexChanged();
     }
 
     /// <inheritdoc />
-    public void BackgroundRefreshIndex() { }
+    public void BackgroundRefreshIndex()
+    {
+        Task.Run(async () => await RefreshIndex().ConfigureAwait(false))
+            .SafeFireAndForget(ex =>
+            {
+                logger.LogError(ex, "Error in background model indexing");
+            });
+    }
 }

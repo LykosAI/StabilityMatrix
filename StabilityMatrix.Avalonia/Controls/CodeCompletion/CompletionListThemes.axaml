@@ -1,0 +1,225 @@
+﻿<ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:cc="clr-namespace:StabilityMatrix.Avalonia.Controls.CodeCompletion"
+    xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
+
+    <Design.PreviewWith>
+        <Panel Width="400" Height="600">
+            <Panel Width="350" Height="200">
+                <ContentPresenter Content="{x:Static mocks:DesignData.SampleCompletionList}" />
+            </Panel>
+        </Panel>
+
+    </Design.PreviewWith>
+
+    <models:IconData 
+        x:Key="PlaceHolderIcon" 
+        FAIcon="fa-solid fa-question"/>
+
+    <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
+    <ControlTheme
+        x:Key="{x:Type cc:CompletionListBox}"
+        BasedOn="{StaticResource {x:Type ListBox}}"
+        TargetType="cc:CompletionListBox">
+        <Setter Property="Margin" Value="0,2" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="WrapSelection" Value="True" />
+        <Setter Property="ItemContainerTheme">
+            <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
+            <ControlTheme TargetType="ListBoxItem">
+                <!--
+                    Modified from https://github.com/amwx/FluentAvalonia/blob/main/src/
+                    FluentAvalonia/Styling/ControlThemes/BasicControls/ListBoxStyles.axaml
+                -->
+
+                <Setter Property="Padding" Value="8,0,12,0" />
+
+                <Setter Property="FontFamily" Value="{DynamicResource ContentControlThemeFontFamily}" />
+                <Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
+                <Setter Property="Background" Value="{DynamicResource ListViewItemBackground}" />
+                <Setter Property="CornerRadius" Value="7" />
+                <Setter Property="Foreground" Value="{DynamicResource ListViewItemForeground}" />
+
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="MinWidth" Value="{DynamicResource ListViewItemMinWidth}" />
+                <Setter Property="Height" Value="26" />
+
+                <Setter Property="Template">
+                    <ControlTemplate>
+                        <Panel>
+                            <ContentPresenter
+                                Name="PART_ContentPresenter"
+                                Margin="2,0"
+                                Padding="{TemplateBinding Padding}"
+                                HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                CornerRadius="{TemplateBinding CornerRadius}" />
+                        </Panel>
+                    </ControlTemplate>
+                </Setter>
+
+                <!--<Style Selector="^:pointerover">
+                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Background" Value="{DynamicResource ListViewItemBackgroundPointerOver}" />
+                    </Style>
+                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundPointerOver}" />
+                    </Style>
+                </Style>-->
+
+                <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="{DynamicResource ListViewItemBackgroundPressed}" />
+                </Style>
+                <Style Selector="^ /template/ ContentPresenter">
+                    <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundPressed}" />
+                </Style>
+
+
+                <Style Selector="^:selected">
+                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Background" Value="{DynamicResource CompletionSelectionBackgroundBrush}" />
+                    </Style>
+                    <Style Selector="^ /template/ ContentPresenter">
+                        <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundSelected}" />
+                    </Style>
+                    <!--  Disable selection indicator from fluent theme  -->
+                    <!--<Style Selector="^ /template/ Rectangle#SelectionIndicator">
+                        <Setter Property="IsVisible" Value="False" />
+                    </Style>-->
+                    <!--<Style Selector="^:not(:focus) /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Background" Value="{DynamicResource ListViewItemBackgroundSelected}" />
+                    </Style>
+                    <Style Selector="^:not(:focus) /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundSelected}" />
+                    </Style>-->
+
+                    <!--<Style Selector="^:pointerover">
+                        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="{DynamicResource ListViewItemBackgroundSelectedPointerOver}" />
+                        </Style>
+                        <Style Selector="^ /template/ ContentPresenter">
+                            <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundSelectedPointerOver}" />
+                        </Style>
+                    </Style>-->
+
+                    <Style Selector="^:pressed">
+                        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="{DynamicResource ListViewItemBackgroundSelectedPressed}" />
+                        </Style>
+                        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundSelectedPressed}" />
+                        </Style>
+                    </Style>
+
+                    <!--<Style Selector="^:disabled /template/ Rectangle#SelectionIndicator">
+                        <Setter Property="Fill" Value="{DynamicResource ListViewItemSelectionIndicatorDisabledBrush}" />
+                    </Style>-->
+                </Style>
+
+            </ControlTheme>
+        </Setter>
+    </ControlTheme>
+
+    <ControlTheme x:Key="{x:Type cc:CompletionList}" TargetType="cc:CompletionList">
+
+        <Setter Property="Background" Value="{DynamicResource CompletionBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CompletionBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1.5" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="MinWidth" Value="{DynamicResource FlyoutThemeMinWidth}" />
+        <Setter Property="MaxWidth" Value="{DynamicResource FlyoutThemeMaxWidth}" />
+        <Setter Property="MinHeight" Value="{DynamicResource FlyoutThemeMinHeight}" />
+        <Setter Property="MaxHeight" Value="{DynamicResource FlyoutThemeMaxHeight}" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
+        <Setter Property="FontFamily" Value="{DynamicResource ContentControlThemeFontFamily}" />
+
+        <Setter Property="Template">
+            <ControlTemplate>
+                <!--  BoxShadow="0 0 10 2 #BF000000"  -->
+                <ui:FABorder
+                    Padding="{DynamicResource FlyoutBorderThemePadding}"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="{TemplateBinding CornerRadius}">
+
+                    <Grid RowDefinitions="*,Auto">
+                        <!--  ReSharper disable once InconsistentNaming  -->
+                        <cc:CompletionListBox Name="PART_ListBox">
+                            <cc:CompletionListBox.ItemTemplate>
+                                <DataTemplate x:DataType="cc:ICompletionData">
+                                    <Grid ColumnDefinitions="20,Auto,*">
+                                        <!--<Image
+                                            Width="16"
+                                            Height="16"
+                                            Margin="0,0,2,0"
+                                            IsVisible="{Binding Image, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                            Source="{Binding Image}" />-->
+
+                                        <!--  Icon  -->
+                                        <icons:Icon
+                                            Grid.Column="0"
+                                            Margin="0,0,4,0"
+                                            DataContext="{Binding Icon, TargetNullValue={StaticResource PlaceHolderIcon}}"
+                                            FontSize="{Binding FontSize, TargetNullValue=12}"
+                                            Foreground="{Binding Foreground, TargetNullValue=Red, FallbackValue=Red}"
+                                            IsVisible="{Binding FAIcon, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                            Value="{Binding FAIcon}" />
+
+                                        <!--  Main text  -->
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                            Inlines="{Binding TextInlines}"
+                                            FontSize="13"/>
+
+                                        <!--  Description Text  -->
+                                        <TextBlock
+                                            Grid.Column="2"
+                                            VerticalAlignment="Center"
+                                            FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                            FontSize="13"
+                                            Foreground="{DynamicResource CompletionSecondaryForegroundBrush}"
+                                            Text="{Binding Description}"
+                                            TextAlignment="Right" />
+                                        <!--<ContentPresenter Content="{Binding Content}" />-->
+                                    </Grid>
+                                </DataTemplate>
+                            </cc:CompletionListBox.ItemTemplate>
+                        </cc:CompletionListBox>
+
+                        <!--  Keybinding hints panel  -->
+                        <Panel
+                            Grid.Row="1"
+                            MinHeight="20"
+                            Background="{DynamicResource CompletionSecondaryBackgroundBrush}">
+                            <TextBlock
+                                Margin="10,3"
+                                FontSize="12"
+                                Foreground="{DynamicResource CompletionSecondaryForegroundBrush}"
+                                Text="{TemplateBinding FooterText}" />
+                        </Panel>
+                    </Grid>
+
+
+                </ui:FABorder>
+
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+
+</ResourceDictionary>

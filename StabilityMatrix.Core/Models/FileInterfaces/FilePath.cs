@@ -92,6 +92,12 @@ public class FilePath : FileSystemPath, IPathObject
     /// <summary> Deletes the file </summary>
     public void Delete() => File.Delete(FullPath);
 
+    /// <summary> Deletes the file asynchronously </summary>
+    public Task DeleteAsync(CancellationToken ct = default)
+    {
+        return Task.Run(() => File.Delete(FullPath), ct);
+    }
+
     // Methods specific to files
 
     /// <summary> Read text </summary>
@@ -143,7 +149,7 @@ public class FilePath : FileSystemPath, IPathObject
     /// <summary>
     /// Move the file to a directory.
     /// </summary>
-    public async Task<FilePath> MoveToAsync(DirectoryPath directory)
+    public async Task<FilePath> MoveToDirectoryAsync(DirectoryPath directory)
     {
         await Task.Run(() => Info.MoveTo(directory.FullPath)).ConfigureAwait(false);
         // Return the new path
@@ -166,6 +172,20 @@ public class FilePath : FileSystemPath, IPathObject
     public FilePath CopyTo(FilePath destinationFile, bool overwrite = false)
     {
         Info.CopyTo(destinationFile.FullPath, overwrite);
+        // Return the new path
+        return destinationFile;
+    }
+
+    /// <summary>
+    /// Copy the file to a target path asynchronously.
+    /// </summary>
+    public async Task<FilePath> CopyToAsync(FilePath destinationFile, bool overwrite = false)
+    {
+        await using var sourceStream = Info.OpenRead();
+        await using var destinationStream = destinationFile.Info.OpenWrite();
+
+        await sourceStream.CopyToAsync(destinationStream).ConfigureAwait(false);
+
         // Return the new path
         return destinationFile;
     }

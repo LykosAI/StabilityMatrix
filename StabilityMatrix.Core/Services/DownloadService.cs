@@ -103,12 +103,13 @@ public class DownloadService : IDownloadService
 
     /// <inheritdoc />
     public async Task ResumeDownloadToFileAsync(
-        string downloadUrl, 
-        string downloadPath, 
+        string downloadUrl,
+        string downloadPath,
         long existingFileSize,
-        IProgress<ProgressReport>? progress = null, 
+        IProgress<ProgressReport>? progress = null,
         string? httpClientName = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         using var client = string.IsNullOrWhiteSpace(httpClientName)
             ? httpClientFactory.CreateClient()
@@ -118,14 +119,17 @@ public class DownloadService : IDownloadService
         client.DefaultRequestHeaders.UserAgent.Add(
             new ProductInfoHeaderValue("StabilityMatrix", "2.0")
         );
-        
+
         // Create file if it doesn't exist
         if (!File.Exists(downloadPath))
         {
-            logger.LogInformation("Resume file doesn't exist, creating file {DownloadPath}", downloadPath);
+            logger.LogInformation(
+                "Resume file doesn't exist, creating file {DownloadPath}",
+                downloadPath
+            );
             File.Create(downloadPath).Close();
         }
-        
+
         await using var file = new FileStream(
             downloadPath,
             FileMode.Append,
@@ -137,35 +141,39 @@ public class DownloadService : IDownloadService
         long remainingContentLength = 0;
         // Total of the original content
         long originalContentLength = 0;
-        
+
         using var request = new HttpRequestMessage();
         request.Method = HttpMethod.Get;
         request.RequestUri = new Uri(downloadUrl);
         request.Headers.Range = new RangeHeaderValue(existingFileSize, null);
 
         HttpResponseMessage? response = null;
-        foreach (var delay in Backoff.DecorrelatedJitterBackoffV2(
-                     TimeSpan.FromMilliseconds(50),
-                     retryCount: 4
-                 ))
+        foreach (
+            var delay in Backoff.DecorrelatedJitterBackoffV2(
+                TimeSpan.FromMilliseconds(50),
+                retryCount: 4
+            )
+        )
         {
-            response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead,
-                cancellationToken).ConfigureAwait(false);
+            response = await client
+                .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+                .ConfigureAwait(false);
             remainingContentLength = response.Content.Headers.ContentLength ?? 0;
-            originalContentLength = response.Content.Headers.ContentRange?.Length.GetValueOrDefault() ?? 0;
-            
+            originalContentLength =
+                response.Content.Headers.ContentRange?.Length.GetValueOrDefault() ?? 0;
+
             if (remainingContentLength > 0)
                 break;
-            
+
             logger.LogDebug("Retrying get-headers for content-length");
             await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
         }
-        
+
         if (response == null)
         {
             throw new ApplicationException("Response is null");
         }
-        
+
         var isIndeterminate = remainingContentLength == 0;
 
         await using var stream = await response.Content
@@ -176,7 +184,7 @@ public class DownloadService : IDownloadService
         while (true)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             var bytesRead = await stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
             if (bytesRead == 0)
                 break;
@@ -206,6 +214,46 @@ public class DownloadService : IDownloadService
         await file.FlushAsync(cancellationToken).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(1f, message: "Download complete!"));
+    }
+
+    /// <inheritdoc />
+    public async Task<long> GetFileSizeAsync(
+        string downloadUrl,
+        string? httpClientName = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        using var client = string.IsNullOrWhiteSpace(httpClientName)
+            ? httpClientFactory.CreateClient()
+            : httpClientFactory.CreateClient(httpClientName);
+
+        client.Timeout = TimeSpan.FromMinutes(10);
+        client.DefaultRequestHeaders.UserAgent.Add(
+            new ProductInfoHeaderValue("StabilityMatrix", "2.0")
+        );
+
+        var contentLength = 0L;
+
+        foreach (
+            var delay in Backoff.DecorrelatedJitterBackoffV2(
+                TimeSpan.FromMilliseconds(50),
+                retryCount: 3
+            )
+        )
+        {
+            var response = await client
+                .GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+                .ConfigureAwait(false);
+            contentLength = response.Content.Headers.ContentLength ?? -1;
+
+            if (contentLength > 0)
+                break;
+
+            logger.LogDebug("Retrying get-headers for content-length");
+            await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+        }
+
+        return contentLength;
     }
 
     public async Task<Stream> GetImageStreamFromUrl(string url)

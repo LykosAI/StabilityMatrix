@@ -951,6 +951,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to License.
+        /// </summary>
+        public static string Label_License {
+            get {
+                return ResourceManager.GetString("Label_License", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to License Agreement..
         /// </summary>
         public static string Label_LicenseAgreement {

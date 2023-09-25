@@ -15,6 +15,9 @@ public partial class ProgressViewModel : ViewModelBase
     
     [ObservableProperty, NotifyPropertyChangedFor(nameof(IsProgressVisible))]
     private double value;
+
+    [ObservableProperty]
+    private double maximum = 100;
     
     [ObservableProperty, NotifyPropertyChangedFor(nameof(IsProgressVisible))]
     private bool isIndeterminate;

@@ -1,0 +1,190 @@
+﻿<dock:DockUserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Inference.InferenceImageUpscaleView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dock="clr-namespace:StabilityMatrix.Avalonia.Controls.Dock"
+    xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:modelsInference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
+    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    d:DataContext="{x:Static mocks:DesignData.InferenceImageUpscaleViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="vmInference:InferenceImageUpscaleViewModel"
+    mc:Ignorable="d">
+
+    <Grid Margin="2,0,2,8">
+        <DockControl
+            x:Name="Dock"
+            InitializeFactory="True"
+            InitializeLayout="True">
+            <DockControl.Factory>
+                <Factory />
+            </DockControl.Factory>
+
+            <RootDock
+                x:Name="Root"
+                DefaultDockable="{Binding #MainLayout}"
+                Id="Root"
+                IsCollapsable="False">
+
+                <ProportionalDock
+                    x:Name="MainLayout"
+                    Id="MainLayout"
+                    Orientation="Horizontal">
+
+                    <!--  Left Pane  -->
+                    <ProportionalDock 
+                        x:Name="LeftProportionalDock" 
+                        Id="LeftProportionalDock" 
+                        Orientation="Vertical"
+                        Proportion="0.2">
+
+                        <!-- Left Upper (Image Source) Pane -->
+                        <ToolDock
+                            x:Name="SourceImagePane"
+                            Alignment="Top"
+                            Id="SourceImagePane"
+                            Proportion="0.5">
+                            <Tool
+                                x:Name="SourceImageTool"
+                                Title="Source Image"
+                                x:DataType="Tool"
+                                CanClose="False"
+                                Id="SourceImageTool">
+                                <controls:SelectImageCard x:CompileBindings="False" DataContext="{Binding ElementName=Dock, Path=DataContext.SelectImageCardViewModel}" />
+                            </Tool>
+                        </ToolDock>
+                        
+                        <ProportionalDockSplitter Id="LeftProportionalDockSplitter" />
+                        
+                        <!--  Left Lower (Config) Pane  -->
+                        <ToolDock
+                            x:Name="ConfigPane"
+                            Alignment="Bottom"
+                            Id="ConfigPane"
+                            Proportion="0.5">
+                            <Tool
+                                x:Name="ConfigTool"
+                                Title="Config"
+                                x:DataType="Tool"
+                                CanClose="False"
+                                Id="ConfigTool">
+
+                                <!--  Config and buttons  -->
+                                <Grid
+                                    x:CompileBindings="False"
+                                    DataContext="{Binding ElementName=Dock, Path=DataContext}"
+                                    Opacity="1"
+                                    RowDefinitions="*,Auto,Auto">
+                                    <!--  Config options  -->
+                                    <controls:StackCard DataContext="{ReflectionBinding ElementName=Dock, Path=DataContext.StackCardViewModel}" Opacity="1" />
+
+                                    <!--  Generate Buttons  -->
+                                    <StackPanel Grid.Row="2" Margin="0,6,0,0">
+                                        <controls:Card Padding="8">
+                                            <Grid
+                                                HorizontalAlignment="Center"
+                                                ColumnDefinitions="Auto,*,Auto"
+                                                RowDefinitions="Auto,*">
+                                                <!--  Main Generate Button  -->
+                                                <Button
+                                                    x:Name="GenerateButton"
+                                                    Grid.Row="1"
+                                                    Grid.Column="1"
+                                                    Width="130"
+                                                    HorizontalAlignment="Stretch"
+                                                    Classes="accent"
+                                                    Command="{Binding GenerateImageCommand}"
+                                                    CommandParameter="{x:Static modelsInference:GenerateFlags.None}"
+                                                    IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}">
+                                                    <Panel>
+                                                        <TextBlock IsVisible="{Binding #GenerateButton.IsEnabled}" Text="Generate Image" />
+                                                        <controls:ProgressRing IsIndeterminate="True" IsVisible="{Binding !#GenerateButton.IsEnabled}" />
+                                                    </Panel>
+                                                </Button>
+                                                <!--  Cancel Button  -->
+                                                <Button
+                                                    x:Name="CancelButton"
+                                                    Grid.Row="1"
+                                                    Grid.Column="1"
+                                                    Width="130"
+                                                    HorizontalAlignment="Stretch"
+                                                    icons:Attached.Icon="fa-solid fa-stop"
+                                                    Command="{Binding GenerateImageCancelCommand}"
+                                                    IsVisible="{Binding GenerateImageCommand.CanBeCanceled}" />
+                                            </Grid>
+                                        </controls:Card>
+                                    </StackPanel>
+                                </Grid>
+                            </Tool>
+                        </ToolDock>
+
+                    </ProportionalDock>
+
+                    <ProportionalDockSplitter x:Name="LeftSplitter" Id="LeftSplitter" />
+
+                    <!--  Middle Right Pane  -->
+                    <ToolDock
+                        x:Name="ImageGalleryPane"
+                        Alignment="Right"
+                        Id="ImageGalleryPane"
+                        Proportion="0.6">
+                        <Tool
+                            x:Name="ImageGalleryTool"
+                            Title="Output Image"
+                            x:DataType="Tool"
+                            CanClose="False"
+                            Id="ImageGalleryTool">
+
+                            <Grid x:CompileBindings="False" DataContext="{Binding ElementName=Dock, Path=DataContext}">
+                                <StackPanel
+                                    Margin="2,1,2,4"
+                                    VerticalAlignment="Top"
+                                    DataContext="{Binding OutputProgress}"
+                                    Spacing="4">
+                                    <ProgressBar
+                                        IsVisible="{Binding IsProgressVisible}"
+                                        Maximum="{Binding Maximum}"
+                                        Value="{Binding Value}" />
+                                    <TextBlock
+                                        IsVisible="{Binding IsTextVisible}"
+                                        Text="{Binding Text}"
+                                        TextAlignment="Center" />
+                                </StackPanel>
+
+                                <controls:ImageGalleryCard Grid.Row="0" DataContext="{Binding ImageGalleryCardViewModel}" />
+                            </Grid>
+                        </Tool>
+                    </ToolDock>
+
+                    <ProportionalDockSplitter x:Name="RightSplitter" Id="RightSplitter" />
+
+                    <!--  Right Pane  -->
+                    <ToolDock
+                        x:Name="ImageFolderPane"
+                        Alignment="Right"
+                        Id="ImageFolderPane"
+                        Proportion="0.1">
+                        <Tool
+                            x:Name="ImageFolderTool"
+                            x:DataType="Tool"
+                            CanClose="False"
+                            Id="ImageFolderTool">
+
+                            <Grid x:CompileBindings="False" DataContext="{Binding ElementName=Dock, Path=DataContext}">
+                                <controls:ImageFolderCard DataContext="{Binding ImageFolderCardViewModel}" />
+                            </Grid>
+                        </Tool>
+                    </ToolDock>
+
+                </ProportionalDock>
+            </RootDock>
+
+        </DockControl>
+    </Grid>
+
+</dock:DockUserControlBase>

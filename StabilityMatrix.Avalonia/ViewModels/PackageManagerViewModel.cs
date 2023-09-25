@@ -23,6 +23,7 @@ using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
@@ -118,11 +119,11 @@ public partial class PackageManagerViewModel : PageViewModelBase
         unknownInstalledPackages.Edit(s => s.Load(currentUnknown));
     }
 
-    public async Task ShowInstallDialog()
+    public async Task ShowInstallDialog(BasePackage? selectedPackage = null)
     {
         var viewModel = dialogFactory.Get<InstallerViewModel>();
         viewModel.AvailablePackages = packageFactory.GetAllAvailablePackages().ToImmutableArray();
-        viewModel.SelectedPackage = viewModel.AvailablePackages[0];
+        viewModel.SelectedPackage = selectedPackage ?? viewModel.AvailablePackages[0];
 
         var dialog = new BetterContentDialog
         {

@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
+using NLog;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -23,10 +26,13 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 [View(typeof(MainWindow))]
 public partial class MainWindowViewModel : ViewModelBase
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly IDiscordRichPresenceService discordRichPresenceService;
+    private readonly IModelIndexService modelIndexService;
     public string Greeting => "Welcome to Avalonia!";
 
     [ObservableProperty]
@@ -48,14 +54,15 @@ public partial class MainWindowViewModel : ViewModelBase
         ISettingsManager settingsManager,
         IDiscordRichPresenceService discordRichPresenceService,
         ServiceManager<ViewModelBase> dialogFactory,
-        ITrackedDownloadService trackedDownloadService
+        ITrackedDownloadService trackedDownloadService,
+        IModelIndexService modelIndexService
     )
     {
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
         this.discordRichPresenceService = discordRichPresenceService;
         this.trackedDownloadService = trackedDownloadService;
-
+        this.modelIndexService = modelIndexService;
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
     }
@@ -93,7 +100,8 @@ public partial class MainWindowViewModel : ViewModelBase
         // Index checkpoints if we dont have
         Task.Run(() => settingsManager.IndexCheckpoints()).SafeFireAndForget();
 
-        if (!settingsManager.Settings.InstalledPackages.Any())
+        PreloadPages();
+        if (Program.Args.DebugOneClickInstall || !settingsManager.Settings.InstalledPackages.Any())
         {
             var viewModel = dialogFactory.Get<OneClickInstallViewModel>();
             var dialog = new BetterContentDialog
@@ -114,6 +122,45 @@ public partial class MainWindowViewModel : ViewModelBase
             };
 
             await dialog.ShowAsync();
+        }
+    }
+
+    private void PreloadPages()
+    {
+        // Preload pages with Preload attribute
+        foreach (
+            var page in Pages
+                .Concat(FooterPages)
+                .Where(p => p.GetType().GetCustomAttributes(typeof(PreloadAttribute), true).Any())
+        )
+        {
+            Dispatcher.UIThread
+                .InvokeAsync(
+                    async () =>
+                    {
+                        var stopwatch = Stopwatch.StartNew();
+
+                        // ReSharper disable once MethodHasAsyncOverload
+                        page.OnLoaded();
+                        await page.OnLoadedAsync();
+
+                        // Get view
+                        new ViewLocator().Build(page);
+
+                        Logger.Trace(
+                            $"Preloaded page {page.GetType().Name} in {stopwatch.Elapsed.TotalMilliseconds:F1}ms"
+                        );
+                    },
+                    DispatcherPriority.Background
+                )
+                .ContinueWith(task =>
+                {
+                    if (task.Exception is { } exception)
+                    {
+                        Logger.Error(exception, "Error preloading page");
+                        Debug.Fail(exception.Message);
+                    }
+                });
         }
     }
 

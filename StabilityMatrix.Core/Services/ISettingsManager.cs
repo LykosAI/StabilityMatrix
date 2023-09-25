@@ -14,10 +14,23 @@ public interface ISettingsManager
     string DatabasePath { get; }
     string ModelsDirectory { get; }
     string DownloadsDirectory { get; }
-    Settings Settings { get; }
+    DirectoryPath TagsDirectory { get; }
+    DirectoryPath ImagesDirectory { get; }
+    DirectoryPath ImagesInferenceDirectory { get; }
+
     List<string> PackageInstallsInProgress { get; set; }
+
+    Settings Settings { get; }
+
+    /// <summary>
+    /// Event fired when the library directory is changed
+    /// </summary>
     event EventHandler<string>? LibraryDirChanged;
-    event EventHandler<PropertyChangedEventArgs>? SettingsPropertyChanged;
+
+    /// <summary>
+    /// Event fired when a property of Settings is changed
+    /// </summary>
+    event EventHandler<RelayPropertyChangedEventArgs>? SettingsPropertyChanged;
 
     /// <summary>
     /// Register a handler that fires once when LibraryDir is first set.
@@ -25,24 +38,44 @@ public interface ISettingsManager
     /// </summary>
     void RegisterOnLibraryDirSet(Action<string> handler);
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Event fired when Settings are loaded from disk
+    /// </summary>
+    event EventHandler? Loaded;
+
+    /// <summary>
+    /// Return a SettingsTransaction that can be used to modify Settings
+    /// Saves on Dispose.
+    /// </summary>
     SettingsTransaction BeginTransaction();
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Execute a function that modifies Settings
+    /// Commits changes after the function returns.
+    /// </summary>
+    /// <param name="func">Function accepting Settings to modify</param>
     void Transaction(Action<Settings> func, bool ignoreMissingLibraryDir = false);
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Modify a settings property by expression and commit changes.
+    /// This will notify listeners of SettingsPropertyChanged.
+    /// </summary>
     void Transaction<TValue>(Expression<Func<Settings, TValue>> expression, TValue value);
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Register a source observable object and property to be relayed to Settings
+    /// </summary>
     void RelayPropertyFor<T, TValue>(
         T source,
         Expression<Func<T, TValue>> sourceProperty,
-        Expression<Func<Settings, TValue>> settingsProperty
+        Expression<Func<Settings, TValue>> settingsProperty,
+        bool setInitial = false
     )
         where T : INotifyPropertyChanged;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Register an Action to be called on change of the settings property.
+    /// </summary>
     void RegisterPropertyChangedHandler<T>(
         Expression<Func<Settings, T>> settingsProperty,
         Action<T> onPropertyChanged
@@ -52,7 +85,8 @@ public interface ISettingsManager
     /// Attempts to locate and set the library path
     /// Return true if found, false otherwise
     /// </summary>
-    bool TryFindLibrary();
+    /// <param name="forceReload">Force reload even if library is already set</param>
+    bool TryFindLibrary(bool forceReload = false);
 
     /// <summary>
     /// Save a new library path to %APPDATA%/StabilityMatrix/library.json

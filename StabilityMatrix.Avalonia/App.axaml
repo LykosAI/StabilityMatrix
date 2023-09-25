@@ -2,8 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="StabilityMatrix.Avalonia.App"
              xmlns:local="using:StabilityMatrix.Avalonia"
+             xmlns:idcr="using:Dock.Avalonia.Controls.Recycling"
              xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
-             
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
@@ -15,9 +15,18 @@
          <ResourceDictionary>
              <ResourceDictionary.MergedDictionaries>
                  <ResourceInclude Source="Styles/ThemeColors.axaml"/>
+                 <ResourceInclude Source="Styles/ThemeMaterials.axaml"/>
                  <ResourceInclude Source="Styles/Card.axaml"/>
+                 <ResourceInclude Source="Controls/CodeCompletion/CompletionListThemes.axaml"/>
+                 <ResourceInclude Source="Styles/ContextMenuStyles.axaml"/>
+                 <ResourceInclude Source="Controls/EditorFlyouts.axaml"/>
              </ResourceDictionary.MergedDictionaries>
+             
+             <idcr:ControlRecycling x:Key="ControlRecyclingKey" />
              <x:Double x:Key="ContentDialogMaxWidth">700</x:Double>
+             
+             <SolidColorBrush x:Key="ToolTipBackground" Color="#1E1F22"/>
+             <SolidColorBrush x:Key="ToolTipForeground" Color="#9FBDC3"/>
              <FontFamily x:Key="NotoSansJP">avares://StabilityMatrix.Avalonia/Assets/Fonts/NotoSansJP#Noto Sans JP</FontFamily>
          </ResourceDictionary>
      </Application.Resources>
@@ -25,11 +34,34 @@
     <Application.Styles>
         <styling:FluentAvaloniaTheme PreferUserAccentColor="True" UseSystemFontOnWindows="True"
                                      TextVerticalAlignmentOverrideBehavior="Disabled"/>
+        <StyleInclude Source="avares://Dock.Avalonia/Themes/DockFluentTheme.axaml" />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
         <StyleInclude Source="Styles/ProgressRing.axaml"/>
         <StyleInclude Source="Styles/ButtonStyles.axaml"/>
         <StyleInclude Source="Styles/SplitButtonStyles.axaml"/>
         <StyleInclude Source="Styles/ToggleButtonStyles.axaml"/>
+        <StyleInclude Source="Styles/DockStyles.axaml"/>
+        <StyleInclude Source="Styles/BorderStyles.axaml"/>
+        <StyleInclude Source="Controls/SeedCard.axaml"/>
+        <StyleInclude Source="Controls/SamplerCard.axaml"/>
+        <StyleInclude Source="Controls/ImageGalleryCard.axaml"/>
+        <StyleInclude Source="Controls/PromptCard.axaml"/>
+        <StyleInclude Source="Controls/StackCard.axaml"/>
+        <StyleInclude Source="Controls/UpscalerCard.axaml"/>
+        <StyleInclude Source="Controls/StackExpander.axaml"/>
+        <StyleInclude Source="Controls/ModelCard.axaml"/>
+        <StyleInclude Source="Controls/BatchSizeCard.axaml"/>
+        <StyleInclude Source="Controls/AdvancedImageBox.axaml"/>
+        <StyleInclude Source="Controls/FrameCarousel.axaml"/>
+        <StyleInclude Source="Controls/CodeCompletion/CompletionWindow.axaml"/>
+        <StyleInclude Source="Controls/SelectImageCard.axaml"/>
+        <StyleInclude Source="Controls/ImageFolderCard.axaml"/>
+        <StyleInclude Source="Controls/SharpenCard.axaml"/>
+        <StyleInclude Source="Controls/Paginator.axaml"/>
+        
+        <Style Selector="DockControl">
+            <Setter Property="(DockProperties.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />
+        </Style>
     </Application.Styles>
 </Application>

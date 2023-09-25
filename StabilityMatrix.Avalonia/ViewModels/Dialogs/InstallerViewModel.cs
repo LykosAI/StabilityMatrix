@@ -144,7 +144,6 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     {
         if (AvailablePackages == null)
             return;
-        SelectedPackage = AvailablePackages[0];
         IsReleaseMode = !SelectedPackage.ShouldIgnoreReleases;
     }
 
@@ -239,6 +238,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             downloadOptions.VersionTag =
                 SelectedVersion?.TagName
                 ?? throw new NullReferenceException("Selected version is null");
+
             installedVersion.InstalledReleaseVersion = downloadOptions.VersionTag;
         }
         else
@@ -316,7 +316,6 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
 
             // If still not found, just use the first one
             version ??= AvailableVersions.FirstOrDefault();
-
             SelectedVersion = version;
         }
     }
@@ -372,10 +371,8 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         AvailableVersionTypes = SelectedPackage.ShouldIgnoreReleases
             ? PackageVersionType.Commit
             : PackageVersionType.GithubRelease | PackageVersionType.Commit;
-
         SelectedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
         SelectedTorchVersion = SelectedPackage.GetRecommendedTorchVersion();
-
         if (Design.IsDesignMode)
             return;
 
@@ -391,7 +388,6 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
 
                 SelectedVersion = AvailableVersions.First(x => !x.IsPrerelease);
                 ReleaseNotes = SelectedVersion.ReleaseNotesMarkdown;
-
                 Logger.Debug($"Loaded release notes for {ReleaseNotes}");
 
                 if (!IsReleaseMode)

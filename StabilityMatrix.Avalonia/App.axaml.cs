@@ -3,6 +3,7 @@ using StabilityMatrix.Avalonia.Diagnostics.LogViewer;
 using StabilityMatrix.Avalonia.Diagnostics.LogViewer.Extensions;
 #endif
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -16,11 +17,15 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input.Platform;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,6 +42,7 @@ using Polly.Timeout;
 using Refit;
 using Sentry;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
@@ -59,11 +65,13 @@ using StabilityMatrix.Avalonia.Views.Settings;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Database;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Settings;
@@ -752,6 +760,69 @@ public sealed class App : Application
         LogManager.ReconfigExistingLoggers();
 
         return LogManager.Configuration;
+    }
+
+    /// <summary>
+    /// Opens a dialog to save the current view as a screenshot.
+    /// </summary>
+    /// <remarks>Only available in debug builds.</remarks>
+    [Conditional("DEBUG")]
+    internal static void DebugSaveScreenshot(int dpi = 96)
+    {
+        const int scale = 2;
+        dpi *= scale;
+
+        var results = new List<MemoryStream>();
+        var targets = new List<Visual?> { VisualRoot };
+
+        foreach (var visual in targets.Where(x => x != null))
+        {
+            var rect = new Rect(visual!.Bounds.Size);
+
+            var pixelSize = new PixelSize((int)rect.Width * scale, (int)rect.Height * scale);
+            var dpiVector = new Vector(dpi, dpi);
+
+            var ms = new MemoryStream();
+
+            using (var bitmap = new RenderTargetBitmap(pixelSize, dpiVector))
+            {
+                bitmap.Render(visual);
+                bitmap.Save(ms);
+            }
+
+            results.Add(ms);
+        }
+
+        Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            var dest = await StorageProvider.SaveFilePickerAsync(
+                new FilePickerSaveOptions()
+                {
+                    SuggestedFileName = "screenshot.png",
+                    ShowOverwritePrompt = true
+                }
+            );
+
+            if (dest?.TryGetLocalPath() is { } localPath)
+            {
+                var localFile = new FilePath(localPath);
+                foreach (var (i, stream) in results.Enumerate())
+                {
+                    var name = localFile.NameWithoutExtension;
+                    if (results.Count > 1)
+                    {
+                        name += $"_{i + 1}";
+                    }
+
+                    localFile = localFile.Directory!.JoinFile(name + ".png");
+                    localFile.Create();
+
+                    await using var fileStream = localFile.Info.OpenWrite();
+                    stream.Seek(0, SeekOrigin.Begin);
+                    await stream.CopyToAsync(fileStream);
+                }
+            }
+        });
     }
 
     [Conditional("DEBUG")]

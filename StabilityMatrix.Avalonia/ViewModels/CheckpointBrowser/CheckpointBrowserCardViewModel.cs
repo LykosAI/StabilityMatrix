@@ -44,10 +44,12 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         set
         {
             civitModel = value;
+            IsFavorite = settingsManager.Settings.FavoriteModels.Contains(value.Id);
             UpdateImage();
             CheckIfInstalled();
         }
     }
+    private CivitModel civitModel;
 
     public override bool IsTextVisible => Value > 0;
 
@@ -62,7 +64,9 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
 
     [ObservableProperty]
     private bool showUpdateCard;
-    private CivitModel civitModel;
+
+    [ObservableProperty]
+    private bool isFavorite;
 
     public CheckpointBrowserCardViewModel(
         IDownloadService downloadService,
@@ -165,6 +169,21 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
     private void OpenModel()
     {
         ProcessRunner.OpenUrl($"https://civitai.com/models/{CivitModel.Id}");
+    }
+
+    [RelayCommand]
+    private void ToggleFavorite()
+    {
+        if (settingsManager.Settings.FavoriteModels.Contains(CivitModel.Id))
+        {
+            settingsManager.Transaction(s => s.FavoriteModels.Remove(CivitModel.Id));
+        }
+        else
+        {
+            settingsManager.Transaction(s => s.FavoriteModels.Add(CivitModel.Id));
+        }
+
+        IsFavorite = settingsManager.Settings.FavoriteModels.Contains(CivitModel.Id);
     }
 
     [RelayCommand]

@@ -441,11 +441,6 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
                 .GetAllCheckpointFiles(settingsManager.ModelsDirectory)
                 .Where(c => c.IsConnectedModel);
 
-            if (SelectedModelType != CivitModelType.All)
-            {
-                connectedModels = connectedModels.Where(c => c.ModelType == SelectedModelType);
-            }
-
             modelRequest.CommaSeparatedModelIds = string.Join(
                 ",",
                 connectedModels
@@ -453,6 +448,14 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
                     .GroupBy(m => m)
                     .Select(g => g.First())
             );
+            modelRequest.Sort = null;
+            modelRequest.Period = null;
+        }
+        else if (SortMode == CivitSortMode.Favorites)
+        {
+            var favoriteModels = settingsManager.Settings.FavoriteModels;
+
+            modelRequest.CommaSeparatedModelIds = string.Join(",", favoriteModels);
             modelRequest.Sort = null;
             modelRequest.Period = null;
         }

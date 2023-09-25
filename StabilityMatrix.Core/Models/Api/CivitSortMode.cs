@@ -8,10 +8,16 @@ public enum CivitSortMode
 {
     [EnumMember(Value = "Highest Rated")]
     HighestRated,
+
     [EnumMember(Value = "Most Downloaded")]
     MostDownloaded,
+
     [EnumMember(Value = "Newest")]
     Newest,
+
     [EnumMember(Value = "Installed")]
     Installed,
+
+    [EnumMember(Value = "Favorites")]
+    Favorites,
 }

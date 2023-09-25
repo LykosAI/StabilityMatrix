@@ -35,7 +35,7 @@
                     Grid.Row="0"
                     Grid.Column="0">
                     <Button
-                        Width="72"
+                        Width="84"
                         IsVisible="{Binding !SelectedBasePackage.ExtraLaunchCommands.Count, FallbackValue=False}"
                         Classes="success"
                         HorizontalAlignment="Left"
@@ -84,7 +84,7 @@
                     Grid.Row="0"
                     Grid.Column="0">
                     <Button
-                        Width="72"
+                        Width="84"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Stretch"
                         Classes="danger"

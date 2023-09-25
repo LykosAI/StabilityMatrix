@@ -645,4 +645,7 @@
   <data name="Label_License" xml:space="preserve">
     <value>License</value>
   </data>
+  <data name="Label_SharedModelStrategyShort" xml:space="preserve">
+    <value>Model Sharing</value>
+  </data>
 </root>

@@ -1293,6 +1293,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Model Sharing.
+        /// </summary>
+        public static string Label_SharedModelStrategyShort {
+            get {
+                return ResourceManager.GetString("Label_SharedModelStrategyShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show Model Images.
         /// </summary>
         public static string Label_ShowModelImages {

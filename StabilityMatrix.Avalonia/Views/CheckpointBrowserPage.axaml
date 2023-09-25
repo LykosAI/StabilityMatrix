@@ -26,11 +26,36 @@
                 Width="330">
 
                 <StackPanel Orientation="Vertical">
-                    <TextBlock
-                        Foreground="{DynamicResource TextControlForeground}"
-                        Margin="0,0,0,0"
-                        Text="{Binding CivitModel.Name}"
-                        VerticalAlignment="Center" />
+                    <Grid ColumnDefinitions="*, Auto"
+                          Margin="0,-4,0,0">
+                        <TextBlock
+                            Foreground="{DynamicResource TextControlForeground}"
+                            Text="{Binding CivitModel.Name}"
+                            VerticalAlignment="Center" />
+                        <Button
+                            Grid.Column="1"
+                            HorizontalContentAlignment="Right"
+                            HorizontalAlignment="Right"
+                            VerticalContentAlignment="Top"
+                            VerticalAlignment="Top"
+                            Padding="4,2"
+                            Margin="4,0,0,0"
+                            Classes="transparent"
+                            Width="24"
+                            BorderThickness="0">
+                            <ui:SymbolIcon FontSize="18" Symbol="MoreVertical" />
+                            <Button.Flyout>
+                                <MenuFlyout>
+                                    <MenuItem Header="{x:Static lang:Resources.Action_OpenOnCivitAi}"
+                                              Command="{Binding OpenModelCommand}">
+                                        <MenuItem.Icon>
+                                            <ui:SymbolIcon Symbol="Open" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </MenuFlyout>
+                            </Button.Flyout>
+                        </Button>
+                    </Grid>
                     <TextBlock
                         FontSize="11"
                         Foreground="{DynamicResource TextControlForeground}"
@@ -49,16 +74,30 @@
                             Stretch="UniformToFill" />
 
                         <Button
-                            Command="{Binding OpenModelCommand}"
-                            CommandParameter="{Binding CivitModel}"
+                            Command="{Binding ToggleFavoriteCommand}"
                             HorizontalAlignment="Right"
-                            Classes="transparent-info"
                             Margin="0,16,8,0"
+                            FontSize="20"
+                            Classes="info"
+                            IsVisible="{Binding !IsFavorite}"
                             VerticalAlignment="Top">
-                            <Button.Content>
-                                <ui:SymbolIcon Symbol="Open" />
-                            </Button.Content>
+                                <Grid>
+                                    <ui:SymbolIcon Symbol="StarAdd" />
+                                </Grid>
                         </Button>
+                        <Button
+                            Command="{Binding ToggleFavoriteCommand}"
+                            HorizontalAlignment="Right"
+                            Margin="0,16,8,0"
+                            FontSize="20"
+                            Classes="success"
+                            IsVisible="{Binding IsFavorite}"
+                            VerticalAlignment="Top">
+                            <Grid>
+                                <ui:SymbolIcon Symbol="StarFilled" />
+                            </Grid>
+                        </Button>
+                        
                         <StackPanel Orientation="Horizontal">
                             <controls:Card
                                 Classes="info"

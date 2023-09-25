@@ -373,12 +373,48 @@ public class ComfyUI : BaseGitPackage
     {
         return sharedFolderMethod switch
         {
-            SharedFolderMethod.Configuration => Task.CompletedTask,
+            SharedFolderMethod.Configuration => RemoveConfigSection(installDirectory),
             SharedFolderMethod.None => Task.CompletedTask,
             SharedFolderMethod.Symlink
                 => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
             _ => Task.CompletedTask
         };
+    }
+
+    private Task RemoveConfigSection(string installDirectory)
+    {
+        var extraPathsYamlPath = Path.Combine(installDirectory, "extra_model_paths.yaml");
+        var exists = File.Exists(extraPathsYamlPath);
+        if (!exists)
+        {
+            return Task.CompletedTask;
+        }
+
+        var yaml = File.ReadAllText(extraPathsYamlPath);
+        using var sr = new StringReader(yaml);
+        var yamlStream = new YamlStream();
+        yamlStream.Load(sr);
+
+        if (!yamlStream.Documents.Any())
+        {
+            return Task.CompletedTask;
+        }
+
+        var root = yamlStream.Documents[0].RootNode;
+        if (root is not YamlMappingNode mappingNode)
+        {
+            return Task.CompletedTask;
+        }
+
+        mappingNode.Children.Remove("stability_matrix");
+
+        var serializer = new SerializerBuilder()
+            .WithNamingConvention(UnderscoredNamingConvention.Instance)
+            .Build();
+        var yamlData = serializer.Serialize(mappingNode);
+        File.WriteAllText(extraPathsYamlPath, yamlData);
+
+        return Task.CompletedTask;
     }
 
     private async Task InstallRocmTorch(

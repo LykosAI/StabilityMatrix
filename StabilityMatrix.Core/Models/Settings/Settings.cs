@@ -78,6 +78,8 @@ public class Settings
 
     public bool AutoScrollLaunchConsoleToEnd { get; set; } = true;
 
+    public HashSet<int> FavoriteModels { get; set; } = new();
+
     public void RemoveInstalledPackageAndUpdateActive(InstalledPackage package)
     {
         RemoveInstalledPackageAndUpdateActive(package.Id);

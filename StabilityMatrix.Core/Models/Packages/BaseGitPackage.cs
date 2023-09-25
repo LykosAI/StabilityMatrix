@@ -135,7 +135,8 @@ public abstract class BaseGitPackage : BasePackage
     public async Task<PyVenvRunner> SetupVenv(
         string installedPackagePath,
         string venvName = "venv",
-        bool forceRecreate = false
+        bool forceRecreate = false,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         var venvPath = Path.Combine(installedPackagePath, venvName);
@@ -152,7 +153,7 @@ public abstract class BaseGitPackage : BasePackage
 
         if (!VenvRunner.Exists() || forceRecreate)
         {
-            await VenvRunner.Setup(forceRecreate).ConfigureAwait(false);
+            await VenvRunner.Setup(forceRecreate, onConsoleOutput).ConfigureAwait(false);
         }
         return VenvRunner;
     }

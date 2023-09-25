@@ -228,7 +228,7 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
             Id = Guid.NewGuid(),
             DisplayName = PackagePath.Name,
             PackageName = SelectedBasePackage.Name,
-            LibraryPath = $"Packages{Path.DirectorySeparatorChar}{PackagePath.Name}",
+            LibraryPath = Path.Combine("Packages", PackagePath.Name),
             Version = version,
             LaunchCommand = SelectedBasePackage.LaunchCommand,
             LastUpdateCheck = DateTimeOffset.Now,
@@ -239,10 +239,27 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
         // Recreate venv if it's a BaseGitPackage
         if (SelectedBasePackage is BaseGitPackage gitPackage)
         {
-            await gitPackage.SetupVenv(PackagePath, forceRecreate: true);
+            Logger.Info(
+                "Recreating venv for imported package {Name} ({PackageName})",
+                package.DisplayName,
+                package.PackageName
+            );
+            await gitPackage.SetupVenv(
+                PackagePath,
+                forceRecreate: true,
+                onConsoleOutput: output =>
+                {
+                    Logger.Debug("SetupVenv output: {Output}", output.Text);
+                }
+            );
         }
 
         // Reconfigure shared links
+        Logger.Info(
+            "Configuring shared links for imported package {Name} ({PackageName})",
+            package.DisplayName,
+            package.PackageName
+        );
         var recommendedSharedFolderMethod = SelectedBasePackage.RecommendedSharedFolderMethod;
         await SelectedBasePackage.UpdateModelFolders(PackagePath, recommendedSharedFolderMethod);
 

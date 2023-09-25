@@ -114,7 +114,11 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     /// <summary>
     /// Creates a venv at the configured path.
     /// </summary>
-    public async Task Setup(bool existsOk = false)
+    public async Task Setup(
+        bool existsOk = false,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
+    )
     {
         if (!existsOk && Exists())
         {
@@ -132,18 +136,32 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
             Compat.IsWindows ? "--always-copy" : "",
             RootPath
         };
-        var venvProc = ProcessRunner.StartAnsiProcess(PyRunner.PythonExePath, args);
-        await venvProc.WaitForExitAsync().ConfigureAwait(false);
 
-        // Check return code
-        var returnCode = venvProc.ExitCode;
-        if (returnCode != 0)
+        var venvProc = ProcessRunner.StartAnsiProcess(
+            PyRunner.PythonExePath,
+            args,
+            WorkingDirectory?.FullPath,
+            onConsoleOutput
+        );
+
+        try
         {
-            var output = await venvProc.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
-            output += await venvProc.StandardError.ReadToEndAsync().ConfigureAwait(false);
-            throw new InvalidOperationException(
-                $"Venv creation failed with code {returnCode}: {output}"
-            );
+            await venvProc.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+
+            // Check return code
+            if (venvProc.ExitCode != 0)
+            {
+                throw new ProcessException($"Venv creation failed with code {venvProc.ExitCode}");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            venvProc.CancelStreamReaders();
+        }
+        finally
+        {
+            venvProc.Kill();
+            venvProc.Dispose();
         }
     }
 

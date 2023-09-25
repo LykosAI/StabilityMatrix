@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Collections;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using AvaloniaEdit.Utils;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -454,6 +455,16 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         else if (SortMode == CivitSortMode.Favorites)
         {
             var favoriteModels = settingsManager.Settings.FavoriteModels;
+
+            if (!favoriteModels.Any())
+            {
+                notificationService.Show(
+                    "No Favorites",
+                    "You have not added any models to your Favorites.",
+                    NotificationType.Error
+                );
+                return;
+            }
 
             modelRequest.CommaSeparatedModelIds = string.Join(",", favoriteModels);
             modelRequest.Sort = null;

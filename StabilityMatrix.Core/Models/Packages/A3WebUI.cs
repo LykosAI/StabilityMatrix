@@ -171,7 +171,7 @@ public class A3WebUI : BaseGitPackage
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
         venvRunner.WorkingDirectory = installLocation;
-        await venvRunner.Setup(true).ConfigureAwait(false);
+        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
         switch (torchVersion)
         {

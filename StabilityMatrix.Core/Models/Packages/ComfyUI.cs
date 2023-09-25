@@ -158,7 +158,7 @@ public class ComfyUI : BaseGitPackage
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
         venvRunner.WorkingDirectory = installLocation;
-        await venvRunner.Setup(true).ConfigureAwait(false);
+        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
         // Install torch / xformers based on gpu info
         switch (torchVersion)
@@ -364,7 +364,16 @@ public class ComfyUI : BaseGitPackage
     public override Task UpdateModelFolders(
         DirectoryPath installDirectory,
         SharedFolderMethod sharedFolderMethod
-    ) => SetupModelFolders(installDirectory, sharedFolderMethod);
+    ) =>
+        sharedFolderMethod switch
+        {
+            SharedFolderMethod.Symlink
+                => base.UpdateModelFolders(installDirectory, sharedFolderMethod),
+            SharedFolderMethod.Configuration
+                => SetupModelFolders(installDirectory, sharedFolderMethod),
+            SharedFolderMethod.None => Task.CompletedTask,
+            _ => Task.CompletedTask
+        };
 
     public override Task RemoveModelFolderLinks(
         DirectoryPath installDirectory,

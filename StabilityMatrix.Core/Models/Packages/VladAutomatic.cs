@@ -171,7 +171,7 @@ public class VladAutomatic : BaseGitPackage
         venvRunner.WorkingDirectory = installLocation;
         venvRunner.EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables;
 
-        await venvRunner.Setup(true).ConfigureAwait(false);
+        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
         switch (torchVersion)
         {
@@ -433,7 +433,16 @@ public class VladAutomatic : BaseGitPackage
     public override Task UpdateModelFolders(
         DirectoryPath installDirectory,
         SharedFolderMethod sharedFolderMethod
-    ) => SetupModelFolders(installDirectory, sharedFolderMethod);
+    ) =>
+        sharedFolderMethod switch
+        {
+            SharedFolderMethod.Symlink
+                => base.UpdateModelFolders(installDirectory, sharedFolderMethod),
+            SharedFolderMethod.None => Task.CompletedTask,
+            SharedFolderMethod.Configuration
+                => SetupModelFolders(installDirectory, sharedFolderMethod),
+            _ => Task.CompletedTask
+        };
 
     public override Task RemoveModelFolderLinks(
         DirectoryPath installDirectory,

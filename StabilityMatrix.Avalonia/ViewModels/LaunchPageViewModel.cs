@@ -180,19 +180,22 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
 
     public override void OnLoaded()
     {
-        // Ensure active package either exists or is null
-        settingsManager.Transaction(
-            s =>
-            {
-                s.UpdateActiveInstalledPackage();
-            },
-            ignoreMissingLibraryDir: true
-        );
-
         // Load installed packages
         InstalledPackages = new ObservableCollection<InstalledPackage>(
             settingsManager.Settings.InstalledPackages
         );
+
+        // Ensure active package either exists or is null
+        if (SelectedPackage?.Id is { } id && InstalledPackages.All(x => x.Id != id))
+        {
+            settingsManager.Transaction(
+                s =>
+                {
+                    s.UpdateActiveInstalledPackage();
+                },
+                ignoreMissingLibraryDir: true
+            );
+        }
 
         // Load active package
         SelectedPackage = settingsManager.Settings.ActiveInstalledPackage;

@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed SD.Next not showing "Open Web UI" button when finished loading
 - Fixed model index startup errors when `./Models` contains unknown custom folder names
 - Fixed ストップ button being cut off in Japanese translation 
+- Fixed update progress freezing in some cases
 
 ## v2.4.6
 ### Added

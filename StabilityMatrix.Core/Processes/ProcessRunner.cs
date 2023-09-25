@@ -254,7 +254,7 @@ public static class ProcessRunner
         return process;
     }
 
-    public static Process StartAnsiProcess(
+    public static AnsiProcess StartAnsiProcess(
         string fileName,
         IEnumerable<string> arguments,
         string? workingDirectory = null,

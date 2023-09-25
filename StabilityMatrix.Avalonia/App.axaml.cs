@@ -65,6 +65,7 @@ using StabilityMatrix.Avalonia.Views.Settings;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Database;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
@@ -720,9 +721,6 @@ public sealed class App : Application
             builder.ForLogger("System.*").WriteToNil(NLog.LogLevel.Warn);
             builder.ForLogger("Microsoft.*").WriteToNil(NLog.LogLevel.Warn);
             builder.ForLogger("Microsoft.Extensions.Http.*").WriteToNil(NLog.LogLevel.Warn);
-            builder
-                .ForLogger("StabilityMatrix.Avalonia.ViewModels.ConsoleViewModel")
-                .WriteToNil(NLog.LogLevel.Debug);
 
             // Disable console trace logging by default
             builder
@@ -754,6 +752,18 @@ public sealed class App : Application
                 o.MinimumBreadcrumbLevel = NLog.LogLevel.Debug;
                 // Error and higher is sent as event (default is Error)
                 o.MinimumEventLevel = NLog.LogLevel.Error;
+                // Filters
+                o.SetBeforeSend(
+                    (sentryEvent, _) =>
+                    {
+                        if (sentryEvent.Logger == "Websocket.Client.WebsocketClient")
+                        {
+                            return null;
+                        }
+
+                        return sentryEvent;
+                    }
+                );
             });
         }
 

@@ -108,6 +108,9 @@ public partial class PackageCardViewModel : ProgressViewModel
         if (Package == null)
             return;
 
+        if (!settingsManager.IsLibraryDirSet)
+            return;
+
         IsSharedModelSymlink = Package.PreferredSharedFolderMethod == SharedFolderMethod.Symlink;
         IsSharedModelConfig =
             Package.PreferredSharedFolderMethod == SharedFolderMethod.Configuration;

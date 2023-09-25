@@ -720,9 +720,6 @@ public sealed class App : Application
             builder.ForLogger("System.*").WriteToNil(NLog.LogLevel.Warn);
             builder.ForLogger("Microsoft.*").WriteToNil(NLog.LogLevel.Warn);
             builder.ForLogger("Microsoft.Extensions.Http.*").WriteToNil(NLog.LogLevel.Warn);
-            builder
-                .ForLogger("StabilityMatrix.Avalonia.ViewModels.ConsoleViewModel")
-                .WriteToNil(NLog.LogLevel.Debug);
 
             // Disable console trace logging by default
             builder

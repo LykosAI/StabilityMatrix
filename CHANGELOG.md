@@ -58,7 +58,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.4.0
 ### Added
-- Added Inference - A native generation interface that connects with a running ComfyUI Package as backend.
 - New installable Package - [Fooocus-MRE](https://github.com/MoonRide303/Fooocus-MRE)
 - Added toggle to show connected model images in the Checkpoints tab
 - Added "Find Connected Metadata" option to the context menu of Checkpoint Folders in the Checkpoints tab to connect models that don't have any metadata

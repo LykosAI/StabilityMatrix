@@ -202,6 +202,7 @@
                         <Tool
                             x:Name="ImageFolderTool"
                             x:DataType="Tool"
+                            Title="Gallery"
                             Id="ImageFolderTool"
                             CanClose="False">
                             

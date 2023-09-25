@@ -171,6 +171,7 @@
                         Proportion="0.1">
                         <Tool
                             x:Name="ImageFolderTool"
+                            Title="Gallery"
                             x:DataType="Tool"
                             CanClose="False"
                             Id="ImageFolderTool">

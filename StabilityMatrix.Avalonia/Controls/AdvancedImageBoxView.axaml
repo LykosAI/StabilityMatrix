@@ -17,13 +17,6 @@
         Image="{Binding BitmapAsync^}">
         <controls:AdvancedImageBox.ContextFlyout>
             <ui:FAMenuFlyout>
-                <!--<ui:MenuFlyoutItem 
-                       Command="{ReflectionBinding #ImageCarousel.DataContext.FlyoutPreviewCommand}" 
-                       CommandParameter="{Binding #ImageView.Image}"
-                       Text="Expanded Preview"
-                       HotKey="Space"
-                       IconSource="ZoomInFilled" />
-                <ui:MenuFlyoutSeparator/>-->
                 <ui:MenuFlyoutItem 
                     x:Name="CopyMenuItem"
                     IsEnabled="{OnPlatform Windows=True, Default=False}"

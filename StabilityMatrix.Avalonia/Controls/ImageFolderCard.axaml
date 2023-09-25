@@ -140,11 +140,11 @@
                                                 <ui:FAMenuFlyout>
                                                     <ui:MenuFlyoutItem 
                                                         HotKey="{x:Null}"
-                                                        Command="{StaticResource ImageCopyCommand}"
+                                                        Command="{StaticResource ImageDeleteCommand}"
                                                         CommandParameter="{Binding $self.DataContext}"/>
                                                     <ui:MenuFlyoutItem 
                                                         HotKey="{x:Null}"
-                                                        Command="{StaticResource ImageDeleteCommand}"
+                                                        Command="{StaticResource ImageCopyCommand}"
                                                         CommandParameter="{Binding $self.DataContext}"/>
                                                     
                                                     <ui:MenuFlyoutSeparator/>

@@ -47,7 +47,23 @@
         VerticalAlignment="Stretch"
         RowDefinitions="*,Auto">
 
-        <controls:AdvancedImageBox Image="{Binding ImageSource.BitmapAsync^}" SizeMode="Fit" />
+        <controls:AdvancedImageBox
+            Name="ImageBox"
+            Image="{Binding ImageSource.BitmapAsync^}" 
+            SizeMode="Fit">
+            <controls:AdvancedImageBox.ContextFlyout>
+                <ui:FAMenuFlyout>
+                    <ui:MenuFlyoutItem 
+                        x:Name="CopyMenuItem"
+                        IsEnabled="{OnPlatform Windows=True, Default=False}"
+                        Command="{Binding CopyImageCommand}"
+                        CommandParameter="{Binding #ImageBox.Image}"
+                        Text="Copy"
+                        HotKey="Ctrl+C"
+                        IconSource="Copy" />
+                </ui:FAMenuFlyout>
+            </controls:AdvancedImageBox.ContextFlyout>
+        </controls:AdvancedImageBox>
 
         <!--  Info button  -->
         <Grid

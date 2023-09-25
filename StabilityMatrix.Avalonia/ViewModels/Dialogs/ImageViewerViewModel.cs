@@ -1,16 +1,20 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.Primitives;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.Core;
 using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Database;
 using Size = StabilityMatrix.Core.Helper.Size;
 
@@ -72,6 +76,21 @@ public partial class ImageViewerViewModel : ContentDialogViewModelBase
     private void OnNavigatePrevious()
     {
         NavigationRequested?.Invoke(this, DirectionalNavigationEventArgs.Down);
+    }
+
+    [RelayCommand]
+    private async Task CopyImage(Bitmap? image)
+    {
+        if (image is null || !Compat.IsWindows)
+            return;
+
+        await Task.Run(() =>
+        {
+            if (Compat.IsWindows)
+            {
+                WindowsClipboard.SetBitmap(image);
+            }
+        });
     }
 
     public BetterContentDialog GetDialog()

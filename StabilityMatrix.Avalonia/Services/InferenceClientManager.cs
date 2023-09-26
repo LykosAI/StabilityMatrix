@@ -94,7 +94,16 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         this.modelIndexService = modelIndexService;
         this.settingsManager = settingsManager;
 
-        modelsSource.Connect().DeferUntilLoaded().Bind(Models).Subscribe();
+        modelsSource
+            .Connect()
+            .SortBy(
+                f => f.ShortDisplayName,
+                SortDirection.Ascending,
+                SortOptimisations.ComparesImmutableValuesOnly
+            )
+            .DeferUntilLoaded()
+            .Bind(Models)
+            .Subscribe();
 
         vaeModelsDefaults.AddOrUpdate(HybridModelFile.Default);
 

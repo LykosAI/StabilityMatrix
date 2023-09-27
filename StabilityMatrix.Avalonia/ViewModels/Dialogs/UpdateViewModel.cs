@@ -2,10 +2,12 @@
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Semver;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
@@ -23,6 +25,8 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly IHttpClientFactory httpClientFactory;
     private readonly IUpdateHelper updateHelper;
+
+    private bool isLoaded;
 
     [ObservableProperty]
     private bool isUpdateAvailable;
@@ -60,6 +64,44 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         updateHelper.StartCheckingForUpdates().SafeFireAndForget();
     }
 
+    /// <summary>
+    /// Formats changelog markdown including up to the current version
+    /// </summary>
+    internal static string? FormatChangelog(string markdown, SemVersion currentVersion)
+    {
+        var pattern = $@"(##[\s\S]+?)(?:## v{currentVersion.WithoutPrereleaseOrMetadata()})";
+
+        var match = Regex.Match(markdown, pattern);
+
+        return match.Success ? match.Groups[1].Value.TrimEnd() : null;
+    }
+
+    public async Task Preload()
+    {
+        if (UpdateInfo is null)
+            return;
+
+        using var client = httpClientFactory.CreateClient();
+        var response = await client.GetAsync(UpdateInfo.ChangelogUrl);
+        if (response.IsSuccessStatusCode)
+        {
+            var changelog = await response.Content.ReadAsStringAsync();
+
+            // Formatting for new changelog format
+            // https://keepachangelog.com/en/1.1.0/
+            if (UpdateInfo.ChangelogUrl.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+            {
+                ReleaseNotes =
+                    FormatChangelog(changelog, UpdateInfo.Version)
+                    ?? "## Unable to format release notes";
+            }
+        }
+        else
+        {
+            ReleaseNotes = "## Unable to load release notes";
+        }
+    }
+
     public override async Task OnLoadedAsync()
     {
         if (UpdateInfo is null)
@@ -68,29 +110,17 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         UpdateText =
             $"Stability Matrix v{UpdateInfo.Version} is now available! You currently have v{Compat.AppVersion}. Would you like to update now?";
 
-        var client = httpClientFactory.CreateClient();
-        var response = await client.GetAsync(UpdateInfo.ChangelogUrl);
-        if (response.IsSuccessStatusCode)
+        if (!isLoaded)
         {
-            ReleaseNotes = await response.Content.ReadAsStringAsync();
+            await Preload();
+        }
+    }
 
-            // Formatting for new changelog format
-            // https://keepachangelog.com/en/1.1.0/
-            if (UpdateInfo.ChangelogUrl.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
-            {
-                // Skip until the first occurrence of "##"
-                const string delimiter = "##";
-                var startIndex = ReleaseNotes.IndexOf(delimiter, StringComparison.Ordinal);
-                if (startIndex != -1)
-                {
-                    ReleaseNotes = ReleaseNotes[startIndex..];
-                }
-            }
-        }
-        else
-        {
-            ReleaseNotes = "## Unable to load release notes";
-        }
+    /// <inheritdoc />
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
+        isLoaded = false;
     }
 
     [RelayCommand]

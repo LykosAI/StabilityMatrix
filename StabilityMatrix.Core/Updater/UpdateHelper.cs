@@ -18,7 +18,7 @@ public class UpdateHelper : IUpdateHelper
     private readonly IHttpClientFactory httpClientFactory;
     private readonly IDownloadService downloadService;
     private readonly DebugOptions debugOptions;
-    private readonly System.Timers.Timer timer = new(TimeSpan.FromMinutes(5));
+    private readonly System.Timers.Timer timer = new(TimeSpan.FromMinutes(60));
 
     private string UpdateManifestUrl =>
         debugOptions.UpdateManifestUrl ?? "https://cdn.lykos.ai/update-v2.json";

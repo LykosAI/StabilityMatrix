@@ -134,6 +134,9 @@ public partial class SettingsViewModel : PageViewModelBase
     public string VersionFlyoutText =>
         $"You are {VersionTapCountThreshold - VersionTapCount} clicks away from enabling Debug options.";
 
+    public string DataDirectory =>
+        settingsManager.IsLibraryDirSet ? settingsManager.LibraryDir : "Not set";
+
     public SettingsViewModel(
         INotificationService notificationService,
         ISettingsManager settingsManager,

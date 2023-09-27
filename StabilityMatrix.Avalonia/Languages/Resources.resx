@@ -654,4 +654,7 @@
   <data name="Label_DataFolderName" xml:space="preserve">
     <value>Data Folder Name</value>
   </data>
+  <data name="Label_CurrentDirectory" xml:space="preserve">
+    <value>Current directory:</value>
+  </data>
 </root>

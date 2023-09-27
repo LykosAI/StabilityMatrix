@@ -609,6 +609,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Current directory:.
+        /// </summary>
+        public static string Label_CurrentDirectory {
+            get {
+                return ResourceManager.GetString("Label_CurrentDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Data Directory.
         /// </summary>
         public static string Label_DataDirectory {

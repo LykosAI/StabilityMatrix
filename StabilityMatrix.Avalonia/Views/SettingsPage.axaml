@@ -268,7 +268,7 @@
                             <TextBlock Text="{x:Static lang:Resources.Label_SelectNewDataDirectory}"/>
                             <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                        FontSize="12">
-                                <Run Text="Current directory:"/>
+                                <Run Text="{x:Static lang:Resources.Label_CurrentDirectory}"/>
                                 <Run Text="{Binding DataDirectory}"/>
                             </TextBlock>
                         </StackPanel>

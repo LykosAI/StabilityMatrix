@@ -321,14 +321,15 @@ public partial class MainWindow : AppWindowBase
         progressFlyout = flyout;
     }
 
-    private void FooterUpdateItem_OnTapped(object? sender, TappedEventArgs e)
+    private async void FooterUpdateItem_OnTapped(object? sender, TappedEventArgs e)
     {
         // show update window thing
         if (DataContext is not MainWindowViewModel vm)
         {
             throw new NullReferenceException("DataContext is not MainWindowViewModel");
         }
-        Dispatcher.UIThread.InvokeAsync(vm.ShowUpdateDialog).SafeFireAndForget();
+
+        await vm.ShowUpdateDialog();
     }
 
     private void FooterDiscordItem_OnTapped(object? sender, TappedEventArgs e)

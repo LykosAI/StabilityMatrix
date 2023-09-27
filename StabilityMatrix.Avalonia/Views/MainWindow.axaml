@@ -12,7 +12,6 @@
                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="550"
                         d:DataContext="{x:Static mocks:DesignData.MainWindowViewModel}"
                         x:DataType="vm:MainWindowViewModel"
-                        x:CompileBindings="True"
                         Icon="/Assets/Icon.ico"
                         Width="1100"
                         Height="750"

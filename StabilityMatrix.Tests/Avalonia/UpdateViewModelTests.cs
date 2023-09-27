@@ -50,6 +50,19 @@ public class UpdateViewModelTests
                                 """;
 
         Assert.AreEqual(expected, result);
-        Assert.AreEqual(expected, resultPre);
+
+        // Pre-release should include the current release
+        const string expectedPre = """
+                                   ## v2.4.6
+                                   ### Added
+                                   - Stuff
+                                   ### Changed
+                                   - Things
+
+                                   ## v2.4.5
+                                   ### Fixed
+                                   - Fixed bug
+                                   """;
+        Assert.AreEqual(expectedPre, resultPre);
     }
 }

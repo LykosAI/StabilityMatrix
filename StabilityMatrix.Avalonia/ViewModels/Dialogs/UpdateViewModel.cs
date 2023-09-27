@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -53,6 +54,11 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
     [ObservableProperty]
     private string? newVersionText;
 
+    [GeneratedRegex(
+        @"(##\s*(v[0-9]+\.[0-9]+\.[0-9]+)((?:\n|.)+?))(?=(##\s*v[0-9]+\.[0-9]+\.[0-9]+)|\z)"
+    )]
+    private static partial Regex RegexChangelog();
+
     public UpdateViewModel(
         ISettingsManager settingsManager,
         IHttpClientFactory httpClientFactory,
@@ -76,11 +82,39 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
     /// </summary>
     internal static string? FormatChangelog(string markdown, SemVersion currentVersion)
     {
-        var pattern = $@"(##[\s\S]+?)(?:## v{currentVersion.WithoutPrereleaseOrMetadata()})";
+        var pattern = RegexChangelog();
 
-        var match = Regex.Match(markdown, pattern);
+        var results = pattern
+            .Matches(markdown)
+            .Select(
+                m =>
+                    new
+                    {
+                        Block = m.Groups[1].Value.Trim(),
+                        Version = m.Groups[2].Value.Trim(),
+                        Content = m.Groups[3].Value.Trim()
+                    }
+            )
+            .ToList();
 
-        return match.Success ? match.Groups[1].Value.TrimEnd() : null;
+        // Join all blocks until and excluding the current version
+        // If we're on a pre-release, include the current release
+
+        var currentVersionBlock = results.FindIndex(
+            x => x.Version == $"v{currentVersion.WithoutPrereleaseOrMetadata()}"
+        );
+
+        if (currentVersionBlock == -1)
+        {
+            return null;
+        }
+
+        var blocks = results
+            .Take(currentVersionBlock + (currentVersion.IsPrerelease ? 1 : 0))
+            .Select(x => x.Block)
+            .ToList();
+
+        return string.Join(Environment.NewLine + Environment.NewLine, blocks);
     }
 
     public async Task Preload()
@@ -99,7 +133,7 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
             if (UpdateInfo.ChangelogUrl.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
             {
                 ReleaseNotes =
-                    FormatChangelog(changelog, UpdateInfo.Version)
+                    FormatChangelog(changelog, Compat.AppVersion)
                     ?? "## Unable to format release notes";
             }
         }

@@ -8,6 +8,7 @@ using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Semver;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
@@ -45,6 +46,12 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
 
     [ObservableProperty]
     private bool showProgressBar;
+
+    [ObservableProperty]
+    private string? currentVersionText;
+
+    [ObservableProperty]
+    private string? newVersionText;
 
     public UpdateViewModel(
         ISettingsManager settingsManager,
@@ -102,14 +109,14 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         }
     }
 
+    partial void OnUpdateInfoChanged(UpdateInfo? value)
+    {
+        CurrentVersionText = $"v{Compat.AppVersion}";
+        NewVersionText = $"v{value?.Version}";
+    }
+
     public override async Task OnLoadedAsync()
     {
-        if (UpdateInfo is null)
-            return;
-
-        UpdateText =
-            $"Stability Matrix v{UpdateInfo.Version} is now available! You currently have v{Compat.AppVersion}. Would you like to update now?";
-
         if (!isLoaded)
         {
             await Preload();
@@ -132,7 +139,10 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         }
 
         ShowProgressBar = true;
-        UpdateText = $"Downloading update v{UpdateInfo.Version}...";
+        UpdateText = string.Format(
+            Resources.TextTemplate_UpdatingPackage,
+            Resources.Label_StabilityMatrix
+        );
         await updateHelper.DownloadUpdate(
             UpdateInfo,
             new Progress<ProgressReport>(report =>

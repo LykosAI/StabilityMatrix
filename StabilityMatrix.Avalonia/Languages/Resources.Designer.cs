@@ -186,6 +186,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Install Now.
+        /// </summary>
+        public static string Action_InstallNow {
+            get {
+                return ResourceManager.GetString("Action_InstallNow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Launch.
         /// </summary>
         public static string Action_Launch {
@@ -281,6 +290,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Action_RelaunchLater {
             get {
                 return ResourceManager.GetString("Action_RelaunchLater", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remind Me Later.
+        /// </summary>
+        public static string Action_RemindMeLater {
+            get {
+                return ResourceManager.GetString("Action_RemindMeLater", resourceCulture);
             }
         }
         
@@ -1239,6 +1257,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Release Notes.
+        /// </summary>
+        public static string Label_ReleaseNotes {
+            get {
+                return ResourceManager.GetString("Label_ReleaseNotes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Releases.
         /// </summary>
         public static string Label_Releases {
@@ -1595,6 +1622,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string TeachingTip_ClickLaunchToGetStarted {
             get {
                 return ResourceManager.GetString("TeachingTip_ClickLaunchToGetStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The app will relaunch after updating.
+        /// </summary>
+        public static string Text_AppWillRelaunchAfterUpdate {
+            get {
+                return ResourceManager.GetString("Text_AppWillRelaunchAfterUpdate", resourceCulture);
             }
         }
         

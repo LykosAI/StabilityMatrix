@@ -8,6 +8,7 @@
                           xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
                           xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
                           xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+                          xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
                           d:DataContext="{x:Static mocks:DesignData.UpdateViewModel}"
                           x:DataType="dialogs:UpdateViewModel"
                           mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="550"
@@ -27,16 +28,37 @@
                    Margin="0,16,0,0"
                    FontSize="28"/>
         
+        <StackPanel Grid.Row="1" 
+                    Margin="0,4"
+                    Orientation="Horizontal" 
+                    IsVisible="{Binding UpdateText, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                    HorizontalAlignment="Center">
+            <TextBlock
+                Foreground="{StaticResource ThemeGreyColor}"
+                FontSize="18"
+                Text="{Binding CurrentVersionText}"/>
+            <fluentIcons:SymbolIcon 
+                FontSize="15"
+                Margin="8,0"
+                VerticalAlignment="Center"
+                Symbol="ArrowRight" 
+                IsFilled="True"/>
+            <TextBlock
+                FontSize="18"
+                Text="{Binding NewVersionText}"/>
+        </StackPanel>
+        
         <TextBlock Grid.Row="1" 
                    HorizontalAlignment="Center"
                    FontSize="18"
                    TextWrapping="Wrap"
                    TextAlignment="Center"
+                   IsVisible="{Binding UpdateText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                    Text="{Binding UpdateText}"
                    Margin="16,32,16,0"/>
         
         <TextBlock Grid.Row="2" 
-                   Text="Release Notes" 
+                   Text="{x:Static lang:Resources.Label_ReleaseNotes}" 
                    FontSize="16"
                    IsVisible="{Binding !ShowProgressBar}"
                    Margin="32,16,32,0"/>
@@ -63,20 +85,20 @@
                     Margin="64,0,64,16"
                     IsOpen="True"
                     IsClosable="False"
-                    Title="The app will relaunch after updating" /> 
+                    Title="{x:Static lang:Resources.Text_AppWillRelaunchAfterUpdate}" /> 
         
         <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,16">
-            <Button Content="Remind Me Later"
+            <Button Content="{x:Static lang:Resources.Action_RemindMeLater}"
                     Classes="info"
                     Margin="0,0,8,0"
-                    FontSize="18"
+                    FontSize="15"
                     Command="{Binding OnCloseButtonClick}"
                     IsEnabled="{Binding !InstallUpdateCommand.IsRunning}" />
             
-            <Button Content="Install Now"
+            <Button Content="{x:Static lang:Resources.Action_InstallNow}"
                     Classes="success"
                        Margin="8,0,0,0"
-                       FontSize="18"
+                       FontSize="15"
                        Command="{Binding InstallUpdateCommand}" />
         </StackPanel>
         

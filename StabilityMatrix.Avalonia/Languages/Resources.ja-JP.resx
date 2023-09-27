@@ -311,7 +311,7 @@
     <value>Stability Matrixがバージョンアップ！</value>
   </data>
   <data name="Label_ImportLatest" xml:space="preserve">
-    <value>直近のインポート</value>
+    <value>最新版DL</value>
   </data>
   <data name="Label_AllVersions" xml:space="preserve">
     <value>すべてのバージョン</value>

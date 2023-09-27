@@ -280,7 +280,7 @@
     <value>Data Directory</value>
   </data>
   <data name="Label_DataDirectoryExplanation" xml:space="preserve">
-    <value>This is where model checkpoints, LORAs, web UIs, settings, etc. will be installed.</value>
+    <value>This is where application data (model checkpoints, web UIs, etc.) will be installed.</value>
   </data>
   <data name="Label_FatWarning" xml:space="preserve">
     <value>You may encounter errors when using a FAT32 or exFAT drive. Select a different drive for a smoother experience.</value>
@@ -647,5 +647,11 @@
   </data>
   <data name="Label_SharedModelStrategyShort" xml:space="preserve">
     <value>Model Sharing</value>
+  </data>
+  <data name="Label_PleaseSelectDataDirectory" xml:space="preserve">
+    <value>Please Select a Data Directory</value>
+  </data>
+  <data name="Label_DataFolderName" xml:space="preserve">
+    <value>Data Folder Name</value>
   </data>
 </root>

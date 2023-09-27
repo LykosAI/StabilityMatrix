@@ -262,8 +262,17 @@
                     Grid.Row="2"
                     Margin="8,0"
                     Description="{x:Static lang:Resources.Label_SelectNewDataDirectory_Details}"
-                    Header="{x:Static lang:Resources.Label_SelectNewDataDirectory}"
                     IconSource="MoveToFolder">
+                    <ui:SettingsExpander.Header>
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="{x:Static lang:Resources.Label_SelectNewDataDirectory}"/>
+                            <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                       FontSize="12">
+                                <Run Text="Current directory:"/>
+                                <Run Text="{Binding DataDirectory}"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </ui:SettingsExpander.Header>
                     <ui:SettingsExpander.Footer>
                         <Button Command="{Binding PickNewDataDirectory}">
                             <Grid ColumnDefinitions="Auto, Auto">

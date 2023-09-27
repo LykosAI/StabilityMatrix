@@ -10,26 +10,42 @@
                           d:DataContext="{x:Static mocks:DesignData.SelectDataDirectoryViewModel}"
                           x:DataType="dialogs:SelectDataDirectoryViewModel"
                           x:CompileBindings="True"
-                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="550"
                           x:Class="StabilityMatrix.Avalonia.Views.Dialogs.SelectDataDirectoryDialog">
     
-    <Grid RowDefinitions="Auto,1*,1*"
+    <Grid RowDefinitions="Auto,Auto,Auto,*,*"
           Margin="16,0,16,16"
           MinHeight="450"
           MaxWidth="700" >
-
-        <StackPanel Grid.Row="0" Margin="0,0,0,16">
-            <ui:InfoBar
-                IsClosable="False"
-                IsOpen="True"
-                Margin="0,0,0,16"
-                IsVisible="{Binding HasOldData}"
-                Title="Welcome back! In this update, you can optionally choose a custom location to store all data. If you choose a new location, or opt to use Portable Mode, you'll be able to migrate your existing data on the next page."/>
         
+        <StackPanel Orientation="Vertical">
+            <TextBlock Text="{x:Static lang:Resources.Text_WelcomeToStabilityMatrix}"
+                       TextWrapping="Wrap"
+                       Margin="8,0,8,0"
+                       VerticalAlignment="Center" HorizontalAlignment="Center"
+                       FontSize="36" FontWeight="Light" />
+            <TextBlock Text="{x:Static lang:Resources.Label_PleaseSelectDataDirectory}"
+                       TextWrapping="Wrap"
+                       Margin="8,4,8,0"
+                       VerticalAlignment="Center" HorizontalAlignment="Center"
+                       FontSize="20" FontWeight="Light" />
+            <TextBlock
+                Text="{x:Static lang:Resources.Label_DataDirectoryExplanation}"
+                TextWrapping="Wrap"
+                Foreground="LightGray"
+                FontSize="14"
+                FontWeight="Light"
+                TextAlignment="Center"
+                Margin="0,8,0,0" />
+        </StackPanel>
+        
+
+        <StackPanel Grid.Row="1" Margin="0,0,0,16">
             <Label
                 Content="{x:Static lang:Resources.Label_DataDirectory}"
                 FontSize="13"
                 Margin="0,16,0,0" />
+            
             <Grid ColumnDefinitions="*,Auto">
 
                 <TextBox
@@ -49,14 +65,7 @@
                     <ui:SymbolIcon Symbol="OpenFolder" />
                 </Button>
             </Grid>
-            
-            <TextBlock
-                Text="{x:Static lang:Resources.Label_DataDirectoryExplanation}"
-                TextWrapping="Wrap"
-                Foreground="LightGray"
-                FontSize="12"
-                Margin="0,8,0,0" />
-            
+
             <TextBlock
                 Text="{x:Static lang:Resources.Label_FatWarning}"
                 TextWrapping="Wrap"
@@ -64,11 +73,13 @@
                 IsVisible="{Binding ShowFatWarning}"
                 FontSize="14"
                 Margin="0,8,0,0" />
-
+        </StackPanel>
+        
+        <StackPanel Grid.Row="2" Orientation="Vertical">
             <CheckBox
                 Content="{x:Static lang:Resources.Label_PortableMode}"
                 IsChecked="{Binding IsPortableMode, Mode=TwoWay}"
-                Margin="0,32,0,0" />
+                Margin="0,8,0,0" />
 
             <ui:InfoBar
                 IsClosable="False"
@@ -77,14 +88,13 @@
                 Margin="0,8,0,0"
                 Padding="16"
                 Title="{x:Static lang:Resources.Label_PortableModeExplanation}" />
-        
         </StackPanel>
 
         <!--  Indicator of existing or new data directory  -->
         <StackPanel
-            Grid.Row="1"
+            Grid.Row="3"
             HorizontalAlignment="Center"
-            Margin="8,0,8,8"
+            Margin="8,0,8,0"
             Orientation="Horizontal"
             IsVisible="{Binding IsStatusBadgeVisible}">
             <controls:RefreshBadge DataContext="{Binding ValidatorRefreshBadge}" />
@@ -94,15 +104,27 @@
                 VerticalAlignment="Center" />
         </StackPanel>
 
-        <Button
-            Content="{x:Static lang:Resources.Action_Continue}"
-            IsDefault="True"
-            Command="{Binding OnPrimaryButtonClick}"
-            FontSize="16"
-            Grid.Row="2"
-            HorizontalAlignment="Center"
-            IsEnabled="{Binding IsDirectoryValid}"
-            Padding="16,8" />
+        <UniformGrid Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                     Margin="0,8,0,0">
+            <Button
+                Content="{x:Static lang:Resources.Action_Cancel}"
+                IsDefault="True"
+                Command="{Binding OnCloseButtonClick}"
+                FontSize="16"
+                HorizontalAlignment="Center"
+                IsEnabled="{Binding IsDirectoryValid}"
+                Padding="16,8" />
+            <Button
+                Content="{x:Static lang:Resources.Action_Continue}"
+                IsDefault="True"
+                Command="{Binding OnPrimaryButtonClick}"
+                FontSize="16"
+                Classes="success"
+                HorizontalAlignment="Center"
+                IsEnabled="{Binding IsDirectoryValid}"
+                Padding="16,8" />
+        </UniformGrid>
+        
     </Grid>
     
 </controls:UserControlBase>

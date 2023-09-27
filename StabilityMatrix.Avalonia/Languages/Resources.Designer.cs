@@ -618,11 +618,20 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This is where model checkpoints, LORAs, web UIs, settings, etc. will be installed..
+        ///   Looks up a localized string similar to This is where application data (model checkpoints, web UIs, etc.) will be installed..
         /// </summary>
         public static string Label_DataDirectoryExplanation {
             get {
                 return ResourceManager.GetString("Label_DataDirectoryExplanation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Data Folder Name.
+        /// </summary>
+        public static string Label_DataFolderName {
+            get {
+                return ResourceManager.GetString("Label_DataFolderName", resourceCulture);
             }
         }
         
@@ -1127,6 +1136,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_PleaseChooseDifferentName {
             get {
                 return ResourceManager.GetString("Label_PleaseChooseDifferentName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please Select a Data Directory.
+        /// </summary>
+        public static string Label_PleaseSelectDataDirectory {
+            get {
+                return ResourceManager.GetString("Label_PleaseSelectDataDirectory", resourceCulture);
             }
         }
         

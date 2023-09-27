@@ -267,6 +267,7 @@ public partial class MainWindowViewModel : ViewModelBase
             Content = new UpdateDialog { DataContext = viewModel }
         };
 
+        await viewModel.Preload();
         await dialog.ShowAsync();
     }
 }

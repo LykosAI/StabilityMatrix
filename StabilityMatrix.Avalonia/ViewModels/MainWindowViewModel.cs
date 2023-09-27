@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
@@ -19,6 +20,7 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
@@ -188,6 +190,31 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // Check if there are old packages, if so show migration dialog
         // TODO: Migration dialog
+
+        return true;
+    }
+
+    /// <summary>
+    /// Return true if we should show the update available teaching tip
+    /// </summary>
+    public bool ShouldShowUpdateAvailableTeachingTip([NotNullWhen(true)] UpdateInfo? info)
+    {
+        if (info is null)
+        {
+            return false;
+        }
+
+        // If matching settings seen version, don't show
+        if (info.Version == settingsManager.Settings.LastSeenUpdateVersion)
+        {
+            return false;
+        }
+
+        // Save that we have dismissed this update
+        settingsManager.Transaction(
+            s => s.LastSeenUpdateVersion = info.Version,
+            ignoreMissingLibraryDir: true
+        );
 
         return true;
     }

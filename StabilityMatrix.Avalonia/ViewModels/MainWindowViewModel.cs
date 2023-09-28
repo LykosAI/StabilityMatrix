@@ -103,6 +103,11 @@ public partial class MainWindowViewModel : ViewModelBase
         Task.Run(() => settingsManager.IndexCheckpoints()).SafeFireAndForget();
 
         PreloadPages();
+
+        Program.StartupTimer.Stop();
+        var startupTime = CodeTimer.FormatTime(Program.StartupTimer.Elapsed);
+        Logger.Info($"App started ({startupTime})");
+
         if (Program.Args.DebugOneClickInstall || !settingsManager.Settings.InstalledPackages.Any())
         {
             var viewModel = dialogFactory.Get<OneClickInstallViewModel>();

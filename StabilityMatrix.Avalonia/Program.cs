@@ -38,12 +38,16 @@ public class Program
 
     public static bool IsDebugBuild { get; private set; }
 
+    public static Stopwatch StartupTimer { get; } = new();
+
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
     [STAThread]
     public static void Main(string[] args)
     {
+        StartupTimer.Start();
+
         Args.DebugExceptionDialog = args.Contains("--debug-exception-dialog");
         Args.DebugSentry = args.Contains("--debug-sentry");
         Args.DebugOneClickInstall = args.Contains("--debug-one-click-install");

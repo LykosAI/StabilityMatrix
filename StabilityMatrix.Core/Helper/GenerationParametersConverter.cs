@@ -46,6 +46,9 @@ public static class GenerationParametersConverter
         x => x.Key
     );
 
+    /// <summary>
+    /// Converts a parameters-type string to a <see cref="ComfySamplerScheduler"/>.
+    /// </summary>
     public static bool TryGetSamplerScheduler(
         string parameters,
         out ComfySamplerScheduler samplerScheduler
@@ -54,6 +57,9 @@ public static class GenerationParametersConverter
         return ParamsToSamplerSchedulers.TryGetValue(parameters, out samplerScheduler);
     }
 
+    /// <summary>
+    /// Converts a <see cref="ComfySamplerScheduler"/> to a parameters-type string.
+    /// </summary>
     public static bool TryGetParameters(
         ComfySamplerScheduler samplerScheduler,
         [NotNullWhen(true)] out string? parameters

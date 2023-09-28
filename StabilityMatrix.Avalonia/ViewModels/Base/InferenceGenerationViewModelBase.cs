@@ -60,6 +60,7 @@ public abstract partial class InferenceGenerationViewModelBase
         IInferenceClientManager inferenceClientManager,
         INotificationService notificationService
     )
+        : base(notificationService)
     {
         this.notificationService = notificationService;
         this.vmFactory = vmFactory;

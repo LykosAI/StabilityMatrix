@@ -65,6 +65,29 @@ public class ImageMetadata
         return new System.Drawing.Size(imageWidth, imageHeight);
     }
 
+    public static (
+        string? Parameters,
+        string? ParametersJson,
+        string? SMProject,
+        string? ComfyNodes
+    ) GetAllFileMetadata(FilePath filePath)
+    {
+        using var stream = filePath.Info.OpenRead();
+        using var reader = new BinaryReader(stream);
+
+        var parameters = ReadTextChunk(reader, "parameters");
+        var parametersJson = ReadTextChunk(reader, "parameters-json");
+        var smProject = ReadTextChunk(reader, "smproj");
+        var comfyNodes = ReadTextChunk(reader, "prompt");
+
+        return (
+            string.IsNullOrEmpty(parameters) ? null : parameters,
+            string.IsNullOrEmpty(parametersJson) ? null : parametersJson,
+            string.IsNullOrEmpty(smProject) ? null : smProject,
+            string.IsNullOrEmpty(comfyNodes) ? null : comfyNodes
+        );
+    }
+
     public IEnumerable<Tag>? GetTextualData()
     {
         // Get the PNG-tEXt directory

@@ -202,16 +202,25 @@
                                 <ui:MenuFlyoutItem
                                     Command="{Binding MenuOpenProjectCommand}"
                                     InputGesture="Ctrl+O"
-                                    Text="Open Project..." />
+                                    IconSource="OpenFolder"
+                                    Text="{x:Static lang:Resources.Action_OpenProjectEllipsis}" />
                                 <ui:MenuFlyoutSeparator />
                                 <ui:MenuFlyoutItem
                                     Command="{Binding MenuSaveCommand}"
                                     InputGesture="Ctrl+S"
+                                    IconSource="Save"
                                     Text="{x:Static lang:Resources.Action_Save}" />
                                 <ui:MenuFlyoutItem
                                     Command="{Binding MenuSaveAsCommand}"
                                     InputGesture="Ctrl+Shift+S"
-                                    Text="Save As..." />
+                                    Text="{x:Static lang:Resources.Action_SaveAsEllipsis}" />
+                                
+                                <ui:MenuFlyoutSeparator />
+                                
+                                <ui:MenuFlyoutItem
+                                    Command="{Binding SelectedTab.RestoreDefaultViewStateCommand, FallbackValue={x:Null}}"
+                                    IconSource="CalendarReply"
+                                    Text="{x:Static lang:Resources.Action_RestoreDefaultLayout}" />
                                 
                                 <!-- Debug mode menus -->
                                 <ui:MenuFlyoutSeparator IsVisible="{Binding SharedState.IsDebugMode}" />

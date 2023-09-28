@@ -33,8 +33,9 @@
         <PackageReference Include="AvaloniaEdit.TextMate" Version="11.0.0" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
         <PackageReference Include="DiscordRichPresence" Version="1.2.1.24" />
-        <PackageReference Include="Dock.Avalonia" Version="11.0.0.1" />
+        <PackageReference Include="Dock.Avalonia" Version="11.0.0.2" />
         <PackageReference Include="Dock.Model.Avalonia" Version="11.0.0.2" />
+        <PackageReference Include="Dock.Serializer" Version="11.0.0.2" />
         <PackageReference Include="DynamicData" Version="7.14.2" />
         <PackageReference Include="FluentAvaloniaUI" Version="2.0.4" />
         <PackageReference Include="FluentIcons.Avalonia" Version="1.1.217" />

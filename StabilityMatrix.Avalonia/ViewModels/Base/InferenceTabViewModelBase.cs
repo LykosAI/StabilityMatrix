@@ -14,7 +14,10 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using FluentAvalonia.UI.Media.Animation;
+using Microsoft.Extensions.DependencyInjection;
 using NLog;
+using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -78,6 +81,8 @@ public abstract partial class InferenceTabViewModelBase
     protected void LoadViewState(LoadViewStateEventArgs args) =>
         loadViewStateRequestedEventManager?.RaiseEvent(this, args, nameof(LoadViewStateRequested));
 
+    protected void ResetViewState() => LoadViewState(new LoadViewStateEventArgs());
+
     private WeakEventManager<SaveViewStateEventArgs>? saveViewStateRequestedEventManager;
 
     public event EventHandler<SaveViewStateEventArgs> SaveViewStateRequested
@@ -114,6 +119,18 @@ public abstract partial class InferenceTabViewModelBase
     protected InferenceTabViewModelBase(INotificationService notificationService)
     {
         this.notificationService = notificationService;
+    }
+
+    [RelayCommand]
+    private void RestoreDefaultViewState()
+    {
+        // ResetViewState();
+        // TODO: Dock reset not working, using this hack for now to get a new view
+
+        var navService = App.Services.GetRequiredService<INavigationService>();
+        navService.NavigateTo<LaunchPageViewModel>(new SuppressNavigationTransitionInfo());
+        ((IPersistentViewProvider)this).AttachedPersistentView = null;
+        navService.NavigateTo<InferenceViewModel>(new BetterEntranceNavigationTransition());
     }
 
     [RelayCommand]

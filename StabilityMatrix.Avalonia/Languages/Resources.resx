@@ -669,4 +669,13 @@
   <data name="Label_ReleaseNotes" xml:space="preserve">
     <value>Release Notes</value>
   </data>
+  <data name="Action_OpenProjectEllipsis" xml:space="preserve">
+    <value>Open Project...</value>
+  </data>
+  <data name="Action_SaveAsEllipsis" xml:space="preserve">
+    <value>Save As...</value>
+  </data>
+  <data name="Action_RestoreDefaultLayout" xml:space="preserve">
+    <value>Restore Default Layout</value>
+  </data>
 </root>

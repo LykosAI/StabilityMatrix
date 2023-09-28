@@ -141,7 +141,7 @@ public class ImageMetadata
     {
         // skip to end of png header stuff
         byteStream.BaseStream.Position = 0x21;
-        while (byteStream.BaseStream.Position < byteStream.BaseStream.Length)
+        while (byteStream.BaseStream.Position < byteStream.BaseStream.Length - 4)
         {
             var chunkSize = BitConverter.ToInt32(byteStream.ReadBytes(4).Reverse().ToArray());
             var chunkType = Encoding.UTF8.GetString(byteStream.ReadBytes(4));

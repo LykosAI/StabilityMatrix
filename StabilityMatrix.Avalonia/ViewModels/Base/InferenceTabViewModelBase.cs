@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -13,6 +15,8 @@ using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
@@ -144,6 +148,66 @@ public abstract partial class InferenceTabViewModelBase
         GC.SuppressFinalize(this);
     }
 
+    private bool TryLoadImageMetadata(FilePath? filePath)
+    {
+        if (filePath is not { Exists: true })
+            return false;
+
+        var metadata = ImageMetadata.GetAllFileMetadata(filePath);
+
+        // Has SMProject metadata
+        if (metadata.SMProject is not null)
+        {
+            var project = JsonSerializer.Deserialize<InferenceProjectDocument>(metadata.SMProject);
+
+            // Check project type matches
+            if (project?.ProjectType.ToViewModelType() == GetType() && project.State is not null)
+            {
+                LoadStateFromJsonObject(project.State);
+            }
+            else
+            {
+                return false;
+            }
+
+            // Load image
+            if (this is IImageGalleryComponent imageGalleryComponent)
+            {
+                imageGalleryComponent.LoadImagesToGallery(new ImageSource(filePath));
+            }
+
+            return true;
+        }
+
+        // Has generic metadata
+        if (metadata.Parameters is { } parametersString)
+        {
+            if (!GenerationParameters.TryParse(parametersString, out var parameters))
+            {
+                return false;
+            }
+
+            if (this is IParametersLoadableState paramsLoadableVm)
+            {
+                paramsLoadableVm.LoadStateFromParameters(parameters);
+            }
+            else
+            {
+                return false;
+            }
+
+            // Load image
+            if (this is IImageGalleryComponent imageGalleryComponent)
+            {
+                imageGalleryComponent.LoadImagesToGallery(new ImageSource(filePath));
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
     /// <inheritdoc />
     public void DragOver(object? sender, DragEventArgs e)
     {
@@ -162,10 +226,10 @@ public abstract partial class InferenceTabViewModelBase
         if (e.Data.GetDataFormats().Contains(DataFormats.Files))
         {
             e.Handled = true;
-            e.DragEffects = DragDropEffects.None;
             return;
         }
 
+        // Other kinds - not supported
         e.DragEffects = DragDropEffects.None;
     }
 
@@ -214,6 +278,16 @@ public abstract partial class InferenceTabViewModelBase
         if (e.Data.GetDataFormats().Contains(DataFormats.Files))
         {
             e.Handled = true;
+
+            if (e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> files)
+            {
+                var paths = files.Select(f => f.TryGetLocalPath()).ToList();
+
+                if (paths.FirstOrDefault() is { } file)
+                {
+                    Dispatcher.UIThread.Post(() => TryLoadImageMetadata(file));
+                }
+            }
         }
     }
 }

@@ -1,15 +1,18 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Linq;
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(SamplerCard))]
-public partial class SamplerCardViewModel : LoadableViewModelBase
+public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLoadableState
 {
     [ObservableProperty]
     private bool isRefinerStepsEnabled;
@@ -61,42 +64,32 @@ public partial class SamplerCardViewModel : LoadableViewModelBase
         ClientManager = clientManager;
     }
 
-    /*/// <inheritdoc />
-    public override void LoadStateFromJsonObject(JsonObject state)
+    /// <inheritdoc />
+    public void LoadStateFromParameters(GenerationParameters parameters)
     {
-        var model = DeserializeModel<SamplerCardModel>(state);
+        Width = parameters.Width;
+        Height = parameters.Height;
+        Steps = parameters.Steps;
+        CfgScale = parameters.CfgScale;
 
-        Steps = model.Steps;
-        IsDenoiseStrengthEnabled = model.IsDenoiseStrengthEnabled;
-        DenoiseStrength = model.DenoiseStrength;
-        IsCfgScaleEnabled = model.IsCfgScaleEnabled;
-        CfgScale = model.CfgScale;
-        IsDimensionsEnabled = model.IsDimensionsEnabled;
-        Width = model.Width;
-        Height = model.Height;
-        IsSamplerSelectionEnabled = model.IsSamplerSelectionEnabled;
-        SelectedSampler = model.SelectedSampler is null
-            ? null
-            : new ComfySampler(model.SelectedSampler);
+        if (parameters.GetComfySamplers() is { } paramSamplers)
+        {
+            var (sampler, scheduler) = paramSamplers;
+
+            SelectedSampler = ClientManager.Samplers.FirstOrDefault(s => s.Name == sampler.Name);
+        }
     }
 
     /// <inheritdoc />
-    public override JsonObject SaveStateToJsonObject()
+    public GenerationParameters SaveStateToParameters(GenerationParameters parameters)
     {
-        return SerializeModel(
-            new SamplerCardModel
-            {
-                Steps = Steps,
-                IsDenoiseStrengthEnabled = IsDenoiseStrengthEnabled,
-                DenoiseStrength = DenoiseStrength,
-                IsCfgScaleEnabled = IsCfgScaleEnabled,
-                CfgScale = CfgScale,
-                IsDimensionsEnabled = IsDimensionsEnabled,
-                Width = Width,
-                Height = Height,
-                IsSamplerSelectionEnabled = IsSamplerSelectionEnabled,
-                SelectedSampler = SelectedSampler?.Name
-            }
-        );
-    }*/
+        return parameters with
+        {
+            Width = Width,
+            Height = Height,
+            Steps = Steps,
+            CfgScale = CfgScale,
+            Sampler = SelectedSampler?.Name
+        };
+    }
 }

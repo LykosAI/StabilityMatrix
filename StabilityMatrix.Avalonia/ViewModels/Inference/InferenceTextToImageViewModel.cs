@@ -25,7 +25,9 @@ using InferenceTextToImageView = StabilityMatrix.Avalonia.Views.Inference.Infere
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceTextToImageView), persistent: true)]
-public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase
+public class InferenceTextToImageViewModel
+    : InferenceGenerationViewModelBase,
+        IParametersLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -326,5 +328,29 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase
         };
 
         await RunGeneration(generationArgs, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public void LoadStateFromParameters(GenerationParameters parameters)
+    {
+        PromptCardViewModel.LoadStateFromParameters(parameters);
+        SamplerCardViewModel.LoadStateFromParameters(parameters);
+
+        SeedCardViewModel.Seed = Convert.ToInt64(parameters.Seed);
+
+        ModelCardViewModel.LoadStateFromParameters(parameters);
+    }
+
+    /// <inheritdoc />
+    public GenerationParameters SaveStateToParameters(GenerationParameters parameters)
+    {
+        parameters = PromptCardViewModel.SaveStateToParameters(parameters);
+        parameters = SamplerCardViewModel.SaveStateToParameters(parameters);
+
+        parameters.Seed = (ulong)SeedCardViewModel.Seed;
+
+        parameters = ModelCardViewModel.SaveStateToParameters(parameters);
+
+        return parameters;
     }
 }

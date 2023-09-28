@@ -6,6 +6,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
 
@@ -72,24 +73,39 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         Steps = parameters.Steps;
         CfgScale = parameters.CfgScale;
 
-        if (parameters.GetComfySamplers() is { } paramSamplers)
+        if (
+            !string.IsNullOrEmpty(parameters.Sampler)
+            && GenerationParametersConverter.TryGetSamplerScheduler(
+                parameters.Sampler,
+                out var samplerScheduler
+            )
+        )
         {
-            var (sampler, scheduler) = paramSamplers;
-
-            SelectedSampler = ClientManager.Samplers.FirstOrDefault(s => s.Name == sampler.Name);
+            SelectedSampler = ClientManager.Samplers.FirstOrDefault(
+                s => s == samplerScheduler.Sampler
+            );
+            SelectedScheduler = ClientManager.Schedulers.FirstOrDefault(
+                s => s == samplerScheduler.Scheduler
+            );
         }
     }
 
     /// <inheritdoc />
     public GenerationParameters SaveStateToParameters(GenerationParameters parameters)
     {
+        var sampler = GenerationParametersConverter.TryGetParameters(
+            new ComfySamplerScheduler(SelectedSampler ?? default, SelectedScheduler ?? default),
+            out var res
+        )
+            ? res
+            : null;
         return parameters with
         {
             Width = Width,
             Height = Height,
             Steps = Steps,
             CfgScale = CfgScale,
-            Sampler = SelectedSampler?.Name
+            Sampler = sampler,
         };
     }
 }

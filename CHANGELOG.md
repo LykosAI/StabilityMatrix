@@ -11,8 +11,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added option to change the Shared Folder method for packages using the three-dots menu on the Packages page
 - Added the ability to Favorite models in the Model Browser
 - Added "Favorites" sort option to the Model Browser
+- Added notification flyout for new available updates. Dismiss to hide until the next update version.
 ### Changed
 - Model Browser page size is now 20 instead of 14  
+- Update changelog now only shows the difference between the current version and the latest version
 ### Fixed
 - Fixed [#141](https://github.com/LykosAI/StabilityMatrix/issues/141) - Search not working when sorting by Installed on Model Browser
 - Fixed SD.Next not showing "Open Web UI" button when finished loading

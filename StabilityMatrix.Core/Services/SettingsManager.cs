@@ -638,6 +638,7 @@ public class SettingsManager : ISettingsManager
                 new JsonSerializerOptions
                 {
                     WriteIndented = true,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                     Converters = { new JsonStringEnumConverter() }
                 }
             );

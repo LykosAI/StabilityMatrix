@@ -1,5 +1,7 @@
 ﻿using System.Globalization;
 using System.Text.Json.Serialization;
+using Semver;
+using StabilityMatrix.Core.Converters.Json;
 
 namespace StabilityMatrix.Core.Models.Settings;
 
@@ -34,6 +36,12 @@ public class Settings
     public List<string>? PathExtensions { get; set; }
     public string? WebApiHost { get; set; }
     public string? WebApiPort { get; set; }
+
+    /// <summary>
+    /// The last auto-update version that had a notification dismissed by the user
+    /// </summary>
+    [JsonConverter(typeof(SemVersionJsonConverter))]
+    public SemVersion? LastSeenUpdateVersion { get; set; }
 
     // UI states
     public bool ModelBrowserNsfwEnabled { get; set; }

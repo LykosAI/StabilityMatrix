@@ -13,6 +13,10 @@
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="StabilityMatrix.Tests" />
+    </ItemGroup>
     
     <ItemGroup>
         <PackageReference Include="AsyncImageLoader.Avalonia" Version="3.2.0" />

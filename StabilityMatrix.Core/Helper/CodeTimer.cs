@@ -52,7 +52,7 @@ public class CodeTimer : IDisposable
     /// <summary>
     /// Formats a TimeSpan into a string. Chooses the most appropriate unit of time.
     /// </summary>
-    private static string FormatTime(TimeSpan duration)
+    public static string FormatTime(TimeSpan duration)
     {
         if (duration.TotalSeconds < 1)
         {

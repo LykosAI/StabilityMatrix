@@ -57,7 +57,8 @@ public class UpdateHelper : IUpdateHelper
     {
         var downloadUrl = updateInfo.DownloadUrl;
 
-        Directory.CreateDirectory(UpdateFolder);
+        UpdateFolder.Create();
+        UpdateFolder.Info.Attributes |= FileAttributes.Hidden;
 
         // download the file from URL
         await downloadService

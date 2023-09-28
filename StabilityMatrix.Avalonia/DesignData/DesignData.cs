@@ -306,8 +306,8 @@ public static class DesignData
         );
 
         UpdateViewModel = Services.GetRequiredService<UpdateViewModel>();
-        UpdateViewModel.UpdateText =
-            $"Stability Matrix v2.0.1 is now available! You currently have v2.0.0. Would you like to update now?";
+        UpdateViewModel.CurrentVersionText = "v2.0.0";
+        UpdateViewModel.NewVersionText = "v2.0.1";
         UpdateViewModel.ReleaseNotes =
             "## v2.0.1\n- Fixed a bug\n- Added a feature\n- Removed a feature";
 

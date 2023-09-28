@@ -38,7 +38,9 @@
                         <StackPanel DataContext="{Binding Exception}" Spacing="4">
                             <!--  Exception Message  -->
                             <TextBlock Theme="{DynamicResource BodyStrongTextBlockStyle}" Text="{x:Static lang:Resources.Label_Details}" />
-                            <SelectableTextBlock Text="{Binding Message}" Margin="0,0,0,8"
+                            <SelectableTextBlock Text="{Binding Message}" 
+                                                 TextWrapping="WrapWithOverflow"
+                                                 Margin="0,0,0,8"
                                                  SelectionBrush="DodgerBlue"/>
                             <!--  Callstack  -->
                             <TextBlock Theme="{DynamicResource BodyStrongTextBlockStyle}" Text="{x:Static lang:Resources.Label_Callstack}" />

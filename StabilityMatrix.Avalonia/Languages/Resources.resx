@@ -657,4 +657,16 @@
   <data name="Label_CurrentDirectory" xml:space="preserve">
     <value>Current directory:</value>
   </data>
+  <data name="Text_AppWillRelaunchAfterUpdate" xml:space="preserve">
+    <value>The app will relaunch after updating</value>
+  </data>
+  <data name="Action_RemindMeLater" xml:space="preserve">
+    <value>Remind Me Later</value>
+  </data>
+  <data name="Action_InstallNow" xml:space="preserve">
+    <value>Install Now</value>
+  </data>
+  <data name="Label_ReleaseNotes" xml:space="preserve">
+    <value>Release Notes</value>
+  </data>
 </root>

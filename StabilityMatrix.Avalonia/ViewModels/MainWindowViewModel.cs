@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
@@ -19,6 +20,7 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
@@ -101,6 +103,11 @@ public partial class MainWindowViewModel : ViewModelBase
         Task.Run(() => settingsManager.IndexCheckpoints()).SafeFireAndForget();
 
         PreloadPages();
+
+        Program.StartupTimer.Stop();
+        var startupTime = CodeTimer.FormatTime(Program.StartupTimer.Elapsed);
+        Logger.Info($"App started ({startupTime})");
+
         if (Program.Args.DebugOneClickInstall || !settingsManager.Settings.InstalledPackages.Any())
         {
             var viewModel = dialogFactory.Get<OneClickInstallViewModel>();
@@ -193,6 +200,31 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Return true if we should show the update available teaching tip
+    /// </summary>
+    public bool ShouldShowUpdateAvailableTeachingTip([NotNullWhen(true)] UpdateInfo? info)
+    {
+        if (info is null)
+        {
+            return false;
+        }
+
+        // If matching settings seen version, don't show
+        if (info.Version == settingsManager.Settings.LastSeenUpdateVersion)
+        {
+            return false;
+        }
+
+        // Save that we have dismissed this update
+        settingsManager.Transaction(
+            s => s.LastSeenUpdateVersion = info.Version,
+            ignoreMissingLibraryDir: true
+        );
+
+        return true;
+    }
+
+    /// <summary>
     /// Shows the select data directory dialog.
     /// </summary>
     /// <returns>true if path set successfully, false if user exited dialog.</returns>
@@ -240,6 +272,7 @@ public partial class MainWindowViewModel : ViewModelBase
             Content = new UpdateDialog { DataContext = viewModel }
         };
 
+        await viewModel.Preload();
         await dialog.ShowAsync();
     }
 }

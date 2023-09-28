@@ -1,18 +1,29 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Input;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using FluentAvalonia.UI.Media.Animation;
+using Microsoft.Extensions.DependencyInjection;
+using NLog;
+using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
@@ -26,6 +37,10 @@ public abstract partial class InferenceTabViewModelBase
         IPersistentViewProvider,
         IDropTarget
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    private readonly INotificationService notificationService;
+
     /// <summary>
     /// The title of the tab
     /// </summary>
@@ -66,6 +81,8 @@ public abstract partial class InferenceTabViewModelBase
     protected void LoadViewState(LoadViewStateEventArgs args) =>
         loadViewStateRequestedEventManager?.RaiseEvent(this, args, nameof(LoadViewStateRequested));
 
+    protected void ResetViewState() => LoadViewState(new LoadViewStateEventArgs());
+
     private WeakEventManager<SaveViewStateEventArgs>? saveViewStateRequestedEventManager;
 
     public event EventHandler<SaveViewStateEventArgs> SaveViewStateRequested
@@ -98,6 +115,23 @@ public abstract partial class InferenceTabViewModelBase
     }
 
     #endregion
+
+    protected InferenceTabViewModelBase(INotificationService notificationService)
+    {
+        this.notificationService = notificationService;
+    }
+
+    [RelayCommand]
+    private void RestoreDefaultViewState()
+    {
+        // ResetViewState();
+        // TODO: Dock reset not working, using this hack for now to get a new view
+
+        var navService = App.Services.GetRequiredService<INavigationService>();
+        navService.NavigateTo<LaunchPageViewModel>(new SuppressNavigationTransitionInfo());
+        ((IPersistentViewProvider)this).AttachedPersistentView = null;
+        navService.NavigateTo<InferenceViewModel>(new BetterEntranceNavigationTransition());
+    }
 
     [RelayCommand]
     private async Task DebugSaveViewState()
@@ -144,6 +178,79 @@ public abstract partial class InferenceTabViewModelBase
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Loads image and metadata from a file path
+    /// </summary>
+    /// <remarks>This is safe to call from non-UI threads</remarks>
+    /// <param name="filePath">File path</param>
+    /// <exception cref="FileNotFoundException"></exception>
+    /// <exception cref="ApplicationException"></exception>
+    /// <exception cref="InvalidOperationException"></exception>
+    private void LoadImageMetadata(FilePath? filePath)
+    {
+        if (filePath is not { Exists: true })
+        {
+            throw new FileNotFoundException("File does not exist", filePath?.FullPath);
+        }
+
+        var metadata = ImageMetadata.GetAllFileMetadata(filePath);
+
+        // Has SMProject metadata
+        if (metadata.SMProject is not null)
+        {
+            var project = JsonSerializer.Deserialize<InferenceProjectDocument>(metadata.SMProject);
+
+            // Check project type matches
+            if (project?.ProjectType.ToViewModelType() == GetType() && project.State is not null)
+            {
+                Dispatcher.UIThread.Invoke(() => LoadStateFromJsonObject(project.State));
+            }
+            else
+            {
+                throw new ApplicationException("Unsupported project type");
+            }
+
+            // Load image
+            if (this is IImageGalleryComponent imageGalleryComponent)
+            {
+                imageGalleryComponent.LoadImagesToGallery(new ImageSource(filePath));
+            }
+        }
+        // Has generic metadata
+        else if (metadata.Parameters is { } parametersString)
+        {
+            if (!GenerationParameters.TryParse(parametersString, out var parameters))
+            {
+                throw new ApplicationException("Failed to parse parameters");
+            }
+
+            if (this is IParametersLoadableState paramsLoadableVm)
+            {
+                Dispatcher.UIThread.Invoke(
+                    () => paramsLoadableVm.LoadStateFromParameters(parameters)
+                );
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    "Load parameters target does not implement IParametersLoadableState"
+                );
+            }
+
+            // Load image
+            if (this is IImageGalleryComponent imageGalleryComponent)
+            {
+                Dispatcher.UIThread.Invoke(
+                    () => imageGalleryComponent.LoadImagesToGallery(new ImageSource(filePath))
+                );
+            }
+        }
+        else
+        {
+            throw new ApplicationException("File does not contain any metadata");
+        }
+    }
+
     /// <inheritdoc />
     public void DragOver(object? sender, DragEventArgs e)
     {
@@ -162,10 +269,10 @@ public abstract partial class InferenceTabViewModelBase
         if (e.Data.GetDataFormats().Contains(DataFormats.Files))
         {
             e.Handled = true;
-            e.DragEffects = DragDropEffects.None;
             return;
         }
 
+        // Other kinds - not supported
         e.DragEffects = DragDropEffects.None;
     }
 
@@ -181,29 +288,41 @@ public abstract partial class InferenceTabViewModelBase
 
                 Dispatcher.UIThread.Post(() =>
                 {
-                    var metadata = imageFile.ReadMetadata();
-                    if (metadata.SMProject is not null)
+                    try
                     {
-                        var project = JsonSerializer.Deserialize<InferenceProjectDocument>(
-                            metadata.SMProject
-                        );
-
-                        // Check project type matches
-                        if (
-                            project?.ProjectType.ToViewModelType() == GetType()
-                            && project.State is not null
-                        )
+                        var metadata = imageFile.ReadMetadata();
+                        if (metadata.SMProject is not null)
                         {
-                            LoadStateFromJsonObject(project.State);
-                        }
-
-                        // Load image
-                        if (this is IImageGalleryComponent imageGalleryComponent)
-                        {
-                            imageGalleryComponent.LoadImagesToGallery(
-                                new ImageSource(imageFile.GlobalFullPath)
+                            var project = JsonSerializer.Deserialize<InferenceProjectDocument>(
+                                metadata.SMProject
                             );
+
+                            // Check project type matches
+                            if (
+                                project?.ProjectType.ToViewModelType() == GetType()
+                                && project.State is not null
+                            )
+                            {
+                                LoadStateFromJsonObject(project.State);
+                            }
+
+                            // Load image
+                            if (this is IImageGalleryComponent imageGalleryComponent)
+                            {
+                                imageGalleryComponent.LoadImagesToGallery(
+                                    new ImageSource(imageFile.GlobalFullPath)
+                                );
+                            }
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warn(ex, "Failed to load image from context drop");
+                        notificationService.ShowPersistent(
+                            $"Could not parse image metadata",
+                            $"{imageFile.FileName} - {ex.Message}",
+                            NotificationType.Warning
+                        );
                     }
                 });
 
@@ -214,6 +333,30 @@ public abstract partial class InferenceTabViewModelBase
         if (e.Data.GetDataFormats().Contains(DataFormats.Files))
         {
             e.Handled = true;
+
+            if (e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> files)
+            {
+                if (files.Select(f => f.TryGetLocalPath()).FirstOrDefault() is { } path)
+                {
+                    var file = new FilePath(path);
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        try
+                        {
+                            LoadImageMetadata(file);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Warn(ex, "Failed to load image from OS file drop");
+                            notificationService.ShowPersistent(
+                                $"Could not parse image metadata",
+                                $"{file.Name} - {ex.Message}",
+                                NotificationType.Warning
+                            );
+                        }
+                    });
+                }
+            }
         }
     }
 }

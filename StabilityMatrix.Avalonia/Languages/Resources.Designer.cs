@@ -258,6 +258,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open Project....
+        /// </summary>
+        public static string Action_OpenProjectEllipsis {
+            get {
+                return ResourceManager.GetString("Action_OpenProjectEllipsis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open Web UI.
         /// </summary>
         public static string Action_OpenWebUI {
@@ -330,6 +339,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Restore Default Layout.
+        /// </summary>
+        public static string Action_RestoreDefaultLayout {
+            get {
+                return ResourceManager.GetString("Action_RestoreDefaultLayout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Retry.
         /// </summary>
         public static string Action_Retry {
@@ -344,6 +362,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Action_Save {
             get {
                 return ResourceManager.GetString("Action_Save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save As....
+        /// </summary>
+        public static string Action_SaveAsEllipsis {
+            get {
+                return ResourceManager.GetString("Action_SaveAsEllipsis", resourceCulture);
             }
         }
         

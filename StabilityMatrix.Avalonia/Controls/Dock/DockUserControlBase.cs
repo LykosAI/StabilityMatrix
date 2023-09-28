@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
@@ -10,6 +11,7 @@ using Dock.Avalonia.Controls;
 using Dock.Model;
 using Dock.Model.Avalonia.Json;
 using Dock.Model.Core;
+using Dock.Serializer;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 
@@ -21,22 +23,23 @@ namespace StabilityMatrix.Avalonia.Controls.Dock;
 /// </summary>
 public abstract class DockUserControlBase : DropTargetUserControlBase
 {
-    protected DockControl? BaseDock;
-    protected readonly AvaloniaDockSerializer DockSerializer = new();
-    protected readonly DockState DockState = new();
+    private DockControl? baseDock;
+    private readonly DockSerializer dockSerializer = new(typeof(AvaloniaList<>));
+    private readonly DockState dockState = new();
 
     /// <inheritdoc />
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
 
-        BaseDock =
+        baseDock =
             this.FindControl<DockControl>("Dock")
             ?? throw new NullReferenceException("DockControl not found");
 
-        if (BaseDock.Layout is { } layout)
+        if (baseDock.Layout is { } layout)
         {
-            Dispatcher.UIThread.Post(() => DockState.Save(layout), DispatcherPriority.Background);
+            dockState.Save(layout);
+            // Dispatcher.UIThread.Post(() => dockState.Save(layout), DispatcherPriority.Background);
         }
     }
 
@@ -81,31 +84,45 @@ public abstract class DockUserControlBase : DropTargetUserControlBase
 
     private void DataContext_OnLoadViewStateRequested(object? sender, LoadViewStateEventArgs args)
     {
-        if (args.State.DockLayout is { } layout)
+        if (args.State?.DockLayout is { } layout)
         {
+            // Provided
             LoadDockLayout(layout);
+        }
+        else
+        {
+            // Restore default
+            RestoreDockLayout();
         }
     }
 
-    protected void LoadDockLayout(JsonObject data)
+    private void LoadDockLayout(JsonObject data)
     {
         LoadDockLayout(data.ToJsonString());
     }
 
-    protected void LoadDockLayout(string data)
+    private void LoadDockLayout(string data)
     {
-        if (BaseDock is null)
+        if (baseDock is null)
             return;
 
-        if (DockSerializer.Deserialize<IDock?>(data) is { } layout)
+        if (dockSerializer.Deserialize<IDock?>(data) is { } layout)
         {
-            BaseDock.Layout = layout;
-            DockState.Restore(layout);
+            baseDock.Layout = layout;
+        }
+    }
+
+    private void RestoreDockLayout()
+    {
+        // TODO: idk this doesn't work
+        if (baseDock?.Layout != null)
+        {
+            dockState.Restore(baseDock.Layout);
         }
     }
 
     protected string? SaveDockLayout()
     {
-        return BaseDock is null ? null : DockSerializer.Serialize(BaseDock.Layout);
+        return baseDock is null ? null : dockSerializer.Serialize(baseDock.Layout);
     }
 }

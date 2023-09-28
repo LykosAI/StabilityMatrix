@@ -1,11 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using StabilityMatrix.Core.Models.Api.Comfy;
 
 namespace StabilityMatrix.Core.Models;
 
 [JsonSerializable(typeof(GenerationParameters))]
-public partial class GenerationParameters
+public partial record GenerationParameters
 {
     public string? PositivePrompt { get; set; }
     public string? NegativePrompt { get; set; }
@@ -78,6 +79,8 @@ public partial class GenerationParameters
             Sampler = match.Groups["Sampler"].Value,
             CfgScale = double.Parse(match.Groups["CfgScale"].Value),
             Seed = ulong.Parse(match.Groups["Seed"].Value),
+            Height = int.Parse(match.Groups["Height"].Value),
+            Width = int.Parse(match.Groups["Width"].Value),
             ModelHash = match.Groups["ModelHash"].Value,
             ModelName = match.Groups["ModelName"].Value,
         };
@@ -85,8 +88,47 @@ public partial class GenerationParameters
         return true;
     }
 
+    /// <summary>
+    /// Converts current <see cref="Sampler"/> string to <see cref="ComfySampler"/> and <see cref="ComfyScheduler"/>.
+    /// </summary>
+    /// <returns></returns>
+    public (ComfySampler sampler, ComfyScheduler scheduler)? GetComfySamplers()
+    {
+        if (Sampler is not { } source)
+            return null;
+
+        var scheduler = source switch
+        {
+            _ when source.Contains("Karras") => ComfyScheduler.Karras,
+            _ when source.Contains("Exponential") => ComfyScheduler.Exponential,
+            _ => ComfyScheduler.Normal,
+        };
+
+        var sampler = source switch
+        {
+            "LMS" => ComfySampler.LMS,
+            "DDIM" => ComfySampler.DDIM,
+            "UniPC" => ComfySampler.UniPC,
+            "DPM fast" => ComfySampler.DpmFast,
+            "DPM adaptive" => ComfySampler.DpmAdaptive,
+            "Heun" => ComfySampler.Heun,
+            _ when source.StartsWith("DPM2 a") => ComfySampler.Dpm2Ancestral,
+            _ when source.StartsWith("DPM2") => ComfySampler.Dpm2,
+            _ when source.StartsWith("DPM++ 2M SDE") => ComfySampler.Dpmpp2MSde,
+            _ when source.StartsWith("DPM++ 2M") => ComfySampler.Dpmpp2M,
+            _ when source.StartsWith("DPM++ 3M SDE") => ComfySampler.Dpmpp3MSde,
+            _ when source.StartsWith("DPM++ 3M") => ComfySampler.Dpmpp3M,
+            _ when source.StartsWith("DPM++ SDE") => ComfySampler.DpmppSde,
+            _ when source.StartsWith("DPM++ 2S a") => ComfySampler.Dpmpp2SAncestral,
+            _ => default
+        };
+
+        return (sampler, scheduler);
+    }
+
+    // Example: Steps: 30, Sampler: DPM++ 2M Karras, CFG scale: 7, Seed: 2216407431, Size: 640x896, Model hash: eb2h052f91, Model: anime_v1
     [GeneratedRegex(
-        """^Steps: (?<Steps>\d+), Sampler: (?<Sampler>.+?), CFG scale: (?<CfgScale>\d+(\.\d+)?), Seed: (?<Seed>\d+), Size: \d+x\d+, Model hash: (?<ModelHash>.+?), Model: (?<ModelName>.+)$"""
+        """^Steps: (?<Steps>\d+), Sampler: (?<Sampler>.+?), CFG scale: (?<CfgScale>\d+(\.\d+)?), Seed: (?<Seed>\d+), Size: (?<Width>\d+)x(?<Height>\d+), Model hash: (?<ModelHash>.+?), Model: (?<ModelName>.+)$"""
     )]
     private static partial Regex ParseLastLineRegex();
 }

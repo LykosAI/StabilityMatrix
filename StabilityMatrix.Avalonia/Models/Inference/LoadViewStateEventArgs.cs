@@ -7,5 +7,5 @@ namespace StabilityMatrix.Avalonia.Models.Inference;
 /// </summary>
 public class LoadViewStateEventArgs : EventArgs
 {
-    public required ViewState State { get; init; }
+    public ViewState? State { get; init; }
 }

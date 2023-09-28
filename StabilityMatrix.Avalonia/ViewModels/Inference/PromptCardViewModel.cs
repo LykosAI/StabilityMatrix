@@ -22,12 +22,13 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(PromptCard))]
-public partial class PromptCardViewModel : LoadableViewModelBase
+public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoadableState
 {
     private readonly IModelIndexService modelIndexService;
 
@@ -283,5 +284,22 @@ public partial class PromptCardViewModel : LoadableViewModelBase
 
         PromptDocument.Text = model.Prompt ?? "";
         NegativePromptDocument.Text = model.NegativePrompt ?? "";
+    }
+
+    /// <inheritdoc />
+    public void LoadStateFromParameters(GenerationParameters parameters)
+    {
+        PromptDocument.Text = parameters.PositivePrompt ?? "";
+        NegativePromptDocument.Text = parameters.NegativePrompt ?? "";
+    }
+
+    /// <inheritdoc />
+    public GenerationParameters SaveStateToParameters(GenerationParameters parameters)
+    {
+        return parameters with
+        {
+            PositivePrompt = PromptDocument.Text,
+            NegativePrompt = NegativePromptDocument.Text
+        };
     }
 }

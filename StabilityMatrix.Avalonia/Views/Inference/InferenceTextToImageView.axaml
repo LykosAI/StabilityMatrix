@@ -36,7 +36,9 @@
                     x:Name="MainLayout"
                     Id="MainLayout"
                     Orientation="Horizontal">
-
+                    
+                    <ProportionalDockSplitter x:Name="Splitter1" Id="Splitter1" />
+                    
                     <!--  Left Pane  -->
                     <ToolDock
                         x:Name="ConfigPane"
@@ -55,12 +57,12 @@
                         </Tool>
                     </ToolDock>
 
-                    <ProportionalDockSplitter x:Name="LeftSplitter" Id="LeftSplitter" />
+                    <ProportionalDockSplitter x:Name="Splitter2" Id="Splitter2" />
 
                     <!--  Prompt Pane  -->
                     <ToolDock
                         x:Name="PromptPane"
-                        Alignment="Right"
+                        Alignment="Left"
                         Id="PromptPane"
                         Proportion="0.25">
                         <Tool
@@ -149,7 +151,7 @@
                         </Tool>
                     </ToolDock>
 
-                    <ProportionalDockSplitter x:Name="MiddleRightSplitter" Id="MiddleRightSplitter" />
+                    <ProportionalDockSplitter x:Name="Splitter3" Id="Splitter3" />
 
                     <!--  Middle Right Pane  -->
                     <ToolDock
@@ -191,7 +193,7 @@
                         </Tool>
                     </ToolDock>
                     
-                    <ProportionalDockSplitter x:Name="RightSplitter" Id="RightSplitter" />
+                    <ProportionalDockSplitter x:Name="Splitter4" Id="Splitter4" />
                     
                     <!--  Right Pane  -->
                     <ToolDock
@@ -208,12 +210,14 @@
                             
                             <Grid
                                 x:CompileBindings="False"
-                                DataContext="{Binding ElementName=Dock, Path=DataContext}">
+                                DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DockControl}, Path=DataContext}">
                                 <controls:ImageFolderCard
                                     DataContext="{Binding ImageFolderCardViewModel}" />
                             </Grid>
                         </Tool>
                     </ToolDock>
+                    
+                    <ProportionalDockSplitter x:Name="Splitter5" Id="Splitter5" />
 
                 </ProportionalDock>
             </RootDock>

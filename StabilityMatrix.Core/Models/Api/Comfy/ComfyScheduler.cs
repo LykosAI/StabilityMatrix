@@ -4,10 +4,14 @@ namespace StabilityMatrix.Core.Models.Api.Comfy;
 
 public readonly record struct ComfyScheduler(string Name)
 {
+    public static ComfyScheduler Normal { get; } = new("normal");
+    public static ComfyScheduler Karras { get; } = new("karras");
+    public static ComfyScheduler Exponential { get; } = new("exponential");
+
     private static Dictionary<string, string> ConvertDict { get; } =
         new()
         {
-            ["normal"] = "Normal",
+            [Normal.Name] = "Normal",
             ["karras"] = "Karras",
             ["exponential"] = "Exponential",
             ["sgm_uniform"] = "SGM Uniform",

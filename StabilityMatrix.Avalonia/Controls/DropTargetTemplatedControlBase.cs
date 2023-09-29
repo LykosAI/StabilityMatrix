@@ -1,10 +1,9 @@
-﻿using Avalonia.Controls.Primitives;
-using Avalonia.Input;
+﻿using Avalonia.Input;
 using StabilityMatrix.Avalonia.ViewModels;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-public abstract class DropTargetTemplatedControlBase : TemplatedControl
+public abstract class DropTargetTemplatedControlBase : TemplatedControlBase
 {
     protected DropTargetTemplatedControlBase()
     {

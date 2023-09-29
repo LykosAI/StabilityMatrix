@@ -187,11 +187,12 @@ public class InferenceTextToImageViewModel
         // Override with custom VAE if enabled
         if (ModelCardViewModel is { IsVaeSelectionEnabled: true, SelectedVae.IsDefault: false })
         {
-            builder.Connections.BaseVAE = nodes
-                .AddNamedNode(
-                    ComfyNodeBuilder.VAELoader("VAELoader", ModelCardViewModel.SelectedVae.FileName)
-                )
-                .Output;
+            var customVaeLoader = nodes.AddNamedNode(
+                ComfyNodeBuilder.VAELoader("VAELoader", ModelCardViewModel.SelectedVae.FileName)
+            );
+
+            builder.Connections.BaseVAE = customVaeLoader.Output;
+            builder.Connections.RefinerVAE = customVaeLoader.Output;
         }
 
         // If hi-res fix is enabled, add the LatentUpscale node and another KSampler node

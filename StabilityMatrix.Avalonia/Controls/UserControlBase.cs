@@ -12,40 +12,34 @@ public class UserControlBase : UserControl
 {
     static UserControlBase()
     {
-        LoadedEvent.AddClassHandler<UserControlBase>(
-            (cls, args) => cls.OnLoadedEvent(args));
+        LoadedEvent.AddClassHandler<UserControlBase>((cls, args) => cls.OnLoadedEvent(args));
 
-        UnloadedEvent.AddClassHandler<UserControlBase>(
-            (cls, args) => cls.OnUnloadedEvent(args));
+        UnloadedEvent.AddClassHandler<UserControlBase>((cls, args) => cls.OnUnloadedEvent(args));
     }
 
     // ReSharper disable once UnusedParameter.Global
     protected virtual void OnLoadedEvent(RoutedEventArgs? e)
     {
-        if (DataContext is not ViewModelBase viewModel) return;
-        
+        if (DataContext is not ViewModelBase viewModel)
+            return;
+
         // Run synchronous load then async load
         viewModel.OnLoaded();
-        
+
         // Can't block here so we'll run as async on UI thread
-        Dispatcher.UIThread.InvokeAsync(async () =>
-        {
-            await viewModel.OnLoadedAsync();
-        }).SafeFireAndForget();
+        Dispatcher.UIThread.InvokeAsync(viewModel.OnLoadedAsync).SafeFireAndForget();
     }
-    
+
     // ReSharper disable once UnusedParameter.Global
     protected virtual void OnUnloadedEvent(RoutedEventArgs? e)
     {
-        if (DataContext is not ViewModelBase viewModel) return;
-        
+        if (DataContext is not ViewModelBase viewModel)
+            return;
+
         // Run synchronous load then async load
         viewModel.OnUnloaded();
-        
+
         // Can't block here so we'll run as async on UI thread
-        Dispatcher.UIThread.InvokeAsync(async () =>
-        {
-            await viewModel.OnUnloadedAsync();
-        }).SafeFireAndForget();
+        Dispatcher.UIThread.InvokeAsync(viewModel.OnUnloadedAsync).SafeFireAndForget();
     }
 }

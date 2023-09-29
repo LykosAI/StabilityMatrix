@@ -487,9 +487,15 @@ public class AdvancedImageBox : TemplatedControl
     #endregion
 
     #region UI Controls
-    public ScrollBar HorizontalScrollBar { get; private set; }
-    public ScrollBar VerticalScrollBar { get; private set; }
-    public ContentPresenter ViewPort { get; private set; }
+
+    [NotNull]
+    public ScrollBar? HorizontalScrollBar { get; private set; }
+
+    [NotNull]
+    public ScrollBar? VerticalScrollBar { get; private set; }
+
+    [NotNull]
+    public ContentPresenter? ViewPort { get; private set; }
 
     // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
     public bool IsViewPortLoaded => ViewPort is not null;

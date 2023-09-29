@@ -238,7 +238,7 @@ public partial class SettingsViewModel : PageViewModelBase
 
     partial void OnSelectedLanguageChanged(CultureInfo? oldValue, CultureInfo newValue)
     {
-        if (oldValue is null || newValue.Name == Cultures.Current.Name)
+        if (oldValue is null || newValue.Name == Cultures.Current?.Name)
             return;
 
         // Set locale

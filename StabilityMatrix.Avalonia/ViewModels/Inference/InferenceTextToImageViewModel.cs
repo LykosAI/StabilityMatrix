@@ -55,22 +55,31 @@ public class InferenceTextToImageViewModel
     [JsonPropertyName("HiresUpscaler")]
     public UpscalerCardViewModel HiresUpscalerCardViewModel { get; }
 
+    [JsonPropertyName("FreeU")]
+    public FreeUCardViewModel FreeUCardViewModel { get; }
+
     [JsonPropertyName("BatchSize")]
     public BatchSizeCardViewModel BatchSizeCardViewModel { get; }
 
     [JsonPropertyName("Seed")]
     public SeedCardViewModel SeedCardViewModel { get; }
 
-    public bool IsHiresFixEnabled
+    public bool IsFreeUEnabled
     {
         get => StackCardViewModel.GetCard<StackExpanderViewModel>().IsEnabled;
         set => StackCardViewModel.GetCard<StackExpanderViewModel>().IsEnabled = value;
     }
 
-    public bool IsUpscaleEnabled
+    public bool IsHiresFixEnabled
     {
         get => StackCardViewModel.GetCard<StackExpanderViewModel>(1).IsEnabled;
         set => StackCardViewModel.GetCard<StackExpanderViewModel>(1).IsEnabled = value;
+    }
+
+    public bool IsUpscaleEnabled
+    {
+        get => StackCardViewModel.GetCard<StackExpanderViewModel>(2).IsEnabled;
+        set => StackCardViewModel.GetCard<StackExpanderViewModel>(2).IsEnabled = value;
     }
 
     public InferenceTextToImageViewModel(
@@ -106,6 +115,7 @@ public class InferenceTextToImageViewModel
         });
         HiresUpscalerCardViewModel = vmFactory.Get<UpscalerCardViewModel>();
         UpscalerCardViewModel = vmFactory.Get<UpscalerCardViewModel>();
+        FreeUCardViewModel = vmFactory.Get<FreeUCardViewModel>();
         BatchSizeCardViewModel = vmFactory.Get<BatchSizeCardViewModel>();
 
         StackCardViewModel = vmFactory.Get<StackCardViewModel>();
@@ -115,6 +125,12 @@ public class InferenceTextToImageViewModel
             {
                 ModelCardViewModel,
                 SamplerCardViewModel,
+                // Free U
+                vmFactory.Get<StackExpanderViewModel>(stackExpander =>
+                {
+                    stackExpander.Title = "FreeU";
+                    stackExpander.AddCards(new LoadableViewModelBase[] { FreeUCardViewModel });
+                }),
                 // Hires Fix
                 vmFactory.Get<StackExpanderViewModel>(stackExpander =>
                 {
@@ -166,7 +182,25 @@ public class InferenceTextToImageViewModel
             SamplerCardViewModel,
             PromptCardViewModel,
             ModelCardViewModel,
-            modelIndexService
+            modelIndexService,
+            postModelLoad: x =>
+            {
+                if (IsFreeUEnabled)
+                {
+                    builder.Connections.BaseModel = nodes
+                        .AddNamedNode(
+                            ComfyNodeBuilder.FreeU(
+                                "FreeU",
+                                x.Connections.BaseModel!,
+                                FreeUCardViewModel.B1,
+                                FreeUCardViewModel.B2,
+                                FreeUCardViewModel.S1,
+                                FreeUCardViewModel.S2
+                            )
+                        )
+                        .Output;
+                }
+            }
         );
 
         // Setup refiner stage if enabled
@@ -180,7 +214,25 @@ public class InferenceTextToImageViewModel
                 SamplerCardViewModel,
                 PromptCardViewModel,
                 ModelCardViewModel,
-                modelIndexService
+                modelIndexService,
+                postModelLoad: x =>
+                {
+                    if (IsFreeUEnabled)
+                    {
+                        builder.Connections.RefinerModel = nodes
+                            .AddNamedNode(
+                                ComfyNodeBuilder.FreeU(
+                                    "Refiner_FreeU",
+                                    x.Connections.RefinerModel!,
+                                    FreeUCardViewModel.B1,
+                                    FreeUCardViewModel.B2,
+                                    FreeUCardViewModel.S1,
+                                    FreeUCardViewModel.S2
+                                )
+                            )
+                            .Output;
+                    }
+                }
             );
         }
 

@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Text;
 using AvaloniaEdit.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
@@ -538,6 +539,8 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static ImageFolderCardViewModel ImageFolderCardViewModel =>
         DialogFactory.Get<ImageFolderCardViewModel>();
+
+    public static FreeUCardViewModel FreeUCardViewModel => DialogFactory.Get<FreeUCardViewModel>();
 
     public static PromptCardViewModel PromptCardViewModel =>
         DialogFactory.Get<PromptCardViewModel>(vm =>

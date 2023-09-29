@@ -240,6 +240,29 @@ public class ComfyNodeBuilder
         };
     }
 
+    public static NamedComfyNode<ModelNodeConnection> FreeU(
+        string name,
+        ModelNodeConnection model,
+        double b1,
+        double b2,
+        double s1,
+        double s2
+    )
+    {
+        return new NamedComfyNode<ModelNodeConnection>(name)
+        {
+            ClassType = "FreeU",
+            Inputs = new Dictionary<string, object?>
+            {
+                ["model"] = model.Data,
+                ["b1"] = b1,
+                ["b2"] = b2,
+                ["s1"] = s1,
+                ["s2"] = s2
+            }
+        };
+    }
+
     public static NamedComfyNode<ConditioningNodeConnection> ClipTextEncode(
         string name,
         ClipNodeConnection clip,
@@ -611,12 +634,14 @@ public class ComfyNodeBuilder
     {
         public ModelNodeConnection? BaseModel { get; set; }
         public VAENodeConnection? BaseVAE { get; set; }
+        public ClipNodeConnection? BaseClip { get; set; }
 
         public ConditioningNodeConnection? BaseConditioning { get; set; }
         public ConditioningNodeConnection? BaseNegativeConditioning { get; set; }
 
         public ModelNodeConnection? RefinerModel { get; set; }
         public VAENodeConnection? RefinerVAE { get; set; }
+        public ClipNodeConnection? RefinerClip { get; set; }
         public ConditioningNodeConnection? RefinerConditioning { get; set; }
         public ConditioningNodeConnection? RefinerNegativeConditioning { get; set; }
 

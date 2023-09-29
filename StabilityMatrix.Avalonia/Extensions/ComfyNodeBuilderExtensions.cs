@@ -39,7 +39,8 @@ public static class ComfyNodeBuilderExtensions
         SamplerCardViewModel samplerCardViewModel,
         PromptCardViewModel promptCardViewModel,
         ModelCardViewModel modelCardViewModel,
-        IModelIndexService modelIndexService
+        IModelIndexService modelIndexService,
+        Action<ComfyNodeBuilder>? postModelLoad = null
     )
     {
         // Load base checkpoint
@@ -51,11 +52,12 @@ public static class ComfyNodeBuilderExtensions
             )
         );
 
+        builder.Connections.BaseModel = checkpointLoader.GetOutput<ModelNodeConnection>(0);
+        builder.Connections.BaseClip = checkpointLoader.GetOutput<ClipNodeConnection>(1);
         builder.Connections.BaseVAE = checkpointLoader.GetOutput<VAENodeConnection>(2);
 
-        // Define model and clip for connections for chaining
-        var modelSource = checkpointLoader.GetOutput<ModelNodeConnection>(0);
-        var clipSource = checkpointLoader.GetOutput<ClipNodeConnection>(1);
+        // Run post model load action
+        postModelLoad?.Invoke(builder);
 
         // Load prompts
         var prompt = promptCardViewModel.GetPrompt();
@@ -69,25 +71,28 @@ public static class ComfyNodeBuilderExtensions
             // Convert to local file names
             var lorasGroup = builder.Group_LoraLoadMany(
                 "Loras",
-                modelSource,
-                clipSource,
+                builder.Connections.BaseModel,
+                builder.Connections.BaseClip,
                 prompt.GetExtraNetworksAsLocalModels(modelIndexService)
             );
 
             // Set as source
-            modelSource = lorasGroup.Output1;
-            clipSource = lorasGroup.Output2;
+            builder.Connections.BaseModel = lorasGroup.Output1;
+            builder.Connections.BaseClip = lorasGroup.Output2;
         }
-        builder.Connections.BaseModel = modelSource;
 
         // Clips
         var positiveClip = builder.Nodes.AddNamedNode(
-            ComfyNodeBuilder.ClipTextEncode("PositiveCLIP", clipSource, prompt.ProcessedText)
+            ComfyNodeBuilder.ClipTextEncode(
+                "PositiveCLIP",
+                builder.Connections.BaseClip,
+                prompt.ProcessedText
+            )
         );
         var negativeClip = builder.Nodes.AddNamedNode(
             ComfyNodeBuilder.ClipTextEncode(
                 "NegativeCLIP",
-                clipSource,
+                builder.Connections.BaseClip,
                 negativePrompt.ProcessedText
             )
         );
@@ -103,7 +108,7 @@ public static class ComfyNodeBuilderExtensions
             var sampler = builder.Nodes.AddNamedNode(
                 ComfyNodeBuilder.KSampler(
                     "Sampler",
-                    modelSource,
+                    builder.Connections.BaseModel,
                     Convert.ToUInt64(seedCardViewModel.Seed),
                     samplerCardViewModel.Steps,
                     samplerCardViewModel.CfgScale,
@@ -129,7 +134,7 @@ public static class ComfyNodeBuilderExtensions
             var sampler = builder.Nodes.AddNamedNode(
                 ComfyNodeBuilder.KSamplerAdvanced(
                     "Sampler",
-                    modelSource,
+                    builder.Connections.BaseModel,
                     true,
                     Convert.ToUInt64(seedCardViewModel.Seed),
                     totalSteps,
@@ -157,7 +162,8 @@ public static class ComfyNodeBuilderExtensions
         SamplerCardViewModel samplerCardViewModel,
         PromptCardViewModel promptCardViewModel,
         ModelCardViewModel modelCardViewModel,
-        IModelIndexService modelIndexService
+        IModelIndexService modelIndexService,
+        Action<ComfyNodeBuilder>? postModelLoad = null
     )
     {
         // Load refiner checkpoint
@@ -169,11 +175,12 @@ public static class ComfyNodeBuilderExtensions
             )
         );
 
+        builder.Connections.RefinerModel = checkpointLoader.GetOutput<ModelNodeConnection>(0);
+        builder.Connections.RefinerClip = checkpointLoader.GetOutput<ClipNodeConnection>(1);
         builder.Connections.RefinerVAE = checkpointLoader.GetOutput<VAENodeConnection>(2);
 
-        // Define model and clip for connections for chaining
-        var modelSource = checkpointLoader.GetOutput<ModelNodeConnection>(0);
-        var clipSource = checkpointLoader.GetOutput<ClipNodeConnection>(1);
+        // Run post model load action
+        postModelLoad?.Invoke(builder);
 
         // Load prompts
         var prompt = promptCardViewModel.GetPrompt();
@@ -187,29 +194,28 @@ public static class ComfyNodeBuilderExtensions
             // Convert to local file names
             var lorasGroup = builder.Group_LoraLoadMany(
                 "Refiner_Loras",
-                modelSource,
-                clipSource,
+                builder.Connections.RefinerModel,
+                builder.Connections.RefinerClip,
                 prompt.GetExtraNetworksAsLocalModels(modelIndexService)
             );
 
             // Set as source
-            modelSource = lorasGroup.Output1;
-            clipSource = lorasGroup.Output2;
+            builder.Connections.RefinerModel = lorasGroup.Output1;
+            builder.Connections.RefinerClip = lorasGroup.Output2;
         }
-        builder.Connections.RefinerModel = modelSource;
 
         // Clips
         var positiveClip = builder.Nodes.AddNamedNode(
             ComfyNodeBuilder.ClipTextEncode(
                 "Refiner_PositiveCLIP",
-                clipSource,
+                builder.Connections.RefinerClip,
                 prompt.ProcessedText
             )
         );
         var negativeClip = builder.Nodes.AddNamedNode(
             ComfyNodeBuilder.ClipTextEncode(
                 "Refiner_NegativeCLIP",
-                clipSource,
+                builder.Connections.RefinerClip,
                 negativePrompt.ProcessedText
             )
         );
@@ -224,7 +230,7 @@ public static class ComfyNodeBuilderExtensions
         var sampler = builder.Nodes.AddNamedNode(
             ComfyNodeBuilder.KSamplerAdvanced(
                 "Refiner_Sampler",
-                modelSource,
+                builder.Connections.RefinerModel,
                 false,
                 Convert.ToUInt64(seedCardViewModel.Seed),
                 totalSteps,

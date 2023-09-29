@@ -502,7 +502,11 @@ public class CompletionList : TemplatedControl
         if (string.IsNullOrEmpty(query))
             return;
 
-        var suggestedIndex = _listBox.SelectedIndex;
+        var suggestedIndex = _listBox?.SelectedIndex ?? -1;
+        if (suggestedIndex == -1)
+        {
+            return;
+        }
 
         var bestIndex = -1;
         var bestQuality = -1;

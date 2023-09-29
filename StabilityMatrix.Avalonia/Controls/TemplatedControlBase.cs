@@ -1,25 +1,18 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using AsyncAwaitBestPractices;
-using Avalonia.Controls;
+﻿using AsyncAwaitBestPractices;
+using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-[SuppressMessage("ReSharper", "VirtualMemberNeverOverridden.Global")]
-public class UserControlBase : UserControl
+public abstract class TemplatedControlBase : TemplatedControl
 {
-    static UserControlBase()
+    /// <inheritdoc />
+    protected override void OnLoaded(RoutedEventArgs e)
     {
-        LoadedEvent.AddClassHandler<UserControlBase>((cls, args) => cls.OnLoadedEvent(args));
+        base.OnLoaded(e);
 
-        UnloadedEvent.AddClassHandler<UserControlBase>((cls, args) => cls.OnUnloadedEvent(args));
-    }
-
-    // ReSharper disable once UnusedParameter.Global
-    protected virtual void OnLoadedEvent(RoutedEventArgs? e)
-    {
         if (DataContext is not ViewModelBase viewModel)
             return;
 
@@ -30,9 +23,11 @@ public class UserControlBase : UserControl
         Dispatcher.UIThread.InvokeAsync(viewModel.OnLoadedAsync).SafeFireAndForget();
     }
 
-    // ReSharper disable once UnusedParameter.Global
-    protected virtual void OnUnloadedEvent(RoutedEventArgs? e)
+    /// <inheritdoc />
+    protected override void OnUnloaded(RoutedEventArgs e)
     {
+        base.OnUnloaded(e);
+
         if (DataContext is not ViewModelBase viewModel)
             return;
 

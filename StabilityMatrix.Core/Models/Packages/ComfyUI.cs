@@ -455,24 +455,4 @@ public class ComfyUI : BaseGitPackage
             })
             .ConfigureAwait(false);
     }
-
-    public class ComfyModelPathsYaml
-    {
-        public class SmData
-        {
-            public string Checkpoints { get; set; }
-            public string Vae { get; set; }
-            public string Loras { get; set; }
-            public string UpscaleModels { get; set; }
-            public string Embeddings { get; set; }
-            public string Hypernetworks { get; set; }
-            public string Controlnet { get; set; }
-            public string Clip { get; set; }
-            public string Diffusers { get; set; }
-            public string Gligen { get; set; }
-            public string VaeApprox { get; set; }
-        }
-
-        public SmData? StabilityMatrix { get; set; }
-    }
 }

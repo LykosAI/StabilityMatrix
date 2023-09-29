@@ -210,7 +210,7 @@
                             
                             <Grid
                                 x:CompileBindings="False"
-                                DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DockControl}, Path=DataContext}">
+                                DataContext="{Binding ElementName=Dock, Path=DataContext}">
                                 <controls:ImageFolderCard
                                     DataContext="{Binding ImageFolderCardViewModel}" />
                             </Grid>

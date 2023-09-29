@@ -338,6 +338,7 @@ public sealed class App : Application
         services.AddTransient<BatchSizeCardViewModel>();
         services.AddTransient<SelectImageCardViewModel>();
         services.AddTransient<SharpenCardViewModel>();
+        services.AddTransient<FreeUCardViewModel>();
 
         // Dialog factory
         services.AddSingleton<ServiceManager<ViewModelBase>>(
@@ -376,6 +377,7 @@ public sealed class App : Application
                     .Register(provider.GetRequiredService<InferenceConnectionHelpViewModel>)
                     .Register(provider.GetRequiredService<SharpenCardViewModel>)
                     .Register(provider.GetRequiredService<DownloadResourceViewModel>)
+                    .Register(provider.GetRequiredService<FreeUCardViewModel>)
         );
     }
 
@@ -390,6 +392,7 @@ public sealed class App : Application
         services.AddSingleton<CheckpointBrowserPage>();
         services.AddSingleton<ProgressManagerPage>();
         services.AddSingleton<InferencePage>();
+        services.AddSingleton<NewCheckpointsPage>();
 
         // Inference tabs
         services.AddTransient<InferenceTextToImageView>();
@@ -408,7 +411,7 @@ public sealed class App : Application
         services.AddTransient<BatchSizeCard>();
         services.AddTransient<SelectImageCard>();
         services.AddTransient<SharpenCard>();
-        services.AddSingleton<NewCheckpointsPage>();
+        services.AddTransient<FreeUCard>();
 
         // Dialogs
         services.AddTransient<SelectDataDirectoryDialog>();

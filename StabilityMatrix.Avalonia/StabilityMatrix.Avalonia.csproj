@@ -8,7 +8,7 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
-        <Version>2.5.0-pre.2</Version>
+        <Version>2.5.0-pre.3</Version>
         <InformationalVersion>$(Version)</InformationalVersion>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

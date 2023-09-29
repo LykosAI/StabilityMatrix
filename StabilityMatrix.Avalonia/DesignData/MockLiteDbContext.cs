@@ -47,7 +47,7 @@ public class MockLiteDbContext : ILiteDbContext
 
     public Task<GithubCacheEntry?> GetGithubCacheEntry(string cacheKey)
     {
-        return Task.FromResult<GithubCacheEntry>(null);
+        return Task.FromResult<GithubCacheEntry?>(null);
     }
 
     public Task<bool> UpsertGithubCacheEntry(GithubCacheEntry cacheEntry)

@@ -239,8 +239,13 @@ public abstract class BaseGitPackage : BasePackage
     public override async Task<bool> CheckForUpdates(InstalledPackage package)
     {
         var currentVersion = package.Version;
-        if (currentVersion == null)
+        if (currentVersion is null or { InstalledReleaseVersion: null, InstalledBranch: null })
         {
+            Logger.Warn(
+                "Could not check updates for package {Name}, version is invalid: {@currentVersion}",
+                Name,
+                currentVersion
+            );
             return false;
         }
 
@@ -254,7 +259,7 @@ public abstract class BaseGitPackage : BasePackage
             }
 
             var allCommits = (
-                await GetAllCommits(currentVersion.InstalledBranch).ConfigureAwait(false)
+                await GetAllCommits(currentVersion.InstalledBranch!).ConfigureAwait(false)
             )?.ToList();
             if (allCommits == null || !allCommits.Any())
             {

@@ -699,7 +699,14 @@ public sealed class App : Application
         {
             var debugTarget = builder
                 .ForTarget("console")
-                .WriteTo(new DebuggerTarget { Layout = "${message}" })
+                .WriteTo(
+                    new DebuggerTarget
+                    {
+                        Layout =
+                            "[${level:format=TriLetter}] "
+                            + "${callsite:includeNamespace=false:captureStackTrace=false}: ${message}"
+                    }
+                )
                 .WithAsync();
 
             var fileTarget = builder

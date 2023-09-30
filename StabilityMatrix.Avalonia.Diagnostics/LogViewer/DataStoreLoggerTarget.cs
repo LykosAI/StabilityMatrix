@@ -71,10 +71,6 @@ public class DataStoreLoggerTarget : TargetWithLayout
                 Color = _config!.Colors[logLevel],
             }
         );
-
-        Debug.WriteLine(
-            $"--- [{logLevel.ToString()[..3]}] {message} - {logEvent.Exception?.Message ?? "no error"}"
-        );
     }
 
     #endregion

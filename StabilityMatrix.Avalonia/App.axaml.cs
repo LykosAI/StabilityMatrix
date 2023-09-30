@@ -17,9 +17,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Controls.Primitives;
 using Avalonia.Input.Platform;
-using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
@@ -42,7 +40,6 @@ using Polly.Timeout;
 using Refit;
 using Sentry;
 using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
@@ -65,7 +62,6 @@ using StabilityMatrix.Avalonia.Views.Settings;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Database;
-using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
@@ -81,7 +77,6 @@ using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
 using Application = Avalonia.Application;
 using DrawingColor = System.Drawing.Color;
-using InferenceTextToImageView = StabilityMatrix.Avalonia.Views.Inference.InferenceTextToImageView;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace StabilityMatrix.Avalonia;
@@ -762,18 +757,6 @@ public sealed class App : Application
                 o.MinimumBreadcrumbLevel = NLog.LogLevel.Debug;
                 // Error and higher is sent as event (default is Error)
                 o.MinimumEventLevel = NLog.LogLevel.Error;
-                // Filters
-                o.SetBeforeSend(
-                    (sentryEvent, _) =>
-                    {
-                        if (sentryEvent.Logger == "Websocket.Client.WebsocketClient")
-                        {
-                            return null;
-                        }
-
-                        return sentryEvent;
-                    }
-                );
             });
         }
 

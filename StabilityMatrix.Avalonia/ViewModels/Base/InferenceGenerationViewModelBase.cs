@@ -104,7 +104,7 @@ public abstract partial class InferenceGenerationViewModelBase
         client.PreviewImageReceived += OnPreviewImageReceived;
 
         // Register to interrupt if user cancels
-        await using var promptInterrupt = cancellationToken.Register(() =>
+        var promptInterrupt = cancellationToken.Register(() =>
         {
             Logger.Info("Cancelling prompt");
             client
@@ -173,6 +173,7 @@ public abstract partial class InferenceGenerationViewModelBase
 
             // Cleanup tasks
             promptTask?.Dispose();
+            await promptInterrupt.DisposeAsync();
         }
     }
 

@@ -133,7 +133,7 @@
       "name": "meta.structure.network.prompt",
       "patterns": [
         {
-          "match": "(?<=\\<)([^,:\\<\\> ]+)(:)([^,:\\<\\> ]+)(:)([-+]?\\d+(?:\\.\\d+)?)",
+          "match": "(?<=\\<)([^,:\\<\\>]+)(:)([^,:\\<\\>]+)(:)([-+]?\\d+(?:\\.\\d+)?)",
           "captures": {
             "1": {
               "name": "meta.embedded.network.type.prompt"
@@ -153,7 +153,7 @@
           }
         },
         {
-          "match": "(?<=\\<)([^,:\\<\\> ]+)(:)([^,:\\<\\> ]+)?",
+          "match": "(?<=\\<)([^,:\\<\\>]+)(:)([^,:\\<\\>]+)?",
           "captures": {
             "1": {
               "name": "meta.embedded.network.type.prompt"
@@ -167,7 +167,7 @@
           }
         },
         {
-          "match": "(?<=\\<)([^,:\\<\\> ]+)",
+          "match": "(?<=\\<)([^,:\\<\\>]+)",
           "captures": {
             "1": {
               "name": "meta.embedded.network.type.prompt"

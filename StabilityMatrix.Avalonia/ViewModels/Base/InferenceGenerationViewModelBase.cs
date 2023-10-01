@@ -103,19 +103,22 @@ public abstract partial class InferenceGenerationViewModelBase
         // Connect preview image handler
         client.PreviewImageReceived += OnPreviewImageReceived;
 
+        // Register to interrupt if user cancels
+        await using var promptInterrupt = cancellationToken.Register(() =>
+        {
+            Logger.Info("Cancelling prompt");
+            client
+                .InterruptPromptAsync(new CancellationTokenSource(5000).Token)
+                .SafeFireAndForget(ex =>
+                {
+                    Logger.Warn(ex, "Error while interrupting prompt");
+                });
+        });
+
         ComfyTask? promptTask = null;
 
         try
         {
-            // Register to interrupt if user cancels
-            cancellationToken.Register(() =>
-            {
-                Logger.Info("Cancelling prompt");
-                client
-                    .InterruptPromptAsync(new CancellationTokenSource(5000).Token)
-                    .SafeFireAndForget();
-            });
-
             try
             {
                 promptTask = await client.QueuePromptAsync(nodes, cancellationToken);
@@ -139,6 +142,9 @@ public abstract partial class InferenceGenerationViewModelBase
                 promptTask.Id,
                 cancellationToken
             );
+
+            // Disable cancellation
+            await promptInterrupt.DisposeAsync();
 
             ImageGalleryCardViewModel.ImageSources.Clear();
 

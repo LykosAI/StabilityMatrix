@@ -11,21 +11,22 @@ namespace StabilityMatrix.Core.Helper;
 public static class FileTransfers
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
+
     /// <summary>
     /// Determines suitable buffer size based on stream length.
     /// </summary>
     /// <param name="totalBytes"></param>
     /// <returns></returns>
-    public static ulong GetBufferSize(ulong totalBytes) => totalBytes switch
-    {
-        < Size.MiB => 8 * Size.KiB,
-        < 100 * Size.MiB => 16 * Size.KiB,
-        < 500 * Size.MiB => Size.MiB,
-        < Size.GiB => 16 * Size.MiB,
-        _ => 32 * Size.MiB
-    };
-    
+    public static ulong GetBufferSize(ulong totalBytes) =>
+        totalBytes switch
+        {
+            < Size.MiB => 8 * Size.KiB,
+            < 100 * Size.MiB => 16 * Size.KiB,
+            < 500 * Size.MiB => Size.MiB,
+            < Size.GiB => 16 * Size.MiB,
+            _ => 32 * Size.MiB
+        };
+
     /// <summary>
     /// Copy all files and subfolders using a dictionary of source and destination file paths.
     /// Non-existing directories within the paths will be created.
@@ -42,40 +43,73 @@ public static class FileTransfers
     /// <param name="totalProgress">
     /// Optional (total) progress.
     /// </param>
-    public static async Task CopyFiles(Dictionary<string, string> files, IProgress<ProgressReport>? fileProgress = default, IProgress<ProgressReport>? totalProgress = default)
+    public static async Task CopyFiles(
+        Dictionary<string, string> files,
+        IProgress<ProgressReport>? fileProgress = default,
+        IProgress<ProgressReport>? totalProgress = default
+    )
     {
         var totalFiles = files.Count;
         var completedFiles = 0;
         var totalSize = Convert.ToUInt64(files.Keys.Select(x => new FileInfo(x).Length).Sum());
         var totalRead = 0ul;
 
-        foreach(var (sourcePath, destPath) in files)
+        foreach (var (sourcePath, destPath) in files)
         {
             var totalReadForFile = 0ul;
 
-            await using var outStream = new FileStream(destPath, FileMode.Create, FileAccess.Write, FileShare.Read);
-            await using var inStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var fileSize = (ulong) inStream.Length;
+            await using var outStream = new FileStream(
+                destPath,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.Read
+            );
+            await using var inStream = new FileStream(
+                sourcePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read
+            );
+            var fileSize = (ulong)inStream.Length;
             var fileName = Path.GetFileName(sourcePath);
             completedFiles++;
-            await CopyStream(inStream , outStream, fileReadBytes =>
-            {
-                var lastRead = totalReadForFile;
-                totalReadForFile = Convert.ToUInt64(fileReadBytes);
-                totalRead += totalReadForFile - lastRead;
-                fileProgress?.Report(new ProgressReport(totalReadForFile, fileSize, fileName, $"{completedFiles}/{totalFiles}"));
-                totalProgress?.Report(new ProgressReport(totalRead, totalSize, fileName, $"{completedFiles}/{totalFiles}"));
-            } );
+            await CopyStream(
+                    inStream,
+                    outStream,
+                    fileReadBytes =>
+                    {
+                        var lastRead = totalReadForFile;
+                        totalReadForFile = Convert.ToUInt64(fileReadBytes);
+                        totalRead += totalReadForFile - lastRead;
+                        fileProgress?.Report(
+                            new ProgressReport(
+                                totalReadForFile,
+                                fileSize,
+                                fileName,
+                                $"{completedFiles}/{totalFiles}"
+                            )
+                        );
+                        totalProgress?.Report(
+                            new ProgressReport(
+                                totalRead,
+                                totalSize,
+                                fileName,
+                                $"{completedFiles}/{totalFiles}"
+                            )
+                        );
+                    }
+                )
+                .ConfigureAwait(false);
         }
     }
 
     private static async Task CopyStream(Stream from, Stream to, Action<long> progress)
     {
         var shared = ArrayPool<byte>.Shared;
-        var bufferSize = (int) GetBufferSize((ulong) from.Length);
+        var bufferSize = (int)GetBufferSize((ulong)from.Length);
         var buffer = shared.Rent(bufferSize);
         var totalRead = 0L;
-        
+
         try
         {
             while (totalRead < from.Length)
@@ -104,27 +138,33 @@ public static class FileTransfers
         DirectoryPath sourceDir,
         DirectoryPath destinationDir,
         bool overwrite = false,
-        bool overwriteIfHashMatches = false)
+        bool overwriteIfHashMatches = false
+    )
     {
         // Create the destination directory if it doesn't exist
         if (!destinationDir.Exists)
         {
             destinationDir.Create();
         }
-        
+
         // First move files
         await MoveAllFiles(sourceDir, destinationDir, overwrite, overwriteIfHashMatches);
-        
+
         // Then move directories
         foreach (var subDir in sourceDir.Info.EnumerateDirectories())
         {
             var destinationSubDir = destinationDir.JoinDir(subDir.Name);
             // Recursively move sub directories
-            await MoveAllFilesAndDirectories(subDir, destinationSubDir, 
-                overwrite, overwriteIfHashMatches);
+            await MoveAllFilesAndDirectories(
+                    subDir,
+                    destinationSubDir,
+                    overwrite,
+                    overwriteIfHashMatches
+                )
+                .ConfigureAwait(false);
         }
     }
-    
+
     /// <summary>
     /// Move all files within the source directory to the destination directory.
     /// If the destination contains a file with the same name, we'll check if the hashes match.
@@ -134,10 +174,11 @@ public static class FileTransfers
     /// If moving files results in name collision with different hashes.
     /// </exception>
     public static async Task MoveAllFiles(
-        DirectoryPath sourceDir, 
+        DirectoryPath sourceDir,
         DirectoryPath destinationDir,
         bool overwrite = false,
-        bool overwriteIfHashMatches = false)
+        bool overwriteIfHashMatches = false
+    )
     {
         foreach (var file in sourceDir.Info.EnumerateFiles())
         {
@@ -150,7 +191,7 @@ public static class FileTransfers
                 {
                     destinationFile.Delete();
                 }
-                
+
                 if (overwriteIfHashMatches)
                 {
                     // Check if files hashes are the same
@@ -160,13 +201,14 @@ public static class FileTransfers
                     if (sourceHash == destinationHash)
                     {
                         Logger.Info(
-                            $"Deleted source file {file.Name} as it already exists in {destinationDir}." +
-                            $" Matching Blake3 hash: {sourceHash}");
+                            $"Deleted source file {file.Name} as it already exists in {destinationDir}."
+                                + $" Matching Blake3 hash: {sourceHash}"
+                        );
                         sourceFile.Delete();
                         continue;
                     }
                 }
-                
+
                 throw new FileTransferExistsException(sourceFile, destinationFile);
             }
             // Move the file

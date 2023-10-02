@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using NLog;
+﻿using NLog;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
@@ -54,7 +53,8 @@ public class SharedFolders : ISharedFolders
             Logger.Info($"Creating junction source {sourceDir}");
             sourceDir.Create();
         }
-        // Delete the destination folder if it exists
+
+        // Destination folder exists, move files to source then delete
         if (destinationDir.Exists)
         {
             // Copy all files from destination to source
@@ -76,6 +76,7 @@ public class SharedFolders : ISharedFolders
             Logger.Info($"Deleting junction target {destinationDir}");
             destinationDir.Delete(true);
         }
+
         Logger.Info($"Creating junction link from {sourceDir} to {destinationDir}");
         CreateLinkOrJunction(destinationDir, sourceDir, true);
     }

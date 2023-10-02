@@ -70,9 +70,12 @@ public static class FileTransfers
                 FileAccess.Read,
                 FileShare.Read
             );
+
             var fileSize = (ulong)inStream.Length;
             var fileName = Path.GetFileName(sourcePath);
             completedFiles++;
+            var currentCompletedFiles = completedFiles;
+
             await CopyStream(
                     inStream,
                     outStream,
@@ -86,7 +89,7 @@ public static class FileTransfers
                                 totalReadForFile,
                                 fileSize,
                                 fileName,
-                                $"{completedFiles}/{totalFiles}"
+                                $"{currentCompletedFiles}/{totalFiles}"
                             )
                         );
                         totalProgress?.Report(
@@ -94,7 +97,7 @@ public static class FileTransfers
                                 totalRead,
                                 totalSize,
                                 fileName,
-                                $"{completedFiles}/{totalFiles}"
+                                $"{currentCompletedFiles}/{totalFiles}"
                             )
                         );
                     }

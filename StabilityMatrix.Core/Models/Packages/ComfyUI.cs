@@ -449,9 +449,9 @@ public class ComfyUI : BaseGitPackage
 
         var sharedInferenceDir = SettingsManager.ImagesInferenceDirectory;
 
-        if (sharedInferenceDir.IsSymbolicLink)
+        if (inferenceDir.IsSymbolicLink)
         {
-            if (inferenceDir.Info.ResolveLinkTarget(true) == sharedInferenceDir.Info)
+            if (inferenceDir.Info.ResolveLinkTarget(true)?.FullName == sharedInferenceDir.FullPath)
             {
                 // Already valid link, skip
                 return;

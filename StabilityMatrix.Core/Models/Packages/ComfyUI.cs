@@ -451,7 +451,7 @@ public class ComfyUI : BaseGitPackage
 
         if (sharedInferenceDir.IsSymbolicLink)
         {
-            if (sharedInferenceDir.Info.ResolveLinkTarget(true) == sharedInferenceDir.Info)
+            if (inferenceDir.Info.ResolveLinkTarget(true) == sharedInferenceDir.Info)
             {
                 // Already valid link, skip
                 return;

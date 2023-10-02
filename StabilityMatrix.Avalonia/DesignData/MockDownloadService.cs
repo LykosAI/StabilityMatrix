@@ -43,8 +43,8 @@ public class MockDownloadService : IDownloadService
         return Task.FromResult(0L);
     }
 
-    public Task<Stream> GetImageStreamFromUrl(string url)
+    public Task<Stream?> GetImageStreamFromUrl(string url)
     {
-        return Task.FromResult(new MemoryStream(new byte[24]) as Stream);
+        return Task.FromResult(new MemoryStream(new byte[24]) as Stream)!;
     }
 }

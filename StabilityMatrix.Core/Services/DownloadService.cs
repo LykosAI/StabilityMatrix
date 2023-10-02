@@ -256,7 +256,7 @@ public class DownloadService : IDownloadService
         return contentLength;
     }
 
-    public async Task<Stream> GetImageStreamFromUrl(string url)
+    public async Task<Stream?> GetImageStreamFromUrl(string url)
     {
         using var client = httpClientFactory.CreateClient();
         client.Timeout = TimeSpan.FromSeconds(10);
@@ -270,7 +270,8 @@ public class DownloadService : IDownloadService
         }
         catch (Exception e)
         {
-            return default;
+            logger.LogError(e, "Failed to get image stream from url {Url}", url);
+            return null;
         }
     }
 }

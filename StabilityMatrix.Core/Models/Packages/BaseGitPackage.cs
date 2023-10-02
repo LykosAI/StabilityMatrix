@@ -338,7 +338,7 @@ public abstract class BaseGitPackage : BasePackage
     {
         if (sharedFolderMethod == SharedFolderMethod.Symlink && SharedFolders is { } folders)
         {
-            StabilityMatrix.Core.Helper.SharedFolders.SetupLinks(
+            return StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(
                 folders,
                 SettingsManager.ModelsDirectory,
                 installDirectory
@@ -348,17 +348,21 @@ public abstract class BaseGitPackage : BasePackage
         return Task.CompletedTask;
     }
 
-    public override async Task UpdateModelFolders(
+    public override Task UpdateModelFolders(
         DirectoryPath installDirectory,
         SharedFolderMethod sharedFolderMethod
     )
     {
-        if (SharedFolders is not null && sharedFolderMethod == SharedFolderMethod.Symlink)
+        if (sharedFolderMethod == SharedFolderMethod.Symlink && SharedFolders is { } sharedFolders)
         {
-            await StabilityMatrix.Core.Helper.SharedFolders
-                .UpdateLinksForPackage(this, SettingsManager.ModelsDirectory, installDirectory)
-                .ConfigureAwait(false);
+            return StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(
+                sharedFolders,
+                SettingsManager.ModelsDirectory,
+                installDirectory
+            );
         }
+
+        return Task.CompletedTask;
     }
 
     public override Task RemoveModelFolderLinks(

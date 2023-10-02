@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Drawing;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Helper;
@@ -12,7 +11,6 @@ using StabilityMatrix.Core.Services;
 using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
-using YamlDotNet.Serialization.TypeInspectors;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -461,10 +459,8 @@ public class ComfyUI : BaseGitPackage
             await sharedInferenceDir.DeleteAsync(false).ConfigureAwait(false);
         }
 
-        await Task.Run(() =>
-            {
-                Helper.SharedFolders.CreateLinkOrJunctionWithMove(sharedInferenceDir, inferenceDir);
-            })
+        await Helper.SharedFolders
+            .CreateOrUpdateLink(sharedInferenceDir, inferenceDir)
             .ConfigureAwait(false);
     }
 }

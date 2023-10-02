@@ -117,8 +117,9 @@ public static class FileTransfers
         {
             while (totalRead < from.Length)
             {
-                var read = await from.ReadAsync(buffer.AsMemory(0, bufferSize));
-                await to.WriteAsync(buffer.AsMemory(0, read));
+                var read = await from.ReadAsync(buffer.AsMemory(0, bufferSize))
+                    .ConfigureAwait(false);
+                await to.WriteAsync(buffer.AsMemory(0, read)).ConfigureAwait(false);
                 totalRead += read;
                 progress(totalRead);
             }
@@ -151,7 +152,8 @@ public static class FileTransfers
         }
 
         // First move files
-        await MoveAllFiles(sourceDir, destinationDir, overwrite, overwriteIfHashMatches);
+        await MoveAllFiles(sourceDir, destinationDir, overwrite, overwriteIfHashMatches)
+            .ConfigureAwait(false);
 
         // Then move directories
         foreach (var subDir in sourceDir.Info.EnumerateDirectories())
@@ -190,16 +192,15 @@ public static class FileTransfers
 
             if (destinationFile.Exists)
             {
-                if (overwrite)
-                {
-                    destinationFile.Delete();
-                }
-
                 if (overwriteIfHashMatches)
                 {
                     // Check if files hashes are the same
-                    var sourceHash = await FileHash.GetBlake3Async(sourceFile);
-                    var destinationHash = await FileHash.GetBlake3Async(destinationFile);
+                    var sourceHash = await FileHash
+                        .GetBlake3Async(sourceFile)
+                        .ConfigureAwait(false);
+                    var destinationHash = await FileHash
+                        .GetBlake3Async(destinationFile)
+                        .ConfigureAwait(false);
                     // For same hash, just delete original file
                     if (sourceHash == destinationHash)
                     {
@@ -208,14 +209,15 @@ public static class FileTransfers
                                 + $" Matching Blake3 hash: {sourceHash}"
                         );
                         sourceFile.Delete();
-                        continue;
                     }
                 }
-
-                throw new FileTransferExistsException(sourceFile, destinationFile);
+                else if (!overwrite)
+                {
+                    throw new FileTransferExistsException(sourceFile, destinationFile);
+                }
             }
             // Move the file
-            await sourceFile.MoveToAsync(destinationFile);
+            await sourceFile.MoveToAsync(destinationFile).ConfigureAwait(false);
         }
     }
 }

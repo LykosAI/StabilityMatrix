@@ -174,7 +174,7 @@ public class SharedFolders : ISharedFolders
                             Logger.Info(
                                 $"Skipped updating matching folder link ({destinationDir} -> ({sourceDir})"
                             );
-                            return;
+                            continue;
                         }
 
                         // Otherwise delete the link

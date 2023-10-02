@@ -132,6 +132,7 @@ public abstract partial class InferenceGenerationViewModelBase
 
             // Register progress handler
             promptTask.ProgressUpdate += OnProgressUpdateReceived;
+            promptTask.RunningNodeChanged += OnRunningNodeChanged;
 
             // Wait for prompt to finish
             await promptTask.Task.WaitAsync(cancellationToken);

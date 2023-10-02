@@ -449,6 +449,18 @@ public class ComfyUI : BaseGitPackage
 
         var sharedInferenceDir = SettingsManager.ImagesInferenceDirectory;
 
+        if (inferenceDir.IsSymbolicLink)
+        {
+            if (inferenceDir.Info.ResolveLinkTarget(true)?.FullName == sharedInferenceDir.FullPath)
+            {
+                // Already valid link, skip
+                return;
+            }
+
+            // Otherwise delete so we don't have to move files
+            await sharedInferenceDir.DeleteAsync(false).ConfigureAwait(false);
+        }
+
         await Task.Run(() =>
             {
                 Helper.SharedFolders.CreateLinkOrJunctionWithMove(sharedInferenceDir, inferenceDir);

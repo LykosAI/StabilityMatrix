@@ -83,7 +83,7 @@ public class ComfyClient : InferenceClientBase
 
         webSocketClient = new WebsocketClient(wsUri)
         {
-            Name = "ComfyClient",
+            Name = nameof(ComfyClient),
             ReconnectTimeout = TimeSpan.FromSeconds(30)
         };
 

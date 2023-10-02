@@ -176,6 +176,19 @@ public class Program
 #if DEBUG
             o.Environment = "Development";
 #endif
+            // Filters
+            o.SetBeforeSend(
+                (sentryEvent, _) =>
+                {
+                    // Ignore websocket errors from ComfyClient
+                    if (sentryEvent.Logger == "Websocket.Client.WebsocketClient")
+                    {
+                        return null;
+                    }
+
+                    return sentryEvent;
+                }
+            );
         });
     }
 

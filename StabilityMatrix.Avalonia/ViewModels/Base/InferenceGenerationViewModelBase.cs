@@ -103,19 +103,22 @@ public abstract partial class InferenceGenerationViewModelBase
         // Connect preview image handler
         client.PreviewImageReceived += OnPreviewImageReceived;
 
+        // Register to interrupt if user cancels
+        var promptInterrupt = cancellationToken.Register(() =>
+        {
+            Logger.Info("Cancelling prompt");
+            client
+                .InterruptPromptAsync(new CancellationTokenSource(5000).Token)
+                .SafeFireAndForget(ex =>
+                {
+                    Logger.Warn(ex, "Error while interrupting prompt");
+                });
+        });
+
         ComfyTask? promptTask = null;
 
         try
         {
-            // Register to interrupt if user cancels
-            cancellationToken.Register(() =>
-            {
-                Logger.Info("Cancelling prompt");
-                client
-                    .InterruptPromptAsync(new CancellationTokenSource(5000).Token)
-                    .SafeFireAndForget();
-            });
-
             try
             {
                 promptTask = await client.QueuePromptAsync(nodes, cancellationToken);
@@ -130,6 +133,19 @@ public abstract partial class InferenceGenerationViewModelBase
             // Register progress handler
             promptTask.ProgressUpdate += OnProgressUpdateReceived;
 
+            // Delay attaching running node change handler to not show indeterminate progress
+            // if progress updates are received before the prompt starts
+            Task.Run(
+                    async () =>
+                    {
+                        await Task.Delay(200, cancellationToken);
+                        // ReSharper disable once AccessToDisposedClosure
+                        promptTask.RunningNodeChanged += OnRunningNodeChanged;
+                    },
+                    cancellationToken
+                )
+                .SafeFireAndForget();
+
             // Wait for prompt to finish
             await promptTask.Task.WaitAsync(cancellationToken);
             Logger.Trace($"Prompt task {promptTask.Id} finished");
@@ -139,6 +155,9 @@ public abstract partial class InferenceGenerationViewModelBase
                 promptTask.Id,
                 cancellationToken
             );
+
+            // Disable cancellation
+            await promptInterrupt.DisposeAsync();
 
             ImageGalleryCardViewModel.ImageSources.Clear();
 
@@ -159,8 +178,7 @@ public abstract partial class InferenceGenerationViewModelBase
             client.PreviewImageReceived -= OnPreviewImageReceived;
 
             // Clear progress
-            OutputProgress.Value = 0;
-            OutputProgress.Text = "";
+            OutputProgress.ClearProgress();
             ImageGalleryCardViewModel.PreviewImage?.Dispose();
             ImageGalleryCardViewModel.PreviewImage = null;
             ImageGalleryCardViewModel.IsPreviewOverlayEnabled = false;
@@ -330,6 +348,26 @@ public abstract partial class InferenceGenerationViewModelBase
             OutputProgress.Text =
                 $"({args.Value} / {args.Maximum})"
                 + (args.RunningNode != null ? $" {args.RunningNode}" : "");
+        });
+    }
+
+    /// <summary>
+    /// Handles the node executing updates received event from the websocket.
+    /// </summary>
+    protected virtual void OnRunningNodeChanged(object? sender, string? nodeName)
+    {
+        // Ignore if regular progress updates started
+        if (sender is not ComfyTask { LastProgressUpdate: null })
+        {
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            OutputProgress.IsIndeterminate = true;
+            OutputProgress.Value = 100;
+            OutputProgress.Maximum = 100;
+            OutputProgress.Text = nodeName;
         });
     }
 

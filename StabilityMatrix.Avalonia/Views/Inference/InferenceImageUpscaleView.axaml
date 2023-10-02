@@ -148,6 +148,7 @@
                                     Spacing="4">
                                     <ProgressBar
                                         IsVisible="{Binding IsProgressVisible}"
+                                        IsIndeterminate="{Binding IsIndeterminate}"
                                         Maximum="{Binding Maximum}"
                                         Value="{Binding Value}" />
                                     <TextBlock

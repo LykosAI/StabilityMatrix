@@ -340,6 +340,26 @@ public abstract partial class InferenceGenerationViewModelBase
         });
     }
 
+    /// <summary>
+    /// Handles the node executing updates received event from the websocket.
+    /// </summary>
+    protected virtual void OnRunningNodeChanged(object? sender, string? nodeName)
+    {
+        // Ignore if regular progress updates started
+        if (sender is not ComfyTask { LastProgressUpdate: null })
+        {
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            OutputProgress.IsIndeterminate = true;
+            OutputProgress.Value = 100;
+            OutputProgress.Maximum = 100;
+            OutputProgress.Text = nodeName;
+        });
+    }
+
     public class ImageGenerationEventArgs : EventArgs
     {
         public required ComfyClient Client { get; init; }

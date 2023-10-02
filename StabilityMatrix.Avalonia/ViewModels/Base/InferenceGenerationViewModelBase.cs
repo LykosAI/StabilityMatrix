@@ -132,7 +132,19 @@ public abstract partial class InferenceGenerationViewModelBase
 
             // Register progress handler
             promptTask.ProgressUpdate += OnProgressUpdateReceived;
-            promptTask.RunningNodeChanged += OnRunningNodeChanged;
+
+            // Delay attaching running node change handler to not show indeterminate progress
+            // if progress updates are received before the prompt starts
+            Task.Run(
+                    async () =>
+                    {
+                        await Task.Delay(200, cancellationToken);
+                        // ReSharper disable once AccessToDisposedClosure
+                        promptTask.RunningNodeChanged += OnRunningNodeChanged;
+                    },
+                    cancellationToken
+                )
+                .SafeFireAndForget();
 
             // Wait for prompt to finish
             await promptTask.Task.WaitAsync(cancellationToken);
@@ -166,15 +178,13 @@ public abstract partial class InferenceGenerationViewModelBase
             client.PreviewImageReceived -= OnPreviewImageReceived;
 
             // Clear progress
-            OutputProgress.Value = 0;
-            OutputProgress.Text = "";
+            OutputProgress.ClearProgress();
             ImageGalleryCardViewModel.PreviewImage?.Dispose();
             ImageGalleryCardViewModel.PreviewImage = null;
             ImageGalleryCardViewModel.IsPreviewOverlayEnabled = false;
 
             // Cleanup tasks
             promptTask?.Dispose();
-            await promptInterrupt.DisposeAsync();
         }
     }
 

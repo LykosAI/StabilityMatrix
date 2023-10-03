@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed ストップ button being cut off in Japanese translation 
 - Fixed update progress freezing in some cases
 - Fixed light theme being default in first time setup window
+- Fixed shared folder links not recreating fully when partially missing
 
 ## v2.4.6
 ### Added

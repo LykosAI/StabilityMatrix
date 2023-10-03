@@ -36,6 +36,7 @@ public partial class CompletionProvider : ICompletionProvider
     private readonly ISettingsManager settingsManager;
     private readonly INotificationService notificationService;
     private readonly IModelIndexService modelIndexService;
+    private readonly IDownloadService downloadService;
 
     private readonly AsyncLock loadLock = new();
     private readonly Dictionary<string, TagCsvEntry> entries = new();
@@ -61,12 +62,14 @@ public partial class CompletionProvider : ICompletionProvider
     public CompletionProvider(
         ISettingsManager settingsManager,
         INotificationService notificationService,
-        IModelIndexService modelIndexService
+        IModelIndexService modelIndexService,
+        IDownloadService downloadService
     )
     {
         this.settingsManager = settingsManager;
         this.notificationService = notificationService;
         this.modelIndexService = modelIndexService;
+        this.downloadService = downloadService;
 
         PrepareInsertionText = PrepareInsertionText_Process;
 
@@ -146,6 +149,48 @@ public partial class CompletionProvider : ICompletionProvider
                 },
                 true
             );
+    }
+
+    /// <inheritdoc />
+    public async Task Setup()
+    {
+        var tagsDir = settingsManager.TagsDirectory;
+        tagsDir.Create();
+
+        // If tagsDir is empty and no selected, download defaults
+        if (
+            !tagsDir.Info.EnumerateFiles().Any()
+            && settingsManager.Settings.TagCompletionCsv is null
+        )
+        {
+            foreach (var remoteCsv in Assets.DefaultCompletionTags)
+            {
+                var fileName = remoteCsv.Url.Segments.Last();
+                Logger.Info(
+                    "Downloading default tag source {Name} [{Hash}]",
+                    fileName,
+                    remoteCsv.HashSha256[..7]
+                );
+                await downloadService.DownloadToFileAsync(
+                    remoteCsv.Url.ToString(),
+                    tagsDir.JoinFile(fileName)
+                );
+            }
+
+            var defaultFile = tagsDir.JoinFile("danbooru.csv");
+            if (!defaultFile.Exists)
+            {
+                Logger.Warn("Failed to download default tag source");
+                return;
+            }
+
+            // Set default file as selected
+            settingsManager.Settings.TagCompletionCsv = defaultFile.Name;
+            Logger.Debug("Tag completion source set to {Name}", defaultFile.Name);
+
+            // Load default file
+            BackgroundLoadFromFile(defaultFile);
+        }
     }
 
     /// <inheritdoc />

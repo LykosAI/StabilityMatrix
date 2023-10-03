@@ -58,7 +58,7 @@ public class Settings
     /// <summary>
     /// Whether prompt auto completion is enabled
     /// </summary>
-    public bool IsPromptCompletionEnabled { get; set; }
+    public bool IsPromptCompletionEnabled { get; set; } = true;
 
     /// <summary>
     /// Relative path to the tag completion CSV file from 'LibraryDir/Tags'
@@ -68,7 +68,7 @@ public class Settings
     /// <summary>
     /// Whether to remove underscores from completions
     /// </summary>
-    public bool IsCompletionRemoveUnderscoresEnabled { get; set; }
+    public bool IsCompletionRemoveUnderscoresEnabled { get; set; } = true;
 
     /// <summary>
     /// Whether the Inference Image Viewer shows pixel grids at high zoom levels

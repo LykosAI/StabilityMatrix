@@ -11,6 +11,7 @@ using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Inference;
@@ -32,6 +33,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     private readonly IApiFactory apiFactory;
     private readonly IModelIndexService modelIndexService;
     private readonly ISettingsManager settingsManager;
+    private readonly ICompletionProvider completionProvider;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsConnected), nameof(CanUserConnect))]
@@ -86,13 +88,15 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         ILogger<InferenceClientManager> logger,
         IApiFactory apiFactory,
         IModelIndexService modelIndexService,
-        ISettingsManager settingsManager
+        ISettingsManager settingsManager,
+        ICompletionProvider completionProvider
     )
     {
         this.logger = logger;
         this.apiFactory = apiFactory;
         this.modelIndexService = modelIndexService;
         this.settingsManager = settingsManager;
+        this.completionProvider = completionProvider;
 
         modelsSource
             .Connect()
@@ -354,6 +358,14 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         {
             throw new ArgumentException("Base package is not ComfyUI", nameof(packagePair));
         }
+
+        // Setup completion provider
+        completionProvider
+            .Setup()
+            .SafeFireAndForget(ex =>
+            {
+                logger.LogError(ex, "Error setting up completion provider");
+            });
 
         // Setup image folder links
         await comfyPackage.SetupInferenceOutputFolderLinks(

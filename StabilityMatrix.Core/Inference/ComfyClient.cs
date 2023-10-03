@@ -282,7 +282,7 @@ public class ComfyClient : InferenceClientBase
 
         // Add task to dictionary and set it as the current task
         var task = new ComfyTask(result.PromptId);
-        PromptTasks[result.PromptId] = task;
+        PromptTasks.TryAdd(result.PromptId, task);
         currentPromptTask = task;
 
         return task;

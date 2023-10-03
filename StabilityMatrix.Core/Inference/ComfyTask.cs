@@ -1,11 +1,10 @@
-﻿using System.ComponentModel;
-using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
+﻿using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 
 namespace StabilityMatrix.Core.Inference;
 
 public class ComfyTask : TaskCompletionSource, IDisposable
 {
-    public string Id { get; set; }
+    public string Id { get; }
 
     private string? runningNode;
     public string? RunningNode
@@ -15,10 +14,18 @@ public class ComfyTask : TaskCompletionSource, IDisposable
         {
             runningNode = value;
             RunningNodeChanged?.Invoke(this, value);
+            if (value != null)
+            {
+                RunningNodesHistory.Push(value);
+            }
         }
     }
 
+    public Stack<string> RunningNodesHistory { get; } = new();
+
     public ComfyProgressUpdateEventArgs? LastProgressUpdate { get; private set; }
+
+    public bool HasProgressUpdateStarted => LastProgressUpdate != null;
 
     public EventHandler<ComfyProgressUpdateEventArgs>? ProgressUpdate;
 
@@ -34,7 +41,8 @@ public class ComfyTask : TaskCompletionSource, IDisposable
     /// </summary>
     public void OnProgressUpdate(ComfyWebSocketProgressData update)
     {
-        var args = new ComfyProgressUpdateEventArgs(update.Value, update.Max, Id, RunningNode);
+        RunningNodesHistory.TryPeek(out var lastNode);
+        var args = new ComfyProgressUpdateEventArgs(update.Value, update.Max, Id, lastNode);
         ProgressUpdate?.Invoke(this, args);
         LastProgressUpdate = args;
     }

@@ -32,7 +32,7 @@ internal static class Assets
     public static AvaloniaResource ThemeMatrixDarkJson =>
         new("avares://StabilityMatrix.Avalonia/Assets/ThemeMatrixDark.json");
 
-    private const UnixFileMode unix755 =
+    private const UnixFileMode Unix755 =
         UnixFileMode.UserRead
         | UnixFileMode.UserWrite
         | UnixFileMode.UserExecute
@@ -54,14 +54,14 @@ internal static class Assets
                 PlatformKind.Linux | PlatformKind.X64,
                 new AvaloniaResource(
                     "avares://StabilityMatrix.Avalonia/Assets/linux-x64/7zzs",
-                    unix755
+                    Unix755
                 )
             ),
             (
                 PlatformKind.MacOS | PlatformKind.Arm,
                 new AvaloniaResource(
                     "avares://StabilityMatrix.Avalonia/Assets/macos-arm64/7zz",
-                    unix755
+                    Unix755
                 )
             )
         );
@@ -135,6 +135,19 @@ internal static class Assets
                 )
             )
         );
+
+    public static IReadOnlyList<RemoteResource> DefaultCompletionTags { get; } =
+        new[]
+        {
+            new RemoteResource(
+                new Uri("https://cdn.lykos.ai/tags/danbooru.csv"),
+                "b84a879f1d9c47bf4758d66542598faa565b1571122ae12e7b145da8e7a4c1c6"
+            ),
+            new RemoteResource(
+                new Uri("https://cdn.lykos.ai/tags/e621.csv"),
+                "ef7ea148ad865ad936d0c1ee57f0f83de723b43056c70b07fd67dbdbb89cae35"
+            )
+        };
 
     public static Uri DiscordServerUrl { get; } = new("https://discord.com/invite/TUrgfECxHz");
 

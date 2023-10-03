@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -119,6 +120,8 @@ public abstract partial class InferenceGenerationViewModelBase
 
         try
         {
+            var timer = Stopwatch.StartNew();
+
             try
             {
                 promptTask = await client.QueuePromptAsync(nodes, cancellationToken);
@@ -138,9 +141,13 @@ public abstract partial class InferenceGenerationViewModelBase
             Task.Run(
                     async () =>
                     {
-                        await Task.Delay(200, cancellationToken);
+                        var delayTime = 250 - (int)timer.ElapsedMilliseconds;
+                        if (delayTime > 0)
+                        {
+                            await Task.Delay(delayTime, cancellationToken);
+                        }
                         // ReSharper disable once AccessToDisposedClosure
-                        promptTask.RunningNodeChanged += OnRunningNodeChanged;
+                        AttachRunningNodeChangedHandler(promptTask);
                     },
                     cancellationToken
                 )
@@ -351,13 +358,24 @@ public abstract partial class InferenceGenerationViewModelBase
         });
     }
 
+    private void AttachRunningNodeChangedHandler(ComfyTask comfyTask)
+    {
+        // Do initial update
+        if (comfyTask.RunningNodesHistory.TryPeek(out var lastNode))
+        {
+            OnRunningNodeChanged(comfyTask, lastNode);
+        }
+
+        comfyTask.RunningNodeChanged += OnRunningNodeChanged;
+    }
+
     /// <summary>
     /// Handles the node executing updates received event from the websocket.
     /// </summary>
     protected virtual void OnRunningNodeChanged(object? sender, string? nodeName)
     {
         // Ignore if regular progress updates started
-        if (sender is not ComfyTask { LastProgressUpdate: null })
+        if (sender is not ComfyTask { HasProgressUpdateStarted: false })
         {
             return;
         }

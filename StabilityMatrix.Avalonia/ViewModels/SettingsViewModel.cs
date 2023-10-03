@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
@@ -95,7 +96,7 @@ public partial class SettingsViewModel : PageViewModelBase
 
     // Inference UI section
     [ObservableProperty]
-    private bool isPromptCompletionEnabled;
+    private bool isPromptCompletionEnabled = true;
 
     [ObservableProperty]
     private IReadOnlyList<string> availableTagCompletionCsvs = Array.Empty<string>();
@@ -104,7 +105,7 @@ public partial class SettingsViewModel : PageViewModelBase
     private string? selectedTagCompletionCsv;
 
     [ObservableProperty]
-    private bool isCompletionRemoveUnderscoresEnabled;
+    private bool isCompletionRemoveUnderscoresEnabled = true;
 
     [ObservableProperty]
     private bool isImageViewerPixelGridEnabled = true;
@@ -215,9 +216,11 @@ public partial class SettingsViewModel : PageViewModelBase
     }
 
     /// <inheritdoc />
-    public override void OnLoaded()
+    public override async Task OnLoadedAsync()
     {
-        base.OnLoaded();
+        await base.OnLoadedAsync();
+
+        await notificationService.TryAsync(completionProvider.Setup());
 
         UpdateAvailableTagCompletionCsvs();
     }

@@ -4,7 +4,7 @@
              xmlns:local="using:StabilityMatrix.Avalonia"
              xmlns:idcr="using:Dock.Avalonia.Controls.Recycling"
              xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
-             RequestedThemeVariant="Default">
+             RequestedThemeVariant="Dark">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>

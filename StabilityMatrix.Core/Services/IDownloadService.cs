@@ -27,5 +27,5 @@ public interface IDownloadService
         CancellationToken cancellationToken = default
     );
 
-    Task<Stream> GetImageStreamFromUrl(string url);
+    Task<Stream?> GetImageStreamFromUrl(string url);
 }

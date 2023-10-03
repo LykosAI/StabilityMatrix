@@ -19,6 +19,11 @@ public interface ICompletionProvider
     Func<ICompletionData, string>? PrepareInsertionText => null;
 
     /// <summary>
+    /// Downloads default tags and selects one if required.
+    /// </summary>
+    Task Setup();
+
+    /// <summary>
     /// Load the completion provider from a file.
     /// </summary>
     Task LoadFromFile(FilePath path, bool recreate = false);

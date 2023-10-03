@@ -160,7 +160,10 @@ public partial class CompletionProvider : ICompletionProvider
         // If tagsDir is empty and no selected, download defaults
         if (
             !tagsDir.Info.EnumerateFiles().Any()
-            && settingsManager.Settings.TagCompletionCsv is null
+            && (
+                settingsManager.Settings.TagCompletionCsv is null
+                || !tagsDir.JoinFile(settingsManager.Settings.TagCompletionCsv).Exists
+            )
         )
         {
             foreach (var remoteCsv in Assets.DefaultCompletionTags)

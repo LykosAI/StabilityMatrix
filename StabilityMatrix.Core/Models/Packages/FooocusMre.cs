@@ -2,6 +2,7 @@
 using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
@@ -129,11 +130,9 @@ public class FooocusMre : BaseGitPackage
             )
             .ConfigureAwait(false);
 
-        progress?.Report(
-            new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true)
-        );
+        var requirements = new FilePath(installLocation, "requirements_versions.txt");
         await venvRunner
-            .PipInstall("-r requirements_versions.txt", onConsoleOutput)
+            .PipInstallFromRequirements(requirements, onConsoleOutput)
             .ConfigureAwait(false);
     }
 

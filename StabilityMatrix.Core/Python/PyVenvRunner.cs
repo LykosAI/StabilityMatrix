@@ -20,17 +20,19 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private const string TorchPipInstallArgs = "torch==2.0.1 torchvision==2.0.1";
+
     public const string TorchPipInstallArgsCuda =
-        "torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118";
-    public const string TorchPipInstallArgsCpu = "torch torchvision torchaudio";
+        $"{TorchPipInstallArgs} --extra-index-url https://download.pytorch.org/whl/cu118";
+    public const string TorchPipInstallArgsCpu = TorchPipInstallArgs;
     public const string TorchPipInstallArgsDirectML = "torch-directml";
 
     public const string TorchPipInstallArgsRocm511 =
-        "torch torchvision --extra-index-url https://download.pytorch.org/whl/rocm5.1.1";
+        $"{TorchPipInstallArgs} --extra-index-url https://download.pytorch.org/whl/rocm5.1.1";
     public const string TorchPipInstallArgsRocm542 =
-        "torch torchvision --extra-index-url https://download.pytorch.org/whl/rocm5.4.2";
+        $"{TorchPipInstallArgs} --extra-index-url https://download.pytorch.org/whl/rocm5.4.2";
     public const string TorchPipInstallArgsRocmNightly56 =
-        "--pre torch torchvision --index-url https://download.pytorch.org/whl/nightly/rocm5.6";
+        $"--pre {TorchPipInstallArgs} --index-url https://download.pytorch.org/whl/nightly/rocm5.6";
 
     /// <summary>
     /// Relative path to the site-packages folder from the venv root.

@@ -9,6 +9,7 @@ namespace StabilityMatrix.Core.Models.FileInterfaces;
 public class DirectoryPath : FileSystemPath, IPathObject
 {
     private DirectoryInfo? info;
+
     // ReSharper disable once MemberCanBePrivate.Global
     [JsonIgnore]
     public DirectoryInfo Info => info ??= new DirectoryInfo(FullPath);
@@ -19,53 +20,49 @@ public class DirectoryPath : FileSystemPath, IPathObject
         get
         {
             Info.Refresh();
-            return Info.Attributes.HasFlag(FileAttributes.ReparsePoint);
+            return Info.Exists && Info.Attributes.HasFlag(FileAttributes.ReparsePoint);
         }
     }
-    
+
     /// <summary>
     /// Gets a value indicating whether the directory exists.
     /// </summary>
     [JsonIgnore]
     public bool Exists => Info.Exists;
-    
+
     /// <inheritdoc/>
     [JsonIgnore]
     public string Name => Info.Name;
-    
+
     /// <summary>
     /// Get the parent directory.
     /// </summary>
     [JsonIgnore]
-    public DirectoryPath? Parent => Info.Parent == null 
-        ? null : new DirectoryPath(Info.Parent);
+    public DirectoryPath? Parent => Info.Parent == null ? null : new DirectoryPath(Info.Parent);
 
-    public DirectoryPath(string path) : base(path)
-    {
-    }
-    
-    public DirectoryPath(FileSystemPath path) : base(path)
-    {
-    }
-    
-    public DirectoryPath(DirectoryInfo info) : base(info.FullName)
+    public DirectoryPath(string path)
+        : base(path) { }
+
+    public DirectoryPath(FileSystemPath path)
+        : base(path) { }
+
+    public DirectoryPath(DirectoryInfo info)
+        : base(info.FullName)
     {
         // Additionally set the info field
         this.info = info;
     }
-    
-    public DirectoryPath(params string[] paths) : base(paths)
-    {
-    }
+
+    public DirectoryPath(params string[] paths)
+        : base(paths) { }
 
     /// <inheritdoc />
     public long GetSize()
     {
         Info.Refresh();
-        return Info.EnumerateFiles("*", SearchOption.AllDirectories)
-            .Sum(file => file.Length);
+        return Info.EnumerateFiles("*", SearchOption.AllDirectories).Sum(file => file.Length);
     }
-    
+
     /// <summary>
     /// Gets the size of the directory.
     /// </summary>
@@ -74,15 +71,18 @@ public class DirectoryPath : FileSystemPath, IPathObject
     /// </param>
     public long GetSize(bool includeSymbolicLinks)
     {
-        if (includeSymbolicLinks) return GetSize();
-        
+        if (includeSymbolicLinks)
+            return GetSize();
+
         Info.Refresh();
         var files = Info.GetFiles()
             .Where(file => !file.Attributes.HasFlag(FileAttributes.ReparsePoint))
             .Sum(file => file.Length);
         var subDirs = Info.GetDirectories()
             .Where(dir => !dir.Attributes.HasFlag(FileAttributes.ReparsePoint))
-            .Sum(dir => dir.EnumerateFiles("*", SearchOption.AllDirectories).Sum(file => file.Length));
+            .Sum(
+                dir => dir.EnumerateFiles("*", SearchOption.AllDirectories).Sum(file => file.Length)
+            );
         return files + subDirs;
     }
 
@@ -96,7 +96,7 @@ public class DirectoryPath : FileSystemPath, IPathObject
     {
         return Task.Run(() => GetSize(includeSymbolicLinks));
     }
-    
+
     /// <summary>
     /// Creates the directory.
     /// </summary>
@@ -106,7 +106,7 @@ public class DirectoryPath : FileSystemPath, IPathObject
     /// Deletes the directory.
     /// </summary>
     public void Delete() => Directory.Delete(FullPath);
-    
+
     /// <summary> Deletes the directory asynchronously. </summary>
     public Task DeleteAsync() => Task.Run(Delete);
 
@@ -120,38 +120,43 @@ public class DirectoryPath : FileSystemPath, IPathObject
     /// Deletes the directory asynchronously.
     /// </summary>
     public Task DeleteAsync(bool recursive) => Task.Run(() => Delete(recursive));
-    
+
     /// <summary>
     /// Join with other paths to form a new directory path.
     /// </summary>
-    public DirectoryPath JoinDir(params DirectoryPath[] paths) => 
+    public DirectoryPath JoinDir(params DirectoryPath[] paths) =>
         new(Path.Combine(FullPath, Path.Combine(paths.Select(path => path.FullPath).ToArray())));
-    
+
     /// <summary>
     /// Join with other paths to form a new file path.
     /// </summary>
-    public FilePath JoinFile(params FilePath[] paths) => 
+    public FilePath JoinFile(params FilePath[] paths) =>
         new(Path.Combine(FullPath, Path.Combine(paths.Select(path => path.FullPath).ToArray())));
 
     public override string ToString() => FullPath;
 
     // DirectoryPath + DirectoryPath = DirectoryPath
-    public static DirectoryPath operator +(DirectoryPath path, DirectoryPath other) => new(Path.Combine(path, other.FullPath));
-    
+    public static DirectoryPath operator +(DirectoryPath path, DirectoryPath other) =>
+        new(Path.Combine(path, other.FullPath));
+
     // DirectoryPath + FilePath = FilePath
-    public static FilePath operator +(DirectoryPath path, FilePath other) => new(Path.Combine(path, other.FullPath));
-    
+    public static FilePath operator +(DirectoryPath path, FilePath other) =>
+        new(Path.Combine(path, other.FullPath));
+
     // DirectoryPath + FileInfo = FilePath
-    public static FilePath operator +(DirectoryPath path, FileInfo other) => new(Path.Combine(path, other.FullName));
-    
+    public static FilePath operator +(DirectoryPath path, FileInfo other) =>
+        new(Path.Combine(path, other.FullName));
+
     // DirectoryPath + string = string
     public static string operator +(DirectoryPath path, string other) => Path.Combine(path, other);
-    
+
     // Implicit conversions to and from string
     public static implicit operator string(DirectoryPath path) => path.FullPath;
+
     public static implicit operator DirectoryPath(string path) => new(path);
-    
+
     // Implicit conversions to and from DirectoryInfo
     public static implicit operator DirectoryInfo(DirectoryPath path) => path.Info;
+
     public static implicit operator DirectoryPath(DirectoryInfo path) => new(path);
 }

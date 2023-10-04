@@ -201,7 +201,7 @@ public class A3WebUI : BaseGitPackage
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
         await venvRunner
-            .PipInstallFromRequirements(requirements, onConsoleOutput)
+            .PipInstallFromRequirements(requirements, onConsoleOutput, excludes: "torch")
             .ConfigureAwait(false);
 
         progress?.Report(

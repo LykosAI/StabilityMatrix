@@ -128,7 +128,7 @@ public class Fooocus : BaseGitPackage
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
         await venvRunner
-            .PipInstallFromRequirements(requirements, onConsoleOutput)
+            .PipInstallFromRequirements(requirements, onConsoleOutput, excludes: "torch")
             .ConfigureAwait(false);
     }
 

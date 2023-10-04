@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text.Json;
 using AsyncAwaitBestPractices;
 using DynamicData;
@@ -73,33 +74,22 @@ public class ImageIndexService : IImageIndexService
         var stopwatch = Stopwatch.StartNew();
         logger.LogInformation("Refreshing images index at {ImagesDir}...", imagesDir);
 
-        var added = 0;
-        var toAdd = new Queue<LocalImageFile>();
+        var toAdd = new ConcurrentBag<LocalImageFile>();
 
         await Task.Run(() =>
             {
-                foreach (
-                    var file in imagesDir.Info
-                        .EnumerateFiles("*.*", SearchOption.AllDirectories)
-                        .Where(
-                            info => LocalImageFile.SupportedImageExtensions.Contains(info.Extension)
-                        )
-                        .Select(info => new FilePath(info))
-                )
-                {
-                    /*var relativePath = Path.GetRelativePath(imagesDir, file);
-                    
-                    if (string.IsNullOrEmpty(relativePath))
+                var files = imagesDir.Info
+                    .EnumerateFiles("*.*", SearchOption.AllDirectories)
+                    .Where(info => LocalImageFile.SupportedImageExtensions.Contains(info.Extension))
+                    .Select(info => new FilePath(info));
+
+                Parallel.ForEach(
+                    files,
+                    f =>
                     {
-                        continue;
-                    }*/
-
-                    var localImage = LocalImageFile.FromPath(file);
-
-                    toAdd.Enqueue(localImage);
-
-                    added++;
-                }
+                        toAdd.Add(LocalImageFile.FromPath(f));
+                    }
+                );
             })
             .ConfigureAwait(false);
 
@@ -114,7 +104,7 @@ public class ImageIndexService : IImageIndexService
         logger.LogInformation(
             "Image index updated for {Prefix} with {Entries} files, took {IndexDuration:F1}ms ({EditDuration:F1}ms edit)",
             subPath,
-            added,
+            toAdd.Count,
             indexElapsed.TotalMilliseconds,
             editElapsed.TotalMilliseconds
         );

@@ -19,7 +19,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private const string TorchPipInstallArgs = "torch==2.0.1 torchvision==2.0.1";
+    private const string TorchPipInstallArgs = "torch==2.0.1 torchvision";
 
     public const string TorchPipInstallArgsCuda =
         $"{TorchPipInstallArgs} --extra-index-url https://download.pytorch.org/whl/cu118";

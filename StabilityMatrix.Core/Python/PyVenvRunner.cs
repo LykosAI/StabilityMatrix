@@ -268,7 +268,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         var pipArgs = string.Join(' ', requirements);
 
         Logger.Info("Installing {FileName} ({PipArgs})", file.Name, pipArgs);
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        await PipInstall(pipArgs, outputDataReceived).ConfigureAwait(false);
     }
 
     /// <summary>

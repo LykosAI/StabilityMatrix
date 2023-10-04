@@ -23,7 +23,7 @@ Multi-Platform Package Manager for Stable Diffusion
 ### ✨ New in 2.5 - [Inference](#inference), a built-in Stable Diffusion interface powered by ComfyUI
 
 ### 🖱️ One click install and update for Stable Diffusion Web UI Packages
-- Supports [Automatic 1111][auto1111], [Comfy UI][comfy], [SD.Next (Vladmandic)][sdnext], [VoltaML][voltaml], [InvokeAI][invokeai], [Fooocus][fooocus], and [Fooocus-MRE][fooocus-mre]
+- Supports [Automatic 1111][auto1111], [Comfy UI][comfy], [SD.Next (Vladmandic)][sdnext], [VoltaML][voltaml], [InvokeAI][invokeai], [Fooocus][fooocus], and [Fooocus MRE][fooocus-mre]
 - Embedded Git and Python dependencies, with no need for either to be globally installed
 - Fully portable - move Stability Matrix's Data Directory to a new drive or computer at any time
 

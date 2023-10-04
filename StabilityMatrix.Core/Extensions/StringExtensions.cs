@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.RegularExpressions;
 
 namespace StabilityMatrix.Core.Extensions;
 
@@ -83,5 +84,17 @@ public static class StringExtensions
     {
         var index = str.IndexOf(subString, StringComparison.Ordinal);
         return index < 0 ? str : str.Remove(index, subString.Length);
+    }
+
+    /// <summary>
+    /// Splits lines by \n and \r\n
+    /// </summary>
+    // ReSharper disable once ReturnTypeCanBeEnumerable.Global
+    public static string[] SplitLines(
+        this string str,
+        StringSplitOptions options = StringSplitOptions.None
+    )
+    {
+        return str.Split(new[] { "\r\n", "\n" }, options);
     }
 }

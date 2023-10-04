@@ -178,12 +178,20 @@ public class ComfyUI : BaseGitPackage
                 throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);
         }
 
-        // Install requirements file
+        // Install requirements file (skip torch)
         progress?.Report(
             new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true)
         );
-        Logger.Info("Installing requirements.txt");
-        await venvRunner.PipInstall($"-r requirements.txt", onConsoleOutput).ConfigureAwait(false);
+
+        var requirementsFile = new FilePath(installLocation, "requirements.txt");
+
+        await venvRunner
+            .PipInstallFromRequirements(
+                requirementsFile,
+                onConsoleOutput,
+                excludes: new[] { "torch" }
+            )
+            .ConfigureAwait(false);
 
         progress?.Report(
             new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false)

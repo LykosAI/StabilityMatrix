@@ -186,11 +186,7 @@ public class ComfyUI : BaseGitPackage
         var requirementsFile = new FilePath(installLocation, "requirements.txt");
 
         await venvRunner
-            .PipInstallFromRequirements(
-                requirementsFile,
-                onConsoleOutput,
-                excludes: new[] { "torch" }
-            )
+            .PipInstallFromRequirements(requirementsFile, onConsoleOutput, excludes: "torch")
             .ConfigureAwait(false);
 
         progress?.Report(

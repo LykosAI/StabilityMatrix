@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using System.Text.RegularExpressions;
 using NLog;
 using Salaros.Configuration;
 using StabilityMatrix.Core.Exceptions;
@@ -15,7 +16,6 @@ namespace StabilityMatrix.Core.Python;
 /// <summary>
 /// Python runner using a subprocess, mainly for venv support.
 /// </summary>
-[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class PyVenvRunner : IDisposable, IAsyncDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -248,21 +248,19 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     public async Task PipInstallFromRequirements(
         FilePath file,
         Action<ProcessOutput>? outputDataReceived = null,
-        IEnumerable<string>? excludes = null
+        [StringSyntax(StringSyntaxAttribute.Regex)] string? excludes = null
     )
     {
         var requirementsText = await file.ReadAllTextAsync().ConfigureAwait(false);
         var requirements = requirementsText
-            .Split(Environment.NewLine)
-            .Where(s => !string.IsNullOrWhiteSpace(s));
+            .SplitLines(StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .AsEnumerable();
 
         if (excludes is not null)
         {
-            var excludesFilter = excludes.ToImmutableHashSet(
-                StringComparer.InvariantCultureIgnoreCase
-            );
+            var excludeRegex = new Regex(excludes);
 
-            requirements = requirements.Where(s => !excludesFilter.Contains(s));
+            requirements = requirements.Where(s => !excludeRegex.IsMatch(s));
         }
 
         var pipArgs = string.Join(' ', requirements);

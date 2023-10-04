@@ -259,7 +259,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
 
         if (excludes is not null)
         {
-            var excludeRegex = new Regex(excludes);
+            var excludeRegex = new Regex($"^{excludes}$");
 
             requirements = requirements.Where(s => !excludeRegex.IsMatch(s));
         }

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using NLog;
 using Salaros.Configuration;
@@ -239,6 +240,35 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
                 $"pip install failed with code {Process.ExitCode}: {output.ToString().ToRepr()}"
             );
         }
+    }
+
+    /// <summary>
+    /// Pip install from a requirements.txt file.
+    /// </summary>
+    public async Task PipInstallFromRequirements(
+        FilePath file,
+        Action<ProcessOutput>? outputDataReceived = null,
+        IEnumerable<string>? excludes = null
+    )
+    {
+        var requirementsText = await file.ReadAllTextAsync().ConfigureAwait(false);
+        var requirements = requirementsText
+            .Split(Environment.NewLine)
+            .Where(s => !string.IsNullOrWhiteSpace(s));
+
+        if (excludes is not null)
+        {
+            var excludesFilter = excludes.ToImmutableHashSet(
+                StringComparer.InvariantCultureIgnoreCase
+            );
+
+            requirements = requirements.Where(s => !excludesFilter.Contains(s));
+        }
+
+        var pipArgs = string.Join(' ', requirements);
+
+        Logger.Info("Installing {FileName} ({PipArgs})", file.Name, pipArgs);
+        await PipInstall(pipArgs, outputDataReceived).ConfigureAwait(false);
     }
 
     /// <summary>

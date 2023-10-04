@@ -20,6 +20,8 @@
 
 Multi-Platform Package Manager for Stable Diffusion
 
+### ✨ New in 2.5 - [Inference](#inference), a built-in Stable Diffusion interface powered by ComfyUI
+
 ### 🖱️ One click install and update for Stable Diffusion Web UI Packages
 - Supports [Automatic 1111][auto1111], [Comfy UI][comfy], [SD.Next (Vladmandic)][sdnext], [VoltaML][voltaml], [InvokeAI][invokeai], [Fooocus][fooocus], and [Fooocus-MRE][fooocus-mre]
 - Embedded Git and Python dependencies, with no need for either to be globally installed
@@ -45,6 +47,18 @@ Multi-Platform Package Manager for Stable Diffusion
 [![macOS](https://img.shields.io/badge/mac%20os%20%28apple%20silicon%29-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)][download-macos]
 
 > macOS builds are currently pending: [#45][download-macos]
+
+### Inference - A reimagined built-in Stable Diffusion experience
+- Powerful auto-completion and syntax highlighting using a formal language grammar
+- Workspaces open in tabs that save and load from `.smproj` project files
+
+![](https://cdn.lykos.ai/static/sm-banner-inference-rounded.webp)
+
+- Customizable dockable and float panels
+- Generated images contain Inference Project, ComfyUI Nodes, and A1111-compatible metadata
+- Drag and drop gallery images or files to load states
+
+![](https://cdn.lykos.ai/static/sc-inference-drag-load-2.gif)
 
 ### Searchable launch options
 <p align="center">

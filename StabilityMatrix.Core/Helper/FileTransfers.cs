@@ -209,6 +209,7 @@ public static class FileTransfers
                                 + $" Matching Blake3 hash: {sourceHash}"
                         );
                         sourceFile.Delete();
+                        continue;
                     }
                 }
                 else if (!overwrite)

@@ -62,7 +62,7 @@
         <PackageReference Include="Sylvan.Common" Version="0.4.2" />
         <PackageReference Include="Sylvan.Data" Version="0.2.12" />
         <PackageReference Include="Sylvan.Data.Csv" Version="1.3.3" />
-        <PackageReference Include="TextMateSharp.Grammars" Version="1.0.55" />
+        <PackageReference Include="TextMateSharp.Grammars" Version="1.0.56" />
     </ItemGroup>
 
 

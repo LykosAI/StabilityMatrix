@@ -2,7 +2,6 @@
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -14,6 +13,7 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
     private readonly ILogger<TrackedDownloadService> logger;
     private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
+    private readonly IModelIndexService modelIndexService;
 
     private readonly ConcurrentDictionary<
         Guid,
@@ -28,12 +28,14 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
     public TrackedDownloadService(
         ILogger<TrackedDownloadService> logger,
         IDownloadService downloadService,
+        IModelIndexService modelIndexService,
         ISettingsManager settingsManager
     )
     {
         this.logger = logger;
         this.downloadService = downloadService;
         this.settingsManager = settingsManager;
+        this.modelIndexService = modelIndexService;
 
         // Index for in-progress downloads when library dir loaded
         settingsManager.RegisterOnLibraryDirSet(path =>
@@ -137,10 +139,19 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
         // On successes, run the continuation action
         if (e == ProgressState.Success)
         {
-            if (download.ContextAction is CivitPostDownloadContextAction action)
+            if (download.ContextAction is not null)
             {
                 logger.LogDebug("Running context action for {Download}", download.FileName);
-                action.Invoke(settingsManager);
+            }
+
+            switch (download.ContextAction)
+            {
+                case CivitPostDownloadContextAction action:
+                    action.Invoke(settingsManager, modelIndexService);
+                    break;
+                case ModelPostDownloadContextAction action:
+                    action.Invoke(modelIndexService);
+                    break;
             }
         }
     }

@@ -21,7 +21,9 @@ public class SharedFolders : ISharedFolders
         this.packageFactory = packageFactory;
     }
 
-    // Platform redirect for junctions / symlinks
+    /// <summary>
+    /// Platform redirect for junctions / symlinks
+    /// </summary>
     private static void CreateLinkOrJunction(string junctionDir, string targetDir, bool overwrite)
     {
         if (Compat.IsWindows)
@@ -36,75 +38,91 @@ public class SharedFolders : ISharedFolders
         }
     }
 
-    public static void SetupLinks(
-        Dictionary<SharedFolderType, IReadOnlyList<string>> definitions,
-        DirectoryPath modelsDirectory,
-        DirectoryPath installDirectory
+    /// <summary>
+    /// Creates or updates junction link from the source to the destination.
+    /// Moves destination files to source if they exist.
+    /// </summary>
+    /// <param name="sourceDir">Shared source (i.e. "Models/")</param>
+    /// <param name="destinationDir">Destination (i.e. "webui/models/lora")</param>
+    /// <param name="overwrite">Whether to overwrite the destination if it exists</param>
+    public static async Task CreateOrUpdateLink(
+        DirectoryPath sourceDir,
+        DirectoryPath destinationDir,
+        bool overwrite = false
     )
     {
-        foreach (var (folderType, relativePaths) in definitions)
+        // Create source folder if it doesn't exist
+        if (!sourceDir.Exists)
         {
-            foreach (var relativePath in relativePaths)
+            Logger.Info($"Creating junction source {sourceDir}");
+            sourceDir.Create();
+        }
+
+        if (destinationDir.Exists)
+        {
+            // Existing dest is a link
+            if (destinationDir.IsSymbolicLink)
             {
-                var sourceDir = new DirectoryPath(modelsDirectory, folderType.GetStringValue());
-                var destinationDir = new DirectoryPath(installDirectory, relativePath);
-                // Create source folder if it doesn't exist
-                if (!sourceDir.Exists)
+                // If link is already the same, just skip
+                if (destinationDir.Info.LinkTarget == sourceDir)
                 {
-                    Logger.Info($"Creating junction source {sourceDir}");
-                    sourceDir.Create();
+                    Logger.Info(
+                        $"Skipped updating matching folder link ({destinationDir} -> ({sourceDir})"
+                    );
+                    return;
                 }
-                // Delete the destination folder if it exists
-                if (destinationDir.Exists)
+
+                // Otherwise delete the link
+                Logger.Info($"Deleting existing junction at target {destinationDir}");
+                await destinationDir.DeleteAsync(false).ConfigureAwait(false);
+            }
+            else
+            {
+                // Move all files if not empty
+                if (destinationDir.Info.EnumerateFileSystemInfos().Any())
                 {
-                    // Copy all files from destination to source
-                    Logger.Info($"Copying files from {destinationDir} to {sourceDir}");
-                    foreach (var file in destinationDir.Info.EnumerateFiles())
-                    {
-                        var sourceFile = sourceDir + file;
-                        var destinationFile = destinationDir + file;
-                        // Skip name collisions
-                        if (File.Exists(sourceFile))
-                        {
-                            Logger.Warn(
-                                $"Skipping file {file.FullName} because it already exists in {sourceDir}"
-                            );
-                            continue;
-                        }
-                        destinationFile.Info.MoveTo(sourceFile);
-                    }
-                    Logger.Info($"Deleting junction target {destinationDir}");
-                    destinationDir.Delete(true);
+                    Logger.Info($"Moving files from {destinationDir} to {sourceDir}");
+                    await FileTransfers
+                        .MoveAllFilesAndDirectories(
+                            destinationDir,
+                            sourceDir,
+                            overwriteIfHashMatches: true,
+                            overwrite: overwrite
+                        )
+                        .ConfigureAwait(false);
                 }
-                Logger.Info($"Creating junction link from {sourceDir} to {destinationDir}");
-                CreateLinkOrJunction(destinationDir, sourceDir, true);
+
+                Logger.Info($"Deleting existing empty folder at target {destinationDir}");
+                await destinationDir.DeleteAsync(false).ConfigureAwait(false);
             }
         }
+
+        Logger.Info($"Updating junction link from {sourceDir} to {destinationDir}");
+        CreateLinkOrJunction(destinationDir, sourceDir, true);
     }
 
+    [Obsolete("Use static methods instead")]
     public void SetupLinksForPackage(BasePackage basePackage, DirectoryPath installDirectory)
     {
         var modelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
         var sharedFolders = basePackage.SharedFolders;
         if (sharedFolders == null)
             return;
-        SetupLinks(sharedFolders, modelsDirectory, installDirectory);
+        UpdateLinksForPackage(sharedFolders, modelsDirectory, installDirectory)
+            .GetAwaiter()
+            .GetResult();
     }
 
     /// <summary>
-    /// Deletes junction links and remakes them. Unlike SetupLinksForPackage,
-    /// this will not copy files from the destination to the source.
+    /// Updates or creates shared links for a package.
+    /// Will attempt to move files from the destination to the source if the destination is not empty.
     /// </summary>
     public static async Task UpdateLinksForPackage(
-        BasePackage basePackage,
+        Dictionary<SharedFolderType, IReadOnlyList<string>> sharedFolders,
         DirectoryPath modelsDirectory,
         DirectoryPath installDirectory
     )
     {
-        var sharedFolders = basePackage.SharedFolders;
-        if (sharedFolders is null)
-            return;
-
         foreach (var (folderType, relativePaths) in sharedFolders)
         {
             foreach (var relativePath in relativePaths)
@@ -112,53 +130,7 @@ public class SharedFolders : ISharedFolders
                 var sourceDir = new DirectoryPath(modelsDirectory, folderType.GetStringValue());
                 var destinationDir = installDirectory.JoinDir(relativePath);
 
-                // Create source folder if it doesn't exist
-                if (!sourceDir.Exists)
-                {
-                    Logger.Info($"Creating junction source {sourceDir}");
-                    sourceDir.Create();
-                }
-
-                if (destinationDir.Exists)
-                {
-                    // Existing dest is a link
-                    if (destinationDir.IsSymbolicLink)
-                    {
-                        // If link is already the same, just skip
-                        if (destinationDir.Info.LinkTarget == sourceDir)
-                        {
-                            Logger.Info(
-                                $"Skipped updating matching folder link ({destinationDir} -> ({sourceDir})"
-                            );
-                            return;
-                        }
-
-                        // Otherwise delete the link
-                        Logger.Info($"Deleting existing junction at target {destinationDir}");
-                        await destinationDir.DeleteAsync(false).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        // Move all files if not empty
-                        if (destinationDir.Info.EnumerateFileSystemInfos().Any())
-                        {
-                            Logger.Info($"Moving files from {destinationDir} to {sourceDir}");
-                            await FileTransfers
-                                .MoveAllFilesAndDirectories(
-                                    destinationDir,
-                                    sourceDir,
-                                    overwriteIfHashMatches: true
-                                )
-                                .ConfigureAwait(false);
-                        }
-
-                        Logger.Info($"Deleting existing empty folder at target {destinationDir}");
-                        await destinationDir.DeleteAsync(false).ConfigureAwait(false);
-                    }
-                }
-
-                Logger.Info($"Updating junction link from {sourceDir} to {destinationDir}");
-                CreateLinkOrJunction(destinationDir, sourceDir, true);
+                await CreateOrUpdateLink(sourceDir, destinationDir).ConfigureAwait(false);
             }
         }
     }
@@ -191,16 +163,16 @@ public class SharedFolders : ISharedFolders
         var packages = settingsManager.Settings.InstalledPackages;
         foreach (var package in packages)
         {
-            if (package.PackageName == null)
-                continue;
-            var basePackage = packageFactory[package.PackageName];
-            if (basePackage == null)
-                continue;
-            if (package.LibraryPath == null)
-                continue;
-
             try
             {
+                if (
+                    packageFactory.FindPackageByName(package.PackageName) is not { } basePackage
+                    || package.FullPath is null
+                )
+                {
+                    continue;
+                }
+
                 var sharedFolderMethod =
                     package.PreferredSharedFolderMethod
                     ?? basePackage.RecommendedSharedFolderMethod;

@@ -25,11 +25,13 @@ using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Processes;
 #if DEBUG
 using StabilityMatrix.Avalonia.Diagnostics.Views;
@@ -65,14 +67,15 @@ public partial class MainWindow : AppWindowBase
 
 #if DEBUG
         this.AttachDevTools();
+        this.AttachDebugSaveScreenshot();
         LogWindow.Attach(this, App.Services);
 #endif
         TitleBar.ExtendsContentIntoTitleBar = true;
         TitleBar.TitleBarHitTestType = TitleBarHitTestType.Complex;
 
         EventManager.Instance.ToggleProgressFlyout += (_, _) => progressFlyout?.Hide();
-
         EventManager.Instance.CultureChanged += (_, _) => SetDefaultFonts();
+        EventManager.Instance.UpdateAvailable += OnUpdateAvailable;
     }
 
     /// <inheritdoc />
@@ -128,6 +131,12 @@ public partial class MainWindow : AppWindowBase
         {
             loader.LoadFailed += OnImageLoadFailed;
         }
+
+        // Check show update teaching tip
+        if (DataContext is MainWindowViewModel { UpdateViewModel.IsUpdateAvailable: true } vm)
+        {
+            OnUpdateAvailable(this, vm.UpdateViewModel.UpdateInfo);
+        }
     }
 
     protected override void OnUnloaded(RoutedEventArgs e)
@@ -138,6 +147,21 @@ public partial class MainWindow : AppWindowBase
         if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
         {
             loader.LoadFailed -= OnImageLoadFailed;
+        }
+    }
+
+    private void OnUpdateAvailable(object? sender, UpdateInfo? updateInfo)
+    {
+        var vm = DataContext as MainWindowViewModel;
+
+        if (vm!.ShouldShowUpdateAvailableTeachingTip(updateInfo))
+        {
+            var target = this.FindControl<NavigationViewItem>("FooterUpdateItem")!;
+            var tip = this.FindControl<TeachingTip>("UpdateAvailableTeachingTip")!;
+
+            tip.Target = target;
+            tip.Subtitle = $"{Compat.AppVersion} -> {updateInfo.Version}";
+            tip.IsOpen = true;
         }
     }
 
@@ -297,14 +321,15 @@ public partial class MainWindow : AppWindowBase
         progressFlyout = flyout;
     }
 
-    private void FooterUpdateItem_OnTapped(object? sender, TappedEventArgs e)
+    private async void FooterUpdateItem_OnTapped(object? sender, TappedEventArgs e)
     {
         // show update window thing
         if (DataContext is not MainWindowViewModel vm)
         {
             throw new NullReferenceException("DataContext is not MainWindowViewModel");
         }
-        Dispatcher.UIThread.InvokeAsync(vm.ShowUpdateDialog).SafeFireAndForget();
+
+        await vm.ShowUpdateDialog();
     }
 
     private void FooterDiscordItem_OnTapped(object? sender, TappedEventArgs e)

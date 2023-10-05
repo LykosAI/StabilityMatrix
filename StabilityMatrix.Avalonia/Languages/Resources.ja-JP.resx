@@ -171,11 +171,11 @@
     <comment>checkpoint / embedding / LoRA are often used in the same way as the above words on Japanese information websites, so it is easier to understand them without translation.</comment>
   </data>
   <data name="Label_Emphasis" xml:space="preserve">
-    <value>Emphasis</value>
+    <value>プロンプトの強調</value>
     <comment>The word has not been translated because it is not possible to guess what part of the UI it is used in. It is a little difficult to translate the word into Japanese, so I want to be careful not to change the meaning of the word.</comment>
   </data>
   <data name="Label_Deemphasis" xml:space="preserve">
-    <value>Deemphasis</value>
+    <value>プロンプトの縮小</value>
   </data>
   <data name="Label_EmbeddingsOrTextualInversion" xml:space="preserve">
     <value>Emebeddings / Textual Inversion</value>
@@ -311,7 +311,7 @@
     <value>Stability Matrixがバージョンアップ！</value>
   </data>
   <data name="Label_ImportLatest" xml:space="preserve">
-    <value>直近のインポート</value>
+    <value>最新版DL</value>
   </data>
   <data name="Label_AllVersions" xml:space="preserve">
     <value>すべてのバージョン</value>
@@ -455,7 +455,7 @@
     <value>統合</value>
   </data>
   <data name="Label_DiscordRichPresence" xml:space="preserve">
-    <value>Discord Rich Presence</value>
+    <value>Stability Matrix利用中、Discordステータス欄に表示</value>
   </data>
   <data name="Label_System" xml:space="preserve">
     <value>システム</value>
@@ -605,7 +605,7 @@
     <value>リスタート</value>
   </data>
   <data name="Label_ConfirmDelete" xml:space="preserve">
-    <value>削除の再確認</value>
+    <value>削除する</value>
   </data>
   <data name="Text_PackageUninstall_Details" xml:space="preserve">
     <value>これにより、生成された画像や追加したファイルを含め、パッケージフォルダとそのすべてのコンテンツが削除されます。</value>
@@ -629,7 +629,7 @@
     <value>更新完了</value>
   </data>
   <data name="TextTemplate_PackageUpdatedToLatest" xml:space="preserve">
-    <value>{0}が最新バージョンに更新されました</value>
+    <value>{0}が最新版に更新されました</value>
   </data>
   <data name="TextTemplate_ErrorUpdatingPackage" xml:space="preserve">
     <value>{0}の更新エラー</value>
@@ -646,5 +646,38 @@
   <data name="Label_Branch" xml:space="preserve">
     <value>Branch</value>
     <comment>For Japanese engineers who use git on a daily basis, it is easier to understand terms used in git as they are in English.</comment>
+  </data>
+  <data name="Label_License" xml:space="preserve">
+    <value>ライセンス</value>
+  </data>
+  <data name="Label_PleaseSelectDataDirectory" xml:space="preserve">
+    <value>データフォルダを選択してください</value>
+  </data>
+  <data name="Label_DataFolderName" xml:space="preserve">
+    <value>データフォルダの名前</value>
+  </data>
+  <data name="Label_CurrentDirectory" xml:space="preserve">
+    <value>現在のフォルダ:</value>
+  </data>
+  <data name="Text_AppWillRelaunchAfterUpdate" xml:space="preserve">
+    <value>アップデート完了後に再起動します</value>
+  </data>
+  <data name="Action_RemindMeLater" xml:space="preserve">
+    <value>また後で</value>
+  </data>
+  <data name="Action_InstallNow" xml:space="preserve">
+    <value>Install Now</value>
+  </data>
+  <data name="Label_ReleaseNotes" xml:space="preserve">
+    <value>リリースノート</value>
+  </data>
+  <data name="Action_OpenProjectEllipsis" xml:space="preserve">
+    <value>プロジェクトファイルを開く</value>
+  </data>
+  <data name="Action_SaveAsEllipsis" xml:space="preserve">
+    <value>名前をつけて保存</value>
+  </data>
+  <data name="Action_RestoreDefaultLayout" xml:space="preserve">
+    <value>レイアウトを初期状態に戻す</value>
   </data>
 </root>

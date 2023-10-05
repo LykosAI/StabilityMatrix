@@ -171,7 +171,7 @@ public class VladAutomatic : BaseGitPackage
         venvRunner.WorkingDirectory = installLocation;
         venvRunner.EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables;
 
-        await venvRunner.Setup(true).ConfigureAwait(false);
+        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
         switch (torchVersion)
         {
@@ -262,7 +262,7 @@ public class VladAutomatic : BaseGitPackage
         void HandleConsoleOutput(ProcessOutput s)
         {
             onConsoleOutput?.Invoke(s);
-            if (s.Text.Contains("Running on local URL", StringComparison.OrdinalIgnoreCase))
+            if (s.Text.Contains("Local URL", StringComparison.OrdinalIgnoreCase))
             {
                 var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
                 var match = regex.Match(s.Text);
@@ -433,7 +433,16 @@ public class VladAutomatic : BaseGitPackage
     public override Task UpdateModelFolders(
         DirectoryPath installDirectory,
         SharedFolderMethod sharedFolderMethod
-    ) => SetupModelFolders(installDirectory, sharedFolderMethod);
+    ) =>
+        sharedFolderMethod switch
+        {
+            SharedFolderMethod.Symlink
+                => base.UpdateModelFolders(installDirectory, sharedFolderMethod),
+            SharedFolderMethod.None => Task.CompletedTask,
+            SharedFolderMethod.Configuration
+                => SetupModelFolders(installDirectory, sharedFolderMethod),
+            _ => Task.CompletedTask
+        };
 
     public override Task RemoveModelFolderLinks(
         DirectoryPath installDirectory,
@@ -444,6 +453,61 @@ public class VladAutomatic : BaseGitPackage
             SharedFolderMethod.Symlink
                 => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
             SharedFolderMethod.None => Task.CompletedTask,
+            SharedFolderMethod.Configuration => RemoveConfigSettings(installDirectory),
             _ => Task.CompletedTask
         };
+
+    private Task RemoveConfigSettings(string installDirectory)
+    {
+        var configJsonPath = Path.Combine(installDirectory, "config.json");
+        var exists = File.Exists(configJsonPath);
+        JsonObject? configRoot;
+        if (exists)
+        {
+            var configJson = File.ReadAllText(configJsonPath);
+            try
+            {
+                configRoot = JsonSerializer.Deserialize<JsonObject>(configJson);
+                if (configRoot == null)
+                {
+                    return Task.CompletedTask;
+                }
+            }
+            catch (JsonException e)
+            {
+                Logger.Error(e, "Error removing Vlad shared model config");
+                return Task.CompletedTask;
+            }
+        }
+        else
+        {
+            return Task.CompletedTask;
+        }
+
+        configRoot.Remove("ckpt_dir");
+        configRoot.Remove("diffusers_dir");
+        configRoot.Remove("vae_dir");
+        configRoot.Remove("lora_dir");
+        configRoot.Remove("lyco_dir");
+        configRoot.Remove("embeddings_dir");
+        configRoot.Remove("hypernetwork_dir");
+        configRoot.Remove("codeformer_models_path");
+        configRoot.Remove("gfpgan_models_path");
+        configRoot.Remove("bsrgan_models_path");
+        configRoot.Remove("esrgan_models_path");
+        configRoot.Remove("realesrgan_models_path");
+        configRoot.Remove("scunet_models_path");
+        configRoot.Remove("swinir_models_path");
+        configRoot.Remove("ldsr_models_path");
+        configRoot.Remove("clip_models_path");
+        configRoot.Remove("control_net_models_path");
+
+        var configJsonStr = JsonSerializer.Serialize(
+            configRoot,
+            new JsonSerializerOptions { WriteIndented = true }
+        );
+        File.WriteAllText(configJsonPath, configJsonStr);
+
+        return Task.CompletedTask;
+    }
 }

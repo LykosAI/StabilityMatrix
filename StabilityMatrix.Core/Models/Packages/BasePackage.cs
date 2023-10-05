@@ -36,6 +36,8 @@ public abstract class BasePackage
     public virtual bool ShouldIgnoreReleases => false;
     public virtual bool UpdateAvailable { get; set; }
 
+    public virtual bool IsInferenceCompatible => false;
+
     public abstract Task DownloadPackage(
         string installLocation,
         DownloadPackageVersionOptions versionOptions,
@@ -179,7 +181,7 @@ public abstract class BasePackage
         await venvRunner.PipInstall("xformers", onConsoleOutput).ConfigureAwait(false);
     }
 
-    protected async Task InstallDirectMlTorch(
+    protected Task InstallDirectMlTorch(
         PyVenvRunner venvRunner,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
@@ -189,12 +191,10 @@ public abstract class BasePackage
             new ProgressReport(-1f, "Installing PyTorch for DirectML", isIndeterminate: true)
         );
 
-        await venvRunner
-            .PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, onConsoleOutput)
-            .ConfigureAwait(false);
+        return venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, onConsoleOutput);
     }
 
-    protected async Task InstallCpuTorch(
+    protected Task InstallCpuTorch(
         PyVenvRunner venvRunner,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
@@ -204,8 +204,6 @@ public abstract class BasePackage
             new ProgressReport(-1f, "Installing PyTorch for CPU", isIndeterminate: true)
         );
 
-        await venvRunner
-            .PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, onConsoleOutput)
-            .ConfigureAwait(false);
+        return venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, onConsoleOutput);
     }
 }

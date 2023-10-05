@@ -21,7 +21,8 @@ public static class Cultures
         ["en-US"] = Default,
         ["ja-JP"] = new("ja-JP"),
         ["zh-Hans"] = new("zh-Hans"),
-        ["zh-Hant"] = new("zh-Hant")
+        ["zh-Hant"] = new("zh-Hant"),
+        ["it-IT"] = new("it-IT")
     };
 
     public static IReadOnlyList<CultureInfo> SupportedCultures =>

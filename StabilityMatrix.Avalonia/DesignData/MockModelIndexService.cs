@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
@@ -9,9 +10,18 @@ namespace StabilityMatrix.Avalonia.DesignData;
 public class MockModelIndexService : IModelIndexService
 {
     /// <inheritdoc />
+    public Dictionary<SharedFolderType, List<LocalModelFile>> ModelIndex { get; } = new();
+
+    /// <inheritdoc />
     public Task RefreshIndex()
     {
         return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public IEnumerable<LocalModelFile> GetFromModelIndex(SharedFolderType types)
+    {
+        return Array.Empty<LocalModelFile>();
     }
 
     /// <inheritdoc />

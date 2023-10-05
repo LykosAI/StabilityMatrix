@@ -1,0 +1,114 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+        xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+        xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+        xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+        x:DataType="inference:SharpenCardViewModel">
+    <Design.PreviewWith>
+        <Grid Width="600" Height="400">
+            <StackPanel>
+                <controls:SharpenCard DataContext="{x:Static mocks:DesignData.SharpenCardViewModel}" />
+            </StackPanel>
+        </Grid>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|SharpenCard">
+        <!--  Set Defaults  -->
+        <Setter Property="Focusable" Value="True"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card x:Name="PART_Card">
+                    <StackPanel Spacing="8">
+                        <!-- Sharpen Radius -->
+                        <StackPanel>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock 
+                                    VerticalAlignment="Center"
+                                    Text="Sharpen Radius"/>
+                                <ui:NumberBox
+                                    Grid.Column="1"
+                                    Margin="4,0,0,0"
+                                    ValidationMode="InvalidInputOverwritten"
+                                    SmallChange="1"
+                                    SimpleNumberFormat="F0"
+                                    Minimum="1"
+                                    Maximum="31"
+                                    Value="{Binding SharpenRadius}"
+                                    HorizontalAlignment="Stretch"
+                                    MinWidth="70"
+                                    SpinButtonPlacementMode="Compact"/>
+                            </Grid>
+                            <Slider 
+                                Minimum="1"
+                                Maximum="31"
+                                Value="{Binding SharpenRadius}"
+                                TickFrequency="1"
+                                Margin="0,0,0,-4"
+                                TickPlacement="BottomRight"/>
+                        </StackPanel>
+                        
+                        <!-- Sigma -->
+                        <StackPanel>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock 
+                                    VerticalAlignment="Center"
+                                    Text="Sigma"/>
+                                <ui:NumberBox
+                                    Grid.Column="1"
+                                    Margin="4,0,0,0"
+                                    ValidationMode="InvalidInputOverwritten"
+                                    SmallChange="0.1"
+                                    SimpleNumberFormat="F1"
+                                    Minimum="0.1"
+                                    Maximum="10"
+                                    Value="{Binding Sigma}"
+                                    HorizontalAlignment="Stretch"
+                                    MinWidth="70"
+                                    SpinButtonPlacementMode="Compact"/>
+                            </Grid>
+                            <Slider 
+                                Minimum="0.1"
+                                Maximum="10"
+                                SmallChange="0.1"
+                                Value="{Binding Sigma}"
+                                Margin="0,0,0,-4"
+                                TickPlacement="BottomRight"/>
+                        </StackPanel>
+                        
+                        <!-- Alpha -->
+                        <StackPanel>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock 
+                                    VerticalAlignment="Center"
+                                    Text="Alpha"/>
+                                <ui:NumberBox
+                                    Grid.Column="1"
+                                    Margin="4,0,0,0"
+                                    ValidationMode="InvalidInputOverwritten"
+                                    SmallChange="0.1"
+                                    SimpleNumberFormat="F1"
+                                    Minimum="0"
+                                    Maximum="5"
+                                    Value="{Binding Alpha}"
+                                    HorizontalAlignment="Stretch"
+                                    MinWidth="70"
+                                    SpinButtonPlacementMode="Compact"/>
+                            </Grid>
+                            <Slider 
+                                Minimum="0"
+                                Maximum="5"
+                                SmallChange="0.1"
+                                TickFrequency="0.5"
+                                IsSnapToTickEnabled="True"
+                                Value="{Binding Alpha}"
+                                Margin="0,0,0,-4"
+                                TickPlacement="BottomRight"/>
+                        </StackPanel>
+                    </StackPanel>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

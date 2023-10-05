@@ -1,8 +1,11 @@
 ﻿using System.Globalization;
 using System.Text.Json.Serialization;
+using Semver;
+using StabilityMatrix.Core.Converters.Json;
 
 namespace StabilityMatrix.Core.Models.Settings;
 
+[JsonSerializable(typeof(Settings))]
 public class Settings
 {
     public int? Version { get; set; } = 1;
@@ -34,6 +37,12 @@ public class Settings
     public string? WebApiHost { get; set; }
     public string? WebApiPort { get; set; }
 
+    /// <summary>
+    /// The last auto-update version that had a notification dismissed by the user
+    /// </summary>
+    [JsonConverter(typeof(SemVersionJsonConverter))]
+    public SemVersion? LastSeenUpdateVersion { get; set; }
+
     // UI states
     public bool ModelBrowserNsfwEnabled { get; set; }
     public bool IsNavExpanded { get; set; }
@@ -46,6 +55,25 @@ public class Settings
 
     public ModelSearchOptions? ModelSearchOptions { get; set; }
 
+    /// <summary>
+    /// Whether prompt auto completion is enabled
+    /// </summary>
+    public bool IsPromptCompletionEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Relative path to the tag completion CSV file from 'LibraryDir/Tags'
+    /// </summary>
+    public string? TagCompletionCsv { get; set; }
+
+    /// <summary>
+    /// Whether to remove underscores from completions
+    /// </summary>
+    public bool IsCompletionRemoveUnderscoresEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Whether the Inference Image Viewer shows pixel grids at high zoom levels
+    /// </summary>
+    public bool IsImageViewerPixelGridEnabled { get; set; } = true;
     public bool RemoveFolderLinksOnShutdown { get; set; }
 
     public bool IsDiscordRichPresenceEnabled { get; set; }
@@ -57,6 +85,8 @@ public class Settings
     public float AnimationScale { get; set; } = 1.0f;
 
     public bool AutoScrollLaunchConsoleToEnd { get; set; } = true;
+
+    public HashSet<int> FavoriteModels { get; set; } = new();
 
     public void RemoveInstalledPackageAndUpdateActive(InstalledPackage package)
     {

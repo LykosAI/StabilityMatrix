@@ -1,12 +1,13 @@
 ﻿using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using StabilityMatrix.Core.ReparsePoints;
 
 namespace StabilityMatrix.Tests.ReparsePoints;
 
 using System.IO;
 
-
 [TestClass]
+[SupportedOSPlatform("windows")]
 public class JunctionTest
 {
     private string tempFolder = string.Empty;
@@ -19,7 +20,7 @@ public class JunctionTest
             Assert.Inconclusive("Test cannot be run on anything but Windows currently.");
             return;
         }
-        
+
         tempFolder = Path.GetTempFileName();
         File.Delete(tempFolder);
         Directory.CreateDirectory(tempFolder);
@@ -28,7 +29,8 @@ public class JunctionTest
     [TestCleanup]
     public void Cleanup()
     {
-        if (string.IsNullOrEmpty(tempFolder)) return;
+        if (string.IsNullOrEmpty(tempFolder))
+            return;
         TempFiles.DeleteDirectory(tempFolder);
     }
 
@@ -56,28 +58,38 @@ public class JunctionTest
         File.Create(Path.Combine(targetFolder, "AFile")).Close();
 
         // Verify behavior before junction point created.
-        Assert.IsFalse(File.Exists(Path.Combine(junctionPoint, "AFile")),
-            "File should not be located until junction point created.");
+        Assert.IsFalse(
+            File.Exists(Path.Combine(junctionPoint, "AFile")),
+            "File should not be located until junction point created."
+        );
 
         Assert.IsFalse(Junction.Exists(junctionPoint), "Junction point not created yet.");
 
         // Create junction point and confirm its properties.
-        Junction.Create(junctionPoint, targetFolder, false /*don't overwrite*/);
+        Junction.Create(
+            junctionPoint,
+            targetFolder,
+            false /*don't overwrite*/
+        );
 
         Assert.IsTrue(Junction.Exists(junctionPoint), "Junction point exists now.");
 
         Assert.AreEqual(targetFolder, Junction.GetTarget(junctionPoint));
 
-        Assert.IsTrue(File.Exists(Path.Combine(junctionPoint, "AFile")),
-            "File should be accessible via the junction point.");
+        Assert.IsTrue(
+            File.Exists(Path.Combine(junctionPoint, "AFile")),
+            "File should be accessible via the junction point."
+        );
 
         // Delete junction point.
         Junction.Delete(junctionPoint);
 
         Assert.IsFalse(Junction.Exists(junctionPoint), "Junction point should not exist now.");
 
-        Assert.IsFalse(File.Exists(Path.Combine(junctionPoint, "AFile")),
-            "File should not be located after junction point deleted.");
+        Assert.IsFalse(
+            File.Exists(Path.Combine(junctionPoint, "AFile")),
+            "File should not be located after junction point deleted."
+        );
 
         Assert.IsFalse(Directory.Exists(junctionPoint), "Ensure directory was deleted too.");
 
@@ -86,7 +98,10 @@ public class JunctionTest
     }
 
     [TestMethod]
-    [ExpectedException(typeof(IOException), "Directory already exists and overwrite parameter is false.")]
+    [ExpectedException(
+        typeof(IOException),
+        "Directory already exists and overwrite parameter is false."
+    )]
     public void Create_ThrowsIfOverwriteNotSpecifiedAndDirectoryExists()
     {
         var targetFolder = Path.Combine(tempFolder, "ADirectory");

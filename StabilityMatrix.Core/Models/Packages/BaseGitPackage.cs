@@ -101,19 +101,22 @@ public abstract class BaseGitPackage : BasePackage
     {
         var packageVersionOptions = new PackageVersionOptions();
 
-        var allReleases = await GetAllReleases().ConfigureAwait(false);
-        var releasesList = allReleases.ToList();
-        if (releasesList.Any())
+        if (!ShouldIgnoreReleases)
         {
-            packageVersionOptions.AvailableVersions = releasesList.Select(
-                r =>
-                    new PackageVersion
-                    {
-                        TagName = r.TagName!,
-                        ReleaseNotesMarkdown = r.Body,
-                        IsPrerelease = r.Prerelease
-                    }
-            );
+            var allReleases = await GetAllReleases().ConfigureAwait(false);
+            var releasesList = allReleases.ToList();
+            if (releasesList.Any())
+            {
+                packageVersionOptions.AvailableVersions = releasesList.Select(
+                    r =>
+                        new PackageVersion
+                        {
+                            TagName = r.TagName!,
+                            ReleaseNotesMarkdown = r.Body,
+                            IsPrerelease = r.Prerelease
+                        }
+                );
+            }
         }
 
         // Branch mode
@@ -132,7 +135,8 @@ public abstract class BaseGitPackage : BasePackage
     public async Task<PyVenvRunner> SetupVenv(
         string installedPackagePath,
         string venvName = "venv",
-        bool forceRecreate = false
+        bool forceRecreate = false,
+        Action<ProcessOutput>? onConsoleOutput = null
     )
     {
         var venvPath = Path.Combine(installedPackagePath, venvName);
@@ -149,7 +153,7 @@ public abstract class BaseGitPackage : BasePackage
 
         if (!VenvRunner.Exists() || forceRecreate)
         {
-            await VenvRunner.Setup(forceRecreate).ConfigureAwait(false);
+            await VenvRunner.Setup(forceRecreate, onConsoleOutput).ConfigureAwait(false);
         }
         return VenvRunner;
     }
@@ -235,8 +239,13 @@ public abstract class BaseGitPackage : BasePackage
     public override async Task<bool> CheckForUpdates(InstalledPackage package)
     {
         var currentVersion = package.Version;
-        if (currentVersion == null)
+        if (currentVersion is null or { InstalledReleaseVersion: null, InstalledBranch: null })
         {
+            Logger.Warn(
+                "Could not check updates for package {Name}, version is invalid: {@currentVersion}",
+                Name,
+                currentVersion
+            );
             return false;
         }
 
@@ -250,7 +259,7 @@ public abstract class BaseGitPackage : BasePackage
             }
 
             var allCommits = (
-                await GetAllCommits(currentVersion.InstalledBranch).ConfigureAwait(false)
+                await GetAllCommits(currentVersion.InstalledBranch!).ConfigureAwait(false)
             )?.ToList();
             if (allCommits == null || !allCommits.Any())
             {
@@ -329,7 +338,7 @@ public abstract class BaseGitPackage : BasePackage
     {
         if (sharedFolderMethod == SharedFolderMethod.Symlink && SharedFolders is { } folders)
         {
-            StabilityMatrix.Core.Helper.SharedFolders.SetupLinks(
+            return StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(
                 folders,
                 SettingsManager.ModelsDirectory,
                 installDirectory
@@ -339,17 +348,21 @@ public abstract class BaseGitPackage : BasePackage
         return Task.CompletedTask;
     }
 
-    public override async Task UpdateModelFolders(
+    public override Task UpdateModelFolders(
         DirectoryPath installDirectory,
         SharedFolderMethod sharedFolderMethod
     )
     {
-        if (SharedFolders is not null && sharedFolderMethod == SharedFolderMethod.Symlink)
+        if (sharedFolderMethod == SharedFolderMethod.Symlink && SharedFolders is { } sharedFolders)
         {
-            await StabilityMatrix.Core.Helper.SharedFolders
-                .UpdateLinksForPackage(this, SettingsManager.ModelsDirectory, installDirectory)
-                .ConfigureAwait(false);
+            return StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(
+                sharedFolders,
+                SettingsManager.ModelsDirectory,
+                installDirectory
+            );
         }
+
+        return Task.CompletedTask;
     }
 
     public override Task RemoveModelFolderLinks(

@@ -18,6 +18,10 @@ public class MockLiteDbContext : ILiteDbContext
         throw new NotImplementedException();
     public ILiteCollectionAsync<LocalModelFile> LocalModelFiles =>
         throw new NotImplementedException();
+    public ILiteCollectionAsync<InferenceProjectEntry> InferenceProjects =>
+        throw new NotImplementedException();
+    public ILiteCollectionAsync<LocalImageFile> LocalImageFiles =>
+        throw new NotImplementedException();
 
     public Task<(CivitModel?, CivitModelVersion?)> FindCivitModelFromFileHashAsync(
         string hashBlake3
@@ -43,7 +47,7 @@ public class MockLiteDbContext : ILiteDbContext
 
     public Task<GithubCacheEntry?> GetGithubCacheEntry(string cacheKey)
     {
-        return Task.FromResult<GithubCacheEntry>(null);
+        return Task.FromResult<GithubCacheEntry?>(null);
     }
 
     public Task<bool> UpsertGithubCacheEntry(GithubCacheEntry cacheEntry)

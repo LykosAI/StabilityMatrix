@@ -172,7 +172,7 @@
     <value>强调</value>
   </data>
   <data name="Label_Deemphasis" xml:space="preserve">
-    <value>轻描淡写</value>
+    <value>淡化</value>
     <comment>I am not sure about this, need to know what background are we talking about</comment>
   </data>
   <data name="Label_EmbeddingsOrTextualInversion" xml:space="preserve">
@@ -334,10 +334,10 @@
     <value>基础模型</value>
   </data>
   <data name="Label_ShowNsfwContent" xml:space="preserve">
-    <value>显示 NSFW 内容</value>
+    <value>显示NSFW内容</value>
   </data>
   <data name="Label_DataProvidedByCivitAi" xml:space="preserve">
-    <value>数据由 CivitAI 提供</value>
+    <value>数据由CivitAI提供</value>
   </data>
   <data name="Label_Page" xml:space="preserve">
     <value>页次</value>
@@ -361,7 +361,7 @@
     <value>删除</value>
   </data>
   <data name="Action_OpenOnCivitAi" xml:space="preserve">
-    <value>在 CivitAI上打开</value>
+    <value>在CivitAI上打开</value>
   </data>
   <data name="Label_ConnectedModel" xml:space="preserve">
     <value>已连接CivitAI元数据</value>
@@ -426,7 +426,7 @@
     <value>关闭时删除共享模型目录的符号链接</value>
   </data>
   <data name="Label_RemoveSymlinksOnShutdown_Details" xml:space="preserve">
-    <value>如果您在将 Stability Matrix 移至另一个驱动器时遇到问题，请选择此选项</value>
+    <value>如果您在将Stability Matrix移至另一个驱动器时遇到问题，请选择此选项</value>
   </data>
   <data name="Label_ResetCheckpointsCache" xml:space="preserve">
     <value>重置模型缓存</value>
@@ -466,7 +466,7 @@
     <value>使用当前应用程序的位置，如果应用程序移动了，可以再次运行此功能</value>
   </data>
   <data name="Label_OnlyAvailableOnWindows" xml:space="preserve">
-    <value>仅适用于 Windows</value>
+    <value>仅适用于Windows</value>
   </data>
   <data name="Action_AddForCurrentUser" xml:space="preserve">
     <value>为当前用户添加</value>
@@ -554,7 +554,7 @@
     <value>在资源管理器中打开</value>
   </data>
   <data name="Action_OpenInFinder" xml:space="preserve">
-    <value>在 Finder中打开</value>
+    <value>在Finder中打开</value>
   </data>
   <data name="Action_Uninstall" xml:space="preserve">
     <value>卸载</value>

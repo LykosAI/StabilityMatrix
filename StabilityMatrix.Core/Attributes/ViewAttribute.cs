@@ -3,11 +3,17 @@
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
 public class ViewAttribute : Attribute
 {
+    public Type ViewType { get; init; }
+    public bool IsPersistent { get; init; }
+    
     public ViewAttribute(Type type)
     {
-        this.type = type;
+        ViewType = type;
     }
-
-    private readonly Type type;
-    public Type GetViewType() => type;
+    
+    public ViewAttribute(Type type, bool persistent)
+    {
+        ViewType = type;
+        IsPersistent = persistent;
+    }
 }

@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -171,7 +172,7 @@ public class A3WebUI : BaseGitPackage
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
         venvRunner.WorkingDirectory = installLocation;
-        await venvRunner.Setup(true).ConfigureAwait(false);
+        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
         switch (torchVersion)
         {
@@ -197,8 +198,10 @@ public class A3WebUI : BaseGitPackage
             new ProgressReport(-1f, "Installing Package Requirements", isIndeterminate: true)
         );
         Logger.Info("Installing requirements_versions.txt");
+
+        var requirements = new FilePath(installLocation, "requirements_versions.txt");
         await venvRunner
-            .PipInstall($"-r requirements_versions.txt", onConsoleOutput)
+            .PipInstallFromRequirements(requirements, onConsoleOutput, excludes: "torch")
             .ConfigureAwait(false);
 
         progress?.Report(

@@ -1,0 +1,269 @@
+{
+  "name": "Image Prompt",
+  "scopeName": "source.prompt",
+  "uuid": "A5283894-BA62-4BFE-BB29-7892AE7ACCDC",
+  "foldingStartMarker": "^.*\b(\\#)\b.*$",
+  "foldingStopMarker": "(\r?\n){2}",
+  "patterns": [
+    {
+      "include": "#value"
+    }
+  ],
+  "repository": {
+    "comment": {
+      "captures": {
+        "1": {
+          "name": "punctuation.definition.comment.prompt"
+        }
+      },
+      "match": "(#).*$\\n?",
+      "name": "comment.line.number-sign.prompt"
+    },
+    "escape": {
+      "begin": "\\\\",
+      "beginCaptures": {
+        "0": {
+          "name": "constant.character.escape.prompt"
+        }
+      },
+      "end": "[-+.!(){}\\[\\]<\\>]",
+      "endCaptures": {
+        "0": {
+          "name": "constant.character.escape.target.prompt"
+        }
+      },
+      "name": "meta.structure.escape.prompt",
+      "patterns": [
+        {
+          "match": "[^-+.!(){}\\[\\]<\\>]",
+          "name": "invalid.illegal.escape.prompt"
+        }
+      ]
+    },
+    "weight": {
+      "begin": ":",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.separator.weight.prompt"
+        }
+      },
+      "end": "[\\)\\b]",
+      "name": "meta.structure.weight.prompt",
+      "patterns": [
+        {
+          "include": "#number",
+          "name": "constant.numeric.weight.prompt"
+        },
+        {
+          "match": "[^\\s\\)\\b]",
+          "name": "invalid.illegal.expected-weight-separator.prompt"
+        }
+      ]
+    },
+    "parenthesized": {
+      "begin": "\\(",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.array.begin.prompt"
+        }
+      },
+      "end": "\\)",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.array.end.prompt"
+        }
+      },
+      "name": "meta.structure.array.prompt",
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "include": "#escape"
+        },
+        {
+          "include": "#weight"
+        },
+        {
+          "include": "#value"
+        },
+        {
+          "match": "[^\\s\\)]",
+          "name": "invalid.illegal.expected-array-separator.prompt"
+        }
+      ]
+    },
+    "array": {
+      "begin": "\\[",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.array.begin.prompt"
+        }
+      },
+      "end": "\\]",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.array.end.prompt"
+        }
+      },
+      "name": "meta.structure.array.prompt",
+      "patterns": [
+        {
+          "include": "#value"
+        },
+        {
+          "match": "[^\\s\\]]",
+          "name": "invalid.illegal.expected-array-separator.prompt"
+        }
+      ]
+    },
+    "network": {
+      "begin": "<",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.network.begin.prompt"
+        }
+      },
+      "end": ">",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.network.end.prompt"
+        }
+      },
+      "name": "meta.structure.network.prompt",
+      "patterns": [
+        {
+          "match": "(?<=\\<)([^,:\\<\\>]+)(:)([^,:\\<\\>]+)(:)([-+]?\\d+(?:\\.\\d+)?)",
+          "captures": {
+            "1": {
+              "name": "meta.embedded.network.type.prompt"
+            },
+            "2": {
+              "name": "punctuation.separator.variable.prompt"
+            },
+            "3": {
+              "name": "meta.embedded.network.model.prompt"
+            },
+            "4": {
+              "name": "punctuation.separator.variable.prompt"
+            },
+            "5" : {
+              "name": "constant.numeric"
+            }
+          }
+        },
+        {
+          "match": "(?<=\\<)([^,:\\<\\>]+)(:)([^,:\\<\\>]+)?",
+          "captures": {
+            "1": {
+              "name": "meta.embedded.network.type.prompt"
+            },
+            "2": {
+              "name": "punctuation.separator.variable.prompt"
+            },
+            "3": {
+              "name": "meta.embedded.network.model.prompt"
+            }
+          }
+        },
+        {
+          "match": "(?<=\\<)([^,:\\<\\>]+)",
+          "captures": {
+            "1": {
+              "name": "meta.embedded.network.type.prompt"
+            }
+          }
+        },
+        {
+          "include": "#comment"
+        },
+        {
+          "include": "#escape"
+        },
+        {
+          "match": "[^\\s\\>]+",
+          "name": "invalid.illegal.expected-array-separator.prompt"
+        }
+      ]
+    },
+    "separator": {
+      "match": ",\\s*",
+      "name": "punctuation.separator.variable.prompt"
+    },
+    "colon": {
+      "match": ":",
+      "name": "punctuation.separator.variable.prompt"
+    },
+    "number": {
+      "match": "(?x)        # turn on extended mode\n  -?        # an optional minus\n  (?:\n    0       # a zero\n    |       # ...or...\n    [1-9]   # a 1-9 character\n    \\d*     # followed by zero or more digits\n  )\n  (?:\n    (?:\n      \\.    # a period\n      \\d+   # followed by one or more digits\n    )?\n    (?:\n      [eE]  # an e character\n      [+-]? # followed by an option +/-\n      \\d+   # followed by one or more digits\n    )?      # make exponent optional\n  )?        # make decimal portion optional",
+      "name": "constant.numeric"
+    },
+    "keyword": {
+      "match": "\\b(?:BREAK|AND)\\b",
+      "name": "keyword.control"
+    },
+    "whitespace": {
+      "match": "\\s+",
+      "name": "meta.embedded.whitespace"
+    },
+    "model": {
+      "match": "\\b(?<type>[\\w\\d_]+):(?<model>\\w+)(?::(?<weight>\\d+(\\.\\d+)?))?\\b",
+      "name": "meta.embedded.model"
+    },
+    "text": {
+      "match": "[^,:\\[\\]\\(\\)\\<\\> \\\\]+",
+      "name": "meta.embedded"
+    },
+    "invalid_reserved" : {
+      "name": "invalid.illegal.reserved.prompt",
+      "patterns": [
+        {
+          "match": ":",
+          "name": "invalid.illegal.reserved.prompt"
+        },
+        {
+          "match": "\\)",
+          "name": "invalid.illegal.mismatched.parenthesis.closing.prompt"
+        },
+        {
+          "match": "\\(",
+          "name": "invalid.illegal.mismatched.parenthesis.opening.prompt"
+        }
+      ]
+    },
+    "value": {
+      "patterns": [
+        {
+          "include": "#comment"
+        },
+        {
+          "include": "#escape"
+        },
+        {
+          "include": "#parenthesized"
+        },
+        {
+          "include": "#array"
+        },
+        {
+          "include": "#network"
+        },
+        {
+          "include": "#separator"
+        },
+        {
+          "include": "#keyword"
+        },
+        {
+          "include": "#whitespace"
+        },
+        {
+          "include": "#text"
+        },
+        {
+          "include": "#invalid_reserved"
+        }
+      ]
+    }
+  }
+}

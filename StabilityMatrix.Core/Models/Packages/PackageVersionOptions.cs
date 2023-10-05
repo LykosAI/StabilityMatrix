@@ -2,6 +2,8 @@
 
 public class PackageVersionOptions
 {
-    public IEnumerable<PackageVersion>? AvailableVersions { get; set; }
-    public IEnumerable<PackageVersion>? AvailableBranches { get; set; }
+    public IEnumerable<PackageVersion> AvailableVersions { get; set; } =
+        Enumerable.Empty<PackageVersion>();
+    public IEnumerable<PackageVersion> AvailableBranches { get; set; } =
+        Enumerable.Empty<PackageVersion>();
 }

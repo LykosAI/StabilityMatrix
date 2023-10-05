@@ -5,6 +5,25 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.5.0
+### Added
+- Added Inference, a built-in native Stable Diffusion interface, powered by ComfyUI
+- Added option to change the Shared Folder method for packages using the three-dots menu on the Packages page
+- Added the ability to Favorite models in the Model Browser
+- Added "Favorites" sort option to the Model Browser
+- Added notification flyout for new available updates. Dismiss to hide until the next update version.
+### Changed
+- Model Browser page size is now 20 instead of 14  
+- Update changelog now only shows the difference between the current version and the latest version
+### Fixed
+- Fixed [#141](https://github.com/LykosAI/StabilityMatrix/issues/141) - Search not working when sorting by Installed on Model Browser
+- Fixed SD.Next not showing "Open Web UI" button when finished loading
+- Fixed model index startup errors when `./Models` contains unknown custom folder names
+- Fixed ストップ button being cut off in Japanese translation 
+- Fixed update progress freezing in some cases
+- Fixed light theme being default in first time setup window
+- Fixed shared folder links not recreating fully when partially missing
+
 ## v2.4.6
 ### Added
 - LDSR / ADetailer shared folder links for Automatic1111 Package

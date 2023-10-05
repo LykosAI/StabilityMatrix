@@ -5,6 +5,7 @@ using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
@@ -40,7 +41,9 @@ public class MockLaunchPageViewModel : LaunchPageViewModel
     {
         IsLaunchTeachingTipsOpen = false;
 
-        RunningPackage = new DankDiffusion(null!, null!, null!, null!);
+        RunningPackage = new PackagePair(
+            null!, 
+            new DankDiffusion(null!, null!, null!, null!));
         
         Console.Document.Insert(0, 
             """

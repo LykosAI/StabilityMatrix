@@ -1,0 +1,30 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+             xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
+             xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="StabilityMatrix.Avalonia.Controls.AdvancedImageBoxView"
+             d:DataContext="{x:Static mocks:DesignData.SampleImageSource}"
+             x:DataType="models:ImageSource">
+    <controls:AdvancedImageBox
+        Name="ImageBox"
+        SizeMode="Fit"
+        CornerRadius="4"
+        Image="{Binding BitmapAsync^}">
+        <controls:AdvancedImageBox.ContextFlyout>
+            <ui:FAMenuFlyout>
+                <ui:MenuFlyoutItem 
+                    x:Name="CopyMenuItem"
+                    IsEnabled="{OnPlatform Windows=True, Default=False}"
+                    CommandParameter="{Binding #ImageBox.Image}"
+                    Text="Copy"
+                    HotKey="Ctrl+C"
+                    IconSource="Copy" />
+            </ui:FAMenuFlyout>
+        </controls:AdvancedImageBox.ContextFlyout>
+    </controls:AdvancedImageBox>
+</UserControl>

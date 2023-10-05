@@ -5,10 +5,17 @@ namespace StabilityMatrix.Core.Services;
 
 public interface IModelIndexService
 {
+    Dictionary<SharedFolderType, List<LocalModelFile>> ModelIndex { get; }
+
     /// <summary>
     /// Refreshes the local model file index.
     /// </summary>
     Task RefreshIndex();
+
+    /// <summary>
+    /// Get all models of the specified type from the existing (in-memory) index.
+    /// </summary>
+    IEnumerable<LocalModelFile> GetFromModelIndex(SharedFolderType types);
 
     /// <summary>
     /// Get all models of the specified type from the existing index.

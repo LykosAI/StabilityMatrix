@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Drawing;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Helper;
@@ -12,7 +11,6 @@ using StabilityMatrix.Core.Services;
 using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
-using YamlDotNet.Serialization.TypeInspectors;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -31,6 +29,7 @@ public class ComfyUI : BaseGitPackage
     public override Uri PreviewImageUri =>
         new("https://github.com/comfyanonymous/ComfyUI/raw/master/comfyui_screenshot.png");
     public override bool ShouldIgnoreReleases => true;
+    public override bool IsInferenceCompatible => true;
     public override SharedFolderMethod RecommendedSharedFolderMethod =>
         SharedFolderMethod.Configuration;
 
@@ -64,6 +63,20 @@ public class ComfyUI : BaseGitPackage
         {
             new()
             {
+                Name = "Host",
+                Type = LaunchOptionType.String,
+                DefaultValue = "127.0.0.1",
+                Options = { "--listen" }
+            },
+            new()
+            {
+                Name = "Port",
+                Type = LaunchOptionType.String,
+                DefaultValue = "8188",
+                Options = { "--port" }
+            },
+            new()
+            {
                 Name = "VRAM",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper
@@ -76,6 +89,18 @@ public class ComfyUI : BaseGitPackage
                     _ => null
                 },
                 Options = { "--highvram", "--normalvram", "--lowvram", "--novram" }
+            },
+            new()
+            {
+                Name = "Preview Method",
+                Type = LaunchOptionType.Bool,
+                InitialValue = "--preview-method auto",
+                Options =
+                {
+                    "--preview-method auto",
+                    "--preview-method latent2rgb",
+                    "--preview-method taesd"
+                }
             },
             new()
             {
@@ -97,6 +122,12 @@ public class ComfyUI : BaseGitPackage
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),
                 Options = { "--disable-xformers" }
+            },
+            new()
+            {
+                Name = "Disable upcasting of attention",
+                Type = LaunchOptionType.Bool,
+                Options = { "--dont-upcast-attention" }
             },
             new()
             {
@@ -125,7 +156,7 @@ public class ComfyUI : BaseGitPackage
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
         venvRunner.WorkingDirectory = installLocation;
-        await venvRunner.Setup(true).ConfigureAwait(false);
+        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
         // Install torch / xformers based on gpu info
         switch (torchVersion)
@@ -147,12 +178,16 @@ public class ComfyUI : BaseGitPackage
                 throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);
         }
 
-        // Install requirements file
+        // Install requirements file (skip torch)
         progress?.Report(
             new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true)
         );
-        Logger.Info("Installing requirements.txt");
-        await venvRunner.PipInstall($"-r requirements.txt", onConsoleOutput).ConfigureAwait(false);
+
+        var requirementsFile = new FilePath(installLocation, "requirements.txt");
+
+        await venvRunner
+            .PipInstallFromRequirements(requirementsFile, onConsoleOutput, excludes: "torch")
+            .ConfigureAwait(false);
 
         progress?.Report(
             new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false)
@@ -331,7 +366,16 @@ public class ComfyUI : BaseGitPackage
     public override Task UpdateModelFolders(
         DirectoryPath installDirectory,
         SharedFolderMethod sharedFolderMethod
-    ) => SetupModelFolders(installDirectory, sharedFolderMethod);
+    ) =>
+        sharedFolderMethod switch
+        {
+            SharedFolderMethod.Symlink
+                => base.UpdateModelFolders(installDirectory, sharedFolderMethod),
+            SharedFolderMethod.Configuration
+                => SetupModelFolders(installDirectory, sharedFolderMethod),
+            SharedFolderMethod.None => Task.CompletedTask,
+            _ => Task.CompletedTask
+        };
 
     public override Task RemoveModelFolderLinks(
         DirectoryPath installDirectory,
@@ -340,12 +384,48 @@ public class ComfyUI : BaseGitPackage
     {
         return sharedFolderMethod switch
         {
-            SharedFolderMethod.Configuration => Task.CompletedTask,
+            SharedFolderMethod.Configuration => RemoveConfigSection(installDirectory),
             SharedFolderMethod.None => Task.CompletedTask,
             SharedFolderMethod.Symlink
                 => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
             _ => Task.CompletedTask
         };
+    }
+
+    private Task RemoveConfigSection(string installDirectory)
+    {
+        var extraPathsYamlPath = Path.Combine(installDirectory, "extra_model_paths.yaml");
+        var exists = File.Exists(extraPathsYamlPath);
+        if (!exists)
+        {
+            return Task.CompletedTask;
+        }
+
+        var yaml = File.ReadAllText(extraPathsYamlPath);
+        using var sr = new StringReader(yaml);
+        var yamlStream = new YamlStream();
+        yamlStream.Load(sr);
+
+        if (!yamlStream.Documents.Any())
+        {
+            return Task.CompletedTask;
+        }
+
+        var root = yamlStream.Documents[0].RootNode;
+        if (root is not YamlMappingNode mappingNode)
+        {
+            return Task.CompletedTask;
+        }
+
+        mappingNode.Children.Remove("stability_matrix");
+
+        var serializer = new SerializerBuilder()
+            .WithNamingConvention(UnderscoredNamingConvention.Instance)
+            .Build();
+        var yamlData = serializer.Serialize(mappingNode);
+        File.WriteAllText(extraPathsYamlPath, yamlData);
+
+        return Task.CompletedTask;
     }
 
     private async Task InstallRocmTorch(
@@ -365,23 +445,26 @@ public class ComfyUI : BaseGitPackage
             .ConfigureAwait(false);
     }
 
-    public class ComfyModelPathsYaml
+    public async Task SetupInferenceOutputFolderLinks(DirectoryPath installDirectory)
     {
-        public class SmData
+        var inferenceDir = installDirectory.JoinDir("output", "Inference");
+
+        var sharedInferenceDir = SettingsManager.ImagesInferenceDirectory;
+
+        if (inferenceDir.IsSymbolicLink)
         {
-            public string Checkpoints { get; set; }
-            public string Vae { get; set; }
-            public string Loras { get; set; }
-            public string UpscaleModels { get; set; }
-            public string Embeddings { get; set; }
-            public string Hypernetworks { get; set; }
-            public string Controlnet { get; set; }
-            public string Clip { get; set; }
-            public string Diffusers { get; set; }
-            public string Gligen { get; set; }
-            public string VaeApprox { get; set; }
+            if (inferenceDir.Info.ResolveLinkTarget(true)?.FullName == sharedInferenceDir.FullPath)
+            {
+                // Already valid link, skip
+                return;
+            }
+
+            // Otherwise delete so we don't have to move files
+            await sharedInferenceDir.DeleteAsync(false).ConfigureAwait(false);
         }
 
-        public SmData? StabilityMatrix { get; set; }
+        await Helper.SharedFolders
+            .CreateOrUpdateLink(sharedInferenceDir, inferenceDir)
+            .ConfigureAwait(false);
     }
 }

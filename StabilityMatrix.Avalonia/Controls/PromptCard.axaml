@@ -1,0 +1,145 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+    xmlns:behaviors="clr-namespace:StabilityMatrix.Avalonia.Behaviors"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+    xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    x:DataType="vmInference:PromptCardViewModel">
+    <Design.PreviewWith>
+        <Grid Width="460" Height="600">
+            <controls:PromptCard DataContext="{x:Static mocks:DesignData.PromptCardViewModel}" />
+        </Grid>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|PromptCard">
+        <!--  Set Defaults  -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card Padding="12" HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
+                    <controls:Card.Styles>
+                        <Style Selector="avaloniaEdit|TextEditor">
+                            <Setter Property="Margin" Value="0,8,0,8" />
+                            <Setter Property="CornerRadius" Value="8" />
+                            <Setter Property="BorderThickness" Value="4" />
+                            <Setter Property="LineNumbersForeground" Value="DarkSlateGray" />
+                            <Setter Property="ShowLineNumbers" Value="True" />
+                            <Setter Property="WordWrap" Value="True" />
+                            <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+                            <Setter Property="ContextFlyout" Value="{StaticResource EditorContextFlyout}" />
+                        </Style>
+                    </controls:Card.Styles>
+
+                    <Grid RowDefinitions="*,16,*">
+                        <!--  Prompt  -->
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,*">
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Margin="4,0,4,8"
+                                Orientation="Horizontal">
+                                <TextBlock FontSize="14" Text="Prompt" />
+                                <icons:Icon
+                                    Margin="8,0"
+                                    FontSize="10"
+                                    Value="fa-solid fa-caret-up" />
+                            </StackPanel>
+
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Margin="0,0,0,4"
+                                HorizontalAlignment="Right"
+                                Orientation="Horizontal">
+
+                                <Button
+                                    Margin="0,-2,0,0"
+                                    Padding="10,4"
+                                    VerticalAlignment="Top"
+                                    VerticalContentAlignment="Top"
+                                    icons:Attached.Icon="fa-solid fa-question"
+                                    Classes="transparent-full"
+                                    Command="{Binding ShowHelpDialogCommand}" />
+
+                                <Button
+                                    Padding="8,4"
+                                    Command="{Binding DebugShowTokensCommand}"
+                                    Content="Show Tokens"
+                                    IsVisible="{Binding SharedState.IsDebugMode}" />
+
+                            </StackPanel>
+
+                            <Border
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Classes="theme-dark"
+                                VerticalAlignment="Stretch"
+                                CornerRadius="4">
+
+                                <avaloniaEdit:TextEditor
+                                    x:Name="PromptEditor"
+                                    Document="{Binding PromptDocument}"
+                                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace">
+                                    <i:Interaction.Behaviors>
+                                        <behaviors:TextEditorCompletionBehavior
+                                            CompletionProvider="{Binding CompletionProvider}"
+                                            IsEnabled="{Binding IsAutoCompletionEnabled}"
+                                            TokenizerProvider="{Binding TokenizerProvider}" />
+                                        <behaviors:TextEditorToolTipBehavior IsEnabled="False" TokenizerProvider="{Binding TokenizerProvider}" />
+                                    </i:Interaction.Behaviors>
+                                </avaloniaEdit:TextEditor>
+
+                            </Border>
+                        </Grid>
+
+                        <GridSplitter
+                            Grid.Row="1"
+                            MaxWidth="45"
+                            VerticalAlignment="Center"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Opacity="0.3" />
+
+                        <!--  Negative Prompt  -->
+                        <Grid Grid.Row="2" RowDefinitions="Auto,*">
+                            <StackPanel Margin="4,0,4,8" Orientation="Horizontal">
+                                <TextBlock FontSize="14" Text="Negative Prompt" />
+                                <icons:Icon
+                                    Margin="8,0"
+                                    FontSize="10"
+                                    Value="fa-solid fa-caret-down" />
+                            </StackPanel>
+
+                            <Border
+                                Grid.Row="1"
+                                Classes="theme-dark"
+                                VerticalAlignment="Stretch"
+                                CornerRadius="4">
+
+                                <avaloniaEdit:TextEditor
+                                    x:Name="NegativePromptEditor"
+                                    Document="{Binding NegativePromptDocument}"
+                                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace">
+                                    <i:Interaction.Behaviors>
+                                        <behaviors:TextEditorCompletionBehavior
+                                            CompletionProvider="{Binding CompletionProvider}"
+                                            IsEnabled="{Binding IsAutoCompletionEnabled}"
+                                            TokenizerProvider="{Binding TokenizerProvider}" />
+                                        <behaviors:TextEditorToolTipBehavior IsEnabled="False" TokenizerProvider="{Binding TokenizerProvider}" />
+                                    </i:Interaction.Behaviors>
+                                </avaloniaEdit:TextEditor>
+
+
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

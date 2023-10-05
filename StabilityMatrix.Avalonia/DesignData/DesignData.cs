@@ -5,8 +5,13 @@ using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Http;
+using System.Text;
+using AvaloniaEdit.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -14,6 +19,8 @@ using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
+using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Helper;
@@ -21,6 +28,7 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
@@ -102,8 +110,12 @@ public static class DesignData
             .AddSingleton<ISharedFolders, MockSharedFolders>()
             .AddSingleton<IDownloadService, MockDownloadService>()
             .AddSingleton<IHttpClientFactory, MockHttpClientFactory>()
+            .AddSingleton<IApiFactory, MockApiFactory>()
+            .AddSingleton<IInferenceClientManager, MockInferenceClientManager>()
             .AddSingleton<IDiscordRichPresenceService, MockDiscordRichPresenceService>()
+            .AddSingleton<ICompletionProvider, MockCompletionProvider>()
             .AddSingleton<IModelIndexService, MockModelIndexService>()
+            .AddSingleton<IImageIndexService, MockImageIndexService>()
             .AddSingleton<ITrackedDownloadService, MockTrackedDownloadService>()
             .AddSingleton<IPackageModificationRunner, PackageModificationRunner>();
 
@@ -113,6 +125,7 @@ public static class DesignData
             .AddSingleton<ILiteDbContext>(_ => null!)
             .AddSingleton<ICivitApi>(_ => null!)
             .AddSingleton<IGithubApiCache>(_ => null!)
+            .AddSingleton<ITokenizerProvider>(_ => null!)
             .AddSingleton<IPrerequisiteHelper>(_ => null!);
 
         // Using some default service implementations from App
@@ -294,8 +307,8 @@ public static class DesignData
         );
 
         UpdateViewModel = Services.GetRequiredService<UpdateViewModel>();
-        UpdateViewModel.UpdateText =
-            $"Stability Matrix v2.0.1 is now available! You currently have v2.0.0. Would you like to update now?";
+        UpdateViewModel.CurrentVersionText = "v2.0.0";
+        UpdateViewModel.NewVersionText = "v2.0.1";
         UpdateViewModel.ReleaseNotes =
             "## v2.0.1\n- Fixed a bug\n- Added a feature\n- Removed a feature";
 
@@ -352,6 +365,9 @@ public static class DesignData
 
     public static SettingsViewModel SettingsViewModel =>
         Services.GetRequiredService<SettingsViewModel>();
+
+    public static InferenceSettingsViewModel InferenceSettingsViewModel =>
+        Services.GetRequiredService<InferenceSettingsViewModel>();
 
     public static CheckpointBrowserViewModel CheckpointBrowserViewModel =>
         Services.GetRequiredService<CheckpointBrowserViewModel>();
@@ -413,6 +429,9 @@ The gallery images are often inpainted, but you will get something very similar 
     public static OneClickInstallViewModel OneClickInstallViewModel =>
         Services.GetRequiredService<OneClickInstallViewModel>();
 
+    public static InferenceViewModel InferenceViewModel =>
+        Services.GetRequiredService<InferenceViewModel>();
+
     public static SelectDataDirectoryViewModel SelectDataDirectoryViewModel =>
         Services.GetRequiredService<SelectDataDirectoryViewModel>();
 
@@ -446,9 +465,212 @@ The gallery images are often inpainted, but you will get something very similar 
             viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair> { new("UWU", "TRUE"), };
         });
 
+    public static InferenceTextToImageViewModel InferenceTextToImageViewModel =>
+        DialogFactory.Get<InferenceTextToImageViewModel>(vm =>
+        {
+            vm.OutputProgress.Value = 10;
+            vm.OutputProgress.Maximum = 30;
+            vm.OutputProgress.Text = "Sampler 10/30";
+        });
+
+    public static InferenceImageUpscaleViewModel InferenceImageUpscaleViewModel =>
+        DialogFactory.Get<InferenceImageUpscaleViewModel>();
+
     public static PackageImportViewModel PackageImportViewModel =>
         DialogFactory.Get<PackageImportViewModel>();
 
     public static RefreshBadgeViewModel RefreshBadgeViewModel =>
         new() { State = ProgressState.Success };
+
+    public static SeedCardViewModel SeedCardViewModel => new();
+
+    public static SamplerCardViewModel SamplerCardViewModel =>
+        DialogFactory.Get<SamplerCardViewModel>(vm =>
+        {
+            vm.Steps = 20;
+            vm.CfgScale = 7;
+            vm.IsCfgScaleEnabled = true;
+            vm.IsSamplerSelectionEnabled = true;
+            vm.IsDimensionsEnabled = true;
+            vm.SelectedSampler = new ComfySampler("euler");
+        });
+
+    public static SamplerCardViewModel SamplerCardViewModelScaleMode =>
+        DialogFactory.Get<SamplerCardViewModel>(vm =>
+        {
+            vm.IsDenoiseStrengthEnabled = true;
+        });
+
+    public static SamplerCardViewModel SamplerCardViewModelRefinerMode =>
+        DialogFactory.Get<SamplerCardViewModel>(vm =>
+        {
+            vm.IsCfgScaleEnabled = true;
+            vm.IsSamplerSelectionEnabled = true;
+            vm.IsDimensionsEnabled = true;
+            vm.IsRefinerStepsEnabled = true;
+        });
+
+    public static ModelCardViewModel ModelCardViewModel => DialogFactory.Get<ModelCardViewModel>();
+
+    public static ImageGalleryCardViewModel ImageGalleryCardViewModel =>
+        DialogFactory.Get<ImageGalleryCardViewModel>(vm =>
+        {
+            vm.ImageSources.AddRange(
+                new ImageSource[]
+                {
+                    new(
+                        new Uri(
+                            "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/4a7e00a7-6f18-42d4-87c0-10e792df2640/width=1152"
+                        )
+                    ),
+                    new(
+                        new Uri(
+                            "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1024"
+                        )
+                    ),
+                    new(
+                        new Uri(
+                            "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/16588c94-6595-4be9-8806-d7e6e22d198c/width=1152"
+                        )
+                    ),
+                }
+            );
+        });
+
+    public static ImageFolderCardViewModel ImageFolderCardViewModel =>
+        DialogFactory.Get<ImageFolderCardViewModel>();
+
+    public static FreeUCardViewModel FreeUCardViewModel => DialogFactory.Get<FreeUCardViewModel>();
+
+    public static PromptCardViewModel PromptCardViewModel =>
+        DialogFactory.Get<PromptCardViewModel>(vm =>
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine("house, (high quality), [example], BREAK");
+            builder.AppendLine("# this is a comment");
+            builder.AppendLine(
+                "(detailed), [purple and orange lighting], looking pleased, (cinematic, god rays:0.8), "
+                    + "(8k, 4k, high res:1), (intricate), (unreal engine:1.2), (shaded:1.1), "
+                    + "(soft focus, detailed background), (horizontal lens flare), "
+                    + "(clear eyes)"
+            );
+            builder.AppendLine("<lora:details:0.8>, <lyco:some_model>");
+
+            vm.PromptDocument.Text = builder.ToString();
+            vm.NegativePromptDocument.Text = "embedding:EasyNegative, blurry, jpeg artifacts";
+        });
+
+    public static StackCardViewModel StackCardViewModel =>
+        DialogFactory.Get<StackCardViewModel>(vm =>
+        {
+            vm.AddCards(new LoadableViewModelBase[] { SamplerCardViewModel, SeedCardViewModel, });
+        });
+
+    public static StackExpanderViewModel StackExpanderViewModel =>
+        DialogFactory.Get<StackExpanderViewModel>(vm =>
+        {
+            vm.Title = "Hires Fix";
+            vm.AddCards(
+                new LoadableViewModelBase[] { UpscalerCardViewModel, SamplerCardViewModel }
+            );
+        });
+
+    public static UpscalerCardViewModel UpscalerCardViewModel =>
+        DialogFactory.Get<UpscalerCardViewModel>();
+
+    public static BatchSizeCardViewModel BatchSizeCardViewModel =>
+        DialogFactory.Get<BatchSizeCardViewModel>();
+
+    public static IList<ICompletionData> SampleCompletionData =>
+        new List<ICompletionData>
+        {
+            new TagCompletionData("test1", TagType.General),
+            new TagCompletionData("test2", TagType.Artist),
+            new TagCompletionData("test3", TagType.Character),
+            new TagCompletionData("test4", TagType.Copyright),
+            new TagCompletionData("test5", TagType.Species),
+            new TagCompletionData("test_unknown", TagType.Invalid),
+        };
+
+    public static CompletionList SampleCompletionList
+    {
+        get
+        {
+            var list = new CompletionList { IsFiltering = true };
+            list.CompletionData.AddRange(SampleCompletionData);
+            list.FilteredCompletionData.AddRange(list.CompletionData);
+            list.SelectItem("te", true);
+            return list;
+        }
+    }
+
+    public static ImageViewerViewModel ImageViewerViewModel =>
+        DialogFactory.Get<ImageViewerViewModel>(vm =>
+        {
+            vm.ImageSource = new ImageSource(
+                new Uri(
+                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"
+                )
+            );
+            vm.FileNameText = "TextToImage_00041.png";
+            vm.FileSizeText = "2.4 MB";
+            vm.ImageSizeText = "1280 x 1792";
+        });
+
+    public static DownloadResourceViewModel DownloadResourceViewModel =>
+        DialogFactory.Get<DownloadResourceViewModel>(vm =>
+        {
+            vm.FileName = ComfyUpscaler.DefaultDownloadableModels[0].Name;
+            vm.FileSize = Convert.ToInt64(2 * Size.GiB);
+            vm.Resource = ComfyUpscaler.DefaultDownloadableModels[0].DownloadableResource!.Value;
+        });
+
+    public static SharpenCardViewModel SharpenCardViewModel =>
+        DialogFactory.Get<SharpenCardViewModel>();
+
+    public static InferenceConnectionHelpViewModel InferenceConnectionHelpViewModel =>
+        DialogFactory.Get<InferenceConnectionHelpViewModel>();
+
+    public static SelectImageCardViewModel SelectImageCardViewModel =>
+        DialogFactory.Get<SelectImageCardViewModel>();
+
+    public static SelectImageCardViewModel SelectImageCardViewModel_WithImage =>
+        DialogFactory.Get<SelectImageCardViewModel>(vm =>
+        {
+            vm.ImageSource = new ImageSource(
+                new Uri(
+                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"
+                )
+            );
+        });
+
+    public static ImageSource SampleImageSource =>
+        new(
+            new Uri(
+                "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"
+            )
+        );
+
+    public static Indexer Types => new();
+
+    public class Indexer
+    {
+        public object? this[string typeName]
+        {
+            get
+            {
+                var type =
+                    Type.GetType(typeName)
+                    ?? throw new ArgumentException($"Type {typeName} not found");
+                try
+                {
+                    return Services.GetService(type);
+                }
+                catch (InvalidOperationException)
+                {
+                    return Activator.CreateInstance(type);
+                }
+            }
+        }
+    }
 }

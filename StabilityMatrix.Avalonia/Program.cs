@@ -12,6 +12,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
+using FluentAvalonia.Core;
 using NLog;
 using Polly.Contrib.WaitAndRetry;
 using Projektanker.Icons.Avalonia;
@@ -30,9 +31,14 @@ namespace StabilityMatrix.Avalonia;
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class Program
 {
+    private static Logger? _logger;
+    private static Logger Logger => _logger ??= LogManager.GetCurrentClassLogger();
+
     public static AppArgs Args { get; } = new();
 
     public static bool IsDebugBuild { get; private set; }
+
+    public static Stopwatch StartupTimer { get; } = new();
 
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
@@ -40,8 +46,11 @@ public class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        StartupTimer.Start();
+
         Args.DebugExceptionDialog = args.Contains("--debug-exception-dialog");
         Args.DebugSentry = args.Contains("--debug-sentry");
+        Args.DebugOneClickInstall = args.Contains("--debug-one-click-install");
         Args.NoSentry = args.Contains("--no-sentry");
         Args.NoWindowChromeEffects = args.Contains("--no-window-chrome-effects");
         Args.ResetWindowPosition = args.Contains("--reset-window-position");
@@ -61,6 +70,8 @@ public class Program
         {
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         }
+
+        TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
         // Configure Sentry
         if (!Args.NoSentry && (!Debugger.IsAttached || Args.DebugSentry))
@@ -165,7 +176,31 @@ public class Program
 #if DEBUG
             o.Environment = "Development";
 #endif
+            // Filters
+            o.SetBeforeSend(
+                (sentryEvent, _) =>
+                {
+                    // Ignore websocket errors from ComfyClient
+                    if (sentryEvent.Logger == "Websocket.Client.WebsocketClient")
+                    {
+                        return null;
+                    }
+
+                    return sentryEvent;
+                }
+            );
         });
+    }
+
+    private static void TaskScheduler_UnobservedTaskException(
+        object? sender,
+        UnobservedTaskExceptionEventArgs e
+    )
+    {
+        if (e.Exception is Exception ex)
+        {
+            Logger.Error(ex, "Unobserved task exception");
+        }
     }
 
     private static void CurrentDomain_UnhandledException(
@@ -176,9 +211,7 @@ public class Program
         if (e.ExceptionObject is not Exception ex)
             return;
 
-        var logger = LogManager.GetCurrentClassLogger();
-        logger.Fatal(ex, "Unhandled {Type}: {Message}", ex.GetType().Name, ex.Message);
-
+        Logger.Fatal(ex, "Unhandled {Type}: {Message}", ex.GetType().Name, ex.Message);
         if (SentrySdk.IsEnabled)
         {
             SentrySdk.CaptureException(ex);

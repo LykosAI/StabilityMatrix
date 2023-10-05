@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -10,21 +11,29 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls.Notifications;
+using Avalonia.Controls.Primitives;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
+using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
@@ -49,6 +58,7 @@ public partial class SettingsViewModel : PageViewModelBase
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly IPyRunner pyRunner;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
+    private readonly ICompletionProvider completionProvider;
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly IModelIndexService modelIndexService;
 
@@ -84,6 +94,22 @@ public partial class SettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool removeSymlinksOnShutdown;
 
+    // Inference UI section
+    [ObservableProperty]
+    private bool isPromptCompletionEnabled = true;
+
+    [ObservableProperty]
+    private IReadOnlyList<string> availableTagCompletionCsvs = Array.Empty<string>();
+
+    [ObservableProperty]
+    private string? selectedTagCompletionCsv;
+
+    [ObservableProperty]
+    private bool isCompletionRemoveUnderscoresEnabled = true;
+
+    [ObservableProperty]
+    private bool isImageViewerPixelGridEnabled = true;
+
     // Integrations section
     [ObservableProperty]
     private bool isDiscordRichPresenceEnabled;
@@ -109,14 +135,18 @@ public partial class SettingsViewModel : PageViewModelBase
     public string VersionFlyoutText =>
         $"You are {VersionTapCountThreshold - VersionTapCount} clicks away from enabling Debug options.";
 
+    public string DataDirectory =>
+        settingsManager.IsLibraryDirSet ? settingsManager.LibraryDir : "Not set";
+
     public SettingsViewModel(
         INotificationService notificationService,
         ISettingsManager settingsManager,
         IPrerequisiteHelper prerequisiteHelper,
         IPyRunner pyRunner,
         ServiceManager<ViewModelBase> dialogFactory,
-        SharedState sharedState,
         ITrackedDownloadService trackedDownloadService,
+        SharedState sharedState,
+        ICompletionProvider completionProvider,
         IModelIndexService modelIndexService
     )
     {
@@ -126,6 +156,7 @@ public partial class SettingsViewModel : PageViewModelBase
         this.pyRunner = pyRunner;
         this.dialogFactory = dialogFactory;
         this.trackedDownloadService = trackedDownloadService;
+        this.completionProvider = completionProvider;
         this.modelIndexService = modelIndexService;
 
         SharedState = sharedState;
@@ -140,7 +171,8 @@ public partial class SettingsViewModel : PageViewModelBase
         settingsManager.RelayPropertyFor(
             this,
             vm => vm.IsDiscordRichPresenceEnabled,
-            settings => settings.IsDiscordRichPresenceEnabled
+            settings => settings.IsDiscordRichPresenceEnabled,
+            true
         );
 
         settingsManager.RelayPropertyFor(
@@ -148,6 +180,49 @@ public partial class SettingsViewModel : PageViewModelBase
             vm => vm.SelectedAnimationScale,
             settings => settings.AnimationScale
         );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.SelectedTagCompletionCsv,
+            settings => settings.TagCompletionCsv
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.IsPromptCompletionEnabled,
+            settings => settings.IsPromptCompletionEnabled,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.IsCompletionRemoveUnderscoresEnabled,
+            settings => settings.IsCompletionRemoveUnderscoresEnabled,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.IsImageViewerPixelGridEnabled,
+            settings => settings.IsImageViewerPixelGridEnabled,
+            true
+        );
+
+        DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(
+            notificationService,
+            LogLevel.Warn
+        );
+        ImportTagCsvCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
+    }
+
+    /// <inheritdoc />
+    public override async Task OnLoadedAsync()
+    {
+        await base.OnLoadedAsync();
+
+        await notificationService.TryAsync(completionProvider.Setup());
+
+        UpdateAvailableTagCompletionCsvs();
     }
 
     partial void OnSelectedThemeChanged(string? value)
@@ -166,8 +241,9 @@ public partial class SettingsViewModel : PageViewModelBase
 
     partial void OnSelectedLanguageChanged(CultureInfo? oldValue, CultureInfo newValue)
     {
-        if (oldValue is null || newValue.Name == Cultures.Current.Name)
+        if (oldValue is null || newValue.Name == Cultures.Current?.Name)
             return;
+
         // Set locale
         if (AvailableLanguages.Contains(newValue))
         {
@@ -282,6 +358,68 @@ public partial class SettingsViewModel : PageViewModelBase
         await dialog.ShowAsync();
     }
 
+    #endregion
+
+    #region Inference UI
+
+    private void UpdateAvailableTagCompletionCsvs()
+    {
+        if (!settingsManager.IsLibraryDirSet)
+            return;
+
+        var tagsDir = settingsManager.TagsDirectory;
+        if (!tagsDir.Exists)
+            return;
+
+        var csvFiles = tagsDir.Info.EnumerateFiles("*.csv");
+        AvailableTagCompletionCsvs = csvFiles.Select(f => f.Name).ToImmutableArray();
+
+        // Set selected to current if exists
+        var settingsCsv = settingsManager.Settings.TagCompletionCsv;
+        if (settingsCsv is not null && AvailableTagCompletionCsvs.Contains(settingsCsv))
+        {
+            SelectedTagCompletionCsv = settingsCsv;
+        }
+    }
+
+    [RelayCommand(FlowExceptionsToTaskScheduler = true)]
+    private async Task ImportTagCsv()
+    {
+        var storage = App.StorageProvider;
+        var files = await storage.OpenFilePickerAsync(
+            new FilePickerOpenOptions
+            {
+                FileTypeFilter = new List<FilePickerFileType>
+                {
+                    new("CSV") { Patterns = new[] { "*.csv" }, }
+                }
+            }
+        );
+
+        if (files.Count == 0)
+            return;
+
+        var sourceFile = new FilePath(files[0].TryGetLocalPath()!);
+
+        var tagsDir = settingsManager.TagsDirectory;
+        tagsDir.Create();
+
+        // Copy to tags directory
+        var targetFile = tagsDir.JoinFile(sourceFile.Name);
+        await sourceFile.CopyToAsync(targetFile);
+
+        // Update index
+        UpdateAvailableTagCompletionCsvs();
+
+        // Trigger load
+        completionProvider.BackgroundLoadFromFile(targetFile, true);
+
+        notificationService.Show(
+            $"Imported {sourceFile.Name}",
+            $"The {sourceFile.Name} file has been imported.",
+            NotificationType.Success
+        );
+    }
     #endregion
 
     #region System
@@ -518,8 +656,106 @@ public partial class SettingsViewModel : PageViewModelBase
     [RelayCommand]
     private void DebugThrowException()
     {
-        // Use try-catch to generate traceback information
         throw new OperationCanceledException("Example Message");
+    }
+
+    [RelayCommand(FlowExceptionsToTaskScheduler = true)]
+    private async Task DebugThrowAsyncException()
+    {
+        await Task.Yield();
+
+        throw new ApplicationException("Example Message");
+    }
+
+    [RelayCommand]
+    private async Task DebugMakeImageGrid()
+    {
+        var provider = App.StorageProvider;
+        var files = await provider.OpenFilePickerAsync(
+            new FilePickerOpenOptions() { AllowMultiple = true }
+        );
+
+        if (files.Count == 0)
+            return;
+
+        var images = await files.SelectAsync(
+            async f => SKImage.FromEncodedData(await f.OpenReadAsync())
+        );
+
+        var grid = ImageProcessor.CreateImageGrid(images.ToImmutableArray());
+
+        // Show preview
+
+        using var peekPixels = grid.PeekPixels();
+        using var data = peekPixels.Encode(SKEncodedImageFormat.Jpeg, 100);
+        await using var stream = data.AsStream();
+
+        var bitmap = WriteableBitmap.Decode(stream);
+
+        var galleryImages = new List<ImageSource> { new(bitmap), };
+        galleryImages.AddRange(files.Select(f => new ImageSource(f.Path.ToString())));
+
+        var imageBox = new ImageGalleryCard
+        {
+            Width = 1000,
+            Height = 900,
+            DataContext = dialogFactory.Get<ImageGalleryCardViewModel>(vm =>
+            {
+                vm.ImageSources.AddRange(galleryImages);
+            })
+        };
+
+        var dialog = new BetterContentDialog
+        {
+            MaxDialogWidth = 1000,
+            MaxDialogHeight = 1000,
+            FullSizeDesired = true,
+            Content = imageBox,
+            CloseButtonText = "Close",
+            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+        };
+
+        await dialog.ShowAsync();
+    }
+
+    [RelayCommand]
+    private async Task DebugLoadCompletionCsv()
+    {
+        var provider = App.StorageProvider;
+        var files = await provider.OpenFilePickerAsync(new FilePickerOpenOptions());
+
+        if (files.Count == 0)
+            return;
+
+        await completionProvider.LoadFromFile(files[0].TryGetLocalPath()!, true);
+
+        notificationService.Show("Loaded completion file", "");
+    }
+
+    [RelayCommand]
+    private async Task DebugImageMetadata()
+    {
+        var provider = App.StorageProvider;
+        var files = await provider.OpenFilePickerAsync(new FilePickerOpenOptions());
+
+        if (files.Count == 0)
+            return;
+
+        var metadata = ImageMetadata.ParseFile(files[0].TryGetLocalPath()!);
+        var textualTags = metadata.GetTextualData()?.ToArray();
+
+        if (textualTags is null)
+        {
+            notificationService.Show("No textual data found", "");
+            return;
+        }
+
+        if (metadata.GetGenerationParameters() is { } parameters)
+        {
+            var parametersJson = JsonSerializer.Serialize(parameters);
+            var dialog = DialogHelper.CreateJsonDialog(parametersJson, "Generation Parameters");
+            await dialog.ShowAsync();
+        }
     }
 
     [RelayCommand]

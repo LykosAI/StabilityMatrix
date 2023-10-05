@@ -26,7 +26,6 @@ public class InstalledPackage : IJsonOnDeserialized
 
     [Obsolete("Use Version instead. (Kept for migration)")]
     public string? DisplayVersion { get; set; }
-
     public InstalledPackageVersion? Version { get; set; }
 
     // Old type absolute path
@@ -51,6 +50,32 @@ public class InstalledPackage : IJsonOnDeserialized
     public bool UpdateAvailable { get; set; }
     public TorchVersion? PreferredTorchVersion { get; set; }
     public SharedFolderMethod? PreferredSharedFolderMethod { get; set; }
+
+    /// <summary>
+    /// Get the launch args host option value.
+    /// </summary>
+    public string? GetLaunchArgsHost()
+    {
+        var hostOption = LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "--host");
+        if (hostOption?.OptionValue != null)
+        {
+            return hostOption.OptionValue as string;
+        }
+        return hostOption?.DefaultValue as string;
+    }
+
+    /// <summary>
+    /// Get the launch args port option value.
+    /// </summary>
+    public string? GetLaunchArgsPort()
+    {
+        var portOption = LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "--port");
+        if (portOption?.OptionValue != null)
+        {
+            return portOption.OptionValue as string;
+        }
+        return portOption?.DefaultValue as string;
+    }
 
     /// <summary>
     /// Get the path as a relative sub-path of the relative path.

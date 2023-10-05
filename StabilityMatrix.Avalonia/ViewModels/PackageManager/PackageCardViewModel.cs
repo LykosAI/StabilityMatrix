@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -20,7 +21,6 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
-using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
@@ -49,6 +49,18 @@ public partial class PackageCardViewModel : ProgressViewModel
 
     [ObservableProperty]
     private bool isUnknownPackage;
+
+    [ObservableProperty]
+    private bool isSharedModelSymlink;
+
+    [ObservableProperty]
+    private bool isSharedModelConfig;
+
+    [ObservableProperty]
+    private bool isSharedModelDisabled;
+
+    [ObservableProperty]
+    private bool canUseConfigMethod;
 
     public PackageCardViewModel(
         ILogger<PackageCardViewModel> logger,
@@ -85,12 +97,48 @@ public partial class PackageCardViewModel : ProgressViewModel
             var basePackage = packageFactory[value.PackageName];
             CardImageSource = basePackage?.PreviewImageUri.ToString() ?? Assets.NoImage.ToString();
             InstalledVersion = value.Version?.DisplayVersion ?? "Unknown";
+            CanUseConfigMethod =
+                basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Configuration)
+                ?? false;
         }
     }
 
     public override async Task OnLoadedAsync()
     {
-        IsUpdateAvailable = await HasUpdate();
+        if (
+            Design.IsDesignMode
+            || !settingsManager.IsLibraryDirSet
+            || Package is not { } currentPackage
+        )
+            return;
+
+        if (
+            packageFactory.FindPackageByName(currentPackage.PackageName)
+            is { } basePackage
+                and not UnknownPackage
+        )
+        {
+            // Migrate old packages with null preferred shared folder method
+            currentPackage.PreferredSharedFolderMethod ??=
+                basePackage.RecommendedSharedFolderMethod;
+
+            switch (currentPackage.PreferredSharedFolderMethod)
+            {
+                case SharedFolderMethod.Configuration:
+                    IsSharedModelConfig = true;
+                    break;
+                case SharedFolderMethod.Symlink:
+                    IsSharedModelSymlink = true;
+                    break;
+                case SharedFolderMethod.None:
+                    IsSharedModelDisabled = true;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            IsUpdateAvailable = await HasUpdate();
+        }
     }
 
     public void Launch()
@@ -310,6 +358,81 @@ public partial class PackageCardViewModel : ProgressViewModel
         {
             logger.LogError(e, "Error checking {PackageName} for updates", Package.PackageName);
             return false;
+        }
+    }
+
+    public void ToggleSharedModelSymlink() => IsSharedModelSymlink = !IsSharedModelSymlink;
+
+    public void ToggleSharedModelConfig() => IsSharedModelConfig = !IsSharedModelConfig;
+
+    public void ToggleSharedModelNone() => IsSharedModelDisabled = !IsSharedModelDisabled;
+
+    // fake radio button stuff
+    partial void OnIsSharedModelSymlinkChanged(bool oldValue, bool newValue)
+    {
+        if (oldValue == newValue)
+            return;
+
+        if (newValue != Package!.PreferredSharedFolderMethod is SharedFolderMethod.Symlink)
+        {
+            if (!newValue)
+            {
+                var basePackage = packageFactory[Package!.PackageName!];
+                basePackage!.RemoveModelFolderLinks(Package.FullPath!, SharedFolderMethod.Symlink);
+                return;
+            }
+
+            using var st = settingsManager.BeginTransaction();
+            Package.PreferredSharedFolderMethod = SharedFolderMethod.Symlink;
+        }
+
+        if (newValue)
+        {
+            IsSharedModelConfig = false;
+            IsSharedModelDisabled = false;
+        }
+    }
+
+    partial void OnIsSharedModelConfigChanged(bool oldValue, bool newValue)
+    {
+        if (oldValue == newValue)
+            return;
+
+        if (newValue != Package!.PreferredSharedFolderMethod is SharedFolderMethod.Configuration)
+        {
+            if (!newValue)
+            {
+                var basePackage = packageFactory[Package!.PackageName!];
+                basePackage!.RemoveModelFolderLinks(
+                    Package.FullPath!,
+                    SharedFolderMethod.Configuration
+                );
+                return;
+            }
+
+            using var st = settingsManager.BeginTransaction();
+            Package.PreferredSharedFolderMethod = SharedFolderMethod.Configuration;
+        }
+
+        if (newValue)
+        {
+            IsSharedModelSymlink = false;
+            IsSharedModelDisabled = false;
+        }
+    }
+
+    partial void OnIsSharedModelDisabledChanged(bool value)
+    {
+        if (value)
+        {
+            if (Package!.PreferredSharedFolderMethod is not SharedFolderMethod.None)
+            {
+                using var st = settingsManager.BeginTransaction();
+                Package.PreferredSharedFolderMethod = SharedFolderMethod.None;
+            }
+
+            IsSharedModelSymlink = false;
+            IsSharedModelConfig = false;
         }
     }
 }

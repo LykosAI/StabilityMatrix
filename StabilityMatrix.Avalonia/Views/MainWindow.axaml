@@ -9,14 +9,16 @@
                         xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
                         xmlns:base="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
                         xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+                        xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="550"
                         d:DataContext="{x:Static mocks:DesignData.MainWindowViewModel}"
                         x:DataType="vm:MainWindowViewModel"
-                        x:CompileBindings="True"
                         Icon="/Assets/Icon.ico"
                         Width="1100"
                         Height="750"
                         Title="Stability Matrix"
+                        DockProperties.IsDragEnabled="True" 
+                        DockProperties.IsDropEnabled="True"
                         x:Class="StabilityMatrix.Avalonia.Views.MainWindow">
     
     <Grid RowDefinitions="Auto,Auto,*">
@@ -37,7 +39,6 @@
                     </OnPlatform>
                 </Image.IsVisible>
             </Image>
-
             <TextBlock
                 Text="{Binding Title, 
                 RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
@@ -51,6 +52,7 @@
                     </OnPlatform>
                 </TextBlock.IsVisible>
             </TextBlock>
+
             <Border Grid.Column="2" Padding="6" />
         </Grid>
         <ui:NavigationView
@@ -86,7 +88,11 @@
                                            DataContext="{Binding UpdateViewModel}"
                                            Tapped="FooterUpdateItem_OnTapped">
                         <ui:NavigationViewItem.IconSource>
-                            <ui:SymbolIconSource Symbol="Download" Foreground="LimeGreen"/>
+                            <fluentIcons:SymbolIconSource
+                                FontSize="18"
+                                Symbol="ArrowDownload"
+                                IsFilled="True"
+                                Foreground="LimeGreen"/>
                         </ui:NavigationViewItem.IconSource> 
                     </ui:NavigationViewItem>
                     
@@ -137,5 +143,12 @@
             </ui:Frame>
 
         </ui:NavigationView>
+        <ui:TeachingTip
+            Grid.Row="1"
+            Grid.RowSpan="2"
+            Name="UpdateAvailableTeachingTip"
+            Target="{Binding #FooterUpdateItem}"
+            Title="{x:Static lang:Resources.Label_UpdateAvailable}"
+            PreferredPlacement="Right" />
     </Grid>
 </controls:AppWindowBase>

@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Collections;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using AvaloniaEdit.Utils;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -50,7 +51,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly ILiteDbContext liteDbContext;
     private readonly INotificationService notificationService;
-    private const int MaxModelsPerPage = 14;
+    private const int MaxModelsPerPage = 20;
     private LRUCache<
         int /* model id */
         ,
@@ -441,24 +442,33 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
                 .GetAllCheckpointFiles(settingsManager.ModelsDirectory)
                 .Where(c => c.IsConnectedModel);
 
-            if (SelectedModelType != CivitModelType.All)
+            modelRequest.CommaSeparatedModelIds = string.Join(
+                ",",
+                connectedModels
+                    .Select(c => c.ConnectedModel!.ModelId)
+                    .GroupBy(m => m)
+                    .Select(g => g.First())
+            );
+            modelRequest.Sort = null;
+            modelRequest.Period = null;
+        }
+        else if (SortMode == CivitSortMode.Favorites)
+        {
+            var favoriteModels = settingsManager.Settings.FavoriteModels;
+
+            if (!favoriteModels.Any())
             {
-                connectedModels = connectedModels.Where(c => c.ModelType == SelectedModelType);
+                notificationService.Show(
+                    "No Favorites",
+                    "You have not added any models to your Favorites.",
+                    NotificationType.Error
+                );
+                return;
             }
 
-            modelRequest = new CivitModelsRequest
-            {
-                CommaSeparatedModelIds = string.Join(
-                    ",",
-                    connectedModels
-                        .Select(c => c.ConnectedModel!.ModelId)
-                        .GroupBy(m => m)
-                        .Select(g => g.First())
-                ),
-                Types =
-                    SelectedModelType == CivitModelType.All ? null : new[] { SelectedModelType },
-                Page = CurrentPageNumber,
-            };
+            modelRequest.CommaSeparatedModelIds = string.Join(",", favoriteModels);
+            modelRequest.Sort = null;
+            modelRequest.Period = null;
         }
 
         // See if query is cached

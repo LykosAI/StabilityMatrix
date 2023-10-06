@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added the ability to Favorite models in the Model Browser
 - Added "Favorites" sort option to the Model Browser
 - Added notification flyout for new available updates. Dismiss to hide until the next update version.
+- Added Italian UI language options, thanks to Marco Capelli for the translations
 ### Changed
 - Model Browser page size is now 20 instead of 14  
 - Update changelog now only shows the difference between the current version and the latest version

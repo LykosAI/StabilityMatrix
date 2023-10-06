@@ -2,9 +2,8 @@
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Moq;
+using NSubstitute;
 using StabilityMatrix.Avalonia.Models;
-using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
@@ -16,9 +15,9 @@ public class TestLoadableViewModel : LoadableViewModelBase
 {
     [JsonInclude]
     public string? Included { get; set; }
-    
+
     public int Id { get; set; }
-    
+
     [JsonIgnore]
     public int Ignored { get; set; }
 }
@@ -43,10 +42,10 @@ public partial class TestLoadableViewModelObservable : LoadableViewModelBase
     [ObservableProperty]
     [property: JsonIgnore]
     private string? title;
-    
+
     [ObservableProperty]
     private int id;
-    
+
     [RelayCommand]
     private void TestCommand()
     {
@@ -76,9 +75,9 @@ public class LoadableViewModelBaseTests
             Id = 123,
             Ignored = 456,
         };
-        
+
         var state = vm.SaveStateToJsonObject();
-        
+
         // [JsonInclude] and not marked property should be serialized.
         // Ignored property should be ignored.
         Assert.AreEqual(2, state.Count);
@@ -90,17 +89,13 @@ public class LoadableViewModelBaseTests
     public void TestSaveStateToJsonObject_Observable()
     {
         // Mvvm ObservableProperty should be serialized.
-        var vm = new TestLoadableViewModelObservable
-        {
-            Title = "abc",
-            Id = 123,
-        };
+        var vm = new TestLoadableViewModelObservable { Title = "abc", Id = 123, };
         var state = vm.SaveStateToJsonObject();
-        
+
         // Title should be ignored since it has [JsonIgnore]
         // Command should be ignored from excluded type rules
         // Id should be serialized
-        
+
         Assert.AreEqual(1, state.Count);
         Assert.AreEqual(123, state["Id"].Deserialize<int>());
     }
@@ -110,23 +105,20 @@ public class LoadableViewModelBaseTests
     {
         // Properties of type IJsonLoadableState should be serialized by calling their
         // SaveStateToJsonObject method.
-        
-        // Make a mock IJsonLoadableState
-        var mockState = new Mock<IJsonLoadableState>();
 
-        var vm = new TestLoadableViewModelNestedInterface
-        {
-            NestedState = mockState.Object
-        };
-        
+        // Make a mock IJsonLoadableState
+        var mockState = Substitute.For<IJsonLoadableState>();
+
+        var vm = new TestLoadableViewModelNestedInterface { NestedState = mockState };
+
         // Serialize
         var state = vm.SaveStateToJsonObject();
-        
+
         // Check results
         Assert.AreEqual(1, state.Count);
-        
+
         // Check that SaveStateToJsonObject was called
-        mockState.Verify(x => x.SaveStateToJsonObject(), Times.Once);
+        mockState.Received().SaveStateToJsonObject();
     }
 
     [TestMethod]
@@ -139,20 +131,20 @@ public class LoadableViewModelBaseTests
             Id = 123,
             Ignored = 456,
         };
-        
+
         var state = vm.SaveStateToJsonObject();
-        
+
         // Create a new instance and load the state
         var vm2 = new TestLoadableViewModel();
         vm2.LoadStateFromJsonObject(state);
-        
+
         // Check [JsonInclude] and not marked property was loaded
         Assert.AreEqual("abc", vm2.Included);
         Assert.AreEqual(123, vm2.Id);
         // Check ignored property was not loaded
         Assert.AreEqual(0, vm2.Ignored);
     }
-    
+
     [TestMethod]
     public void TestLoadStateFromJsonObject_Nested_DefaultCtor()
     {
@@ -163,27 +155,24 @@ public class LoadableViewModelBaseTests
             Id = 123,
             Ignored = 456,
         };
-        
-        var vm = new TestLoadableViewModelNested
-        {
-            NestedState = nested
-        };
-        
+
+        var vm = new TestLoadableViewModelNested { NestedState = nested };
+
         var state = vm.SaveStateToJsonObject();
-        
+
         // Create a new instance with null NestedState, rely on default ctor
         var vm2 = new TestLoadableViewModelNested();
         vm2.LoadStateFromJsonObject(state);
-        
+
         // Check nested state was loaded
         Assert.IsNotNull(vm2.NestedState);
-        
-        var loadedNested = (TestLoadableViewModel) vm2.NestedState;
+
+        var loadedNested = (TestLoadableViewModel)vm2.NestedState;
         Assert.AreEqual("abc", loadedNested.Included);
         Assert.AreEqual(123, loadedNested.Id);
         Assert.AreEqual(0, loadedNested.Ignored);
     }
-    
+
     [TestMethod]
     public void TestLoadStateFromJsonObject_Nested_Existing()
     {
@@ -194,63 +183,60 @@ public class LoadableViewModelBaseTests
             Id = 123,
             Ignored = 456,
         };
-        
-        var vm = new TestLoadableViewModelNestedInterface
-        {
-            NestedState = nested
-        };
-        
+
+        var vm = new TestLoadableViewModelNestedInterface { NestedState = nested };
+
         var state = vm.SaveStateToJsonObject();
-        
+
         // Create a new instance with existing NestedState
         var vm2 = new TestLoadableViewModelNestedInterface
         {
             NestedState = new TestLoadableViewModel()
         };
         vm2.LoadStateFromJsonObject(state);
-        
+
         // Check nested state was loaded
         Assert.IsNotNull(vm2.NestedState);
-        
-        var loadedNested = (TestLoadableViewModel) vm2.NestedState;
+
+        var loadedNested = (TestLoadableViewModel)vm2.NestedState;
         Assert.AreEqual("abc", loadedNested.Included);
         Assert.AreEqual(123, loadedNested.Id);
         Assert.AreEqual(0, loadedNested.Ignored);
     }
-    
+
     [TestMethod]
     public void TestLoadStateFromJsonObject_ReadOnly()
     {
         var vm = new TestLoadableViewModelReadOnly(456);
-        
+
         var state = vm.SaveStateToJsonObject();
-        
+
         // Check no properties were serialized
         Assert.AreEqual(0, state.Count);
-        
+
         // Create a new instance and load the state
         var vm2 = new TestLoadableViewModelReadOnly(123);
         vm2.LoadStateFromJsonObject(state);
-        
+
         // Read only property should have been ignored
         Assert.AreEqual(123, vm2.ReadOnly);
     }
-    
+
     [TestMethod]
     public void TestLoadStateFromJsonObject_ReadOnlyLoadable()
     {
         var vm = new TestLoadableViewModelReadOnlyLoadable
         {
-            ReadOnlyLoadable =
-            {
-                Included = "abc-123"
-            }
+            ReadOnlyLoadable = { Included = "abc-123" }
         };
 
         var state = vm.SaveStateToJsonObject();
-        
+
         // Check readonly loadable property was serialized
         Assert.AreEqual(1, state.Count);
-        Assert.AreEqual("abc-123", state["ReadOnlyLoadable"].Deserialize<TestLoadableViewModel>()!.Included);
+        Assert.AreEqual(
+            "abc-123",
+            state["ReadOnlyLoadable"].Deserialize<TestLoadableViewModel>()!.Included
+        );
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -292,7 +293,9 @@ public record Prompt
                 ];
 
                 // Convert to double
-                if (!double.TryParse(modelWeight, out var weightValue))
+                if (
+                    !double.TryParse(modelWeight, CultureInfo.InvariantCulture, out var weightValue)
+                )
                 {
                     throw PromptValidationError.Network_InvalidWeight(
                         currentToken.StartIndex,

@@ -8,16 +8,15 @@ namespace StabilityMatrix.Avalonia.Models.TagCompletion;
 public class TokenizerProvider : ITokenizerProvider
 {
     private readonly Registry registry = new(new RegistryOptions(ThemeName.DarkPlus));
-    private IGrammar grammar;
-    
-    public TokenizerProvider()
-    {
-        SetPromptGrammar();
-    }
-    
+    private IGrammar? grammar;
+
     /// <inheritdoc />
     public ITokenizeLineResult TokenizeLine(string lineText)
     {
+        if (grammar is null)
+        {
+            SetPromptGrammar();
+        }
         return grammar.TokenizeLine(lineText);
     }
 
@@ -27,7 +26,7 @@ public class TokenizerProvider : ITokenizerProvider
         using var stream = Assets.ImagePromptLanguageJson.Open();
         grammar = registry.LoadGrammarFromStream(stream);
     }
-    
+
     public void SetGrammar(string scopeName)
     {
         grammar = registry.LoadGrammar(scopeName);

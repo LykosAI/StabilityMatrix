@@ -144,6 +144,13 @@ public class A3WebUI : BaseGitPackage
                 InitialValue = false,
                 Options = new() { "--no-download-sd-model" }
             },
+            new()
+            {
+                Name = "Skip Install",
+                Type = LaunchOptionType.Bool,
+                InitialValue = true,
+                Options = new() { "--skip-install" }
+            },
             LaunchOptionDefinition.Extras
         };
 

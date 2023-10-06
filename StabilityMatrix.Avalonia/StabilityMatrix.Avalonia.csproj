@@ -73,7 +73,6 @@
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\ImagePrompt.tmLanguage.json" />
-        <AvaloniaResource Include="Assets\ImagePrompt.tmLanguage.json" />
         <AvaloniaResource Include="Assets\ThemeMatrixDark.json" />
     </ItemGroup>
     

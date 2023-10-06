@@ -20,8 +20,6 @@ namespace StabilityMatrix.Avalonia.Models.Inference;
 
 public record Prompt
 {
-    private static readonly CultureInfo NumericParsingCulture = CultureInfo.GetCultureInfo("en-US");
-
     public required string RawText { get; init; }
 
     public required ITokenizeLineResult TokenizeResult { get; init; }
@@ -295,7 +293,9 @@ public record Prompt
                 ];
 
                 // Convert to double
-                if (!double.TryParse(modelWeight, NumericParsingCulture, out var weightValue))
+                if (
+                    !double.TryParse(modelWeight, CultureInfo.InvariantCulture, out var weightValue)
+                )
                 {
                     throw PromptValidationError.Network_InvalidWeight(
                         currentToken.StartIndex,

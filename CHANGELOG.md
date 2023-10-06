@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.5.1
 ### Added
 - `--skip-install` default launch argument for Automatic1111 Package
+### Fixed
+- Fixed Prompt weights showing syntax error in locales where decimal separator is not a period
 
 ## v2.5.0
 ### Added

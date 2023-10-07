@@ -336,6 +336,9 @@ public static class DesignData
     public static LaunchPageViewModel LaunchPageViewModel =>
         Services.GetRequiredService<LaunchPageViewModel>();
 
+    public static OutputsPageViewModel OutputsPageViewModel =>
+        Services.GetRequiredService<OutputsPageViewModel>();
+
     public static PackageManagerViewModel PackageManagerViewModel
     {
         get

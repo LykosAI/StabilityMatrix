@@ -1,0 +1,49 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.OutputsPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    d:DataContext="{x:Static mocks:DesignData.OutputsPageViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="700"
+    x:CompileBindings="True"
+    x:DataType="vm:OutputsPageViewModel"
+    mc:Ignorable="d">
+    <Grid RowDefinitions="Auto, *" Margin="16">
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <ComboBox>
+                <ComboBoxItem>Test</ComboBoxItem>
+                <ComboBoxItem>Test 2</ComboBoxItem>
+            </ComboBox>
+        </StackPanel>
+        
+        <ScrollViewer Grid.Row="1">
+            <ItemsRepeater
+                ItemsSource="{Binding Outputs}"
+                VerticalAlignment="Top">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout MinColumnSpacing="4" MinRowSpacing="4"/>
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="{x:Type system:String}">
+                        <controls:BetterAdvancedImage 
+                            Width="300"
+                            Height="300"
+                            Stretch="UniformToFill"
+                            Source="{Binding }"/>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </ScrollViewer>
+    </Grid>
+</controls:UserControlBase>

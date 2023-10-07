@@ -20,6 +20,7 @@
                  <ResourceInclude Source="Controls/CodeCompletion/CompletionListThemes.axaml"/>
                  <ResourceInclude Source="Styles/ContextMenuStyles.axaml"/>
                  <ResourceInclude Source="Controls/EditorFlyouts.axaml"/>
+                 <ResourceInclude Source="Styles/ListBoxStyles.axaml"/>
              </ResourceDictionary.MergedDictionaries>
              
              <idcr:ControlRecycling x:Key="ControlRecyclingKey" />
@@ -37,6 +38,7 @@
         <StyleInclude Source="avares://Dock.Avalonia/Themes/DockFluentTheme.axaml" />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
+        <StyleInclude Source="avares://Avalonia.Xaml.Interactions.Draggable/Styles.axaml" />
         <StyleInclude Source="Styles/ProgressRing.axaml"/>
         <StyleInclude Source="Styles/ButtonStyles.axaml"/>
         <StyleInclude Source="Styles/SplitButtonStyles.axaml"/>

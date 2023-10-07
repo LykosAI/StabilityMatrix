@@ -1,0 +1,121 @@
+﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData">
+    
+    <Design.PreviewWith>
+        <Panel Width="400" Height="600">
+            <Panel Width="350" Height="200">
+            </Panel>
+        </Panel>
+
+    </Design.PreviewWith>
+    
+    <ControlTheme
+        x:Key="DraggableListBoxTheme"
+        TargetType="ListBox"
+        BasedOn="{StaticResource {x:Type ListBox}}">
+        
+        <Setter Property="ItemContainerTheme" Value="{StaticResource DraggableListBoxTheme}"/>
+        
+    </ControlTheme>
+    
+    <ControlTheme
+        x:Key="DraggableListBoxItemTheme"
+        TargetType="ListBoxItem">
+        <!--
+                    Modified from https://github.com/amwx/FluentAvalonia/blob/main/src/
+                    FluentAvalonia/Styling/ControlThemes/BasicControls/ListBoxStyles.axaml
+                -->
+
+                <Setter Property="Padding" Value="8,0,12,0" />
+
+                <Setter Property="FontFamily" Value="{DynamicResource ContentControlThemeFontFamily}" />
+                <Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
+                <Setter Property="Background" Value="{DynamicResource ListViewItemBackground}" />
+                <Setter Property="CornerRadius" Value="7" />
+                <Setter Property="Foreground" Value="{DynamicResource ListViewItemForeground}" />
+
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="MinWidth" Value="{DynamicResource ListViewItemMinWidth}" />
+                <!--<Setter Property="Height" Value="26" />-->
+
+                <Setter Property="Template">
+                    <ControlTemplate>
+                        <Panel>
+                            <ContentPresenter
+                                Name="PART_ContentPresenter"
+                                Margin="2,0"
+                                Padding="{TemplateBinding Padding}"
+                                HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                CornerRadius="{TemplateBinding CornerRadius}" />
+                        </Panel>
+                    </ControlTemplate>
+                </Setter>
+
+                <!--<Style Selector="^:pointerover">
+                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Background" Value="{DynamicResource ListViewItemBackgroundPointerOver}" />
+                    </Style>
+                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundPointerOver}" />
+                    </Style>
+                </Style>-->
+
+                <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="{DynamicResource ListViewItemBackgroundPressed}" />
+                </Style>
+                <Style Selector="^ /template/ ContentPresenter">
+                    <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundPressed}" />
+                </Style>
+
+
+                <!--<Style Selector="^:selected">
+                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Background" Value="{DynamicResource CompletionSelectionBackgroundBrush}" />
+                    </Style>
+                    <Style Selector="^ /template/ ContentPresenter">
+                        <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundSelected}" />
+                    </Style>
+                    ~1~  Disable selection indicator from fluent theme  @1@
+                    ~1~<Style Selector="^ /template/ Rectangle#SelectionIndicator">
+                        <Setter Property="IsVisible" Value="False" />
+                    </Style>@1@
+                    ~1~<Style Selector="^:not(:focus) /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Background" Value="{DynamicResource ListViewItemBackgroundSelected}" />
+                    </Style>
+                    <Style Selector="^:not(:focus) /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundSelected}" />
+                    </Style>@1@
+
+                    ~1~<Style Selector="^:pointerover">
+                        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="{DynamicResource ListViewItemBackgroundSelectedPointerOver}" />
+                        </Style>
+                        <Style Selector="^ /template/ ContentPresenter">
+                            <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundSelectedPointerOver}" />
+                        </Style>
+                    </Style>@1@
+
+                    <Style Selector="^:pressed">
+                        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Background" Value="{DynamicResource ListViewItemBackgroundSelectedPressed}" />
+                        </Style>
+                        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                            <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundSelectedPressed}" />
+                        </Style>
+                    </Style>
+
+                    ~1~<Style Selector="^:disabled /template/ Rectangle#SelectionIndicator">
+                        <Setter Property="Fill" Value="{DynamicResource ListViewItemSelectionIndicatorDisabledBrush}" />
+                    </Style>@1@
+                </Style>-->
+        
+    </ControlTheme>
+</ResourceDictionary>

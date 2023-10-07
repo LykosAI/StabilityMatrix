@@ -69,6 +69,9 @@ public class InvokeAI : BaseGitPackage
             [SharedFolderType.ControlNet] = new[] { RelativeRootPath + "/autoimport/controlnet" },
         };
 
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+        new() { [SharedOutputType.Text2Img] = new[] { "invokeai-root/outputs/images" } };
+
     // https://github.com/invoke-ai/InvokeAI/blob/main/docs/features/CONFIGURATION.md
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new List<LaunchOptionDefinition>

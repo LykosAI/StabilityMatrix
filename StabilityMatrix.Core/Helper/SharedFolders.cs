@@ -45,10 +45,12 @@ public class SharedFolders : ISharedFolders
     /// <param name="sourceDir">Shared source (i.e. "Models/")</param>
     /// <param name="destinationDir">Destination (i.e. "webui/models/lora")</param>
     /// <param name="overwrite">Whether to overwrite the destination if it exists</param>
+    /// <param name="recursiveDelete">Whether to recursively delete the directory after moving data out of it</param>
     public static async Task CreateOrUpdateLink(
         DirectoryPath sourceDir,
         DirectoryPath destinationDir,
-        bool overwrite = false
+        bool overwrite = false,
+        bool recursiveDelete = false
     )
     {
         // Create source folder if it doesn't exist
@@ -93,7 +95,7 @@ public class SharedFolders : ISharedFolders
                 }
 
                 Logger.Info($"Deleting existing empty folder at target {destinationDir}");
-                await destinationDir.DeleteAsync(false).ConfigureAwait(false);
+                await destinationDir.DeleteAsync(recursiveDelete).ConfigureAwait(false);
             }
         }
 
@@ -117,11 +119,13 @@ public class SharedFolders : ISharedFolders
     /// Updates or creates shared links for a package.
     /// Will attempt to move files from the destination to the source if the destination is not empty.
     /// </summary>
-    public static async Task UpdateLinksForPackage(
-        Dictionary<SharedFolderType, IReadOnlyList<string>> sharedFolders,
+    public static async Task UpdateLinksForPackage<T>(
+        Dictionary<T, IReadOnlyList<string>> sharedFolders,
         DirectoryPath modelsDirectory,
-        DirectoryPath installDirectory
+        DirectoryPath installDirectory,
+        bool recursiveDelete = false
     )
+        where T : Enum
     {
         foreach (var (folderType, relativePaths) in sharedFolders)
         {
@@ -130,14 +134,22 @@ public class SharedFolders : ISharedFolders
                 var sourceDir = new DirectoryPath(modelsDirectory, folderType.GetStringValue());
                 var destinationDir = installDirectory.JoinDir(relativePath);
 
-                await CreateOrUpdateLink(sourceDir, destinationDir).ConfigureAwait(false);
+                await CreateOrUpdateLink(
+                        sourceDir,
+                        destinationDir,
+                        recursiveDelete: recursiveDelete
+                    )
+                    .ConfigureAwait(false);
             }
         }
     }
 
-    public static void RemoveLinksForPackage(BasePackage package, DirectoryPath installPath)
+    public static void RemoveLinksForPackage<T>(
+        Dictionary<T, IReadOnlyList<string>>? sharedFolders,
+        DirectoryPath installPath
+    )
+        where T : Enum
     {
-        var sharedFolders = package.SharedFolders;
         if (sharedFolders == null)
         {
             return;

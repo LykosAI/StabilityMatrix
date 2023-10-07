@@ -68,6 +68,12 @@ public class DankDiffusion : BaseGitPackage
 
     public override List<LaunchOptionDefinition> LaunchOptions { get; }
 
+    public override Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
+    public override Dictionary<
+        SharedOutputType,
+        IReadOnlyList<string>
+    >? SharedOutputFolders { get; }
+
     public override Task<string> GetLatestVersion()
     {
         throw new NotImplementedException();

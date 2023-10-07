@@ -21,6 +21,7 @@ public interface ISettingsManager
     List<string> PackageInstallsInProgress { get; set; }
 
     Settings Settings { get; }
+    string OutputDirectory { get; }
 
     /// <summary>
     /// Event fired when the library directory is changed

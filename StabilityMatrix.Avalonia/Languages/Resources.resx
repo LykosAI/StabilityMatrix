@@ -678,4 +678,7 @@
   <data name="Action_RestoreDefaultLayout" xml:space="preserve">
     <value>Restore Default Layout</value>
   </data>
+  <data name="Label_UseSharedOutputFolder" xml:space="preserve">
+    <value>Output Sharing</value>
+  </data>
 </root>

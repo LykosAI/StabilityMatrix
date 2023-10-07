@@ -85,6 +85,9 @@ public class FooocusMre : BaseGitPackage
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" }
         };
 
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+        new() { [SharedOutputType.Text2Img] = new[] { "outputs" } };
+
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
 

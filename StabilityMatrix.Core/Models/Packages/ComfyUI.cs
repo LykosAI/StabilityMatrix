@@ -58,6 +58,9 @@ public class ComfyUI : BaseGitPackage
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
         };
 
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+        new() { [SharedOutputType.Text2Img] = new[] { "output" } };
+
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new List<LaunchOptionDefinition>
         {

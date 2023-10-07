@@ -62,6 +62,9 @@ public partial class PackageCardViewModel : ProgressViewModel
     [ObservableProperty]
     private bool canUseConfigMethod;
 
+    [ObservableProperty]
+    private bool useSharedOutput;
+
     public PackageCardViewModel(
         ILogger<PackageCardViewModel> logger,
         IPackageFactory packageFactory,
@@ -100,6 +103,7 @@ public partial class PackageCardViewModel : ProgressViewModel
             CanUseConfigMethod =
                 basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Configuration)
                 ?? false;
+            UseSharedOutput = Package?.UseSharedOutputFolder ?? false;
         }
     }
 
@@ -366,6 +370,33 @@ public partial class PackageCardViewModel : ProgressViewModel
     public void ToggleSharedModelConfig() => IsSharedModelConfig = !IsSharedModelConfig;
 
     public void ToggleSharedModelNone() => IsSharedModelDisabled = !IsSharedModelDisabled;
+
+    public void ToggleSharedOutput() => UseSharedOutput = !UseSharedOutput;
+
+    partial void OnUseSharedOutputChanged(bool value)
+    {
+        if (Package == null)
+            return;
+
+        if (value == Package.UseSharedOutputFolder)
+            return;
+
+        using var st = settingsManager.BeginTransaction();
+        Package.UseSharedOutputFolder = value;
+
+        var basePackage = packageFactory[Package.PackageName!];
+        if (basePackage == null)
+            return;
+
+        if (value)
+        {
+            basePackage.SetupOutputFolderLinks(Package.FullPath!);
+        }
+        else
+        {
+            basePackage.RemoveOutputFolderLinks(Package.FullPath!);
+        }
+    }
 
     // fake radio button stuff
     partial void OnIsSharedModelSymlinkChanged(bool oldValue, bool newValue)

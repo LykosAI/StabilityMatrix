@@ -1518,6 +1518,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Output Sharing.
+        /// </summary>
+        public static string Label_UseSharedOutputFolder {
+            get {
+                return ResourceManager.GetString("Label_UseSharedOutputFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to VAE.
         /// </summary>
         public static string Label_VAE {

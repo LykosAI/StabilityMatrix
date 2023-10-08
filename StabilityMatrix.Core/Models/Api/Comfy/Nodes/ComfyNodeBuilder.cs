@@ -144,6 +144,25 @@ public class ComfyNodeBuilder
         };
     }
 
+    public static NamedComfyNode<LatentNodeConnection> LatentFromBatch(
+        string name,
+        LatentNodeConnection samples,
+        int batchIndex,
+        int length
+    )
+    {
+        return new NamedComfyNode<LatentNodeConnection>(name)
+        {
+            ClassType = "LatentFromBatch",
+            Inputs = new Dictionary<string, object?>
+            {
+                ["samples"] = samples.Data,
+                ["batch_index"] = batchIndex,
+                ["length"] = length,
+            }
+        };
+    }
+
     public static NamedComfyNode<ImageNodeConnection> ImageUpscaleWithModel(
         string name,
         UpscaleModelNodeConnection upscaleModel,

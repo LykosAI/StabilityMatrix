@@ -235,6 +235,8 @@ public abstract partial class InferenceGenerationViewModelBase
         // Download all images to make grid, if multiple
         if (outputImages.Count > 1)
         {
+            var outputDir = outputImages[0].LocalFile!.Directory;
+
             var loadedImages = outputImages
                 .Select(i => i.LocalFile)
                 .Where(f => f is { Exists: true })
@@ -255,7 +257,7 @@ public abstract partial class InferenceGenerationViewModelBase
 
             // Save to disk
             var lastName = outputImages.Last().LocalFile?.Info.Name;
-            var gridPath = args.Client.OutputImagesDir!.JoinFile($"grid-{lastName}");
+            var gridPath = outputDir!.JoinFile($"grid-{lastName}");
 
             await using (var fileStream = gridPath.Info.OpenWrite())
             {

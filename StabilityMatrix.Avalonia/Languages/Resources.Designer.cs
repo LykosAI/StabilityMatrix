@@ -528,6 +528,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Batch Index.
+        /// </summary>
+        public static string Label_BatchIndex {
+            get {
+                return ResourceManager.GetString("Label_BatchIndex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Become a Patron.
         /// </summary>
         public static string Label_BecomeAPatron {

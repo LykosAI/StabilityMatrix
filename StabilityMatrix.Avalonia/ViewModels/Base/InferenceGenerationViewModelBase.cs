@@ -20,6 +20,7 @@ using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
@@ -199,14 +200,16 @@ public abstract partial class InferenceGenerationViewModelBase
     /// Handles image output metadata for generation runs
     /// </summary>
     private async Task ProcessOutputImages(
-        IEnumerable<ComfyImage> images,
+        IReadOnlyCollection<ComfyImage> images,
         ImageGenerationEventArgs args
     )
     {
         // Write metadata to images
         var outputImages = new List<ImageSource>();
         foreach (
-            var filePath in images.Select(image => image.ToFilePath(args.Client.OutputImagesDir!))
+            var (i, filePath) in images
+                .Select(image => image.ToFilePath(args.Client.OutputImagesDir!))
+                .Enumerate()
         )
         {
             if (!filePath.Exists)
@@ -215,10 +218,30 @@ public abstract partial class InferenceGenerationViewModelBase
                 continue;
             }
 
+            var parameters = args.Parameters!;
+            var project = args.Project!;
+
+            // Seed and batch override for batches
+            if (images.Count > 1 && project.ProjectType is InferenceProjectType.TextToImage)
+            {
+                project = (InferenceProjectDocument)project.Clone();
+
+                // Set batch size indexes
+                project.TryUpdateModel(
+                    "BatchSize",
+                    node =>
+                    {
+                        node[nameof(BatchSizeCardViewModel.IsBatchIndexEnabled)] = true;
+                        node[nameof(BatchSizeCardViewModel.BatchIndex)] = i + 1;
+                        return node;
+                    }
+                );
+            }
+
             var bytesWithMetadata = PngDataHelper.AddMetadata(
                 await filePath.ReadAllBytesAsync(),
-                args.Parameters!,
-                args.Project!
+                parameters,
+                project
             );
 
             await using (var outputStream = filePath.Info.OpenWrite())

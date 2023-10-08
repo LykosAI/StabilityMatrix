@@ -31,6 +31,22 @@ public static class ComfyNodeBuilderExtensions
             samplerCardViewModel.Width,
             samplerCardViewModel.Height
         );
+
+        // If batch index is selected, add a LatentFromBatch
+        if (batchSizeCardViewModel.IsBatchIndexEnabled)
+        {
+            builder.Connections.Latent = builder.Nodes
+                .AddNamedNode(
+                    ComfyNodeBuilder.LatentFromBatch(
+                        "LatentFromBatch",
+                        builder.Connections.Latent,
+                        // remote expects a 0-based index, vm is 1-based
+                        batchSizeCardViewModel.BatchIndex - 1,
+                        1
+                    )
+                )
+                .Output;
+        }
     }
 
     public static void SetupBaseSampler(

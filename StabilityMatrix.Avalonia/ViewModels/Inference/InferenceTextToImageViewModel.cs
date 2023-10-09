@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -173,12 +174,20 @@ public class InferenceTextToImageViewModel
         var builder = args.Builder;
         var nodes = builder.Nodes;
 
+        if (args.SeedOverride is { } seed)
+        {
+            builder.Connections.Seed = Convert.ToUInt64(seed);
+        }
+        else
+        {
+            builder.Connections.Seed = Convert.ToUInt64(SeedCardViewModel.Seed);
+        }
+
         // Setup empty latent
         builder.SetupLatentSource(BatchSizeCardViewModel, SamplerCardViewModel);
 
         // Setup base stage
         builder.SetupBaseSampler(
-            SeedCardViewModel,
             SamplerCardViewModel,
             PromptCardViewModel,
             ModelCardViewModel,
@@ -210,7 +219,6 @@ public class InferenceTextToImageViewModel
         )
         {
             builder.SetupRefinerSampler(
-                SeedCardViewModel,
                 SamplerCardViewModel,
                 PromptCardViewModel,
                 ModelCardViewModel,
@@ -285,7 +293,7 @@ public class InferenceTextToImageViewModel
                 ComfyNodeBuilder.KSampler(
                     "HiresSampler",
                     builder.Connections.GetRefinerOrBaseModel(),
-                    Convert.ToUInt64(SeedCardViewModel.Seed),
+                    builder.Connections.Seed,
                     HiresSamplerCardViewModel.Steps,
                     HiresSamplerCardViewModel.CfgScale,
                     // Use hires sampler name if not null, otherwise use the normal sampler
@@ -353,34 +361,55 @@ public class InferenceTextToImageViewModel
             seedCard.GenerateNewSeed();
         }
 
-        var buildPromptArgs = new BuildPromptEventArgs { Overrides = overrides };
-        BuildPrompt(buildPromptArgs);
+        var batches = BatchSizeCardViewModel.BatchCount;
 
-        var generationArgs = new ImageGenerationEventArgs
+        var batchArgs = new List<ImageGenerationEventArgs>();
+
+        for (var i = 0; i < batches; i++)
         {
-            Client = ClientManager.Client,
-            Nodes = buildPromptArgs.Builder.ToNodeDictionary(),
-            OutputNodeNames = buildPromptArgs.Builder.Connections.OutputNodeNames.ToArray(),
-            Parameters = new GenerationParameters
-            {
-                Seed = (ulong)seedCard.Seed,
-                Steps = SamplerCardViewModel.Steps,
-                CfgScale = SamplerCardViewModel.CfgScale,
-                Sampler = SamplerCardViewModel.SelectedSampler?.Name,
-                ModelName = ModelCardViewModel.SelectedModelName,
-                ModelHash = ModelCardViewModel
-                    .SelectedModel
-                    ?.Local
-                    ?.ConnectedModelInfo
-                    ?.Hashes
-                    .SHA256,
-                PositivePrompt = PromptCardViewModel.PromptDocument.Text,
-                NegativePrompt = PromptCardViewModel.NegativePromptDocument.Text
-            },
-            Project = InferenceProjectDocument.FromLoadable(this)
-        };
+            var seed = seedCard.Seed + i;
 
-        await RunGeneration(generationArgs, cancellationToken);
+            var buildPromptArgs = new BuildPromptEventArgs
+            {
+                Overrides = overrides,
+                SeedOverride = seed
+            };
+            BuildPrompt(buildPromptArgs);
+
+            var generationArgs = new ImageGenerationEventArgs
+            {
+                Client = ClientManager.Client,
+                Nodes = buildPromptArgs.Builder.ToNodeDictionary(),
+                OutputNodeNames = buildPromptArgs.Builder.Connections.OutputNodeNames.ToArray(),
+                Parameters = new GenerationParameters
+                {
+                    Seed = (ulong)seed,
+                    Steps = SamplerCardViewModel.Steps,
+                    CfgScale = SamplerCardViewModel.CfgScale,
+                    Sampler = SamplerCardViewModel.SelectedSampler?.Name,
+                    ModelName = ModelCardViewModel.SelectedModelName,
+                    ModelHash = ModelCardViewModel
+                        .SelectedModel
+                        ?.Local
+                        ?.ConnectedModelInfo
+                        ?.Hashes
+                        .SHA256,
+                    PositivePrompt = PromptCardViewModel.PromptDocument.Text,
+                    NegativePrompt = PromptCardViewModel.NegativePromptDocument.Text
+                },
+                Project = InferenceProjectDocument.FromLoadable(this),
+                // Only clear output images on the first batch
+                ClearOutputImages = i == 0
+            };
+
+            batchArgs.Add(generationArgs);
+        }
+
+        // Run batches
+        foreach (var args in batchArgs)
+        {
+            await RunGeneration(args, cancellationToken);
+        }
     }
 
     /// <inheritdoc />

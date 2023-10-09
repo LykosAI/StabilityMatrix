@@ -3,8 +3,11 @@
 namespace StabilityMatrix.Avalonia.Models.Inference;
 
 [JsonSerializable(typeof(SeedCardModel))]
-public class SeedCardModel
+public record SeedCardModel
 {
-    public string? Seed { get; set; }
-    public bool IsRandomizeEnabled { get; set; }
+    [JsonNumberHandling(
+        JsonNumberHandling.WriteAsString | JsonNumberHandling.AllowReadingFromString
+    )]
+    public long Seed { get; init; }
+    public bool IsRandomizeEnabled { get; init; }
 }

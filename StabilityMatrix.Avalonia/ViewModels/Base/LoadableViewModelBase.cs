@@ -34,19 +34,19 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
             && !typeof(IJsonLoadableState).IsAssignableFrom(property.PropertyType)
         )
         {
-            Logger.Trace("Skipping {Property} - read-only", property.Name);
+            Logger.ConditionalTrace("Skipping {Property} - read-only", property.Name);
             return true;
         }
         // Check not JsonIgnore
         if (property.GetCustomAttributes(typeof(JsonIgnoreAttribute), true).Length > 0)
         {
-            Logger.Trace("Skipping {Property} - has [JsonIgnore]", property.Name);
+            Logger.ConditionalTrace("Skipping {Property} - has [JsonIgnore]", property.Name);
             return true;
         }
         // Check not excluded type
         if (SerializerIgnoredTypes.Contains(property.PropertyType))
         {
-            Logger.Trace(
+            Logger.ConditionalTrace(
                 "Skipping {Property} - serializer ignored type {Type}",
                 property.Name,
                 property.PropertyType
@@ -56,7 +56,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
         // Check not ignored name
         if (SerializerIgnoredNames.Contains(property.Name, StringComparer.Ordinal))
         {
-            Logger.Trace("Skipping {Property} - serializer ignored name", property.Name);
+            Logger.ConditionalTrace("Skipping {Property} - serializer ignored name", property.Name);
             return true;
         }
 
@@ -71,7 +71,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
         // Has JsonIncludeAttribute
         if (property.GetCustomAttributes(typeof(JsonIncludeAttribute), true).Length > 0)
         {
-            Logger.Trace("Including {Property} - has [JsonInclude]", property.Name);
+            Logger.ConditionalTrace("Including {Property} - has [JsonInclude]", property.Name);
             return true;
         }
 
@@ -94,7 +94,11 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
     {
         // Get all of our properties using reflection
         var properties = GetType().GetProperties();
-        Logger.Trace("Serializing {Type} with {Count} properties", GetType(), properties.Length);
+        Logger.ConditionalTrace(
+            "Serializing {Type} with {Count} properties",
+            GetType(),
+            properties.Length
+        );
 
         foreach (var property in properties)
         {
@@ -108,7 +112,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
                 is JsonPropertyNameAttribute jsonPropertyName
             )
             {
-                Logger.Trace(
+                Logger.ConditionalTrace(
                     "Deserializing {Property} ({Type}) with JsonPropertyName {JsonPropertyName}",
                     property.Name,
                     property.PropertyType,
@@ -120,7 +124,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
             // Check if property is in the JSON object
             if (!state.TryGetPropertyValue(name, out var value))
             {
-                Logger.Trace("Skipping {Property} - not in JSON object", property.Name);
+                Logger.ConditionalTrace("Skipping {Property} - not in JSON object", property.Name);
                 continue;
             }
 
@@ -133,7 +137,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
             // For types that also implement IJsonLoadableState, defer to their load implementation
             if (typeof(IJsonLoadableState).IsAssignableFrom(property.PropertyType))
             {
-                Logger.Trace(
+                Logger.ConditionalTrace(
                     "Loading {Property} ({Type}) with IJsonLoadableState",
                     property.Name,
                     property.PropertyType
@@ -171,7 +175,11 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
             }
             else
             {
-                Logger.Trace("Loading {Property} ({Type})", property.Name, property.PropertyType);
+                Logger.ConditionalTrace(
+                    "Loading {Property} ({Type})",
+                    property.Name,
+                    property.PropertyType
+                );
 
                 var propertyValue = value.Deserialize(property.PropertyType, SerializerOptions);
                 property.SetValue(this, propertyValue);
@@ -195,7 +203,11 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
     {
         // Get all of our properties using reflection.
         var properties = GetType().GetProperties();
-        Logger.Trace("Serializing {Type} with {Count} properties", GetType(), properties.Length);
+        Logger.ConditionalTrace(
+            "Serializing {Type} with {Count} properties",
+            GetType(),
+            properties.Length
+        );
 
         // Create a JSON object to store the state.
         var state = new JsonObject();
@@ -218,7 +230,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
                 is JsonPropertyNameAttribute jsonPropertyName
             )
             {
-                Logger.Trace(
+                Logger.ConditionalTrace(
                     "Serializing {Property} ({Type}) with JsonPropertyName {JsonPropertyName}",
                     property.Name,
                     property.PropertyType,
@@ -230,7 +242,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
             // For types that also implement IJsonLoadableState, defer to their implementation.
             if (typeof(IJsonLoadableState).IsAssignableFrom(property.PropertyType))
             {
-                Logger.Trace(
+                Logger.ConditionalTrace(
                     "Serializing {Property} ({Type}) with IJsonLoadableState",
                     property.Name,
                     property.PropertyType
@@ -245,7 +257,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
             }
             else
             {
-                Logger.Trace(
+                Logger.ConditionalTrace(
                     "Serializing {Property} ({Type})",
                     property.Name,
                     property.PropertyType

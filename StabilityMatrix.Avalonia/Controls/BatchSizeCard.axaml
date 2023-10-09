@@ -4,6 +4,8 @@
         xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
         xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
         xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+        xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+        xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
         x:DataType="vmInference:BatchSizeCardViewModel">
     
     <Design.PreviewWith>
@@ -12,16 +14,23 @@
                 DataContext="{x:Static mocks:DesignData.BatchSizeCardViewModel}"/>
             <controls:BatchSizeCard 
                 Width="280"
-                DataContext="{x:Static mocks:DesignData.BatchSizeCardViewModel}"/>
+                DataContext="{x:Static mocks:DesignData.BatchSizeCardViewModelWithIndexOption}"/>
         </StackPanel>
     </Design.PreviewWith>
 
     <Style Selector="controls|BatchSizeCard">
         <!-- Set Defaults -->
+        <Setter Property="ContextFlyout">
+            <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
+                <ui:ToggleMenuFlyoutItem
+                    IsChecked="{Binding IsBatchIndexEnabled}"
+                    Text="{x:Static lang:Resources.Label_BatchIndex}"/>
+            </ui:FAMenuFlyout>
+        </Setter>
         <Setter Property="Template">
             <ControlTemplate>
                 <controls:Card Padding="8">
-                    <Grid Margin="8" ColumnDefinitions="*,*">
+                    <Grid Margin="8" RowDefinitions="Auto,Auto" ColumnDefinitions="*,*">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" >
                                 <TextBlock 
@@ -43,7 +52,9 @@
                                 ClipValueToMinMax="True"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="1">
+                        <StackPanel
+                            Grid.Row="0"
+                            Grid.Column="1">
                             <StackPanel Orientation="Horizontal" >
                                 <TextBlock 
                                     VerticalAlignment="Center"
@@ -61,6 +72,34 @@
                                 Increment="1"
                                 ParsingNumberStyle="Integer"
                                 Value="{Binding BatchCount}"
+                                ClipValueToMinMax="True"/>
+                        </StackPanel>
+                        
+                        <!-- Optional index selection -->
+                        <StackPanel 
+                            Grid.Row="1" 
+                            Grid.Column="0" 
+                            Grid.ColumnSpan="2"
+                            IsVisible="{Binding IsBatchIndexEnabled}"
+                            Margin="0,8,0,0">
+                            <StackPanel Orientation="Horizontal" >
+                                <TextBlock 
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,4,0"
+                                    Text="{x:Static lang:Resources.Label_BatchIndex}"/>
+                                <icons:Icon
+                                    FontSize="12"
+                                    Value="fa-solid fa-crosshairs"/>
+                            </StackPanel>
+                            <NumericUpDown 
+                                HorizontalAlignment="Stretch"
+                                Margin="0,4,0,0"
+                                MinWidth="120"
+                                Minimum="1"
+                                Maximum="{Binding BatchSize}"
+                                Increment="1"
+                                ParsingNumberStyle="Integer"
+                                Value="{Binding BatchIndex}"
                                 ClipValueToMinMax="True"/>
                         </StackPanel>
 

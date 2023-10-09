@@ -152,17 +152,20 @@ public partial class MainWindow : AppWindowBase
 
     private void OnUpdateAvailable(object? sender, UpdateInfo? updateInfo)
     {
-        var vm = DataContext as MainWindowViewModel;
-
-        if (vm!.ShouldShowUpdateAvailableTeachingTip(updateInfo))
+        Dispatcher.UIThread.Post(() =>
         {
-            var target = this.FindControl<NavigationViewItem>("FooterUpdateItem")!;
-            var tip = this.FindControl<TeachingTip>("UpdateAvailableTeachingTip")!;
+            var vm = DataContext as MainWindowViewModel;
 
-            tip.Target = target;
-            tip.Subtitle = $"{Compat.AppVersion} -> {updateInfo.Version}";
-            tip.IsOpen = true;
-        }
+            if (vm!.ShouldShowUpdateAvailableTeachingTip(updateInfo))
+            {
+                var target = this.FindControl<NavigationViewItem>("FooterUpdateItem")!;
+                var tip = this.FindControl<TeachingTip>("UpdateAvailableTeachingTip")!;
+
+                tip.Target = target;
+                tip.Subtitle = $"{Compat.AppVersion} -> {updateInfo.Version}";
+                tip.IsOpen = true;
+            }
+        });
     }
 
     public void SetDefaultFonts()

@@ -19,9 +19,9 @@
     mc:Ignorable="d">
 
     <controls:UserControlBase.KeyBindings>
-        <KeyBinding Command="{Binding NavigateNextCommand}" Gesture="Up" />
+        <KeyBinding Command="{Binding NavigateNextCommand}" Gesture="Down" />
         <KeyBinding Command="{Binding NavigateNextCommand}" Gesture="Right" />
-        <KeyBinding Command="{Binding NavigatePreviousCommand}" Gesture="Down" />
+        <KeyBinding Command="{Binding NavigatePreviousCommand}" Gesture="Up" />
         <KeyBinding Command="{Binding NavigatePreviousCommand}" Gesture="Left" />
     </controls:UserControlBase.KeyBindings>
 

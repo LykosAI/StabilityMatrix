@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Right click Inference Batch options to enable selecting a "Batch Index". This can be used to reproduce a specific image from a batch generation. The field will be automatically populated in metadata of individual images from a batch generation.
   - The index is 1-based, so the first image in a batch is index 1, and the last image is the batch size.
   - Currently this generates different individual images for batches using Ancestral samplers, due to an upstream ComfyUI issue with noise masking. Looking into fixing this.
+- Inference Batches option now is implemented, previously the setting had no effect
 ### Fixed
 - Fixed batch combined image grids not showing metadata and not being importable
 - Fixed "Call from invalid thread" errors that sometimes occured during update notifications

@@ -167,7 +167,10 @@ public abstract partial class InferenceGenerationViewModelBase
             // Disable cancellation
             await promptInterrupt.DisposeAsync();
 
-            ImageGalleryCardViewModel.ImageSources.Clear();
+            if (args.ClearOutputImages)
+            {
+                ImageGalleryCardViewModel.ImageSources.Clear();
+            }
 
             if (
                 !imageOutputs.TryGetValue(args.OutputNodeNames[0], out var images) || images is null
@@ -419,13 +422,15 @@ public abstract partial class InferenceGenerationViewModelBase
         public required ComfyClient Client { get; init; }
         public required NodeDictionary Nodes { get; init; }
         public required IReadOnlyList<string> OutputNodeNames { get; init; }
-        public GenerationParameters? Parameters { get; set; }
-        public InferenceProjectDocument? Project { get; set; }
+        public GenerationParameters? Parameters { get; init; }
+        public InferenceProjectDocument? Project { get; init; }
+        public bool ClearOutputImages { get; init; } = true;
     }
 
     public class BuildPromptEventArgs : EventArgs
     {
         public ComfyNodeBuilder Builder { get; } = new();
-        public GenerateOverrides Overrides { get; set; } = new();
+        public GenerateOverrides Overrides { get; init; } = new();
+        public long? SeedOverride { get; init; }
     }
 }

@@ -651,6 +651,8 @@ public class ComfyNodeBuilder
 
     public class NodeBuilderConnections
     {
+        public ulong Seed { get; set; }
+
         public ModelNodeConnection? BaseModel { get; set; }
         public VAENodeConnection? BaseVAE { get; set; }
         public ClipNodeConnection? BaseClip { get; set; }

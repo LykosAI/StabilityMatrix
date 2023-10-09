@@ -51,7 +51,6 @@ public static class ComfyNodeBuilderExtensions
 
     public static void SetupBaseSampler(
         this ComfyNodeBuilder builder,
-        SeedCardViewModel seedCardViewModel,
         SamplerCardViewModel samplerCardViewModel,
         PromptCardViewModel promptCardViewModel,
         ModelCardViewModel modelCardViewModel,
@@ -125,7 +124,7 @@ public static class ComfyNodeBuilderExtensions
                 ComfyNodeBuilder.KSampler(
                     "Sampler",
                     builder.Connections.BaseModel,
-                    Convert.ToUInt64(seedCardViewModel.Seed),
+                    builder.Connections.Seed,
                     samplerCardViewModel.Steps,
                     samplerCardViewModel.CfgScale,
                     samplerCardViewModel.SelectedSampler
@@ -152,7 +151,7 @@ public static class ComfyNodeBuilderExtensions
                     "Sampler",
                     builder.Connections.BaseModel,
                     true,
-                    Convert.ToUInt64(seedCardViewModel.Seed),
+                    builder.Connections.Seed,
                     totalSteps,
                     samplerCardViewModel.CfgScale,
                     samplerCardViewModel.SelectedSampler
@@ -174,7 +173,6 @@ public static class ComfyNodeBuilderExtensions
 
     public static void SetupRefinerSampler(
         this ComfyNodeBuilder builder,
-        SeedCardViewModel seedCardViewModel,
         SamplerCardViewModel samplerCardViewModel,
         PromptCardViewModel promptCardViewModel,
         ModelCardViewModel modelCardViewModel,
@@ -248,7 +246,7 @@ public static class ComfyNodeBuilderExtensions
                 "Refiner_Sampler",
                 builder.Connections.RefinerModel,
                 false,
-                Convert.ToUInt64(seedCardViewModel.Seed),
+                builder.Connections.Seed,
                 totalSteps,
                 samplerCardViewModel.CfgScale,
                 samplerCardViewModel.SelectedSampler

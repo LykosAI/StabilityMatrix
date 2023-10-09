@@ -13,8 +13,9 @@ public class ImageMetadata
 {
     private IReadOnlyList<Directory>? Directories { get; set; }
 
-    private static readonly byte[] Idat = { 0x49, 0x44, 0x41, 0x54 };
-    private static readonly byte[] Text = { 0x74, 0x45, 0x58, 0x74 };
+    private static readonly byte[] PngHeader = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+    private static readonly byte[] Idat = "IDAT"u8.ToArray();
+    private static readonly byte[] Text = "tEXt"u8.ToArray();
 
     public static ImageMetadata ParseFile(FilePath path)
     {
@@ -139,12 +140,19 @@ public class ImageMetadata
 
     public static string ReadTextChunk(BinaryReader byteStream, string key)
     {
-        // skip to end of png header stuff
-        byteStream.BaseStream.Position = 0x21;
+        byteStream.BaseStream.Position = 0;
+
+        // Read first 8 bytes and make sure they match the png header
+        if (!byteStream.ReadBytes(8).SequenceEqual(PngHeader))
+        {
+            return string.Empty;
+        }
+
         while (byteStream.BaseStream.Position < byteStream.BaseStream.Length - 4)
         {
             var chunkSize = BitConverter.ToInt32(byteStream.ReadBytes(4).Reverse().ToArray());
             var chunkType = Encoding.UTF8.GetString(byteStream.ReadBytes(4));
+
             if (chunkType == Encoding.UTF8.GetString(Idat))
             {
                 return string.Empty;
@@ -158,6 +166,11 @@ public class ImageMetadata
                 {
                     return text[(key.Length + 1)..];
                 }
+            }
+            else
+            {
+                // skip chunk data
+                byteStream.BaseStream.Position += chunkSize;
             }
 
             // skip crc

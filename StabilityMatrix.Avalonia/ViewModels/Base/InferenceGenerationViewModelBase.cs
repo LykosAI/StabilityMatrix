@@ -20,6 +20,7 @@ using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
@@ -166,7 +167,10 @@ public abstract partial class InferenceGenerationViewModelBase
             // Disable cancellation
             await promptInterrupt.DisposeAsync();
 
-            ImageGalleryCardViewModel.ImageSources.Clear();
+            if (args.ClearOutputImages)
+            {
+                ImageGalleryCardViewModel.ImageSources.Clear();
+            }
 
             if (
                 !imageOutputs.TryGetValue(args.OutputNodeNames[0], out var images) || images is null
@@ -199,14 +203,16 @@ public abstract partial class InferenceGenerationViewModelBase
     /// Handles image output metadata for generation runs
     /// </summary>
     private async Task ProcessOutputImages(
-        IEnumerable<ComfyImage> images,
+        IReadOnlyCollection<ComfyImage> images,
         ImageGenerationEventArgs args
     )
     {
         // Write metadata to images
         var outputImages = new List<ImageSource>();
         foreach (
-            var filePath in images.Select(image => image.ToFilePath(args.Client.OutputImagesDir!))
+            var (i, filePath) in images
+                .Select(image => image.ToFilePath(args.Client.OutputImagesDir!))
+                .Enumerate()
         )
         {
             if (!filePath.Exists)
@@ -215,10 +221,37 @@ public abstract partial class InferenceGenerationViewModelBase
                 continue;
             }
 
+            var parameters = args.Parameters!;
+            var project = args.Project!;
+
+            // Lock seed
+            project.TryUpdateModel<SeedCardModel>(
+                "Seed",
+                model => model with { IsRandomizeEnabled = false }
+            );
+
+            // Seed and batch override for batches
+            if (images.Count > 1 && project.ProjectType is InferenceProjectType.TextToImage)
+            {
+                project = (InferenceProjectDocument)project.Clone();
+
+                // Set batch size indexes
+                project.TryUpdateModel(
+                    "BatchSize",
+                    node =>
+                    {
+                        node[nameof(BatchSizeCardViewModel.BatchCount)] = 1;
+                        node[nameof(BatchSizeCardViewModel.IsBatchIndexEnabled)] = true;
+                        node[nameof(BatchSizeCardViewModel.BatchIndex)] = i + 1;
+                        return node;
+                    }
+                );
+            }
+
             var bytesWithMetadata = PngDataHelper.AddMetadata(
                 await filePath.ReadAllBytesAsync(),
-                args.Parameters!,
-                args.Project!
+                parameters,
+                project
             );
 
             await using (var outputStream = filePath.Info.OpenWrite())
@@ -235,6 +268,8 @@ public abstract partial class InferenceGenerationViewModelBase
         // Download all images to make grid, if multiple
         if (outputImages.Count > 1)
         {
+            var outputDir = outputImages[0].LocalFile!.Directory;
+
             var loadedImages = outputImages
                 .Select(i => i.LocalFile)
                 .Where(f => f is { Exists: true })
@@ -244,6 +279,14 @@ public abstract partial class InferenceGenerationViewModelBase
                     return SKImage.FromEncodedData(stream);
                 })
                 .ToImmutableArray();
+
+            var project = args.Project!;
+
+            // Lock seed
+            project.TryUpdateModel<SeedCardModel>(
+                "Seed",
+                model => model with { IsRandomizeEnabled = false }
+            );
 
             var grid = ImageProcessor.CreateImageGrid(loadedImages);
             var gridBytes = grid.Encode().ToArray();
@@ -255,7 +298,7 @@ public abstract partial class InferenceGenerationViewModelBase
 
             // Save to disk
             var lastName = outputImages.Last().LocalFile?.Info.Name;
-            var gridPath = args.Client.OutputImagesDir!.JoinFile($"grid-{lastName}");
+            var gridPath = outputDir!.JoinFile($"grid-{lastName}");
 
             await using (var fileStream = gridPath.Info.OpenWrite())
             {
@@ -394,13 +437,15 @@ public abstract partial class InferenceGenerationViewModelBase
         public required ComfyClient Client { get; init; }
         public required NodeDictionary Nodes { get; init; }
         public required IReadOnlyList<string> OutputNodeNames { get; init; }
-        public GenerationParameters? Parameters { get; set; }
-        public InferenceProjectDocument? Project { get; set; }
+        public GenerationParameters? Parameters { get; init; }
+        public InferenceProjectDocument? Project { get; init; }
+        public bool ClearOutputImages { get; init; } = true;
     }
 
     public class BuildPromptEventArgs : EventArgs
     {
         public ComfyNodeBuilder Builder { get; } = new();
-        public GenerateOverrides Overrides { get; set; } = new();
+        public GenerateOverrides Overrides { get; init; } = new();
+        public long? SeedOverride { get; init; }
     }
 }

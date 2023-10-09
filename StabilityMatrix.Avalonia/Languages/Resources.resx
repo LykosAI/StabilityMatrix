@@ -678,4 +678,7 @@
   <data name="Action_RestoreDefaultLayout" xml:space="preserve">
     <value>Restore Default Layout</value>
   </data>
+  <data name="Label_BatchIndex" xml:space="preserve">
+    <value>Batch Index</value>
+  </data>
 </root>

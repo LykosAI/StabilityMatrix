@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 
 namespace StabilityMatrix.Avalonia.Models;
@@ -10,7 +11,7 @@ namespace StabilityMatrix.Avalonia.Models;
 /// This is the project file for inference tabs
 /// </summary>
 [JsonSerializable(typeof(InferenceProjectDocument))]
-public class InferenceProjectDocument
+public class InferenceProjectDocument : ICloneable
 {
     [JsonIgnore]
     private static readonly JsonSerializerOptions SerializerOptions =
@@ -49,5 +50,90 @@ public class InferenceProjectDocument
                     + $"Please create a new project."
             );
         }
+    }
+
+    public SeedCardModel? GetSeedModel()
+    {
+        if (State is null || !State.TryGetPropertyValue("Seed", out var seedCard))
+        {
+            return null;
+        }
+
+        return seedCard.Deserialize<SeedCardModel>();
+    }
+
+    /// <summary>
+    /// Returns a new <see cref="InferenceProjectDocument"/> with the State modified.
+    /// </summary>
+    /// <param name="stateModifier">Action that changes the state</param>
+    public InferenceProjectDocument WithState(Action<JsonObject?> stateModifier)
+    {
+        var document = (InferenceProjectDocument)Clone();
+        stateModifier(document.State);
+        return document;
+    }
+
+    public bool TryUpdateModel<T>(string key, Func<T, T> modifier)
+    {
+        if (State is not { } state)
+            return false;
+
+        if (!state.TryGetPropertyValue(key, out var modelNode))
+        {
+            return false;
+        }
+
+        if (modelNode.Deserialize<T>() is not { } model)
+        {
+            return false;
+        }
+
+        modelNode = JsonSerializer.SerializeToNode(modifier(model));
+
+        state[key] = modelNode;
+
+        return true;
+    }
+
+    public bool TryUpdateModel(string key, Func<JsonNode, JsonNode> modifier)
+    {
+        if (State is not { } state)
+            return false;
+
+        if (!state.TryGetPropertyValue(key, out var modelNode) || modelNode is null)
+        {
+            return false;
+        }
+
+        state[key] = modifier(modelNode);
+
+        return true;
+    }
+
+    public InferenceProjectDocument WithBatchSize(int batchSize, int batchCount)
+    {
+        if (State is null)
+            throw new InvalidOperationException("State is null");
+
+        var document = (InferenceProjectDocument)Clone();
+
+        var batchSizeCard =
+            document.State!["BatchSize"]
+            ?? throw new InvalidOperationException("BatchSize card is null");
+
+        batchSizeCard["BatchSize"] = batchSize;
+        batchSizeCard["BatchCount"] = batchCount;
+
+        return document;
+    }
+
+    /// <inheritdoc />
+    public object Clone()
+    {
+        var newObj = (InferenceProjectDocument)MemberwiseClone();
+        // Clone State also since its mutable
+        newObj.State =
+            State == null ? null : JsonSerializer.SerializeToNode(State).Deserialize<JsonObject>();
+        return newObj;
     }
 }

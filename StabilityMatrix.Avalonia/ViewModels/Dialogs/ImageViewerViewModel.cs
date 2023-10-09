@@ -69,13 +69,13 @@ public partial class ImageViewerViewModel : ContentDialogViewModelBase
     [RelayCommand]
     private void OnNavigateNext()
     {
-        NavigationRequested?.Invoke(this, DirectionalNavigationEventArgs.Up);
+        NavigationRequested?.Invoke(this, DirectionalNavigationEventArgs.Down);
     }
 
     [RelayCommand]
     private void OnNavigatePrevious()
     {
-        NavigationRequested?.Invoke(this, DirectionalNavigationEventArgs.Down);
+        NavigationRequested?.Invoke(this, DirectionalNavigationEventArgs.Up);
     }
 
     [RelayCommand]

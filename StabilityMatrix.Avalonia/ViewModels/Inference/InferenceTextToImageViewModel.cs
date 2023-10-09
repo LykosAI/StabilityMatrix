@@ -362,7 +362,6 @@ public class InferenceTextToImageViewModel
         }
 
         var batches = BatchSizeCardViewModel.BatchCount;
-        var isMultiBatch = batches > 1;
 
         var batchArgs = new List<ImageGenerationEventArgs>();
 

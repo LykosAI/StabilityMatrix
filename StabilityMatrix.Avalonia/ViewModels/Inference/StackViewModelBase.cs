@@ -9,9 +9,14 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public abstract class StackViewModelBase : LoadableViewModelBase
 {
     private readonly Dictionary<Type, List<LoadableViewModelBase>> viewModelManager = new();
-    
+
     public AvaloniaList<LoadableViewModelBase> Cards { get; } = new();
-    
+
+    public void AddCards(params LoadableViewModelBase[] cards)
+    {
+        AddCards((IEnumerable<LoadableViewModelBase>)cards);
+    }
+
     /// <summary>
     /// Register new cards
     /// </summary>
@@ -24,7 +29,7 @@ public abstract class StackViewModelBase : LoadableViewModelBase
             Cards.Add(card);
         }
     }
-    
+
     /// <summary>
     /// Registers new cards and returns self
     /// </summary>
@@ -33,12 +38,13 @@ public abstract class StackViewModelBase : LoadableViewModelBase
         AddCards(cards);
         return this;
     }
-    
+
     /// <summary>
     /// Gets a card by type at specified index
     /// </summary>
-    public T GetCard<T>(int index = 0) where T : LoadableViewModelBase
+    public T GetCard<T>(int index = 0)
+        where T : LoadableViewModelBase
     {
-        return (T) viewModelManager[typeof(T)][index];
+        return (T)viewModelManager[typeof(T)][index];
     }
 }

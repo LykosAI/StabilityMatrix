@@ -1,0 +1,60 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+        xmlns:local="clr-namespace:StabilityMatrix.Avalonia"
+        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+        xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+        x:DataType="vmInference:StackEditableCardViewModel">
+    
+    <Design.PreviewWith>
+        <Grid Width="600" Height="800">
+            <controls:StackEditableCard
+                DataContext="{x:Static mocks:DesignData.StackEditableCardViewModel}"/>
+        </Grid>
+    </Design.PreviewWith>
+
+    <!-- Like StackCard but draggable items -->
+    <Style Selector="controls|StackEditableCard">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <ScrollViewer Padding="8,0,8,0">
+                    <!-- ReSharper disable once Xaml.StyleClassNotFound -->
+                    <ListBox 
+                        Classes="draggableVirtualizing"
+                        ItemContainerTheme="{StaticResource DraggableListBoxItemTheme}"
+                        ItemsSource="{Binding Cards}">
+                        
+                        <ListBox.DataTemplates>
+                            <local:ViewLocator/>
+                        </ListBox.DataTemplates>
+                        
+                        <ListBox.Styles>
+                            <!--<Style Selector="ListBoxItem > TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Left" />
+                            </Style>-->
+                            <Style Selector="ListBoxItem:not(:dragging)">
+                                <Setter Property="Transitions">
+                                    <Setter.Value>
+                                        <Transitions>
+                                            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+                                        </Transitions>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.Styles>
+                        
+                        <!--<ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel 
+                                    VerticalAlignment="Top"
+                                    Orientation="Vertical"
+                                    Spacing="{TemplateBinding Spacing}"/>
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>-->
+                        
+                    </ListBox>
+                </ScrollViewer>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

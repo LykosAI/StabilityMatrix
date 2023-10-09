@@ -50,6 +50,7 @@
         <StyleInclude Source="Controls/ImageGalleryCard.axaml"/>
         <StyleInclude Source="Controls/PromptCard.axaml"/>
         <StyleInclude Source="Controls/StackCard.axaml"/>
+        <StyleInclude Source="Controls/StackEditableCard.axaml"/>
         <StyleInclude Source="Controls/UpscalerCard.axaml"/>
         <StyleInclude Source="Controls/StackExpander.axaml"/>
         <StyleInclude Source="Controls/ModelCard.axaml"/>

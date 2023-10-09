@@ -328,6 +328,7 @@ public sealed class App : Application
         services.AddTransient<ImageFolderCardViewModel>();
         services.AddTransient<PromptCardViewModel>();
         services.AddTransient<StackCardViewModel>();
+        services.AddTransient<StackEditableCardViewModel>();
         services.AddTransient<StackExpanderViewModel>();
         services.AddTransient<ModelCardViewModel>();
         services.AddTransient<BatchSizeCardViewModel>();
@@ -361,6 +362,7 @@ public sealed class App : Application
                     .Register(provider.GetRequiredService<ImageFolderCardViewModel>)
                     .Register(provider.GetRequiredService<PromptCardViewModel>)
                     .Register(provider.GetRequiredService<StackCardViewModel>)
+                    .Register(provider.GetRequiredService<StackEditableCardViewModel>)
                     .Register(provider.GetRequiredService<StackExpanderViewModel>)
                     .Register(provider.GetRequiredService<UpscalerCardViewModel>)
                     .Register(provider.GetRequiredService<ModelCardViewModel>)
@@ -400,6 +402,7 @@ public sealed class App : Application
         services.AddTransient<SamplerCard>();
         services.AddTransient<PromptCard>();
         services.AddTransient<StackCard>();
+        services.AddTransient<StackEditableCard>();
         services.AddTransient<StackExpander>();
         services.AddTransient<UpscalerCard>();
         services.AddTransient<ModelCard>();

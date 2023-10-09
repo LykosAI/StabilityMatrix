@@ -27,7 +27,7 @@
                     FluentAvalonia/Styling/ControlThemes/BasicControls/ListBoxStyles.axaml
                 -->
 
-                <Setter Property="Padding" Value="8,0,12,0" />
+                <Setter Property="Padding" Value="0,0,0,0" />
 
                 <Setter Property="FontFamily" Value="{DynamicResource ContentControlThemeFontFamily}" />
                 <Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
@@ -45,7 +45,7 @@
                         <Panel>
                             <ContentPresenter
                                 Name="PART_ContentPresenter"
-                                Margin="2,0"
+                                Margin="0,4"
                                 Padding="{TemplateBinding Padding}"
                                 HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
                                 VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"

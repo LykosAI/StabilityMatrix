@@ -224,6 +224,12 @@ public abstract partial class InferenceGenerationViewModelBase
             var parameters = args.Parameters!;
             var project = args.Project!;
 
+            // Lock seed
+            project.TryUpdateModel<SeedCardModel>(
+                "Seed",
+                model => model with { IsRandomizeEnabled = false }
+            );
+
             // Seed and batch override for batches
             if (images.Count > 1 && project.ProjectType is InferenceProjectType.TextToImage)
             {
@@ -234,6 +240,7 @@ public abstract partial class InferenceGenerationViewModelBase
                     "BatchSize",
                     node =>
                     {
+                        node[nameof(BatchSizeCardViewModel.BatchCount)] = 1;
                         node[nameof(BatchSizeCardViewModel.IsBatchIndexEnabled)] = true;
                         node[nameof(BatchSizeCardViewModel.BatchIndex)] = i + 1;
                         return node;
@@ -272,6 +279,14 @@ public abstract partial class InferenceGenerationViewModelBase
                     return SKImage.FromEncodedData(stream);
                 })
                 .ToImmutableArray();
+
+            var project = args.Project!;
+
+            // Lock seed
+            project.TryUpdateModel<SeedCardModel>(
+                "Seed",
+                model => model with { IsRandomizeEnabled = false }
+            );
 
             var grid = ImageProcessor.CreateImageGrid(loadedImages);
             var gridBytes = grid.Encode().ToArray();

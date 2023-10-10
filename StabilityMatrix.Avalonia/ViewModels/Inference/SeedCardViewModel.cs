@@ -14,14 +14,13 @@ public partial class SeedCardViewModel : LoadableViewModelBase
 {
     [ObservableProperty, NotifyPropertyChangedFor(nameof(RandomizeButtonToolTip))]
     private bool isRandomizeEnabled = true;
-    
-    [ObservableProperty] 
+
+    [ObservableProperty]
     private long seed;
 
-    public string RandomizeButtonToolTip => IsRandomizeEnabled 
-        ? "Randomizing Seed on each run"
-        : "Seed is locked";
-    
+    public string RandomizeButtonToolTip =>
+        IsRandomizeEnabled ? "Randomizing Seed on each run" : "Seed is locked";
+
     [RelayCommand]
     public void GenerateNewSeed()
     {
@@ -32,18 +31,16 @@ public partial class SeedCardViewModel : LoadableViewModelBase
     public override void LoadStateFromJsonObject(JsonObject state)
     {
         var model = DeserializeModel<SeedCardModel>(state);
-        
-        Seed = long.TryParse(model.Seed, out var result) ? result : 0;
+
+        Seed = model.Seed;
         IsRandomizeEnabled = model.IsRandomizeEnabled;
     }
 
     /// <inheritdoc />
     public override JsonObject SaveStateToJsonObject()
     {
-        return SerializeModel(new SeedCardModel
-        {
-            Seed = Seed.ToString(),
-            IsRandomizeEnabled = IsRandomizeEnabled
-        });
+        return SerializeModel(
+            new SeedCardModel { Seed = Seed, IsRandomizeEnabled = IsRandomizeEnabled }
+        );
     }
 }

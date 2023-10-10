@@ -38,6 +38,8 @@ public abstract class BasePackage
 
     public virtual bool IsInferenceCompatible => false;
 
+    public abstract string OutputFolderName { get; }
+
     public abstract Task DownloadPackage(
         string installLocation,
         DownloadPackageVersionOptions versionOptions,

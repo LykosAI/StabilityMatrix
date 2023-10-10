@@ -28,7 +28,7 @@ public partial class UpscalerCardViewModel : LoadableViewModelBase
     private readonly ServiceManager<ViewModelBase> vmFactory;
 
     [ObservableProperty]
-    private double scale = 1;
+    private double scale = 2;
 
     [ObservableProperty]
     private ComfyUpscaler? selectedUpscaler = ComfyUpscaler.Defaults[0];

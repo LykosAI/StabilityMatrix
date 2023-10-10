@@ -177,6 +177,8 @@ public class A3WebUI : BaseGitPackage
         return release.TagName!;
     }
 
+    public override string OutputFolderName => "outputs";
+
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,

@@ -30,6 +30,8 @@ public class ComfyUI : BaseGitPackage
         new("https://github.com/comfyanonymous/ComfyUI/raw/master/comfyui_screenshot.png");
     public override bool ShouldIgnoreReleases => true;
     public override bool IsInferenceCompatible => true;
+    public override string OutputFolderName => "output";
+
     public override SharedFolderMethod RecommendedSharedFolderMethod =>
         SharedFolderMethod.Configuration;
 

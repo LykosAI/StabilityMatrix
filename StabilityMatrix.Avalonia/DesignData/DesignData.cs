@@ -584,6 +584,12 @@ The gallery images are often inpainted, but you will get something very similar 
     public static BatchSizeCardViewModel BatchSizeCardViewModel =>
         DialogFactory.Get<BatchSizeCardViewModel>();
 
+    public static BatchSizeCardViewModel BatchSizeCardViewModelWithIndexOption =>
+        DialogFactory.Get<BatchSizeCardViewModel>(vm =>
+        {
+            vm.IsBatchIndexEnabled = true;
+        });
+
     public static IList<ICompletionData> SampleCompletionData =>
         new List<ICompletionData>
         {

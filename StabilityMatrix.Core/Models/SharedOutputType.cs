@@ -2,6 +2,7 @@
 
 public enum SharedOutputType
 {
+    All,
     Text2Img,
     Img2Img,
     Extras,

@@ -19,9 +19,9 @@
     mc:Ignorable="d">
 
     <controls:UserControlBase.KeyBindings>
-        <KeyBinding Command="{Binding NavigateNextCommand}" Gesture="Up" />
+        <KeyBinding Command="{Binding NavigateNextCommand}" Gesture="Down" />
         <KeyBinding Command="{Binding NavigateNextCommand}" Gesture="Right" />
-        <KeyBinding Command="{Binding NavigatePreviousCommand}" Gesture="Down" />
+        <KeyBinding Command="{Binding NavigatePreviousCommand}" Gesture="Up" />
         <KeyBinding Command="{Binding NavigatePreviousCommand}" Gesture="Left" />
     </controls:UserControlBase.KeyBindings>
 
@@ -105,6 +105,20 @@
                     <SelectableTextBlock
                         Grid.Row="1"
                         Text="{Binding NegativePrompt}" />
+                </Grid>
+                
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Text="Model" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <SelectableTextBlock
+                        Grid.Row="1"
+                        Text="{Binding ModelName}" />
+                </Grid>
+                
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Text="Seed" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <SelectableTextBlock
+                        Grid.Row="1"
+                        Text="{Binding Seed}" />
                 </Grid>
             </StackPanel>
 

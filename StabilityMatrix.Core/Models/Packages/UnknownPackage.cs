@@ -26,6 +26,8 @@ public class UnknownPackage : BasePackage
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
+    public override string OutputFolderName { get; }
+
     public override Task DownloadPackage(
         string installLocation,
         DownloadPackageVersionOptions versionOptions,

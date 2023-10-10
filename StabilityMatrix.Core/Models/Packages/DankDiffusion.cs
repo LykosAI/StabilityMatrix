@@ -30,6 +30,8 @@ public class DankDiffusion : BaseGitPackage
 
     public override Uri PreviewImageUri { get; }
 
+    public override string OutputFolderName { get; }
+
     public override Task RunPackage(
         string installedPackagePath,
         string command,

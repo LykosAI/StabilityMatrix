@@ -78,6 +78,8 @@ public class VladAutomatic : BaseGitPackage
             [SharedOutputType.Saved] = new[] { "outputs/save" },
         };
 
+    public override string OutputFolderName => "outputs";
+
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new()

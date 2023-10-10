@@ -17,6 +17,8 @@ public class LocalImageFile
     [BsonId]
     public required string RelativePath { get; set; }
 
+    public required string AbsolutePath { get; set; }
+
     /// <summary>
     /// Type of the model file.
     /// </summary>
@@ -127,6 +129,7 @@ public class LocalImageFile
         return new LocalImageFile
         {
             RelativePath = relativePath,
+            AbsolutePath = filePath,
             ImageType = imageType,
             CreatedAt = filePath.Info.CreationTimeUtc,
             LastModifiedAt = filePath.Info.LastWriteTimeUtc,

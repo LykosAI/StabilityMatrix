@@ -48,10 +48,12 @@ public class VoltaML : BaseGitPackage
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
         new()
         {
-            [SharedOutputType.Text2Img] = new[] { "outputs/txt2img" },
-            [SharedOutputType.Extras] = new[] { "outputs/extra" },
-            [SharedOutputType.Img2Img] = new[] { "outputs/img2img" },
+            [SharedOutputType.Text2Img] = new[] { "data/outputs/txt2img" },
+            [SharedOutputType.Extras] = new[] { "data/outputs/extra" },
+            [SharedOutputType.Img2Img] = new[] { "data/outputs/img2img" },
         };
+
+    public override string OutputFolderName => "data/outputs";
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 

@@ -93,6 +93,8 @@ public class Fooocus : BaseGitPackage
 
     public override bool ShouldIgnoreReleases => true;
 
+    public override string OutputFolderName => "outputs";
+
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,

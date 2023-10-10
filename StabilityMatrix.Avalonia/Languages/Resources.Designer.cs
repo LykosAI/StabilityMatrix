@@ -141,6 +141,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy.
+        /// </summary>
+        public static string Action_Copy {
+            get {
+                return ResourceManager.GetString("Action_Copy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete.
         /// </summary>
         public static string Action_Delete {
@@ -524,6 +533,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_BaseModel {
             get {
                 return ResourceManager.GetString("Label_BaseModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Batch Index.
+        /// </summary>
+        public static string Label_BatchIndex {
+            get {
+                return ResourceManager.GetString("Label_BatchIndex", resourceCulture);
             }
         }
         

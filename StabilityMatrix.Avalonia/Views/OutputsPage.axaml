@@ -7,12 +7,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
-    xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-    xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:models1="clr-namespace:StabilityMatrix.Avalonia.Models"
+    xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
+    xmlns:fluentAvalonia="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+    xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
     d:DataContext="{x:Static mocks:DesignData.OutputsPageViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="700"
@@ -20,27 +21,122 @@
     x:DataType="vm:OutputsPageViewModel"
     mc:Ignorable="d">
     <Grid RowDefinitions="Auto, *" Margin="16">
-        <StackPanel Grid.Row="0" Orientation="Horizontal">
-            <ComboBox>
-                <ComboBoxItem>Test</ComboBoxItem>
-                <ComboBoxItem>Test 2</ComboBoxItem>
-            </ComboBox>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16"
+                    HorizontalAlignment="Left">
+            <Grid RowDefinitions="Auto, *">
+                <TextBlock Text="Output Folder" Margin="4"/>
+                <ComboBox Grid.Row="1" ItemsSource="{Binding Categories}"
+                          SelectedItem="{Binding SelectedCategory}"
+                          MinWidth="150">
+                    <ComboBox.Styles>
+                        <Style
+                            Selector="ComboBox /template/ ContentControl#ContentPresenter &gt; StackPanel &gt; TextBlock:nth-child(2)">
+                            <Setter Property="IsVisible" Value="False" />
+                        </Style>
+                    </ComboBox.Styles>
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type models1:PackageOutputCategory}">
+                            <StackPanel>
+                                <TextBlock
+                                    Margin="0,4,0,4"
+                                    Text="{Binding Name, Mode=OneWay}" />
+                                <TextBlock Text="{Binding Path, Mode=OneWay}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </Grid>
+            <Grid RowDefinitions="Auto, *" Margin="8,0"
+                  IsVisible="{Binding CanShowOutputTypes}">
+                <TextBlock Text="Output Type" Margin="4"/>
+                <ComboBox Grid.Row="1" ItemsSource="{Binding OutputTypes}"
+                          SelectedItem="{Binding SelectedOutputType}"
+                          MinWidth="150"
+                          VerticalAlignment="Stretch"
+                          VerticalContentAlignment="Center"/>
+            </Grid>
         </StackPanel>
-        
+
         <ScrollViewer Grid.Row="1">
             <ItemsRepeater
                 ItemsSource="{Binding Outputs}"
                 VerticalAlignment="Top">
                 <ItemsRepeater.Layout>
-                    <UniformGridLayout MinColumnSpacing="4" MinRowSpacing="4"/>
+                    <UniformGridLayout MinColumnSpacing="16" MinRowSpacing="16" />
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
-                    <DataTemplate DataType="{x:Type system:String}">
-                        <controls:BetterAdvancedImage 
-                            Width="300"
-                            Height="300"
-                            Stretch="UniformToFill"
-                            Source="{Binding }"/>
+                    <DataTemplate DataType="{x:Type database:LocalImageFile}">
+                        <Button
+                            Margin="0"
+                            Padding="4"
+                            Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).OnImageClick}"
+                            CommandParameter="{Binding }">
+                            <controls:BetterAdvancedImage
+                                Width="300"
+                                Height="300"
+                                Stretch="UniformToFill"
+                                Source="{Binding AbsolutePath}" />
+
+                            <Button.ContextFlyout>
+                                <ui:FAMenuFlyout>
+                                    <ui:MenuFlyoutItem
+                                        HotKey="{x:Null}"
+                                        Text="{x:Static lang:Resources.Action_Delete}"
+                                        IconSource="Delete"
+                                        Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).DeleteImage}"
+                                        CommandParameter="{Binding }" />
+                                    <ui:MenuFlyoutItem
+                                        HotKey="{x:Null}"
+                                        Text="{x:Static lang:Resources.Action_Copy}"
+                                        IconSource="Copy"
+                                        Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).CopyImage}"
+                                        CommandParameter="{Binding AbsolutePath}" />
+
+                                    <ui:MenuFlyoutItem
+                                        HotKey="{x:Null}"
+                                        Text="{x:Static lang:Resources.Action_OpenInExplorer}"
+                                        IconSource="Folder"
+                                        Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).OpenImage}"
+                                        CommandParameter="{Binding AbsolutePath}" />
+
+                                    <ui:MenuFlyoutSeparator
+                                        IsVisible="{Binding GenerationParameters, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+                                    <ui:MenuFlyoutSubItem Text="Send to Inference" IconSource="Share"
+                                                          IsVisible="{Binding GenerationParameters, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                        <ui:MenuFlyoutItem
+                                            HotKey="{x:Null}"
+                                            Text="Text to Image"
+                                            IconSource="FullScreenMaximize"
+                                            Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).SendToTextToImage}"
+                                            CommandParameter="{Binding }" />
+                                        <ui:MenuFlyoutItem
+                                            HotKey="{x:Null}"
+                                            Text="Image to Image"
+                                            IsEnabled="False"
+                                            IconSource="ImageCopy"
+                                            CommandParameter="{Binding }" />
+                                        <ui:MenuFlyoutItem
+                                            Text="Inpainting"
+                                            IconSource="ImageEdit"
+                                            IsEnabled="False"
+                                            HotKey="{x:Null}"
+                                            CommandParameter="{Binding }" />
+                                        <ui:MenuFlyoutItem
+                                            Text="Upscale"
+                                            HotKey="{x:Null}"
+                                            Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).SendToUpscale}"
+                                            CommandParameter="{Binding }">
+                                            <ui:MenuFlyoutItem.IconSource>
+                                                <fluentAvalonia:SymbolIconSource
+                                                    FontSize="10"
+                                                    Symbol="ResizeImage" />
+                                            </ui:MenuFlyoutItem.IconSource>
+                                        </ui:MenuFlyoutItem>
+                                    </ui:MenuFlyoutSubItem>
+                                </ui:FAMenuFlyout>
+                            </Button.ContextFlyout>
+                        </Button>
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>

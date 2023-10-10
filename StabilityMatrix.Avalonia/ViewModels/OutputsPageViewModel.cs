@@ -8,15 +8,12 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader;
 using Avalonia.Controls;
-using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
-using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Extensions;
-using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -121,7 +118,11 @@ public partial class OutputsPageViewModel : PageViewModelBase
         if (Design.IsDesignMode)
             return;
 
-        GetOutputs(SelectedCategory.Path);
+        var path =
+            CanShowOutputTypes && SelectedOutputType != SharedOutputType.All
+                ? Path.Combine(SelectedCategory.Path, SelectedOutputType.ToString())
+                : SelectedCategory.Path;
+        GetOutputs(path);
     }
 
     partial void OnSelectedCategoryChanged(

@@ -5,6 +5,13 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.6.0
+### Added
+- Added "Output Sharing" option for all packages in the three-dots menu on the Packages page
+  - This will link the package's output folders to the relevant subfolders in the "Outputs" directory
+    - When a package only has a generic "outputs" folder, all generated images from that package will be linked to the "Outputs\Text2Img" folder when this option is enabled
+- Added "Outputs" page for viewing generated images from any package, or the shared output folder
+
 ## v2.5.2
 ### Added
 - Right click Inference Batch options to enable selecting a "Batch Index". This can be used to reproduce a specific image from a batch generation. The field will be automatically populated in metadata of individual images from a batch generation.

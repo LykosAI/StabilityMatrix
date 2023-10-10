@@ -386,7 +386,7 @@ public abstract class BaseGitPackage : BasePackage
         {
             return StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(
                 sharedOutputFolders,
-                SettingsManager.OutputDirectory,
+                SettingsManager.ImagesDirectory,
                 installDirectory,
                 recursiveDelete: true
             );

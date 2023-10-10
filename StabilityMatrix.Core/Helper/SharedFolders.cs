@@ -76,6 +76,7 @@ public class SharedFolders : ISharedFolders
 
                 // Otherwise delete the link
                 Logger.Info($"Deleting existing junction at target {destinationDir}");
+                destinationDir.Info.Attributes = FileAttributes.Normal;
                 await destinationDir.DeleteAsync(false).ConfigureAwait(false);
             }
             else

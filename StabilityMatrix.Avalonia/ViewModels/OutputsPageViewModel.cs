@@ -39,7 +39,6 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 public partial class OutputsPageViewModel : PageViewModelBase
 {
     private readonly ISettingsManager settingsManager;
-    private readonly IPackageFactory packageFactory;
     private readonly INotificationService notificationService;
     private readonly INavigationService navigationService;
     public override string Title => "Outputs";
@@ -74,7 +73,6 @@ public partial class OutputsPageViewModel : PageViewModelBase
     )
     {
         this.settingsManager = settingsManager;
-        this.packageFactory = packageFactory;
         this.notificationService = notificationService;
         this.navigationService = navigationService;
 
@@ -108,7 +106,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
             0,
             new PackageOutputCategory
             {
-                Path = settingsManager.OutputDirectory,
+                Path = settingsManager.ImagesDirectory,
                 Name = "Shared Output Folder"
             }
         );
@@ -134,9 +132,10 @@ public partial class OutputsPageViewModel : PageViewModelBase
         if (oldValue == newValue || newValue == null)
             return;
 
-        var path = CanShowOutputTypes
-            ? Path.Combine(newValue.Path, SelectedOutputType.ToString())
-            : SelectedCategory.Path;
+        var path =
+            CanShowOutputTypes && SelectedOutputType != SharedOutputType.All
+                ? Path.Combine(newValue.Path, SelectedOutputType.ToString())
+                : SelectedCategory.Path;
         GetOutputs(path);
     }
 
@@ -249,7 +248,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         if (!settingsManager.IsLibraryDirSet)
             return;
 
-        if (!Directory.Exists(directory))
+        if (!Directory.Exists(directory) && SelectedOutputType != SharedOutputType.All)
         {
             Directory.CreateDirectory(directory);
             return;

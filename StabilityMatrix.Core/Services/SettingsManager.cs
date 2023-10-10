@@ -63,7 +63,6 @@ public class SettingsManager : ISettingsManager
     private string SettingsPath => Path.Combine(LibraryDir, "settings.json");
     public string ModelsDirectory => Path.Combine(LibraryDir, "Models");
     public string DownloadsDirectory => Path.Combine(LibraryDir, ".downloads");
-    public string OutputDirectory => Path.Combine(LibraryDir, "Output");
     public List<string> PackageInstallsInProgress { get; set; } = new();
 
     public DirectoryPath TagsDirectory => new(LibraryDir, "Tags");

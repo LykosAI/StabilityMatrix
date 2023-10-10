@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added French UI language option, thanks to eephyne for the translation
 ### Fixed
 - Fixed Automatic 1111 missing dependencies on startup by no longer enabling `--skip-install` by default.
+- Fixed crash when clicking Inference gallery image after the image is deleted externally in file explorer
 
 ## v2.5.2
 ### Added

@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.5.3
+### Added
+- Added French UI language option, thanks to eephyne for the translation
 ### Fixed
 - Fixed Automatic 1111 missing dependencies on startup by no longer enabling `--skip-install` by default.
 

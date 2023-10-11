@@ -148,7 +148,6 @@ public class A3WebUI : BaseGitPackage
             {
                 Name = "Skip Install",
                 Type = LaunchOptionType.Bool,
-                InitialValue = true,
                 Options = new() { "--skip-install" }
             },
             LaunchOptionDefinition.Extras

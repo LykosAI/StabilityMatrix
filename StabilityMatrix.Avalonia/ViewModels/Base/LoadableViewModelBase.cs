@@ -8,9 +8,14 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.ViewModels.Inference;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
+[JsonDerivedType(typeof(FreeUCardViewModel), FreeUCardViewModel.ModuleKey)]
+[JsonDerivedType(typeof(StackExpanderViewModel), StackExpanderViewModel.ModuleKey)]
+[JsonDerivedType(typeof(UpscalerCardViewModel), UpscalerCardViewModel.ModuleKey)]
+[JsonDerivedType(typeof(SamplerCardViewModel), SamplerCardViewModel.ModuleKey)]
 public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

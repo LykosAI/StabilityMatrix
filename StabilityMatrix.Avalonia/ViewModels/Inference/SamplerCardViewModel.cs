@@ -15,6 +15,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(SamplerCard))]
 public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLoadableState
 {
+    public const string ModuleKey = "Sampler";
+
     [ObservableProperty]
     private bool isRefinerStepsEnabled;
 

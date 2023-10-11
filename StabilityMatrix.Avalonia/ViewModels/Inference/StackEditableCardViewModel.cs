@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text.Json.Nodes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -24,16 +25,32 @@ public partial class StackEditableCardViewModel : StackViewModelBase
     /// Available card types resolvers for creation / serialization
     /// - The Types must be annotated with <see cref="PolymorphicKeyAttribute"/>
     /// </summary>
-    public IReadOnlyList<EditableModule> AvailableModules { get; } = Array.Empty<EditableModule>();
+    public IReadOnlyList<EditableModule> AvailableModules { get; set; } =
+        Array.Empty<EditableModule>();
 
-    public IReadOnlyList<EditableModule> DefaultModules { get; } = Array.Empty<EditableModule>();
+    /// <summary>
+    /// Default modules that are used when no modules are loaded
+    /// This is a subset of <see cref="AvailableModules"/>
+    /// </summary>
+    public IReadOnlyList<EditableModule> DefaultModules { get; set; } =
+        Array.Empty<EditableModule>();
 
+    /*[ObservableProperty]
+    private IReadOnlyList<EditableModule> currentModules = Array.Empty<EditableModule>();*/
+
+    /// <inheritdoc />
     public StackEditableCardViewModel(ServiceManager<ViewModelBase> vmFactory)
+        : base(vmFactory)
     {
         this.vmFactory = vmFactory;
     }
 
-    private ViewModelBase? GetViewModelFromTypeKey(string key)
+    public void InitializeDefaults()
+    {
+        AddCards(DefaultModules.Select(m => m.Build(vmFactory)).Cast<LoadableViewModelBase>());
+    }
+
+    /*private ViewModelBase? GetViewModelFromTypeKey(string key)
     {
         return AvailableModules.FirstOrDefault(x => x.Value == key)?.Builder(vmFactory);
     }
@@ -53,33 +70,24 @@ public partial class StackEditableCardViewModel : StackViewModelBase
     /// <inheritdoc />
     public override void LoadStateFromJsonObject(JsonObject state)
     {
-        var model = DeserializeModel<StackCardModel>(state);
+        var derivedTypes = ViewModelSerializer.GetDerivedTypes(typeof(LoadableViewModelBase));
+        
+        Clear();
+        
+        var stateArray = state.AsArray();
 
-        if (model.Cards is null)
-            return;
-
-        foreach (var (i, card) in model.Cards.Enumerate())
+        foreach (var node in stateArray)
         {
-            // Ignore if more than cards than we have
-            if (i > Cards.Count - 1)
-                break;
-
-            Cards[i].LoadStateFromJsonObject(card);
+            
         }
+        
+        var cards = ViewModelSerializer.DeserializeJsonObject<List<LoadableViewModelBase>>(state);
+        AddCards(cards!);
     }
 
     /// <inheritdoc />
     public override JsonObject SaveStateToJsonObject()
     {
-        var cards = Cards
-            .Select(x =>
-            {
-                // Add $type to each card
-                var type = x.GetType().FullName;
-                return x.SaveStateToJsonObject();
-            })
-            .ToList();
-
-        return SerializeModel(new StackCardModel { Cards = cards });
-    }
+        return ViewModelSerializer.SerializeToJsonObject(Cards.ToList());
+    }*/
 }

@@ -563,16 +563,20 @@ The gallery images are often inpainted, but you will get something very similar 
     public static StackCardViewModel StackCardViewModel =>
         DialogFactory.Get<StackCardViewModel>(vm =>
         {
-            vm.AddCards(new LoadableViewModelBase[] { SamplerCardViewModel, SeedCardViewModel, });
+            vm.AddCards(SamplerCardViewModel, SeedCardViewModel);
+        });
+
+    public static StackEditableCardViewModel StackEditableCardViewModel =>
+        DialogFactory.Get<StackEditableCardViewModel>(vm =>
+        {
+            vm.AddCards(SamplerCardViewModel, SeedCardViewModel);
         });
 
     public static StackExpanderViewModel StackExpanderViewModel =>
         DialogFactory.Get<StackExpanderViewModel>(vm =>
         {
             vm.Title = "Hires Fix";
-            vm.AddCards(
-                new LoadableViewModelBase[] { UpscalerCardViewModel, SamplerCardViewModel }
-            );
+            vm.AddCards(UpscalerCardViewModel, SamplerCardViewModel);
         });
 
     public static UpscalerCardViewModel UpscalerCardViewModel =>

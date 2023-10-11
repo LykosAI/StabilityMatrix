@@ -233,6 +233,9 @@ public sealed class App : Application
         var services = ConfigureServices();
         Services = services.BuildServiceProvider();
 
+        // Configure json serializers
+        ViewModelSerializer.SetServiceProvider(Services);
+
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
 
         if (settingsManager.TryFindLibrary())

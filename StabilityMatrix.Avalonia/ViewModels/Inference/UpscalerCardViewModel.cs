@@ -22,6 +22,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(UpscalerCard))]
 public partial class UpscalerCardViewModel : LoadableViewModelBase
 {
+    public const string ModuleKey = "Upscaler";
+
     private readonly INotificationService notificationService;
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly ISettingsManager settingsManager;

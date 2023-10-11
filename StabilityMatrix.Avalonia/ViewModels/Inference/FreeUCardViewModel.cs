@@ -9,6 +9,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(FreeUCard))]
 public partial class FreeUCardViewModel : LoadableViewModelBase
 {
+    public const string ModuleKey = "FreeU";
+
     [ObservableProperty]
     [Required]
     [Range(0D, 10D)]

@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Progress;
@@ -34,6 +35,8 @@ public class EventManager
     public event EventHandler? ModelIndexChanged;
 
     public event EventHandler<FilePath>? ImageFileAdded;
+    public event EventHandler<LocalImageFile>? InferenceTextToImageRequested;
+    public event EventHandler<LocalImageFile>? InferenceUpscaleRequested;
 
     public void OnGlobalProgressChanged(int progress) =>
         GlobalProgressChanged?.Invoke(this, progress);
@@ -74,4 +77,10 @@ public class EventManager
     public void OnModelIndexChanged() => ModelIndexChanged?.Invoke(this, EventArgs.Empty);
 
     public void OnImageFileAdded(FilePath filePath) => ImageFileAdded?.Invoke(this, filePath);
+
+    public void OnInferenceTextToImageRequested(LocalImageFile imageFile) =>
+        InferenceTextToImageRequested?.Invoke(this, imageFile);
+
+    public void OnInferenceUpscaleRequested(LocalImageFile imageFile) =>
+        InferenceUpscaleRequested?.Invoke(this, imageFile);
 }

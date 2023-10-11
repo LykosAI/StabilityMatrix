@@ -97,6 +97,16 @@
                                                 </MenuItem>
                                                 <!-- ReSharper enable Xaml.RedundantResource -->
                                             </MenuItem>
+                                            <MenuItem
+                                                Header="{x:Static lang:Resources.Label_UseSharedOutputFolder}"
+                                                Command="{Binding ToggleSharedOutput}">
+                                                <MenuItem.Icon>
+                                                    <CheckBox Margin="8,0,0,0"
+                                                              Padding="0"
+                                                              Width="28" Height="28"
+                                                              IsChecked="{Binding UseSharedOutput}"/>
+                                                </MenuItem.Icon>
+                                            </MenuItem>
                                             <Separator />
                                             <MenuItem Header="{x:Static lang:Resources.Action_Uninstall}"
                                                       Command="{Binding Uninstall}">

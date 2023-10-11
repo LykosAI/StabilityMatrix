@@ -85,6 +85,9 @@ public class FooocusMre : BaseGitPackage
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" }
         };
 
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+        new() { [SharedOutputType.Text2Img] = new[] { "outputs" } };
+
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
 
@@ -93,6 +96,8 @@ public class FooocusMre : BaseGitPackage
         var release = await GetLatestRelease().ConfigureAwait(false);
         return release.TagName!;
     }
+
+    public override string OutputFolderName => "outputs";
 
     public override async Task InstallPackage(
         string installLocation,

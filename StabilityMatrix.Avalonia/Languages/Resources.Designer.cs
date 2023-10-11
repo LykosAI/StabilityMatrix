@@ -141,6 +141,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy.
+        /// </summary>
+        public static string Action_Copy {
+            get {
+                return ResourceManager.GetString("Action_Copy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete.
         /// </summary>
         public static string Action_Delete {
@@ -1523,6 +1532,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_UpdateAvailable {
             get {
                 return ResourceManager.GetString("Label_UpdateAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Output Sharing.
+        /// </summary>
+        public static string Label_UseSharedOutputFolder {
+            get {
+                return ResourceManager.GetString("Label_UseSharedOutputFolder", resourceCulture);
             }
         }
         

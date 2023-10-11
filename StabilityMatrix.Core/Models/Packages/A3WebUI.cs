@@ -61,6 +61,17 @@ public class A3WebUI : BaseGitPackage
             [SharedFolderType.AfterDetailer] = new[] { "models/adetailer" }
         };
 
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+        new()
+        {
+            [SharedOutputType.Extras] = new[] { "outputs/extras-images" },
+            [SharedOutputType.Saved] = new[] { "log/images" },
+            [SharedOutputType.Img2Img] = new[] { "outputs/img2img-images" },
+            [SharedOutputType.Text2Img] = new[] { "outputs/text2img-images" },
+            [SharedOutputType.Img2ImgGrids] = new[] { "outputs/img2img-grids" },
+            [SharedOutputType.Text2ImgGrids] = new[] { "outputs/text2img-grids" }
+        };
+
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new()
@@ -164,6 +175,8 @@ public class A3WebUI : BaseGitPackage
         var release = await GetLatestRelease().ConfigureAwait(false);
         return release.TagName!;
     }
+
+    public override string OutputFolderName => "outputs";
 
     public override async Task InstallPackage(
         string installLocation,

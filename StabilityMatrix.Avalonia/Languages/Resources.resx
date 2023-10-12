@@ -687,4 +687,10 @@
   <data name="Action_Copy" xml:space="preserve">
     <value>Copy</value>
   </data>
+  <data name="Action_OpenInViewer" xml:space="preserve">
+    <value>Open in Image Viewer</value>
+  </data>
+  <data name="Label_NumImagesSelected" xml:space="preserve">
+    <value>{0} images selected</value>
+  </data>
 </root>

@@ -258,6 +258,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open in Image Viewer.
+        /// </summary>
+        public static string Action_OpenInViewer {
+            get {
+                return ResourceManager.GetString("Action_OpenInViewer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open on CivitAI.
         /// </summary>
         public static string Action_OpenOnCivitAi {
@@ -1154,6 +1163,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_No {
             get {
                 return ResourceManager.GetString("Label_No", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} images selected.
+        /// </summary>
+        public static string Label_NumImagesSelected {
+            get {
+                return ResourceManager.GetString("Label_NumImagesSelected", resourceCulture);
             }
         }
         

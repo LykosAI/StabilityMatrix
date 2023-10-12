@@ -4,21 +4,24 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
-using StabilityMatrix.Avalonia.Views;
+using StabilityMatrix.Avalonia.ViewModels.OutputsPage;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
@@ -32,21 +35,23 @@ using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
-[View(typeof(OutputsPage))]
+[View(typeof(Views.OutputsPage))]
 public partial class OutputsPageViewModel : PageViewModelBase
 {
     private readonly ISettingsManager settingsManager;
     private readonly INotificationService notificationService;
     private readonly INavigationService navigationService;
+    private readonly ILogger<OutputsPageViewModel> logger;
     public override string Title => "Outputs";
 
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.Grid, IsFilled = true };
 
-    public SourceCache<LocalImageFile, string> OutputsCache { get; } = new(p => p.AbsolutePath);
+    public SourceCache<OutputImageViewModel, string> OutputsCache { get; } =
+        new(p => p.ImageFile.AbsolutePath);
 
-    public IObservableCollection<LocalImageFile> Outputs { get; } =
-        new ObservableCollectionExtended<LocalImageFile>();
+    public IObservableCollection<OutputImageViewModel> Outputs { get; set; } =
+        new ObservableCollectionExtended<OutputImageViewModel>();
 
     public IEnumerable<SharedOutputType> OutputTypes { get; } = Enum.GetValues<SharedOutputType>();
 
@@ -60,25 +65,35 @@ public partial class OutputsPageViewModel : PageViewModelBase
     [ObservableProperty]
     private SharedOutputType selectedOutputType;
 
+    [ObservableProperty]
+    private int numItemsSelected;
+
     public bool CanShowOutputTypes => SelectedCategory.Name.Equals("Shared Output Folder");
 
     public OutputsPageViewModel(
         ISettingsManager settingsManager,
         IPackageFactory packageFactory,
         INotificationService notificationService,
-        INavigationService navigationService
+        INavigationService navigationService,
+        ILogger<OutputsPageViewModel> logger
     )
     {
         this.settingsManager = settingsManager;
         this.notificationService = notificationService;
         this.navigationService = navigationService;
+        this.logger = logger;
 
         OutputsCache
             .Connect()
             .DeferUntilLoaded()
-            .SortBy(x => x.CreatedAt, SortDirection.Descending)
+            .SortBy(x => x.ImageFile.CreatedAt, SortDirection.Descending)
+            .ObserveOn(SynchronizationContext.Current)
             .Bind(Outputs)
-            .Subscribe();
+            .WhenPropertyChanged(p => p.IsSelected)
+            .Subscribe(_ =>
+            {
+                NumItemsSelected = Outputs.Count(o => o.IsSelected);
+            });
 
         if (!settingsManager.IsLibraryDirSet || Design.IsDesignMode)
             return;
@@ -152,16 +167,29 @@ public partial class OutputsPageViewModel : PageViewModelBase
         GetOutputs(path);
     }
 
-    public async Task OnImageClick(LocalImageFile item)
+    public async Task OnImageClick(OutputImageViewModel item)
+    {
+        // Select image if we're in "select mode"
+        if (NumItemsSelected > 0)
+        {
+            item.IsSelected = !item.IsSelected;
+        }
+        else
+        {
+            await ShowImageDialog(item);
+        }
+    }
+
+    public async Task ShowImageDialog(OutputImageViewModel item)
     {
         var currentIndex = Outputs.IndexOf(item);
 
-        var image = new ImageSource(new FilePath(item.AbsolutePath));
+        var image = new ImageSource(new FilePath(item.ImageFile.AbsolutePath));
 
         // Preload
         await image.GetBitmapAsync();
 
-        var vm = new ImageViewerViewModel { ImageSource = image, LocalImageFile = item };
+        var vm = new ImageViewerViewModel { ImageSource = image, LocalImageFile = item.ImageFile };
 
         using var onNext = Observable
             .FromEventPattern<DirectionalNavigationEventArgs>(
@@ -180,14 +208,14 @@ public partial class OutputsPageViewModel : PageViewModelBase
                         {
                             var newImage = Outputs[newIndex];
                             var newImageSource = new ImageSource(
-                                new FilePath(newImage.AbsolutePath)
+                                new FilePath(newImage.ImageFile.AbsolutePath)
                             );
 
                             // Preload
                             await newImageSource.GetBitmapAsync();
 
                             sender.ImageSource = newImageSource;
-                            sender.LocalImageFile = newImage;
+                            sender.LocalImageFile = newImage.ImageFile;
 
                             currentIndex = newIndex;
                         }
@@ -207,9 +235,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     public async Task OpenImage(string imagePath) => await ProcessRunner.OpenFileBrowser(imagePath);
 
-    public async Task DeleteImage(LocalImageFile? item)
+    public async Task DeleteImage(OutputImageViewModel? item)
     {
-        if (item?.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
+        if (item?.ImageFile.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
         {
             return;
         }
@@ -223,7 +251,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
             return;
         }
 
-        Outputs.Remove(item);
+        OutputsCache.Remove(item);
 
         // Invalidate cache
         if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
@@ -244,6 +272,14 @@ public partial class OutputsPageViewModel : PageViewModelBase
         EventManager.Instance.OnInferenceUpscaleRequested(image);
     }
 
+    public void ClearSelection()
+    {
+        foreach (var output in Outputs)
+        {
+            output.IsSelected = false;
+        }
+    }
+
     private void GetOutputs(string directory)
     {
         if (!settingsManager.IsLibraryDirSet)
@@ -257,9 +293,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         var list = Directory
             .EnumerateFiles(directory, "*.png", SearchOption.AllDirectories)
-            .Select(file => LocalImageFile.FromPath(file))
-            .OrderByDescending(f => f.CreatedAt);
+            .Select(file => new OutputImageViewModel(LocalImageFile.FromPath(file)))
+            .OrderByDescending(f => f.ImageFile.CreatedAt);
 
-        OutputsCache.EditDiff(list, (x, y) => x.AbsolutePath == y.AbsolutePath);
+        OutputsCache.EditDiff(list, (x, y) => x.ImageFile.AbsolutePath == y.ImageFile.AbsolutePath);
     }
 }

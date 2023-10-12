@@ -13,7 +13,8 @@
     xmlns:models1="clr-namespace:StabilityMatrix.Avalonia.Models"
     xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
     xmlns:fluentAvalonia="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
-    xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+    xmlns:outputsPage="clr-namespace:StabilityMatrix.Avalonia.ViewModels.OutputsPage"
+    xmlns:selectableImageCard="clr-namespace:StabilityMatrix.Avalonia.Controls.SelectableImageCard"
     d:DataContext="{x:Static mocks:DesignData.OutputsPageViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="700"
@@ -24,8 +25,9 @@
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16"
                     HorizontalAlignment="Left">
             <Grid RowDefinitions="Auto, *">
-                <TextBlock Text="Output Folder" Margin="4"/>
+                <TextBlock Text="Output Folder" Margin="4" />
                 <ComboBox Grid.Row="1" ItemsSource="{Binding Categories}"
+                          CornerRadius="8"
                           SelectedItem="{Binding SelectedCategory}"
                           MinWidth="150">
                     <ComboBox.Styles>
@@ -48,13 +50,31 @@
             </Grid>
             <Grid RowDefinitions="Auto, *" Margin="8,0"
                   IsVisible="{Binding CanShowOutputTypes}">
-                <TextBlock Text="Output Type" Margin="4"/>
+                <TextBlock Text="Output Type" Margin="4" />
                 <ComboBox Grid.Row="1" ItemsSource="{Binding OutputTypes}"
+                          CornerRadius="8"
                           SelectedItem="{Binding SelectedOutputType}"
                           MinWidth="150"
                           VerticalAlignment="Stretch"
-                          VerticalContentAlignment="Center"/>
+                          VerticalContentAlignment="Center" />
             </Grid>
+
+            <TextBlock IsVisible="{Binding !!NumItemsSelected}"
+                       FontSize="16"
+                       Margin="8, 0"
+                       VerticalAlignment="Center"
+                       TextAlignment="Center">
+                <Run Text="{Binding NumItemsSelected}" />
+                <Run Text="images selected" />
+            </TextBlock>
+
+            <Button Content="Clear Selection"
+                    VerticalAlignment="Bottom"
+                    CornerRadius="8"
+                    Margin="8, 0"
+                    Height="40"
+                    Command="{Binding ClearSelection}"
+                    IsVisible="{Binding !!NumItemsSelected}" />
         </StackPanel>
 
         <ScrollViewer Grid.Row="1">
@@ -65,45 +85,45 @@
                     <UniformGridLayout MinColumnSpacing="16" MinRowSpacing="16" />
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
-                    <DataTemplate DataType="{x:Type database:LocalImageFile}">
-                        <Button
-                            Margin="0"
-                            Padding="4"
+                    <DataTemplate DataType="{x:Type outputsPage:OutputImageViewModel}">
+                        <selectableImageCard:SelectableImageButton
                             Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).OnImageClick}"
-                            CommandParameter="{Binding }">
-                            <controls:BetterAdvancedImage
-                                Width="300"
-                                Height="300"
-                                Stretch="UniformToFill"
-                                Source="{Binding AbsolutePath}" />
-
-                            <Button.ContextFlyout>
+                            CommandParameter="{Binding }"
+                            IsSelected="{Binding IsSelected}"
+                            Source="{Binding ImageFile.AbsolutePath}">
+                            <selectableImageCard:SelectableImageButton.ContextFlyout>
                                 <ui:FAMenuFlyout>
+                                    <ui:MenuFlyoutItem
+                                        HotKey="{x:Null}"
+                                        Text="{x:Static lang:Resources.Action_Copy}"
+                                        IconSource="Copy"
+                                        Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).CopyImage}"
+                                        CommandParameter="{Binding ImageFile.AbsolutePath}" />
+                                    <ui:MenuFlyoutItem
+                                        HotKey="{x:Null}"
+                                        Text="{x:Static lang:Resources.Action_OpenInExplorer}"
+                                        IconSource="Folder"
+                                        Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).OpenImage}"
+                                        CommandParameter="{Binding ImageFile.AbsolutePath}" />
+                                    <ui:MenuFlyoutItem
+                                        HotKey="{x:Null}"
+                                        Text="{x:Static lang:Resources.Action_OpenInViewer}"
+                                        IconSource="Image"
+                                        IsVisible="{Binding !!$parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).NumItemsSelected}"
+                                        Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).ShowImageDialog}"
+                                        CommandParameter="{Binding }" />
                                     <ui:MenuFlyoutItem
                                         HotKey="{x:Null}"
                                         Text="{x:Static lang:Resources.Action_Delete}"
                                         IconSource="Delete"
                                         Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).DeleteImage}"
                                         CommandParameter="{Binding }" />
-                                    <ui:MenuFlyoutItem
-                                        HotKey="{x:Null}"
-                                        Text="{x:Static lang:Resources.Action_Copy}"
-                                        IconSource="Copy"
-                                        Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).CopyImage}"
-                                        CommandParameter="{Binding AbsolutePath}" />
-
-                                    <ui:MenuFlyoutItem
-                                        HotKey="{x:Null}"
-                                        Text="{x:Static lang:Resources.Action_OpenInExplorer}"
-                                        IconSource="Folder"
-                                        Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).OpenImage}"
-                                        CommandParameter="{Binding AbsolutePath}" />
 
                                     <ui:MenuFlyoutSeparator
-                                        IsVisible="{Binding GenerationParameters, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                        IsVisible="{Binding ImageFile.GenerationParameters, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
                                     <ui:MenuFlyoutSubItem Text="Send to Inference" IconSource="Share"
-                                                          IsVisible="{Binding GenerationParameters, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                                          IsVisible="{Binding ImageFile.GenerationParameters, Converter={x:Static ObjectConverters.IsNotNull}}">
                                         <ui:MenuFlyoutItem
                                             HotKey="{x:Null}"
                                             Text="Text to Image"
@@ -135,8 +155,8 @@
                                         </ui:MenuFlyoutItem>
                                     </ui:MenuFlyoutSubItem>
                                 </ui:FAMenuFlyout>
-                            </Button.ContextFlyout>
-                        </Button>
+                            </selectableImageCard:SelectableImageButton.ContextFlyout>
+                        </selectableImageCard:SelectableImageButton>
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>

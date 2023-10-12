@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -345,6 +346,61 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         return ConnectAsyncImpl(new Uri("http://127.0.0.1:8188"), cancellationToken);
     }
 
+    private async Task MigrateLinksIfNeeded(PackagePair packagePair)
+    {
+        if (packagePair.InstalledPackage.FullPath is not { } packagePath)
+        {
+            throw new ArgumentException("Package path is null", nameof(packagePair));
+        }
+
+        var newDestination = settingsManager.ImagesInferenceDirectory;
+
+        // If new destination is a reparse point (like before, delete it first)
+        if (newDestination is { IsSymbolicLink: true, Info.LinkTarget: null })
+        {
+            logger.LogInformation("Deleting existing link target at {NewDir}", newDestination);
+            newDestination.Info.Attributes = FileAttributes.Normal;
+            await newDestination.DeleteAsync(false).ConfigureAwait(false);
+        }
+
+        newDestination.Create();
+
+        // For locally installed packages only
+        // Move all files in ./output/Inference to /Images/Inference and delete ./output/Inference
+
+        var legacyLinkSource = new DirectoryPath(packagePair.InstalledPackage.FullPath).JoinDir(
+            "output",
+            "Inference"
+        );
+        if (!legacyLinkSource.Exists)
+        {
+            return;
+        }
+
+        // Move files if not empty
+        if (legacyLinkSource.Info.EnumerateFiles().Any())
+        {
+            logger.LogInformation(
+                "Moving files from {LegacyDir} to {NewDir}",
+                legacyLinkSource,
+                newDestination
+            );
+            await FileTransfers
+                .MoveAllFilesAndDirectories(
+                    legacyLinkSource,
+                    newDestination,
+                    overwriteIfHashMatches: true,
+                    overwrite: false
+                )
+                .ConfigureAwait(false);
+        }
+
+        // Delete legacy link
+        logger.LogInformation("Deleting legacy link at {LegacyDir}", legacyLinkSource);
+        legacyLinkSource.Info.Attributes = FileAttributes.Normal;
+        await legacyLinkSource.DeleteAsync(false).ConfigureAwait(false);
+    }
+
     /// <inheritdoc />
     public async Task ConnectAsync(
         PackagePair packagePair,
@@ -367,11 +423,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
                 logger.LogError(ex, "Error setting up completion provider");
             });
 
-        // Setup image folder links
-        await comfyPackage.SetupInferenceOutputFolderLinks(
-            packagePair.InstalledPackage.FullPath
-                ?? throw new InvalidOperationException("Package does not have a Path")
-        );
+        await MigrateLinksIfNeeded(packagePair);
 
         // Get user defined host and port
         var host = packagePair.InstalledPackage.GetLaunchArgsHost();

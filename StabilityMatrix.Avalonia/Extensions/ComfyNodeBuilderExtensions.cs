@@ -282,20 +282,16 @@ public static class ComfyNodeBuilderExtensions
             builder.Connections.ImageSize = builder.Connections.LatentSize;
         }
 
-        var saveImage = builder.Nodes.AddNamedNode(
+        var previewImage = builder.Nodes.AddNamedNode(
             new NamedComfyNode("SaveImage")
             {
-                ClassType = "SaveImage",
-                Inputs = new Dictionary<string, object?>
-                {
-                    ["filename_prefix"] = "Inference/TextToImage",
-                    ["images"] = builder.Connections.Image
-                }
+                ClassType = "PreviewImage",
+                Inputs = new Dictionary<string, object?> { ["images"] = builder.Connections.Image }
             }
         );
 
-        builder.Connections.OutputNodes.Add(saveImage);
+        builder.Connections.OutputNodes.Add(previewImage);
 
-        return saveImage.Name;
+        return previewImage.Name;
     }
 }

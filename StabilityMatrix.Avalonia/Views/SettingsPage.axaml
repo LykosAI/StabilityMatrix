@@ -6,10 +6,12 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
     d:DataContext="{x:Static mocks:DesignData.SettingsViewModel}"
     d:DesignHeight="700"
     d:DesignWidth="800"
@@ -83,10 +85,10 @@
             </Grid>
             
             <!-- Inference UI -->
-            <Grid Margin="0,8,0,0" RowDefinitions="auto,*,*">
+            <Grid Margin="0,8,0,0" RowDefinitions="auto,*,*,*">
                 <TextBlock 
                     FontWeight="Medium"
-                    Text="Inference UI" 
+                    Text="Inference" 
                     Margin="0,0,0,8" />
                 <!-- Auto Completion -->
                 <ui:SettingsExpander  Grid.Row="1"
@@ -152,6 +154,26 @@
                         <ui:SettingsExpanderItem.Footer>
                             <CheckBox Margin="8"
                                       IsChecked="{Binding IsImageViewerPixelGridEnabled}"/>
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                </ui:SettingsExpander>
+                
+                <!-- Output Image Files -->
+                <ui:SettingsExpander  Grid.Row="3"
+                                      Header="Output Image Files"
+                                      Margin="8,0,8,4">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource Symbol="TabDesktopImage"/>
+                    </ui:SettingsExpander.IconSource>
+                    <!-- File name pattern  -->
+                    <ui:SettingsExpanderItem
+                        Content="File name pattern"
+                        IconSource="Rename">
+                        <ui:SettingsExpanderItem.Footer>
+                            <TextBox 
+                                Text="{Binding OutputImageFileNameFormat}"
+                                FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                Margin="0,2"/>
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
                 </ui:SettingsExpander>

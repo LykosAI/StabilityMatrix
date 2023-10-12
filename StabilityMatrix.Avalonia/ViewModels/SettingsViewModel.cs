@@ -108,6 +108,9 @@ public partial class SettingsViewModel : PageViewModelBase
     private bool isCompletionRemoveUnderscoresEnabled = true;
 
     [ObservableProperty]
+    private string? outputImageFileNameFormat;
+
+    [ObservableProperty]
     private bool isImageViewerPixelGridEnabled = true;
 
     // Integrations section
@@ -198,6 +201,13 @@ public partial class SettingsViewModel : PageViewModelBase
             this,
             vm => vm.IsCompletionRemoveUnderscoresEnabled,
             settings => settings.IsCompletionRemoveUnderscoresEnabled,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.OutputImageFileNameFormat,
+            settings => settings.InferenceOutputImageFileNameFormat,
             true
         );
 

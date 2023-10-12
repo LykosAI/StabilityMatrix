@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -35,13 +36,17 @@ public record FileNameFormat
     public string GetFileName()
     {
         return Prefix
-            + string.Join("", Parts.Select(p => p.Constant ?? p.Substitution?.Invoke() ?? ""))
+            + string.Join(
+                "",
+                Parts.Select(
+                    part => part.Match(constant => constant, substitution => substitution.Invoke())
+                )
+            )
             + Postfix;
     }
 
     public static FileNameFormat Parse(string template, FileNameFormatProvider provider)
     {
-        provider.Validate(template);
         var parts = provider.GetParts(template).ToImmutableArray();
         return new FileNameFormat(template, parts);
     }

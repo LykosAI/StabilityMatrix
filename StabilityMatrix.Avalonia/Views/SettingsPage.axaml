@@ -12,6 +12,9 @@
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+    xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
+    xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
+    Focusable="True"
     d:DataContext="{x:Static mocks:DesignData.SettingsViewModel}"
     d:DesignHeight="700"
     d:DesignWidth="800"
@@ -168,15 +171,32 @@
                     <!-- File name pattern  -->
                     <ui:SettingsExpanderItem
                         Content="File name pattern"
+                        Description="{Binding OutputImageFileNameFormatSample}"
                         IconSource="Rename">
                         <ui:SettingsExpanderItem.Footer>
-                            <TextBox 
+                            <TextBox
+                                Name="OutputImageFileNameFormatTextBox"
+                                Watermark="{x:Static inference:FileNameFormat.DefaultTemplate}"
+                                FontSize="13"
+                                MinWidth="150"
                                 Text="{Binding OutputImageFileNameFormat}"
-                                FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
-                                Margin="0,2"/>
+                                FontFamily="Cascadia Code,Consolas,Menlo,Monospace"/>
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
                 </ui:SettingsExpander>
+                
+                <ui:TeachingTip 
+                    IsOpen="{Binding #OutputImageFileNameFormatTextBox.IsFocused}"
+                    Target="{Binding #OutputImageFileNameFormatTextBox, Mode=OneWay}"
+                    PreferredPlacement="Top"
+                    Title="Format Variables"
+                    Grid.Row="3">
+                    <DataGrid 
+                        AutoGenerateColumns="True"
+                        ItemsSource="{Binding OutputImageFileNameFormatVars}" />
+                    <!--<mdxaml:MarkdownScrollViewer
+                        Markdown="{Binding OutputImageFileNameFormatGuideMarkdown}"/>-->
+                </ui:TeachingTip>
             </Grid>
             
             <!--  Environment Options  -->

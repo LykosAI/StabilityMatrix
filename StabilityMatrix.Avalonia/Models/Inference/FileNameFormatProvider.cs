@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Avalonia.Data;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 
@@ -17,7 +21,7 @@ public partial class FileNameFormatProvider
 
     private Dictionary<string, Func<string?>>? _substitutions;
 
-    private Dictionary<string, Func<string?>> Substitutions =>
+    public Dictionary<string, Func<string?>> Substitutions =>
         _substitutions ??= new Dictionary<string, Func<string?>>
         {
             { "seed", () => GenerationParameters?.Seed.ToString() },
@@ -34,19 +38,24 @@ public partial class FileNameFormatProvider
     /// <summary>
     /// Validate a format string
     /// </summary>
-    public void Validate(string format)
+    /// <param name="format">Format string</param>
+    /// <exception cref="DataValidationException">Thrown if the format string contains an unknown variable</exception>
+    [Pure]
+    public ValidationResult Validate(string format)
     {
         var regex = BracketRegex();
         var matches = regex.Matches(format);
-        var variables = matches.Select(m => m.Value[1..^1]).ToList();
+        var variables = matches.Select(m => m.Groups[1].Value);
 
         foreach (var variable in variables)
         {
             if (!Substitutions.ContainsKey(variable))
             {
-                throw new ArgumentException($"Unknown variable '{variable}'");
+                return new ValidationResult($"Unknown variable '{variable}'");
             }
         }
+
+        return ValidationResult.Success!;
     }
 
     public IEnumerable<FileNameFormatPart> GetParts(string template)
@@ -65,13 +74,15 @@ public partial class FileNameFormatProvider
             if (result.Index != currentIndex)
             {
                 var constant = template[currentIndex..result.Index];
-                parts.Add(new FileNameFormatPart(constant, null));
+                parts.Add(FileNameFormatPart.FromConstant(constant));
 
                 currentIndex += constant.Length;
             }
 
-            var variable = result.Value[1..^1];
-            parts.Add(new FileNameFormatPart(null, Substitutions[variable]));
+            // Now we're at start of the current match, add the variable part
+            var variable = result.Groups[1].Value;
+
+            parts.Add(FileNameFormatPart.FromSubstitution(Substitutions[variable]));
 
             currentIndex += result.Length;
         }
@@ -80,15 +91,34 @@ public partial class FileNameFormatProvider
         if (currentIndex != template.Length)
         {
             var constant = template[currentIndex..];
-            parts.Add(new FileNameFormatPart(constant, null));
+            parts.Add(FileNameFormatPart.FromConstant(constant));
         }
 
         return parts;
     }
 
     /// <summary>
+    /// Return a sample provider for UI preview
+    /// </summary>
+    public static FileNameFormatProvider GetSample()
+    {
+        return new FileNameFormatProvider
+        {
+            GenerationParameters = GenerationParameters.GetSample(),
+            ProjectType = InferenceProjectType.TextToImage,
+            ProjectName = "Sample Project"
+        };
+    }
+
+    /// <summary>
     /// Regex for matching contents within a curly brace.
     /// </summary>
-    [GeneratedRegex(@"\{[a-z_]+\}")]
+    [GeneratedRegex(@"\{([a-z_]+)\}")]
     private static partial Regex BracketRegex();
+
+    /// <summary>
+    /// Regex for matching a Python-like array index.
+    /// </summary>
+    [GeneratedRegex(@"\[(?:(?<start>-?\d+)?)\:(?:(?<end>-?\d+)?)?(?:\:(?<step>-?\d+))?\]")]
+    private static partial Regex IndexRegex();
 }

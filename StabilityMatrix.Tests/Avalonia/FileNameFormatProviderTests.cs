@@ -1,4 +1,5 @@
-﻿using StabilityMatrix.Avalonia.Models.Inference;
+﻿using System.ComponentModel.DataAnnotations;
+using StabilityMatrix.Avalonia.Models.Inference;
 
 namespace StabilityMatrix.Tests.Avalonia;
 
@@ -10,7 +11,8 @@ public class FileNameFormatProviderTests
     {
         var provider = new FileNameFormatProvider();
 
-        provider.Validate("{date}_{time}-{model_name}-{seed}");
+        var result = provider.Validate("{date}_{time}-{model_name}-{seed}");
+        Assert.AreEqual(ValidationResult.Success, result);
     }
 
     [TestMethod]
@@ -18,8 +20,9 @@ public class FileNameFormatProviderTests
     {
         var provider = new FileNameFormatProvider();
 
-        Assert.ThrowsException<ArgumentException>(
-            () => provider.Validate("{date}_{time}-{model_name}-{seed}-{invalid}")
-        );
+        var result = provider.Validate("{date}_{time}-{model_name}-{seed}-{invalid}");
+        Assert.AreNotEqual(ValidationResult.Success, result);
+
+        Assert.AreEqual("Unknown variable 'invalid'", result.ErrorMessage);
     }
 }

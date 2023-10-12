@@ -353,52 +353,35 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             throw new ArgumentException("Package path is null", nameof(packagePair));
         }
 
-        var newDestination = settingsManager.ImagesInferenceDirectory;
-
-        // If new destination is a reparse point (like before, delete it first)
-        if (newDestination is { IsSymbolicLink: true, Info.LinkTarget: null })
-        {
-            logger.LogInformation("Deleting existing link target at {NewDir}", newDestination);
-            newDestination.Info.Attributes = FileAttributes.Normal;
-            await newDestination.DeleteAsync(false).ConfigureAwait(false);
-        }
-
-        newDestination.Create();
+        var inferenceDir = settingsManager.ImagesInferenceDirectory;
+        inferenceDir.Create();
 
         // For locally installed packages only
-        // Move all files in ./output/Inference to /Images/Inference and delete ./output/Inference
+        // Delete ./output/Inference
 
-        var legacyLinkSource = new DirectoryPath(packagePair.InstalledPackage.FullPath).JoinDir(
-            "output",
-            "Inference"
-        );
-        if (!legacyLinkSource.Exists)
-        {
-            return;
-        }
+        var legacyInferenceLinkDir = new DirectoryPath(
+            packagePair.InstalledPackage.FullPath
+        ).JoinDir("output", "Inference");
 
-        // Move files if not empty
-        if (legacyLinkSource.Info.EnumerateFiles().Any())
+        if (legacyInferenceLinkDir.Exists)
         {
             logger.LogInformation(
-                "Moving files from {LegacyDir} to {NewDir}",
-                legacyLinkSource,
-                newDestination
+                "Deleting legacy inference link at {LegacyDir}",
+                legacyInferenceLinkDir
             );
-            await FileTransfers
-                .MoveAllFilesAndDirectories(
-                    legacyLinkSource,
-                    newDestination,
-                    overwriteIfHashMatches: true,
-                    overwrite: false
-                )
-                .ConfigureAwait(false);
-        }
 
-        // Delete legacy link
-        logger.LogInformation("Deleting legacy link at {LegacyDir}", legacyLinkSource);
-        legacyLinkSource.Info.Attributes = FileAttributes.Normal;
-        await legacyLinkSource.DeleteAsync(false).ConfigureAwait(false);
+            if (legacyInferenceLinkDir.IsSymbolicLink)
+            {
+                await legacyInferenceLinkDir.DeleteAsync(false);
+            }
+            else
+            {
+                logger.LogWarning(
+                    "Legacy inference link at {LegacyDir} is not a symbolic link, skipping",
+                    legacyInferenceLinkDir
+                );
+            }
+        }
     }
 
     /// <inheritdoc />

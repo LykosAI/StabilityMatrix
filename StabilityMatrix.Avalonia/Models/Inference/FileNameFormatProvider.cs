@@ -31,8 +31,6 @@ public partial class FileNameFormatProvider
             { "time", () => DateTime.Now.ToString("HH-mm-ss") }
         };
 
-    public (int Current, int Total)? BatchInfo { get; init; }
-
     /// <summary>
     /// Validate a format string
     /// </summary>
@@ -89,23 +87,8 @@ public partial class FileNameFormatProvider
     }
 
     /// <summary>
-    /// Return a string substituting the variables in the format string
+    /// Regex for matching contents within a curly brace.
     /// </summary>
-    private string? GetSubstitution(string variable)
-    {
-        return variable switch
-        {
-            "seed" => GenerationParameters.Seed.ToString(),
-            "model_name" => GenerationParameters.ModelName,
-            "model_hash" => GenerationParameters.ModelHash,
-            "width" => GenerationParameters.Width.ToString(),
-            "height" => GenerationParameters.Height.ToString(),
-            "date" => DateTime.Now.ToString("yyyy-MM-dd"),
-            "time" => DateTime.Now.ToString("HH-mm-ss"),
-            _ => throw new ArgumentOutOfRangeException(nameof(variable), variable, null)
-        };
-    }
-
     [GeneratedRegex(@"\{[a-z_]+\}")]
     private static partial Regex BracketRegex();
 }

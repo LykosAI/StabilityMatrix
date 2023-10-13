@@ -17,6 +17,17 @@ public static class PngDataHelper
     private static readonly byte[] Iend = { 0x49, 0x45, 0x4E, 0x44 };
 
     public static byte[] AddMetadata(
+        Stream inputStream,
+        GenerationParameters generationParameters,
+        InferenceProjectDocument projectDocument
+    )
+    {
+        using var ms = new MemoryStream();
+        inputStream.CopyTo(ms);
+        return AddMetadata(ms.ToArray(), generationParameters, projectDocument);
+    }
+
+    public static byte[] AddMetadata(
         byte[] inputImage,
         GenerationParameters generationParameters,
         InferenceProjectDocument projectDocument

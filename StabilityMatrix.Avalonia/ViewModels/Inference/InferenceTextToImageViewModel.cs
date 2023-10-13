@@ -86,10 +86,11 @@ public class InferenceTextToImageViewModel
     public InferenceTextToImageViewModel(
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
+        ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> vmFactory,
         IModelIndexService modelIndexService
     )
-        : base(vmFactory, inferenceClientManager, notificationService)
+        : base(vmFactory, inferenceClientManager, notificationService, settingsManager)
     {
         this.notificationService = notificationService;
         this.modelIndexService = modelIndexService;

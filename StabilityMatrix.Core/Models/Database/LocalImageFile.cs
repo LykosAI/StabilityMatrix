@@ -126,6 +126,8 @@ public class LocalImageFile
             GenerationParameters.TryParse(metadata, out genParams);
         }
 
+        filePath.Info.Refresh();
+
         return new LocalImageFile
         {
             RelativePath = relativePath,

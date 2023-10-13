@@ -30,6 +30,8 @@ public class ComfyUI : BaseGitPackage
         new("https://github.com/comfyanonymous/ComfyUI/raw/master/comfyui_screenshot.png");
     public override bool ShouldIgnoreReleases => true;
     public override bool IsInferenceCompatible => true;
+    public override string OutputFolderName => "output";
+
     public override SharedFolderMethod RecommendedSharedFolderMethod =>
         SharedFolderMethod.Configuration;
 
@@ -57,6 +59,9 @@ public class ComfyUI : BaseGitPackage
             [SharedFolderType.ESRGAN] = new[] { "models/upscale_models" },
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
         };
+
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+        new() { [SharedOutputType.Text2Img] = new[] { "output" } };
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new List<LaunchOptionDefinition>

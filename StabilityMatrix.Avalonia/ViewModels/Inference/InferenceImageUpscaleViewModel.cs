@@ -19,6 +19,7 @@ using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Services;
 using Path = System.IO.Path;
 
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
@@ -60,9 +61,10 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
     public InferenceImageUpscaleViewModel(
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
+        ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> vmFactory
     )
-        : base(vmFactory, inferenceClientManager, notificationService)
+        : base(vmFactory, inferenceClientManager, notificationService, settingsManager)
     {
         this.notificationService = notificationService;
 

@@ -678,7 +678,13 @@
   <data name="Action_RestoreDefaultLayout" xml:space="preserve">
     <value>Restore Default Layout</value>
   </data>
+  <data name="Label_UseSharedOutputFolder" xml:space="preserve">
+    <value>Output Sharing</value>
+  </data>
   <data name="Label_BatchIndex" xml:space="preserve">
     <value>Batch Index</value>
+  </data>
+  <data name="Action_Copy" xml:space="preserve">
+    <value>Copy</value>
   </data>
 </root>

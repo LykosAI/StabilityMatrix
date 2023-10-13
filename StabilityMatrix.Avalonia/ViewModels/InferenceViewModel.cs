@@ -111,6 +111,10 @@ public partial class InferenceViewModel : PageViewModelBase
         // Keep RunningPackage updated with the current package pair
         EventManager.Instance.RunningPackageStatusChanged += OnRunningPackageStatusChanged;
 
+        // "Send to Inference"
+        EventManager.Instance.InferenceTextToImageRequested += OnInferenceTextToImageRequested;
+        EventManager.Instance.InferenceUpscaleRequested += OnInferenceUpscaleRequested;
+
         MenuSaveAsCommand.WithConditionalNotificationErrorHandler(notificationService);
         MenuOpenProjectCommand.WithConditionalNotificationErrorHandler(notificationService);
     }
@@ -230,6 +234,16 @@ public partial class InferenceViewModel : PageViewModelBase
         {
             AddTab(InferenceProjectType.TextToImage);
         }
+    }
+
+    private void OnInferenceTextToImageRequested(object? sender, LocalImageFile e)
+    {
+        Dispatcher.UIThread.Post(() => AddTabFromImage(e).SafeFireAndForget());
+    }
+
+    private void OnInferenceUpscaleRequested(object? sender, LocalImageFile e)
+    {
+        Dispatcher.UIThread.Post(() => AddUpscalerTabFromImage(e).SafeFireAndForget());
     }
 
     /// <summary>
@@ -589,6 +603,70 @@ public partial class InferenceViewModel : PageViewModelBase
         Tabs.Add(vm);
 
         SelectedTab = vm;
+
+        await SyncTabStatesWithDatabase();
+    }
+
+    private async Task AddTabFromImage(LocalImageFile imageFile)
+    {
+        var metadata = imageFile.ReadMetadata();
+        InferenceTabViewModelBase? vm = null;
+
+        if (!string.IsNullOrWhiteSpace(metadata.SMProject))
+        {
+            var document = JsonSerializer.Deserialize<InferenceProjectDocument>(metadata.SMProject);
+            if (document is null)
+            {
+                throw new ApplicationException(
+                    "MenuOpenProject: Deserialize project file returned null"
+                );
+            }
+
+            if (document.State is null)
+            {
+                throw new ApplicationException("Project file does not have 'State' key");
+            }
+
+            document.VerifyVersion();
+            var textToImage = vmFactory.Get<InferenceTextToImageViewModel>();
+            textToImage.LoadStateFromJsonObject(document.State);
+            vm = textToImage;
+        }
+        else if (!string.IsNullOrWhiteSpace(metadata.Parameters))
+        {
+            if (GenerationParameters.TryParse(metadata.Parameters, out var generationParameters))
+            {
+                var textToImageViewModel = vmFactory.Get<InferenceTextToImageViewModel>();
+                textToImageViewModel.LoadStateFromParameters(generationParameters);
+                vm = textToImageViewModel;
+            }
+        }
+
+        if (vm == null)
+        {
+            notificationService.Show(
+                "Unable to load project from image",
+                "No image metadata found",
+                NotificationType.Error
+            );
+            return;
+        }
+
+        Tabs.Add(vm);
+
+        SelectedTab = vm;
+
+        await SyncTabStatesWithDatabase();
+    }
+
+    private async Task AddUpscalerTabFromImage(LocalImageFile imageFile)
+    {
+        var upscaleVm = vmFactory.Get<InferenceImageUpscaleViewModel>();
+        upscaleVm.IsUpscaleEnabled = true;
+        upscaleVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
+
+        Tabs.Add(upscaleVm);
+        SelectedTab = upscaleVm;
 
         await SyncTabStatesWithDatabase();
     }

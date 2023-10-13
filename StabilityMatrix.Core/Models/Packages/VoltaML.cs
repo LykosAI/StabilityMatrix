@@ -45,6 +45,16 @@ public class VoltaML : BaseGitPackage
             [SharedFolderType.TextualInversion] = new[] { "data/textual-inversion" },
         };
 
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+        new()
+        {
+            [SharedOutputType.Text2Img] = new[] { "data/outputs/txt2img" },
+            [SharedOutputType.Extras] = new[] { "data/outputs/extra" },
+            [SharedOutputType.Img2Img] = new[] { "data/outputs/img2img" },
+        };
+
+    public override string OutputFolderName => "data/outputs";
+
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions => new[] { TorchVersion.None };

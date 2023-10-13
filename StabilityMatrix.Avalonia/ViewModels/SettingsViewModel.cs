@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -21,6 +23,7 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using NLog;
 using SkiaSharp;
@@ -29,6 +32,7 @@ using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -106,6 +110,25 @@ public partial class SettingsViewModel : PageViewModelBase
 
     [ObservableProperty]
     private bool isCompletionRemoveUnderscoresEnabled = true;
+
+    [ObservableProperty]
+    [CustomValidation(typeof(SettingsViewModel), nameof(ValidateOutputImageFileNameFormat))]
+    private string? outputImageFileNameFormat;
+
+    [ObservableProperty]
+    private string? outputImageFileNameFormatSample;
+
+    public IEnumerable<FileNameFormatVar> OutputImageFileNameFormatVars =>
+        FileNameFormatProvider
+            .GetSample()
+            .Substitutions.Select(
+                kv =>
+                    new FileNameFormatVar
+                    {
+                        Variable = $"{{{kv.Key}}}",
+                        Example = kv.Value.Invoke()
+                    }
+            );
 
     [ObservableProperty]
     private bool isImageViewerPixelGridEnabled = true;
@@ -201,6 +224,39 @@ public partial class SettingsViewModel : PageViewModelBase
             true
         );
 
+        this.WhenPropertyChanged(vm => vm.OutputImageFileNameFormat)
+            .Throttle(TimeSpan.FromMilliseconds(50))
+            .Subscribe(formatProperty =>
+            {
+                var provider = FileNameFormatProvider.GetSample();
+                var template = formatProperty.Value;
+
+                if (
+                    !string.IsNullOrEmpty(template)
+                    && provider.Validate(template) == ValidationResult.Success
+                )
+                {
+                    var format = FileNameFormat.Parse(template, provider);
+                    OutputImageFileNameFormatSample = format.GetFileName() + ".png";
+                }
+                else
+                {
+                    // Use default format if empty
+                    var defaultFormat = FileNameFormat.Parse(
+                        FileNameFormat.DefaultTemplate,
+                        provider
+                    );
+                    OutputImageFileNameFormatSample = defaultFormat.GetFileName() + ".png";
+                }
+            });
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.OutputImageFileNameFormat,
+            settings => settings.InferenceOutputImageFileNameFormat,
+            true
+        );
+
         settingsManager.RelayPropertyFor(
             this,
             vm => vm.IsImageViewerPixelGridEnabled,
@@ -223,6 +279,14 @@ public partial class SettingsViewModel : PageViewModelBase
         await notificationService.TryAsync(completionProvider.Setup());
 
         UpdateAvailableTagCompletionCsvs();
+    }
+
+    public static ValidationResult ValidateOutputImageFileNameFormat(
+        string format,
+        ValidationContext context
+    )
+    {
+        return FileNameFormatProvider.GetSample().Validate(format);
     }
 
     partial void OnSelectedThemeChanged(string? value)

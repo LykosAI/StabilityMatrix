@@ -262,7 +262,8 @@ public sealed class App : Application
             .AddSingleton<LaunchPageViewModel>()
             .AddSingleton<ProgressManagerViewModel>()
             .AddSingleton<InferenceViewModel>()
-            .AddSingleton<ProgressManagerViewModel>();
+            .AddSingleton<ProgressManagerViewModel>()
+            .AddSingleton<OutputsPageViewModel>();
 
         services.AddSingleton<MainWindowViewModel>(
             provider =>
@@ -281,6 +282,7 @@ public sealed class App : Application
                         provider.GetRequiredService<PackageManagerViewModel>(),
                         provider.GetRequiredService<CheckpointsPageViewModel>(),
                         provider.GetRequiredService<CheckpointBrowserViewModel>(),
+                        provider.GetRequiredService<OutputsPageViewModel>()
                     },
                     FooterPages = { provider.GetRequiredService<SettingsViewModel>() }
                 }
@@ -393,6 +395,7 @@ public sealed class App : Application
         services.AddSingleton<ProgressManagerPage>();
         services.AddSingleton<InferencePage>();
         services.AddSingleton<NewCheckpointsPage>();
+        services.AddSingleton<OutputsPage>();
 
         // Inference tabs
         services.AddTransient<InferenceTextToImageView>();

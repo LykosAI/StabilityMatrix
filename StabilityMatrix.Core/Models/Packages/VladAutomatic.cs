@@ -67,6 +67,19 @@ public class VladAutomatic : BaseGitPackage
             [SharedFolderType.ControlNet] = new[] { "models/ControlNet" }
         };
 
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+        new()
+        {
+            [SharedOutputType.Text2Img] = new[] { "outputs/text" },
+            [SharedOutputType.Img2Img] = new[] { "outputs/image" },
+            [SharedOutputType.Extras] = new[] { "outputs/extras" },
+            [SharedOutputType.Img2ImgGrids] = new[] { "outputs/grids" },
+            [SharedOutputType.Text2ImgGrids] = new[] { "outputs/grids" },
+            [SharedOutputType.Saved] = new[] { "outputs/save" },
+        };
+
+    public override string OutputFolderName => "outputs";
+
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new()

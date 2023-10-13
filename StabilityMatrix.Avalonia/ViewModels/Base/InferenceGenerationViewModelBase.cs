@@ -152,8 +152,8 @@ public abstract partial class InferenceGenerationViewModelBase
             format = format.WithBatchPostFix(batchNum, batchTotal);
         }
 
-        var fileName = format.GetFileName() + ".png";
-        var file = outputDir.JoinFile(fileName);
+        var fileName = format.GetFileName();
+        var file = outputDir.JoinFile($"{fileName}.png");
 
         // Until the file is free, keep adding _{i} to the end
         for (var i = 0; i < 100; i++)
@@ -161,13 +161,14 @@ public abstract partial class InferenceGenerationViewModelBase
             if (!file.Exists)
                 break;
 
-            file = outputDir.JoinFile($"{fileName}_{i + 1}");
+            file = outputDir.JoinFile($"{fileName}_{i + 1}.png");
         }
 
         // If that fails, append an 7-char uuid
         if (file.Exists)
         {
-            file = outputDir.JoinFile($"{fileName}_{Guid.NewGuid():N}"[..7]);
+            var uuid = Guid.NewGuid().ToString("N")[..7];
+            file = outputDir.JoinFile($"{fileName}_{uuid}.png");
         }
 
         await using var fileStream = file.Info.OpenWrite();

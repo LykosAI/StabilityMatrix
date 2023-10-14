@@ -255,8 +255,7 @@ public class InferenceTextToImageViewModel
                 ComfyNodeBuilder.VAELoader("VAELoader", ModelCardViewModel.SelectedVae.FileName)
             );
 
-            builder.Connections.BaseVAE = customVaeLoader.Output;
-            builder.Connections.RefinerVAE = customVaeLoader.Output;
+            builder.Connections.PrimaryVAE = customVaeLoader.Output;
         }
 
         // If hi-res fix is enabled, add the LatentUpscale node and another KSampler node

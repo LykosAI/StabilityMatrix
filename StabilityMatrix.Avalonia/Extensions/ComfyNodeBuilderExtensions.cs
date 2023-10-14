@@ -70,6 +70,7 @@ public static class ComfyNodeBuilderExtensions
         builder.Connections.BaseModel = checkpointLoader.GetOutput<ModelNodeConnection>(0);
         builder.Connections.BaseClip = checkpointLoader.GetOutput<ClipNodeConnection>(1);
         builder.Connections.BaseVAE = checkpointLoader.GetOutput<VAENodeConnection>(2);
+        builder.Connections.PrimaryVAE = builder.Connections.BaseVAE;
 
         // Run post model load action
         postModelLoad?.Invoke(builder);
@@ -191,6 +192,7 @@ public static class ComfyNodeBuilderExtensions
         builder.Connections.RefinerModel = checkpointLoader.GetOutput<ModelNodeConnection>(0);
         builder.Connections.RefinerClip = checkpointLoader.GetOutput<ClipNodeConnection>(1);
         builder.Connections.RefinerVAE = checkpointLoader.GetOutput<VAENodeConnection>(2);
+        builder.Connections.PrimaryVAE = builder.Connections.RefinerVAE;
 
         // Run post model load action
         postModelLoad?.Invoke(builder);

@@ -126,6 +126,26 @@ public partial record GenerationParameters
         return (sampler, scheduler);
     }
 
+    /// <summary>
+    /// Return a sample parameters for UI preview
+    /// </summary>
+    public static GenerationParameters GetSample()
+    {
+        return new GenerationParameters
+        {
+            PositivePrompt = "(cat:1.2), by artist, detailed, [shaded]",
+            NegativePrompt = "blurry, jpg artifacts",
+            Steps = 30,
+            CfgScale = 7,
+            Width = 640,
+            Height = 896,
+            Seed = 124825529,
+            ModelName = "ExampleMix7",
+            ModelHash = "b899d188a1ac7356bfb9399b2277d5b21712aa360f8f9514fba6fcce021baff7",
+            Sampler = "DPM++ 2M Karras"
+        };
+    }
+
     // Example: Steps: 30, Sampler: DPM++ 2M Karras, CFG scale: 7, Seed: 2216407431, Size: 640x896, Model hash: eb2h052f91, Model: anime_v1
     [GeneratedRegex(
         """^Steps: (?<Steps>\d+), Sampler: (?<Sampler>.+?), CFG scale: (?<CfgScale>\d+(\.\d+)?), Seed: (?<Seed>\d+), Size: (?<Width>\d+)x(?<Height>\d+), Model hash: (?<ModelHash>.+?), Model: (?<ModelName>.+)$"""

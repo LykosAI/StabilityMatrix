@@ -178,7 +178,7 @@ public abstract class BasePackage
         await venvRunner
             .PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, onConsoleOutput)
             .ConfigureAwait(false);
-        await venvRunner.PipInstall("xformers", onConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall("xformers==0.0.20", onConsoleOutput).ConfigureAwait(false);
     }
 
     protected Task InstallDirectMlTorch(

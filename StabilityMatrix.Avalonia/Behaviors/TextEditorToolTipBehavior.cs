@@ -242,6 +242,10 @@ public class TextEditorToolTipBehavior : Behavior<TextEditor>
                     {
                         return new ToolTipData(segment, "Mismatched opening parenthesis '('");
                     }
+                    if (results.Contains("invalid.illegal.expected-weight-separator.prompt"))
+                    {
+                        return new ToolTipData(segment, "Expected numeric weight");
+                    }
 
                     return new ToolTipData(segment, "Syntax error: " + string.Join(", ", results));
                 }

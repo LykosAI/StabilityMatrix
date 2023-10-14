@@ -79,20 +79,41 @@
                                                 <MenuItem Header="Symlink"
                                                           Command="{Binding ToggleSharedModelSymlink}">
                                                     <MenuItem.Icon>
-                                                        <CheckBox IsChecked="{Binding IsSharedModelSymlink}"/>
+                                                        <CheckBox IsChecked="{Binding IsSharedModelSymlink}"
+                                                                  Margin="8,0,0,0"
+                                                                  Padding="0"
+                                                                  Width="28" Height="28">
+                                                            <CheckBox.RenderTransform>
+                                                                <ScaleTransform ScaleX="1.5" ScaleY="1.5"/>
+                                                            </CheckBox.RenderTransform>
+                                                        </CheckBox>
                                                     </MenuItem.Icon>
                                                 </MenuItem>
                                                 <MenuItem Header="Config"
                                                           Command="{Binding ToggleSharedModelConfig}"
                                                           IsVisible="{Binding CanUseConfigMethod}">
                                                     <MenuItem.Icon>
-                                                        <CheckBox IsChecked="{Binding IsSharedModelConfig}"/>
+                                                        <CheckBox Margin="8,0,0,0"
+                                                                  Padding="0"
+                                                                  Width="28" Height="28"
+                                                                  IsChecked="{Binding IsSharedModelConfig}">
+                                                            <CheckBox.RenderTransform>
+                                                                <ScaleTransform ScaleX="1.5" ScaleY="1.5"/>
+                                                            </CheckBox.RenderTransform>
+                                                        </CheckBox>
                                                     </MenuItem.Icon>
                                                 </MenuItem>
                                                 <MenuItem Header="None"
                                                           Command="{Binding ToggleSharedModelNone}">
                                                     <MenuItem.Icon>
-                                                        <CheckBox IsChecked="{Binding IsSharedModelDisabled}"/>
+                                                        <CheckBox IsChecked="{Binding IsSharedModelDisabled}"
+                                                                  Margin="8,0,0,0"
+                                                                  Padding="0"
+                                                                  Width="28" Height="28">
+                                                            <CheckBox.RenderTransform>
+                                                                <ScaleTransform ScaleX="1.5" ScaleY="1.5"/>
+                                                            </CheckBox.RenderTransform>
+                                                        </CheckBox>
                                                     </MenuItem.Icon>
                                                 </MenuItem>
                                                 <!-- ReSharper enable Xaml.RedundantResource -->
@@ -104,7 +125,11 @@
                                                     <CheckBox Margin="8,0,0,0"
                                                               Padding="0"
                                                               Width="28" Height="28"
-                                                              IsChecked="{Binding UseSharedOutput}"/>
+                                                              IsChecked="{Binding UseSharedOutput}">
+                                                        <CheckBox.RenderTransform>
+                                                            <ScaleTransform ScaleX="1.5" ScaleY="1.5"/>
+                                                        </CheckBox.RenderTransform>
+                                                    </CheckBox>
                                                 </MenuItem.Icon>
                                             </MenuItem>
                                             <Separator />

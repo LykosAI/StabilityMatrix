@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -16,7 +17,9 @@ using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -42,7 +45,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
     private readonly INotificationService notificationService;
     private readonly INavigationService navigationService;
     private readonly ILogger<OutputsPageViewModel> logger;
-    public override string Title => "Outputs";
+    public override string Title => Resources.Label_OutputsPageTitle;
 
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.Grid, IsFilled = true };
@@ -66,9 +69,15 @@ public partial class OutputsPageViewModel : PageViewModelBase
     private SharedOutputType selectedOutputType;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NumImagesSelected))]
     private int numItemsSelected;
 
     public bool CanShowOutputTypes => SelectedCategory.Name.Equals("Shared Output Folder");
+
+    public string NumImagesSelected =>
+        NumItemsSelected == 1
+            ? Resources.Label_OneImageSelected
+            : string.Format(Resources.Label_NumImagesSelected, NumItemsSelected);
 
     public OutputsPageViewModel(
         ISettingsManager settingsManager,
@@ -237,6 +246,19 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     public async Task DeleteImage(OutputImageViewModel? item)
     {
+        var confirmationDialog = new BetterContentDialog
+        {
+            Title = "Are you sure you want to delete this image?",
+            Content = "This action cannot be undone.",
+            PrimaryButtonText = Resources.Action_Delete,
+            SecondaryButtonText = Resources.Action_Cancel,
+            DefaultButton = ContentDialogButton.Primary,
+            IsSecondaryButtonEnabled = true,
+        };
+        var dialogResult = await confirmationDialog.ShowAsync();
+        if (dialogResult != ContentDialogResult.Primary)
+            return;
+
         if (item?.ImageFile.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
         {
             return;
@@ -278,6 +300,59 @@ public partial class OutputsPageViewModel : PageViewModelBase
         {
             output.IsSelected = false;
         }
+    }
+
+    public void SelectAll()
+    {
+        foreach (var output in Outputs)
+        {
+            output.IsSelected = true;
+        }
+    }
+
+    public async Task DeleteAllSelected()
+    {
+        var confirmationDialog = new BetterContentDialog
+        {
+            Title = $"Are you sure you want to delete {NumItemsSelected} images?",
+            Content = "This action cannot be undone.",
+            PrimaryButtonText = Resources.Action_Delete,
+            SecondaryButtonText = Resources.Action_Cancel,
+            DefaultButton = ContentDialogButton.Primary,
+            IsSecondaryButtonEnabled = true,
+        };
+        var dialogResult = await confirmationDialog.ShowAsync();
+        if (dialogResult != ContentDialogResult.Primary)
+            return;
+
+        var selected = Outputs.Where(o => o.IsSelected).ToList();
+        Debug.Assert(selected.Count == NumItemsSelected);
+        foreach (var output in selected)
+        {
+            if (output?.ImageFile.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
+            {
+                continue;
+            }
+
+            // Delete the file
+            var imageFile = new FilePath(imagePath);
+            var result = await notificationService.TryAsync(imageFile.DeleteAsync());
+
+            if (!result.IsSuccessful)
+            {
+                continue;
+            }
+            OutputsCache.Remove(output);
+
+            // Invalidate cache
+            if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
+            {
+                loader.RemoveAllNamesFromCache(imageFile.Name);
+            }
+        }
+
+        NumItemsSelected = 0;
+        ClearSelection();
     }
 
     private void GetOutputs(string directory)

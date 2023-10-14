@@ -11,10 +11,10 @@
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:models1="clr-namespace:StabilityMatrix.Avalonia.Models"
-    xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
     xmlns:fluentAvalonia="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
     xmlns:outputsPage="clr-namespace:StabilityMatrix.Avalonia.ViewModels.OutputsPage"
     xmlns:selectableImageCard="clr-namespace:StabilityMatrix.Avalonia.Controls.SelectableImageCard"
+    xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     d:DataContext="{x:Static mocks:DesignData.OutputsPageViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="700"
@@ -22,60 +22,95 @@
     x:DataType="vm:OutputsPageViewModel"
     mc:Ignorable="d">
     <Grid RowDefinitions="Auto, *" Margin="16">
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16"
-                    HorizontalAlignment="Left">
-            <Grid RowDefinitions="Auto, *">
-                <TextBlock Text="Output Folder" Margin="4" />
-                <ComboBox Grid.Row="1" ItemsSource="{Binding Categories}"
-                          CornerRadius="8"
-                          SelectedItem="{Binding SelectedCategory}"
-                          MinWidth="150">
-                    <ComboBox.Styles>
-                        <Style
-                            Selector="ComboBox /template/ ContentControl#ContentPresenter &gt; StackPanel &gt; TextBlock:nth-child(2)">
-                            <Setter Property="IsVisible" Value="False" />
-                        </Style>
-                    </ComboBox.Styles>
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate DataType="{x:Type models1:PackageOutputCategory}">
-                            <StackPanel>
-                                <TextBlock
-                                    Margin="0,4,0,4"
-                                    Text="{Binding Name, Mode=OneWay}" />
-                                <TextBlock Text="{Binding Path, Mode=OneWay}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-            </Grid>
-            <Grid RowDefinitions="Auto, *" Margin="8,0"
-                  IsVisible="{Binding CanShowOutputTypes}">
-                <TextBlock Text="Output Type" Margin="4" />
-                <ComboBox Grid.Row="1" ItemsSource="{Binding OutputTypes}"
-                          CornerRadius="8"
-                          SelectedItem="{Binding SelectedOutputType}"
-                          MinWidth="150"
-                          VerticalAlignment="Stretch"
-                          VerticalContentAlignment="Center" />
-            </Grid>
+        <Grid Grid.Row="0" Margin="0,0,0,16"
+              HorizontalAlignment="Stretch"
+              RowDefinitions="Auto, Auto"
+              ColumnDefinitions="Auto, Auto, Auto, *, Auto, Auto">
+            <TextBlock Grid.Row="0"
+                       Grid.Column="0"
+                       Text="{x:Static lang:Resources.Label_OutputFolder}"
+                       Margin="4" />
+            <ComboBox Grid.Column="0"
+                      Grid.Row="1" ItemsSource="{Binding Categories}"
+                      CornerRadius="8"
+                      Margin="4,0"
+                      SelectedItem="{Binding SelectedCategory}"
+                      VerticalAlignment="Stretch"
+                      MinWidth="150">
+                <ComboBox.Styles>
+                    <Style
+                        Selector="ComboBox /template/ ContentControl#ContentPresenter &gt; StackPanel &gt; TextBlock:nth-child(2)">
+                        <Setter Property="IsVisible" Value="False" />
+                    </Style>
+                </ComboBox.Styles>
+                <ComboBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type models1:PackageOutputCategory}">
+                        <StackPanel>
+                            <TextBlock
+                                Margin="0,4,0,4"
+                                Text="{Binding Name, Mode=OneWay}" />
+                            <TextBlock Text="{Binding Path, Mode=OneWay}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            
+            <TextBlock Grid.Row="0"
+                       Grid.Column="1"
+                       Text="{x:Static lang:Resources.Label_OutputType}"
+                       Margin="4"
+                       IsVisible="{Binding CanShowOutputTypes}" />
+            <ComboBox Grid.Column="1" Grid.Row="1" ItemsSource="{Binding OutputTypes}"
+                      IsVisible="{Binding CanShowOutputTypes}"
+                      CornerRadius="8"
+                      SelectedItem="{Binding SelectedOutputType}"
+                      MinWidth="150"
+                      Margin="4,0"
+                      VerticalAlignment="Stretch"
+                      VerticalContentAlignment="Center" />
 
-            <TextBlock IsVisible="{Binding !!NumItemsSelected}"
+            <TextBlock Grid.Row="1"
+                       Grid.Column="3" 
+                       IsVisible="{Binding !!NumItemsSelected}"
                        FontSize="16"
                        Margin="8, 0"
                        VerticalAlignment="Center"
-                       TextAlignment="Center">
-                <Run Text="{Binding NumItemsSelected}" />
-                <Run Text="images selected" />
-            </TextBlock>
+                       TextAlignment="Center"
+                       HorizontalAlignment="Right"
+                       Text="{Binding NumImagesSelected, FallbackValue=1234 images selected}" />
 
-            <Button Content="Clear Selection"
+            <Button Grid.Row="1"
+                    Grid.Column="4"
+                    VerticalAlignment="Bottom"
+                    CornerRadius="8"
+                    Padding="12, 0"
+                    Height="40"
+                    Classes="danger"
+                    Command="{Binding DeleteAllSelected}"
+                    IsVisible="{Binding !!NumItemsSelected}" >
+                <avalonia:Icon Value="fa-solid fa-trash-can"/>
+            </Button>
+            
+            <Button Grid.Row="1"
+                    Grid.Column="5"
+                    Content="{x:Static lang:Resources.Action_ClearSelection}"
                     VerticalAlignment="Bottom"
                     CornerRadius="8"
                     Margin="8, 0"
                     Height="40"
                     Command="{Binding ClearSelection}"
                     IsVisible="{Binding !!NumItemsSelected}" />
-        </StackPanel>
+            <Button Grid.Row="1"
+                    Grid.Column="5"
+                    Content="{x:Static lang:Resources.Action_SelectAll}"
+                    VerticalAlignment="Bottom"
+                    Classes="accent"
+                    CornerRadius="8"
+                    Margin="8, 0"
+                    Height="40"
+                    Command="{Binding SelectAll}"
+                    IsVisible="{Binding !NumItemsSelected}" />
+        </Grid>
 
         <ScrollViewer Grid.Row="1">
             <ItemsRepeater
@@ -122,28 +157,29 @@
                                     <ui:MenuFlyoutSeparator
                                         IsVisible="{Binding ImageFile.GenerationParameters, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
-                                    <ui:MenuFlyoutSubItem Text="Send to Inference" IconSource="Share"
+                                    <ui:MenuFlyoutSubItem Text="{x:Static lang:Resources.Action_SendToInference}"
+                                                          IconSource="Share"
                                                           IsVisible="{Binding ImageFile.GenerationParameters, Converter={x:Static ObjectConverters.IsNotNull}}">
                                         <ui:MenuFlyoutItem
                                             HotKey="{x:Null}"
-                                            Text="Text to Image"
+                                            Text="{x:Static lang:Resources.Label_TextToImage}"
                                             IconSource="FullScreenMaximize"
                                             Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).SendToTextToImage}"
                                             CommandParameter="{Binding }" />
                                         <ui:MenuFlyoutItem
                                             HotKey="{x:Null}"
-                                            Text="Image to Image"
+                                            Text="{x:Static lang:Resources.Label_ImageToImage}"
                                             IsEnabled="False"
                                             IconSource="ImageCopy"
                                             CommandParameter="{Binding }" />
                                         <ui:MenuFlyoutItem
-                                            Text="Inpainting"
+                                            Text="{x:Static lang:Resources.Label_Inpainting}"
                                             IconSource="ImageEdit"
                                             IsEnabled="False"
                                             HotKey="{x:Null}"
                                             CommandParameter="{Binding }" />
                                         <ui:MenuFlyoutItem
-                                            Text="Upscale"
+                                            Text="{x:Static lang:Resources.Label_Upscale}"
                                             HotKey="{x:Null}"
                                             Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).SendToUpscale}"
                                             CommandParameter="{Binding }">

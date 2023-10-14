@@ -11,8 +11,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - This will link the package's output folders to the relevant subfolders in the "Outputs" directory
     - When a package only has a generic "outputs" folder, all generated images from that package will be linked to the "Outputs\Text2Img" folder when this option is enabled
 - Added "Outputs" page for viewing generated images from any package, or the shared output folder
+- Added [Stable Diffusion WebUI/UX](https://github.com/anapnoe/stable-diffusion-webui-ux) package
+### Changed
+- If ComfyUI for Inference is chosen during the One-Click Installer, the Inference page will be opened after installation instead of the Launch page
 ### Fixed
 - Fixed crash when clicking Inference gallery image after the image is deleted externally in file explorer
+- Fixed Inference popup Install button not working on One-Click Installer
 
 ## v2.5.3
 ### Added

@@ -3,7 +3,6 @@ using System.Drawing;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Database;
-using StabilityMatrix.Core.Models.Tokens;
 
 namespace StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
@@ -15,9 +14,25 @@ public class ComfyNodeBuilder
 {
     public NodeDictionary Nodes { get; } = new();
 
-    public Dictionary<Type, NodeConnectionBase> GlobalConnections { get; } = new();
-
     private static string GetRandomPrefix() => Guid.NewGuid().ToString()[..8];
+
+    private string GetUniqueName(string nameBase)
+    {
+        var name = $"{nameBase}_1";
+        for (var i = 0; Nodes.ContainsKey(name); i++)
+        {
+            if (i > 1_000_000)
+            {
+                throw new InvalidOperationException(
+                    $"Could not find unique name for base {nameBase}"
+                );
+            }
+
+            name = $"{nameBase}_{i + 1}";
+        }
+
+        return name;
+    }
 
     public static NamedComfyNode<LatentNodeConnection> VAEEncode(
         string name,
@@ -338,7 +353,8 @@ public class ComfyNodeBuilder
         VAENodeConnection vae
     )
     {
-        return Nodes.AddNamedNode(VAEDecode($"{GetRandomPrefix()}_VAEDecode", latent, vae)).Output;
+        var name = GetUniqueName("VAEDecode");
+        return Nodes.AddNamedNode(VAEDecode(name, latent, vae)).Output;
     }
 
     public LatentNodeConnection Lambda_ImageToLatent(
@@ -346,30 +362,8 @@ public class ComfyNodeBuilder
         VAENodeConnection vae
     )
     {
-        return Nodes.AddNamedNode(VAEEncode($"{GetRandomPrefix()}_VAEEncode", pixels, vae)).Output;
-    }
-
-    /// <summary>
-    /// Get a global connection for a given type
-    /// </summary>
-    public TConnection GetConnection<TConnection>()
-        where TConnection : NodeConnectionBase
-    {
-        if (GlobalConnections.TryGetValue(typeof(TConnection), out var connection))
-        {
-            return (TConnection)connection;
-        }
-
-        throw new InvalidOperationException($"No global connection of type {typeof(TConnection)}");
-    }
-
-    /// <summary>
-    /// Set a global connection for a given type
-    /// </summary>
-    public void SetConnection<TConnection>(TConnection connection)
-        where TConnection : NodeConnectionBase
-    {
-        GlobalConnections[typeof(TConnection)] = connection;
+        var name = GetUniqueName("VAEEncode");
+        return Nodes.AddNamedNode(VAEEncode(name, pixels, vae)).Output;
     }
 
     /// <summary>
@@ -390,6 +384,84 @@ public class ComfyNodeBuilder
         );
 
         return upscaler;
+    }
+
+    /// <summary>
+    /// Create a group node that scales a given image to image output
+    /// </summary>
+    public PrimaryNodeConnection Group_Upscale(
+        string name,
+        PrimaryNodeConnection primary,
+        VAENodeConnection vae,
+        ComfyUpscaler upscaleInfo,
+        int width,
+        int height
+    )
+    {
+        if (upscaleInfo.Type == ComfyUpscalerType.Latent)
+        {
+            return primary.Match<PrimaryNodeConnection>(
+                latent =>
+                    Nodes
+                        .AddNamedNode(
+                            new NamedComfyNode<LatentNodeConnection>($"{name}_LatentUpscale")
+                            {
+                                ClassType = "LatentUpscale",
+                                Inputs = new Dictionary<string, object?>
+                                {
+                                    ["upscale_method"] = upscaleInfo.Name,
+                                    ["width"] = width,
+                                    ["height"] = height,
+                                    ["crop"] = "disabled",
+                                    ["samples"] = latent.Data,
+                                }
+                            }
+                        )
+                        .Output,
+                image =>
+                    Nodes
+                        .AddNamedNode(
+                            ImageScale(
+                                $"{name}_ImageUpscale",
+                                image,
+                                upscaleInfo.Name,
+                                height,
+                                width,
+                                false
+                            )
+                        )
+                        .Output
+            );
+        }
+
+        if (upscaleInfo.Type == ComfyUpscalerType.ESRGAN)
+        {
+            // Convert to image space if needed
+            var samplerImage = GetPrimaryAsImage(primary, vae);
+
+            // Do group upscale
+            var modelUpscaler = Group_UpscaleWithModel(
+                $"{name}_ModelUpscale",
+                upscaleInfo.Name,
+                samplerImage
+            );
+
+            // Since the model upscale is fixed to model (2x/4x), scale it again to the requested size
+            var resizedScaled = Nodes.AddNamedNode(
+                ImageScale(
+                    $"{name}_ImageScale",
+                    modelUpscaler.Output,
+                    "bilinear",
+                    height,
+                    width,
+                    false
+                )
+            );
+
+            return resizedScaled.Output;
+        }
+
+        throw new InvalidOperationException($"Unknown upscaler type: {upscaleInfo.Type}");
     }
 
     /// <summary>
@@ -641,6 +713,60 @@ public class ComfyNodeBuilder
     }
 
     /// <summary>
+    /// Get or convert latest primary connection to latent
+    /// </summary>
+    public LatentNodeConnection GetPrimaryAsLatent()
+    {
+        if (Connections.Primary?.IsT0 == true)
+        {
+            return Connections.Primary.AsT0;
+        }
+
+        return GetPrimaryAsLatent(
+            Connections.Primary ?? throw new NullReferenceException("No primary connection"),
+            Connections.PrimaryVAE ?? throw new NullReferenceException("No primary VAE")
+        );
+    }
+
+    /// <summary>
+    /// Get or convert latest primary connection to latent
+    /// </summary>
+    public LatentNodeConnection GetPrimaryAsLatent(
+        PrimaryNodeConnection primary,
+        VAENodeConnection vae
+    )
+    {
+        return primary.Match(latent => latent, image => Lambda_ImageToLatent(image, vae));
+    }
+
+    /// <summary>
+    /// Get or convert latest primary connection to image
+    /// </summary>
+    public ImageNodeConnection GetPrimaryAsImage()
+    {
+        if (Connections.Primary?.IsT1 == true)
+        {
+            return Connections.Primary.AsT1;
+        }
+
+        return GetPrimaryAsImage(
+            Connections.Primary ?? throw new NullReferenceException("No primary connection"),
+            Connections.PrimaryVAE ?? throw new NullReferenceException("No primary VAE")
+        );
+    }
+
+    /// <summary>
+    /// Get or convert latest primary connection to image
+    /// </summary>
+    public ImageNodeConnection GetPrimaryAsImage(
+        PrimaryNodeConnection primary,
+        VAENodeConnection vae
+    )
+    {
+        return primary.Match(latent => Lambda_LatentToImage(latent, vae), image => image);
+    }
+
+    /// <summary>
     /// Convert to a NodeDictionary
     /// </summary>
     public NodeDictionary ToNodeDictionary()
@@ -666,37 +792,19 @@ public class ComfyNodeBuilder
         public ConditioningNodeConnection? RefinerConditioning { get; set; }
         public ConditioningNodeConnection? RefinerNegativeConditioning { get; set; }
 
-        public LatentNodeConnection? Latent { get; set; }
+        public PrimaryNodeConnection? Primary { get; set; }
+        public VAENodeConnection? PrimaryVAE { get; set; }
+        public Size PrimarySize { get; set; }
+
+        /*public LatentNodeConnection? Latent { get; set; }
         public Size LatentSize { get; set; }
 
         public ImageNodeConnection? Image { get; set; }
-        public Size ImageSize { get; set; }
+        public Size ImageSize { get; set; }*/
 
         public List<NamedComfyNode> OutputNodes { get; } = new();
 
         public IEnumerable<string> OutputNodeNames => OutputNodes.Select(n => n.Name);
-
-        /// <summary>
-        /// Gets the latent size scaled by a given factor
-        /// </summary>
-        public Size GetScaledLatentSize(double scale)
-        {
-            return new Size(
-                (int)Math.Floor(LatentSize.Width * scale),
-                (int)Math.Floor(LatentSize.Height * scale)
-            );
-        }
-
-        /// <summary>
-        /// Gets the image size scaled by a given factor
-        /// </summary>
-        public Size GetScaledImageSize(double scale)
-        {
-            return new Size(
-                (int)Math.Floor(ImageSize.Width * scale),
-                (int)Math.Floor(ImageSize.Height * scale)
-            );
-        }
 
         public VAENodeConnection GetRefinerOrBaseVAE()
         {

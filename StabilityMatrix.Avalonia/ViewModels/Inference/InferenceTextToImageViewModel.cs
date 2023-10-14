@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Drawing;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -8,11 +9,13 @@ using System.Threading.Tasks;
 using DynamicData.Binding;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
@@ -259,34 +262,25 @@ public class InferenceTextToImageViewModel
         // If hi-res fix is enabled, add the LatentUpscale node and another KSampler node
         if (args.Overrides.IsHiresFixEnabled ?? IsHiresFixEnabled)
         {
-            // Requested upscale to this size
-            var hiresSize = builder.Connections.GetScaledLatentSize(
+            // Get new latent size
+            var hiresSize = builder.Connections.PrimarySize.WithScale(
                 HiresUpscalerCardViewModel.Scale
             );
-
-            LatentNodeConnection hiresLatent;
 
             // Select between latent upscale and normal upscale based on the upscale method
             var selectedUpscaler = HiresUpscalerCardViewModel.SelectedUpscaler!.Value;
 
-            if (selectedUpscaler.Type == ComfyUpscalerType.None)
+            // If upscaler selected, upscale latent image first
+            if (selectedUpscaler.Type != ComfyUpscalerType.None)
             {
-                // If no upscaler selected or none, just use the latent image
-                hiresLatent = builder.Connections.Latent!;
-            }
-            else
-            {
-                // Otherwise upscale the latent image
-                hiresLatent = builder
-                    .Group_UpscaleToLatent(
-                        "HiresFix",
-                        builder.Connections.Latent!,
-                        builder.Connections.GetRefinerOrBaseVAE(),
-                        selectedUpscaler,
-                        hiresSize.Width,
-                        hiresSize.Height
-                    )
-                    .Output;
+                builder.Connections.Primary = builder.Group_Upscale(
+                    "HiresFix",
+                    builder.Connections.Primary!,
+                    builder.Connections.PrimaryVAE!,
+                    selectedUpscaler,
+                    hiresSize.Width,
+                    hiresSize.Height
+                );
             }
 
             // Use refiner model if set, or base if not
@@ -306,33 +300,34 @@ public class InferenceTextToImageViewModel
                         ?? throw new ValidationException("Scheduler not selected"),
                     builder.Connections.GetRefinerOrBaseConditioning(),
                     builder.Connections.GetRefinerOrBaseNegativeConditioning(),
-                    hiresLatent,
+                    builder.GetPrimaryAsLatent(),
                     HiresSamplerCardViewModel.DenoiseStrength
                 )
             );
 
-            // Set as latest latent
-            builder.Connections.Latent = hiresSampler.Output;
-            builder.Connections.LatentSize = hiresSize;
+            // Set as primary
+            builder.Connections.Primary = hiresSampler.Output;
+            builder.Connections.PrimarySize = hiresSize;
         }
 
         // If upscale is enabled, add another upscale group
         if (IsUpscaleEnabled)
         {
-            var upscaleSize = builder.Connections.GetScaledLatentSize(UpscalerCardViewModel.Scale);
+            var upscaleSize = builder.Connections.PrimarySize.WithScale(
+                UpscalerCardViewModel.Scale
+            );
 
-            // Build group
-            var postUpscaleGroup = builder.Group_LatentUpscaleToImage(
+            var upscaleResult = builder.Group_Upscale(
                 "PostUpscale",
-                builder.Connections.Latent!,
-                builder.Connections.GetRefinerOrBaseVAE(),
+                builder.Connections.Primary!,
+                builder.Connections.PrimaryVAE!,
                 UpscalerCardViewModel.SelectedUpscaler!.Value,
                 upscaleSize.Width,
                 upscaleSize.Height
             );
 
-            // Set as the image output
-            builder.Connections.Image = postUpscaleGroup.Output;
+            builder.Connections.Primary = upscaleResult;
+            builder.Connections.PrimarySize = upscaleSize;
         }
 
         builder.SetupOutputImage();

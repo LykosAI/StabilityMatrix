@@ -26,8 +26,8 @@ public static class ComfyNodeBuilderExtensions
             )
         );
 
-        builder.Connections.Latent = emptyLatent.Output;
-        builder.Connections.LatentSize = new Size(
+        builder.Connections.Primary = emptyLatent.Output;
+        builder.Connections.PrimarySize = new Size(
             samplerCardViewModel.Width,
             samplerCardViewModel.Height
         );
@@ -35,11 +35,11 @@ public static class ComfyNodeBuilderExtensions
         // If batch index is selected, add a LatentFromBatch
         if (batchSizeCardViewModel.IsBatchIndexEnabled)
         {
-            builder.Connections.Latent = builder.Nodes
+            builder.Connections.Primary = builder.Nodes
                 .AddNamedNode(
                     ComfyNodeBuilder.LatentFromBatch(
                         "LatentFromBatch",
-                        builder.Connections.Latent,
+                        builder.GetPrimaryAsLatent(),
                         // remote expects a 0-based index, vm is 1-based
                         batchSizeCardViewModel.BatchIndex - 1,
                         1
@@ -133,12 +133,12 @@ public static class ComfyNodeBuilderExtensions
                         ?? throw new ValidationException("Sampler not selected"),
                     positiveClip.Output,
                     negativeClip.Output,
-                    builder.Connections.Latent
+                    builder.GetPrimaryAsLatent()
                         ?? throw new ValidationException("Latent source not set"),
                     samplerCardViewModel.DenoiseStrength
                 )
             );
-            builder.Connections.Latent = sampler.Output;
+            builder.Connections.Primary = sampler.Output;
         }
         // Add base sampler (with refiner)
         else
@@ -160,14 +160,13 @@ public static class ComfyNodeBuilderExtensions
                         ?? throw new ValidationException("Sampler not selected"),
                     positiveClip.Output,
                     negativeClip.Output,
-                    builder.Connections.Latent
-                        ?? throw new ValidationException("Latent source not set"),
+                    builder.GetPrimaryAsLatent(),
                     0,
                     samplerCardViewModel.Steps,
                     true
                 )
             );
-            builder.Connections.Latent = sampler.Output;
+            builder.Connections.Primary = sampler.Output;
         }
     }
 
@@ -255,38 +254,26 @@ public static class ComfyNodeBuilderExtensions
                     ?? throw new ValidationException("Sampler not selected"),
                 positiveClip.Output,
                 negativeClip.Output,
-                builder.Connections.Latent
-                    ?? throw new ValidationException("Latent source not set"),
+                builder.GetPrimaryAsLatent(),
                 samplerCardViewModel.Steps,
                 totalSteps,
                 false
             )
         );
-        builder.Connections.Latent = sampler.Output;
+
+        builder.Connections.Primary = sampler.Output;
     }
 
     public static string SetupOutputImage(this ComfyNodeBuilder builder)
     {
-        // Do VAE decoding if not done already
-        if (builder.Connections.Image is null)
-        {
-            var vaeDecoder = builder.Nodes.AddNamedNode(
-                ComfyNodeBuilder.VAEDecode(
-                    "VAEDecode",
-                    builder.Connections.Latent
-                        ?? throw new InvalidOperationException("Latent source not set"),
-                    builder.Connections.GetRefinerOrBaseVAE()
-                )
-            );
-            builder.Connections.Image = vaeDecoder.Output;
-            builder.Connections.ImageSize = builder.Connections.LatentSize;
-        }
-
         var previewImage = builder.Nodes.AddNamedNode(
             new NamedComfyNode("SaveImage")
             {
                 ClassType = "PreviewImage",
-                Inputs = new Dictionary<string, object?> { ["images"] = builder.Connections.Image }
+                Inputs = new Dictionary<string, object?>
+                {
+                    ["images"] = builder.GetPrimaryAsImage().Data
+                }
             }
         );
 

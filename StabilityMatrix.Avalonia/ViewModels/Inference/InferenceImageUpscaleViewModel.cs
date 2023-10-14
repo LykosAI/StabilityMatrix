@@ -17,6 +17,7 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Services;
@@ -119,47 +120,47 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
             ?? throw new InvalidOperationException("Source image size is null");
 
         // Set source size
-        builder.Connections.ImageSize = sourceImageSize;
+        builder.Connections.PrimarySize = sourceImageSize;
 
         // Load source
         var loadImage = nodes.AddNamedNode(
             ComfyNodeBuilder.LoadImage("LoadImage", sourceImageRelativePath)
         );
-        builder.Connections.Image = loadImage.Output1;
+        builder.Connections.Primary = loadImage.Output1;
 
         // If upscale is enabled, add another upscale group
         if (IsUpscaleEnabled)
         {
-            var upscaleSize = builder.Connections.GetScaledImageSize(UpscalerCardViewModel.Scale);
-
-            // Build group
-            var upscaleGroup = builder.Group_UpscaleToImage(
-                "Upscale",
-                builder.Connections.Image!,
-                UpscalerCardViewModel.SelectedUpscaler!.Value,
-                upscaleSize.Width,
-                upscaleSize.Height
+            var upscaleSize = builder.Connections.PrimarySize.WithScale(
+                UpscalerCardViewModel.Scale
             );
 
-            // Set as the image output
-            builder.Connections.Image = upscaleGroup.Output;
+            // Build group
+            builder.Connections.Primary = builder
+                .Group_UpscaleToImage(
+                    "Upscale",
+                    builder.GetPrimaryAsImage(),
+                    UpscalerCardViewModel.SelectedUpscaler!.Value,
+                    upscaleSize.Width,
+                    upscaleSize.Height
+                )
+                .Output;
         }
 
         // If sharpen is enabled, add another sharpen group
         if (IsSharpenEnabled)
         {
-            var sharpenGroup = nodes.AddNamedNode(
-                ComfyNodeBuilder.ImageSharpen(
-                    "Sharpen",
-                    builder.Connections.Image,
-                    SharpenCardViewModel.SharpenRadius,
-                    SharpenCardViewModel.Sigma,
-                    SharpenCardViewModel.Alpha
+            builder.Connections.Primary = nodes
+                .AddNamedNode(
+                    ComfyNodeBuilder.ImageSharpen(
+                        "Sharpen",
+                        builder.GetPrimaryAsImage(),
+                        SharpenCardViewModel.SharpenRadius,
+                        SharpenCardViewModel.Sigma,
+                        SharpenCardViewModel.Alpha
+                    )
                 )
-            );
-
-            // Set as the image output
-            builder.Connections.Image = sharpenGroup.Output;
+                .Output;
         }
 
         builder.SetupOutputImage();

@@ -4,7 +4,6 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader;
-using Avalonia;
 using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
@@ -121,19 +120,49 @@ public partial class ImageFolderCardViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Gets the image path if it exists, returns null.
+    /// If the image path is resolved but the file doesn't exist, it will be removed from the index.
+    /// </summary>
+    private FilePath? GetImagePathIfExists(LocalImageFile item)
+    {
+        if (item.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
+        {
+            return null;
+        }
+
+        var imageFile = new FilePath(imagePath);
+
+        if (!imageFile.Exists)
+        {
+            // Remove from index
+            imageIndexService.InferenceImages.Remove(item);
+
+            // Invalidate cache
+            if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
+            {
+                loader.RemoveAllNamesFromCache(imageFile.Name);
+            }
+
+            return null;
+        }
+
+        return imageFile;
+    }
+
+    /// <summary>
     /// Handles image clicks to show preview
     /// </summary>
     [RelayCommand]
     private async Task OnImageClick(LocalImageFile item)
     {
-        if (item.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
+        if (GetImagePathIfExists(item) is not { } imageFile)
         {
             return;
         }
 
         var currentIndex = LocalImages.IndexOf(item);
 
-        var image = new ImageSource(new FilePath(imagePath));
+        var image = new ImageSource(imageFile);
 
         // Preload
         await image.GetBitmapAsync();
@@ -163,7 +192,7 @@ public partial class ImageFolderCardViewModel : ViewModelBase
                             // Preload
                             await newImageSource.GetBitmapAsync();
 
-                            var oldImageSource = sender.ImageSource;
+                            // var oldImageSource = sender.ImageSource;
 
                             sender.ImageSource = newImageSource;
                             sender.LocalImageFile = newImage;
@@ -185,13 +214,12 @@ public partial class ImageFolderCardViewModel : ViewModelBase
     [RelayCommand]
     private async Task OnImageDelete(LocalImageFile? item)
     {
-        if (item?.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
+        if (item is null || GetImagePathIfExists(item) is not { } imageFile)
         {
             return;
         }
 
         // Delete the file
-        var imageFile = new FilePath(imagePath);
         var result = await notificationService.TryAsync(imageFile.DeleteAsync());
 
         if (!result.IsSuccessful)
@@ -215,14 +243,14 @@ public partial class ImageFolderCardViewModel : ViewModelBase
     [RelayCommand]
     private async Task OnImageCopy(LocalImageFile? item)
     {
-        if (item?.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
+        if (item is null || GetImagePathIfExists(item) is not { } imageFile)
         {
             return;
         }
 
         var clipboard = App.Clipboard;
 
-        await clipboard.SetFileDataObjectAsync(imagePath);
+        await clipboard.SetFileDataObjectAsync(imageFile.FullPath);
     }
 
     /// <summary>
@@ -231,12 +259,12 @@ public partial class ImageFolderCardViewModel : ViewModelBase
     [RelayCommand]
     private async Task OnImageOpen(LocalImageFile? item)
     {
-        if (item?.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
+        if (item is null || GetImagePathIfExists(item) is not { } imageFile)
         {
             return;
         }
 
-        await ProcessRunner.OpenFileBrowser(imagePath);
+        await ProcessRunner.OpenFileBrowser(imageFile);
     }
 
     /// <summary>
@@ -248,12 +276,10 @@ public partial class ImageFolderCardViewModel : ViewModelBase
         bool includeMetadata = false
     )
     {
-        if (item?.GetFullPath(settingsManager.ImagesDirectory) is not { } sourcePath)
+        if (item is null || GetImagePathIfExists(item) is not { } sourceFile)
         {
             return;
         }
-
-        var sourceFile = new FilePath(sourcePath);
 
         var formatName = format.ToString();
 

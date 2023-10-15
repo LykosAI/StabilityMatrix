@@ -38,6 +38,8 @@ public abstract class BasePackage
 
     public virtual bool IsInferenceCompatible => false;
 
+    public abstract string OutputFolderName { get; }
+
     public abstract Task DownloadPackage(
         string installLocation,
         DownloadPackageVersionOptions versionOptions,
@@ -93,6 +95,9 @@ public abstract class BasePackage
         SharedFolderMethod sharedFolderMethod
     );
 
+    public abstract Task SetupOutputFolderLinks(DirectoryPath installDirectory);
+    public abstract Task RemoveOutputFolderLinks(DirectoryPath installDirectory);
+
     public abstract IEnumerable<TorchVersion> AvailableTorchVersions { get; }
 
     public virtual TorchVersion GetRecommendedTorchVersion()
@@ -142,7 +147,11 @@ public abstract class BasePackage
     /// The shared folders that this package supports.
     /// Mapping of <see cref="SharedFolderType"/> to the relative paths from the package root.
     /// </summary>
-    public virtual Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
+    public abstract Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
+    public abstract Dictionary<
+        SharedOutputType,
+        IReadOnlyList<string>
+    >? SharedOutputFolders { get; }
 
     public abstract Task<string> GetLatestVersion();
     public abstract Task<PackageVersionOptions> GetAllVersionOptions();

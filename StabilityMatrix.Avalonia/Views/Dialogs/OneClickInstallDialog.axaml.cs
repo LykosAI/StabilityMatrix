@@ -30,7 +30,12 @@ public partial class OneClickInstallDialog : UserControl
         var teachingTip =
             this.FindControl<TeachingTip>("InferenceTeachingTip")
             ?? throw new InvalidOperationException("TeachingTip not found");
-        ;
+
+        teachingTip.ActionButtonClick += (_, _) =>
+        {
+            teachingTip.IsOpen = false;
+        };
+
         // Find ComfyUI listbox item
         var listBox = this.FindControl<ListBox>("PackagesListBox");
 

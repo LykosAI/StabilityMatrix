@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
@@ -26,6 +27,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
     private readonly ILogger<OneClickInstallViewModel> logger;
     private readonly IPyRunner pyRunner;
     private readonly ISharedFolders sharedFolders;
+    private readonly INavigationService navigationService;
     private const string DefaultPackageName = "stable-diffusion-webui";
 
     [ObservableProperty]
@@ -55,13 +57,16 @@ public partial class OneClickInstallViewModel : ViewModelBase
 
     public bool IsProgressBarVisible => OneClickInstallProgress > 0 || IsIndeterminate;
 
+    private bool isInferenceInstall;
+
     public OneClickInstallViewModel(
         ISettingsManager settingsManager,
         IPackageFactory packageFactory,
         IPrerequisiteHelper prerequisiteHelper,
         ILogger<OneClickInstallViewModel> logger,
         IPyRunner pyRunner,
-        ISharedFolders sharedFolders
+        ISharedFolders sharedFolders,
+        INavigationService navigationService
     )
     {
         this.settingsManager = settingsManager;
@@ -70,6 +75,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
         this.logger = logger;
         this.pyRunner = pyRunner;
         this.sharedFolders = sharedFolders;
+        this.navigationService = navigationService;
 
         HeaderText = Resources.Text_WelcomeToStabilityMatrix;
         SubHeaderText = Resources.Text_OneClickInstaller_SubHeader;
@@ -93,6 +99,18 @@ public partial class OneClickInstallViewModel : ViewModelBase
     {
         EventManager.Instance.OnOneClickInstallFinished(true);
         return Task.CompletedTask;
+    }
+
+    [RelayCommand]
+    private async Task InstallComfyForInference()
+    {
+        var comfyPackage = AllPackages.FirstOrDefault(x => x is ComfyUI);
+        if (comfyPackage != null)
+        {
+            SelectedPackage = comfyPackage;
+            isInferenceInstall = true;
+            await InstallCommand.ExecuteAsync(null);
+        }
     }
 
     private async Task DoInstall()
@@ -171,14 +189,18 @@ public partial class OneClickInstallViewModel : ViewModelBase
         SubSubHeaderText = string.Empty;
         OneClickInstallProgress = 100;
 
-        for (var i = 0; i < 3; i++)
+        for (var i = 3; i > 0; i--)
         {
-            SubHeaderText = $"{Resources.Text_ProceedingToLaunchPage} ({i + 1}s)";
+            SubHeaderText = $"{Resources.Text_ProceedingToLaunchPage} ({i}s)";
             await Task.Delay(1000);
         }
 
         // should close dialog
         EventManager.Instance.OnOneClickInstallFinished(false);
+        if (isInferenceInstall)
+        {
+            navigationService.NavigateTo<InferenceViewModel>();
+        }
     }
 
     private async Task DownloadPackage(

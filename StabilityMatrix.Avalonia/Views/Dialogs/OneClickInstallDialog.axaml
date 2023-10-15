@@ -37,8 +37,10 @@
             Title="Use ComfyUI with Inference"
             Subtitle="A new built-in native Stable Diffusion experience, powered by ComfyUI"
             ActionButtonContent="{x:Static lang:Resources.Action_Install}"
+            ActionButtonCommand="{Binding InstallComfyForInferenceCommand}"
             CloseButtonContent="{x:Static lang:Resources.Action_Close}"
             PreferredPlacement="RightTop"
+            Margin="8,0,0,0"
             PlacementMargin="0,0,0,0"
             TailVisibility="Auto">
             <ui:TeachingTip.HeroContent>
@@ -68,6 +70,7 @@
                        FontSize="24"
                        Margin="16, 16, 0, 4"/>
             <TextBlock Text="{Binding SelectedPackage.Blurb}"
+                       TextWrapping="Wrap"
                        Margin="16, 0, 0, 8"/>
             <TextBlock Text="{Binding SelectedPackage.Disclaimer}"
                        Padding="4"
@@ -124,34 +127,39 @@
         </StackPanel>
 
         
-        <ListBox Grid.Column="1" Grid.Row="1"
-                 Name="PackagesListBox"
-                 Margin="8, 16"
-                 IsVisible="{Binding ShowInstallButton}"
-                 ItemsSource="{Binding AllPackages}"
-                 SelectedItem="{Binding SelectedPackage}">
-            <ListBox.Template>
-                <ControlTemplate>
-                    <ItemsPresenter/>
-                </ControlTemplate>
-            </ListBox.Template>
-            <ListBox.ItemTemplate>
-                <DataTemplate DataType="{x:Type packages:BasePackage}">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <StackPanel Margin="8">
-                            <TextBlock Text="{Binding DisplayName}"/>
-                            <TextBlock Text="{Binding ByAuthor}"/>
-                        </StackPanel>
-                        <ui:InfoBadge
-                            IsVisible="{Binding IsInferenceCompatible}"
-                            Grid.Column="1"
-                            Margin="16,0,0,0"
-                            Classes="Success Dot" 
-                            VerticalAlignment="Center" />
-                    </Grid>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+        <ScrollViewer Grid.Column="1" Grid.Row="1"
+                      MaxHeight="400"
+                      VerticalScrollBarVisibility="Visible"
+                      Margin="0, 16">
+            <ListBox 
+                Name="PackagesListBox"
+                Margin="8,0"
+                IsVisible="{Binding ShowInstallButton}"
+                ItemsSource="{Binding AllPackages}"
+                SelectedItem="{Binding SelectedPackage}">
+                <ListBox.Template>
+                    <ControlTemplate>
+                        <ItemsPresenter/>
+                    </ControlTemplate>
+                </ListBox.Template>
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type packages:BasePackage}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Margin="8">
+                                <TextBlock Text="{Binding DisplayName}"/>
+                                <TextBlock Text="{Binding ByAuthor}"/>
+                            </StackPanel>
+                            <ui:InfoBadge
+                                IsVisible="{Binding IsInferenceCompatible}"
+                                Grid.Column="1"
+                                Margin="8,0,0,0"
+                                Classes="Success Dot" 
+                                VerticalAlignment="Center" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </ScrollViewer>
     </Grid>
     
 </UserControl>

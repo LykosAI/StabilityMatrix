@@ -26,6 +26,7 @@
                        FontSize="24"
                        Margin="0, 16, 0, 4" />
             <TextBlock Grid.Row="1" Text="{Binding SelectedPackage.Blurb}"
+                       TextWrapping="Wrap"
                        Margin="0, 0, 0, 4" />
             <TextBlock Grid.Row="2" Text="{Binding SelectedPackage.Disclaimer}"
                        Margin="0, 0, 0, 4"
@@ -206,24 +207,28 @@
         </UniformGrid>
 
         <!-- Available Packages -->
-        <ListBox Grid.Column="1" Grid.Row="0"
-                 Margin="8, 16"
-                 ItemsSource="{Binding AvailablePackages}"
-                 SelectedItem="{Binding SelectedPackage}">
-            <ListBox.Template>
-                <ControlTemplate>
-                    <ItemsPresenter />
-                </ControlTemplate>
-            </ListBox.Template>
-            <ListBox.ItemTemplate>
-                <DataTemplate DataType="{x:Type packages:BasePackage}">
-                    <StackPanel Margin="8">
-                        <TextBlock Text="{Binding DisplayName}" />
-                        <TextBlock Text="{Binding ByAuthor}" />
-                    </StackPanel>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+        <ScrollViewer Grid.Column="1" Grid.Row="0"
+                      Margin="8, 16"
+                      MaxHeight="400"
+                      VerticalScrollBarVisibility="Visible">
+            <ListBox
+                ItemsSource="{Binding AvailablePackages}"
+                SelectedItem="{Binding SelectedPackage}">
+                <ListBox.Template>
+                    <ControlTemplate>
+                        <ItemsPresenter />
+                    </ControlTemplate>
+                </ListBox.Template>
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type packages:BasePackage}">
+                        <StackPanel Margin="8">
+                            <TextBlock Text="{Binding DisplayName}" />
+                            <TextBlock Text="{Binding ByAuthor}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </ScrollViewer>
     </Grid>
 
 </controls:UserControlBase>

@@ -108,7 +108,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var startupTime = CodeTimer.FormatTime(Program.StartupTimer.Elapsed);
         Logger.Info($"App started ({startupTime})");
 
-        if (Program.Args.DebugOneClickInstall || !settingsManager.Settings.InstalledPackages.Any())
+        if (Program.Args.DebugOneClickInstall || settingsManager.Settings.InstalledPackages.Any())
         {
             var viewModel = dialogFactory.Get<OneClickInstallViewModel>();
             var dialog = new BetterContentDialog

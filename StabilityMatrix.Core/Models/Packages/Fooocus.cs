@@ -83,12 +83,17 @@ public class Fooocus : BaseGitPackage
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" }
         };
 
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+        new() { [SharedOutputType.Text2Img] = new[] { "outputs" } };
+
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
 
     public override Task<string> GetLatestVersion() => Task.FromResult("main");
 
     public override bool ShouldIgnoreReleases => true;
+
+    public override string OutputFolderName => "outputs";
 
     public override async Task InstallPackage(
         string installLocation,

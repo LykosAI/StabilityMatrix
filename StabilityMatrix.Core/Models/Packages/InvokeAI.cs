@@ -69,6 +69,11 @@ public class InvokeAI : BaseGitPackage
             [SharedFolderType.ControlNet] = new[] { RelativeRootPath + "/autoimport/controlnet" },
         };
 
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+        new() { [SharedOutputType.Text2Img] = new[] { "invokeai-root/outputs/images" } };
+
+    public override string OutputFolderName => "invokeai-root/outputs/images";
+
     // https://github.com/invoke-ai/InvokeAI/blob/main/docs/features/CONFIGURATION.md
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new List<LaunchOptionDefinition>
@@ -234,8 +239,6 @@ public class InvokeAI : BaseGitPackage
         var downloadUrl = isReleaseMode
             ? $"https://github.com/invoke-ai/InvokeAI/archive/{latestVersion}.zip"
             : $"https://github.com/invoke-ai/InvokeAI/archive/refs/heads/{installedPackage.Version.InstalledBranch}.zip";
-
-        var gpus = HardwareHelper.IterGpuInfo().ToList();
 
         progress?.Report(new ProgressReport(-1f, "Installing Package", isIndeterminate: true));
 

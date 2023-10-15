@@ -30,6 +30,8 @@ public class DankDiffusion : BaseGitPackage
 
     public override Uri PreviewImageUri { get; }
 
+    public override string OutputFolderName { get; }
+
     public override Task RunPackage(
         string installedPackagePath,
         string command,
@@ -67,6 +69,12 @@ public class DankDiffusion : BaseGitPackage
     public override IEnumerable<TorchVersion> AvailableTorchVersions { get; }
 
     public override List<LaunchOptionDefinition> LaunchOptions { get; }
+
+    public override Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
+    public override Dictionary<
+        SharedOutputType,
+        IReadOnlyList<string>
+    >? SharedOutputFolders { get; }
 
     public override Task<string> GetLatestVersion()
     {

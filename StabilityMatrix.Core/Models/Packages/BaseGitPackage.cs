@@ -372,7 +372,37 @@ public abstract class BaseGitPackage : BasePackage
     {
         if (SharedFolders is not null && sharedFolderMethod == SharedFolderMethod.Symlink)
         {
-            StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(this, installDirectory);
+            StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(
+                SharedFolders,
+                installDirectory
+            );
+        }
+        return Task.CompletedTask;
+    }
+
+    public override Task SetupOutputFolderLinks(DirectoryPath installDirectory)
+    {
+        if (SharedOutputFolders is { } sharedOutputFolders)
+        {
+            return StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(
+                sharedOutputFolders,
+                SettingsManager.ImagesDirectory,
+                installDirectory,
+                recursiveDelete: true
+            );
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public override Task RemoveOutputFolderLinks(DirectoryPath installDirectory)
+    {
+        if (SharedOutputFolders is { } sharedOutputFolders)
+        {
+            StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(
+                sharedOutputFolders,
+                installDirectory
+            );
         }
         return Task.CompletedTask;
     }

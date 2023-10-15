@@ -7,6 +7,7 @@ using System.IO;
 using System.Net.Http;
 using System.Text;
 using AvaloniaEdit.Utils;
+using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
@@ -20,6 +21,7 @@ using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Avalonia.ViewModels.OutputsPage;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Database;
@@ -29,6 +31,7 @@ using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.Comfy;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
@@ -335,6 +338,28 @@ public static class DesignData
 
     public static LaunchPageViewModel LaunchPageViewModel =>
         Services.GetRequiredService<LaunchPageViewModel>();
+
+    public static OutputsPageViewModel OutputsPageViewModel
+    {
+        get
+        {
+            var vm = Services.GetRequiredService<OutputsPageViewModel>();
+            vm.Outputs = new ObservableCollectionExtended<OutputImageViewModel>
+            {
+                new(
+                    new LocalImageFile
+                    {
+                        AbsolutePath =
+                            "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
+                        RelativePath =
+                            "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
+                        ImageType = LocalImageFileType.TextToImage
+                    }
+                )
+            };
+            return vm;
+        }
+    }
 
     public static PackageManagerViewModel PackageManagerViewModel
     {

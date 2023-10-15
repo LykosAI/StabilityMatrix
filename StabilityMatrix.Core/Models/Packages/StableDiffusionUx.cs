@@ -12,26 +12,28 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-public class A3WebUI : BaseGitPackage
+public class StableDiffusionUx : BaseGitPackage
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    public override string Name => "stable-diffusion-webui";
-    public override string DisplayName { get; set; } = "Stable Diffusion WebUI";
-    public override string Author => "AUTOMATIC1111";
+    public override string Name => "stable-diffusion-webui-ux";
+    public override string DisplayName { get; set; } = "Stable Diffusion Web UI-UX";
+    public override string Author => "anapnoe";
     public override string LicenseType => "AGPL-3.0";
     public override string LicenseUrl =>
-        "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/master/LICENSE.txt";
+        "https://github.com/anapnoe/stable-diffusion-webui-ux/blob/master/LICENSE.txt";
     public override string Blurb =>
-        "A browser interface based on Gradio library for Stable Diffusion";
+        "A pixel perfect design, mobile friendly, customizable interface that adds accessibility, "
+        + "ease of use and extended functionallity to the stable diffusion web ui.";
     public override string LaunchCommand => "launch.py";
     public override Uri PreviewImageUri =>
-        new("https://github.com/AUTOMATIC1111/stable-diffusion-webui/raw/master/screenshot.png");
-    public string RelativeArgsDefinitionScriptPath => "modules.cmd_args";
+        new(
+            "https://user-images.githubusercontent.com/124302297/227973574-6003142d-0c7c-41c6-9966-0792a94549e9.png"
+        );
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
-    public A3WebUI(
+    public StableDiffusionUx(
         IGithubApiCache githubApi,
         ISettingsManager settingsManager,
         IDownloadService downloadService,
@@ -39,7 +41,6 @@ public class A3WebUI : BaseGitPackage
     )
         : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
 
-    // From https://github.com/AUTOMATIC1111/stable-diffusion-webui/tree/master/models
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
         {
@@ -170,11 +171,9 @@ public class A3WebUI : BaseGitPackage
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm };
 
-    public override async Task<string> GetLatestVersion()
-    {
-        var release = await GetLatestRelease().ConfigureAwait(false);
-        return release.TagName!;
-    }
+    public override Task<string> GetLatestVersion() => Task.FromResult("master");
+
+    public override bool ShouldIgnoreReleases => true;
 
     public override string OutputFolderName => "outputs";
 
@@ -229,14 +228,14 @@ public class A3WebUI : BaseGitPackage
 
         progress?.Report(new ProgressReport(-1f, "Updating configuration", isIndeterminate: true));
 
-        // Create and add {"show_progress_type": "TAESD"} to config.json
-        // Only add if the file doesn't exist
-        var configPath = Path.Combine(installLocation, "config.json");
-        if (!File.Exists(configPath))
-        {
-            var config = new JsonObject { { "show_progress_type", "TAESD" } };
-            await File.WriteAllTextAsync(configPath, config.ToString()).ConfigureAwait(false);
-        }
+        // // Create and add {"show_progress_type": "TAESD"} to config.json
+        // // Only add if the file doesn't exist
+        // var configPath = Path.Combine(installLocation, "config.json");
+        // if (!File.Exists(configPath))
+        // {
+        //     var config = new JsonObject { { "show_progress_type", "TAESD" } };
+        //     await File.WriteAllTextAsync(configPath, config.ToString()).ConfigureAwait(false);
+        // }
 
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
     }

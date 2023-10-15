@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -100,6 +101,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         return window;
     }
 
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void InvokeManualCompletion()
     {
         if (CompletionProvider is null)
@@ -109,11 +111,13 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
 
         // If window already open, skip since handled by completion window
         // Unless this is an end char, where we'll open a new window
-        if (completionWindow is { IsOpen: true })
+        if (completionWindow is { ToolTipIsOpen: true })
         {
             Logger.ConditionalTrace("Skipping, completion window already open");
             return;
         }
+        completionWindow?.Hide();
+        completionWindow = null;
 
         // Get the segment of the token the caret is currently in
         if (GetCaretCompletionToken() is not { } completionRequest)
@@ -138,23 +142,37 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         var token = textEditor.Document.GetText(tokenSegment);
         Logger.ConditionalTrace("Using token {Token} ({@Segment})", token, tokenSegment);
 
-        completionWindow = CreateCompletionWindow(textEditor.TextArea);
-        completionWindow.StartOffset = tokenSegment.Offset;
-        completionWindow.EndOffset = tokenSegment.EndOffset;
+        var newWindow = CreateCompletionWindow(textEditor.TextArea);
+        newWindow.StartOffset = tokenSegment.Offset;
+        newWindow.EndOffset = tokenSegment.EndOffset;
 
-        completionWindow.UpdateQuery(completionRequest);
+        newWindow.UpdateQuery(completionRequest);
 
-        completionWindow.Closed += (_, _) =>
+        newWindow.Closed += CompletionWindow_OnClosed;
+
+        completionWindow = newWindow;
+
+        newWindow.Show();
+    }
+
+    private void CompletionWindow_OnClosed(object? sender, EventArgs e)
+    {
+        if (ReferenceEquals(sender, completionWindow))
         {
             completionWindow = null;
-        };
+        }
 
-        completionWindow.Show();
+        Logger.ConditionalTrace("Completion window closed");
+
+        if (sender is CompletionWindow window)
+        {
+            window.Closed -= CompletionWindow_OnClosed;
+        }
     }
 
     private void TextArea_TextEntered(object? sender, TextInputEventArgs e)
     {
-        Logger.ConditionalTrace($"Text entered: {e.Text.ToRepr()}");
+        Logger.ConditionalTrace("Text entered: {Text}", e.Text);
 
         if (!IsEnabled || CompletionProvider is null)
         {
@@ -174,7 +192,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
             return;
         }
 
-        InvokeManualCompletion();
+        Dispatcher.UIThread.Post(InvokeManualCompletion, DispatcherPriority.Input);
     }
 
     private void TextArea_KeyDown(object? sender, KeyEventArgs e)

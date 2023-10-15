@@ -183,7 +183,7 @@
                                                     <controls:BetterAdvancedImage
                                                         Width="150"
                                                         Height="190"
-                                                        Source="{Binding GlobalFullPath}"
+                                                        Source="{Binding AbsolutePath}"
                                                         Stretch="UniformToFill"
                                                         StretchDirection="Both" />
 

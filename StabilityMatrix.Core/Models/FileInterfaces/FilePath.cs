@@ -11,7 +11,6 @@ public class FilePath : FileSystemPath, IPathObject
 {
     private FileInfo? _info;
 
-    // ReSharper disable once MemberCanBePrivate.Global
     [JsonIgnore]
     public FileInfo Info => _info ??= new FileInfo(FullPath);
 

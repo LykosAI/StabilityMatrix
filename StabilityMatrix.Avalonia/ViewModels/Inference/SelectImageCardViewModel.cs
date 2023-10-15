@@ -88,7 +88,7 @@ public partial class SelectImageCardViewModel : ViewModelBase, IDropTarget
                 {
                     var current = ImageSource;
 
-                    ImageSource = new ImageSource(imageFile.GlobalFullPath);
+                    ImageSource = new ImageSource(imageFile.AbsolutePath);
 
                     current?.Dispose();
                 });

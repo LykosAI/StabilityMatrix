@@ -11,56 +11,42 @@ namespace StabilityMatrix.Core.Models.Database;
 /// </summary>
 public class LocalImageFile
 {
-    /// <summary>
-    /// Relative path of the file from the root images directory ("%LIBRARY%/Images").
-    /// </summary>
-    [BsonId]
-    public required string RelativePath { get; set; }
-
-    public required string AbsolutePath { get; set; }
+    public required string AbsolutePath { get; init; }
 
     /// <summary>
     /// Type of the model file.
     /// </summary>
-    public LocalImageFileType ImageType { get; set; }
+    public LocalImageFileType ImageType { get; init; }
 
     /// <summary>
     /// Creation time of the file.
     /// </summary>
-    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; init; }
 
     /// <summary>
     /// Last modified time of the file.
     /// </summary>
-    public DateTimeOffset LastModifiedAt { get; set; }
+    public DateTimeOffset LastModifiedAt { get; init; }
 
     /// <summary>
     /// Generation parameters metadata of the file.
     /// </summary>
-    public GenerationParameters? GenerationParameters { get; set; }
+    public GenerationParameters? GenerationParameters { get; init; }
 
     /// <summary>
     /// Dimensions of the image
     /// </summary>
-    public Size? ImageSize { get; set; }
+    public Size? ImageSize { get; init; }
 
     /// <summary>
     /// File name of the relative path.
     /// </summary>
-    public string FileName => Path.GetFileName(RelativePath);
+    public string FileName => Path.GetFileName(AbsolutePath);
 
     /// <summary>
     /// File name of the relative path without extension.
     /// </summary>
-    public string FileNameWithoutExtension => Path.GetFileNameWithoutExtension(RelativePath);
-
-    public string GlobalFullPath =>
-        GlobalConfig.LibraryDir.JoinDir("Images").JoinFile(RelativePath);
-
-    public string GetFullPath(string rootImageDirectory)
-    {
-        return Path.Combine(rootImageDirectory, RelativePath);
-    }
+    public string FileNameWithoutExtension => Path.GetFileNameWithoutExtension(AbsolutePath);
 
     public (
         string? Parameters,
@@ -70,7 +56,7 @@ public class LocalImageFile
     ) ReadMetadata()
     {
         using var stream = new FileStream(
-            GlobalFullPath,
+            AbsolutePath,
             FileMode.Open,
             FileAccess.Read,
             FileShare.Read
@@ -92,29 +78,19 @@ public class LocalImageFile
 
     public static LocalImageFile FromPath(FilePath filePath)
     {
-        var relativePath = Path.GetRelativePath(
-            GlobalConfig.LibraryDir.JoinDir("Images"),
-            filePath
-        );
-
         // TODO: Support other types
         const LocalImageFileType imageType =
             LocalImageFileType.Inference | LocalImageFileType.TextToImage;
 
         // Get metadata
-        using var stream = new FileStream(
-            filePath.FullPath,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read
-        );
+        using var stream = filePath.Info.OpenRead();
         using var reader = new BinaryReader(stream);
 
         var imageSize = ImageMetadata.GetImageSize(reader);
 
         var metadata = ImageMetadata.ReadTextChunk(reader, "parameters-json");
 
-        GenerationParameters? genParams = null;
+        GenerationParameters? genParams;
 
         if (!string.IsNullOrWhiteSpace(metadata))
         {
@@ -130,7 +106,6 @@ public class LocalImageFile
 
         return new LocalImageFile
         {
-            RelativePath = relativePath,
             AbsolutePath = filePath,
             ImageType = imageType,
             CreatedAt = filePath.Info.CreationTimeUtc,
@@ -155,21 +130,23 @@ public class LocalImageFile
                 return false;
             if (x.GetType() != y.GetType())
                 return false;
-            return x.RelativePath == y.RelativePath
+            return x.AbsolutePath == y.AbsolutePath
                 && x.ImageType == y.ImageType
                 && x.CreatedAt.Equals(y.CreatedAt)
                 && x.LastModifiedAt.Equals(y.LastModifiedAt)
-                && Equals(x.GenerationParameters, y.GenerationParameters);
+                && Equals(x.GenerationParameters, y.GenerationParameters)
+                && Nullable.Equals(x.ImageSize, y.ImageSize);
         }
 
         public int GetHashCode(LocalImageFile obj)
         {
             return HashCode.Combine(
-                obj.RelativePath,
+                obj.AbsolutePath,
                 obj.ImageType,
                 obj.CreatedAt,
                 obj.LastModifiedAt,
-                obj.GenerationParameters
+                obj.GenerationParameters,
+                obj.ImageSize
             );
         }
     }

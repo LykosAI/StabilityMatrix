@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
@@ -16,6 +17,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 [JsonDerivedType(typeof(StackExpanderViewModel), StackExpanderViewModel.ModuleKey)]
 [JsonDerivedType(typeof(UpscalerCardViewModel), UpscalerCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(SamplerCardViewModel), SamplerCardViewModel.ModuleKey)]
+[JsonDerivedType(typeof(UpscalerModule))]
 public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

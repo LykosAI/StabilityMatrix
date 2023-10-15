@@ -188,6 +188,7 @@
                                                         StretchDirection="Both" />
 
                                                     <Border
+                                                        MaxWidth="150"
                                                         Grid.Row="1"
                                                         Classes="theme-dark"
                                                         MinHeight="20"

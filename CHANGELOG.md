@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed crash when clicking Inference gallery image after the image is deleted externally in file explorer
 - Fixed Inference popup Install button not working on One-Click Installer
+- Fixed Inference Prompt Completion window sometimes not showing while typing
+
+## v2.5.4
+### Fixed
+- Fixed [#208](https://github.com/LykosAI/StabilityMatrix/issues/208) - error when installing xformers
 
 ## v2.5.3
 ### Added

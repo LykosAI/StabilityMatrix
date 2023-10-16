@@ -238,6 +238,8 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             downloadOptions.VersionTag =
                 SelectedVersion?.TagName
                 ?? throw new NullReferenceException("Selected version is null");
+            downloadOptions.IsLatest =
+                AvailableVersions?.First().TagName == downloadOptions.VersionTag;
 
             installedVersion.InstalledReleaseVersion = downloadOptions.VersionTag;
         }
@@ -245,6 +247,11 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         {
             downloadOptions.CommitHash =
                 SelectedCommit?.Sha ?? throw new NullReferenceException("Selected commit is null");
+            downloadOptions.BranchName =
+                SelectedVersion?.TagName
+                ?? throw new NullReferenceException("Selected version is null");
+            downloadOptions.IsLatest = AvailableCommits?.First().Sha == SelectedCommit.Sha;
+
             installedVersion.InstalledBranch =
                 SelectedVersion?.TagName
                 ?? throw new NullReferenceException("Selected version is null");
@@ -259,6 +266,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         var installStep = new InstallPackageStep(
             SelectedPackage,
             SelectedTorchVersion,
+            downloadOptions,
             installLocation
         );
         var setupModelFoldersStep = new SetupModelFoldersStep(
@@ -306,6 +314,10 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         if (AvailableVersions is null)
         {
             SelectedVersion = null;
+        }
+        else if (SelectedPackage is FooocusMre)
+        {
+            SelectedVersion = AvailableVersions.FirstOrDefault(x => x.TagName == "moonride-main");
         }
         else
         {

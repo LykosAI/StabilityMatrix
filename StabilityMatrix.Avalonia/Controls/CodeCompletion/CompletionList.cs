@@ -325,7 +325,7 @@ public class CompletionList : TemplatedControl
             return;
         }
 
-        using var _ = new CodeTimer();
+        using var _ = CodeTimer.StartDebug();
 
         if (_listBox == null)
         {

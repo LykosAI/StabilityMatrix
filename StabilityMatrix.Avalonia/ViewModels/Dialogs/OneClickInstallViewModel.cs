@@ -145,7 +145,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
         // get latest version & download & install
         var installLocation = Path.Combine(libraryDir, "Packages", SelectedPackage.Name);
 
-        var downloadVersion = new DownloadPackageVersionOptions();
+        var downloadVersion = new DownloadPackageVersionOptions { IsLatest = true };
         var installedVersion = new InstalledPackageVersion();
 
         var versionOptions = await SelectedPackage.GetAllVersionOptions();
@@ -157,13 +157,19 @@ public partial class OneClickInstallViewModel : ViewModelBase
         else
         {
             downloadVersion.BranchName = await SelectedPackage.GetLatestVersion();
+            downloadVersion.CommitHash =
+                (await SelectedPackage.GetAllCommits(downloadVersion.BranchName))
+                    ?.FirstOrDefault()
+                    ?.Sha ?? string.Empty;
+
             installedVersion.InstalledBranch = downloadVersion.BranchName;
+            installedVersion.InstalledCommitSha = downloadVersion.CommitHash;
         }
 
         var torchVersion = SelectedPackage.GetRecommendedTorchVersion();
 
         await DownloadPackage(installLocation, downloadVersion);
-        await InstallPackage(installLocation, torchVersion);
+        await InstallPackage(installLocation, torchVersion, downloadVersion);
 
         var recommendedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
         await SelectedPackage.SetupModelFolders(installLocation, recommendedSharedFolderMethod);
@@ -222,7 +228,11 @@ public partial class OneClickInstallViewModel : ViewModelBase
         OneClickInstallProgress = 100;
     }
 
-    private async Task InstallPackage(string installLocation, TorchVersion torchVersion)
+    private async Task InstallPackage(
+        string installLocation,
+        TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions
+    )
     {
         var progress = new Progress<ProgressReport>(progress =>
         {
@@ -235,6 +245,7 @@ public partial class OneClickInstallViewModel : ViewModelBase
         await SelectedPackage.InstallPackage(
             installLocation,
             torchVersion,
+            versionOptions,
             progress,
             (output) => SubSubHeaderText = output.Text
         );

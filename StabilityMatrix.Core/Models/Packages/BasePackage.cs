@@ -49,6 +49,7 @@ public abstract class BasePackage
     public abstract Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
     );
@@ -65,6 +66,7 @@ public abstract class BasePackage
     public abstract Task<InstalledPackageVersion> Update(
         InstalledPackage installedPackage,
         TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         bool includePrerelease = false,
         Action<ProcessOutput>? onConsoleOutput = null

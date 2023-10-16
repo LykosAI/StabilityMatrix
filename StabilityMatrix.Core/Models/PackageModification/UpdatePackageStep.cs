@@ -9,16 +9,19 @@ public class UpdatePackageStep : IPackageStep
 {
     private readonly ISettingsManager settingsManager;
     private readonly InstalledPackage installedPackage;
+    private readonly DownloadPackageVersionOptions versionOptions;
     private readonly BasePackage basePackage;
 
     public UpdatePackageStep(
         ISettingsManager settingsManager,
         InstalledPackage installedPackage,
+        DownloadPackageVersionOptions versionOptions,
         BasePackage basePackage
     )
     {
         this.settingsManager = settingsManager;
         this.installedPackage = installedPackage;
+        this.versionOptions = versionOptions;
         this.basePackage = basePackage;
     }
 
@@ -33,7 +36,13 @@ public class UpdatePackageStep : IPackageStep
         }
 
         var updateResult = await basePackage
-            .Update(installedPackage, torchVersion, progress, onConsoleOutput: OnConsoleOutput)
+            .Update(
+                installedPackage,
+                torchVersion,
+                versionOptions,
+                progress,
+                onConsoleOutput: OnConsoleOutput
+            )
             .ConfigureAwait(false);
 
         settingsManager.UpdatePackageVersionNumber(installedPackage.Id, updateResult);

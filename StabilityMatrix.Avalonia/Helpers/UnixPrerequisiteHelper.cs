@@ -126,7 +126,11 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         }
     }
 
-    public async Task RunGit(string? workingDirectory = null, params string[] args)
+    public async Task RunGit(
+        string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null,
+        params string[] args
+    )
     {
         var command =
             args.Length == 0 ? "git" : "git " + string.Join(" ", args.Select(ProcessRunner.Quote));

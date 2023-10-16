@@ -114,6 +114,10 @@ public partial class ModelCardViewModel : LoadableViewModelBase, IParametersLoad
     /// <inheritdoc />
     public GenerationParameters SaveStateToParameters(GenerationParameters parameters)
     {
-        return parameters with { ModelName = SelectedModel?.FileName };
+        return parameters with
+        {
+            ModelName = SelectedModel?.FileName,
+            ModelHash = SelectedModel?.Local?.ConnectedModelInfo?.Hashes.SHA256
+        };
     }
 }

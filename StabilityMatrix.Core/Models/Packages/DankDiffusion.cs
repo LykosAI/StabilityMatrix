@@ -1,6 +1,7 @@
 ﻿using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
@@ -31,6 +32,17 @@ public class DankDiffusion : BaseGitPackage
     public override Uri PreviewImageUri { get; }
 
     public override string OutputFolderName { get; }
+
+    public override Task InstallPackage(
+        string installLocation,
+        TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null
+    )
+    {
+        throw new NotImplementedException();
+    }
 
     public override Task RunPackage(
         string installedPackagePath,

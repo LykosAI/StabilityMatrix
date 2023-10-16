@@ -120,7 +120,8 @@
                                             </MenuItem>
                                             <MenuItem
                                                 Header="{x:Static lang:Resources.Label_UseSharedOutputFolder}"
-                                                Command="{Binding ToggleSharedOutput}">
+                                                Command="{Binding ToggleSharedOutput}"
+                                                IsVisible="{Binding !IsUnknownPackage}">
                                                 <MenuItem.Icon>
                                                     <CheckBox Margin="8,0,0,0"
                                                               Padding="0"

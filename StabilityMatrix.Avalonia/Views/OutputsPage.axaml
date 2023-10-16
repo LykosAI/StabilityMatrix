@@ -25,7 +25,7 @@
         <Grid Grid.Row="0" Margin="0,0,0,16"
               HorizontalAlignment="Stretch"
               RowDefinitions="Auto, Auto"
-              ColumnDefinitions="Auto, Auto, Auto, *, Auto, Auto">
+              ColumnDefinitions="Auto, Auto, Auto, Auto, *, Auto, Auto">
             <TextBlock Grid.Row="0"
                        Grid.Column="0"
                        Text="{x:Static lang:Resources.Label_OutputFolder}"
@@ -68,9 +68,21 @@
                       Margin="4,0"
                       VerticalAlignment="Stretch"
                       VerticalContentAlignment="Center" />
+            
+            <TextBlock Grid.Row="0"
+                       Grid.Column="2"
+                       Margin="4"
+                       Text="Search"/>
+            <TextBox Grid.Row="1"
+                     Grid.Column="2"
+                     Text="{Binding SearchQuery, Mode=TwoWay}"
+                     Watermark="Search"
+                     Margin="4, 0"
+                     VerticalContentAlignment="Center"
+                     MinWidth="150"/>
 
             <TextBlock Grid.Row="1"
-                       Grid.Column="3" 
+                       Grid.Column="4" 
                        IsVisible="{Binding !!NumItemsSelected}"
                        FontSize="16"
                        Margin="8, 0"
@@ -80,7 +92,7 @@
                        Text="{Binding NumImagesSelected, FallbackValue=1234 images selected}" />
 
             <Button Grid.Row="1"
-                    Grid.Column="4"
+                    Grid.Column="5"
                     VerticalAlignment="Bottom"
                     CornerRadius="8"
                     Padding="12, 0"
@@ -92,7 +104,7 @@
             </Button>
             
             <Button Grid.Row="1"
-                    Grid.Column="5"
+                    Grid.Column="6"
                     Content="{x:Static lang:Resources.Action_ClearSelection}"
                     VerticalAlignment="Bottom"
                     CornerRadius="8"
@@ -101,7 +113,7 @@
                     Command="{Binding ClearSelection}"
                     IsVisible="{Binding !!NumItemsSelected}" />
             <Button Grid.Row="1"
-                    Grid.Column="5"
+                    Grid.Column="6"
                     Content="{x:Static lang:Resources.Action_SelectAll}"
                     VerticalAlignment="Bottom"
                     Classes="accent"

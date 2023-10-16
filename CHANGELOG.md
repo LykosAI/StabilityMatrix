@@ -14,9 +14,15 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added [Stable Diffusion WebUI/UX](https://github.com/anapnoe/stable-diffusion-webui-ux) package
 ### Changed
 - If ComfyUI for Inference is chosen during the One-Click Installer, the Inference page will be opened after installation instead of the Launch page
+- Changed all package installs & updates to use git commands instead of downloading zip files
 ### Fixed
 - Fixed crash when clicking Inference gallery image after the image is deleted externally in file explorer
 - Fixed Inference popup Install button not working on One-Click Installer
+- Fixed Inference Prompt Completion window sometimes not showing while typing
+
+## v2.5.4
+### Fixed
+- Fixed [#208](https://github.com/LykosAI/StabilityMatrix/issues/208) - error when installing xformers
 
 ## v2.5.3
 ### Added

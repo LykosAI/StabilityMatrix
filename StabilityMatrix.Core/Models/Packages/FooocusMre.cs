@@ -37,6 +37,9 @@ public class FooocusMre : BaseGitPackage
             "https://user-images.githubusercontent.com/130458190/265366059-ce430ea0-0995-4067-98dd-cef1d7dc1ab6.png"
         );
 
+    public override string Disclaimer =>
+        "This package may no longer receive updates from its author. It may be removed from Stability Matrix in the future.";
+
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new()
         {
@@ -102,11 +105,11 @@ public class FooocusMre : BaseGitPackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
         var venvRunner = await SetupVenv(installLocation, forceRecreate: true)
             .ConfigureAwait(false);
 

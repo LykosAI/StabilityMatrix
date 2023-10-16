@@ -24,6 +24,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.ViewModels.OutputsPage;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
@@ -98,26 +99,34 @@ public partial class OutputsPageViewModel : PageViewModelBase
         this.navigationService = navigationService;
         this.logger = logger;
 
+        var predicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
+            .Throttle(TimeSpan.FromMilliseconds(50))!
+            .Select<PropertyValue<OutputsPageViewModel, string>, Func<OutputImageViewModel, bool>>(
+                propertyValue =>
+                    output =>
+                    {
+                        if (string.IsNullOrWhiteSpace(propertyValue.Value))
+                            return true;
+
+                        return output.ImageFile.FileName.Contains(
+                                propertyValue.Value,
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                            || (
+                                output.ImageFile.GenerationParameters?.PositivePrompt != null
+                                && output.ImageFile.GenerationParameters.PositivePrompt.Contains(
+                                    propertyValue.Value,
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                            );
+                    }
+            )
+            .AsObservable();
+
         OutputsCache
             .Connect()
             .DeferUntilLoaded()
-            .Filter(output =>
-            {
-                if (string.IsNullOrWhiteSpace(SearchQuery))
-                    return true;
-
-                return output.ImageFile.FileName.Contains(
-                        SearchQuery,
-                        StringComparison.OrdinalIgnoreCase
-                    )
-                    || (
-                        output.ImageFile.GenerationParameters?.PositivePrompt != null
-                        && output.ImageFile.GenerationParameters.PositivePrompt.Contains(
-                            SearchQuery,
-                            StringComparison.OrdinalIgnoreCase
-                        )
-                    );
-            })
+            .Filter(predicate)
             .SortBy(x => x.ImageFile.CreatedAt, SortDirection.Descending)
             .Bind(Outputs)
             .WhenPropertyChanged(p => p.IsSelected)
@@ -197,11 +206,6 @@ public partial class OutputsPageViewModel : PageViewModelBase
                 ? SelectedCategory.Path
                 : Path.Combine(SelectedCategory.Path, newValue.ToString());
         GetOutputs(path);
-    }
-
-    partial void OnSearchQueryChanged(string value)
-    {
-        OutputsCache.Refresh();
     }
 
     public async Task OnImageClick(OutputImageViewModel item)

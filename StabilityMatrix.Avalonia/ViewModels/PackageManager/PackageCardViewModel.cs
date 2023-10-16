@@ -240,7 +240,29 @@ public partial class PackageCardViewModel : ProgressViewModel
             {
                 ModificationCompleteMessage = $"{packageName} Update Complete"
             };
-            var updatePackageStep = new UpdatePackageStep(settingsManager, Package, basePackage);
+
+            var versionOptions = new DownloadPackageVersionOptions { IsLatest = true };
+            if (Package.Version.IsReleaseMode)
+            {
+                versionOptions.VersionTag = await basePackage.GetLatestVersion();
+            }
+            else
+            {
+                var commits = await basePackage.GetAllCommits(Package.Version.InstalledBranch);
+                var latest = commits?.FirstOrDefault();
+                if (latest == null)
+                    throw new Exception("Could not find latest commit");
+
+                versionOptions.BranchName = Package.Version.InstalledBranch;
+                versionOptions.CommitHash = latest.Sha;
+            }
+
+            var updatePackageStep = new UpdatePackageStep(
+                settingsManager,
+                Package,
+                versionOptions,
+                basePackage
+            );
             var steps = new List<IPackageStep> { updatePackageStep };
 
             EventManager.Instance.OnPackageInstallProgressAdded(runner);

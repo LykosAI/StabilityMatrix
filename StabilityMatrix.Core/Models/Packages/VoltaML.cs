@@ -146,11 +146,19 @@ public class VoltaML : BaseGitPackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
+        await base.InstallPackage(
+            installLocation,
+            torchVersion,
+            versionOptions,
+            progress,
+            onConsoleOutput
+        )
+            .ConfigureAwait(false);
 
         // Setup venv
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));

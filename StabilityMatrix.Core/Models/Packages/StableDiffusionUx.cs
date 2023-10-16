@@ -68,9 +68,9 @@ public class StableDiffusionUx : BaseGitPackage
             [SharedOutputType.Extras] = new[] { "outputs/extras-images" },
             [SharedOutputType.Saved] = new[] { "log/images" },
             [SharedOutputType.Img2Img] = new[] { "outputs/img2img-images" },
-            [SharedOutputType.Text2Img] = new[] { "outputs/text2img-images" },
+            [SharedOutputType.Text2Img] = new[] { "outputs/txt2img-images" },
             [SharedOutputType.Img2ImgGrids] = new[] { "outputs/img2img-grids" },
-            [SharedOutputType.Text2ImgGrids] = new[] { "outputs/text2img-grids" }
+            [SharedOutputType.Text2ImgGrids] = new[] { "outputs/txt2img-grids" }
         };
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
@@ -180,11 +180,19 @@ public class StableDiffusionUx : BaseGitPackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
+        await base.InstallPackage(
+            installLocation,
+            torchVersion,
+            versionOptions,
+            progress,
+            onConsoleOutput
+        )
+            .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
         // Setup venv

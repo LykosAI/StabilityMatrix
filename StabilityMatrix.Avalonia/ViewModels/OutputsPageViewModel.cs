@@ -56,6 +56,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
     public IObservableCollection<OutputImageViewModel> Outputs { get; set; } =
         new ObservableCollectionExtended<OutputImageViewModel>();
 
+    public IObservableCollection<OutputImageViewModel> FilteredOutputs { get; set; } =
+        new ObservableCollectionExtended<OutputImageViewModel>();
+
     public IEnumerable<SharedOutputType> OutputTypes { get; } = Enum.GetValues<SharedOutputType>();
 
     [ObservableProperty]
@@ -71,6 +74,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(NumImagesSelected))]
     private int numItemsSelected;
+
+    [ObservableProperty]
+    private string searchQuery;
 
     public bool CanShowOutputTypes => SelectedCategory.Name.Equals("Shared Output Folder");
 
@@ -95,8 +101,24 @@ public partial class OutputsPageViewModel : PageViewModelBase
         OutputsCache
             .Connect()
             .DeferUntilLoaded()
+            .Filter(output =>
+            {
+                if (string.IsNullOrWhiteSpace(SearchQuery))
+                    return true;
+
+                return output.ImageFile.FileName.Contains(
+                        SearchQuery,
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                    || (
+                        output.ImageFile.GenerationParameters?.PositivePrompt != null
+                        && output.ImageFile.GenerationParameters.PositivePrompt.Contains(
+                            SearchQuery,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    );
+            })
             .SortBy(x => x.ImageFile.CreatedAt, SortDirection.Descending)
-            .ObserveOn(SynchronizationContext.Current)
             .Bind(Outputs)
             .WhenPropertyChanged(p => p.IsSelected)
             .Subscribe(_ =>
@@ -135,6 +157,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         Categories = new ObservableCollection<PackageOutputCategory>(packageCategories);
         SelectedCategory = Categories.First();
         SelectedOutputType = SharedOutputType.All;
+        SearchQuery = string.Empty;
     }
 
     public override void OnLoaded()
@@ -174,6 +197,11 @@ public partial class OutputsPageViewModel : PageViewModelBase
                 ? SelectedCategory.Path
                 : Path.Combine(SelectedCategory.Path, newValue.ToString());
         GetOutputs(path);
+    }
+
+    partial void OnSearchQueryChanged(string value)
+    {
+        OutputsCache.Refresh();
     }
 
     public async Task OnImageClick(OutputImageViewModel item)
@@ -280,16 +308,16 @@ public partial class OutputsPageViewModel : PageViewModelBase
         }
     }
 
-    public void SendToTextToImage(LocalImageFile image)
+    public void SendToTextToImage(OutputImageViewModel vm)
     {
         navigationService.NavigateTo<InferenceViewModel>();
-        EventManager.Instance.OnInferenceTextToImageRequested(image);
+        EventManager.Instance.OnInferenceTextToImageRequested(vm.ImageFile);
     }
 
-    public void SendToUpscale(LocalImageFile image)
+    public void SendToUpscale(OutputImageViewModel vm)
     {
         navigationService.NavigateTo<InferenceViewModel>();
-        EventManager.Instance.OnInferenceUpscaleRequested(image);
+        EventManager.Instance.OnInferenceUpscaleRequested(vm.ImageFile);
     }
 
     public void ClearSelection()

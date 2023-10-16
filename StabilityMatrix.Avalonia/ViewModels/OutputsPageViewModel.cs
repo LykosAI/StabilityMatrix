@@ -246,6 +246,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     public async Task DeleteImage(OutputImageViewModel? item)
     {
+        if (item is null)
+            return;
+
         var confirmationDialog = new BetterContentDialog
         {
             Title = "Are you sure you want to delete this image?",
@@ -259,13 +262,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
         if (dialogResult != ContentDialogResult.Primary)
             return;
 
-        if (item?.ImageFile.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
-        {
-            return;
-        }
-
         // Delete the file
-        var imageFile = new FilePath(imagePath);
+        var imageFile = new FilePath(item.ImageFile.AbsolutePath);
         var result = await notificationService.TryAsync(imageFile.DeleteAsync());
 
         if (!result.IsSuccessful)
@@ -329,13 +327,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
         Debug.Assert(selected.Count == NumItemsSelected);
         foreach (var output in selected)
         {
-            if (output?.ImageFile.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
-            {
-                continue;
-            }
-
             // Delete the file
-            var imageFile = new FilePath(imagePath);
+            var imageFile = new FilePath(output.ImageFile.AbsolutePath);
             var result = await notificationService.TryAsync(imageFile.DeleteAsync());
 
             if (!result.IsSuccessful)

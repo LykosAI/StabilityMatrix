@@ -125,12 +125,7 @@ public partial class ImageFolderCardViewModel : ViewModelBase
     /// </summary>
     private FilePath? GetImagePathIfExists(LocalImageFile item)
     {
-        if (item.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
-        {
-            return null;
-        }
-
-        var imageFile = new FilePath(imagePath);
+        var imageFile = new FilePath(item.AbsolutePath);
 
         if (!imageFile.Exists)
         {
@@ -185,9 +180,7 @@ public partial class ImageFolderCardViewModel : ViewModelBase
                         if (newIndex >= 0 && newIndex < LocalImages.Count)
                         {
                             var newImage = LocalImages[newIndex];
-                            var newImageSource = new ImageSource(
-                                new FilePath(newImage.GetFullPath(settingsManager.ImagesDirectory))
-                            );
+                            var newImageSource = new ImageSource(newImage.AbsolutePath);
 
                             // Preload
                             await newImageSource.GetBitmapAsync();

@@ -351,8 +351,6 @@ public static class DesignData
                     {
                         AbsolutePath =
                             "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
-                        RelativePath =
-                            "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
                         ImageType = LocalImageFileType.TextToImage
                     }
                 )

@@ -382,22 +382,7 @@ public class InferenceTextToImageViewModel
                 Client = ClientManager.Client,
                 Nodes = buildPromptArgs.Builder.ToNodeDictionary(),
                 OutputNodeNames = buildPromptArgs.Builder.Connections.OutputNodeNames.ToArray(),
-                Parameters = new GenerationParameters
-                {
-                    Seed = (ulong)seed,
-                    Steps = SamplerCardViewModel.Steps,
-                    CfgScale = SamplerCardViewModel.CfgScale,
-                    Sampler = SamplerCardViewModel.SelectedSampler?.Name,
-                    ModelName = ModelCardViewModel.SelectedModelName,
-                    ModelHash = ModelCardViewModel
-                        .SelectedModel
-                        ?.Local
-                        ?.ConnectedModelInfo
-                        ?.Hashes
-                        .SHA256,
-                    PositivePrompt = PromptCardViewModel.PromptDocument.Text,
-                    NegativePrompt = PromptCardViewModel.NegativePromptDocument.Text
-                },
+                Parameters = SaveStateToParameters(new GenerationParameters()),
                 Project = InferenceProjectDocument.FromLoadable(this),
                 // Only clear output images on the first batch
                 ClearOutputImages = i == 0
@@ -418,10 +403,9 @@ public class InferenceTextToImageViewModel
     {
         PromptCardViewModel.LoadStateFromParameters(parameters);
         SamplerCardViewModel.LoadStateFromParameters(parameters);
+        ModelCardViewModel.LoadStateFromParameters(parameters);
 
         SeedCardViewModel.Seed = Convert.ToInt64(parameters.Seed);
-
-        ModelCardViewModel.LoadStateFromParameters(parameters);
     }
 
     /// <inheritdoc />
@@ -429,10 +413,9 @@ public class InferenceTextToImageViewModel
     {
         parameters = PromptCardViewModel.SaveStateToParameters(parameters);
         parameters = SamplerCardViewModel.SaveStateToParameters(parameters);
+        parameters = ModelCardViewModel.SaveStateToParameters(parameters);
 
         parameters.Seed = (ulong)SeedCardViewModel.Seed;
-
-        parameters = ModelCardViewModel.SaveStateToParameters(parameters);
 
         return parameters;
     }

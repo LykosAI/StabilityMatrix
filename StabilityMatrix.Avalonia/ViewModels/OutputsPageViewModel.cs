@@ -56,9 +56,6 @@ public partial class OutputsPageViewModel : PageViewModelBase
     public IObservableCollection<OutputImageViewModel> Outputs { get; set; } =
         new ObservableCollectionExtended<OutputImageViewModel>();
 
-    public IObservableCollection<OutputImageViewModel> FilteredOutputs { get; set; } =
-        new ObservableCollectionExtended<OutputImageViewModel>();
-
     public IEnumerable<SharedOutputType> OutputTypes { get; } = Enum.GetValues<SharedOutputType>();
 
     [ObservableProperty]

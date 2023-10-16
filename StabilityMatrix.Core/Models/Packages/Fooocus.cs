@@ -98,11 +98,11 @@ public class Fooocus : BaseGitPackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
         var venvRunner = await SetupVenv(installLocation, forceRecreate: true)
             .ConfigureAwait(false);
 

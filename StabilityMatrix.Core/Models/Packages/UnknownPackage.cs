@@ -41,6 +41,7 @@ public class UnknownPackage : BasePackage
     public override Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
     )
@@ -120,6 +121,7 @@ public class UnknownPackage : BasePackage
     public override Task<InstalledPackageVersion> Update(
         InstalledPackage installedPackage,
         TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         bool includePrerelease = false,
         Action<ProcessOutput>? onConsoleOutput = null

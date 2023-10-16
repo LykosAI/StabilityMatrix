@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added [Stable Diffusion WebUI/UX](https://github.com/anapnoe/stable-diffusion-webui-ux) package
 ### Changed
 - If ComfyUI for Inference is chosen during the One-Click Installer, the Inference page will be opened after installation instead of the Launch page
+- Changed all package installs & updates to use git commands instead of downloading zip files
 ### Fixed
 - Fixed crash when clicking Inference gallery image after the image is deleted externally in file explorer
 - Fixed Inference popup Install button not working on One-Click Installer

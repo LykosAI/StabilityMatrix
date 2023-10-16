@@ -24,6 +24,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.ViewModels.OutputsPage;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
@@ -72,6 +73,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
     [NotifyPropertyChangedFor(nameof(NumImagesSelected))]
     private int numItemsSelected;
 
+    [ObservableProperty]
+    private string searchQuery;
+
     public bool CanShowOutputTypes => SelectedCategory.Name.Equals("Shared Output Folder");
 
     public string NumImagesSelected =>
@@ -92,11 +96,35 @@ public partial class OutputsPageViewModel : PageViewModelBase
         this.navigationService = navigationService;
         this.logger = logger;
 
+        var predicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
+            .Throttle(TimeSpan.FromMilliseconds(50))!
+            .Select<PropertyValue<OutputsPageViewModel, string>, Func<OutputImageViewModel, bool>>(
+                propertyValue =>
+                    output =>
+                    {
+                        if (string.IsNullOrWhiteSpace(propertyValue.Value))
+                            return true;
+
+                        return output.ImageFile.FileName.Contains(
+                                propertyValue.Value,
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                            || (
+                                output.ImageFile.GenerationParameters?.PositivePrompt != null
+                                && output.ImageFile.GenerationParameters.PositivePrompt.Contains(
+                                    propertyValue.Value,
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                            );
+                    }
+            )
+            .AsObservable();
+
         OutputsCache
             .Connect()
             .DeferUntilLoaded()
+            .Filter(predicate)
             .SortBy(x => x.ImageFile.CreatedAt, SortDirection.Descending)
-            .ObserveOn(SynchronizationContext.Current)
             .Bind(Outputs)
             .WhenPropertyChanged(p => p.IsSelected)
             .Subscribe(_ =>
@@ -135,6 +163,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         Categories = new ObservableCollection<PackageOutputCategory>(packageCategories);
         SelectedCategory = Categories.First();
         SelectedOutputType = SharedOutputType.All;
+        SearchQuery = string.Empty;
     }
 
     public override void OnLoaded()
@@ -280,16 +309,16 @@ public partial class OutputsPageViewModel : PageViewModelBase
         }
     }
 
-    public void SendToTextToImage(LocalImageFile image)
+    public void SendToTextToImage(OutputImageViewModel vm)
     {
         navigationService.NavigateTo<InferenceViewModel>();
-        EventManager.Instance.OnInferenceTextToImageRequested(image);
+        EventManager.Instance.OnInferenceTextToImageRequested(vm.ImageFile);
     }
 
-    public void SendToUpscale(LocalImageFile image)
+    public void SendToUpscale(OutputImageViewModel vm)
     {
         navigationService.NavigateTo<InferenceViewModel>();
-        EventManager.Instance.OnInferenceUpscaleRequested(image);
+        EventManager.Instance.OnInferenceUpscaleRequested(vm.ImageFile);
     }
 
     public void ClearSelection()

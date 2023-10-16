@@ -2,16 +2,12 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
-    xmlns:fluentAvalonia="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
-    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
-    xmlns:ui="using:FluentAvalonia.UI.Controls"
-    xmlns:input="using:FluentAvalonia.UI.Input"
-    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     xmlns:dbModels="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
-    xmlns:animations="clr-namespace:StabilityMatrix.Avalonia.Animations"
+    xmlns:input="using:FluentAvalonia.UI.Input"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-    xmlns:behaviors="clr-namespace:StabilityMatrix.Avalonia.Behaviors"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     x:DataType="vmInference:ImageFolderCardViewModel">
 
     <Design.PreviewWith>
@@ -22,15 +18,10 @@
         </Panel>
     </Design.PreviewWith>
 
-
-    <!--<Style Selector="ListBox /template/ VirtualizingStackPanel">
-        <Setter Property="Orientation" Value="Horizontal" />
-    </Style>-->
-
     <Style Selector="controls|ImageFolderCard">
         <!--  Set Defaults  -->
         <Setter Property="CornerRadius" Value="8" />
-
+        <Setter Property="Focusable" Value="True" />
         <!--  Template  -->
         <Setter Property="Template">
             <ControlTemplate>
@@ -40,7 +31,7 @@
                     VerticalAlignment="{TemplateBinding VerticalAlignment}"
                     HorizontalContentAlignment="{TemplateBinding HorizontalAlignment}"
                     VerticalContentAlignment="{TemplateBinding VerticalAlignment}">
-                    
+
                     <!--<controls:Card.Styles>
                         <Style Selector="ItemsRepeater">
                             <Setter Property="animations:ItemsRepeaterArrangeAnimation.EnableItemsArrangeAnimation" Value="True"/>
@@ -50,134 +41,160 @@
                     <Grid RowDefinitions="Auto,*">
                         <TextBox
                             x:Name="SearchBox"
-                            Text="{Binding SearchQuery}"
                             Margin="6,4,6,8"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Top"
+                            Text="{Binding SearchQuery}"
                             Watermark="{x:Static lang:Resources.Label_SearchEllipsis}">
                             <TextBox.InnerRightContent>
-                                <ui:SymbolIcon 
+                                <ui:SymbolIcon
                                     Margin="0,0,6,0"
                                     FontSize="16"
                                     Symbol="Find" />
                             </TextBox.InnerRightContent>
                         </TextBox>
 
-                        <ScrollViewer 
-                            Grid.Row="1" 
-                            IsScrollInertiaEnabled="True"
-                            VerticalSnapPointsType="Mandatory"
+                        <ScrollViewer
+                            Grid.Row="1"
                             BringIntoViewOnFocusChange="False"
-                            HorizontalScrollBarVisibility="Disabled">
+                            HorizontalScrollBarVisibility="Disabled"
+                            IsScrollInertiaEnabled="True"
+                            VerticalSnapPointsType="Mandatory">
                             <ItemsRepeater
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Stretch"
-                                VerticalCacheLength="8"
-                                ItemsSource="{Binding LocalImages}">
-                                
+                                ItemsSource="{Binding LocalImages}"
+                                VerticalCacheLength="8">
+
                                 <ItemsRepeater.Resources>
-                                    <input:StandardUICommand 
-                                        x:Key="ImageClickCommand" 
-                                        Command="{Binding ImageClickCommand}"/>
-                                    <input:StandardUICommand 
+                                    <input:StandardUICommand x:Key="ImageClickCommand" Command="{Binding ImageClickCommand}" />
+                                    <input:StandardUICommand
                                         x:Key="ImageDeleteCommand"
-                                        Label="{x:Static lang:Resources.Action_Delete}"
+                                        Command="{Binding ImageDeleteCommand}"
                                         IconSource="Delete"
-                                        Command="{Binding ImageDeleteCommand}"/>
-                                    <input:StandardUICommand 
+                                        Label="{x:Static lang:Resources.Action_Delete}" />
+                                    <input:StandardUICommand
                                         x:Key="ImageCopyCommand"
-                                        Label="Copy"
+                                        Command="{Binding ImageCopyCommand}"
                                         IconSource="Copy"
-                                        Command="{Binding ImageCopyCommand}"/>
-                                    <input:StandardUICommand 
-                                        x:Key="ImageOpenCommand" 
-                                        Label="{OnPlatform Default={x:Static lang:Resources.Action_OpenInExplorer}, macOS={x:Static lang:Resources.Action_OpenInFinder}}"
+                                        Label="Copy" />
+                                    <input:StandardUICommand
+                                        x:Key="ImageOpenCommand"
+                                        Command="{Binding ImageOpenCommand}"
                                         IconSource="Folder"
-                                        Command="{Binding ImageOpenCommand}"/>
-                                    <input:StandardUICommand 
-                                        x:Key="ImageExportPngWithMetadataCommand" 
-                                        Label="Png with Metadata"
-                                        Command="{Binding ImageExportPngWithMetadataCommand}"/>
-                                    <input:StandardUICommand 
-                                        x:Key="ImageExportPngCommand" 
-                                        Label="Png"
-                                        Command="{Binding ImageExportPngCommand}"/>
-                                    <input:StandardUICommand 
-                                        x:Key="ImageExportJpegCommand" 
-                                        Label="Jpeg"
-                                        Command="{Binding ImageExportJpegCommand}"/>
-                                    <input:StandardUICommand 
-                                        x:Key="ImageExportWebpCommand" 
-                                        Label="Webp"
-                                        Command="{Binding ImageExportWebpCommand}"/>
+                                        Label="{OnPlatform Default={x:Static lang:Resources.Action_OpenInExplorer},
+                                                           macOS={x:Static lang:Resources.Action_OpenInFinder}}" />
+                                    <input:StandardUICommand
+                                        x:Key="ImageExportPngWithMetadataCommand"
+                                        Command="{Binding ImageExportPngWithMetadataCommand}"
+                                        Label="Png with Metadata" />
+                                    <input:StandardUICommand
+                                        x:Key="ImageExportPngCommand"
+                                        Command="{Binding ImageExportPngCommand}"
+                                        Label="Png" />
+                                    <input:StandardUICommand
+                                        x:Key="ImageExportJpegCommand"
+                                        Command="{Binding ImageExportJpegCommand}"
+                                        Label="Jpeg" />
+                                    <input:StandardUICommand
+                                        x:Key="ImageExportWebpCommand"
+                                        Command="{Binding ImageExportWebpCommand}"
+                                        Label="Webp" />
                                 </ItemsRepeater.Resources>
-                                
+
                                 <ItemsRepeater.Layout>
                                     <!--<WrapLayout HorizontalSpacing="2" VerticalSpacing="2" />-->
                                     <UniformGridLayout
-                                        Orientation="Horizontal"
                                         MinColumnSpacing="2"
-                                        MinRowSpacing="2" />
+                                        MinRowSpacing="2"
+                                        Orientation="Horizontal" />
                                 </ItemsRepeater.Layout>
                                 <ItemsRepeater.ItemTemplate>
                                     <DataTemplate DataType="{x:Type dbModels:LocalImageFile}">
                                         <Button
-                                            ToolTip.Placement="LeftEdgeAlignedTop"
-                                            Command="{StaticResource ImageClickCommand}"
-                                            CommandParameter="{Binding $self.DataContext}"
-                                            HotKey="{x:Null}"
                                             Padding="4"
                                             Classes="transparent-full"
-                                            CornerRadius="8">
-                                            
+                                            Command="{StaticResource ImageClickCommand}"
+                                            CommandParameter="{Binding $self.DataContext}"
+                                            CornerRadius="8"
+                                            HotKey="{x:Null}"
+                                            ToolTip.Placement="LeftEdgeAlignedTop">
+
                                             <Interaction.Behaviors>
                                                 <BehaviorCollection>
-                                                    <ContextDragBehavior HorizontalDragThreshold="6" VerticalDragThreshold="6"/>
+                                                    <ContextDragBehavior HorizontalDragThreshold="6" VerticalDragThreshold="6" />
                                                 </BehaviorCollection>
                                             </Interaction.Behaviors>
-                                            
+
                                             <Button.ContextFlyout>
                                                 <ui:FAMenuFlyout>
-                                                    <ui:MenuFlyoutItem 
-                                                        HotKey="{x:Null}"
+                                                    <ui:MenuFlyoutItem
                                                         Command="{StaticResource ImageDeleteCommand}"
-                                                        CommandParameter="{Binding $self.DataContext}"/>
-                                                    <ui:MenuFlyoutItem 
-                                                        HotKey="{x:Null}"
+                                                        CommandParameter="{Binding $self.DataContext}"
+                                                        HotKey="{x:Null}" />
+                                                    <ui:MenuFlyoutItem
                                                         Command="{StaticResource ImageCopyCommand}"
-                                                        CommandParameter="{Binding $self.DataContext}"/>
-                                                    
-                                                    <ui:MenuFlyoutSeparator/>
-                                                    
-                                                    <ui:MenuFlyoutItem 
-                                                        HotKey="{x:Null}"
+                                                        CommandParameter="{Binding $self.DataContext}"
+                                                        HotKey="{x:Null}" />
+
+                                                    <ui:MenuFlyoutSeparator />
+
+                                                    <ui:MenuFlyoutItem
                                                         Command="{StaticResource ImageOpenCommand}"
-                                                        CommandParameter="{Binding $self.DataContext}"/>
-                                                    <ui:MenuFlyoutSubItem Text="Export" IconSource="Share">
-                                                        <ui:MenuFlyoutItem 
-                                                            HotKey="{x:Null}"
+                                                        CommandParameter="{Binding $self.DataContext}"
+                                                        HotKey="{x:Null}" />
+                                                    <ui:MenuFlyoutSubItem IconSource="Share" Text="Export">
+                                                        <ui:MenuFlyoutItem
                                                             Command="{StaticResource ImageExportPngWithMetadataCommand}"
-                                                            CommandParameter="{Binding $self.DataContext}"/>
+                                                            CommandParameter="{Binding $self.DataContext}"
+                                                            HotKey="{x:Null}" />
                                                         <ui:MenuFlyoutItem
-                                                            HotKey="{x:Null}"
                                                             Command="{StaticResource ImageExportPngCommand}"
-                                                            CommandParameter="{Binding $self.DataContext}"/>
+                                                            CommandParameter="{Binding $self.DataContext}"
+                                                            HotKey="{x:Null}" />
                                                         <ui:MenuFlyoutItem
-                                                            HotKey="{x:Null}"
                                                             Command="{StaticResource ImageExportJpegCommand}"
-                                                            CommandParameter="{Binding $self.DataContext}"/>
+                                                            CommandParameter="{Binding $self.DataContext}"
+                                                            HotKey="{x:Null}" />
                                                         <ui:MenuFlyoutItem
-                                                            HotKey="{x:Null}"
                                                             Command="{StaticResource ImageExportWebpCommand}"
-                                                            CommandParameter="{Binding $self.DataContext}"/>
+                                                            CommandParameter="{Binding $self.DataContext}"
+                                                            HotKey="{x:Null}" />
                                                     </ui:MenuFlyoutSubItem>
                                                 </ui:FAMenuFlyout>
                                             </Button.ContextFlyout>
-                                            
+
                                             <ToolTip.Tip>
-                                                <TextBlock Text="{Binding GenerationParameters.PositivePrompt}"/>
+                                                <StackPanel Spacing="4">
+                                                    <StackPanel.Styles>
+                                                        <Style Selector="StackPanel > TextBlock">
+                                                            <Setter Property="Theme" Value="{DynamicResource BodyTextBlockStyle}"/>
+                                                        </Style>
+                                                        <Style Selector="SelectableTextBlock">
+                                                            <Setter Property="FontSize" Value="13"/>
+                                                            <Setter Property="FontFamily" Value="Cascadia Code,Consolas,Menlo,Monospace"/>
+                                                        </Style>
+                                                        <Style Selector="controls|Card">
+                                                            <Setter Property="Padding" Value="4,4" />
+                                                        </Style>
+                                                    </StackPanel.Styles>
+                                                    
+                                                    <TextBlock Text="{Binding FileName}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+
+                                                    <controls:Card>
+                                                        <SelectableTextBlock Text="{Binding GenerationParameters.PositivePrompt, FallbackValue=''}" />
+                                                    </controls:Card>
+
+                                                    <controls:Card>
+                                                        <SelectableTextBlock Text="{Binding GenerationParameters.NegativePrompt, FallbackValue=''}" />
+                                                    </controls:Card>
+
+                                                    <TextBlock Text="{Binding GenerationParameters.ModelName, FallbackValue=''}" />
+                                                    <TextBlock Text="{Binding GenerationParameters.Sampler, FallbackValue=''}" />
+                                                    <TextBlock Text="{Binding GenerationParameters.Seed, FallbackValue=''}" />
+                                                </StackPanel>
                                             </ToolTip.Tip>
-                                            
+
                                             <Border ClipToBounds="True" CornerRadius="8">
                                                 <Grid RowDefinitions="*,Auto">
                                                     <controls:BetterAdvancedImage
@@ -188,18 +205,18 @@
                                                         StretchDirection="Both" />
 
                                                     <Border
-                                                        MaxWidth="150"
                                                         Grid.Row="1"
-                                                        Classes="theme-dark"
                                                         MinHeight="20"
+                                                        MaxWidth="150"
                                                         Padding="4,0,0,0"
                                                         VerticalAlignment="Bottom"
+                                                        Classes="theme-dark"
                                                         Opacity="0.9">
-                                                        <TextBlock 
-                                                            FontSize="12"
+                                                        <TextBlock
                                                             VerticalAlignment="Center"
-                                                            TextTrimming="CharacterEllipsis"
-                                                            Text="{Binding FileNameWithoutExtension}"/>
+                                                            FontSize="12"
+                                                            Text="{Binding FileNameWithoutExtension}"
+                                                            TextTrimming="CharacterEllipsis" />
                                                     </Border>
                                                 </Grid>
                                             </Border>

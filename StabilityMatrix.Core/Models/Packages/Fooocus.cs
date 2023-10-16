@@ -103,14 +103,6 @@ public class Fooocus : BaseGitPackage
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        await base.InstallPackage(
-            installLocation,
-            torchVersion,
-            versionOptions,
-            progress,
-            onConsoleOutput
-        )
-            .ConfigureAwait(false);
         var venvRunner = await SetupVenv(installLocation, forceRecreate: true)
             .ConfigureAwait(false);
 

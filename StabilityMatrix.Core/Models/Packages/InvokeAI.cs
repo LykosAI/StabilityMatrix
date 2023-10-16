@@ -155,7 +155,10 @@ public class InvokeAI : BaseGitPackage
         // Setup venv
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
-        await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
+        var venvPath = Path.Combine(installLocation, "venv");
+        var exists = Directory.Exists(venvPath);
+
+        await using var venvRunner = new PyVenvRunner(venvPath);
         venvRunner.WorkingDirectory = installLocation;
         await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
@@ -190,7 +193,9 @@ public class InvokeAI : BaseGitPackage
                 break;
         }
 
-        await venvRunner.PipInstall(pipCommandArgs, onConsoleOutput).ConfigureAwait(false);
+        await venvRunner
+            .PipInstall($"{pipCommandArgs}{(exists ? " --upgrade" : "")}", onConsoleOutput)
+            .ConfigureAwait(false);
 
         await venvRunner
             .PipInstall("rich packaging python-dotenv", onConsoleOutput)

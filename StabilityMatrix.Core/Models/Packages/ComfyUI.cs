@@ -156,15 +156,6 @@ public class ComfyUI : BaseGitPackage
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        await base.InstallPackage(
-            installLocation,
-            torchVersion,
-            versionOptions,
-            progress,
-            onConsoleOutput
-        )
-            .ConfigureAwait(false);
-
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));

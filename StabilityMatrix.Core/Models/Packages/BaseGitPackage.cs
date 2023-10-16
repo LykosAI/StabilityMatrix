@@ -209,17 +209,6 @@ public abstract class BaseGitPackage : BasePackage
         progress?.Report(new ProgressReport(100, message: "Download Complete"));
     }
 
-    public override Task InstallPackage(
-        string installLocation,
-        TorchVersion torchVersion,
-        DownloadPackageVersionOptions versionOptions,
-        IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
-    )
-    {
-        return Task.CompletedTask;
-    }
-
     protected Task UnzipPackage(string installLocation, IProgress<ProgressReport>? progress = null)
     {
         using var zip = ZipFile.OpenRead(DownloadLocation);

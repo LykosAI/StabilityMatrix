@@ -151,15 +151,6 @@ public class VoltaML : BaseGitPackage
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        await base.InstallPackage(
-            installLocation,
-            torchVersion,
-            versionOptions,
-            progress,
-            onConsoleOutput
-        )
-            .ConfigureAwait(false);
-
         // Setup venv
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));

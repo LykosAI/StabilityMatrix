@@ -52,6 +52,7 @@ using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
@@ -338,6 +339,10 @@ public sealed class App : Application
         services.AddTransient<SharpenCardViewModel>();
         services.AddTransient<FreeUCardViewModel>();
 
+        // Inference modules
+        services.AddTransient<UpscalerModule>();
+        services.AddTransient<HiresFixModule>();
+
         // Dialog factory
         services.AddSingleton<ServiceManager<ViewModelBase>>(
             provider =>
@@ -377,6 +382,8 @@ public sealed class App : Application
                     .Register(provider.GetRequiredService<SharpenCardViewModel>)
                     .Register(provider.GetRequiredService<DownloadResourceViewModel>)
                     .Register(provider.GetRequiredService<FreeUCardViewModel>)
+                    .Register(provider.GetRequiredService<UpscalerModule>)
+                    .Register(provider.GetRequiredService<HiresFixModule>)
         );
     }
 

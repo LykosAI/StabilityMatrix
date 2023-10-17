@@ -600,6 +600,7 @@ The gallery images are often inpainted, but you will get something very similar 
         {
             vm.Title = "Hires Fix";
             vm.AddCards(UpscalerCardViewModel, SamplerCardViewModel);
+            vm.OnContainerIndexChanged(0);
         });
 
     public static UpscalerCardViewModel UpscalerCardViewModel =>

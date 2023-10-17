@@ -22,11 +22,20 @@ public partial class StackExpanderViewModel : StackViewModelBase
     private string? title;
 
     [ObservableProperty]
+    [property: JsonIgnore]
+    private string? titleExtra;
+
+    [ObservableProperty]
     private bool isEnabled;
 
     /// <inheritdoc />
     public StackExpanderViewModel(ServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory) { }
+
+    public override void OnContainerIndexChanged(int value)
+    {
+        TitleExtra = $"{value + 1}.";
+    }
 
     /// <inheritdoc />
     public override void LoadStateFromJsonObject(JsonObject state)

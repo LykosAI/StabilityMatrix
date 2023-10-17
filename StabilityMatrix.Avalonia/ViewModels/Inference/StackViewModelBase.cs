@@ -21,7 +21,22 @@ public abstract class StackViewModelBase : LoadableViewModelBase
     protected StackViewModelBase(ServiceManager<ViewModelBase> vmFactory)
     {
         this.vmFactory = vmFactory;
+
+        Cards.CollectionChanged += (sender, args) =>
+        {
+            if (args.NewItems != null)
+            {
+                var itemIndex = args.NewStartingIndex;
+                foreach (var item in args.NewItems.OfType<StackViewModelBase>())
+                {
+                    item.OnContainerIndexChanged(itemIndex);
+                    itemIndex++;
+                }
+            }
+        };
     }
+
+    public virtual void OnContainerIndexChanged(int value) { }
 
     public void AddCards(params LoadableViewModelBase[] cards)
     {

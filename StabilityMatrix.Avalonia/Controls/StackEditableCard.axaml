@@ -4,6 +4,9 @@
         xmlns:local="clr-namespace:StabilityMatrix.Avalonia"
         xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
         xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+        xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+        xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+        xmlns:modules="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference.Modules"
         x:DataType="vmInference:StackEditableCardViewModel">
     
     <Design.PreviewWith>
@@ -12,38 +15,68 @@
                 DataContext="{x:Static mocks:DesignData.StackEditableCardViewModel}"/>
         </Grid>
     </Design.PreviewWith>
-
+    
     <!-- Like StackCard but draggable items -->
     <Style Selector="controls|StackEditableCard">
         <Setter Property="Template">
             <ControlTemplate>
                 <ScrollViewer>
-                    <!-- ReSharper disable once Xaml.StyleClassNotFound -->
-                    <ListBox 
-                        Classes="draggableVirtualizing"
-                        ItemContainerTheme="{StaticResource DraggableListBoxItemTheme}"
-                        ItemsSource="{Binding Cards}">
+                    <Grid RowDefinitions="Auto,*">
+                        <controls:Card Margin="0,0,0,3" Padding="14,4">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Text="Steps" VerticalAlignment="Center"/>
+                                <Button Grid.Column="1"
+                                        VerticalAlignment="Bottom"
+                                        CornerRadius="4"
+                                        Padding="4" >
+                                    <fluentIcons:SymbolIcon Symbol="Add" IsFilled="True" />
+                                    <Button.Flyout>
+                                        <ui:FAMenuFlyout>
+                                            <ui:MenuFlyoutItem Text="FreeU" />
+                                            <ui:MenuFlyoutItem 
+                                                Text="Hires Fix" 
+                                                Command="{Binding AddModuleCommand}"
+                                                CommandParameter="{x:Type modules:HiresFixModule}"/>
+                                            <ui:MenuFlyoutItem 
+                                                Text="Upscaler"
+                                                Command="{Binding AddModuleCommand}"
+                                                CommandParameter="{x:Type modules:UpscalerModule}"/>
+                                            <ui:MenuFlyoutItem Text="ControlNet"/>
+                                        </ui:FAMenuFlyout>
+                                    </Button.Flyout>
+                                </Button>
+                            </Grid>
+
+                        </controls:Card>
                         
-                        <ListBox.DataTemplates>
-                            <local:ViewLocator/>
-                        </ListBox.DataTemplates>
+                        <!-- ReSharper disable once Xaml.StyleClassNotFound -->
+                        <ListBox
+                            Name="PART_ListBox"
+                            Grid.Row="1"
+                            Classes="draggableVirtualizing"
+                            ItemContainerTheme="{StaticResource DraggableListBoxItemTheme}"
+                            ItemsSource="{Binding Cards}">
                         
-                        <ListBox.Styles>
-                            <!--<Style Selector="ListBoxItem > TextBlock">
+                            <ListBox.DataTemplates>
+                                <local:ViewLocator/>
+                            </ListBox.DataTemplates>
+                        
+                            <ListBox.Styles>
+                                <!--<Style Selector="ListBoxItem > TextBlock">
                                 <Setter Property="HorizontalAlignment" Value="Left" />
                             </Style>-->
-                            <Style Selector="ListBoxItem:not(:dragging)">
-                                <Setter Property="Transitions">
-                                    <Setter.Value>
-                                        <Transitions>
-                                            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
-                                        </Transitions>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </ListBox.Styles>
+                                <Style Selector="ListBoxItem:not(:dragging)">
+                                    <Setter Property="Transitions">
+                                        <Setter.Value>
+                                            <Transitions>
+                                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+                                            </Transitions>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.Styles>
                         
-                        <!--<ListBox.ItemsPanel>
+                            <!--<ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <StackPanel 
                                     VerticalAlignment="Top"
@@ -52,7 +85,10 @@
                             </ItemsPanelTemplate>
                         </ListBox.ItemsPanel>-->
                         
-                    </ListBox>
+                        </ListBox>
+                    </Grid>
+
+
                 </ScrollViewer>
             </ControlTemplate>
         </Setter>

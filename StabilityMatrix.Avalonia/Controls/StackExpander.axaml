@@ -25,18 +25,23 @@
                     VerticalAlignment="{TemplateBinding VerticalAlignment}">
                     
                     <Expander.Header>
-                        <StackPanel Orientation="Horizontal">
+                        <Grid ColumnDefinitions="*,Auto,Auto">
                             <ToggleSwitch
                                 Margin="2,0,0,2"
                                 IsChecked="{Binding IsEnabled}"
                                 VerticalContentAlignment="Center"
                                 OnContent="" 
                                 OffContent=""/>     
+                            <TextBlock
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Text="{Binding TitleExtra}"
+                                IsVisible="{Binding TitleExtra, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                             <TextBlock 
+                                Grid.Column="2"
                                 VerticalAlignment="Center"
                                 Text="{Binding Title}"/>
-                        </StackPanel>
-
+                        </Grid>
                     </Expander.Header>
                     
                     <ItemsControl 

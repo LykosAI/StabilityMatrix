@@ -8,7 +8,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
-public class HiresFixModule : StackExpanderViewModel, IComfyStep
+public class HiresFixModule : ModuleBase
 {
     /// <inheritdoc />
     public HiresFixModule(ServiceManager<ViewModelBase> vmFactory)
@@ -25,7 +25,7 @@ public class HiresFixModule : StackExpanderViewModel, IComfyStep
     }
 
     /// <inheritdoc />
-    public void ApplyStep(ModuleApplyStepEventArgs e)
+    protected override void OnApplyStep(ModuleApplyStepEventArgs e)
     {
         var builder = e.Builder;
 

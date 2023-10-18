@@ -14,6 +14,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -40,6 +41,9 @@ public class InferenceTextToImageViewModel
 
     [JsonIgnore]
     public StackCardViewModel StackCardViewModel { get; }
+
+    [JsonPropertyName("Modules")]
+    public StackEditableCardViewModel ModulesCardViewModel { get; }
 
     [JsonPropertyName("Model")]
     public ModelCardViewModel ModelCardViewModel { get; }
@@ -68,7 +72,11 @@ public class InferenceTextToImageViewModel
     [JsonPropertyName("Seed")]
     public SeedCardViewModel SeedCardViewModel { get; }
 
-    public bool IsFreeUEnabled
+    public bool IsFreeUEnabled => false;
+    public bool IsHiresFixEnabled => false;
+    public bool IsUpscaleEnabled => false;
+
+    /*public bool IsFreeUEnabled
     {
         get => StackCardViewModel.GetCard<StackExpanderViewModel>().IsEnabled;
         set => StackCardViewModel.GetCard<StackExpanderViewModel>().IsEnabled = value;
@@ -84,7 +92,7 @@ public class InferenceTextToImageViewModel
     {
         get => StackCardViewModel.GetCard<StackExpanderViewModel>(2).IsEnabled;
         set => StackCardViewModel.GetCard<StackExpanderViewModel>(2).IsEnabled = value;
-    }
+    }*/
 
     public InferenceTextToImageViewModel(
         INotificationService notificationService,
@@ -123,14 +131,21 @@ public class InferenceTextToImageViewModel
         FreeUCardViewModel = vmFactory.Get<FreeUCardViewModel>();
         BatchSizeCardViewModel = vmFactory.Get<BatchSizeCardViewModel>();
 
-        StackCardViewModel = vmFactory.Get<StackCardViewModel>();
+        ModulesCardViewModel = vmFactory.Get<StackEditableCardViewModel>(modulesCard =>
+        {
+            modulesCard.AvailableModules = new[] { typeof(HiresFixModule), typeof(UpscalerModule) };
+            modulesCard.DefaultModules = modulesCard.AvailableModules;
+            modulesCard.InitializeDefaults();
+        });
 
+        StackCardViewModel = vmFactory.Get<StackCardViewModel>();
         StackCardViewModel.AddCards(
             new LoadableViewModelBase[]
             {
                 ModelCardViewModel,
                 SamplerCardViewModel,
-                // Free U
+                ModulesCardViewModel,
+                /*// Free U
                 vmFactory.Get<StackExpanderViewModel>(stackExpander =>
                 {
                     stackExpander.Title = "FreeU";
@@ -152,7 +167,7 @@ public class InferenceTextToImageViewModel
                 {
                     stackExpander.Title = "Upscale";
                     stackExpander.AddCards(new LoadableViewModelBase[] { UpscalerCardViewModel });
-                }),
+                }),*/
                 SeedCardViewModel,
                 BatchSizeCardViewModel,
             }

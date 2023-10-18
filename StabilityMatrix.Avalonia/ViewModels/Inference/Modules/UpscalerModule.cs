@@ -1,5 +1,4 @@
 ﻿using System;
-using AvaloniaEdit.Utils;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;

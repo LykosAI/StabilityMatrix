@@ -62,7 +62,7 @@ public static class ComfyNodeBuilderExtensions
         var checkpointLoader = builder.Nodes.AddNamedNode(
             ComfyNodeBuilder.CheckpointLoaderSimple(
                 "CheckpointLoader",
-                modelCardViewModel.SelectedModelName
+                modelCardViewModel.SelectedModel?.FileName
                     ?? throw new NullReferenceException("Model not selected")
             )
         );

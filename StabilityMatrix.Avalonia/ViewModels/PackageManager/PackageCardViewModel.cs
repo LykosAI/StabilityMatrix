@@ -205,6 +205,10 @@ public partial class PackageCardViewModel : ProgressViewModel
 
                 EventManager.Instance.OnInstalledPackagesChanged();
             }
+
+            Text = "";
+            IsIndeterminate = false;
+            Value = 0;
         }
     }
 

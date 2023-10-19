@@ -5,6 +5,12 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.5.5
+### Added
+- Added Spanish UI language options, thanks to Carlos Baena and Lautaroturina for the translations
+### Fixed
+- Fixed infinite progress wheel when package uninstall fails
+
 ## v2.5.4
 ### Fixed
 - Fixed [#208](https://github.com/LykosAI/StabilityMatrix/issues/208) - error when installing xformers

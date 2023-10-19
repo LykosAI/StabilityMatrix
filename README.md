@@ -59,7 +59,7 @@ Multi-Platform Package Manager for Stable Diffusion
 - Drag and drop gallery images or files to load states
 
 <p align="center">
-  <img style="width: 80%; height: 80%" src="https://github.com/LykosAI/StabilityMatrix/assets/13956642/c61e51f2-0eca-4277-abeb-0a5584fe8668" alt=""/>
+  <img style="width: 80%; height: 80%" src="https://github.com/LykosAI/StabilityMatrix/assets/13956642/4341cc34-a584-4e9c-bb3b-276009bdae80" alt=""/>
 </p>
 
 ### Searchable launch options

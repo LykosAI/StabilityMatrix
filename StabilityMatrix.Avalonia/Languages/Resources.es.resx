@@ -1,0 +1,683 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Action_Launch" xml:space="preserve">
+    <value>Iniciar</value>
+  </data>
+  <data name="Action_Quit" xml:space="preserve">
+    <value>Salir</value>
+  </data>
+  <data name="Action_Save" xml:space="preserve">
+    <value>Guardar</value>
+  </data>
+  <data name="Action_Cancel" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="Label_Language" xml:space="preserve">
+    <value>Idioma</value>
+  </data>
+  <data name="Text_RelaunchRequiredToApplyLanguage" xml:space="preserve">
+    <value>Es necesario reiniciar para que la nueva opción de idioma surta efecto</value>
+  </data>
+  <data name="Action_Relaunch" xml:space="preserve">
+    <value>Reiniciar</value>
+  </data>
+  <data name="Action_RelaunchLater" xml:space="preserve">
+    <value>Reiniciar Luego</value>
+  </data>
+  <data name="Label_RelaunchRequired" xml:space="preserve">
+    <value>Reinicio Necesario</value>
+  </data>
+  <data name="Label_UnknownPackage" xml:space="preserve">
+    <value>Paquete Desconocido</value>
+  </data>
+  <data name="Action_Import" xml:space="preserve">
+    <value>Importar</value>
+  </data>
+  <data name="Label_PackageType" xml:space="preserve">
+    <value>Tipo de Paquete</value>
+  </data>
+  <data name="Label_Version" xml:space="preserve">
+    <value>Versión</value>
+  </data>
+  <data name="Label_VersionType" xml:space="preserve">
+    <value>Tipo de Versión</value>
+  </data>
+  <data name="Label_Releases" xml:space="preserve">
+    <value>Lanzamientos</value>
+  </data>
+  <data name="Label_Branches" xml:space="preserve">
+    <value>Ramas</value>
+  </data>
+  <data name="Label_DragAndDropCheckpointsHereToImport" xml:space="preserve">
+    <value>Arrastra y Suelta los checkpoints aquí para importarlos</value>
+  </data>
+  <data name="Label_Emphasis" xml:space="preserve">
+    <value>Intensificar</value>
+  </data>
+  <data name="Label_Deemphasis" xml:space="preserve">
+    <value>Suavizar</value>
+  </data>
+  <data name="Label_EmbeddingsOrTextualInversion" xml:space="preserve">
+    <value>Incrustaciones / Inversión Textual</value>
+  </data>
+  <data name="Label_NetworksLoraOrLycoris" xml:space="preserve">
+    <value>Redes (LoRa / LyCORIS)</value>
+  </data>
+  <data name="Label_Comments" xml:space="preserve">
+    <value>Comentarios</value>
+  </data>
+  <data name="Label_ShowPixelGridAtHighZoomLevels" xml:space="preserve">
+    <value>Mostrar cuadrícula de píxeles en niveles altos de zoom</value>
+  </data>
+  <data name="Label_Steps" xml:space="preserve">
+    <value>Pasos</value>
+  </data>
+  <data name="Label_StepsBase" xml:space="preserve">
+    <value>Pasos - Base</value>
+  </data>
+  <data name="Label_StepsRefiner" xml:space="preserve">
+    <value>Pasos - Refinador</value>
+  </data>
+  <data name="Label_CFGScale" xml:space="preserve">
+    <value>Escala CFG</value>
+  </data>
+  <data name="Label_DenoisingStrength" xml:space="preserve">
+    <value>Fuerza de Atenuación de Ruido</value>
+  </data>
+  <data name="Label_Width" xml:space="preserve">
+    <value>Ancho</value>
+  </data>
+  <data name="Label_Height" xml:space="preserve">
+    <value>Alto</value>
+  </data>
+  <data name="Label_Refiner" xml:space="preserve">
+    <value>Refinador</value>
+  </data>
+  <data name="Label_VAE" xml:space="preserve">
+    <value>VAE</value>
+  </data>
+  <data name="Label_Model" xml:space="preserve">
+    <value>Modelo</value>
+  </data>
+  <data name="Action_Connect" xml:space="preserve">
+    <value>Conectar</value>
+  </data>
+  <data name="Label_ConnectingEllipsis" xml:space="preserve">
+    <value>Conectando...</value>
+  </data>
+  <data name="Action_Close" xml:space="preserve">
+    <value>Cerrar</value>
+  </data>
+  <data name="Label_WaitingToConnectEllipsis" xml:space="preserve">
+    <value>Esperando conexión...</value>
+  </data>
+  <data name="Label_UpdateAvailable" xml:space="preserve">
+    <value>Actualización disponible</value>
+  </data>
+  <data name="Label_BecomeAPatron" xml:space="preserve">
+    <value>Conviértete en Patrocinador</value>
+  </data>
+  <data name="Label_JoinDiscord" xml:space="preserve">
+    <value>Únete al Servidor de Discord</value>
+  </data>
+  <data name="Label_Downloads" xml:space="preserve">
+    <value>Descargas</value>
+  </data>
+  <data name="Action_Install" xml:space="preserve">
+    <value>Instalar</value>
+  </data>
+  <data name="Label_SkipSetup" xml:space="preserve">
+    <value>Saltar configuración inicial</value>
+  </data>
+  <data name="Label_UnexpectedErrorOccurred" xml:space="preserve">
+    <value>Ha ocurrido un error inesperado</value>
+  </data>
+  <data name="Action_ExitApplication" xml:space="preserve">
+    <value>Salir de la Aplicación</value>
+  </data>
+  <data name="Label_DisplayName" xml:space="preserve">
+    <value>Mostrar Nombre</value>
+  </data>
+  <data name="Label_InstallationWithThisNameExists" xml:space="preserve">
+    <value>Ya existe una instalación con este nombre.</value>
+  </data>
+  <data name="Label_PleaseChooseDifferentName" xml:space="preserve">
+    <value>Por favor, elige un nombre diferente o selecciona otra ubicación para la instalación.</value>
+  </data>
+  <data name="Label_AdvancedOptions" xml:space="preserve">
+    <value>Opciones Avanzadas</value>
+  </data>
+  <data name="Label_Commit" xml:space="preserve">
+    <value>Commit</value>
+  </data>
+  <data name="Label_SharedModelFolderStrategy" xml:space="preserve">
+    <value>Estrategia de Carpeta de Modelo Compartida</value>
+  </data>
+  <data name="Label_PyTorchVersion" xml:space="preserve">
+    <value>Versión de PyTorch</value>
+  </data>
+  <data name="Label_CloseDialogWhenFinished" xml:space="preserve">
+    <value>Cerrar cuadro de diálogo al finalizar</value>
+  </data>
+  <data name="Label_DataDirectory" xml:space="preserve">
+    <value>Directorio de datos</value>
+  </data>
+  <data name="Label_DataDirectoryExplanation" xml:space="preserve">
+    <value>Aquí es donde se instalarán los checkpoints, LORAs, interfaces web de usuario, configuraciones, etc.</value>
+  </data>
+  <data name="Label_FatWarning" xml:space="preserve">
+    <value>Puedes encontrar errores al usar una unidad FAT32 o exFAT. Selecciona una unidad diferente para una experiencia más fluida.</value>
+  </data>
+  <data name="Label_PortableMode" xml:space="preserve">
+    <value>Modo Portátil</value>
+  </data>
+  <data name="Label_PortableModeExplanation" xml:space="preserve">
+    <value>En el Modo Portátil, todos los datos y configuraciones se almacenarán en el mismo directorio que la aplicación. Podrás mover la aplicación con su carpeta &apos;Data&apos; a una ubicación o computadora diferente.</value>
+  </data>
+  <data name="Action_Continue" xml:space="preserve">
+    <value>Continuar</value>
+  </data>
+  <data name="Label_PreviousImage" xml:space="preserve">
+    <value>Imagen Anterior</value>
+  </data>
+  <data name="Label_NextImage" xml:space="preserve">
+    <value>Imagen Siguiente</value>
+  </data>
+  <data name="Label_ModelDescription" xml:space="preserve">
+    <value>Descripción del Modelo</value>
+  </data>
+  <data name="Label_NewVersionAvailable" xml:space="preserve">
+    <value>¡Hay disponible una nueva versión de Stability Matrix!</value>
+  </data>
+  <data name="Label_ImportLatest" xml:space="preserve">
+    <value>Importar el más Reciente -</value>
+  </data>
+  <data name="Label_AllVersions" xml:space="preserve">
+    <value>Todas las Versiones</value>
+  </data>
+  <data name="Label_ModelSearchWatermark" xml:space="preserve">
+    <value>Buscar modelos, #etiquetas o @usuarios</value>
+  </data>
+  <data name="Action_Search" xml:space="preserve">
+    <value>Buscar</value>
+  </data>
+  <data name="Label_Sort" xml:space="preserve">
+    <value>Tipos</value>
+  </data>
+  <data name="Label_TimePeriod" xml:space="preserve">
+    <value>Período</value>
+  </data>
+  <data name="Label_ModelType" xml:space="preserve">
+    <value>Tipo de Modelo</value>
+  </data>
+  <data name="Label_BaseModel" xml:space="preserve">
+    <value>Modelo Base</value>
+  </data>
+  <data name="Label_ShowNsfwContent" xml:space="preserve">
+    <value>Mostrar Contenido NSFW (Adulto)</value>
+  </data>
+  <data name="Label_DataProvidedByCivitAi" xml:space="preserve">
+    <value>Datos proporcionados por CivitAI</value>
+  </data>
+  <data name="Label_Page" xml:space="preserve">
+    <value>Página</value>
+  </data>
+  <data name="Label_FirstPage" xml:space="preserve">
+    <value>Primera Página</value>
+  </data>
+  <data name="Label_PreviousPage" xml:space="preserve">
+    <value>Página Anterior</value>
+  </data>
+  <data name="Label_NextPage" xml:space="preserve">
+    <value>Página Siguiente</value>
+  </data>
+  <data name="Label_LastPage" xml:space="preserve">
+    <value>Última Página</value>
+  </data>
+  <data name="Action_Rename" xml:space="preserve">
+    <value>Renombrar</value>
+  </data>
+  <data name="Action_Delete" xml:space="preserve">
+    <value>Eliminar</value>
+  </data>
+  <data name="Action_OpenOnCivitAi" xml:space="preserve">
+    <value>Abrir en CivitAI</value>
+  </data>
+  <data name="Label_ConnectedModel" xml:space="preserve">
+    <value>Modelo Conectado</value>
+  </data>
+  <data name="Label_LocalModel" xml:space="preserve">
+    <value>Modelo Local</value>
+  </data>
+  <data name="Action_ShowInExplorer" xml:space="preserve">
+    <value>Mostrar en el Explorador</value>
+  </data>
+  <data name="Action_New" xml:space="preserve">
+    <value>Nuevo</value>
+  </data>
+  <data name="Label_Folder" xml:space="preserve">
+    <value>Carpeta</value>
+  </data>
+  <data name="Label_DropFileToImport" xml:space="preserve">
+    <value>Suelta el archivo aquí para importar</value>
+  </data>
+  <data name="Label_ImportAsConnected" xml:space="preserve">
+    <value>Importar como Conectado</value>
+  </data>
+  <data name="Label_ImportAsConnectedExplanation" xml:space="preserve">
+    <value>Buscar metadatos conectados en las nuevas importaciones locales</value>
+  </data>
+  <data name="Label_Indexing" xml:space="preserve">
+    <value>Indexando...</value>
+  </data>
+  <data name="Label_ModelsFolder" xml:space="preserve">
+    <value>Carpeta de Modelos</value>
+  </data>
+  <data name="Label_Categories" xml:space="preserve">
+    <value>Categorías</value>
+  </data>
+  <data name="Label_LetsGetStarted" xml:space="preserve">
+    <value>Comencemos</value>
+  </data>
+  <data name="Label_ReadAndAgree" xml:space="preserve">
+    <value>He leído y acepto el</value>
+  </data>
+  <data name="Label_LicenseAgreement" xml:space="preserve">
+    <value>Acuerdo de Licencia.</value>
+  </data>
+  <data name="Label_FindConnectedMetadata" xml:space="preserve">
+    <value>Buscar Metadatos Conectados</value>
+  </data>
+  <data name="Label_ShowModelImages" xml:space="preserve">
+    <value>Mostrar Imágenes del Modelo</value>
+  </data>
+  <data name="Label_Appearance" xml:space="preserve">
+    <value>Apariencia</value>
+  </data>
+  <data name="Label_Theme" xml:space="preserve">
+    <value>Tema</value>
+  </data>
+  <data name="Label_CheckpointManager" xml:space="preserve">
+    <value>Gestor de Checkpoint</value>
+    <comment>The word &apos;Checkpoint&apos; should not be translated into Spanish, because the community uses this word in English</comment>
+  </data>
+  <data name="Label_RemoveSymlinksOnShutdown" xml:space="preserve">
+    <value>Eliminar enlaces simbólicos del directorio de checkpoints compartidos al apagar</value>
+  </data>
+  <data name="Label_RemoveSymlinksOnShutdown_Details" xml:space="preserve">
+    <value>Selecciona esta opción si tienes problemas al mover Stability Matrix a otro disco</value>
+  </data>
+  <data name="Label_ResetCheckpointsCache" xml:space="preserve">
+    <value>Restablecer Caché de Checkpoints</value>
+  </data>
+  <data name="Label_ResetCheckpointsCache_Details" xml:space="preserve">
+    <value>Reconstruye la caché de Checkpoints instalados. Úsalo si los Checkpoints tienen etiquetas incorrectas en el Explorador de Modelos</value>
+  </data>
+  <data name="Label_PackageEnvironment" xml:space="preserve">
+    <value>Entorno del Paquete</value>
+  </data>
+  <data name="Action_Edit" xml:space="preserve">
+    <value>Editar</value>
+  </data>
+  <data name="Label_EnvironmentVariables" xml:space="preserve">
+    <value>Variables del Entorno</value>
+  </data>
+  <data name="Label_EmbeddedPython" xml:space="preserve">
+    <value>Python Incorporado</value>
+  </data>
+  <data name="Action_CheckVersion" xml:space="preserve">
+    <value>Comprobar Versión</value>
+  </data>
+  <data name="Label_Integrations" xml:space="preserve">
+    <value>Integraciones</value>
+  </data>
+  <data name="Label_DiscordRichPresence" xml:space="preserve">
+    <value>Discord Rich Presence</value>
+  </data>
+  <data name="Label_System" xml:space="preserve">
+    <value>Sistema</value>
+  </data>
+  <data name="Label_AddToStartMenu" xml:space="preserve">
+    <value>Agregar Stability Matrix al Menú de Inicio</value>
+  </data>
+  <data name="Label_AddToStartMenu_Details" xml:space="preserve">
+    <value>Usa la ubicación actual de la aplicación, puedes ejecutarla nuevamente si mueves la aplicación</value>
+  </data>
+  <data name="Label_OnlyAvailableOnWindows" xml:space="preserve">
+    <value>Disponible solo en Windows</value>
+  </data>
+  <data name="Action_AddForCurrentUser" xml:space="preserve">
+    <value>Agregar para el Usuario Actual</value>
+  </data>
+  <data name="Action_AddForAllUsers" xml:space="preserve">
+    <value>Agregar para Todos los Usuarios</value>
+  </data>
+  <data name="Label_SelectNewDataDirectory" xml:space="preserve">
+    <value>Seleccionar Nuevo Directorio de Datos</value>
+  </data>
+  <data name="Label_SelectNewDataDirectory_Details" xml:space="preserve">
+    <value>No mueve los datos existentes</value>
+  </data>
+  <data name="Action_SelectDirectory" xml:space="preserve">
+    <value>Seleccionar Directorio</value>
+  </data>
+  <data name="Label_About" xml:space="preserve">
+    <value>Acerca de</value>
+  </data>
+  <data name="Label_StabilityMatrix" xml:space="preserve">
+    <value>Stability Matrix</value>
+  </data>
+  <data name="Label_LicenseAndOpenSourceNotices" xml:space="preserve">
+    <value>Licencia y Avisos de Código Abierto</value>
+  </data>
+  <data name="TeachingTip_ClickLaunchToGetStarted" xml:space="preserve">
+    <value>¡Pulsa Iniciar para comenzar!</value>
+  </data>
+  <data name="Action_Stop" xml:space="preserve">
+    <value>Detener</value>
+  </data>
+  <data name="Action_SendInput" xml:space="preserve">
+    <value>Enviar Entrada</value>
+  </data>
+  <data name="Label_Input" xml:space="preserve">
+    <value>Entrada</value>
+  </data>
+  <data name="Action_Send" xml:space="preserve">
+    <value>Enviar</value>
+  </data>
+  <data name="Label_InputRequired" xml:space="preserve">
+    <value>Entrada requerida</value>
+  </data>
+  <data name="Label_ConfirmQuestion" xml:space="preserve">
+    <value>¿Confirmar?</value>
+  </data>
+  <data name="Action_Yes" xml:space="preserve">
+    <value>Sí</value>
+  </data>
+  <data name="Label_No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Action_OpenWebUI" xml:space="preserve">
+    <value>Abrir Interfaz de Usuario Web</value>
+  </data>
+  <data name="Text_WelcomeToStabilityMatrix" xml:space="preserve">
+    <value>¡Bienvenido a Stability Matrix!</value>
+  </data>
+  <data name="Text_OneClickInstaller_SubHeader" xml:space="preserve">
+    <value>Elige tu interfaz preferida y pulsa Instalar para comenzar</value>
+  </data>
+  <data name="Label_Installing" xml:space="preserve">
+    <value>Instalando</value>
+  </data>
+  <data name="Text_ProceedingToLaunchPage" xml:space="preserve">
+    <value>Entrando a página de Inicio</value>
+  </data>
+  <data name="Progress_DownloadingPackage" xml:space="preserve">
+    <value>Descargando paquete...</value>
+  </data>
+  <data name="Progress_DownloadComplete" xml:space="preserve">
+    <value>Descarga completada</value>
+  </data>
+  <data name="Progress_InstallationComplete" xml:space="preserve">
+    <value>Instalación completada</value>
+  </data>
+  <data name="Progress_InstallingPrerequisites" xml:space="preserve">
+    <value>Instalando prerrequisitos...</value>
+  </data>
+  <data name="Progress_InstallingPackageRequirements" xml:space="preserve">
+    <value>Instalando requisitos del paquete...</value>
+  </data>
+  <data name="Action_OpenInExplorer" xml:space="preserve">
+    <value>Abrir en el Explorador</value>
+  </data>
+  <data name="Action_OpenInFinder" xml:space="preserve">
+    <value>Abrir en Finder</value>
+  </data>
+  <data name="Action_Uninstall" xml:space="preserve">
+    <value>Desinstalar</value>
+  </data>
+  <data name="Action_CheckForUpdates" xml:space="preserve">
+    <value>Buscar Actualizaciones</value>
+  </data>
+  <data name="Action_Update" xml:space="preserve">
+    <value>Actualizar</value>
+  </data>
+  <data name="Action_AddPackage" xml:space="preserve">
+    <value>Añadir Paquete</value>
+  </data>
+  <data name="TeachingTip_AddPackageToGetStarted" xml:space="preserve">
+    <value>¡Añade un paquete para empezar!</value>
+  </data>
+  <data name="Label_EnvVarsTable_Name" xml:space="preserve">
+    <value>Nombre</value>
+  </data>
+  <data name="Label_EnvVarsTable_Value" xml:space="preserve">
+    <value>Valor</value>
+  </data>
+  <data name="Action_Remove" xml:space="preserve">
+    <value>Eliminar</value>
+  </data>
+  <data name="Label_Details" xml:space="preserve">
+    <value>Detalles</value>
+  </data>
+  <data name="Label_Callstack" xml:space="preserve">
+    <value>Pila de llamadas</value>
+  </data>
+  <data name="Label_InnerException" xml:space="preserve">
+    <value>Excepción interna</value>
+  </data>
+  <data name="Label_SearchEllipsis" xml:space="preserve">
+    <value>Buscar...</value>
+  </data>
+  <data name="Action_OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Action_Retry" xml:space="preserve">
+    <value>Reintentar</value>
+  </data>
+  <data name="Label_PythonVersionInfo" xml:space="preserve">
+    <value>Información de la Versión de Python</value>
+  </data>
+  <data name="Action_Restart" xml:space="preserve">
+    <value>Reiniciar</value>
+  </data>
+  <data name="Label_ConfirmDelete" xml:space="preserve">
+    <value>Confirmar Eliminación</value>
+  </data>
+  <data name="Text_PackageUninstall_Details" xml:space="preserve">
+    <value>Esto eliminará la carpeta del paquete y todo su contenido, incluyendo cualquiera de las imágenes y archivos generados que hayas añadido.</value>
+  </data>
+  <data name="Progress_UninstallingPackage" xml:space="preserve">
+    <value>Desinstalando paquete...</value>
+  </data>
+  <data name="Label_PackageUninstalled" xml:space="preserve">
+    <value>Paquete Desinstalado</value>
+  </data>
+  <data name="Text_SomeFilesCouldNotBeDeleted" xml:space="preserve">
+    <value>Algunos archivos no pudieron eliminarse. Por favor, cierra cualquier archivo abierto en el directorio del paquete y vuelve a intentarlo.</value>
+  </data>
+  <data name="Label_InvalidPackageType" xml:space="preserve">
+    <value>Tipo de Paquete Incorrecto</value>
+  </data>
+  <data name="TextTemplate_UpdatingPackage" xml:space="preserve">
+    <value>Actualizando {0}</value>
+  </data>
+  <data name="Progress_UpdateComplete" xml:space="preserve">
+    <value>Actualización completa</value>
+  </data>
+  <data name="TextTemplate_PackageUpdatedToLatest" xml:space="preserve">
+    <value>{0} se ha actualizado a la última versión</value>
+    <comment>El mensaje se muestra cuando se ha actualizado un paquete por ej. ComfyUI, por lo tanto, es correcto decir que se &quot;ha actualizado&quot;</comment>
+  </data>
+  <data name="TextTemplate_ErrorUpdatingPackage" xml:space="preserve">
+    <value>Error al actualizar {0}</value>
+  </data>
+  <data name="Progress_UpdateFailed" xml:space="preserve">
+    <value>Actualización fallida</value>
+  </data>
+  <data name="Action_OpenInBrowser" xml:space="preserve">
+    <value>Abrir en el navegador</value>
+  </data>
+  <data name="Label_ErrorInstallingPackage" xml:space="preserve">
+    <value>Error al instalar el paquete</value>
+  </data>
+  <data name="Label_Branch" xml:space="preserve">
+    <value>Rama</value>
+  </data>
+  <data name="Label_AutoScrollToEnd" xml:space="preserve">
+    <value>Desplazarse automáticamente hasta el final de la salida de consola</value>
+  </data>
+  <data name="Label_License" xml:space="preserve">
+    <value>Licencia</value>
+  </data>
+  <data name="Label_SharedModelStrategyShort" xml:space="preserve">
+    <value>Modelo Compartido</value>
+  </data>
+  <data name="Label_PleaseSelectDataDirectory" xml:space="preserve">
+    <value>Por favor, Selecciona un Directorio de Datos</value>
+  </data>
+  <data name="Label_DataFolderName" xml:space="preserve">
+    <value>Nombre del Directorio de Datos</value>
+  </data>
+  <data name="Label_CurrentDirectory" xml:space="preserve">
+    <value>Directorio actual:</value>
+  </data>
+  <data name="Text_AppWillRelaunchAfterUpdate" xml:space="preserve">
+    <value>La aplicación se reiniciará después de actualizar</value>
+  </data>
+  <data name="Action_RemindMeLater" xml:space="preserve">
+    <value>Recuérdamelo Más Tarde</value>
+  </data>
+  <data name="Action_InstallNow" xml:space="preserve">
+    <value>Instalar Ahora</value>
+  </data>
+  <data name="Label_ReleaseNotes" xml:space="preserve">
+    <value>Notas de la Versión</value>
+  </data>
+  <data name="Action_OpenProjectEllipsis" xml:space="preserve">
+    <value>Abrir Proyecto...</value>
+  </data>
+  <data name="Action_SaveAsEllipsis" xml:space="preserve">
+    <value>Guardar como...</value>
+  </data>
+  <data name="Action_RestoreDefaultLayout" xml:space="preserve">
+    <value>Restablecer Diseño Predeterminado</value>
+  </data>
+</root>

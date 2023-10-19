@@ -102,6 +102,8 @@ public abstract class BasePackage
 
     public abstract IEnumerable<TorchVersion> AvailableTorchVersions { get; }
 
+    public virtual bool IsCompatible => GetRecommendedTorchVersion() != TorchVersion.Cpu;
+
     public virtual TorchVersion GetRecommendedTorchVersion()
     {
         // if there's only one AvailableTorchVersion, return that

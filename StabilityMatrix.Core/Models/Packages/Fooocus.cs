@@ -87,7 +87,7 @@ public class Fooocus : BaseGitPackage
         new() { [SharedOutputType.Text2Img] = new[] { "outputs" } };
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
+        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm };
 
     public override Task<string> GetLatestVersion() => Task.FromResult("main");
 
@@ -113,7 +113,7 @@ public class Fooocus : BaseGitPackage
         switch (torchVersion)
         {
             case TorchVersion.Cuda:
-                torchVersionStr = "cu118";
+                torchVersionStr = "cu121";
                 break;
             case TorchVersion.Rocm:
                 torchVersionStr = "rocm5.4.2";
@@ -124,9 +124,10 @@ public class Fooocus : BaseGitPackage
                 throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);
         }
 
+        await venvRunner.PipUninstall("xformers").ConfigureAwait(false);
         await venvRunner
             .PipInstall(
-                $"torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/{torchVersionStr}",
+                $"torch==2.1.0 torchvision==0.16.0 --extra-index-url https://download.pytorch.org/whl/{torchVersionStr}",
                 onConsoleOutput
             )
             .ConfigureAwait(false);

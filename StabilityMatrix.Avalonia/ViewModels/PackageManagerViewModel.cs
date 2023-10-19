@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Controls.Primitives;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
@@ -122,17 +123,18 @@ public partial class PackageManagerViewModel : PageViewModelBase
     public async Task ShowInstallDialog(BasePackage? selectedPackage = null)
     {
         var viewModel = dialogFactory.Get<InstallerViewModel>();
-        viewModel.AvailablePackages = packageFactory.GetAllAvailablePackages().ToImmutableArray();
         viewModel.SelectedPackage = selectedPackage ?? viewModel.AvailablePackages[0];
 
         var dialog = new BetterContentDialog
         {
             MaxDialogWidth = 900,
             MinDialogWidth = 900,
+            FullSizeDesired = true,
             DefaultButton = ContentDialogButton.Close,
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
             IsFooterVisible = false,
+            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
             Content = new InstallerDialog { DataContext = viewModel }
         };
 

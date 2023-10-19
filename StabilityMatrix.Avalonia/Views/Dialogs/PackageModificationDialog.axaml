@@ -12,7 +12,8 @@
              x:Class="StabilityMatrix.Avalonia.Views.Dialogs.PackageModificationDialog">
     <Grid Margin="8" RowDefinitions="Auto, Auto, Auto, *, Auto, Auto">
         <TextBlock Grid.Row="0" Text="{Binding Text}"
-                   FontSize="16"
+                   FontSize="24"
+                   FontWeight="Light"
                    Margin="4"
                    TextWrapping="WrapWithOverflow"
                    TextAlignment="Center"

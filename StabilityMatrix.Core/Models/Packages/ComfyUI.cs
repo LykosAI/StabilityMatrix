@@ -176,9 +176,11 @@ public class ComfyUI : BaseGitPackage
                 await InstallCpuTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
                 break;
             case TorchVersion.Cuda:
-                await venvRunner.PipUninstall("xformers", onConsoleOutput).ConfigureAwait(false);
                 await venvRunner
                     .PipInstall(PyVenvRunner.TorchPipInstallArgsCuda121, onConsoleOutput)
+                    .ConfigureAwait(false);
+                await venvRunner
+                    .PipInstall("xformers==0.0.22.post4 --upgrade")
                     .ConfigureAwait(false);
                 break;
             case TorchVersion.DirectMl:

@@ -43,6 +43,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 public partial class OutputsPageViewModel : PageViewModelBase
 {
     private readonly ISettingsManager settingsManager;
+    private readonly IPackageFactory packageFactory;
     private readonly INotificationService notificationService;
     private readonly INavigationService navigationService;
     private readonly ILogger<OutputsPageViewModel> logger;
@@ -76,7 +77,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
     [ObservableProperty]
     private string searchQuery;
 
-    public bool CanShowOutputTypes => SelectedCategory.Name.Equals("Shared Output Folder");
+    public bool CanShowOutputTypes =>
+        SelectedCategory?.Name?.Equals("Shared Output Folder") ?? false;
 
     public string NumImagesSelected =>
         NumItemsSelected == 1
@@ -92,6 +94,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
     )
     {
         this.settingsManager = settingsManager;
+        this.packageFactory = packageFactory;
         this.notificationService = notificationService;
         this.navigationService = navigationService;
         this.logger = logger;
@@ -131,10 +134,17 @@ public partial class OutputsPageViewModel : PageViewModelBase
             {
                 NumItemsSelected = Outputs.Count(o => o.IsSelected);
             });
+    }
 
-        if (!settingsManager.IsLibraryDirSet || Design.IsDesignMode)
+    public override void OnLoaded()
+    {
+        if (Design.IsDesignMode)
             return;
 
+        if (!settingsManager.IsLibraryDirSet)
+            return;
+
+        Directory.CreateDirectory(settingsManager.ImagesDirectory);
         var packageCategories = settingsManager.Settings.InstalledPackages
             .Where(x => !x.UseSharedOutputFolder)
             .Select(p =>
@@ -164,12 +174,6 @@ public partial class OutputsPageViewModel : PageViewModelBase
         SelectedCategory = Categories.First();
         SelectedOutputType = SharedOutputType.All;
         SearchQuery = string.Empty;
-    }
-
-    public override void OnLoaded()
-    {
-        if (Design.IsDesignMode)
-            return;
 
         var path =
             CanShowOutputTypes && SelectedOutputType != SharedOutputType.All

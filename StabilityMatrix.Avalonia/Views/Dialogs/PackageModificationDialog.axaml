@@ -48,11 +48,13 @@
         
         <CheckBox Grid.Row="4" IsChecked="{Binding CloseWhenFinished}"
                   HorizontalAlignment="Center"
+                  IsVisible="{Binding !HideCloseButton}"
                   Margin="4" Content="{x:Static lang:Resources.Label_CloseDialogWhenFinished}"/>
         
         <Button Grid.Row="5" Content="{x:Static lang:Resources.Action_Close}"
                 FontSize="20"
                 HorizontalAlignment="Center"
+                IsVisible="{Binding !HideCloseButton}"
                 Command="{Binding OnCloseButtonClick}"/>
     </Grid>
 </controls:UserControlBase>

@@ -40,6 +40,12 @@ public class Fooocus : BaseGitPackage
         {
             new LaunchOptionDefinition
             {
+                Name = "Preset",
+                Type = LaunchOptionType.Bool,
+                Options = { "--preset anime", "--preset realistic" }
+            },
+            new LaunchOptionDefinition
+            {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 Description = "Sets the listen port",
@@ -58,6 +64,49 @@ public class Fooocus : BaseGitPackage
                 Type = LaunchOptionType.String,
                 Description = "Set the listen interface",
                 Options = { "--listen" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Output Directory",
+                Type = LaunchOptionType.String,
+                Description = "Override the output directory",
+                Options = { "--output-directory" }
+            },
+            new()
+            {
+                Name = "VRAM",
+                Type = LaunchOptionType.Bool,
+                InitialValue = HardwareHelper
+                    .IterGpuInfo()
+                    .Select(gpu => gpu.MemoryLevel)
+                    .Max() switch
+                {
+                    Level.Low => "--lowvram",
+                    Level.Medium => "--normalvram",
+                    _ => null
+                },
+                Options = { "--highvram", "--normalvram", "--lowvram", "--novram" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Use DirectML",
+                Type = LaunchOptionType.Bool,
+                Description = "Use pytorch with DirectML support",
+                InitialValue = HardwareHelper.PreferDirectML(),
+                Options = { "--directml" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Disable Xformers",
+                Type = LaunchOptionType.Bool,
+                InitialValue = !HardwareHelper.HasNvidiaGpu(),
+                Options = { "--disable-xformers" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Auto-Launch",
+                Type = LaunchOptionType.Bool,
+                Options = { "--auto-launch" }
             },
             LaunchOptionDefinition.Extras
         };
@@ -124,13 +173,17 @@ public class Fooocus : BaseGitPackage
                 throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);
         }
 
-        await venvRunner.PipUninstall("xformers").ConfigureAwait(false);
         await venvRunner
             .PipInstall(
                 $"torch==2.1.0 torchvision==0.16.0 --extra-index-url https://download.pytorch.org/whl/{torchVersionStr}",
                 onConsoleOutput
             )
             .ConfigureAwait(false);
+
+        if (torchVersion == TorchVersion.Cuda)
+        {
+            await venvRunner.PipInstall("xformers==0.0.22.post4 --upgrade").ConfigureAwait(false);
+        }
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
         await venvRunner

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added GPU compatibility badges to the installers
 - Added filtering of "incompatible" packages (ones that do not support your GPU) to all installers 
   - This can be overridden by checking the new "Show All Packages" checkbox
+- Added more launch options for Fooocus, such as the `--preset` option
 ### Changed
 - If ComfyUI for Inference is chosen during the One-Click Installer, the Inference page will be opened after installation instead of the Launch page
 - Changed all package installs & updates to use git commands instead of downloading zip files

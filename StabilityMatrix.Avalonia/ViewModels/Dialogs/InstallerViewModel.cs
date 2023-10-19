@@ -36,6 +36,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly ISettingsManager settingsManager;
+    private readonly IPackageFactory packageFactory;
     private readonly IPyRunner pyRunner;
     private readonly IDownloadService downloadService;
     private readonly INotificationService notificationService;
@@ -48,13 +49,13 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     private PackageVersion? selectedVersion;
 
     [ObservableProperty]
-    private IReadOnlyList<BasePackage>? availablePackages;
-
-    [ObservableProperty]
     private ObservableCollection<GitCommit>? availableCommits;
 
     [ObservableProperty]
     private ObservableCollection<PackageVersion>? availableVersions;
+
+    [ObservableProperty]
+    private ObservableCollection<BasePackage> availablePackages;
 
     [ObservableProperty]
     private GitCommit? selectedCommit;
@@ -68,6 +69,9 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanInstall))]
     private bool showDuplicateWarning;
+
+    [ObservableProperty]
+    private bool showIncompatiblePackages;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanInstall))]
@@ -115,7 +119,6 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     public bool CanInstall =>
         !string.IsNullOrWhiteSpace(InstallName) && !ShowDuplicateWarning && !IsLoading;
 
-    public ProgressViewModel InstallProgress { get; } = new();
     public IEnumerable<IPackageStep> Steps { get; set; }
 
     public InstallerViewModel(
@@ -128,22 +131,25 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     )
     {
         this.settingsManager = settingsManager;
+        this.packageFactory = packageFactory;
         this.pyRunner = pyRunner;
         this.downloadService = downloadService;
         this.notificationService = notificationService;
         this.prerequisiteHelper = prerequisiteHelper;
 
-        // AvailablePackages and SelectedPackage
+        var filtered = packageFactory.GetAllAvailablePackages().Where(p => p.IsCompatible).ToList();
+
         AvailablePackages = new ObservableCollection<BasePackage>(
-            packageFactory.GetAllAvailablePackages()
+            filtered.Any() ? filtered : packageFactory.GetAllAvailablePackages()
         );
-        SelectedPackage = AvailablePackages[0];
+        ShowIncompatiblePackages = !filtered.Any();
     }
 
     public override void OnLoaded()
     {
         if (AvailablePackages == null)
             return;
+
         IsReleaseMode = !SelectedPackage.ShouldIgnoreReleases;
     }
 
@@ -309,6 +315,19 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         OnCloseButtonClick();
     }
 
+    partial void OnShowIncompatiblePackagesChanged(bool value)
+    {
+        var filtered = packageFactory
+            .GetAllAvailablePackages()
+            .Where(p => ShowIncompatiblePackages || p.IsCompatible)
+            .ToList();
+
+        AvailablePackages = new ObservableCollection<BasePackage>(
+            filtered.Any() ? filtered : packageFactory.GetAllAvailablePackages()
+        );
+        SelectedPackage = AvailablePackages[0];
+    }
+
     private void UpdateSelectedVersionToLatestMain()
     {
         if (AvailableVersions is null)
@@ -370,41 +389,33 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
 
     // When changing branch / release modes, refresh
     // ReSharper disable once UnusedParameterInPartialMethod
-    partial void OnSelectedVersionTypeChanged(PackageVersionType value) =>
-        OnSelectedPackageChanged(SelectedPackage);
-
-    partial void OnSelectedPackageChanged(BasePackage value)
+    partial void OnSelectedVersionTypeChanged(PackageVersionType value)
     {
-        IsLoading = true;
-        ReleaseNotes = string.Empty;
-        AvailableVersions?.Clear();
-        AvailableCommits?.Clear();
-
-        AvailableVersionTypes = SelectedPackage.ShouldIgnoreReleases
-            ? PackageVersionType.Commit
-            : PackageVersionType.GithubRelease | PackageVersionType.Commit;
-        SelectedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
-        SelectedTorchVersion = SelectedPackage.GetRecommendedTorchVersion();
-        if (Design.IsDesignMode)
+        if (SelectedPackage is null || Design.IsDesignMode)
             return;
 
         Dispatcher.UIThread
             .InvokeAsync(async () =>
             {
                 Logger.Debug($"Release mode: {IsReleaseMode}");
-                var versionOptions = await value.GetAllVersionOptions();
+                var versionOptions = await SelectedPackage.GetAllVersionOptions();
 
                 AvailableVersions = IsReleaseMode
                     ? new ObservableCollection<PackageVersion>(versionOptions.AvailableVersions)
                     : new ObservableCollection<PackageVersion>(versionOptions.AvailableBranches);
 
-                SelectedVersion = AvailableVersions.First(x => !x.IsPrerelease);
+                SelectedVersion = AvailableVersions?.FirstOrDefault(x => !x.IsPrerelease);
+                if (SelectedVersion is null)
+                    return;
+
                 ReleaseNotes = SelectedVersion.ReleaseNotesMarkdown;
                 Logger.Debug($"Loaded release notes for {ReleaseNotes}");
 
                 if (!IsReleaseMode)
                 {
-                    var commits = (await value.GetAllCommits(SelectedVersion.TagName))?.ToList();
+                    var commits = (
+                        await SelectedPackage.GetAllCommits(SelectedVersion.TagName)
+                    )?.ToList();
                     if (commits is null || commits.Count == 0)
                         return;
 
@@ -420,6 +431,29 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             .SafeFireAndForget();
     }
 
+    partial void OnSelectedPackageChanged(BasePackage? value)
+    {
+        IsLoading = true;
+        ReleaseNotes = string.Empty;
+        AvailableVersions?.Clear();
+        AvailableCommits?.Clear();
+
+        if (value == null)
+            return;
+
+        AvailableVersionTypes = SelectedPackage.ShouldIgnoreReleases
+            ? PackageVersionType.Commit
+            : PackageVersionType.GithubRelease | PackageVersionType.Commit;
+        IsReleaseMode = !SelectedPackage.ShouldIgnoreReleases;
+        SelectedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
+        SelectedTorchVersion = SelectedPackage.GetRecommendedTorchVersion();
+        SelectedVersionType = SelectedPackage.ShouldIgnoreReleases
+            ? PackageVersionType.Commit
+            : PackageVersionType.GithubRelease;
+
+        OnSelectedVersionTypeChanged(SelectedVersionType);
+    }
+
     partial void OnInstallNameChanged(string? value)
     {
         ShowDuplicateWarning = settingsManager.Settings.InstalledPackages.Any(
@@ -430,7 +464,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     partial void OnSelectedVersionChanged(PackageVersion? value)
     {
         ReleaseNotes = value?.ReleaseNotesMarkdown ?? string.Empty;
-        if (value == null)
+        if (value == null || Design.IsDesignMode)
             return;
 
         SelectedCommit = null;

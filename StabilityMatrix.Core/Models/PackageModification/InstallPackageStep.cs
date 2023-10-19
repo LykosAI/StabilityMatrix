@@ -36,5 +36,5 @@ public class InstallPackageStep : IPackageStep
             .ConfigureAwait(false);
     }
 
-    public string ProgressTitle => "Installing package...";
+    public string ProgressTitle => $"Installing {package.DisplayName}...";
 }

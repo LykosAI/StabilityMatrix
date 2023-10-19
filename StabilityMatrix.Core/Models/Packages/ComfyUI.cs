@@ -146,7 +146,14 @@ public class ComfyUI : BaseGitPackage
     public override Task<string> GetLatestVersion() => Task.FromResult("master");
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm };
+        new[]
+        {
+            TorchVersion.Cpu,
+            TorchVersion.Cuda,
+            TorchVersion.DirectMl,
+            TorchVersion.Rocm,
+            TorchVersion.Mps
+        };
 
     public override async Task InstallPackage(
         string installLocation,
@@ -169,13 +176,24 @@ public class ComfyUI : BaseGitPackage
                 await InstallCpuTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
                 break;
             case TorchVersion.Cuda:
-                await InstallCudaTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
+                await venvRunner
+                    .PipInstall(PyVenvRunner.TorchPipInstallArgsCuda121, onConsoleOutput)
+                    .ConfigureAwait(false);
+                await venvRunner
+                    .PipInstall("xformers==0.0.22.post4 --upgrade")
+                    .ConfigureAwait(false);
+                break;
+            case TorchVersion.DirectMl:
+                await venvRunner
+                    .PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, onConsoleOutput)
+                    .ConfigureAwait(false);
                 break;
             case TorchVersion.Rocm:
                 await InstallRocmTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
                 break;
-            case TorchVersion.DirectMl:
-                await InstallDirectMlTorch(venvRunner, progress, onConsoleOutput)
+            case TorchVersion.Mps:
+                await venvRunner
+                    .PipInstall(PyVenvRunner.TorchPipInstallArgsNightlyCpu, onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             default:
@@ -445,7 +463,7 @@ public class ComfyUI : BaseGitPackage
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         await venvRunner
-            .PipInstall(PyVenvRunner.TorchPipInstallArgsRocm542, onConsoleOutput)
+            .PipInstall(PyVenvRunner.TorchPipInstallArgsRocm56, onConsoleOutput)
             .ConfigureAwait(false);
     }
 

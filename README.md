@@ -58,7 +58,9 @@ Multi-Platform Package Manager for Stable Diffusion
 - Generated images contain Inference Project, ComfyUI Nodes, and A1111-compatible metadata
 - Drag and drop gallery images or files to load states
 
-![](https://cdn.lykos.ai/static/sc-inference-drag-load-2.gif)
+<p align="center">
+  <img style="width: 80%; height: 80%" src="https://cdn.lykos.ai/static/sc-inference-drag-load-2.gif" alt=""/>
+</p>
 
 ### Searchable launch options
 <p align="center">

@@ -185,6 +185,16 @@
                                     HorizontalAlignment="Stretch"
                                     SpinButtonPlacementMode="Compact"/>
                             </Grid>
+                            
+                            <!-- Conditioning Modules -->
+                            <Grid 
+                                IsVisible="{Binding IsDimensionsEnabled}"
+                                Margin="0,8,0,0"
+                                ColumnDefinitions="*" 
+                                RowDefinitions="*">
+                                <controls:StackEditableCard
+                                    DataContext="{Binding StackEditableCardViewModel}"/>
+                            </Grid>
                         </StackPanel>
                     </StackPanel>
                 </controls:Card>

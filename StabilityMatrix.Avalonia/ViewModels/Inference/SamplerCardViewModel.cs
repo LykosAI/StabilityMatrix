@@ -5,6 +5,7 @@ using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -59,12 +60,23 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     [ObservableProperty]
     private ComfyScheduler? selectedScheduler = new ComfyScheduler("normal");
 
+    public StackEditableCardViewModel StackEditableCardViewModel { get; }
+
     [JsonIgnore]
     public IInferenceClientManager ClientManager { get; }
 
-    public SamplerCardViewModel(IInferenceClientManager clientManager)
+    public SamplerCardViewModel(
+        IInferenceClientManager clientManager,
+        ServiceManager<ViewModelBase> vmFactory
+    )
     {
         ClientManager = clientManager;
+        StackEditableCardViewModel = vmFactory.Get<StackEditableCardViewModel>(modulesCard =>
+        {
+            modulesCard.Title = "Conditioning Modules";
+            modulesCard.AvailableModules = new[] { typeof(ControlNetModule) };
+            modulesCard.InitializeDefaults();
+        });
     }
 
     /// <inheritdoc />

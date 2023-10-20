@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Newtonsoft.Json;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
+#pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -14,6 +17,10 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public partial class StackEditableCardViewModel : StackViewModelBase
 {
     private readonly ServiceManager<ViewModelBase> vmFactory;
+
+    [ObservableProperty]
+    [property: JsonIgnore]
+    private string? title = Languages.Resources.Label_Steps;
 
     /// <summary>
     /// Available module types for user creation

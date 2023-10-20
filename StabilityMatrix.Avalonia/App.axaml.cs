@@ -338,10 +338,12 @@ public sealed class App : Application
         services.AddTransient<SelectImageCardViewModel>();
         services.AddTransient<SharpenCardViewModel>();
         services.AddTransient<FreeUCardViewModel>();
+        services.AddTransient<ControlNetCardViewModel>();
 
         // Inference modules
         services.AddTransient<UpscalerModule>();
         services.AddTransient<HiresFixModule>();
+        services.AddTransient<ControlNetModule>();
 
         // Dialog factory
         services.AddSingleton<ServiceManager<ViewModelBase>>(
@@ -382,8 +384,10 @@ public sealed class App : Application
                     .Register(provider.GetRequiredService<SharpenCardViewModel>)
                     .Register(provider.GetRequiredService<DownloadResourceViewModel>)
                     .Register(provider.GetRequiredService<FreeUCardViewModel>)
+                    .Register(provider.GetRequiredService<ControlNetCardViewModel>)
                     .Register(provider.GetRequiredService<UpscalerModule>)
                     .Register(provider.GetRequiredService<HiresFixModule>)
+                    .Register(provider.GetRequiredService<ControlNetModule>)
         );
     }
 
@@ -420,6 +424,7 @@ public sealed class App : Application
         services.AddTransient<SelectImageCard>();
         services.AddTransient<SharpenCard>();
         services.AddTransient<FreeUCard>();
+        services.AddTransient<ControlNetCard>();
 
         // Dialogs
         services.AddTransient<SelectDataDirectoryDialog>();

@@ -44,30 +44,32 @@
                         </Grid>
                     </Expander.Header>
                     
-                    <ItemsControl 
-                        VerticalAlignment="Top"
-                        ItemsSource="{Binding Cards}">
+                    <Panel>
+                        <ItemsControl 
+                            VerticalAlignment="Top"
+                            ItemsSource="{Binding Cards}">
                         
-                        <ItemsControl.Styles>
-                            <Style Selector="controls|Card">
-                                <Setter Property="IsCardVisualsEnabled" Value="False"/>
-                            </Style>
-                        </ItemsControl.Styles>
+                            <ItemsControl.Styles>
+                                <Style Selector="controls|Card">
+                                    <Setter Property="IsCardVisualsEnabled" Value="False"/>
+                                </Style>
+                            </ItemsControl.Styles>
                         
-                        <ItemsControl.DataTemplates>
-                            <local:ViewLocator/>
-                        </ItemsControl.DataTemplates>
+                            <ItemsControl.DataTemplates>
+                                <local:ViewLocator/>
+                            </ItemsControl.DataTemplates>
                         
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel 
-                                    x:Name="PART_ItemsPanel"
-                                    VerticalAlignment="Top"
-                                    Spacing="{TemplateBinding Spacing}" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        
-                    </ItemsControl>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel 
+                                        x:Name="PART_ItemsPanel"
+                                        VerticalAlignment="Top"
+                                        Spacing="{TemplateBinding Spacing}" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </Panel>
+
                     
                 </Expander>
             </ControlTemplate>

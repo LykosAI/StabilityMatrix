@@ -133,8 +133,13 @@ public class InferenceTextToImageViewModel
 
         ModulesCardViewModel = vmFactory.Get<StackEditableCardViewModel>(modulesCard =>
         {
-            modulesCard.AvailableModules = new[] { typeof(HiresFixModule), typeof(UpscalerModule) };
-            modulesCard.DefaultModules = modulesCard.AvailableModules;
+            modulesCard.AvailableModules = new[]
+            {
+                typeof(HiresFixModule),
+                typeof(UpscalerModule),
+                typeof(ControlNetModule)
+            };
+            modulesCard.DefaultModules = new[] { typeof(HiresFixModule), typeof(UpscalerModule) };
             modulesCard.InitializeDefaults();
         });
 

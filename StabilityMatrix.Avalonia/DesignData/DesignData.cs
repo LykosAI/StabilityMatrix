@@ -21,6 +21,7 @@ using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Avalonia.ViewModels.OutputsPage;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Core.Api;
@@ -685,6 +686,9 @@ The gallery images are often inpainted, but you will get something very similar 
                 "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"
             )
         );
+
+    public static ControlNetCardViewModel ControlNetCardViewModel =>
+        DialogFactory.Get<ControlNetCardViewModel>();
 
     public static Indexer Types => new();
 

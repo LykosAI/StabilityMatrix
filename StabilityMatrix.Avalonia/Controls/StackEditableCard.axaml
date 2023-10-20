@@ -24,13 +24,14 @@
                     <Grid RowDefinitions="Auto,*">
                         <controls:Card Margin="0,0,0,3" Padding="14,4">
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Text="Steps" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Title}" VerticalAlignment="Center"/>
                                 <Button Grid.Column="1"
+                                        Name="PART_AddButton"
                                         VerticalAlignment="Bottom"
                                         CornerRadius="4"
                                         Padding="4" >
                                     <fluentIcons:SymbolIcon Symbol="Add" IsFilled="True" />
-                                    <Button.Flyout>
+                                    <!--<Button.Flyout>
                                         <ui:FAMenuFlyout>
                                             <ui:MenuFlyoutItem Text="FreeU" />
                                             <ui:MenuFlyoutItem 
@@ -43,7 +44,7 @@
                                                 CommandParameter="{x:Type modules:UpscalerModule}"/>
                                             <ui:MenuFlyoutItem Text="ControlNet"/>
                                         </ui:FAMenuFlyout>
-                                    </Button.Flyout>
+                                    </Button.Flyout>-->
                                 </Button>
                             </Grid>
 

@@ -63,6 +63,7 @@
         <StyleInclude Source="Controls/ImageFolderCard.axaml"/>
         <StyleInclude Source="Controls/SharpenCard.axaml"/>
         <StyleInclude Source="Controls/FreeUCard.axaml"/>
+        <StyleInclude Source="Controls/ControlNetCard.axaml"/>
         <StyleInclude Source="Controls/Paginator.axaml"/>
         <StyleInclude Source="Controls/SelectableImageCard/SelectableImageButton.axaml"/>
         

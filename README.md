@@ -58,7 +58,9 @@ Multi-Platform Package Manager for Stable Diffusion
 - Generated images contain Inference Project, ComfyUI Nodes, and A1111-compatible metadata
 - Drag and drop gallery images or files to load states
 
-![](https://cdn.lykos.ai/static/sc-inference-drag-load-2.gif)
+<p align="center">
+  <img style="width: 80%; height: 80%" src="https://github.com/LykosAI/StabilityMatrix/assets/13956642/4341cc34-a584-4e9c-bb3b-276009bdae80" alt=""/>
+</p>
 
 ### Searchable launch options
 <p align="center">
@@ -97,6 +99,9 @@ Stability Matrix is now available in the following languages, thanks to our comm
   - Marco Capelli
 - 🇫🇷 Français
   - eephyne
+- 🇪🇸 Español
+  - Carlos Baena 
+  - Lautaroturina
 
 If you would like to contribute a translation, please create an issue or contact us on Discord. Include an email where we'll send an invite to our [POEditor](https://poeditor.com/) project.
 

@@ -87,7 +87,10 @@ public partial class PackageCardViewModel : ProgressViewModel
         if (string.IsNullOrWhiteSpace(value?.PackageName))
             return;
 
-        if (value.PackageName == UnknownPackage.Key)
+        if (
+            value.PackageName == UnknownPackage.Key
+            || packageFactory.FindPackageByName(value.PackageName) is null
+        )
         {
             IsUnknownPackage = true;
             CardImageSource = "";
@@ -206,6 +209,10 @@ public partial class PackageCardViewModel : ProgressViewModel
 
                 EventManager.Instance.OnInstalledPackagesChanged();
             }
+
+            Text = "";
+            IsIndeterminate = false;
+            Value = 0;
         }
     }
 

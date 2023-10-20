@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.5.5
 ### Added
 - Added Spanish UI language options, thanks to Carlos Baena and Lautaroturina for the translations
+- Manual input prompt popup on package input requests besides Y/n confirmations
 ### Fixed
 - Fixed infinite progress wheel when package uninstall fails
 

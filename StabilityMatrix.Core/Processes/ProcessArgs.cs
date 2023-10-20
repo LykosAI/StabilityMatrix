@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Collections;
+using System.Text.RegularExpressions;
 using OneOf;
 
 namespace StabilityMatrix.Core.Processes;
@@ -14,20 +15,33 @@ public partial class ProcessArgs : OneOfBase<string, string[]>
     private ProcessArgs(OneOf<string, string[]> input)
         : base(input) { }
 
+    /// <summary>
+    /// Whether the argument string contains the given substring,
+    /// or any of the given arguments if the input is an array.
+    /// </summary>
+    public bool Contains(string arg) => Match(str => str.Contains(arg), arr => arr.Any(Contains));
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        return Match(str => str, arr => string.Join(' ', arr.Select(ProcessRunner.Quote)));
+    }
+
+    public string[] ToArray() =>
+        Match(
+            str => ArgumentsRegex().Matches(str).Select(x => x.Value.Trim('"')).ToArray(),
+            arr => arr
+        );
+
     // Implicit conversions
 
     public static implicit operator ProcessArgs(string input) => new(input);
 
     public static implicit operator ProcessArgs(string[] input) => new(input);
 
-    public static implicit operator string(ProcessArgs input) =>
-        input.Match(str => str, arr => string.Join(' ', arr.Select(ProcessRunner.Quote)));
+    public static implicit operator string(ProcessArgs input) => input.ToString();
 
-    public static implicit operator string[](ProcessArgs input) =>
-        input.Match(
-            str => ArgumentsRegex().Matches(str).Select(x => x.Value.Trim('"')).ToArray(),
-            arr => arr
-        );
+    public static implicit operator string[](ProcessArgs input) => input.ToArray();
 
     [GeneratedRegex("""[\"].+?[\"]|[^ ]+""", RegexOptions.IgnoreCase)]
     private static partial Regex ArgumentsRegex();

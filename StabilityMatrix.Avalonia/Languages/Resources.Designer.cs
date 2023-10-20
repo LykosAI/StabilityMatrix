@@ -1338,6 +1338,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Preprocessor.
+        /// </summary>
+        public static string Label_Preprocessor {
+            get {
+                return ResourceManager.GetString("Label_Preprocessor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Previous Image.
         /// </summary>
         public static string Label_PreviousImage {
@@ -1577,6 +1586,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_StepsRefiner {
             get {
                 return ResourceManager.GetString("Label_StepsRefiner", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Strength.
+        /// </summary>
+        public static string Label_Strength {
+            get {
+                return ResourceManager.GetString("Label_Strength", resourceCulture);
             }
         }
         

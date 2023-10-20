@@ -726,4 +726,10 @@
   <data name="Label_OneImageSelected" xml:space="preserve">
     <value>1 image selected</value>
   </data>
+  <data name="Label_Preprocessor" xml:space="preserve">
+    <value>Preprocessor</value>
+  </data>
+  <data name="Label_Strength" xml:space="preserve">
+    <value>Strength</value>
+  </data>
 </root>

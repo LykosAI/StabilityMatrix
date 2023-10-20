@@ -146,6 +146,10 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
             {
                 ShowConfirmInputPrompt = true;
             }
+            else
+            {
+                ShowManualInputPrompt = true;
+            }
         };
     }
 

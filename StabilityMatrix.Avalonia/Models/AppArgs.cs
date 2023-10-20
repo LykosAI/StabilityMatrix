@@ -35,4 +35,9 @@ public class AppArgs
     /// Flag to indicate if we should reset the saved window position back to (O,0)
     /// </summary>
     public bool ResetWindowPosition { get; set; }
+
+    /// <summary>
+    /// Flag for disabling hardware acceleration / GPU rendering
+    /// </summary>
+    public bool DisableGpuRendering { get; set; }
 }

@@ -12,7 +12,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
-using FluentAvalonia.Core;
 using NLog;
 using Polly.Contrib.WaitAndRetry;
 using Projektanker.Icons.Avalonia;
@@ -54,6 +53,7 @@ public class Program
         Args.NoSentry = args.Contains("--no-sentry");
         Args.NoWindowChromeEffects = args.Contains("--no-window-chrome-effects");
         Args.ResetWindowPosition = args.Contains("--reset-window-position");
+        Args.DisableGpuRendering = args.Contains("--disable-gpu");
 
         SetDebugBuild();
 
@@ -90,7 +90,28 @@ public class Program
         ImageLoader.AsyncImageLoader.Dispose();
         ImageLoader.AsyncImageLoader = new FallbackRamCachedWebImageLoader();
 
-        return AppBuilder.Configure<App>().UsePlatformDetect().WithInterFont().LogToTrace();
+        var app = AppBuilder.Configure<App>().UsePlatformDetect().WithInterFont().LogToTrace();
+
+        if (Args.DisableGpuRendering)
+        {
+            app = app.With(
+                    new Win32PlatformOptions
+                    {
+                        RenderingMode = new[] { Win32RenderingMode.Software }
+                    }
+                )
+                .With(
+                    new X11PlatformOptions { RenderingMode = new[] { X11RenderingMode.Software } }
+                )
+                .With(
+                    new AvaloniaNativePlatformOptions
+                    {
+                        RenderingMode = new[] { AvaloniaNativeRenderingMode.Software }
+                    }
+                );
+        }
+
+        return app;
     }
 
     private static void HandleUpdateReplacement()

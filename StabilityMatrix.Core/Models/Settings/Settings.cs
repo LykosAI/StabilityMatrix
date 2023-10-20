@@ -71,6 +71,11 @@ public class Settings
     public bool IsCompletionRemoveUnderscoresEnabled { get; set; } = true;
 
     /// <summary>
+    /// Format for Inference output image file names
+    /// </summary>
+    public string? InferenceOutputImageFileNameFormat { get; set; }
+
+    /// <summary>
     /// Whether the Inference Image Viewer shows pixel grids at high zoom levels
     /// </summary>
     public bool IsImageViewerPixelGridEnabled { get; set; } = true;

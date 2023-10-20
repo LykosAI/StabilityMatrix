@@ -23,6 +23,8 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
 
     public const string TorchPipInstallArgsCuda =
         $"{TorchPipInstallArgs} --extra-index-url https://download.pytorch.org/whl/cu118";
+    public const string TorchPipInstallArgsCuda121 =
+        "torch torchvision --extra-index-url https://download.pytorch.org/whl/cu121";
     public const string TorchPipInstallArgsCpu = TorchPipInstallArgs;
     public const string TorchPipInstallArgsDirectML = "torch-directml";
 
@@ -30,8 +32,11 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         $"{TorchPipInstallArgs} --extra-index-url https://download.pytorch.org/whl/rocm5.1.1";
     public const string TorchPipInstallArgsRocm542 =
         $"{TorchPipInstallArgs} --extra-index-url https://download.pytorch.org/whl/rocm5.4.2";
-    public const string TorchPipInstallArgsRocmNightly56 =
-        $"--pre {TorchPipInstallArgs} --index-url https://download.pytorch.org/whl/nightly/rocm5.6";
+    public const string TorchPipInstallArgsRocm56 =
+        $"{TorchPipInstallArgs} --index-url https://download.pytorch.org/whl/rocm5.6";
+
+    public const string TorchPipInstallArgsNightlyCpu =
+        "--pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu";
 
     /// <summary>
     /// Relative path to the site-packages folder from the venv root.
@@ -232,6 +237,42 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
 
         SetPyvenvCfg(PyRunner.PythonDir);
         RunDetached($"-m pip install {args}", outputAction);
+        await Process.WaitForExitAsync().ConfigureAwait(false);
+
+        // Check return code
+        if (Process.ExitCode != 0)
+        {
+            throw new ProcessException(
+                $"pip install failed with code {Process.ExitCode}: {output.ToString().ToRepr()}"
+            );
+        }
+    }
+
+    /// <summary>
+    /// Run a pip uninstall command. Waits for the process to exit.
+    /// workingDirectory defaults to RootPath.
+    /// </summary>
+    public async Task PipUninstall(string args, Action<ProcessOutput>? outputDataReceived = null)
+    {
+        if (!File.Exists(PipPath))
+        {
+            throw new FileNotFoundException("pip not found", PipPath);
+        }
+
+        // Record output for errors
+        var output = new StringBuilder();
+
+        var outputAction = new Action<ProcessOutput>(s =>
+        {
+            Logger.Debug($"Pip output: {s.Text}");
+            // Record to output
+            output.Append(s.Text);
+            // Forward to callback
+            outputDataReceived?.Invoke(s);
+        });
+
+        SetPyvenvCfg(PyRunner.PythonDir);
+        RunDetached($"-m pip uninstall -y {args}", outputAction);
         await Process.WaitForExitAsync().ConfigureAwait(false);
 
         // Check return code

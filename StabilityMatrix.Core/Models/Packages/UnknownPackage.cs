@@ -26,6 +26,8 @@ public class UnknownPackage : BasePackage
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
+    public override string OutputFolderName { get; }
+
     public override Task DownloadPackage(
         string installLocation,
         DownloadPackageVersionOptions versionOptions,
@@ -39,6 +41,7 @@ public class UnknownPackage : BasePackage
     public override Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
     )
@@ -83,6 +86,16 @@ public class UnknownPackage : BasePackage
         throw new NotImplementedException();
     }
 
+    public override Task SetupOutputFolderLinks(DirectoryPath installDirectory)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task RemoveOutputFolderLinks(DirectoryPath installDirectory)
+    {
+        throw new NotImplementedException();
+    }
+
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cuda, TorchVersion.Cpu, TorchVersion.Rocm, TorchVersion.DirectMl };
 
@@ -108,6 +121,7 @@ public class UnknownPackage : BasePackage
     public override Task<InstalledPackageVersion> Update(
         InstalledPackage installedPackage,
         TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         bool includePrerelease = false,
         Action<ProcessOutput>? onConsoleOutput = null
@@ -121,6 +135,12 @@ public class UnknownPackage : BasePackage
         Task.FromResult(Enumerable.Empty<Release>());
 
     public override List<LaunchOptionDefinition> LaunchOptions => new();
+
+    public override Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
+    public override Dictionary<
+        SharedOutputType,
+        IReadOnlyList<string>
+    >? SharedOutputFolders { get; }
 
     public override Task<string> GetLatestVersion() => Task.FromResult(string.Empty);
 

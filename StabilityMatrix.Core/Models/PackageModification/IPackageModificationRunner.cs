@@ -12,6 +12,7 @@ public interface IPackageModificationRunner
     List<string> ConsoleOutput { get; }
     Guid Id { get; }
     bool ShowDialogOnStart { get; init; }
+    bool HideCloseButton { get; init; }
     string? ModificationCompleteMessage { get; init; }
     bool Failed { get; set; }
 }

@@ -202,11 +202,11 @@ public class CompletionList : TemplatedControl
         {
             case Key.Down:
                 e.Handled = true;
-                _listBox.SelectIndex(_listBox.SelectedIndex + 1);
+                _listBox.SelectNextIndexWithLoop();
                 break;
             case Key.Up:
                 e.Handled = true;
-                _listBox.SelectIndex(_listBox.SelectedIndex - 1);
+                _listBox.SelectPreviousIndexWithLoop();
                 break;
             case Key.PageDown:
                 e.Handled = true;
@@ -325,7 +325,7 @@ public class CompletionList : TemplatedControl
             return;
         }
 
-        using var _ = new CodeTimer();
+        using var _ = CodeTimer.StartDebug();
 
         if (_listBox == null)
         {

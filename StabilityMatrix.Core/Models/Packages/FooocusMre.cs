@@ -37,6 +37,9 @@ public class FooocusMre : BaseGitPackage
             "https://user-images.githubusercontent.com/130458190/265366059-ce430ea0-0995-4067-98dd-cef1d7dc1ab6.png"
         );
 
+    public override string Disclaimer =>
+        "This package may no longer receive updates from its author. It may be removed from Stability Matrix in the future.";
+
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new()
         {
@@ -85,6 +88,9 @@ public class FooocusMre : BaseGitPackage
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" }
         };
 
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+        new() { [SharedOutputType.Text2Img] = new[] { "outputs" } };
+
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
 
@@ -94,14 +100,16 @@ public class FooocusMre : BaseGitPackage
         return release.TagName!;
     }
 
+    public override string OutputFolderName => "outputs";
+
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
         var venvRunner = await SetupVenv(installLocation, forceRecreate: true)
             .ConfigureAwait(false);
 

@@ -5,6 +5,30 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.6.0
+### Added
+- Added **Output Sharing** option for all packages in the three-dots menu on the Packages page
+  - This will link the package's output folders to the relevant subfolders in the "Outputs" directory
+    - When a package only has a generic "outputs" folder, all generated images from that package will be linked to the "Outputs\Text2Img" folder when this option is enabled
+- Added **Outputs page** for viewing generated images from any package, or the shared output folder
+- Added [Stable Diffusion WebUI/UX](https://github.com/anapnoe/stable-diffusion-webui-ux) package
+- Added [Stable Diffusion WebUI-DirectML](https://github.com/lshqqytiger/stable-diffusion-webui-directml) package
+- Added GPU compatibility badges to the installers
+- Added filtering of "incompatible" packages (ones that do not support your GPU) to all installers 
+  - This can be overridden by checking the new "Show All Packages" checkbox
+- Added more launch options for Fooocus, such as the `--preset` option
+### Changed
+- If ComfyUI for Inference is chosen during the One-Click Installer, the Inference page will be opened after installation instead of the Launch page
+- Changed all package installs & updates to use git commands instead of downloading zip files
+- The One-Click Installer now uses the new progress dialog with console
+- NVIDIA GPU users will be updated to use CUDA 12.1 for ComfyUI & Fooocus packages for a slight performance improvement
+  - Update will occur the next time the package is updated, or on a fresh install
+  - Note: CUDA 12.1 is only available on Maxwell (GTX 900 series) and newer GPUs
+### Fixed
+- Fixed crash when clicking Inference gallery image after the image is deleted externally in file explorer
+- Fixed Inference popup Install button not working on One-Click Installer
+- Fixed Inference Prompt Completion window sometimes not showing while typing
+
 ## v2.5.5
 ### Added
 - Added Spanish UI language options, thanks to Carlos Baena and Lautaroturina for the translations

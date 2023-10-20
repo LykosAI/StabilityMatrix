@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
@@ -232,10 +233,16 @@ public class Program
         if (e.ExceptionObject is not Exception ex)
             return;
 
-        Logger.Fatal(ex, "Unhandled {Type}: {Message}", ex.GetType().Name, ex.Message);
+        // Exception automatically logged by Sentry if enabled
         if (SentrySdk.IsEnabled)
         {
+            ex.SetSentryMechanism("AppDomain.UnhandledException", handled: false);
             SentrySdk.CaptureException(ex);
+            SentrySdk.FlushAsync().SafeFireAndForget();
+        }
+        else
+        {
+            Logger.Fatal(ex, "Unhandled {Type}: {Message}", ex.GetType().Name, ex.Message);
         }
 
         if (
@@ -290,6 +297,10 @@ public class Program
     [DoesNotReturn]
     private static void ExitWithException(Exception exception)
     {
+        if (SentrySdk.IsEnabled)
+        {
+            SentrySdk.Flush();
+        }
         App.Shutdown(1);
         Dispatcher.UIThread.InvokeShutdown();
         Environment.Exit(Marshal.GetHRForException(exception));

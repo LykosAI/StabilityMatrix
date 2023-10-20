@@ -9,6 +9,7 @@ using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -310,7 +311,7 @@ public abstract partial class InferenceTabViewModelBase
                             if (this is IImageGalleryComponent imageGalleryComponent)
                             {
                                 imageGalleryComponent.LoadImagesToGallery(
-                                    new ImageSource(imageFile.GlobalFullPath)
+                                    new ImageSource(imageFile.AbsolutePath)
                                 );
                             }
                         }

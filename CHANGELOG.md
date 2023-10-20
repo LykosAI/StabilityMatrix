@@ -29,6 +29,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed Inference popup Install button not working on One-Click Installer
 - Fixed Inference Prompt Completion window sometimes not showing while typing
 
+## v2.5.5
+### Added
+- Added Spanish UI language options, thanks to Carlos Baena and Lautaroturina for the translations
+- Manual input prompt popup on package input requests besides Y/n confirmations
+- Added `--disable-gpu` launch argument to disable hardware accelerated rendering
+### Fixed
+- Fixed infinite progress wheel when package uninstall fails
+
 ## v2.5.4
 ### Fixed
 - Fixed [#208](https://github.com/LykosAI/StabilityMatrix/issues/208) - error when installing xformers

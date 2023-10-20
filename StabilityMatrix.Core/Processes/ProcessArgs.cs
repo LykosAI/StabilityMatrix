@@ -3,6 +3,11 @@ using OneOf;
 
 namespace StabilityMatrix.Core.Processes;
 
+/// <summary>
+/// Parameter type for command line arguments
+/// Implicitly converts between string and string[],
+/// with no parsing if the input and output types are the same.
+/// </summary>
 public partial class ProcessArgs : OneOfBase<string, string[]>
 {
     /// <inheritdoc />

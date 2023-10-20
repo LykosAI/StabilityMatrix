@@ -21,6 +21,7 @@
                  <ResourceInclude Source="Styles/ContextMenuStyles.axaml"/>
                  <ResourceInclude Source="Controls/EditorFlyouts.axaml"/>
                  <ResourceInclude Source="Styles/ListBoxStyles.axaml"/>
+                 <ResourceInclude Source="Styles/FAComboBoxStyles.axaml"/>
              </ResourceDictionary.MergedDictionaries>
              
              <idcr:ControlRecycling x:Key="ControlRecyclingKey" />

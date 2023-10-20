@@ -33,6 +33,7 @@ using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.PackageModification;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
@@ -175,9 +176,9 @@ public static class DesignData
         LaunchOptionsViewModel.UpdateFilterCards();
 
         InstallerViewModel = Services.GetRequiredService<InstallerViewModel>();
-        InstallerViewModel.AvailablePackages = packageFactory
-            .GetAllAvailablePackages()
-            .ToImmutableArray();
+        InstallerViewModel.AvailablePackages = new ObservableCollectionExtended<BasePackage>(
+            packageFactory.GetAllAvailablePackages()
+        );
         InstallerViewModel.SelectedPackage = InstallerViewModel.AvailablePackages[0];
         InstallerViewModel.ReleaseNotes = "## Release Notes\nThis is a test release note.";
 

@@ -34,7 +34,7 @@ public class VladAutomatic : BaseGitPackage
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Rocm, TorchVersion.DirectMl, TorchVersion.Cuda };
+        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm };
 
     public VladAutomatic(
         IGithubApiCache githubApi,

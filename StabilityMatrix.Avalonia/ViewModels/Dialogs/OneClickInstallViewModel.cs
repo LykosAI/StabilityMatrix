@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -12,6 +13,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
@@ -19,14 +21,13 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
-public partial class OneClickInstallViewModel : ViewModelBase
+public partial class OneClickInstallViewModel : ContentDialogViewModelBase
 {
     private readonly ISettingsManager settingsManager;
     private readonly IPackageFactory packageFactory;
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly ILogger<OneClickInstallViewModel> logger;
     private readonly IPyRunner pyRunner;
-    private readonly ISharedFolders sharedFolders;
     private readonly INavigationService navigationService;
     private const string DefaultPackageName = "stable-diffusion-webui";
 
@@ -46,6 +47,9 @@ public partial class OneClickInstallViewModel : ViewModelBase
     private bool isIndeterminate;
 
     [ObservableProperty]
+    private bool showIncompatiblePackages;
+
+    [ObservableProperty]
     private ObservableCollection<BasePackage> allPackages;
 
     [ObservableProperty]
@@ -55,9 +59,9 @@ public partial class OneClickInstallViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsProgressBarVisible))]
     private int oneClickInstallProgress;
 
-    public bool IsProgressBarVisible => OneClickInstallProgress > 0 || IsIndeterminate;
-
     private bool isInferenceInstall;
+
+    public bool IsProgressBarVisible => OneClickInstallProgress > 0 || IsIndeterminate;
 
     public OneClickInstallViewModel(
         ISettingsManager settingsManager,
@@ -65,7 +69,6 @@ public partial class OneClickInstallViewModel : ViewModelBase
         IPrerequisiteHelper prerequisiteHelper,
         ILogger<OneClickInstallViewModel> logger,
         IPyRunner pyRunner,
-        ISharedFolders sharedFolders,
         INavigationService navigationService
     )
     {
@@ -74,14 +77,21 @@ public partial class OneClickInstallViewModel : ViewModelBase
         this.prerequisiteHelper = prerequisiteHelper;
         this.logger = logger;
         this.pyRunner = pyRunner;
-        this.sharedFolders = sharedFolders;
         this.navigationService = navigationService;
 
         HeaderText = Resources.Text_WelcomeToStabilityMatrix;
         SubHeaderText = Resources.Text_OneClickInstaller_SubHeader;
         ShowInstallButton = true;
+
+        var filteredPackages = this.packageFactory
+            .GetAllAvailablePackages()
+            .Where(p => p is { OfferInOneClickInstaller: true, IsCompatible: true })
+            .ToList();
+
         AllPackages = new ObservableCollection<BasePackage>(
-            this.packageFactory.GetAllAvailablePackages().Where(p => p.OfferInOneClickInstaller)
+            filteredPackages.Any()
+                ? filteredPackages
+                : this.packageFactory.GetAllAvailablePackages()
         );
         SelectedPackage = AllPackages[0];
     }
@@ -115,35 +125,18 @@ public partial class OneClickInstallViewModel : ViewModelBase
 
     private async Task DoInstall()
     {
-        HeaderText = $"{Resources.Label_Installing} {SelectedPackage.DisplayName}";
-
-        var progressHandler = new Progress<ProgressReport>(progress =>
+        var steps = new List<IPackageStep>
         {
-            SubHeaderText = $"{progress.Title} {progress.Percentage:N0}%";
-
-            IsIndeterminate = progress.IsIndeterminate;
-            OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
-        });
-
-        await prerequisiteHelper.InstallAllIfNecessary(progressHandler);
-
-        SubHeaderText = Resources.Progress_InstallingPrerequisites;
-        IsIndeterminate = true;
-        if (!PyRunner.PipInstalled)
-        {
-            await pyRunner.SetupPip();
-        }
-
-        if (!PyRunner.VenvInstalled)
-        {
-            await pyRunner.InstallPackage("virtualenv");
-        }
-        IsIndeterminate = false;
-
-        var libraryDir = settingsManager.LibraryDir;
+            new SetPackageInstallingStep(settingsManager, SelectedPackage.Name),
+            new SetupPrerequisitesStep(prerequisiteHelper, pyRunner)
+        };
 
         // get latest version & download & install
-        var installLocation = Path.Combine(libraryDir, "Packages", SelectedPackage.Name);
+        var installLocation = Path.Combine(
+            settingsManager.LibraryDir,
+            "Packages",
+            SelectedPackage.Name
+        );
 
         var downloadVersion = new DownloadPackageVersionOptions { IsLatest = true };
         var installedVersion = new InstalledPackageVersion();
@@ -167,12 +160,29 @@ public partial class OneClickInstallViewModel : ViewModelBase
         }
 
         var torchVersion = SelectedPackage.GetRecommendedTorchVersion();
-
-        await DownloadPackage(installLocation, downloadVersion);
-        await InstallPackage(installLocation, torchVersion, downloadVersion);
-
         var recommendedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
-        await SelectedPackage.SetupModelFolders(installLocation, recommendedSharedFolderMethod);
+
+        var downloadStep = new DownloadPackageVersionStep(
+            SelectedPackage,
+            installLocation,
+            downloadVersion
+        );
+        steps.Add(downloadStep);
+
+        var installStep = new InstallPackageStep(
+            SelectedPackage,
+            torchVersion,
+            downloadVersion,
+            installLocation
+        );
+        steps.Add(installStep);
+
+        var setupModelFoldersStep = new SetupModelFoldersStep(
+            SelectedPackage,
+            recommendedSharedFolderMethod,
+            installLocation
+        );
+        steps.Add(setupModelFoldersStep);
 
         var installedPackage = new InstalledPackage
         {
@@ -186,15 +196,23 @@ public partial class OneClickInstallViewModel : ViewModelBase
             PreferredTorchVersion = torchVersion,
             PreferredSharedFolderMethod = recommendedSharedFolderMethod
         };
-        await using var st = settingsManager.BeginTransaction();
-        st.Settings.InstalledPackages.Add(installedPackage);
-        st.Settings.ActiveInstalledPackageId = installedPackage.Id;
+
+        var addInstalledPackageStep = new AddInstalledPackageStep(
+            settingsManager,
+            installedPackage
+        );
+        steps.Add(addInstalledPackageStep);
+
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            HideCloseButton = true,
+        };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+        await runner.ExecuteSteps(steps);
+
         EventManager.Instance.OnInstalledPackagesChanged();
-
-        HeaderText = Resources.Progress_InstallationComplete;
-        SubSubHeaderText = string.Empty;
-        OneClickInstallProgress = 100;
-
+        HeaderText = $"{SelectedPackage.DisplayName} installed successfully";
         for (var i = 3; i > 0; i--)
         {
             SubHeaderText = $"{Resources.Text_ProceedingToLaunchPage} ({i}s)";
@@ -209,45 +227,16 @@ public partial class OneClickInstallViewModel : ViewModelBase
         }
     }
 
-    private async Task DownloadPackage(
-        string installLocation,
-        DownloadPackageVersionOptions versionOptions
-    )
+    partial void OnShowIncompatiblePackagesChanged(bool value)
     {
-        SubHeaderText = Resources.Progress_DownloadingPackage;
+        var filteredPackages = packageFactory
+            .GetAllAvailablePackages()
+            .Where(p => p.OfferInOneClickInstaller && (ShowIncompatiblePackages || p.IsCompatible))
+            .ToList();
 
-        var progress = new Progress<ProgressReport>(progress =>
-        {
-            IsIndeterminate = progress.IsIndeterminate;
-            OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
-            EventManager.Instance.OnGlobalProgressChanged(OneClickInstallProgress);
-        });
-
-        await SelectedPackage.DownloadPackage(installLocation, versionOptions, progress);
-        SubHeaderText = Resources.Progress_DownloadComplete;
-        OneClickInstallProgress = 100;
-    }
-
-    private async Task InstallPackage(
-        string installLocation,
-        TorchVersion torchVersion,
-        DownloadPackageVersionOptions versionOptions
-    )
-    {
-        var progress = new Progress<ProgressReport>(progress =>
-        {
-            SubHeaderText = Resources.Progress_InstallingPackageRequirements;
-            IsIndeterminate = progress.IsIndeterminate;
-            OneClickInstallProgress = Convert.ToInt32(progress.Percentage);
-            EventManager.Instance.OnGlobalProgressChanged(OneClickInstallProgress);
-        });
-
-        await SelectedPackage.InstallPackage(
-            installLocation,
-            torchVersion,
-            versionOptions,
-            progress,
-            (output) => SubSubHeaderText = output.Text
+        AllPackages = new ObservableCollection<BasePackage>(
+            filteredPackages.Any() ? filteredPackages : packageFactory.GetAllAvailablePackages()
         );
+        SelectedPackage = AllPackages[0];
     }
 }

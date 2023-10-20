@@ -12,28 +12,27 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-public class StableDiffusionUx : BaseGitPackage
+public class StableDiffusionDirectMl : BaseGitPackage
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    public override string Name => "stable-diffusion-webui-ux";
-    public override string DisplayName { get; set; } = "Stable Diffusion Web UI-UX";
-    public override string Author => "anapnoe";
+    public override string Name => "stable-diffusion-webui-directml";
+    public override string DisplayName { get; set; } = "Stable Diffusion Web UI";
+    public override string Author => "lshqqytiger";
     public override string LicenseType => "AGPL-3.0";
     public override string LicenseUrl =>
-        "https://github.com/anapnoe/stable-diffusion-webui-ux/blob/master/LICENSE.txt";
+        "https://github.com/lshqqytiger/stable-diffusion-webui-directml/blob/master/LICENSE.txt";
     public override string Blurb =>
-        "A pixel perfect design, mobile friendly, customizable interface that adds accessibility, "
-        + "ease of use and extended functionallity to the stable diffusion web ui.";
+        "A fork of Automatic1111's Stable Diffusion WebUI with DirectML support";
     public override string LaunchCommand => "launch.py";
     public override Uri PreviewImageUri =>
         new(
-            "https://user-images.githubusercontent.com/124302297/227973574-6003142d-0c7c-41c6-9966-0792a94549e9.png"
+            "https://github.com/lshqqytiger/stable-diffusion-webui-directml/raw/master/screenshot.png"
         );
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
-    public StableDiffusionUx(
+    public StableDiffusionDirectMl(
         IGithubApiCache githubApi,
         ISettingsManager settingsManager,
         IDownloadService downloadService,
@@ -169,7 +168,7 @@ public class StableDiffusionUx : BaseGitPackage
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
+        new[] { TorchVersion.Cpu, TorchVersion.DirectMl };
 
     public override Task<string> GetLatestVersion() => Task.FromResult("master");
 
@@ -193,14 +192,12 @@ public class StableDiffusionUx : BaseGitPackage
 
         switch (torchVersion)
         {
+            case TorchVersion.DirectMl:
+                await InstallDirectMlTorch(venvRunner, progress, onConsoleOutput)
+                    .ConfigureAwait(false);
+                break;
             case TorchVersion.Cpu:
                 await InstallCpuTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
-                break;
-            case TorchVersion.Cuda:
-                await InstallCudaTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
-                break;
-            case TorchVersion.Rocm:
-                await InstallRocmTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
                 break;
         }
 
@@ -246,22 +243,5 @@ public class StableDiffusionUx : BaseGitPackage
         var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
         VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
-    }
-
-    private async Task InstallRocmTorch(
-        PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
-    )
-    {
-        progress?.Report(
-            new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true)
-        );
-
-        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
-
-        await venvRunner
-            .PipInstall(PyVenvRunner.TorchPipInstallArgsRocm511, onConsoleOutput)
-            .ConfigureAwait(false);
     }
 }

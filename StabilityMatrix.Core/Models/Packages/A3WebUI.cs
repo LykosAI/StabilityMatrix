@@ -168,7 +168,7 @@ public class A3WebUI : BaseGitPackage
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm };
+        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
 
     public override async Task<string> GetLatestVersion()
     {
@@ -202,10 +202,6 @@ public class A3WebUI : BaseGitPackage
                 break;
             case TorchVersion.Rocm:
                 await InstallRocmTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
-                break;
-            case TorchVersion.DirectMl:
-                await InstallDirectMlTorch(venvRunner, progress, onConsoleOutput)
-                    .ConfigureAwait(false);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);

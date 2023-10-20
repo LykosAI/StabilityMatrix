@@ -444,9 +444,10 @@ public sealed class App : Application
     {
         services.AddSingleton<BasePackage, A3WebUI>();
         services.AddSingleton<BasePackage, StableDiffusionUx>();
+        services.AddSingleton<BasePackage, StableDiffusionDirectMl>();
+        services.AddSingleton<BasePackage, Fooocus>();
         services.AddSingleton<BasePackage, InvokeAI>();
         services.AddSingleton<BasePackage, ComfyUI>();
-        services.AddSingleton<BasePackage, Fooocus>();
         services.AddSingleton<BasePackage, VladAutomatic>();
         services.AddSingleton<BasePackage, VoltaML>();
         services.AddSingleton<BasePackage, FooocusMre>();

@@ -349,7 +349,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     /// Run a command using the venv Python executable and return the result.
     /// </summary>
     /// <param name="arguments">Arguments to pass to the Python executable.</param>
-    public async Task<ProcessResult> Run(string arguments)
+    public async Task<ProcessResult> Run(ProcessArgs arguments)
     {
         // Record output for errors
         var output = new StringBuilder();
@@ -381,12 +381,14 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
 
     [MemberNotNull(nameof(Process))]
     public void RunDetached(
-        string arguments,
+        ProcessArgs args,
         Action<ProcessOutput>? outputDataReceived,
         Action<int>? onExit = null,
         bool unbuffered = true
     )
     {
+        var arguments = args.ToString();
+
         if (!PythonPath.Exists)
         {
             throw new FileNotFoundException("Venv python not found", PythonPath);
@@ -395,10 +397,10 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
 
         Logger.Info(
             "Launching venv process [{PythonPath}] "
-                + "in working directory [{WorkingDirectory}] with args {arguments.ToRepr()}",
+                + "in working directory [{WorkingDirectory}] with args {Arguments}",
             PythonPath,
             WorkingDirectory,
-            arguments.ToRepr()
+            arguments
         );
 
         var filteredOutput =

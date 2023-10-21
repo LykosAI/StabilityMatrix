@@ -348,6 +348,11 @@ public class ComfyNodeBuilder
         };
     }
 
+    public class ControlNetLoader : ComfyTypedNodeBase<ControlNetNodeConnection>
+    {
+        public required string ControlNetName { get; init; }
+    }
+
     public class ControlNetApplyAdvanced
         : ComfyTypedNodeBase<ConditioningNodeConnection, ConditioningNodeConnection>
     {

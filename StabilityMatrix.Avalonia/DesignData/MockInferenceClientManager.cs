@@ -24,6 +24,9 @@ public partial class MockInferenceClientManager : ObservableObject, IInferenceCl
     public IObservableCollection<HybridModelFile> VaeModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
+    public IObservableCollection<HybridModelFile> ControlNetModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
     public IObservableCollection<ComfySampler> Samplers { get; } =
         new ObservableCollectionExtended<ComfySampler>(ComfySampler.Defaults);
 

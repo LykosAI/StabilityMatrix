@@ -65,6 +65,12 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     public IObservableCollection<HybridModelFile> VaeModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
+    private readonly SourceCache<HybridModelFile, string> controlNetModelsSource =
+        new(p => p.GetId());
+
+    public IObservableCollection<HybridModelFile> ControlNetModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
     private readonly SourceCache<ComfySampler, string> samplersSource = new(p => p.Name);
 
     public IObservableCollection<ComfySampler> Samplers { get; } =
@@ -108,6 +114,17 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             )
             .DeferUntilLoaded()
             .Bind(Models)
+            .Subscribe();
+
+        controlNetModelsSource
+            .Connect()
+            .SortBy(
+                f => f.ShortDisplayName,
+                SortDirection.Ascending,
+                SortOptimisations.ComparesImmutableValuesOnly
+            )
+            .DeferUntilLoaded()
+            .Bind(ControlNetModels)
             .Subscribe();
 
         vaeModelsDefaults.AddOrUpdate(HybridModelFile.Default);
@@ -159,10 +176,23 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         if (!IsConnected)
             throw new InvalidOperationException("Client is not connected");
 
+        // Get model names
         if (await Client.GetModelNamesAsync() is { } modelNames)
         {
             modelsSource.EditDiff(
                 modelNames.Select(HybridModelFile.FromRemote),
+                HybridModelFile.Comparer
+            );
+        }
+
+        // Get control net model names
+        if (
+            await Client.GetNodeOptionNamesAsync("ControlNetLoader", "control_net_name") is
+            { } controlNetModelNames
+        )
+        {
+            controlNetModelsSource.EditDiff(
+                controlNetModelNames.Select(HybridModelFile.FromRemote),
                 HybridModelFile.Comparer
             );
         }
@@ -225,6 +255,14 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         modelsSource.EditDiff(
             modelIndexService
                 .GetFromModelIndex(SharedFolderType.StableDiffusion)
+                .Select(HybridModelFile.FromLocal),
+            HybridModelFile.Comparer
+        );
+
+        // Load local control net models
+        controlNetModelsSource.EditDiff(
+            modelIndexService
+                .GetFromModelIndex(SharedFolderType.ControlNet)
                 .Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );

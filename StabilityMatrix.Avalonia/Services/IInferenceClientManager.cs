@@ -43,6 +43,7 @@ public interface IInferenceClientManager
 
     IObservableCollection<HybridModelFile> Models { get; }
     IObservableCollection<HybridModelFile> VaeModels { get; }
+    IObservableCollection<HybridModelFile> ControlNetModels { get; }
     IObservableCollection<ComfySampler> Samplers { get; }
     IObservableCollection<ComfyUpscaler> Upscalers { get; }
     IObservableCollection<ComfyScheduler> Schedulers { get; }

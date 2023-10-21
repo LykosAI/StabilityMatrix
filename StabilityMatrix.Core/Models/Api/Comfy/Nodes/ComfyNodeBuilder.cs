@@ -348,6 +348,18 @@ public class ComfyNodeBuilder
         };
     }
 
+    public class ControlNetApplyAdvanced
+        : ComfyTypedNodeBase<ConditioningNodeConnection, ConditioningNodeConnection>
+    {
+        public required ConditioningNodeConnection Positive { get; init; }
+        public required ConditioningNodeConnection Negative { get; init; }
+        public required ControlNetNodeConnection ControlNet { get; init; }
+        public required ImageNodeConnection Image { get; init; }
+        public required double Strength { get; init; }
+        public required double StartPercent { get; init; }
+        public required double EndPercent { get; init; }
+    }
+
     public ImageNodeConnection Lambda_LatentToImage(
         LatentNodeConnection latent,
         VAENodeConnection vae
@@ -796,20 +808,9 @@ public class ComfyNodeBuilder
         public VAENodeConnection? PrimaryVAE { get; set; }
         public Size PrimarySize { get; set; }
 
-        /*public LatentNodeConnection? Latent { get; set; }
-        public Size LatentSize { get; set; }
-
-        public ImageNodeConnection? Image { get; set; }
-        public Size ImageSize { get; set; }*/
-
         public List<NamedComfyNode> OutputNodes { get; } = new();
 
         public IEnumerable<string> OutputNodeNames => OutputNodes.Select(n => n.Name);
-
-        public VAENodeConnection GetRefinerOrBaseVAE()
-        {
-            return RefinerVAE ?? BaseVAE ?? throw new NullReferenceException("No VAE");
-        }
 
         public ModelNodeConnection GetRefinerOrBaseModel()
         {

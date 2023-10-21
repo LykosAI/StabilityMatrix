@@ -15,3 +15,5 @@ public class ModelNodeConnection : NodeConnectionBase { }
 public class ConditioningNodeConnection : NodeConnectionBase { }
 
 public class ClipNodeConnection : NodeConnectionBase { }
+
+public class ControlNetNodeConnection : NodeConnectionBase { }

@@ -7,6 +7,7 @@
         xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
         xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
         xmlns:modules="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference.Modules"
+        xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
         x:DataType="vmInference:StackEditableCardViewModel">
     
     <Design.PreviewWith>
@@ -22,50 +23,46 @@
             <ControlTemplate>
                 <ScrollViewer>
                     <Grid RowDefinitions="Auto,*">
-                        <controls:Card Margin="0,0,0,3" Padding="14,4">
-                            <Grid ColumnDefinitions="*,Auto">
+                        <controls:Card 
+                            Classes="transparent"
+                            Margin="0,0,0,3" 
+                            Padding="0,4">
+                            <sg:SpacedGrid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
                                 <TextBlock Text="{Binding Title}" VerticalAlignment="Center"/>
-                                <Button Grid.Column="1"
+                                <GridSplitter ShowsPreview="False" IsEnabled="False" MaxHeight="10" Grid.Column="1" />
+                                <!-- Edit button -->
+                                <ToggleButton Grid.Column="2"
+                                        Name="PART_EditButton"
+                                        VerticalAlignment="Bottom"
+                                        CornerRadius="4"
+                                        Padding="12,4"
+                                        IsEnabled="{Binding ElementName=PART_ListBox, Path=!!ItemCount}"
+                                        IsChecked="{TemplateBinding IsListBoxEditEnabled, Mode=TwoWay}">
+                                    <fluentIcons:SymbolIcon Symbol="Edit" />
+                                </ToggleButton>
+                                <!-- Add button -->
+                                <Button Grid.Column="3"
                                         Name="PART_AddButton"
                                         VerticalAlignment="Bottom"
                                         CornerRadius="4"
-                                        Padding="4" >
+                                        Padding="12,4" >
                                     <fluentIcons:SymbolIcon Symbol="Add" IsFilled="True" />
-                                    <!--<Button.Flyout>
-                                        <ui:FAMenuFlyout>
-                                            <ui:MenuFlyoutItem Text="FreeU" />
-                                            <ui:MenuFlyoutItem 
-                                                Text="Hires Fix" 
-                                                Command="{Binding AddModuleCommand}"
-                                                CommandParameter="{x:Type modules:HiresFixModule}"/>
-                                            <ui:MenuFlyoutItem 
-                                                Text="Upscaler"
-                                                Command="{Binding AddModuleCommand}"
-                                                CommandParameter="{x:Type modules:UpscalerModule}"/>
-                                            <ui:MenuFlyoutItem Text="ControlNet"/>
-                                        </ui:FAMenuFlyout>
-                                    </Button.Flyout>-->
                                 </Button>
-                            </Grid>
+                            </sg:SpacedGrid>
 
                         </controls:Card>
                         
-                        <!-- ReSharper disable once Xaml.StyleClassNotFound -->
                         <ListBox
-                            Name="PART_ListBox"
+                            x:Name="PART_ListBox"
                             Grid.Row="1"
-                            Classes="draggableVirtualizing"
-                            ItemContainerTheme="{StaticResource DraggableListBoxItemTheme}"
+                            Theme="{StaticResource DraggableListBoxTheme}"
                             ItemsSource="{Binding Cards}">
                         
                             <ListBox.DataTemplates>
                                 <local:ViewLocator/>
                             </ListBox.DataTemplates>
                         
-                            <ListBox.Styles>
-                                <!--<Style Selector="ListBoxItem > TextBlock">
-                                <Setter Property="HorizontalAlignment" Value="Left" />
-                            </Style>-->
+                            <!--<ListBox.Styles>
                                 <Style Selector="ListBoxItem:not(:dragging)">
                                     <Setter Property="Transitions">
                                         <Setter.Value>
@@ -75,16 +72,7 @@
                                         </Setter.Value>
                                     </Setter>
                                 </Style>
-                            </ListBox.Styles>
-                        
-                            <!--<ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel 
-                                    VerticalAlignment="Top"
-                                    Orientation="Vertical"
-                                    Spacing="{TemplateBinding Spacing}"/>
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>-->
+                            </ListBox.Styles>-->
                         
                         </ListBox>
                     </Grid>
@@ -93,5 +81,15 @@
                 </ScrollViewer>
             </ControlTemplate>
         </Setter>
+        
+        <!--<Style Selector="^:editEnabled">
+            <Style Selector="^ /template/ Expander">
+                <Setter Property="IsEnabled" Value="False" />
+                <Setter Property="Background" Value="Magenta"/>
+            </Style>
+            <Style Selector="^ /template/ controls|DraggableListBox#PART_ListBox Expander">
+                <Setter Property="IsEnabled" Value="False" />
+            </Style>
+        </Style>-->
     </Style>
 </Styles>

@@ -594,7 +594,7 @@ The gallery images are often inpainted, but you will get something very similar 
     public static StackEditableCardViewModel StackEditableCardViewModel =>
         DialogFactory.Get<StackEditableCardViewModel>(vm =>
         {
-            vm.AddCards(SamplerCardViewModel, SeedCardViewModel);
+            vm.AddCards(StackExpanderViewModel, StackExpanderViewModel);
         });
 
     public static StackExpanderViewModel StackExpanderViewModel =>

@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 using Avalonia.Collections;
 using Nito.Disposables.Internals;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Extensions;
@@ -14,9 +15,10 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public abstract class StackViewModelBase : LoadableViewModelBase
 {
     private readonly ServiceManager<ViewModelBase> vmFactory;
-    private readonly Dictionary<Type, List<LoadableViewModelBase>> viewModelManager = new();
 
-    public AvaloniaList<LoadableViewModelBase> Cards { get; } = new();
+    // private readonly Dictionary<Type, List<LoadableViewModelBase>> viewModelManager = new();
+
+    public AdvancedObservableList<LoadableViewModelBase> Cards { get; } = new();
 
     protected StackViewModelBase(ServiceManager<ViewModelBase> vmFactory)
     {
@@ -50,8 +52,8 @@ public abstract class StackViewModelBase : LoadableViewModelBase
     {
         foreach (var card in cards)
         {
-            var list = viewModelManager.GetOrAdd(card.GetType());
-            list.Add(card);
+            /*var list = viewModelManager.GetOrAdd(card.GetType());
+            list.Add(card);*/
             Cards.Add(card);
         }
     }
@@ -71,13 +73,16 @@ public abstract class StackViewModelBase : LoadableViewModelBase
     public T GetCard<T>(int index = 0)
         where T : LoadableViewModelBase
     {
-        return (T)viewModelManager[typeof(T)][index];
+        return Cards.OfType<T>().ElementAtOrDefault(index)
+            ?? throw new InvalidOperationException(
+                $"Card of type {typeof(T).Name} at index {index} not found"
+            );
     }
 
     public void Clear()
     {
         Cards.Clear();
-        viewModelManager.Clear();
+        // viewModelManager.Clear();
     }
 
     /// <inheritdoc />

@@ -6,6 +6,8 @@
     <Color x:Key="ThemeDarkDarkRedColor">#952923</Color>
     <Color x:Key="ThemeDarkRedColor">#C2362E</Color>
     <Color x:Key="ThemeRedColor">#F44336</Color>
+    <Color x:Key="ThemeCoralRedColor">#D65A5A</Color>
+    <Color x:Key="ThemeDarkCoralRedColor">#AA2A2A</Color>
     <Color x:Key="ThemePinkColor">#E91E63</Color>
     <Color x:Key="ThemePurpleColor">#9C27B0</Color>
     <Color x:Key="ThemeDeepPurpleColor">#673AB7</Color>

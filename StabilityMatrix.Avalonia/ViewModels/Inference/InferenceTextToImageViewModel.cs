@@ -137,7 +137,7 @@ public class InferenceTextToImageViewModel
             {
                 typeof(HiresFixModule),
                 typeof(UpscalerModule),
-                typeof(ControlNetModule)
+                typeof(SaveImageModule)
             };
             modulesCard.DefaultModules = new[] { typeof(HiresFixModule), typeof(UpscalerModule) };
             modulesCard.InitializeDefaults();

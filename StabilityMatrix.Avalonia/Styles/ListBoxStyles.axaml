@@ -7,22 +7,12 @@
             <Panel Width="350" Height="200">
             </Panel>
         </Panel>
-
     </Design.PreviewWith>
-    
-    <ControlTheme
-        x:Key="DraggableListBoxTheme"
-        TargetType="ListBox"
-        BasedOn="{StaticResource {x:Type ListBox}}">
-        
-        <Setter Property="ItemContainerTheme" Value="{StaticResource DraggableListBoxTheme}"/>
-        
-    </ControlTheme>
     
     <ControlTheme
         x:Key="DraggableListBoxItemTheme"
         TargetType="ListBoxItem">
-        <!--
+                <!--
                     Modified from https://github.com/amwx/FluentAvalonia/blob/main/src/
                     FluentAvalonia/Styling/ControlThemes/BasicControls/ListBoxStyles.axaml
                 -->
@@ -38,7 +28,6 @@
                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                 <Setter Property="VerticalContentAlignment" Value="Center" />
                 <Setter Property="MinWidth" Value="{DynamicResource ListViewItemMinWidth}" />
-                <!--<Setter Property="Height" Value="26" />-->
 
                 <Setter Property="Template">
                     <ControlTemplate>
@@ -58,6 +47,16 @@
                         </Panel>
                     </ControlTemplate>
                 </Setter>
+        
+                <Style Selector="^:not(:dragging)">
+                    <Setter Property="Transitions">
+                        <Setter.Value>
+                            <Transitions>
+                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+                            </Transitions>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
 
                 <!--<Style Selector="^:pointerover">
                     <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
@@ -116,6 +115,26 @@
                         <Setter Property="Fill" Value="{DynamicResource ListViewItemSelectionIndicatorDisabledBrush}" />
                     </Style>@1@
                 </Style>-->
+        
+    </ControlTheme>
+    
+    <!-- ReSharper disable once Xaml.StaticResourceNotResolved -->
+    <ControlTheme
+        x:Key="DraggableListBoxTheme"
+        TargetType="ListBox"
+        BasedOn="{StaticResource {x:Type ListBox}}">
+        
+        <Setter Property="ItemContainerTheme" Value="{StaticResource DraggableListBoxItemTheme}"/>
+        
+        <!--<Style Selector="^ /template/ ListBoxItem:not(:dragging)">
+            <Setter Property="Transitions">
+                <Setter.Value>
+                    <Transitions>
+                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+                    </Transitions>
+                </Setter.Value>
+            </Setter>
+        </Style>-->
         
     </ControlTheme>
 </ResourceDictionary>

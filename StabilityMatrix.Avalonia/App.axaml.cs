@@ -344,6 +344,7 @@ public sealed class App : Application
         services.AddTransient<UpscalerModule>();
         services.AddTransient<HiresFixModule>();
         services.AddTransient<ControlNetModule>();
+        services.AddTransient<SaveImageModule>();
 
         // Dialog factory
         services.AddSingleton<ServiceManager<ViewModelBase>>(
@@ -388,6 +389,7 @@ public sealed class App : Application
                     .Register(provider.GetRequiredService<UpscalerModule>)
                     .Register(provider.GetRequiredService<HiresFixModule>)
                     .Register(provider.GetRequiredService<ControlNetModule>)
+                    .Register(provider.GetRequiredService<SaveImageModule>)
         );
     }
 

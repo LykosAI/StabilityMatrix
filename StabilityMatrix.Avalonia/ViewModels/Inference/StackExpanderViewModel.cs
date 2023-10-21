@@ -25,6 +25,13 @@ public partial class StackExpanderViewModel : StackViewModelBase
     [property: JsonIgnore]
     private string? titleExtra;
 
+    /// <summary>
+    /// True if parent StackEditableCard is in edit mode (can drag to reorder)
+    /// </summary>
+    [ObservableProperty]
+    [property: JsonIgnore]
+    private bool isEditEnabled;
+
     [ObservableProperty]
     private bool isEnabled;
 

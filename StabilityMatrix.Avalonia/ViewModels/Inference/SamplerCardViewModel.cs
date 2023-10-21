@@ -52,13 +52,13 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     private bool isSamplerSelectionEnabled;
 
     [ObservableProperty]
-    private ComfySampler? selectedSampler = new ComfySampler("euler_ancestral");
+    private ComfySampler? selectedSampler = ComfySampler.EulerAncestral;
 
     [ObservableProperty]
     private bool isSchedulerSelectionEnabled;
 
     [ObservableProperty]
-    private ComfyScheduler? selectedScheduler = new ComfyScheduler("normal");
+    private ComfyScheduler? selectedScheduler = ComfyScheduler.Normal;
 
     public StackEditableCardViewModel StackEditableCardViewModel { get; }
 
@@ -73,7 +73,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         ClientManager = clientManager;
         StackEditableCardViewModel = vmFactory.Get<StackEditableCardViewModel>(modulesCard =>
         {
-            modulesCard.Title = "Conditioning Modules";
+            modulesCard.Title = "Addons";
             modulesCard.AvailableModules = new[] { typeof(ControlNetModule) };
             modulesCard.InitializeDefaults();
         });

@@ -268,14 +268,11 @@ public static class ComfyNodeBuilderExtensions
 
     public static string SetupOutputImage(this ComfyNodeBuilder builder)
     {
-        var previewImage = builder.Nodes.AddNamedNode(
-            new NamedComfyNode("SaveImage")
+        var previewImage = builder.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.PreviewImage
             {
-                ClassType = "PreviewImage",
-                Inputs = new Dictionary<string, object?>
-                {
-                    ["images"] = builder.GetPrimaryAsImage().Data
-                }
+                Name = "SaveImage",
+                Images = builder.GetPrimaryAsImage()
             }
         );
 

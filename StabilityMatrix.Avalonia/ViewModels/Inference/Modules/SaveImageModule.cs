@@ -2,6 +2,7 @@
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
@@ -14,12 +15,19 @@ public class SaveImageModule : ModuleBase
         : base(vmFactory)
     {
         Title = "Save Intermediary Image";
-        AddCards(vmFactory.Get<UpscalerCardViewModel>());
     }
 
     /// <inheritdoc />
     protected override void OnApplyStep(ModuleApplyStepEventArgs e)
     {
-        throw new System.NotImplementedException();
+        var preview = e.Builder.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.PreviewImage
+            {
+                Name = e.Builder.Nodes.GetUniqueName("SaveImage"),
+                Images = e.Builder.GetPrimaryAsImage()
+            }
+        );
+
+        e.Builder.Connections.OutputNodes.Add(preview);
     }
 }

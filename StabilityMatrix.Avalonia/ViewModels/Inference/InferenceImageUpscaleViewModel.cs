@@ -150,14 +150,15 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
         if (IsSharpenEnabled)
         {
             builder.Connections.Primary = nodes
-                .AddNamedNode(
-                    ComfyNodeBuilder.ImageSharpen(
-                        "Sharpen",
-                        builder.GetPrimaryAsImage(),
-                        SharpenCardViewModel.SharpenRadius,
-                        SharpenCardViewModel.Sigma,
-                        SharpenCardViewModel.Alpha
-                    )
+                .AddTypedNode(
+                    new ComfyNodeBuilder.ImageSharpen
+                    {
+                        Name = "Sharpen",
+                        Image = builder.GetPrimaryAsImage(),
+                        SharpenRadius = SharpenCardViewModel.SharpenRadius,
+                        Sigma = SharpenCardViewModel.Sigma,
+                        Alpha = SharpenCardViewModel.Alpha
+                    }
                 )
                 .Output;
         }

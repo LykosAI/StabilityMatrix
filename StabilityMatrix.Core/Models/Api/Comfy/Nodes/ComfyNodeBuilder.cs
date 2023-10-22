@@ -327,33 +327,25 @@ public class ComfyNodeBuilder
         };
     }
 
-    public static NamedComfyNode<ImageNodeConnection> ImageSharpen(
-        string name,
-        ImageNodeConnection image,
-        int sharpenRadius,
-        double sigma,
-        double alpha
-    )
+    public record PreviewImage : ComfyTypedNodeBase
     {
-        return new NamedComfyNode<ImageNodeConnection>(name)
-        {
-            ClassType = "ImageSharpen",
-            Inputs = new Dictionary<string, object?>
-            {
-                ["image"] = image.Data,
-                ["sharpen_radius"] = sharpenRadius,
-                ["sigma"] = sigma,
-                ["alpha"] = alpha
-            }
-        };
+        public required ImageNodeConnection Images { get; init; }
     }
 
-    public class ControlNetLoader : ComfyTypedNodeBase<ControlNetNodeConnection>
+    public record ImageSharpen : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        public required ImageNodeConnection Image { get; init; }
+        public required int SharpenRadius { get; init; }
+        public required double Sigma { get; init; }
+        public required double Alpha { get; init; }
+    }
+
+    public record ControlNetLoader : ComfyTypedNodeBase<ControlNetNodeConnection>
     {
         public required string ControlNetName { get; init; }
     }
 
-    public class ControlNetApplyAdvanced
+    public record ControlNetApplyAdvanced
         : ComfyTypedNodeBase<ConditioningNodeConnection, ConditioningNodeConnection>
     {
         public required ConditioningNodeConnection Positive { get; init; }

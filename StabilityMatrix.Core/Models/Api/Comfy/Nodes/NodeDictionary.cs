@@ -31,6 +31,13 @@ public class NodeDictionary : Dictionary<string, ComfyNode>
         return node;
     }
 
+    public TTypedNode AddTypedNode<TTypedNode>(TTypedNode node)
+        where TTypedNode : ComfyTypedNodeBase
+    {
+        Add(node.Name, node);
+        return node;
+    }
+
     public void NormalizeConnectionTypes()
     {
         using var _ = new CodeTimer();

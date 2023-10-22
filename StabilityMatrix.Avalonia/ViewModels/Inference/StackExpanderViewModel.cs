@@ -18,23 +18,25 @@ public partial class StackExpanderViewModel : StackViewModelBase
     [ObservableProperty]
     [property: JsonIgnore]
     private string? title;
-    
-    [ObservableProperty] 
+
+    [ObservableProperty]
     private bool isEnabled;
-    
+
     /// <inheritdoc />
     public override void LoadStateFromJsonObject(JsonObject state)
     {
         var model = DeserializeModel<StackExpanderModel>(state);
         IsEnabled = model.IsEnabled;
-        
-        if (model.Cards is null) return;
-        
+
+        if (model.Cards is null)
+            return;
+
         foreach (var (i, card) in model.Cards.Enumerate())
         {
             // Ignore if more than cards than we have
-            if (i > Cards.Count - 1) break;
-            
+            if (i > Cards.Count - 1)
+                break;
+
             Cards[i].LoadStateFromJsonObject(card);
         }
     }
@@ -42,10 +44,12 @@ public partial class StackExpanderViewModel : StackViewModelBase
     /// <inheritdoc />
     public override JsonObject SaveStateToJsonObject()
     {
-        return SerializeModel(new StackExpanderModel
-        {
-            IsEnabled = IsEnabled,
-            Cards = Cards.Select(x => x.SaveStateToJsonObject()).ToList()
-        });
+        return SerializeModel(
+            new StackExpanderModel
+            {
+                IsEnabled = IsEnabled,
+                Cards = Cards.Select(x => x.SaveStateToJsonObject()).ToList()
+            }
+        );
     }
 }

@@ -141,7 +141,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         if (!settingsManager.IsLibraryDirSet)
             return;
-        
+
         Directory.CreateDirectory(settingsManager.ImagesDirectory);
         var packageCategories = settingsManager.Settings.InstalledPackages
             .Where(x => !x.UseSharedOutputFolder)

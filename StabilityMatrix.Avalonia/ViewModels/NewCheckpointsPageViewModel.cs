@@ -43,12 +43,17 @@ public partial class NewCheckpointsPageViewModel : PageViewModelBase
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly INotificationService notificationService;
     public override string Title => "Checkpoint Manager";
-    public override IconSource IconSource => new SymbolIconSource
-        {Symbol = Symbol.Cellular5g, IsFilled = true};
+    public override IconSource IconSource =>
+        new SymbolIconSource { Symbol = Symbol.Cellular5g, IsFilled = true };
 
-    public NewCheckpointsPageViewModel(ILogger<NewCheckpointsPageViewModel> logger,
-        ISettingsManager settingsManager, ILiteDbContext liteDbContext, ICivitApi civitApi,
-        ServiceManager<ViewModelBase> dialogFactory, INotificationService notificationService)
+    public NewCheckpointsPageViewModel(
+        ILogger<NewCheckpointsPageViewModel> logger,
+        ISettingsManager settingsManager,
+        ILiteDbContext liteDbContext,
+        ICivitApi civitApi,
+        ServiceManager<ViewModelBase> dialogFactory,
+        INotificationService notificationService
+    )
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
@@ -62,23 +67,27 @@ public partial class NewCheckpointsPageViewModel : PageViewModelBase
     [NotifyPropertyChangedFor(nameof(ConnectedCheckpoints))]
     [NotifyPropertyChangedFor(nameof(NonConnectedCheckpoints))]
     private ObservableCollection<CheckpointFile> allCheckpoints = new();
-    
+
     [ObservableProperty]
     private ObservableCollection<CivitModel> civitModels = new();
 
-    public ObservableCollection<CheckpointFile> ConnectedCheckpoints => new(
-        AllCheckpoints.Where(x => x.IsConnectedModel)
-            .OrderBy(x => x.ConnectedModel!.ModelName)
-            .ThenBy(x => x.ModelType)
-            .GroupBy(x => x.ConnectedModel!.ModelId)
-            .Select(x => x.First()));
+    public ObservableCollection<CheckpointFile> ConnectedCheckpoints =>
+        new(
+            AllCheckpoints
+                .Where(x => x.IsConnectedModel)
+                .OrderBy(x => x.ConnectedModel!.ModelName)
+                .ThenBy(x => x.ModelType)
+                .GroupBy(x => x.ConnectedModel!.ModelId)
+                .Select(x => x.First())
+        );
 
-    public ObservableCollection<CheckpointFile> NonConnectedCheckpoints => new(
-        AllCheckpoints.Where(x => !x.IsConnectedModel).OrderBy(x => x.ModelType));
+    public ObservableCollection<CheckpointFile> NonConnectedCheckpoints =>
+        new(AllCheckpoints.Where(x => !x.IsConnectedModel).OrderBy(x => x.ModelType));
 
     public override async Task OnLoadedAsync()
     {
-        if (Design.IsDesignMode) return;
+        if (Design.IsDesignMode)
+            return;
 
         var files = CheckpointFile.GetAllCheckpointFiles(settingsManager.ModelsDirectory);
         AllCheckpoints = new ObservableCollection<CheckpointFile>(files);
@@ -88,17 +97,17 @@ public partial class NewCheckpointsPageViewModel : PageViewModelBase
         {
             CommaSeparatedModelIds = string.Join(',', connectedModelIds)
         };
-        
+
         // See if query is cached
         var cachedQuery = await liteDbContext.CivitModelQueryCache
             .IncludeAll()
             .FindByIdAsync(ObjectHash.GetMd5Guid(modelRequest));
-        
+
         // If cached, update model cards
         if (cachedQuery is not null)
         {
             CivitModels = new ObservableCollection<CivitModel>(cachedQuery.Items);
-            
+
             // Start remote query (background mode)
             // Skip when last query was less than 2 min ago
             var timeSinceCache = DateTimeOffset.UtcNow - cachedQuery.InsertedAt;
@@ -112,24 +121,34 @@ public partial class NewCheckpointsPageViewModel : PageViewModelBase
             await CivitQuery(modelRequest);
         }
     }
-    
+
     public async Task ShowVersionDialog(int modelId)
     {
         var model = CivitModels.FirstOrDefault(m => m.Id == modelId);
         if (model == null)
         {
-            notificationService.Show(new Notification("Model has no versions available",
-                "This model has no versions available for download", NotificationType.Warning));
+            notificationService.Show(
+                new Notification(
+                    "Model has no versions available",
+                    "This model has no versions available for download",
+                    NotificationType.Warning
+                )
+            );
             return;
         }
         var versions = model.ModelVersions;
         if (versions is null || versions.Count == 0)
         {
-            notificationService.Show(new Notification("Model has no versions available",
-                "This model has no versions available for download", NotificationType.Warning));
+            notificationService.Show(
+                new Notification(
+                    "Model has no versions available",
+                    "This model has no versions available for download",
+                    NotificationType.Warning
+                )
+            );
             return;
         }
-        
+
         var dialog = new BetterContentDialog
         {
             Title = model.Name,
@@ -138,19 +157,21 @@ public partial class NewCheckpointsPageViewModel : PageViewModelBase
             IsFooterVisible = false,
             MaxDialogWidth = 750,
         };
-        
+
         var viewModel = dialogFactory.Get<SelectModelVersionViewModel>();
         viewModel.Dialog = dialog;
-        viewModel.Versions = versions.Select(version =>
-                new ModelVersionViewModel(
-                    settingsManager.Settings.InstalledModelHashes ?? new HashSet<string>(), version))
+        viewModel.Versions = versions
+            .Select(
+                version =>
+                    new ModelVersionViewModel(
+                        settingsManager.Settings.InstalledModelHashes ?? new HashSet<string>(),
+                        version
+                    )
+            )
             .ToImmutableArray();
         viewModel.SelectedVersionViewModel = viewModel.Versions[0];
-        
-        dialog.Content = new SelectModelVersionDialog
-        {
-            DataContext = viewModel
-        };
+
+        dialog.Content = new SelectModelVersionDialog { DataContext = viewModel };
 
         var result = await dialog.ShowAsync();
 
@@ -170,8 +191,10 @@ public partial class NewCheckpointsPageViewModel : PageViewModelBase
             var modelResponse = await civitApi.GetModels(request);
             var models = modelResponse.Items;
             // Filter out unknown model types and archived/taken-down models
-            models = models.Where(m => m.Type.ConvertTo<SharedFolderType>() > 0)
-                .Where(m => m.Mode == null).ToList();
+            models = models
+                .Where(m => m.Type.ConvertTo<SharedFolderType>() > 0)
+                .Where(m => m.Mode == null)
+                .ToList();
 
             // Database update calls will invoke `OnModelsUpdated`
             // Add to database
@@ -185,7 +208,8 @@ public partial class NewCheckpointsPageViewModel : PageViewModelBase
                     Request = request,
                     Items = models,
                     Metadata = modelResponse.Metadata
-                });
+                }
+            );
 
             if (cacheNew)
             {
@@ -194,26 +218,42 @@ public partial class NewCheckpointsPageViewModel : PageViewModelBase
         }
         catch (OperationCanceledException)
         {
-            notificationService.Show(new Notification("Request to CivitAI timed out",
-                "Could not check for checkpoint updates. Please try again later."));
+            notificationService.Show(
+                new Notification(
+                    "Request to CivitAI timed out",
+                    "Could not check for checkpoint updates. Please try again later."
+                )
+            );
             logger.LogWarning($"CivitAI query timed out ({request})");
         }
         catch (HttpRequestException e)
         {
-            notificationService.Show(new Notification("CivitAI can't be reached right now",
-                "Could not check for checkpoint updates. Please try again later."));
+            notificationService.Show(
+                new Notification(
+                    "CivitAI can't be reached right now",
+                    "Could not check for checkpoint updates. Please try again later."
+                )
+            );
             logger.LogWarning(e, $"CivitAI query HttpRequestException ({request})");
         }
         catch (ApiException e)
         {
-            notificationService.Show(new Notification("CivitAI can't be reached right now",
-                "Could not check for checkpoint updates. Please try again later."));
+            notificationService.Show(
+                new Notification(
+                    "CivitAI can't be reached right now",
+                    "Could not check for checkpoint updates. Please try again later."
+                )
+            );
             logger.LogWarning(e, $"CivitAI query ApiException ({request})");
         }
         catch (Exception e)
         {
-            notificationService.Show(new Notification("CivitAI can't be reached right now",
-                $"Unknown exception during CivitAI query: {e.GetType().Name}"));
+            notificationService.Show(
+                new Notification(
+                    "CivitAI can't be reached right now",
+                    $"Unknown exception during CivitAI query: {e.GetType().Name}"
+                )
+            );
             logger.LogError(e, $"CivitAI query unknown exception ({request})");
         }
     }

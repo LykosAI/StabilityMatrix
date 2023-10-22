@@ -65,14 +65,14 @@ public partial class PackageManagerViewModel : PageViewModelBase
     public IObservableCollection<PackageCardViewModel> PackageCards { get; } =
         new ObservableCollectionExtended<PackageCardViewModel>();
 
-
     private DispatcherTimer timer;
 
     public PackageManagerViewModel(
         ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> dialogFactory,
         INotificationService notificationService,
-        ILogger<PackageManagerViewModel> logger)
+        ILogger<PackageManagerViewModel> logger
+    )
     {
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
@@ -99,11 +99,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
             .Bind(PackageCards)
             .Subscribe();
 
-        timer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromSeconds(5),
-            IsEnabled = true
-        };
+        timer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(15), IsEnabled = true };
         timer.Tick += async (_, _) => await CheckPackagesForUpdates();
     }
 
@@ -129,7 +125,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
         var currentUnknown = await Task.Run(IndexUnknownPackages);
         unknownInstalledPackages.Edit(s => s.Load(currentUnknown));
-        
+
         timer.Start();
     }
 
@@ -186,9 +182,13 @@ public partial class PackageManagerViewModel : PageViewModelBase
             {
                 await package.OnLoadedAsync();
             }
-            catch
+            catch (Exception e)
             {
-                logger.LogWarning("Failed to check for updates for {Package}", package?.Package?.PackageName);
+                logger.LogError(
+                    e,
+                    "Failed to check for updates for {Package}",
+                    package?.Package?.PackageName
+                );
             }
         }
     }

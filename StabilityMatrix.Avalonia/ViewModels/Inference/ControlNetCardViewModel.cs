@@ -19,6 +19,21 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
     [Required]
     private HybridModelFile? selectedPreprocessor;
 
+    [ObservableProperty]
+    [Required]
+    [Range(0d, 10d)]
+    private double strength = 1.0;
+
+    [ObservableProperty]
+    [Required]
+    [Range(0d, 1d)]
+    private double startPercent;
+
+    [ObservableProperty]
+    [Required]
+    [Range(0d, 1d)]
+    private double endPercent = 1.0;
+
     public SelectImageCardViewModel SelectImageCardViewModel { get; }
 
     public IInferenceClientManager ClientManager { get; }

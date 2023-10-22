@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -9,7 +8,6 @@ using System.Text;
 using AvaloniaEdit.Utils;
 using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
-using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
@@ -56,7 +54,7 @@ public static class DesignData
         if (isInitialized)
             throw new InvalidOperationException("DesignData is already initialized.");
 
-        var services = new ServiceCollection();
+        var services = App.ConfigureServices();
 
         var activePackageId = Guid.NewGuid();
         services.AddSingleton<ISettingsManager, MockSettingsManager>(
@@ -120,8 +118,7 @@ public static class DesignData
             .AddSingleton<ICompletionProvider, MockCompletionProvider>()
             .AddSingleton<IModelIndexService, MockModelIndexService>()
             .AddSingleton<IImageIndexService, MockImageIndexService>()
-            .AddSingleton<ITrackedDownloadService, MockTrackedDownloadService>()
-            .AddSingleton<IPackageModificationRunner, PackageModificationRunner>();
+            .AddSingleton<ITrackedDownloadService, MockTrackedDownloadService>();
 
         // Placeholder services that nobody should need during design time
         services
@@ -131,12 +128,6 @@ public static class DesignData
             .AddSingleton<IGithubApiCache>(_ => null!)
             .AddSingleton<ITokenizerProvider>(_ => null!)
             .AddSingleton<IPrerequisiteHelper>(_ => null!);
-
-        // Using some default service implementations from App
-        App.ConfigurePackages(services);
-        App.ConfigurePageViewModels(services);
-        App.ConfigureDialogViewModels(services);
-        App.ConfigureViews(services);
 
         // Override Launch page with mock
         services.Remove(ServiceDescriptor.Singleton<LaunchPageViewModel, LaunchPageViewModel>());

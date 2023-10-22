@@ -1,7 +1,9 @@
 ﻿using Avalonia.Input;
+using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
+[Transient]
 public class ImageFolderCard : DropTargetTemplatedControlBase
 {
     /// <inheritdoc />

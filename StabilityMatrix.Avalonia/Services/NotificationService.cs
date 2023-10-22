@@ -3,20 +3,24 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Avalonia.Services;
 
+[Singleton(typeof(INotificationService))]
 public class NotificationService : INotificationService
 {
     private WindowNotificationManager? notificationManager;
-    
+
     public void Initialize(
-        Visual? visual, 
+        Visual? visual,
         NotificationPosition position = NotificationPosition.BottomRight,
-        int maxItems = 4)
+        int maxItems = 4
+    )
     {
-        if (notificationManager is not null) return;
+        if (notificationManager is not null)
+            return;
         notificationManager = new WindowNotificationManager(TopLevel.GetTopLevel(visual))
         {
             Position = position,
@@ -30,28 +34,31 @@ public class NotificationService : INotificationService
     }
 
     public void Show(
-        string title, 
+        string title,
         string message,
         NotificationType appearance = NotificationType.Information,
-        TimeSpan? expiration = null)
+        TimeSpan? expiration = null
+    )
     {
         Show(new Notification(title, message, appearance, expiration));
     }
 
     public void ShowPersistent(
-        string title, 
+        string title,
         string message,
-        NotificationType appearance = NotificationType.Information)
+        NotificationType appearance = NotificationType.Information
+    )
     {
         Show(new Notification(title, message, appearance, TimeSpan.Zero));
     }
-    
+
     /// <inheritdoc />
     public async Task<TaskResult<T>> TryAsync<T>(
         Task<T> task,
         string title = "Error",
         string? message = null,
-        NotificationType appearance = NotificationType.Error)
+        NotificationType appearance = NotificationType.Error
+    )
     {
         try
         {
@@ -63,13 +70,14 @@ public class NotificationService : INotificationService
             return TaskResult<T>.FromException(e);
         }
     }
-    
+
     /// <inheritdoc />
     public async Task<TaskResult<bool>> TryAsync(
         Task task,
         string title = "Error",
         string? message = null,
-        NotificationType appearance = NotificationType.Error)
+        NotificationType appearance = NotificationType.Error
+    )
     {
         try
         {

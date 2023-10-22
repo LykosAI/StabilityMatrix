@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -19,6 +20,8 @@ using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 
+[ManagedService]
+[Transient]
 public partial class CheckpointFile : ViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

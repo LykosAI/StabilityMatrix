@@ -17,6 +17,7 @@ using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -27,6 +28,8 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 
+[ManagedService]
+[Transient]
 public partial class CheckpointFolder : ViewModelBase
 {
     private readonly ISettingsManager settingsManager;

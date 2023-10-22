@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
-using Avalonia.Controls.Shapes;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -23,7 +22,6 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.Views;
-using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
@@ -43,6 +41,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 
 [Preload]
 [View(typeof(InferencePage))]
+[Singleton]
 public partial class InferenceViewModel : PageViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

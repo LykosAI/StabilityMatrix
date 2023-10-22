@@ -8,9 +8,11 @@ using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
+using Avalonia.Threading;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -20,7 +22,6 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
@@ -36,12 +37,13 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 /// </summary>
 
 [View(typeof(PackageManagerPage))]
+[Singleton]
 public partial class PackageManagerViewModel : PageViewModelBase
 {
     private readonly ISettingsManager settingsManager;
-    private readonly IPackageFactory packageFactory;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly INotificationService notificationService;
+    private readonly ILogger<PackageManagerViewModel> logger;
 
     public override string Title => "Packages";
     public override IconSource IconSource =>
@@ -63,17 +65,19 @@ public partial class PackageManagerViewModel : PageViewModelBase
     public IObservableCollection<PackageCardViewModel> PackageCards { get; } =
         new ObservableCollectionExtended<PackageCardViewModel>();
 
+    private DispatcherTimer timer;
+
     public PackageManagerViewModel(
         ISettingsManager settingsManager,
-        IPackageFactory packageFactory,
         ServiceManager<ViewModelBase> dialogFactory,
-        INotificationService notificationService
+        INotificationService notificationService,
+        ILogger<PackageManagerViewModel> logger
     )
     {
         this.settingsManager = settingsManager;
-        this.packageFactory = packageFactory;
         this.dialogFactory = dialogFactory;
         this.notificationService = notificationService;
+        this.logger = logger;
 
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
 
@@ -94,6 +98,9 @@ public partial class PackageManagerViewModel : PageViewModelBase
             )
             .Bind(PackageCards)
             .Subscribe();
+
+        timer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(15), IsEnabled = true };
+        timer.Tick += async (_, _) => await CheckPackagesForUpdates();
     }
 
     public void SetPackages(IEnumerable<InstalledPackage> packages)
@@ -118,6 +125,14 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
         var currentUnknown = await Task.Run(IndexUnknownPackages);
         unknownInstalledPackages.Edit(s => s.Load(currentUnknown));
+
+        timer.Start();
+    }
+
+    public override void OnUnloaded()
+    {
+        timer.Stop();
+        base.OnUnloaded();
     }
 
     public async Task ShowInstallDialog(BasePackage? selectedPackage = null)
@@ -154,6 +169,25 @@ public partial class PackageManagerViewModel : PageViewModelBase
                     "Package Install Complete",
                     $"{viewModel.InstallName} installed successfully",
                     NotificationType.Success
+                );
+            }
+        }
+    }
+
+    private async Task CheckPackagesForUpdates()
+    {
+        foreach (var package in PackageCards)
+        {
+            try
+            {
+                await package.OnLoadedAsync();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(
+                    e,
+                    "Failed to check for updates for {Package}",
+                    package?.Package?.PackageName
                 );
             }
         }

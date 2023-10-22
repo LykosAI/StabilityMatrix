@@ -6,11 +6,13 @@ using Avalonia.Threading;
 using AvaloniaEdit;
 using AvaloniaEdit.TextMate;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using TextMateSharp.Grammars;
 
 namespace StabilityMatrix.Avalonia.Views;
 
+[Singleton]
 public partial class LaunchPageView : UserControlBase
 {
     private const int LineOffset = 5;

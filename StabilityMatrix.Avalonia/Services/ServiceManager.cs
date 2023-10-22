@@ -256,4 +256,19 @@ public class ServiceManager<T>
 
         return new BetterContentDialog { Content = view };
     }
+
+    public void Register(Type type, Func<T> providerFunc)
+    {
+        lock (providers)
+        {
+            if (instances.ContainsKey(type) || providers.ContainsKey(type))
+            {
+                throw new ArgumentException(
+                    $"Service of type {type} is already registered for {typeof(T)}"
+                );
+            }
+
+            providers[type] = providerFunc;
+        }
+    }
 }

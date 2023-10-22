@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Threading;
-using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Media;
 using Avalonia.Styling;
-using FluentAvalonia.UI.Media.Animation;
 
 namespace StabilityMatrix.Avalonia.Animations;
 
@@ -23,7 +21,7 @@ public class BetterEntranceNavigationTransition : BaseTransitionInfo
     /// Gets or sets the Vertical Offset used when animating
     /// </summary>
     public double FromVerticalOffset { get; set; } = 100;
-    
+
     public override async void RunAnimation(Animatable ctrl, CancellationToken cancellationToken)
     {
         var animation = new Animation
@@ -36,7 +34,7 @@ public class BetterEntranceNavigationTransition : BaseTransitionInfo
                     Setters =
                     {
                         new Setter(Visual.OpacityProperty, 0.0),
-                        new Setter(TranslateTransform.XProperty,FromHorizontalOffset),
+                        new Setter(TranslateTransform.XProperty, FromHorizontalOffset),
                         new Setter(TranslateTransform.YProperty, FromVerticalOffset)
                     },
                     Cue = new Cue(0d)
@@ -46,7 +44,7 @@ public class BetterEntranceNavigationTransition : BaseTransitionInfo
                     Setters =
                     {
                         new Setter(Visual.OpacityProperty, 1d),
-                        new Setter(TranslateTransform.XProperty,0.0),
+                        new Setter(TranslateTransform.XProperty, 0.0),
                         new Setter(TranslateTransform.YProperty, 0.0)
                     },
                     Cue = new Cue(1d)

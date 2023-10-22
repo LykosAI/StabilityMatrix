@@ -17,6 +17,7 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
@@ -27,6 +28,8 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
+[ManagedService]
+[Transient]
 public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

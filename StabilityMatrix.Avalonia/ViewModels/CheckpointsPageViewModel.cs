@@ -24,6 +24,7 @@ using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(CheckpointsPage))]
+[Singleton]
 public partial class CheckpointsPageViewModel : PageViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

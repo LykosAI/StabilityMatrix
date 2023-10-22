@@ -1,7 +1,7 @@
-﻿using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
+﻿using Avalonia.Controls.Primitives;
+using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
+[Transient]
 public class SharpenCard : TemplatedControl { }

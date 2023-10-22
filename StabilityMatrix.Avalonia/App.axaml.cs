@@ -308,7 +308,8 @@ public sealed class App : Application
 
         var transientTypes = exportedTypes
             .Select(
-                t => new { t, attributes = t.GetCustomAttributes(typeof(TransientAttribute), true) }
+                t =>
+                    new { t, attributes = t.GetCustomAttributes(typeof(TransientAttribute), false) }
             )
             .Where(
                 t1 =>
@@ -331,7 +332,8 @@ public sealed class App : Application
 
         var singletonTypes = exportedTypes
             .Select(
-                t => new { t, attributes = t.GetCustomAttributes(typeof(SingletonAttribute), true) }
+                t =>
+                    new { t, attributes = t.GetCustomAttributes(typeof(SingletonAttribute), false) }
             )
             .Where(
                 t1 =>

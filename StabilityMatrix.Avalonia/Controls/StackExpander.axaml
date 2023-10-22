@@ -52,7 +52,7 @@
                                 Text="{Binding Title}"/>
                             <Button 
                                 IsVisible="{Binding IsEditEnabled}"
-                                Command="{Binding RemoveFromParentList}"
+                                Command="{Binding RemoveFromParentListCommand}"
                                 Classes="transparent-red"
                                 Grid.Column="3" 
                                 Padding="10,4"

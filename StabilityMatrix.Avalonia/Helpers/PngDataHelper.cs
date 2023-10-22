@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
-using Avalonia;
 using Force.Crc32;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Models;

@@ -1,10 +1,9 @@
-﻿using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
-using StabilityMatrix.Avalonia.Controls;
+﻿using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Views;
 
+[Singleton]
 public partial class OutputsPage : UserControlBase
 {
     public OutputsPage()

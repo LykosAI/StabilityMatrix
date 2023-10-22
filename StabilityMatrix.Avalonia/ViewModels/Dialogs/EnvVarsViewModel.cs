@@ -12,6 +12,8 @@ using StabilityMatrix.Core.Models;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(EnvVarsViewModel))]
+[ManagedService]
+[Transient]
 public partial class EnvVarsViewModel : ContentDialogViewModelBase
 {
     [ObservableProperty]

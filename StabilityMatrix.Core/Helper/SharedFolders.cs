@@ -1,4 +1,5 @@
 ﻿using NLog;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
@@ -9,6 +10,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Helper;
 
+[Singleton(typeof(ISharedFolders))]
 public class SharedFolders : ISharedFolders
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

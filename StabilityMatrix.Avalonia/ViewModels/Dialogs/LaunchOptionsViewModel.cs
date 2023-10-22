@@ -17,6 +17,8 @@ using StabilityMatrix.Core.Models;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(LaunchOptionsDialog))]
+[ManagedService]
+[Transient]
 public partial class LaunchOptionsViewModel : ContentDialogViewModelBase
 {
     private readonly ILogger<LaunchOptionsViewModel> logger;

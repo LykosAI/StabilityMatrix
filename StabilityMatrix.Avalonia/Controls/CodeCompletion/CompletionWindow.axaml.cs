@@ -18,8 +18,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;

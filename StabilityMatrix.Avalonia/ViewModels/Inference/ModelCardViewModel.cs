@@ -12,6 +12,8 @@ using StabilityMatrix.Core.Models;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ModelCard))]
+[ManagedService]
+[Transient]
 public partial class ModelCardViewModel : LoadableViewModelBase, IParametersLoadableState
 {
     [ObservableProperty]

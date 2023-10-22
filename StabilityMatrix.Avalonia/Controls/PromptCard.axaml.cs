@@ -6,9 +6,11 @@ using AvaloniaEdit;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Utils;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
+[Transient]
 public class PromptCard : TemplatedControl
 {
     /// <inheritdoc />

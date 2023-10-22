@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using StabilityMatrix.Avalonia.Models;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;

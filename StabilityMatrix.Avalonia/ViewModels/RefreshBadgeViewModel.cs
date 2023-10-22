@@ -16,6 +16,8 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(RefreshBadge))]
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+[ManagedService]
+[Transient]
 public partial class RefreshBadgeViewModel : ViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

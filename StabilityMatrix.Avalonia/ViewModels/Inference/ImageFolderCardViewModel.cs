@@ -32,6 +32,8 @@ using SortDirection = DynamicData.Binding.SortDirection;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ImageFolderCard))]
+[ManagedService]
+[Transient]
 public partial class ImageFolderCardViewModel : ViewModelBase
 {
     private readonly ILogger<ImageFolderCardViewModel> logger;

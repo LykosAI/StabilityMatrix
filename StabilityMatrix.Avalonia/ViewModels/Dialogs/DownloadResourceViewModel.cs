@@ -16,6 +16,8 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(DownloadResourceDialog))]
+[ManagedService]
+[Transient]
 public partial class DownloadResourceViewModel : ContentDialogViewModelBase
 {
     private readonly IDownloadService downloadService;

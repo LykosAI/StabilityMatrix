@@ -2,7 +2,6 @@
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls.Primitives;
-using AvaloniaEdit.Utils;
 using CommunityToolkit.Mvvm.Input;
 
 namespace StabilityMatrix.Avalonia.Controls;

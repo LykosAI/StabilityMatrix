@@ -11,6 +11,8 @@ using StabilityMatrix.Core.Helper;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(FirstLaunchSetupWindow))]
+[ManagedService]
+[Singleton]
 public partial class FirstLaunchSetupViewModel : ViewModelBase
 {
     [ObservableProperty]

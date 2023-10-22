@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 using AsyncAwaitBestPractices;
 using NLog;
 using Refit;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -15,6 +16,7 @@ using StabilityMatrix.Core.Python;
 
 namespace StabilityMatrix.Core.Services;
 
+[Singleton(typeof(ISettingsManager))]
 public class SettingsManager : ISettingsManager
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

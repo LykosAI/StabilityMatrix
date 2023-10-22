@@ -11,6 +11,8 @@ using StabilityMatrix.Core.Extensions;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(StackExpander))]
+[ManagedService]
+[Transient]
 public partial class StackExpanderViewModel : StackViewModelBase
 {
     [ObservableProperty]

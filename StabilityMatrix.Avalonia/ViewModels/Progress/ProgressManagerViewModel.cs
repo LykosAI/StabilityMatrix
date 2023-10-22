@@ -22,6 +22,8 @@ using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels.Progress;
 
 [View(typeof(ProgressManagerPage))]
+[ManagedService]
+[Singleton]
 public partial class ProgressManagerViewModel : PageViewModelBase
 {
     private readonly INotificationService notificationService;

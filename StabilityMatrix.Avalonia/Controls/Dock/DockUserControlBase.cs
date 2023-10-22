@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Avalonia;
@@ -9,7 +8,6 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
 using Dock.Avalonia.Controls;
 using Dock.Model;
-using Dock.Model.Avalonia.Json;
 using Dock.Model.Core;
 using Dock.Serializer;
 using StabilityMatrix.Avalonia.Models.Inference;

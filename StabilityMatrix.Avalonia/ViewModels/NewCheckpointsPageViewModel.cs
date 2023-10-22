@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
-using AvaloniaEdit.Utils;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
@@ -35,6 +33,7 @@ using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(NewCheckpointsPage))]
+[Singleton]
 public partial class NewCheckpointsPageViewModel : PageViewModelBase
 {
     private readonly ILogger<NewCheckpointsPageViewModel> logger;

@@ -6,6 +6,8 @@ using StabilityMatrix.Core.Attributes;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(ExceptionDialog))]
+[ManagedService]
+[Transient]
 public partial class ExceptionViewModel : ViewModelBase
 {
     public Exception? Exception { get; set; }

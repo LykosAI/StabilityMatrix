@@ -1,9 +1,12 @@
 ﻿using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
+[ManagedService]
+[Transient]
 public class SaveImageModule : ModuleBase
 {
     /// <inheritdoc />

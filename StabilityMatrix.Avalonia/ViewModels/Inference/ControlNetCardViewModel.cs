@@ -9,6 +9,8 @@ using StabilityMatrix.Core.Models;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ControlNetCard))]
+[ManagedService]
+[Transient]
 public partial class ControlNetCardViewModel : LoadableViewModelBase
 {
     [ObservableProperty]

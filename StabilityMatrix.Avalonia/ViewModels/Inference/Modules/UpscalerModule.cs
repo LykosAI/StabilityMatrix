@@ -2,10 +2,13 @@
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
+[ManagedService]
+[Transient]
 public class UpscalerModule : ModuleBase
 {
     /// <inheritdoc />

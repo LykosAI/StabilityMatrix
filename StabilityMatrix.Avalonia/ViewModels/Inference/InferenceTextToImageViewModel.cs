@@ -30,6 +30,8 @@ using InferenceTextToImageView = StabilityMatrix.Avalonia.Views.Inference.Infere
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceTextToImageView), persistent: true)]
+[ManagedService]
+[Transient]
 public class InferenceTextToImageViewModel
     : InferenceGenerationViewModelBase,
         IParametersLoadableState

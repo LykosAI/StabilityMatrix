@@ -10,6 +10,8 @@ using StabilityMatrix.Core.Extensions;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(StackCard))]
+[ManagedService]
+[Transient]
 public class StackCardViewModel : StackViewModelBase
 {
     /// <inheritdoc />

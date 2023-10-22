@@ -1,9 +1,10 @@
-﻿using Avalonia;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Views.Settings;
 
+[Singleton]
 public partial class InferenceSettingsPage : UserControl
 {
     public InferenceSettingsPage()

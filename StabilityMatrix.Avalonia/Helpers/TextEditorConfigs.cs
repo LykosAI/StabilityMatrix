@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using System.Reflection;
 using Avalonia.Media;
 using AvaloniaEdit;
 using AvaloniaEdit.TextMate;

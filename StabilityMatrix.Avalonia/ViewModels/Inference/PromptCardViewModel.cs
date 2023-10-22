@@ -21,6 +21,8 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(PromptCard))]
+[ManagedService]
+[Transient]
 public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoadableState
 {
     private readonly IModelIndexService modelIndexService;

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using AsyncAwaitBestPractices;
 using DynamicData;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
@@ -10,6 +11,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Core.Services;
 
+[Singleton(typeof(IImageIndexService))]
 public class ImageIndexService : IImageIndexService
 {
     private readonly ILogger<ImageIndexService> logger;

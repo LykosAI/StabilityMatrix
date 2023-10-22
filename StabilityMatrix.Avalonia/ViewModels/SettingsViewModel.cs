@@ -13,7 +13,6 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
@@ -53,6 +52,7 @@ using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(SettingsPage))]
+[Singleton]
 public partial class SettingsViewModel : PageViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -229,7 +229,7 @@ public partial class SettingsViewModel : PageViewModelBase
             .Subscribe(formatProperty =>
             {
                 var provider = FileNameFormatProvider.GetSample();
-                var template = formatProperty.Value;
+                var template = formatProperty.Value ?? string.Empty;
 
                 if (
                     !string.IsNullOrEmpty(template)
@@ -282,11 +282,11 @@ public partial class SettingsViewModel : PageViewModelBase
     }
 
     public static ValidationResult ValidateOutputImageFileNameFormat(
-        string format,
+        string? format,
         ValidationContext context
     )
     {
-        return FileNameFormatProvider.GetSample().Validate(format);
+        return FileNameFormatProvider.GetSample().Validate(format ?? string.Empty);
     }
 
     partial void OnSelectedThemeChanged(string? value)

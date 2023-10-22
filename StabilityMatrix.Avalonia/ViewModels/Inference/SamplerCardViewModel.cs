@@ -14,6 +14,8 @@ using StabilityMatrix.Core.Models.Api.Comfy;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(SamplerCard))]
+[ManagedService]
+[Transient]
 public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLoadableState
 {
     public const string ModuleKey = "Sampler";

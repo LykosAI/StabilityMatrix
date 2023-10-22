@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -16,6 +15,7 @@ using NLog;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -26,6 +26,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Models.TagCompletion;
 
+[Singleton(typeof(ICompletionProvider))]
 public partial class CompletionProvider : ICompletionProvider
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

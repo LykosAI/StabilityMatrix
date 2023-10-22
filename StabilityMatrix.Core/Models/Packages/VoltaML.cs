@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Progress;
@@ -8,6 +9,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
+[Singleton(typeof(BasePackage))]
 public class VoltaML : BaseGitPackage
 {
     public override string Name => "voltaML-fast-stable-diffusion";

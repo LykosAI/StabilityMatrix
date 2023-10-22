@@ -72,11 +72,11 @@
             <TextBlock Grid.Row="0"
                        Grid.Column="2"
                        Margin="4"
-                       Text="Search"/>
+                       Text="{x:Static lang:Resources.Action_Search}"/>
             <TextBox Grid.Row="1"
                      Grid.Column="2"
                      Text="{Binding SearchQuery, Mode=TwoWay}"
-                     Watermark="Search"
+                     Watermark="{x:Static lang:Resources.Action_Search}"
                      Margin="4, 0"
                      VerticalContentAlignment="Center"
                      MinWidth="150"/>
@@ -129,7 +129,7 @@
                 ItemsSource="{Binding Outputs}"
                 VerticalAlignment="Top">
                 <ItemsRepeater.Layout>
-                    <UniformGridLayout MinColumnSpacing="16" MinRowSpacing="16" />
+                    <UniformGridLayout MinColumnSpacing="8" MinRowSpacing="8"/>
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="{x:Type outputsPage:OutputImageViewModel}">

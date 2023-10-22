@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +13,7 @@ using SkiaSharp;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
@@ -28,6 +28,7 @@ namespace StabilityMatrix.Avalonia.Services;
 /// Manager for the current inference client
 /// Has observable shared properties for shared info like model names
 /// </summary>
+[Singleton(typeof(IInferenceClientManager))]
 public partial class InferenceClientManager : ObservableObject, IInferenceClientManager
 {
     private readonly ILogger<InferenceClientManager> logger;

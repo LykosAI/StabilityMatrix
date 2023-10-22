@@ -23,6 +23,8 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(PackageImportDialog))]
+[ManagedService]
+[Transient]
 public partial class PackageImportViewModel : ContentDialogViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

@@ -13,39 +13,40 @@ namespace StabilityMatrix.Core.Models;
 public class TrackedDownload
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
+
     [JsonIgnore]
     private IDownloadService? downloadService;
-    
+
     [JsonIgnore]
     private Task? downloadTask;
-    
+
     [JsonIgnore]
     private CancellationTokenSource? downloadCancellationTokenSource;
-    
+
     [JsonIgnore]
     private CancellationTokenSource? downloadPauseTokenSource;
-    
+
     [JsonIgnore]
     private CancellationTokenSource AggregateCancellationTokenSource =>
         CancellationTokenSource.CreateLinkedTokenSource(
             downloadCancellationTokenSource?.Token ?? CancellationToken.None,
-            downloadPauseTokenSource?.Token ?? CancellationToken.None);
-    
+            downloadPauseTokenSource?.Token ?? CancellationToken.None
+        );
+
     public required Guid Id { get; init; }
-    
+
     public required Uri SourceUrl { get; init; }
-    
+
     public Uri? RedirectedUrl { get; init; }
-    
+
     public required DirectoryPath DownloadDirectory { get; init; }
-    
+
     public required string FileName { get; init; }
-    
+
     public required string TempFileName { get; init; }
-    
+
     public string? ExpectedHashSha256 { get; set; }
-    
+
     [JsonIgnore]
     [MemberNotNullWhen(true, nameof(ExpectedHashSha256))]
     public bool ValidateHash => ExpectedHashSha256 is not null;
@@ -54,22 +55,22 @@ public class TrackedDownload
     public ProgressState ProgressState { get; set; } = ProgressState.Inactive;
 
     public List<string> ExtraCleanupFileNames { get; init; } = new();
-    
+
     // Used for restoring progress on load
     public long DownloadedBytes { get; set; }
     public long TotalBytes { get; set; }
-    
+
     /// <summary>
     /// Optional context action to be invoked on completion
     /// </summary>
     public IContextAction? ContextAction { get; set; }
-    
+
     [JsonIgnore]
     public Exception? Exception { get; private set; }
-    
+
     #region Events
     private WeakEventManager<ProgressReport>? progressUpdateEventManager;
-    
+
     public event EventHandler<ProgressReport> ProgressUpdate
     {
         add
@@ -79,18 +80,18 @@ public class TrackedDownload
         }
         remove => progressUpdateEventManager?.RemoveEventHandler(value);
     }
-    
+
     protected void OnProgressUpdate(ProgressReport e)
     {
         // Update downloaded and total bytes
         DownloadedBytes = Convert.ToInt64(e.Current);
         TotalBytes = Convert.ToInt64(e.Total);
-        
+
         progressUpdateEventManager?.RaiseEvent(this, e, nameof(ProgressUpdate));
     }
-    
+
     private WeakEventManager<ProgressState>? progressStateChangedEventManager;
-    
+
     public event EventHandler<ProgressState> ProgressStateChanged
     {
         add
@@ -100,13 +101,13 @@ public class TrackedDownload
         }
         remove => progressStateChangedEventManager?.RemoveEventHandler(value);
     }
-    
+
     protected void OnProgressStateChanged(ProgressState e)
     {
         progressStateChangedEventManager?.RaiseEvent(this, e, nameof(ProgressStateChanged));
     }
     #endregion
-    
+
     [MemberNotNull(nameof(downloadService))]
     private void EnsureDownloadService()
     {
@@ -119,42 +120,59 @@ public class TrackedDownload
     private async Task StartDownloadTask(long resumeFromByte, CancellationToken cancellationToken)
     {
         var progress = new Progress<ProgressReport>(OnProgressUpdate);
-        
-        await downloadService!.ResumeDownloadToFileAsync(
-            SourceUrl.ToString(),
-            DownloadDirectory.JoinFile(TempFileName),
-            resumeFromByte,
-            progress,
-            cancellationToken: cancellationToken).ConfigureAwait(false);
-        
+        try
+        {
+            await downloadService!
+                .ResumeDownloadToFileAsync(
+                    SourceUrl.ToString(),
+                    DownloadDirectory.JoinFile(TempFileName),
+                    resumeFromByte,
+                    progress,
+                    cancellationToken: cancellationToken
+                )
+                .ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e);
+        }
+
         // If hash validation is enabled, validate the hash
         if (ValidateHash)
         {
-            OnProgressUpdate(new ProgressReport(0, isIndeterminate: true, type: ProgressType.Hashing));
-            var hash = await FileHash.GetSha256Async(DownloadDirectory.JoinFile(TempFileName), progress).ConfigureAwait(false);
+            OnProgressUpdate(
+                new ProgressReport(0, isIndeterminate: true, type: ProgressType.Hashing)
+            );
+            var hash = await FileHash
+                .GetSha256Async(DownloadDirectory.JoinFile(TempFileName), progress)
+                .ConfigureAwait(false);
             if (hash != ExpectedHashSha256?.ToLowerInvariant())
             {
-                throw new Exception($"Hash validation for {FileName} failed, expected {ExpectedHashSha256} but got {hash}");
+                throw new Exception(
+                    $"Hash validation for {FileName} failed, expected {ExpectedHashSha256} but got {hash}"
+                );
             }
         }
     }
-    
+
     public void Start()
     {
         if (ProgressState != ProgressState.Inactive)
         {
-            throw new InvalidOperationException($"Download state must be inactive to start, not {ProgressState}");
+            throw new InvalidOperationException(
+                $"Download state must be inactive to start, not {ProgressState}"
+            );
         }
         Logger.Debug("Starting download {Download}", FileName);
-        
+
         EnsureDownloadService();
-        
+
         downloadCancellationTokenSource = new CancellationTokenSource();
         downloadPauseTokenSource = new CancellationTokenSource();
-        
+
         downloadTask = StartDownloadTask(0, AggregateCancellationTokenSource.Token)
             .ContinueWith(OnDownloadTaskCompleted);
-        
+
         ProgressState = ProgressState.Working;
         OnProgressStateChanged(ProgressState);
     }
@@ -163,27 +181,31 @@ public class TrackedDownload
     {
         if (ProgressState != ProgressState.Inactive)
         {
-            Logger.Warn("Attempted to resume download {Download} but it is not paused ({State})", FileName, ProgressState);
+            Logger.Warn(
+                "Attempted to resume download {Download} but it is not paused ({State})",
+                FileName,
+                ProgressState
+            );
         }
         Logger.Debug("Resuming download {Download}", FileName);
-        
+
         // Read the temp file to get the current size
         var tempSize = 0L;
-        
+
         var tempFile = DownloadDirectory.JoinFile(TempFileName);
         if (tempFile.Exists)
         {
             tempSize = tempFile.Info.Length;
         }
-        
+
         EnsureDownloadService();
-        
+
         downloadCancellationTokenSource = new CancellationTokenSource();
         downloadPauseTokenSource = new CancellationTokenSource();
-        
+
         downloadTask = StartDownloadTask(tempSize, AggregateCancellationTokenSource.Token)
             .ContinueWith(OnDownloadTaskCompleted);
-        
+
         ProgressState = ProgressState.Working;
         OnProgressStateChanged(ProgressState);
     }
@@ -192,22 +214,30 @@ public class TrackedDownload
     {
         if (ProgressState != ProgressState.Working)
         {
-            Logger.Warn("Attempted to pause download {Download} but it is not in progress ({State})", FileName, ProgressState);
+            Logger.Warn(
+                "Attempted to pause download {Download} but it is not in progress ({State})",
+                FileName,
+                ProgressState
+            );
             return;
         }
-        
+
         Logger.Debug("Pausing download {Download}", FileName);
         downloadPauseTokenSource?.Cancel();
     }
-    
+
     public void Cancel()
     {
         if (ProgressState is not (ProgressState.Working or ProgressState.Inactive))
         {
-            Logger.Warn("Attempted to cancel download {Download} but it is not in progress ({State})", FileName, ProgressState);
+            Logger.Warn(
+                "Attempted to cancel download {Download} but it is not in progress ({State})",
+                FileName,
+                ProgressState
+            );
             return;
         }
-        
+
         Logger.Debug("Cancelling download {Download}", FileName);
 
         // Cancel token if it exists
@@ -219,7 +249,7 @@ public class TrackedDownload
         else
         {
             DoCleanup();
-            
+
             ProgressState = ProgressState.Cancelled;
             OnProgressStateChanged(ProgressState);
         }
@@ -238,7 +268,7 @@ public class TrackedDownload
         {
             Logger.Warn("Failed to delete temp file {TempFile}", TempFileName);
         }
-        
+
         foreach (var extraFile in ExtraCleanupFileNames)
         {
             try
@@ -251,7 +281,7 @@ public class TrackedDownload
             }
         }
     }
-    
+
     /// <summary>
     /// Invoked by the task's completion callback
     /// </summary>
@@ -272,7 +302,9 @@ public class TrackedDownload
             }
             else
             {
-                throw new InvalidOperationException("Download task was cancelled but neither cancellation token was cancelled.");
+                throw new InvalidOperationException(
+                    "Download task was cancelled but neither cancellation token was cancelled."
+                );
             }
         }
         // For faulted
@@ -293,23 +325,23 @@ public class TrackedDownload
         if (ProgressState is ProgressState.Failed or ProgressState.Cancelled)
         {
             DoCleanup();
-        } 
+        }
         else if (ProgressState == ProgressState.Success)
         {
             // Move the temp file to the final file
             DownloadDirectory.JoinFile(TempFileName).MoveTo(DownloadDirectory.JoinFile(FileName));
         }
-        
+
         // For pause, just do nothing
-        
+
         OnProgressStateChanged(ProgressState);
-        
+
         // Dispose of the task and cancellation token
         downloadTask = null;
         downloadCancellationTokenSource = null;
         downloadPauseTokenSource = null;
     }
-    
+
     public void SetDownloadService(IDownloadService service)
     {
         downloadService = service;

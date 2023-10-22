@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using AsyncAwaitBestPractices;
 using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
@@ -30,6 +29,7 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Processes;
@@ -40,6 +40,7 @@ using StabilityMatrix.Avalonia.Diagnostics.Views;
 namespace StabilityMatrix.Avalonia.Views;
 
 [SuppressMessage("ReSharper", "UnusedParameter.Local")]
+[Singleton]
 public partial class MainWindow : AppWindowBase
 {
     private readonly INotificationService notificationService;

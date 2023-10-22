@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
-using Avalonia.Controls.Shapes;
-using Avalonia.Threading;
 using DynamicData.Binding;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
@@ -29,6 +26,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceImageUpscaleView), persistent: true)]
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+[ManagedService]
+[Transient]
 public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Text.Json;
 using System.Linq;
 using Avalonia.Input;
 using Avalonia.Media;
@@ -19,6 +18,8 @@ using StabilityMatrix.Core.Models.Database;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(SelectImageCard))]
+[ManagedService]
+[Transient]
 public partial class SelectImageCardViewModel : ViewModelBase, IDropTarget
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

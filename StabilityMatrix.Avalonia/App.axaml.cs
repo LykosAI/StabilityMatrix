@@ -383,11 +383,7 @@ public sealed class App : Application
             services.AddSingleton<IPrerequisiteHelper, UnixPrerequisiteHelper>();
         }
 
-        if (Design.IsDesignMode)
-        {
-            services.AddSingleton<ILiteDbContext, MockLiteDbContext>();
-        }
-        else
+        if (!Design.IsDesignMode)
         {
             services.AddSingleton<ILiteDbContext, LiteDbContext>();
             services.AddSingleton<IDisposable>(p => p.GetRequiredService<ILiteDbContext>());

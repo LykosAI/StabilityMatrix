@@ -53,6 +53,7 @@
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
         <PackageReference Include="NLog" Version="5.2.5" />
         <PackageReference Include="NLog.Extensions.Logging" Version="5.3.5" />
+        <PackageReference Include="NSubstitute" Version="5.1.0" />
         <PackageReference Include="Polly" Version="8.0.0" />
         <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
         <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />

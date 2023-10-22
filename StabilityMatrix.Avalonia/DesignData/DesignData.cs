@@ -8,6 +8,8 @@ using System.Text;
 using AvaloniaEdit.Utils;
 using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
+using NSubstitute.ReturnsExtensions;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
@@ -108,17 +110,18 @@ public static class DesignData
 
         // Mock services
         services
-            .AddSingleton<INotificationService, MockNotificationService>()
-            .AddSingleton<ISharedFolders, MockSharedFolders>()
-            .AddSingleton<IDownloadService, MockDownloadService>()
-            .AddSingleton<IHttpClientFactory, MockHttpClientFactory>()
-            .AddSingleton<IApiFactory, MockApiFactory>()
+            .AddSingleton(Substitute.For<INotificationService>())
+            .AddSingleton(Substitute.For<ISharedFolders>())
+            .AddSingleton(Substitute.For<IDownloadService>())
+            .AddSingleton(Substitute.For<IHttpClientFactory>())
+            .AddSingleton(Substitute.For<IApiFactory>())
+            .AddSingleton(Substitute.For<IDiscordRichPresenceService>())
+            .AddSingleton(Substitute.For<ITrackedDownloadService>())
+            .AddSingleton(Substitute.For<ILiteDbContext>())
             .AddSingleton<IInferenceClientManager, MockInferenceClientManager>()
-            .AddSingleton<IDiscordRichPresenceService, MockDiscordRichPresenceService>()
             .AddSingleton<ICompletionProvider, MockCompletionProvider>()
             .AddSingleton<IModelIndexService, MockModelIndexService>()
-            .AddSingleton<IImageIndexService, MockImageIndexService>()
-            .AddSingleton<ITrackedDownloadService, MockTrackedDownloadService>();
+            .AddSingleton<IImageIndexService, MockImageIndexService>();
 
         // Placeholder services that nobody should need during design time
         services

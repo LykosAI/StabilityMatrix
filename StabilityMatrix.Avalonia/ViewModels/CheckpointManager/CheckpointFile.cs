@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
@@ -259,6 +260,11 @@ public partial class CheckpointFile : ViewModelBase
                 )
                 .Where(File.Exists)
                 .FirstOrDefault();
+
+            if (string.IsNullOrWhiteSpace(checkpointFile.PreviewImagePath))
+            {
+                checkpointFile.PreviewImagePath = Assets.NoImage.ToString();
+            }
 
             yield return checkpointFile;
         }

@@ -21,7 +21,7 @@
             <controls:Card
                 Margin="8"
                 MaxHeight="450"
-                CornerRadius="8"
+                CornerRadius="12"
                 Name="ModelCard"
                 Width="330">
 
@@ -66,6 +66,7 @@
                         <controls:BetterAdvancedImage
                             Margin="0,8,0,8"
                             Height="300"
+                            Width="300"
                             StretchDirection="Both"
                             CornerRadius="8"
                             VerticalContentAlignment="Top"
@@ -150,6 +151,8 @@
                         </StackPanel>
                         <Rectangle
                             Fill="#DD000000"
+                            RadiusX="8"
+                            RadiusY="8"
                             HorizontalAlignment="Stretch"
                             Margin="0,8,0,8"
                             VerticalAlignment="Stretch"
@@ -177,16 +180,17 @@
                     </Grid>
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Button
                             Classes="accent"
+                            Margin="0,8,0,0"
                             Command="{Binding ImportCommand}"
                             CommandParameter="{Binding CivitModel}"
                             IsEnabled="{Binding !IsImporting}"
-                            HorizontalAlignment="Stretch"
-                            Margin="0,8,0,0">
+                            CornerRadius="6"
+                            HorizontalAlignment="Stretch">
                             <Button.Content>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{x:Static lang:Resources.Label_ImportLatest}" />
@@ -197,6 +201,7 @@
                         </Button>
 
                         <Button Grid.Column="1"
+                                CornerRadius="6"
                                 Margin="8,8,0,0"
                                 Classes="accent"
                                 IsEnabled="{Binding !IsImporting}"
@@ -244,7 +249,7 @@
                 </Button>
             </Grid>
             <DockPanel>
-                <StackPanel Margin="4, 8" Orientation="Vertical">
+                <StackPanel Margin="8, 8,4,8" Orientation="Vertical">
                     <Label Content="{x:Static lang:Resources.Label_Sort}" />
                     <ComboBox
                         ItemsSource="{Binding AllSortModes}"
@@ -286,7 +291,8 @@
 
         </StackPanel>
 
-        <ScrollViewer Grid.Row="1">
+        <ScrollViewer Grid.Row="1"
+                      Margin="8,0,8,0">
             <ItemsRepeater ItemTemplate="{StaticResource CivitModelTemplate}"
                            ItemsSource="{Binding ModelCards}">
                 <ItemsRepeater.Layout>

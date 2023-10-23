@@ -942,7 +942,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Import as Connected.
+        ///   Looks up a localized string similar to Import with Metadata.
         /// </summary>
         public static string Label_ImportAsConnected {
             get {

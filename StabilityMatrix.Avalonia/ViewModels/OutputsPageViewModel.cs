@@ -31,6 +31,7 @@ using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
+using Size = StabilityMatrix.Core.Models.Settings.Size;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
@@ -74,6 +75,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     [ObservableProperty]
     private string searchQuery;
+
+    [ObservableProperty]
+    private Size imageSize = new(300, 300);
 
     public bool CanShowOutputTypes =>
         SelectedCategory?.Name?.Equals("Shared Output Folder") ?? false;
@@ -132,6 +136,13 @@ public partial class OutputsPageViewModel : PageViewModelBase
             {
                 NumItemsSelected = Outputs.Count(o => o.IsSelected);
             });
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.ImageSize,
+            settings => settings.OutputsImageSize,
+            delay: TimeSpan.FromMilliseconds(250)
+        );
     }
 
     public override void OnLoaded()
@@ -172,6 +183,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         SelectedCategory = Categories.First();
         SelectedOutputType = SharedOutputType.All;
         SearchQuery = string.Empty;
+        ImageSize = settingsManager.Settings.OutputsImageSize;
 
         var path =
             CanShowOutputTypes && SelectedOutputType != SharedOutputType.All

@@ -30,7 +30,7 @@
                 Height="18"
                 Margin="4,0,0,0"
                 Padding="3"
-                Width="40">
+                Width="48">
                 <TextBlock
                     FontSize="10"
                     FontWeight="Medium"
@@ -47,9 +47,10 @@
                 DragDrop.AllowDrop="False"
                 Background="Transparent"
                 BorderThickness="2"
-                Margin="8">
+                Margin="4">
                 
-                <controls:Card Width="260">
+                <controls:Card MaxWidth="330" Width="330"
+                               CornerRadius="12">
                     <!-- Right click menu for a checkpoint file -->
                     <controls:Card.ContextFlyout>
                         <ui:FAMenuFlyout>
@@ -65,9 +66,9 @@
                     <Grid>
                         <!--  Main contents, hidden when IsLoading is true  -->
                         <StackPanel MinHeight="70">
-                            <Grid ColumnDefinitions="*,*,*,*,*" RowDefinitions="*,Auto,0.1*" IsVisible="{Binding !IsLoading}">
+                            <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto,*,Auto" IsVisible="{Binding !IsLoading}">
                                 <StackPanel
-                                    Grid.ColumnSpan="4"
+                                    Grid.ColumnSpan="2"
                                     HorizontalAlignment="Left"
                                     IsEnabled="True"
                                     Margin="0,0,0,4"
@@ -106,7 +107,7 @@
                                         Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                         HorizontalAlignment="Left"
                                         IsEnabled="True"
-                                        MaxWidth="150"
+                                        MaxWidth="250"
                                         Text="{Binding Title}"
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="NoWrap" />
@@ -121,15 +122,17 @@
                                 </StackPanel>
 
                                 <controls:BetterAdvancedImage Grid.Row="1"
-                                                              Grid.Column="0" Grid.ColumnSpan="5"
-                                                              Margin="0,0,0,4"
-                                                              CornerRadius="4"
+                                                              Grid.Column="0"
+                                                              Grid.ColumnSpan="2"
+                                                              Margin="0, 4,0,4"
+                                                              CornerRadius="8"
                                                               Source="{Binding PreviewImagePath}"
                                                               Stretch="UniformToFill"
-                                                              MaxHeight="250"
+                                                              Height="300"
+                                                              Width="300"
                                                               IsVisible="{Binding $parent[ItemsControl].((vm:CheckpointsPageViewModel)DataContext).ShowConnectedModelImages}" />
                                 
-                                <Grid Grid.Column="4" Grid.Row="0">
+                                <Grid Grid.Column="1" Grid.Row="0">
                                     <Button
                                         Background="Transparent"
                                         BorderBrush="Transparent"
@@ -169,7 +172,6 @@
                                     FontSize="11"
                                     Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                     Grid.Column="0"
-                                    Grid.ColumnSpan="3"
                                     Grid.Row="2"
                                     IsEnabled="True"
                                     Margin="4,4"
@@ -178,15 +180,15 @@
                                     ToolTip.Tip="{Binding FileName}"
                                     VerticalAlignment="Bottom" />
                                 <ItemsRepeater
-                                    Grid.Column="3"
-                                    Grid.ColumnSpan="2"
+                                    Grid.Column="1"
                                     Grid.Row="2"
+                                    HorizontalAlignment="Right"
                                     ItemTemplate="{StaticResource BadgeTemplate}"
                                     ItemsSource="{Binding Badges}"
                                     VerticalAlignment="Bottom">
                                     
                                         <ItemsRepeater.Layout>
-                                            <UniformGridLayout/>
+                                            <UniformGridLayout />
                                         </ItemsRepeater.Layout>
                                 </ItemsRepeater>
                             </Grid>
@@ -213,8 +215,9 @@
         <!-- Checkpoint Folder Expander -->
         <DataTemplate DataType="{x:Type checkpointManager:CheckpointFolder}" x:Key="CheckpointFolderGridDataTemplate">
             <Expander
+                CornerRadius="8"
                 IsExpanded="{Binding IsExpanded}"
-                Margin="8"
+                Margin="4"
                 Padding="8,8,8,8"
                 IsVisible="{Binding IsCategoryEnabled, FallbackValue=True}">
                 
@@ -268,7 +271,8 @@
                             ItemTemplate="{StaticResource CheckpointFileDataTemplate}"
                             ItemsSource="{Binding DisplayedCheckpointFiles}">
                             <ItemsRepeater.Layout>
-                                <UniformGridLayout Orientation="Horizontal"/>
+                                <UniformGridLayout Orientation="Horizontal" 
+                                                   MinColumnSpacing="4" MinRowSpacing="4"/>
                             </ItemsRepeater.Layout>
                             <TextBlock Text="Hi"/>
                         </ItemsRepeater>
@@ -280,7 +284,7 @@
                                    IsVisible="{Binding !CheckpointFiles.Count}"/>
                         <!-- Blurred background for drag and drop -->
                         <Border
-                            CornerRadius="8"
+                            CornerRadius="4"
                             Grid.RowSpan="4"
                             IsEnabled="False"
                             IsVisible="{Binding IsDragBlurEnabled}">
@@ -445,6 +449,8 @@
                 <StackPanel Orientation="Vertical">
                     <ItemsControl
                         HorizontalAlignment="Stretch"
+                        Name="FilesRepeater"
+                        x:Name="FilesRepeater"
                         ItemTemplate="{StaticResource CheckpointFolderGridDataTemplate}"
                         ItemsSource="{Binding DisplayedCheckpointFolders, Mode=OneWay}"
                         Margin="8,0,8,8" />

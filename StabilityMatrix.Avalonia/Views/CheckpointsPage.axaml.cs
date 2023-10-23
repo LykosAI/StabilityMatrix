@@ -1,8 +1,15 @@
-﻿using Avalonia.Controls;
+﻿using System;
+using System.Linq;
+using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.VisualTree;
+using DynamicData.Binding;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 using CheckpointFolder = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFolder;
 
 namespace StabilityMatrix.Avalonia.Views;
@@ -10,6 +17,9 @@ namespace StabilityMatrix.Avalonia.Views;
 [Singleton]
 public partial class CheckpointsPage : UserControlBase
 {
+    private ItemsControl? repeater;
+    private IDisposable? subscription;
+
     public CheckpointsPage()
     {
         InitializeComponent();
@@ -22,6 +32,33 @@ public partial class CheckpointsPage : UserControlBase
     private void InitializeComponent()
     {
         AvaloniaXamlLoader.Load(this);
+    }
+
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+
+        subscription?.Dispose();
+        subscription = null;
+
+        if (DataContext is CheckpointsPageViewModel vm)
+        {
+            subscription = vm.WhenPropertyChanged(m => m.ShowConnectedModelImages)
+                .Subscribe(_ => InvalidateRepeater());
+        }
+    }
+
+    private void InvalidateRepeater()
+    {
+        repeater ??= this.FindControl<ItemsControl>("FilesRepeater");
+        repeater?.InvalidateArrange();
+        repeater?.InvalidateMeasure();
+
+        foreach (var child in this.GetVisualDescendants().OfType<ItemsRepeater>())
+        {
+            child?.InvalidateArrange();
+            child?.InvalidateMeasure();
+        }
     }
 
     private static async void OnDrop(object? sender, DragEventArgs e)

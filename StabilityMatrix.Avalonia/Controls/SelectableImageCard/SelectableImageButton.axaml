@@ -14,7 +14,9 @@
     <Style Selector="selectableImageCard|SelectableImageButton">
         <Setter Property="Template">
             <ControlTemplate>
-                <Grid>
+                <Grid
+                    Width="{Binding ImageWidth, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                    Height="{Binding ImageHeight, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
                     <CheckBox VerticalAlignment="Top"
                               HorizontalAlignment="Right"
                               Margin="14,8"
@@ -37,8 +39,6 @@
                         Command="{TemplateBinding Command}"
                         CommandParameter="{TemplateBinding CommandParameter}">
                         <controls:BetterAdvancedImage
-                            Width="300"
-                            Height="300"
                             Stretch="UniformToFill"
                             CornerRadius="8"
                             ContextFlyout="{TemplateBinding ContextFlyout}"

@@ -1,16 +1,7 @@
 ﻿using System;
-using System.Runtime.InteropServices;
-using CSharpDiscriminatedUnion.Attributes;
+using OneOf;
 
 namespace StabilityMatrix.Avalonia.Models.Inference;
 
-[GenerateDiscriminatedUnion(CaseFactoryPrefix = "From")]
-[StructLayout(LayoutKind.Auto)]
-public readonly partial struct FileNameFormatPart
-{
-    [StructCase("Constant", isDefaultValue: true)]
-    private readonly string constant;
-
-    [StructCase("Substitution")]
-    private readonly Func<string?> substitution;
-}
+[GenerateOneOf]
+public partial class FileNameFormatPart : OneOfBase<string, Func<string?>> { }

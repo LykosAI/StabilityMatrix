@@ -84,7 +84,7 @@ public partial class FileNameFormatProvider
             if (result.Index != currentIndex)
             {
                 var constant = template[currentIndex..result.Index];
-                parts.Add(FileNameFormatPart.FromConstant(constant));
+                parts.Add(constant);
 
                 currentIndex += constant.Length;
             }
@@ -97,30 +97,32 @@ public partial class FileNameFormatProvider
             if (slice is not null)
             {
                 parts.Add(
-                    FileNameFormatPart.FromSubstitution(() =>
-                    {
-                        var value = substitution();
-                        if (value is null)
-                            return null;
-
-                        if (slice.End is null)
+                    (FileNameFormatPart)(
+                        () =>
                         {
-                            value = value[(slice.Start ?? 0)..];
-                        }
-                        else
-                        {
-                            var length =
-                                Math.Min(value.Length, slice.End.Value) - (slice.Start ?? 0);
-                            value = value.Substring(slice.Start ?? 0, length);
-                        }
+                            var value = substitution();
+                            if (value is null)
+                                return null;
 
-                        return value;
-                    })
+                            if (slice.End is null)
+                            {
+                                value = value[(slice.Start ?? 0)..];
+                            }
+                            else
+                            {
+                                var length =
+                                    Math.Min(value.Length, slice.End.Value) - (slice.Start ?? 0);
+                                value = value.Substring(slice.Start ?? 0, length);
+                            }
+
+                            return value;
+                        }
+                    )
                 );
             }
             else
             {
-                parts.Add(FileNameFormatPart.FromSubstitution(substitution));
+                parts.Add(substitution);
             }
 
             currentIndex += result.Length;
@@ -130,7 +132,7 @@ public partial class FileNameFormatProvider
         if (currentIndex != template.Length)
         {
             var constant = template[currentIndex..];
-            parts.Add(FileNameFormatPart.FromConstant(constant));
+            parts.Add(constant);
         }
 
         return parts;

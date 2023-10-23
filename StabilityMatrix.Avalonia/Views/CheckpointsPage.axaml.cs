@@ -18,6 +18,7 @@ namespace StabilityMatrix.Avalonia.Views;
 public partial class CheckpointsPage : UserControlBase
 {
     private ItemsControl? repeater;
+    private IDisposable? subscription;
 
     public CheckpointsPage()
     {
@@ -33,12 +34,16 @@ public partial class CheckpointsPage : UserControlBase
         AvaloniaXamlLoader.Load(this);
     }
 
-    protected override void OnLoaded(RoutedEventArgs e)
+    protected override void OnDataContextChanged(EventArgs e)
     {
-        base.OnLoaded(e);
+        base.OnDataContextChanged(e);
+
+        subscription?.Dispose();
+        subscription = null;
+
         if (DataContext is CheckpointsPageViewModel vm)
         {
-            vm.WhenPropertyChanged(v => v.ShowConnectedModelImages)
+            subscription = vm.WhenPropertyChanged(m => m.ShowConnectedModelImages)
                 .Subscribe(_ => InvalidateRepeater());
         }
     }

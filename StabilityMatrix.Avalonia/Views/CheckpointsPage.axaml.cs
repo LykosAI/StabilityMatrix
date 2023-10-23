@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -46,7 +45,6 @@ public partial class CheckpointsPage : UserControlBase
 
     private void OnInvalidateRepeaterRequested(object? sender, EventArgs e)
     {
-        var sw = Stopwatch.StartNew();
         repeater ??= this.FindControl<ItemsControl>("FilesRepeater");
         repeater?.InvalidateArrange();
         repeater?.InvalidateMeasure();
@@ -56,9 +54,6 @@ public partial class CheckpointsPage : UserControlBase
             child?.InvalidateArrange();
             child?.InvalidateMeasure();
         }
-
-        sw.Stop();
-        Debug.WriteLine($"InvalidateRepeaterRequested took {sw.Elapsed.TotalMilliseconds}ms");
     }
 
     private static async void OnDrop(object? sender, DragEventArgs e)

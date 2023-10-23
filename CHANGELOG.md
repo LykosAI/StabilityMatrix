@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed crash when clicking Inference gallery image after the image is deleted externally in file explorer
 - Fixed Inference popup Install button not working on One-Click Installer
 - Fixed Inference Prompt Completion window sometimes not showing while typing
+- Fixed "Show Model Images" toggle on Checkpoints page sometimes displaying cut-off model images
 
 ## v2.5.5
 ### Added

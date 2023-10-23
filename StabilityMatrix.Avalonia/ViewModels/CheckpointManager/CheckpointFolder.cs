@@ -102,7 +102,7 @@ public partial class CheckpointFolder : ViewModelBase
     public IObservableCollection<CheckpointFile> CheckpointFiles { get; } =
         new ObservableCollectionExtended<CheckpointFile>();
 
-    public IObservableCollection<CheckpointFile> DisplayedCheckpointFiles { get; } =
+    public IObservableCollection<CheckpointFile> DisplayedCheckpointFiles { get; set; } =
         new ObservableCollectionExtended<CheckpointFile>();
 
     public CheckpointFolder(

@@ -25,6 +25,7 @@ using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using SortDirection = DynamicData.Binding.SortDirection;
@@ -43,6 +44,9 @@ public partial class ImageFolderCardViewModel : ViewModelBase
 
     [ObservableProperty]
     private string? searchQuery;
+
+    [ObservableProperty]
+    private Size imageSize = new(150, 190);
 
     /// <summary>
     /// Collection of local image files
@@ -76,6 +80,13 @@ public partial class ImageFolderCardViewModel : ViewModelBase
             .SortBy(file => file.LastModifiedAt, SortDirection.Descending)
             .Bind(LocalImages)
             .Subscribe();
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.ImageSize,
+            settings => settings.InferenceImageSize,
+            delay: TimeSpan.FromMilliseconds(250)
+        );
     }
 
     private static bool SearchPredicate(LocalImageFile file, string? query)
@@ -117,7 +128,7 @@ public partial class ImageFolderCardViewModel : ViewModelBase
     public override async Task OnLoadedAsync()
     {
         await base.OnLoadedAsync();
-
+        ImageSize = settingsManager.Settings.InferenceImageSize;
         imageIndexService.RefreshIndexForAllCollections().SafeFireAndForget();
     }
 

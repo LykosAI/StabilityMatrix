@@ -449,6 +449,8 @@
                 <StackPanel Orientation="Vertical">
                     <ItemsControl
                         HorizontalAlignment="Stretch"
+                        Name="FilesRepeater"
+                        x:Name="FilesRepeater"
                         ItemTemplate="{StaticResource CheckpointFolderGridDataTemplate}"
                         ItemsSource="{Binding DisplayedCheckpointFolders, Mode=OneWay}"
                         Margin="8,0,8,8" />

@@ -143,6 +143,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         )
         {
             settingsManager.Transaction(s => s.ShowConnectedModelImages = value);
+            EventManager.Instance.OnInvalidateRepeaterRequested();
         }
     }
 

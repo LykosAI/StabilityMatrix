@@ -1,15 +1,46 @@
-﻿using Avalonia;
+﻿using System;
+using AsyncImageLoader;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 
 namespace StabilityMatrix.Avalonia.Controls.SelectableImageCard;
 
 public class SelectableImageButton : Button
 {
     public static readonly StyledProperty<bool?> IsSelectedProperty =
-        CheckBox.IsCheckedProperty.AddOwner<SelectableImageButton>();
+        ToggleButton.IsCheckedProperty.AddOwner<SelectableImageButton>();
 
     public static readonly StyledProperty<string?> SourceProperty =
-        BetterAdvancedImage.SourceProperty.AddOwner<SelectableImageButton>();
+        AdvancedImage.SourceProperty.AddOwner<SelectableImageButton>();
+
+    public static readonly StyledProperty<double> ImageWidthProperty = AvaloniaProperty.Register<
+        SelectableImageButton,
+        double
+    >("ImageWidth", 300);
+
+    public static readonly StyledProperty<double> ImageHeightProperty = AvaloniaProperty.Register<
+        SelectableImageButton,
+        double
+    >("ImageHeight", 300);
+
+    static SelectableImageButton()
+    {
+        AffectsRender<SelectableImageButton>(ImageWidthProperty, ImageHeightProperty);
+        AffectsArrange<SelectableImageButton>(ImageWidthProperty, ImageHeightProperty);
+    }
+
+    public double ImageHeight
+    {
+        get => GetValue(ImageHeightProperty);
+        set => SetValue(ImageHeightProperty, value);
+    }
+
+    public double ImageWidth
+    {
+        get => GetValue(ImageWidthProperty);
+        set => SetValue(ImageWidthProperty, value);
+    }
 
     public bool? IsSelected
     {

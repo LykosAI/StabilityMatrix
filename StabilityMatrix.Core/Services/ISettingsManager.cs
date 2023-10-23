@@ -69,7 +69,8 @@ public interface ISettingsManager
         T source,
         Expression<Func<T, TValue>> sourceProperty,
         Expression<Func<Settings, TValue>> settingsProperty,
-        bool setInitial = false
+        bool setInitial = false,
+        TimeSpan? delay = null
     )
         where T : INotifyPropertyChanged;
 

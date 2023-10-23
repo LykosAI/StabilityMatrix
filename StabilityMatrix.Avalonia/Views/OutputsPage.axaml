@@ -15,6 +15,7 @@
     xmlns:outputsPage="clr-namespace:StabilityMatrix.Avalonia.ViewModels.OutputsPage"
     xmlns:selectableImageCard="clr-namespace:StabilityMatrix.Avalonia.Controls.SelectableImageCard"
     xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:scroll="clr-namespace:StabilityMatrix.Avalonia.Controls.Scroll"
     d:DataContext="{x:Static mocks:DesignData.OutputsPageViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="700"
@@ -32,7 +33,6 @@
                        Margin="4" />
             <ComboBox Grid.Column="0"
                       Grid.Row="1" ItemsSource="{Binding Categories}"
-                      CornerRadius="8"
                       Margin="4,0"
                       SelectedItem="{Binding SelectedCategory}"
                       VerticalAlignment="Stretch"
@@ -62,7 +62,6 @@
                        IsVisible="{Binding CanShowOutputTypes}" />
             <ComboBox Grid.Column="1" Grid.Row="1" ItemsSource="{Binding OutputTypes}"
                       IsVisible="{Binding CanShowOutputTypes}"
-                      CornerRadius="8"
                       SelectedItem="{Binding SelectedOutputType}"
                       MinWidth="150"
                       Margin="4,0"
@@ -94,7 +93,6 @@
             <Button Grid.Row="1"
                     Grid.Column="5"
                     VerticalAlignment="Bottom"
-                    CornerRadius="8"
                     Padding="12, 0"
                     Height="40"
                     Classes="danger"
@@ -107,7 +105,6 @@
                     Grid.Column="6"
                     Content="{x:Static lang:Resources.Action_ClearSelection}"
                     VerticalAlignment="Bottom"
-                    CornerRadius="8"
                     Margin="8, 0"
                     Height="40"
                     Command="{Binding ClearSelection}"
@@ -117,15 +114,16 @@
                     Content="{x:Static lang:Resources.Action_SelectAll}"
                     VerticalAlignment="Bottom"
                     Classes="accent"
-                    CornerRadius="8"
                     Margin="8, 0"
                     Height="40"
                     Command="{Binding SelectAll}"
                     IsVisible="{Binding !NumItemsSelected}" />
         </Grid>
 
-        <ScrollViewer Grid.Row="1">
+        <scroll:BetterScrollViewer Grid.Row="1"
+                      PointerWheelChanged="ScrollViewer_MouseWheelChanged">
             <ItemsRepeater
+                x:Name="ImageRepeater"
                 ItemsSource="{Binding Outputs}"
                 VerticalAlignment="Top">
                 <ItemsRepeater.Layout>
@@ -134,6 +132,8 @@
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="{x:Type outputsPage:OutputImageViewModel}">
                         <selectableImageCard:SelectableImageButton
+                            ImageHeight="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).ImageSize.Height}"
+                            ImageWidth="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).ImageSize.Width}"
                             Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).OnImageClick}"
                             CommandParameter="{Binding }"
                             IsSelected="{Binding IsSelected}"
@@ -208,6 +208,6 @@
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>
-        </ScrollViewer>
+        </scroll:BetterScrollViewer>
     </Grid>
 </controls:UserControlBase>

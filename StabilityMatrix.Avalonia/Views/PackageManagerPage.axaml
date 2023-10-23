@@ -31,7 +31,8 @@
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="{x:Type packageManager:PackageCardViewModel}">
-                        <controls:Card Padding="8">
+                        <controls:Card Padding="8"
+                                       CornerRadius="8">
                             <Grid RowDefinitions="Auto, Auto, Auto, Auto"
                                   ColumnDefinitions="*,Auto">
 

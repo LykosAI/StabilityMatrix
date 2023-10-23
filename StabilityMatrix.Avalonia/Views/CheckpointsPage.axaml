@@ -107,7 +107,7 @@
                                         Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                         HorizontalAlignment="Left"
                                         IsEnabled="True"
-                                        MaxWidth="150"
+                                        MaxWidth="250"
                                         Text="{Binding Title}"
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="NoWrap" />

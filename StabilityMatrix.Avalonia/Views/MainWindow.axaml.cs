@@ -87,14 +87,6 @@ public partial class MainWindow : AppWindowBase
         navigationService.SetFrame(
             FrameView ?? throw new NullReferenceException("Frame not found")
         );
-
-        // Navigate to first page
-        if (DataContext is not MainWindowViewModel vm)
-        {
-            throw new NullReferenceException("DataContext is not MainWindowViewModel");
-        }
-
-        navigationService.NavigateTo(vm.Pages[0], new DrillInNavigationTransitionInfo());
     }
 
     protected override void OnOpened(EventArgs e)
@@ -133,8 +125,23 @@ public partial class MainWindow : AppWindowBase
             loader.LoadFailed += OnImageLoadFailed;
         }
 
+        if (DataContext is not MainWindowViewModel vm)
+            return;
+
+        // Navigate to first page
+        Dispatcher.UIThread.Post(
+            () =>
+                navigationService.NavigateTo(
+                    vm.Pages[0],
+                    new BetterSlideNavigationTransition
+                    {
+                        Effect = SlideNavigationTransitionEffect.FromBottom
+                    }
+                )
+        );
+
         // Check show update teaching tip
-        if (DataContext is MainWindowViewModel { UpdateViewModel.IsUpdateAvailable: true } vm)
+        if (vm.UpdateViewModel.IsUpdateAvailable)
         {
             OnUpdateAvailable(this, vm.UpdateViewModel.UpdateInfo);
         }

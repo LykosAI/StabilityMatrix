@@ -424,7 +424,7 @@ public static class DialogHelper
                 AllowScrollBelowDocument = false
             }
         };
-        TextEditorConfigs.ConfigForPrompt(textEditor);
+        TextEditorConfigs.Configure(textEditor, TextEditorPreset.Prompt);
 
         textEditor.Document.Text = errorLineFormatted;
         textEditor.TextArea.Caret.Offset = textEditor.Document.Lines[0].EndOffset;

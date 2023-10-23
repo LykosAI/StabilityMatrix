@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.5.6
+### Added
+- Added Russian UI language option, thanks to aolko for the translation
+
 ## v2.5.5
 ### Added
 - Added Spanish UI language options, thanks to Carlos Baena and Lautaroturina for the translations

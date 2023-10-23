@@ -5,7 +5,9 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.VisualTree;
+using DynamicData.Binding;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using CheckpointFolder = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFolder;
@@ -34,16 +36,14 @@ public partial class CheckpointsPage : UserControlBase
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        EventManager.Instance.InvalidateRepeaterRequested += OnInvalidateRepeaterRequested;
+        if (DataContext is CheckpointsPageViewModel vm)
+        {
+            vm.WhenPropertyChanged(v => v.ShowConnectedModelImages)
+                .Subscribe(_ => InvalidateRepeater());
+        }
     }
 
-    protected override void OnUnloaded(RoutedEventArgs e)
-    {
-        base.OnUnloaded(e);
-        EventManager.Instance.InvalidateRepeaterRequested -= OnInvalidateRepeaterRequested;
-    }
-
-    private void OnInvalidateRepeaterRequested(object? sender, EventArgs e)
+    private void InvalidateRepeater()
     {
         repeater ??= this.FindControl<ItemsControl>("FilesRepeater");
         repeater?.InvalidateArrange();

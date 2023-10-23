@@ -37,7 +37,6 @@ public class EventManager
     public event EventHandler<FilePath>? ImageFileAdded;
     public event EventHandler<LocalImageFile>? InferenceTextToImageRequested;
     public event EventHandler<LocalImageFile>? InferenceUpscaleRequested;
-    public event EventHandler? InvalidateRepeaterRequested;
 
     public void OnGlobalProgressChanged(int progress) =>
         GlobalProgressChanged?.Invoke(this, progress);
@@ -84,7 +83,4 @@ public class EventManager
 
     public void OnInferenceUpscaleRequested(LocalImageFile imageFile) =>
         InferenceUpscaleRequested?.Invoke(this, imageFile);
-
-    public void OnInvalidateRepeaterRequested() =>
-        InvalidateRepeaterRequested?.Invoke(this, EventArgs.Empty);
 }

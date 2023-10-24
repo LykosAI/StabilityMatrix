@@ -24,6 +24,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
@@ -42,6 +43,7 @@ using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Python;
@@ -269,6 +271,10 @@ public partial class SettingsViewModel : PageViewModelBase
             LogLevel.Warn
         );
         ImportTagCsvCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
+        DebugInferenceUploadImageCommand.WithNotificationErrorHandler(
+            notificationService,
+            LogLevel.Warn
+        );
     }
 
     /// <inheritdoc />
@@ -846,6 +852,32 @@ public partial class SettingsViewModel : PageViewModelBase
             var download = trackedDownloadService.NewDownload(new Uri(url), new FilePath(filePath));
             download.Start();
         }
+    }
+
+    [RelayCommand(FlowExceptionsToTaskScheduler = true)]
+    private async Task DebugInferenceUploadImage()
+    {
+        if (
+            await App.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions())
+            is not { Count: > 0 } files
+        )
+            return;
+
+        var file = files[0];
+
+        if (
+            App.Services.GetRequiredService<IInferenceClientManager>().Client is not { } comfyClient
+        )
+            return;
+
+        await using var stream = await file.OpenReadAsync();
+
+        var response = await comfyClient.UploadImageAsync(stream, "test.jpg");
+
+        notificationService.ShowPersistent(
+            "Uploaded image",
+            $"Name: {response.Name}\nType: {response.Type}\nSubfolder: {response.SubFolder}"
+        );
     }
     #endregion
 

@@ -470,6 +470,18 @@
                                 Content="Choose image" />
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
+                    
+                    <ui:SettingsExpanderItem
+                        Margin="4,0,4,4"
+                        Content="Inference upload image"
+                        IconSource="Flag">
+                        <ui:SettingsExpanderItem.Footer>
+                            <Button
+                                Margin="0,8"
+                                Command="{Binding DebugInferenceUploadImageCommand}"
+                                Content="Choose image" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
 
                 </ui:SettingsExpander>
             </Grid>

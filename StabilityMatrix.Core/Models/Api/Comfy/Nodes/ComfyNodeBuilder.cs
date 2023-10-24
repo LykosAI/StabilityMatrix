@@ -310,21 +310,12 @@ public class ComfyNodeBuilder
         };
     }
 
-    /// <summary>
-    /// Create a LoadImage node.
-    /// </summary>
-    /// <param name="name">Name of the node</param>
-    /// <param name="relativeInputPath">Path relative to the Comfy input directory</param>
-    public static NamedComfyNode<ImageNodeConnection, ImageMaskConnection> LoadImage(
-        string name,
-        string relativeInputPath
-    )
+    public record LoadImage : ComfyTypedNodeBase<ImageNodeConnection, ImageMaskConnection>
     {
-        return new NamedComfyNode<ImageNodeConnection, ImageMaskConnection>(name)
-        {
-            ClassType = "LoadImage",
-            Inputs = new Dictionary<string, object?> { ["image"] = relativeInputPath }
-        };
+        /// <summary>
+        /// Path relative to the Comfy input directory
+        /// </summary>
+        public required string Image { get; init; }
     }
 
     public record PreviewImage : ComfyTypedNodeBase

@@ -122,8 +122,8 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
         builder.Connections.PrimarySize = sourceImageSize;
 
         // Load source
-        var loadImage = nodes.AddNamedNode(
-            ComfyNodeBuilder.LoadImage("LoadImage", sourceImageRelativePath)
+        var loadImage = nodes.AddTypedNode(
+            new ComfyNodeBuilder.LoadImage { Name = "LoadImage", Image = sourceImageRelativePath }
         );
         builder.Connections.Primary = loadImage.Output1;
 

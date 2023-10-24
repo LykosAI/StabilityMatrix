@@ -19,25 +19,6 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private const string TorchPipInstallArgs = "torch==2.0.1 torchvision";
-
-    public const string TorchPipInstallArgsCuda =
-        $"{TorchPipInstallArgs} --extra-index-url https://download.pytorch.org/whl/cu118";
-    public const string TorchPipInstallArgsCuda121 =
-        "torch torchvision --extra-index-url https://download.pytorch.org/whl/cu121";
-    public const string TorchPipInstallArgsCpu = TorchPipInstallArgs;
-    public const string TorchPipInstallArgsDirectML = "torch-directml";
-
-    public const string TorchPipInstallArgsRocm511 =
-        $"{TorchPipInstallArgs} --extra-index-url https://download.pytorch.org/whl/rocm5.1.1";
-    public const string TorchPipInstallArgsRocm542 =
-        $"{TorchPipInstallArgs} --extra-index-url https://download.pytorch.org/whl/rocm5.4.2";
-    public const string TorchPipInstallArgsRocm56 =
-        $"{TorchPipInstallArgs} --index-url https://download.pytorch.org/whl/rocm5.6";
-
-    public const string TorchPipInstallArgsNightlyCpu =
-        "--pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu";
-
     /// <summary>
     /// Relative path to the site-packages folder from the venv root.
     /// This is platform specific.
@@ -216,7 +197,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     /// Run a pip install command. Waits for the process to exit.
     /// workingDirectory defaults to RootPath.
     /// </summary>
-    public async Task PipInstall(string args, Action<ProcessOutput>? outputDataReceived = null)
+    public async Task PipInstall(ProcessArgs args, Action<ProcessOutput>? outputDataReceived = null)
     {
         if (!File.Exists(PipPath))
         {
@@ -236,7 +217,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         });
 
         SetPyvenvCfg(PyRunner.PythonDir);
-        RunDetached($"-m pip install {args}", outputAction);
+        RunDetached(args.Prepend("-m pip install"), outputAction);
         await Process.WaitForExitAsync().ConfigureAwait(false);
 
         // Check return code

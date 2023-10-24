@@ -9,10 +9,10 @@ namespace StabilityMatrix.Core.Processes;
 /// Implicitly converts between string and string[],
 /// with no parsing if the input and output types are the same.
 /// </summary>
-public partial class ProcessArgs : OneOfBase<string, string[]>
+public partial class ProcessArgs : OneOfBase<string, string[]>, IEnumerable<string>
 {
     /// <inheritdoc />
-    private ProcessArgs(OneOf<string, string[]> input)
+    public ProcessArgs(OneOf<string, string[]> input)
         : base(input) { }
 
     /// <summary>
@@ -21,10 +21,34 @@ public partial class ProcessArgs : OneOfBase<string, string[]>
     /// </summary>
     public bool Contains(string arg) => Match(str => str.Contains(arg), arr => arr.Any(Contains));
 
+    public ProcessArgs Concat(ProcessArgs other) =>
+        Match(
+            str => new ProcessArgs(string.Join(' ', str, other.ToString())),
+            arr => new ProcessArgs(arr.Concat(other.ToArray()).ToArray())
+        );
+
+    public ProcessArgs Prepend(ProcessArgs other) =>
+        Match(
+            str => new ProcessArgs(string.Join(' ', other.ToString(), str)),
+            arr => new ProcessArgs(other.ToArray().Concat(arr).ToArray())
+        );
+
+    /// <inheritdoc />
+    public IEnumerator<string> GetEnumerator()
+    {
+        return ToArray().AsEnumerable().GetEnumerator();
+    }
+
     /// <inheritdoc />
     public override string ToString()
     {
         return Match(str => str, arr => string.Join(' ', arr.Select(ProcessRunner.Quote)));
+    }
+
+    /// <inheritdoc />
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 
     public string[] ToArray() =>

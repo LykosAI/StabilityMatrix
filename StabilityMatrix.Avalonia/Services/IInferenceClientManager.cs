@@ -49,6 +49,8 @@ public interface IInferenceClientManager
 
     Task CopyImageToInputAsync(FilePath imageFile, CancellationToken cancellationToken = default);
 
+    Task UploadInputImageAsync(ImageSource image, CancellationToken cancellationToken = default);
+
     Task WriteImageToInputAsync(
         ImageSource imageSource,
         CancellationToken cancellationToken = default

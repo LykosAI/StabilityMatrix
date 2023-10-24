@@ -73,6 +73,15 @@ public partial class MockInferenceClientManager : ObservableObject, IInferenceCl
     }
 
     /// <inheritdoc />
+    public Task UploadInputImageAsync(
+        ImageSource image,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
     public Task WriteImageToInputAsync(
         ImageSource imageSource,
         CancellationToken cancellationToken = default

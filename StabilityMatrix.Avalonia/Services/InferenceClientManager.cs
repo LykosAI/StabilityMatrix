@@ -172,10 +172,16 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         };
     }
 
-    private async Task LoadSharedPropertiesAsync()
+    [MemberNotNull(nameof(Client))]
+    private void EnsureConnected()
     {
         if (!IsConnected)
             throw new InvalidOperationException("Client is not connected");
+    }
+
+    private async Task LoadSharedPropertiesAsync()
+    {
+        EnsureConnected();
 
         // Get model names
         if (await Client.GetModelNamesAsync() is { } modelNames)
@@ -297,6 +303,25 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             u => !modelUpscalersSource.Lookup(u.Name).HasValue
         );
         downloadableUpscalersSource.EditDiff(remoteUpscalers, ComfyUpscaler.Comparer);
+    }
+
+    /// <inheritdoc />
+    public async Task UploadInputImageAsync(
+        ImageSource image,
+        CancellationToken cancellationToken = default
+    )
+    {
+        EnsureConnected();
+
+        if (image.LocalFile is not { } localFile)
+        {
+            throw new ArgumentException("Image is not a local file", nameof(image));
+        }
+
+        var uploadName = await image.GetHashGuidFileNameAsync();
+
+        await using var stream = localFile.Info.OpenRead();
+        await Client.UploadImageAsync(stream, uploadName, cancellationToken);
     }
 
     /// <inheritdoc />

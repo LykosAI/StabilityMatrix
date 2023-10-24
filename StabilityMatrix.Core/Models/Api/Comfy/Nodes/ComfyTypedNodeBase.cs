@@ -32,7 +32,15 @@ public abstract record ComfyTypedNodeBase
                 property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name
                 ?? namingPolicy.ConvertName(property.Name);
 
-            inputs.Add(key, value);
+            // For connection types, use data property
+            if (value is NodeConnectionBase connection)
+            {
+                inputs.Add(key, connection.Data);
+            }
+            else
+            {
+                inputs.Add(key, value);
+            }
         }
 
         return new NamedComfyNode(Name) { ClassType = ClassType, Inputs = inputs };

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
@@ -13,7 +15,10 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Database;
+using Size = System.Drawing.Size;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -51,6 +56,19 @@ public partial class SelectImageCardViewModel : ViewModelBase, IDropTarget
         this.notificationService = notificationService;
     }
 
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    private void LoadUserImage(ImageSource image)
+    {
+        var current = ImageSource;
+
+        ImageSource = image;
+
+        current?.Dispose();
+
+        // Cache the hash for later upload use
+        image.GetBlake3HashAsync().SafeFireAndForget();
+    }
+
     /// <inheritdoc />
     public void DragOver(object? sender, DragEventArgs e)
     {
@@ -85,14 +103,9 @@ public partial class SelectImageCardViewModel : ViewModelBase, IDropTarget
             {
                 e.Handled = true;
 
-                Dispatcher.UIThread.Post(() =>
-                {
-                    var current = ImageSource;
-
-                    ImageSource = new ImageSource(imageFile.AbsolutePath);
-
-                    current?.Dispose();
-                });
+                Dispatcher.UIThread.Post(
+                    () => LoadUserImage(new ImageSource(imageFile.AbsolutePath))
+                );
 
                 return;
             }
@@ -113,14 +126,7 @@ public partial class SelectImageCardViewModel : ViewModelBase, IDropTarget
                         return;
                     }
 
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        var current = ImageSource;
-
-                        ImageSource = new ImageSource(path);
-
-                        current?.Dispose();
-                    });
+                    Dispatcher.UIThread.Post(() => LoadUserImage(new ImageSource(path)));
                 }
             }
             catch (Exception ex)

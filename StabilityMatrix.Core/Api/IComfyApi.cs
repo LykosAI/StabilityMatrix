@@ -27,7 +27,7 @@ public interface IComfyApi
     [Post("/upload/image")]
     Task<ComfyUploadImageResponse> PostUploadImage(
         StreamPart image,
-        bool overwrite = false,
+        string? overwrite = null,
         string? type = null,
         string? subfolder = null,
         CancellationToken cancellationToken = default

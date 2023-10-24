@@ -26,6 +26,12 @@
 
                     <Grid RowDefinitions="*,Auto">
                         
+                        <Grid.Styles>
+                            <Style Selector="ListBox /template/ VirtualizingStackPanel">
+                                <Setter Property="Orientation" Value="Horizontal" />
+                            </Style>
+                        </Grid.Styles>
+                        
                         <!--  Main image view  -->
                         <Border
                             Classes="theme-dark"

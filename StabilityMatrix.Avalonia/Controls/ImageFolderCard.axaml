@@ -1,4 +1,4 @@
-﻿<Styles
+﻿<ResourceDictionary
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
@@ -8,6 +8,7 @@
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:scroll="clr-namespace:StabilityMatrix.Avalonia.Controls.Scroll"
     x:DataType="vmInference:ImageFolderCardViewModel">
 
     <Design.PreviewWith>
@@ -18,7 +19,8 @@
         </Panel>
     </Design.PreviewWith>
 
-    <Style Selector="controls|ImageFolderCard">
+    <ControlTheme x:Key="{x:Type controls:ImageFolderCard}" TargetType="controls:ImageFolderCard">
+        <Setter Property="Background" Value="Transparent" />
         <!--  Set Defaults  -->
         <Setter Property="CornerRadius" Value="8" />
         <Setter Property="Focusable" Value="True" />
@@ -54,13 +56,15 @@
                             </TextBox.InnerRightContent>
                         </TextBox>
 
-                        <ScrollViewer
+                        <scroll:BetterScrollViewer
                             Grid.Row="1"
                             BringIntoViewOnFocusChange="False"
                             HorizontalScrollBarVisibility="Disabled"
                             IsScrollInertiaEnabled="True"
                             VerticalSnapPointsType="Mandatory">
                             <ItemsRepeater
+                                Name="ImageRepeater"
+                                x:Name="ImageRepeater"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Stretch"
                                 ItemsSource="{Binding LocalImages}"
@@ -198,8 +202,8 @@
                                             <Border ClipToBounds="True" CornerRadius="8">
                                                 <Grid RowDefinitions="*,Auto">
                                                     <controls:BetterAdvancedImage
-                                                        Width="150"
-                                                        Height="190"
+                                                        Width="{Binding $parent[ItemsRepeater].((vmInference:ImageFolderCardViewModel)DataContext).ImageSize.Width}"
+                                                        Height="{Binding $parent[ItemsRepeater].((vmInference:ImageFolderCardViewModel)DataContext).ImageSize.Height}"
                                                         Source="{Binding AbsolutePath}"
                                                         Stretch="UniformToFill"
                                                         StretchDirection="Both" />
@@ -207,7 +211,7 @@
                                                     <Border
                                                         Grid.Row="1"
                                                         MinHeight="20"
-                                                        MaxWidth="150"
+                                                        Width="{Binding $parent[ItemsRepeater].((vmInference:ImageFolderCardViewModel)DataContext).ImageSize.Width}"
                                                         Padding="4,0,0,0"
                                                         VerticalAlignment="Bottom"
                                                         Classes="theme-dark"
@@ -216,6 +220,7 @@
                                                             VerticalAlignment="Center"
                                                             FontSize="12"
                                                             Text="{Binding FileNameWithoutExtension}"
+                                                            TextAlignment="Center"
                                                             TextTrimming="CharacterEllipsis" />
                                                     </Border>
                                                 </Grid>
@@ -224,10 +229,10 @@
                                     </DataTemplate>
                                 </ItemsRepeater.ItemTemplate>
                             </ItemsRepeater>
-                        </ScrollViewer>
+                        </scroll:BetterScrollViewer>
                     </Grid>
                 </controls:Card>
             </ControlTemplate>
         </Setter>
-    </Style>
-</Styles>
+    </ControlTheme>
+</ResourceDictionary>

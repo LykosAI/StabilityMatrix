@@ -6,8 +6,11 @@ using System.IO;
 using System.Net.Http;
 using System.Text;
 using AvaloniaEdit.Utils;
+using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
+using NSubstitute.ReturnsExtensions;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
@@ -109,17 +112,18 @@ public static class DesignData
 
         // Mock services
         services
-            .AddSingleton<INotificationService, MockNotificationService>()
-            .AddSingleton<ISharedFolders, MockSharedFolders>()
-            .AddSingleton<IDownloadService, MockDownloadService>()
-            .AddSingleton<IHttpClientFactory, MockHttpClientFactory>()
-            .AddSingleton<IApiFactory, MockApiFactory>()
+            .AddSingleton(Substitute.For<INotificationService>())
+            .AddSingleton(Substitute.For<ISharedFolders>())
+            .AddSingleton(Substitute.For<IDownloadService>())
+            .AddSingleton(Substitute.For<IHttpClientFactory>())
+            .AddSingleton(Substitute.For<IApiFactory>())
+            .AddSingleton(Substitute.For<IDiscordRichPresenceService>())
+            .AddSingleton(Substitute.For<ITrackedDownloadService>())
+            .AddSingleton(Substitute.For<ILiteDbContext>())
             .AddSingleton<IInferenceClientManager, MockInferenceClientManager>()
-            .AddSingleton<IDiscordRichPresenceService, MockDiscordRichPresenceService>()
             .AddSingleton<ICompletionProvider, MockCompletionProvider>()
             .AddSingleton<IModelIndexService, MockModelIndexService>()
-            .AddSingleton<IImageIndexService, MockImageIndexService>()
-            .AddSingleton<ITrackedDownloadService, MockTrackedDownloadService>();
+            .AddSingleton<IImageIndexService, MockImageIndexService>();
 
         // Placeholder services that nobody should need during design time
         services
@@ -173,6 +177,55 @@ public static class DesignData
         );
         InstallerViewModel.SelectedPackage = InstallerViewModel.AvailablePackages[0];
         InstallerViewModel.ReleaseNotes = "## Release Notes\nThis is a test release note.";
+
+        ObservableCacheEx.AddOrUpdate(
+            CheckpointsPageViewModel.CheckpointFoldersCache,
+            new CheckpointFolder[]
+            {
+                new(settingsManager, downloadService, modelFinder, notificationService)
+                {
+                    DirectoryPath = "Models/StableDiffusion",
+                    DisplayedCheckpointFiles = new ObservableCollectionExtended<CheckpointFile>()
+                    {
+                        new()
+                        {
+                            FilePath = "~/Models/StableDiffusion/electricity-light.safetensors",
+                            Title = "Auroral Background",
+                            PreviewImagePath =
+                                "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
+                                + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
+                            ConnectedModel = new ConnectedModelInfo
+                            {
+                                VersionName = "Lightning Auroral",
+                                BaseModel = "SD 1.5",
+                                ModelName = "Auroral Background",
+                                ModelType = CivitModelType.Model,
+                                FileMetadata = new CivitFileMetadata
+                                {
+                                    Format = CivitModelFormat.SafeTensor,
+                                    Fp = CivitModelFpType.fp16,
+                                    Size = CivitModelSize.pruned,
+                                }
+                            }
+                        },
+                        new()
+                        {
+                            FilePath = "~/Models/Lora/model.safetensors",
+                            Title = "Some model"
+                        },
+                    },
+                },
+                new(settingsManager, downloadService, modelFinder, notificationService)
+                {
+                    Title = "Lora",
+                    DirectoryPath = "Packages/Lora",
+                    DisplayedCheckpointFiles = new ObservableCollectionExtended<CheckpointFile>
+                    {
+                        new() { FilePath = "~/Models/Lora/lora_v2.pt", Title = "Best Lora v2", }
+                    }
+                }
+            }
+        );
 
         /*// Checkpoints page
         CheckpointsPageViewModel.CheckpointFolders =
@@ -624,8 +677,8 @@ The gallery images are often inpainted, but you will get something very similar 
         get
         {
             var list = new CompletionList { IsFiltering = true };
-            list.CompletionData.AddRange(SampleCompletionData);
-            list.FilteredCompletionData.AddRange(list.CompletionData);
+            ExtensionMethods.AddRange(list.CompletionData, SampleCompletionData);
+            ExtensionMethods.AddRange(list.FilteredCompletionData, list.CompletionData);
             list.SelectItem("te", true);
             return list;
         }

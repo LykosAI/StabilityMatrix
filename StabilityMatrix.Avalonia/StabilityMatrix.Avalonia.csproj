@@ -32,7 +32,6 @@
         <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.0.2" />
         <PackageReference Include="AvaloniaEdit.TextMate" Version="11.0.1" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
-        <PackageReference Include="CSharpDiscriminatedUnion" Version="2.0.1" />
         <PackageReference Include="DiscordRichPresence" Version="1.2.1.24" />
         <PackageReference Include="Dock.Avalonia" Version="11.0.0.2" />
         <PackageReference Include="Dock.Model.Avalonia" Version="11.0.0.2" />
@@ -53,6 +52,7 @@
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
         <PackageReference Include="NLog" Version="5.2.5" />
         <PackageReference Include="NLog.Extensions.Logging" Version="5.3.5" />
+        <PackageReference Include="NSubstitute" Version="5.1.0" />
         <PackageReference Include="Polly" Version="8.0.0" />
         <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
         <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Avalonia.Data;
@@ -26,7 +27,10 @@ public partial class FileNameFormatProvider
             { "seed", () => GenerationParameters?.Seed.ToString() },
             { "prompt", () => GenerationParameters?.PositivePrompt },
             { "negative_prompt", () => GenerationParameters?.NegativePrompt },
-            { "model_name", () => GenerationParameters?.ModelName },
+            {
+                "model_name",
+                () => Path.GetFileNameWithoutExtension(GenerationParameters?.ModelName)
+            },
             { "model_hash", () => GenerationParameters?.ModelHash },
             { "width", () => GenerationParameters?.Width.ToString() },
             { "height", () => GenerationParameters?.Height.ToString() },
@@ -84,7 +88,7 @@ public partial class FileNameFormatProvider
             if (result.Index != currentIndex)
             {
                 var constant = template[currentIndex..result.Index];
-                parts.Add(FileNameFormatPart.FromConstant(constant));
+                parts.Add(constant);
 
                 currentIndex += constant.Length;
             }
@@ -97,30 +101,32 @@ public partial class FileNameFormatProvider
             if (slice is not null)
             {
                 parts.Add(
-                    FileNameFormatPart.FromSubstitution(() =>
-                    {
-                        var value = substitution();
-                        if (value is null)
-                            return null;
-
-                        if (slice.End is null)
+                    (FileNameFormatPart)(
+                        () =>
                         {
-                            value = value[(slice.Start ?? 0)..];
-                        }
-                        else
-                        {
-                            var length =
-                                Math.Min(value.Length, slice.End.Value) - (slice.Start ?? 0);
-                            value = value.Substring(slice.Start ?? 0, length);
-                        }
+                            var value = substitution();
+                            if (value is null)
+                                return null;
 
-                        return value;
-                    })
+                            if (slice.End is null)
+                            {
+                                value = value[(slice.Start ?? 0)..];
+                            }
+                            else
+                            {
+                                var length =
+                                    Math.Min(value.Length, slice.End.Value) - (slice.Start ?? 0);
+                                value = value.Substring(slice.Start ?? 0, length);
+                            }
+
+                            return value;
+                        }
+                    )
                 );
             }
             else
             {
-                parts.Add(FileNameFormatPart.FromSubstitution(substitution));
+                parts.Add(substitution);
             }
 
             currentIndex += result.Length;
@@ -130,7 +136,7 @@ public partial class FileNameFormatProvider
         if (currentIndex != template.Length)
         {
             var constant = template[currentIndex..];
-            parts.Add(FileNameFormatPart.FromConstant(constant));
+            parts.Add(constant);
         }
 
         return parts;

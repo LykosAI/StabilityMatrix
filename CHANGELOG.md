@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added filtering of "incompatible" packages (ones that do not support your GPU) to all installers 
   - This can be overridden by checking the new "Show All Packages" checkbox
 - Added more launch options for Fooocus, such as the `--preset` option
+- Added Ctrl+ScrollWheel to change image size in the inference output gallery and new Outputs page
+- Added "No Images Found" placeholder for non-connected models on the Checkpoints tab
 ### Changed
 - If ComfyUI for Inference is chosen during the One-Click Installer, the Inference page will be opened after installation instead of the Launch page
 - Changed all package installs & updates to use git commands instead of downloading zip files
@@ -24,10 +26,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - NVIDIA GPU users will be updated to use CUDA 12.1 for ComfyUI & Fooocus packages for a slight performance improvement
   - Update will occur the next time the package is updated, or on a fresh install
   - Note: CUDA 12.1 is only available on Maxwell (GTX 900 series) and newer GPUs
+- Improved Model Browser download stability with automatic retries for download errors
+- Optimized page navigation and syntax formatting configurations to improve startup time
 ### Fixed
 - Fixed crash when clicking Inference gallery image after the image is deleted externally in file explorer
 - Fixed Inference popup Install button not working on One-Click Installer
 - Fixed Inference Prompt Completion window sometimes not showing while typing
+- Fixed "Show Model Images" toggle on Checkpoints page sometimes displaying cut-off model images
 
 ## v2.5.5
 ### Added

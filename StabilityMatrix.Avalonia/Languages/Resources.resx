@@ -379,7 +379,7 @@
     <value>Drop file here to import</value>
   </data>
   <data name="Label_ImportAsConnected" xml:space="preserve">
-    <value>Import as Connected</value>
+    <value>Import with Metadata</value>
   </data>
   <data name="Label_ImportAsConnectedExplanation" xml:space="preserve">
     <value>Search for connected metadata on new local imports</value>

@@ -182,7 +182,13 @@ public class InvokeAI : BaseGitPackage
             // For AMD, Install ROCm version
             case TorchVersion.Rocm:
                 await venvRunner
-                    .PipInstall(PyVenvRunner.TorchPipInstallArgsRocm542, onConsoleOutput)
+                    .PipInstall(
+                        new PipInstallArgs()
+                            .WithTorch("==2.0.1")
+                            .WithTorchVision()
+                            .WithExtraIndex("rocm5.4.2"),
+                        onConsoleOutput
+                    )
                     .ConfigureAwait(false);
                 Logger.Info("Starting InvokeAI install (ROCm)...");
                 pipCommandArgs =

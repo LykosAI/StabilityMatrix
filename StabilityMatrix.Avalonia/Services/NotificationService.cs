@@ -3,7 +3,9 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Avalonia.Services;
@@ -11,7 +13,13 @@ namespace StabilityMatrix.Avalonia.Services;
 [Singleton(typeof(INotificationService))]
 public class NotificationService : INotificationService
 {
+    private readonly ILogger<NotificationService> logger;
     private WindowNotificationManager? notificationManager;
+
+    public NotificationService(ILogger<NotificationService> logger)
+    {
+        this.logger = logger;
+    }
 
     public void Initialize(
         Visual? visual,
@@ -50,6 +58,19 @@ public class NotificationService : INotificationService
     )
     {
         Show(new Notification(title, message, appearance, TimeSpan.Zero));
+    }
+
+    /// <inheritdoc />
+    public void ShowPersistent(
+        AppException exception,
+        NotificationType appearance = NotificationType.Warning,
+        LogLevel logLevel = LogLevel.Warning
+    )
+    {
+        // Log exception
+        logger.Log(logLevel, exception, "{Message}", exception.Message);
+
+        Show(new Notification(exception.Message, exception.Details, appearance, TimeSpan.Zero));
     }
 
     /// <inheritdoc />

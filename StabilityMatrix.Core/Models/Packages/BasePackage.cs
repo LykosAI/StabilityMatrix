@@ -189,9 +189,14 @@ public abstract class BasePackage
         );
 
         await venvRunner
-            .PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, onConsoleOutput)
+            .PipInstall(
+                new PipInstallArgs()
+                    .WithTorch("==2.0.1")
+                    .WithXFormers("==0.0.20")
+                    .WithTorchExtraIndex("cu118"),
+                onConsoleOutput
+            )
             .ConfigureAwait(false);
-        await venvRunner.PipInstall("xformers==0.0.20", onConsoleOutput).ConfigureAwait(false);
     }
 
     protected Task InstallDirectMlTorch(
@@ -204,7 +209,7 @@ public abstract class BasePackage
             new ProgressReport(-1f, "Installing PyTorch for DirectML", isIndeterminate: true)
         );
 
-        return venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, onConsoleOutput);
+        return venvRunner.PipInstall(new PipInstallArgs().WithTorchDirectML(), onConsoleOutput);
     }
 
     protected Task InstallCpuTorch(
@@ -217,6 +222,9 @@ public abstract class BasePackage
             new ProgressReport(-1f, "Installing PyTorch for CPU", isIndeterminate: true)
         );
 
-        return venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, onConsoleOutput);
+        return venvRunner.PipInstall(
+            new PipInstallArgs().WithTorch("==2.0.1").WithTorchVision(),
+            onConsoleOutput
+        );
     }
 }

@@ -68,6 +68,8 @@ public class TrackedDownload
     [JsonIgnore]
     public Exception? Exception { get; private set; }
 
+    private int attempts;
+
     #region Events
     private WeakEventManager<ProgressReport>? progressUpdateEventManager;
 
@@ -120,22 +122,14 @@ public class TrackedDownload
     private async Task StartDownloadTask(long resumeFromByte, CancellationToken cancellationToken)
     {
         var progress = new Progress<ProgressReport>(OnProgressUpdate);
-        try
-        {
-            await downloadService!
-                .ResumeDownloadToFileAsync(
-                    SourceUrl.ToString(),
-                    DownloadDirectory.JoinFile(TempFileName),
-                    resumeFromByte,
-                    progress,
-                    cancellationToken: cancellationToken
-                )
-                .ConfigureAwait(false);
-        }
-        catch (Exception e)
-        {
-            Logger.Warn(e);
-        }
+
+        await downloadService!.ResumeDownloadToFileAsync(
+            SourceUrl.ToString(),
+            DownloadDirectory.JoinFile(TempFileName),
+            resumeFromByte,
+            progress,
+            cancellationToken: cancellationToken
+        );
 
         // If hash validation is enabled, validate the hash
         if (ValidateHash)
@@ -312,6 +306,23 @@ public class TrackedDownload
         {
             // Set the exception
             Exception = task.Exception;
+
+            if (
+                (Exception is IOException || Exception?.InnerException is IOException)
+                && attempts < 3
+            )
+            {
+                attempts++;
+                Logger.Warn(
+                    "Download {Download} failed with {Exception}, retrying ({Attempt})",
+                    FileName,
+                    Exception,
+                    attempts
+                );
+                ProgressState = ProgressState.Inactive;
+                Resume();
+                return;
+            }
 
             ProgressState = ProgressState.Failed;
         }

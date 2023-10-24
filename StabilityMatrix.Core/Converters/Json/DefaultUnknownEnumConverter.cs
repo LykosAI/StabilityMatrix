@@ -1,14 +1,44 @@
-﻿using System.Text.Json;
+﻿using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Core.Converters.Json;
 
-public class DefaultUnknownEnumConverter<T> : JsonConverter<T> where T : Enum
+public class DefaultUnknownEnumConverter<T> : JsonConverter<T>
+    where T : Enum
 {
-    public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    // Get EnumMember attribute value
+    private Dictionary<string, T>? _enumMemberValues;
+
+    private IReadOnlyDictionary<string, T> EnumMemberValues =>
+        _enumMemberValues ??= typeof(T)
+            .GetFields()
+            .Where(field => field.IsStatic)
+            .Select(
+                field =>
+                    new
+                    {
+                        Field = field,
+                        Attribute = field
+                            .GetCustomAttributes<EnumMemberAttribute>(false)
+                            .FirstOrDefault()
+                    }
+            )
+            .Where(field => field.Attribute != null)
+            .ToDictionary(
+                field => field.Attribute!.Value!.ToString(),
+                field => (T)field.Field.GetValue(null)!
+            );
+
+    public override T Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options
+    )
     {
-        if (reader.TokenType != JsonTokenType.String) 
+        if (reader.TokenType != JsonTokenType.String)
         {
             throw new JsonException();
         }
@@ -16,15 +46,24 @@ public class DefaultUnknownEnumConverter<T> : JsonConverter<T> where T : Enum
         var enumText = reader.GetString()?.Replace(" ", "_");
         if (Enum.TryParse(typeof(T), enumText, true, out var result))
         {
-            return (T) result!;
+            return (T)result!;
+        }
+
+        // Try using enum member values
+        if (enumText != null)
+        {
+            if (EnumMemberValues.TryGetValue(enumText, out var enumMemberResult))
+            {
+                return enumMemberResult;
+            }
         }
 
         // Unknown value handling
-        if (Enum.TryParse(typeof(T), "Unknown", true, out var unknownResult)) 
+        if (Enum.TryParse(typeof(T), "Unknown", true, out var unknownResult))
         {
-            return (T) unknownResult!;
+            return (T)unknownResult!;
         }
-        
+
         throw new JsonException($"Unable to parse '{enumText}' to enum '{typeof(T)}'.");
     }
 

@@ -257,8 +257,23 @@ public abstract partial class InferenceGenerationViewModelBase
                 .SafeFireAndForget();
 
             // Wait for prompt to finish
-            await promptTask.Task.WaitAsync(cancellationToken);
-            Logger.Debug($"Prompt task {promptTask.Id} finished");
+            try
+            {
+                await promptTask.Task.WaitAsync(cancellationToken);
+                Logger.Debug($"Prompt task {promptTask.Id} finished");
+            }
+            catch (ComfyNodeException e)
+            {
+                Logger.Warn(e, "Comfy node exception while queuing prompt");
+                await DialogHelper
+                    .CreateJsonDialog(
+                        e.JsonData,
+                        "Comfy Error",
+                        "Node execution encountered an error"
+                    )
+                    .ShowAsync();
+                return;
+            }
 
             // Get output images
             var imageOutputs = await client.GetImagesForExecutedPromptAsync(

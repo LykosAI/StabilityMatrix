@@ -6,6 +6,7 @@ using NLog;
 using Polly.Contrib.WaitAndRetry;
 using Refit;
 using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
@@ -13,6 +14,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using Websocket.Client;
 using Websocket.Client.Exceptions;
+using Yoh.Text.Json.NamingPolicies;
 
 namespace StabilityMatrix.Core.Inference;
 
@@ -23,6 +25,9 @@ public class ComfyClient : InferenceClientBase
     private readonly WebsocketClient webSocketClient;
     private readonly IComfyApi comfyApi;
     private bool isDisposed;
+
+    private JsonSerializerOptions jsonSerializerOptions =
+        new() { PropertyNamingPolicy = JsonNamingPolicies.SnakeCaseLower, };
 
     // ReSharper disable once MemberCanBePrivate.Global
     public string ClientId { get; } = Guid.NewGuid().ToString();
@@ -121,7 +126,7 @@ public class ComfyClient : InferenceClientBase
         ComfyWebSocketResponse? json;
         try
         {
-            json = JsonSerializer.Deserialize<ComfyWebSocketResponse>(text);
+            json = JsonSerializer.Deserialize<ComfyWebSocketResponse>(text, jsonSerializerOptions);
         }
         catch (JsonException e)
         {
@@ -139,7 +144,9 @@ public class ComfyClient : InferenceClientBase
 
         if (json.Type == ComfyWebSocketResponseType.Executing)
         {
-            var executingData = json.GetDataAsType<ComfyWebSocketExecutingData>();
+            var executingData = json.GetDataAsType<ComfyWebSocketExecutingData>(
+                jsonSerializerOptions
+            );
             if (executingData?.PromptId is null)
             {
                 Logger.Warn($"Could not parse executing data {json.Data}, skipping");
@@ -176,7 +183,7 @@ public class ComfyClient : InferenceClientBase
         }
         else if (json.Type == ComfyWebSocketResponseType.Status)
         {
-            var statusData = json.GetDataAsType<ComfyWebSocketStatusData>();
+            var statusData = json.GetDataAsType<ComfyWebSocketStatusData>(jsonSerializerOptions);
             if (statusData is null)
             {
                 Logger.Warn($"Could not parse status data {json.Data}, skipping");
@@ -187,7 +194,9 @@ public class ComfyClient : InferenceClientBase
         }
         else if (json.Type == ComfyWebSocketResponseType.Progress)
         {
-            var progressData = json.GetDataAsType<ComfyWebSocketProgressData>();
+            var progressData = json.GetDataAsType<ComfyWebSocketProgressData>(
+                jsonSerializerOptions
+            );
             if (progressData is null)
             {
                 Logger.Warn($"Could not parse progress data {json.Data}, skipping");
@@ -198,6 +207,35 @@ public class ComfyClient : InferenceClientBase
             currentPromptTask?.OnProgressUpdate(progressData);
 
             ProgressUpdateReceived?.Invoke(this, progressData);
+        }
+        else if (json.Type == ComfyWebSocketResponseType.ExecutionError)
+        {
+            if (
+                json.GetDataAsType<ComfyWebSocketExecutionErrorData>(jsonSerializerOptions)
+                is not { } errorData
+            )
+            {
+                Logger.Warn($"Could not parse ExecutionError data {json.Data}, skipping");
+                return;
+            }
+
+            // Set error status
+            if (PromptTasks.TryRemove(errorData.PromptId, out var task))
+            {
+                task.RunningNode = null;
+                task.SetException(
+                    new ComfyNodeException
+                    {
+                        ErrorData = errorData,
+                        JsonData = json.Data.ToString()
+                    }
+                );
+                currentPromptTask = null;
+            }
+            else
+            {
+                Logger.Warn($"Could not find task for prompt {errorData.PromptId}, skipping");
+            }
         }
         else
         {
@@ -311,7 +349,13 @@ public class ComfyClient : InferenceClientBase
     )
     {
         var streamPart = new StreamPart(image, fileName);
-        return comfyApi.PostUploadImage(streamPart, true, "input", "Inference", cancellationToken);
+        return comfyApi.PostUploadImage(
+            streamPart,
+            "true",
+            "input",
+            "Inference",
+            cancellationToken
+        );
     }
 
     public async Task<Dictionary<string, List<ComfyImage>?>> GetImagesForExecutedPromptAsync(

@@ -6,6 +6,6 @@ public static class HashExtensions
 {
     public static Guid ToGuid(this Hash hash)
     {
-        return new Guid(hash.AsSpan());
+        return new Guid(hash.AsSpan()[..16]);
     }
 }

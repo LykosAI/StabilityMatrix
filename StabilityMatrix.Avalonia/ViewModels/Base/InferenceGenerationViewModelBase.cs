@@ -22,6 +22,7 @@ using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Inference;
@@ -183,6 +184,34 @@ public abstract partial class InferenceGenerationViewModelBase
     protected virtual void BuildPrompt(BuildPromptEventArgs args) { }
 
     /// <summary>
+    /// Gets ImageSources that need to be uploaded as inputs
+    /// </summary>
+    protected virtual IEnumerable<ImageSource> GetInputImages()
+    {
+        return Enumerable.Empty<ImageSource>();
+    }
+
+    protected async Task UploadInputImages(ComfyClient client)
+    {
+        foreach (var image in GetInputImages())
+        {
+            if (image.LocalFile is { } localFile)
+            {
+                var uploadName = await image.GetHashGuidFileNameAsync();
+
+                Logger.Debug(
+                    "Uploading image {FileName} as {UploadName}",
+                    localFile.Name,
+                    uploadName
+                );
+
+                await using var stream = localFile.Info.OpenRead();
+                await client.UploadImageAsync(stream, uploadName);
+            }
+        }
+    }
+
+    /// <summary>
     /// Runs a generation task
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown if args.Parameters or args.Project are null</exception>
@@ -203,6 +232,9 @@ public abstract partial class InferenceGenerationViewModelBase
             throw new InvalidOperationException("OutputNodeNames is empty");
         if (client.OutputImagesDir is null)
             throw new InvalidOperationException("OutputImagesDir is null");
+
+        // Upload input images
+        await UploadInputImages(client);
 
         // Connect preview image handler
         client.PreviewImageReceived += OnPreviewImageReceived;

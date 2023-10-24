@@ -81,7 +81,7 @@
                                                         HorizontalAlignment="Left"
                                                         FontSize="13"
                                                         Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                                        Text="{Binding FileName}"
+                                                        Text="{Binding RelativePath}"
                                                         TextWrapping="Wrap" />
                                                 </Grid>
                                             </StackPanel>

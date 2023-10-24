@@ -31,9 +31,9 @@ public partial class ModelCardViewModel : LoadableViewModelBase, IParametersLoad
     [ObservableProperty]
     private bool isVaeSelectionEnabled;
 
-    public string? SelectedModelName => SelectedModel?.FileName;
+    public string? SelectedModelName => SelectedModel?.RelativePath;
 
-    public string? SelectedVaeName => SelectedVae?.FileName;
+    public string? SelectedVaeName => SelectedVae?.RelativePath;
 
     public IInferenceClientManager ClientManager { get; }
 
@@ -62,11 +62,11 @@ public partial class ModelCardViewModel : LoadableViewModelBase, IParametersLoad
 
         SelectedModel = model.SelectedModelName is null
             ? null
-            : ClientManager.Models.FirstOrDefault(x => x.FileName == model.SelectedModelName);
+            : ClientManager.Models.FirstOrDefault(x => x.RelativePath == model.SelectedModelName);
 
         SelectedVae = model.SelectedVaeName is null
             ? HybridModelFile.Default
-            : ClientManager.VaeModels.FirstOrDefault(x => x.FileName == model.SelectedVaeName);
+            : ClientManager.VaeModels.FirstOrDefault(x => x.RelativePath == model.SelectedVaeName);
     }
 
     internal class ModelCardModel
@@ -101,7 +101,7 @@ public partial class ModelCardViewModel : LoadableViewModelBase, IParametersLoad
         else
         {
             // Name matches
-            model = currentModels.FirstOrDefault(m => m.FileName.EndsWith(paramsModelName));
+            model = currentModels.FirstOrDefault(m => m.RelativePath.EndsWith(paramsModelName));
             model ??= currentModels.FirstOrDefault(
                 m => m.ShortDisplayName.StartsWith(paramsModelName)
             );

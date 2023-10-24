@@ -30,7 +30,10 @@ public record HybridModelFile
     public bool IsRemote => RemoteName != null;
 
     [JsonIgnore]
-    public string FileName => IsRemote ? RemoteName : Local.RelativePathFromSharedFolder;
+    public string RelativePath => IsRemote ? RemoteName : Local.RelativePathFromSharedFolder;
+
+    [JsonIgnore]
+    public string FileName => Path.GetFileName(RelativePath);
 
     [JsonIgnore]
     public string ShortDisplayName
@@ -47,7 +50,7 @@ public record HybridModelFile
                 return "Default";
             }
 
-            return Path.GetFileNameWithoutExtension(FileName);
+            return Path.GetFileNameWithoutExtension(RelativePath);
         }
     }
 
@@ -63,7 +66,7 @@ public record HybridModelFile
 
     public string GetId()
     {
-        return $"{FileName};{IsNone};{IsDefault}";
+        return $"{RelativePath};{IsNone};{IsDefault}";
     }
 
     private sealed class RemoteNameLocalEqualityComparer : IEqualityComparer<HybridModelFile>
@@ -79,14 +82,14 @@ public record HybridModelFile
             if (x.GetType() != y.GetType())
                 return false;
 
-            return Equals(x.FileName, y.FileName)
+            return Equals(x.RelativePath, y.RelativePath)
                 && x.IsNone == y.IsNone
                 && x.IsDefault == y.IsDefault;
         }
 
         public int GetHashCode(HybridModelFile obj)
         {
-            return HashCode.Combine(obj.IsNone, obj.IsDefault, obj.FileName);
+            return HashCode.Combine(obj.IsNone, obj.IsDefault, obj.RelativePath);
         }
     }
 

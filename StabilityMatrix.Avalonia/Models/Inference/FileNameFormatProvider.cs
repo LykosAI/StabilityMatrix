@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Avalonia.Data;
@@ -26,7 +27,10 @@ public partial class FileNameFormatProvider
             { "seed", () => GenerationParameters?.Seed.ToString() },
             { "prompt", () => GenerationParameters?.PositivePrompt },
             { "negative_prompt", () => GenerationParameters?.NegativePrompt },
-            { "model_name", () => GenerationParameters?.ModelName },
+            {
+                "model_name",
+                () => Path.GetFileNameWithoutExtension(GenerationParameters?.ModelName)
+            },
             { "model_hash", () => GenerationParameters?.ModelHash },
             { "width", () => GenerationParameters?.Width.ToString() },
             { "height", () => GenerationParameters?.Height.ToString() },

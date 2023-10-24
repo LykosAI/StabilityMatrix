@@ -45,9 +45,8 @@ public abstract record ComfyTypedNodeBase
 public abstract record ComfyTypedNodeBase<TOutput> : ComfyTypedNodeBase
     where TOutput : NodeConnectionBase, new()
 {
+    [JsonIgnore]
     public TOutput Output => new() { Data = new object[] { Name, 0 } };
-
-    // public static implicit operator NamedComfyNode(ComfyTypedNodeBase<TOutput> node) => node.ToNamedNode();
 
     public static implicit operator NamedComfyNode<TOutput>(ComfyTypedNodeBase<TOutput> node) =>
         (NamedComfyNode<TOutput>)node.ToNamedNode();
@@ -57,11 +56,11 @@ public abstract record ComfyTypedNodeBase<TOutput1, TOutput2> : ComfyTypedNodeBa
     where TOutput1 : NodeConnectionBase, new()
     where TOutput2 : NodeConnectionBase, new()
 {
+    [JsonIgnore]
     public TOutput1 Output1 => new() { Data = new object[] { Name, 0 } };
 
+    [JsonIgnore]
     public TOutput1 Output2 => new() { Data = new object[] { Name, 1 } };
-
-    // public static implicit operator NamedComfyNode(ComfyTypedNodeBase<TOutput1, TOutput2> node) => node.ToNamedNode();
 
     public static implicit operator NamedComfyNode<TOutput1, TOutput2>(
         ComfyTypedNodeBase<TOutput1, TOutput2> node

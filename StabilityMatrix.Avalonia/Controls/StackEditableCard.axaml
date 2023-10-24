@@ -37,7 +37,7 @@
                                         CornerRadius="4"
                                         Padding="12,4"
                                         IsEnabled="{Binding ElementName=PART_ListBox, Path=!!ItemCount}"
-                                        IsChecked="{TemplateBinding IsListBoxEditEnabled, Mode=TwoWay}">
+                                        IsChecked="{Binding IsEditEnabled}">
                                     <fluentIcons:SymbolIcon Symbol="Edit" />
                                 </ToggleButton>
                                 <!-- Add button -->

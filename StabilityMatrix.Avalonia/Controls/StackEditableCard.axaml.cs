@@ -8,6 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Primitives;
 using Avalonia.LogicalTree;
+using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using Nito.Disposables.Internals;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -51,19 +52,39 @@ public class StackEditableCard : TemplatedControl
                     vm.OnContainerIndexChanged(args.Index);
                 }
             };
-
-            /*listBoxPart
-                .GetPropertyChangedObservable(DraggableListBox.IsDraggingEnabledProperty)
-                .Subscribe(args =>
-                {
-                    IsListBoxEditEnabled = (bool)args.NewValue!;
-                });*/
         }
 
         var addButton = e.NameScope.Find<Button>("PART_AddButton");
         if (addButton != null)
         {
             addButton.Flyout = GetAddButtonFlyout();
+        }
+    }
+
+    /// <inheritdoc />
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+
+        if (listBoxPart is null)
+            return;
+
+        if (DataContext is StackEditableCardViewModel vm)
+        {
+            vm.WhenPropertyChanged(x => x.IsEditEnabled)
+                .Subscribe(args =>
+                {
+                    PseudoClasses.Set(":editEnabled", args.Value);
+
+                    ((IPseudoClasses)listBoxPart!.Classes).Set("draggableVirtualizing", args.Value);
+
+                    foreach (
+                        var item in listBoxPart.Items.Cast<StackExpanderViewModel>().WhereNotNull()
+                    )
+                    {
+                        item.IsEditEnabled = args.Value;
+                    }
+                });
         }
     }
 

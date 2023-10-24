@@ -24,6 +24,10 @@ public partial class StackEditableCardViewModel : StackViewModelBase
     [property: JsonIgnore]
     private string? title = Languages.Resources.Label_Steps;
 
+    [ObservableProperty]
+    [property: JsonIgnore]
+    private bool isEditEnabled;
+
     /// <summary>
     /// Available module types for user creation
     /// </summary>
@@ -45,6 +49,18 @@ public partial class StackEditableCardViewModel : StackViewModelBase
     public void InitializeDefaults()
     {
         AddCards(DefaultModules.Select(t => vmFactory.Get(t)).Cast<LoadableViewModelBase>());
+    }
+
+    /// <inheritdoc />
+    protected override void OnCardAdded(LoadableViewModelBase item)
+    {
+        base.OnCardAdded(item);
+
+        if (item is ModuleBase module)
+        {
+            // Inherit our edit state
+            module.IsEditEnabled = IsEditEnabled;
+        }
     }
 
     [RelayCommand]

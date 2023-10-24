@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -74,25 +75,20 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
 
         StackCardViewModel = vmFactory.Get<StackCardViewModel>();
         StackCardViewModel.AddCards(
-            new LoadableViewModelBase[]
+            vmFactory.Get<StackExpanderViewModel>(stackExpander =>
             {
-                // Upscaler
-                vmFactory.Get<StackExpanderViewModel>(stackExpander =>
-                {
-                    stackExpander.Title = "Upscale";
-                    stackExpander.AddCards(new LoadableViewModelBase[] { UpscalerCardViewModel });
-                }),
-                // Sharpen
-                vmFactory.Get<StackExpanderViewModel>(stackExpander =>
-                {
-                    stackExpander.Title = "Sharpen";
-                    stackExpander.AddCards(new LoadableViewModelBase[] { SharpenCardViewModel });
-                })
-            }
+                stackExpander.Title = "Upscale";
+                stackExpander.AddCards(UpscalerCardViewModel);
+            }),
+            vmFactory.Get<StackExpanderViewModel>(stackExpander =>
+            {
+                stackExpander.Title = "Sharpen";
+                stackExpander.AddCards(SharpenCardViewModel);
+            })
         );
 
         // On any new images, copy to input dir
-        SelectImageCardViewModel
+        /*SelectImageCardViewModel
             .WhenPropertyChanged(x => x.ImageSource)
             .Subscribe(e =>
             {
@@ -100,7 +96,16 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
                 {
                     ClientManager.CopyImageToInputAsync(path).SafeFireAndForget();
                 }
-            });
+            });*/
+    }
+
+    /// <inheritdoc />
+    protected override IEnumerable<ImageSource> GetInputImages()
+    {
+        if (SelectImageCardViewModel.ImageSource is { } imageSource)
+        {
+            yield return imageSource;
+        }
     }
 
     /// <inheritdoc />
@@ -113,7 +118,10 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
 
         // Get source image
         var sourceImage = SelectImageCardViewModel.ImageSource;
-        var sourceImageRelativePath = Path.Combine("Inference", sourceImage!.LocalFile!.Name);
+        var sourceImageRelativePath = Path.Combine(
+            "Inference",
+            sourceImage!.GetHashGuidFileNameCached()
+        );
         var sourceImageSize =
             SelectImageCardViewModel.CurrentBitmapSize
             ?? throw new InvalidOperationException("Source image size is null");
@@ -184,7 +192,10 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
             return;
         }
 
-        await ClientManager.CopyImageToInputAsync(path, cancellationToken);
+        foreach (var image in GetInputImages())
+        {
+            await ClientManager.UploadInputImageAsync(image, cancellationToken);
+        }
 
         var buildPromptArgs = new BuildPromptEventArgs { Overrides = overrides };
         BuildPrompt(buildPromptArgs);

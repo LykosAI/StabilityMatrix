@@ -4,6 +4,7 @@ using System.Net.WebSockets;
 using System.Text.Json;
 using NLog;
 using Polly.Contrib.WaitAndRetry;
+using Refit;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy;
@@ -300,6 +301,17 @@ public class ComfyClient : InferenceClientBase
             task.Dispose();
             currentPromptTask = null;
         }
+    }
+
+    // Upload images
+    public Task<ComfyUploadImageResponse> UploadImageAsync(
+        Stream image,
+        string fileName,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var streamPart = new StreamPart(image, fileName);
+        return comfyApi.PostUploadImage(streamPart, true, "input", "Inference", cancellationToken);
     }
 
     public async Task<Dictionary<string, List<ComfyImage>?>> GetImagesForExecutedPromptAsync(

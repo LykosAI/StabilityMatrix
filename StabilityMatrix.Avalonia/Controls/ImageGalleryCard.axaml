@@ -13,11 +13,6 @@
         </Grid>
     </Design.PreviewWith>
 
-
-    <Style Selector="ListBox /template/ VirtualizingStackPanel">
-        <Setter Property="Orientation" Value="Horizontal" />
-    </Style>
-
     <Style Selector="controls|ImageGalleryCard">
         <!--  Set Defaults  -->
         <Setter Property="Template">
@@ -30,6 +25,12 @@
                     VerticalContentAlignment="{TemplateBinding VerticalAlignment}">
 
                     <Grid RowDefinitions="*,Auto">
+                        
+                        <Grid.Styles>
+                            <Style Selector="ListBox /template/ VirtualizingStackPanel">
+                                <Setter Property="Orientation" Value="Horizontal" />
+                            </Style>
+                        </Grid.Styles>
                         
                         <!--  Main image view  -->
                         <Border

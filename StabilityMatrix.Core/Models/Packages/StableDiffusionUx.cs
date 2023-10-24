@@ -263,7 +263,13 @@ public class StableDiffusionUx : BaseGitPackage
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         await venvRunner
-            .PipInstall(PyVenvRunner.TorchPipInstallArgsRocm511, onConsoleOutput)
+            .PipInstall(
+                new PipInstallArgs()
+                    .WithTorch("==2.0.1")
+                    .WithTorchVision()
+                    .WithTorchExtraIndex("rocm5.1.1"),
+                onConsoleOutput
+            )
             .ConfigureAwait(false);
     }
 }

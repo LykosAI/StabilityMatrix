@@ -184,7 +184,7 @@ public static class ComfyNodeBuilderExtensions
         var checkpointLoader = builder.Nodes.AddNamedNode(
             ComfyNodeBuilder.CheckpointLoaderSimple(
                 "Refiner_CheckpointLoader",
-                modelCardViewModel.SelectedRefiner?.FileName
+                modelCardViewModel.SelectedRefiner?.RelativePath
                     ?? throw new NullReferenceException("Model not selected")
             )
         );

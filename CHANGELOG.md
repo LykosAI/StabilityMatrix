@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - Update will occur the next time the package is updated, or on a fresh install
   - Note: CUDA 12.1 is only available on Maxwell (GTX 900 series) and newer GPUs
 - Improved Model Browser download stability with automatic retries for download errors
+- Optimized page navigation and syntax formatting configurations to improve startup time
 ### Fixed
 - Fixed crash when clicking Inference gallery image after the image is deleted externally in file explorer
 - Fixed Inference popup Install button not working on One-Click Installer

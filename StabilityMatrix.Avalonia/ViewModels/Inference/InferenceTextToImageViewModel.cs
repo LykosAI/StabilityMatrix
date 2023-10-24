@@ -251,7 +251,7 @@ public class InferenceTextToImageViewModel
         if (ModelCardViewModel is { IsVaeSelectionEnabled: true, SelectedVae.IsDefault: false })
         {
             var customVaeLoader = nodes.AddNamedNode(
-                ComfyNodeBuilder.VAELoader("VAELoader", ModelCardViewModel.SelectedVae.FileName)
+                ComfyNodeBuilder.VAELoader("VAELoader", ModelCardViewModel.SelectedVae.RelativePath)
             );
 
             builder.Connections.BaseVAE = customVaeLoader.Output;

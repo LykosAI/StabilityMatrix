@@ -179,15 +179,20 @@ public class ComfyUI : BaseGitPackage
                 break;
             case TorchVersion.Cuda:
                 await venvRunner
-                    .PipInstall(PyVenvRunner.TorchPipInstallArgsCuda121, onConsoleOutput)
-                    .ConfigureAwait(false);
-                await venvRunner
-                    .PipInstall("xformers==0.0.22.post4 --upgrade")
+                    .PipInstall(
+                        new PipInstallArgs()
+                            .WithTorch("~=2.1.0")
+                            .WithTorchVision()
+                            .WithXFormers("==0.0.22.post4")
+                            .AddArg("--upgrade")
+                            .WithTorchExtraIndex("cu121"),
+                        onConsoleOutput
+                    )
                     .ConfigureAwait(false);
                 break;
             case TorchVersion.DirectMl:
                 await venvRunner
-                    .PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, onConsoleOutput)
+                    .PipInstall(new PipInstallArgs().WithTorchDirectML(), onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             case TorchVersion.Rocm:
@@ -195,7 +200,14 @@ public class ComfyUI : BaseGitPackage
                 break;
             case TorchVersion.Mps:
                 await venvRunner
-                    .PipInstall(PyVenvRunner.TorchPipInstallArgsNightlyCpu, onConsoleOutput)
+                    .PipInstall(
+                        new PipInstallArgs()
+                            .AddArg("--pre")
+                            .WithTorch()
+                            .WithTorchVision()
+                            .WithTorchExtraIndex("nightly/cpu"),
+                        onConsoleOutput
+                    )
                     .ConfigureAwait(false);
                 break;
             default:
@@ -465,7 +477,13 @@ public class ComfyUI : BaseGitPackage
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         await venvRunner
-            .PipInstall(PyVenvRunner.TorchPipInstallArgsRocm56, onConsoleOutput)
+            .PipInstall(
+                new PipInstallArgs()
+                    .WithTorch("==2.0.1")
+                    .WithTorchVision()
+                    .WithTorchExtraIndex("rocm5.6"),
+                onConsoleOutput
+            )
             .ConfigureAwait(false);
     }
 

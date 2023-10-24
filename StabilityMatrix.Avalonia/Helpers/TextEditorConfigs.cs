@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Avalonia.Media;
 using AvaloniaEdit;
 using AvaloniaEdit.TextMate;
@@ -17,13 +18,22 @@ public static class TextEditorConfigs
 {
     public static void Configure(TextEditor editor, TextEditorPreset preset)
     {
-        if (preset == TextEditorPreset.Prompt)
+        switch (preset)
         {
-            ConfigForPrompt(editor);
+            case TextEditorPreset.Prompt:
+                ConfigForPrompt(editor);
+                break;
+            case TextEditorPreset.Console:
+                ConfigForConsole(editor);
+                break;
+            case TextEditorPreset.None:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
         }
     }
 
-    public static void ConfigForPrompt(TextEditor editor)
+    private static void ConfigForPrompt(TextEditor editor)
     {
         const ThemeName themeName = ThemeName.DimmedMonokai;
         var registryOptions = new RegistryOptions(themeName);
@@ -55,6 +65,25 @@ public static class TextEditorConfigs
         installation.SetGrammar(promptGrammar.GetScopeName());
 
         installation.SetTheme(theme);
+    }
+
+    private static void ConfigForConsole(TextEditor editor)
+    {
+        var registryOptions = new RegistryOptions(ThemeName.DarkPlus);
+
+        // Config hyperlinks
+        editor.TextArea.Options.EnableHyperlinks = true;
+        editor.TextArea.Options.RequireControlModifierForHyperlinkClick = false;
+        editor.TextArea.TextView.LinkTextForegroundBrush = Brushes.Coral;
+
+        var textMate = editor.InstallTextMate(registryOptions);
+        var scope = registryOptions.GetScopeByLanguageId("log");
+
+        if (scope is null)
+            throw new InvalidOperationException("Scope is null");
+
+        textMate.SetGrammar(scope);
+        textMate.SetTheme(registryOptions.LoadTheme(ThemeName.DarkPlus));
     }
 
     private static IRawTheme GetThemeFromStream(Stream stream)

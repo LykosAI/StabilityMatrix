@@ -222,6 +222,9 @@ public abstract class BasePackage
             new ProgressReport(-1f, "Installing PyTorch for CPU", isIndeterminate: true)
         );
 
-        return venvRunner.PipInstall(PipInstallArgs.GetTorch("==2.0.1"), onConsoleOutput);
+        return venvRunner.PipInstall(
+            new PipInstallArgs().WithTorch("==2.0.1").WithTorchVision(),
+            onConsoleOutput
+        );
     }
 }

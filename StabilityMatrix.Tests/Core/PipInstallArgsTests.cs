@@ -13,10 +13,10 @@ public class PipInstallArgsTests
         const string version = "==2.1.0";
 
         // Act
-        var args = PipInstallArgs.GetTorch(version).ToProcessArgs().ToString();
+        var args = new PipInstallArgs().WithTorch(version).ToProcessArgs().ToString();
 
         // Assert
-        Assert.AreEqual("torch==2.1.0 torchvision", args);
+        Assert.AreEqual("torch==2.1.0", args);
     }
 
     [TestMethod]

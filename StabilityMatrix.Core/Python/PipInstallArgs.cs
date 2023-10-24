@@ -1,5 +1,4 @@
-﻿using Semver;
-using StabilityMatrix.Core.Processes;
+﻿using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Core.Python;
 
@@ -23,12 +22,6 @@ public record PipInstallArgs : ProcessArgsBuilder
 
     public PipInstallArgs WithTorchExtraIndex(string index) =>
         this.AddArg(("--extra-index-url", $"https://download.pytorch.org/whl/{index}"));
-
-    public static PipInstallArgs GetTorch(string version = "") =>
-        new() { Arguments = { $"torch{version}", "torchvision" } };
-
-    public static PipInstallArgs GetTorchDirectML(string version = "") =>
-        new() { Arguments = { $"torch-directml{version}" } };
 
     /// <inheritdoc />
     public override string ToString()

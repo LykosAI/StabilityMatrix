@@ -40,6 +40,16 @@ public abstract class StackViewModelBase : LoadableViewModelBase
 
     public virtual void OnContainerIndexChanged(int value) { }
 
+    /// <summary>
+    /// Event raised when a card is added
+    /// </summary>
+    public event EventHandler<LoadableViewModelBase>? CardAdded;
+
+    protected virtual void OnCardAdded(LoadableViewModelBase item)
+    {
+        CardAdded?.Invoke(this, item);
+    }
+
     public void AddCards(params LoadableViewModelBase[] cards)
     {
         AddCards((IEnumerable<LoadableViewModelBase>)cards);
@@ -52,9 +62,8 @@ public abstract class StackViewModelBase : LoadableViewModelBase
     {
         foreach (var card in cards)
         {
-            /*var list = viewModelManager.GetOrAdd(card.GetType());
-            list.Add(card);*/
             Cards.Add(card);
+            OnCardAdded(card);
         }
     }
 

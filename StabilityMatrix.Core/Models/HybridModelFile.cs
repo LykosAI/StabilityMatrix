@@ -24,10 +24,18 @@ public record HybridModelFile
 
     public LocalModelFile? Local { get; init; }
 
+    /// <summary>
+    /// Downloadable model information.
+    /// </summary>
+    public RemoteResource? DownloadableResource { get; init; }
+
     [MemberNotNullWhen(true, nameof(RemoteName))]
     [MemberNotNullWhen(false, nameof(Local))]
     [JsonIgnore]
     public bool IsRemote => RemoteName != null;
+
+    [MemberNotNullWhen(true, nameof(DownloadableResource))]
+    public bool IsDownloadable => DownloadableResource != null;
 
     [JsonIgnore]
     public string RelativePath => IsRemote ? RemoteName : Local.RelativePathFromSharedFolder;
@@ -54,6 +62,8 @@ public record HybridModelFile
         }
     }
 
+    private HybridModelFile() { }
+
     public static HybridModelFile FromLocal(LocalModelFile local)
     {
         return new HybridModelFile { Local = local };
@@ -62,6 +72,11 @@ public record HybridModelFile
     public static HybridModelFile FromRemote(string remoteName)
     {
         return new HybridModelFile { RemoteName = remoteName };
+    }
+
+    public static HybridModelFile FromDownloadable(RemoteResource resource)
+    {
+        return new HybridModelFile { DownloadableResource = resource };
     }
 
     public string GetId()

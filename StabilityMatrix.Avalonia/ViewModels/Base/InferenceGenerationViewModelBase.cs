@@ -205,8 +205,20 @@ public abstract partial class InferenceGenerationViewModelBase
                     uploadName
                 );
 
-                await using var stream = localFile.Info.OpenRead();
-                await client.UploadImageAsync(stream, uploadName);
+                // For pngs, strip metadata since Pillow can't handle some valid files?
+                if (localFile.Info.Extension.Equals(".png", StringComparison.OrdinalIgnoreCase))
+                {
+                    var bytes = PngDataHelper.RemoveMetadata(await localFile.ReadAllBytesAsync());
+                    using var stream = new MemoryStream(bytes);
+
+                    await client.UploadImageAsync(stream, uploadName);
+                }
+                else
+                {
+                    await using var stream = localFile.Info.OpenRead();
+
+                    await client.UploadImageAsync(stream, uploadName);
+                }
             }
         }
     }

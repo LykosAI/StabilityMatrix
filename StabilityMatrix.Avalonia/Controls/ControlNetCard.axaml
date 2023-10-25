@@ -38,12 +38,14 @@
                             Grid.Row="0"
                             Grid.Column="1"
                             MinWidth="60"
+                            Foreground="{StaticResource ThemeGreyColor}"
                             VerticalAlignment="Bottom"
                             Text="{x:Static lang:Resources.Label_Preprocessor}"
                             TextAlignment="Left" />
                         <ui:FAComboBox
                             Grid.Row="1"
                             Grid.Column="1"
+                            IsEnabled="False"
                             Margin="0,0,0,4"
                             HorizontalAlignment="Stretch"
                             Theme="{StaticResource FAComboBoxHybridModelTheme}" />
@@ -72,7 +74,7 @@
                             Grid.ColumnSpan="2">
                             <!--  Strength  -->
                             <TextBlock 
-                                Text="{x:Static lang:Resources.Label_Strength}" 
+                                Text="{x:Static lang:Resources.Label_ControlWeight}" 
                                 VerticalAlignment="Center"
                                 TextAlignment="Left" />
                             <ui:NumberBox
@@ -90,7 +92,7 @@
                                 Grid.Row="1"
                                 Grid.Column="0"
                                 Grid.ColumnSpan="3"
-                                Margin="0,-4"
+                                Margin="0,-8,0,0"
                                 Maximum="1"
                                 Minimum="0"
                                 TickFrequency="0.01"
@@ -103,13 +105,14 @@
                                 Grid.Row="2"
                                 Grid.Column="0"
                                 VerticalAlignment="Center"
-                                Text="{x:Static lang:Resources.Label_Steps}" 
+                                Text="{x:Static lang:Resources.Label_ControlSteps}" 
                                 TextAlignment="Left" />
                             
                             <ui:NumberBox
                                 Grid.Row="2"
                                 Grid.Column="1"
                                 HorizontalAlignment="Stretch"
+                                SimpleNumberFormat="P0"
                                 Maximum="10"
                                 Minimum="0"
                                 SmallChange="0.01"
@@ -118,6 +121,7 @@
                                 Grid.Row="2"
                                 Grid.Column="2"
                                 HorizontalAlignment="Stretch"
+                                SimpleNumberFormat="P0"
                                 Maximum="10"
                                 Minimum="0"
                                 SmallChange="0.01"
@@ -146,7 +150,8 @@
                                 Grid.Row="3"
                                 Grid.Column="0"
                                 Grid.ColumnSpan="3"
-                                BorderThickness="1"
+                                Margin="0,4,0,0"
+                                ShowValueToolTip="False"
                                 Maximum="1"
                                 Minimum="0"
                                 RangeEnd="{Binding EndPercent}"

@@ -708,6 +708,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Control Steps.
+        /// </summary>
+        public static string Label_ControlSteps {
+            get {
+                return ResourceManager.GetString("Label_ControlSteps", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Control Weight.
+        /// </summary>
+        public static string Label_ControlWeight {
+            get {
+                return ResourceManager.GetString("Label_ControlWeight", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Current directory:.
         /// </summary>
         public static string Label_CurrentDirectory {

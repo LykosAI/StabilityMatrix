@@ -732,4 +732,10 @@
   <data name="Label_Strength" xml:space="preserve">
     <value>Strength</value>
   </data>
+  <data name="Label_ControlWeight" xml:space="preserve">
+    <value>Control Weight</value>
+  </data>
+  <data name="Label_ControlSteps" xml:space="preserve">
+    <value>Control Steps</value>
+  </data>
 </root>

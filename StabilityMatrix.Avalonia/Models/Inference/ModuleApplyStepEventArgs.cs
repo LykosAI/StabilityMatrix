@@ -5,6 +5,9 @@ using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 
 namespace StabilityMatrix.Avalonia.Models.Inference;
 
+/// <summary>
+/// Event args for applying a <see cref="IComfyStep"/>.
+/// </summary>
 public class ModuleApplyStepEventArgs : EventArgs
 {
     public required ComfyNodeBuilder Builder { get; init; }

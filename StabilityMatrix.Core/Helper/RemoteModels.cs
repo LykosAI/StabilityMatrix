@@ -1,4 +1,5 @@
-﻿using StabilityMatrix.Core.Extensions;
+﻿using System.Collections.Immutable;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Core.Helper;
@@ -130,4 +131,39 @@ public static class RemoteModels
                 ContextType = SharedFolderType.ESRGAN
             }
         };
+
+    private static Uri ControlNetRoot { get; } =
+        new("https://huggingface.co/lllyasviel/ControlNet/");
+
+    private static RemoteResource ControlNetCommon(string path, string sha256)
+    {
+        const string commit = "38a62cbf79862c1bac73405ec8dc46133aee3e36";
+
+        return new RemoteResource
+        {
+            Url = ControlNetRoot.Append($"resolve/{commit}/").Append(path),
+            HashSha256 = sha256,
+            InfoUrl = ControlNetRoot,
+            Author = "lllyasviel",
+            LicenseType = "OpenRAIL",
+            LicenseUrl = ControlNetRoot,
+            ContextType = SharedFolderType.ControlNet
+        };
+    }
+
+    public static IReadOnlyList<RemoteResource> ControlNets { get; } =
+        new[]
+        {
+            ControlNetCommon(
+                "models/control_sd15_canny.pth",
+                "4de384b16bc2d7a1fb258ca0cbd941d7dd0a721ae996aff89f905299d6923f45"
+            ),
+            ControlNetCommon(
+                "models/control_sd15_depth.pth",
+                "726cd0b472c4b5c0341b01afcb7fdc4a7b4ab7c37fe797fd394c9805cbef60bf"
+            )
+        };
+
+    public static IReadOnlyList<HybridModelFile> ControlNetModels { get; } =
+        ControlNets.Select(HybridModelFile.FromDownloadable).ToImmutableArray();
 }

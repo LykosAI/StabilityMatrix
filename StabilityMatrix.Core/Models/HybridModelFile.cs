@@ -32,7 +32,6 @@ public record HybridModelFile
     public HybridModelType Type { get; init; }
 
     [MemberNotNullWhen(true, nameof(RemoteName))]
-    [MemberNotNullWhen(false, nameof(Local))]
     [JsonIgnore]
     public bool IsRemote => RemoteName != null;
 
@@ -40,7 +39,15 @@ public record HybridModelFile
     public bool IsDownloadable => DownloadableResource != null;
 
     [JsonIgnore]
-    public string RelativePath => IsRemote ? RemoteName : Local.RelativePathFromSharedFolder;
+    public string RelativePath =>
+        Type switch
+        {
+            HybridModelType.Local => Local!.RelativePathFromSharedFolder,
+            HybridModelType.Remote => RemoteName!,
+            HybridModelType.Downloadable => DownloadableResource!.Value.FileName,
+            HybridModelType.None => throw new InvalidOperationException(),
+            _ => throw new ArgumentOutOfRangeException()
+        };
 
     [JsonIgnore]
     public string FileName => Path.GetFileName(RelativePath);

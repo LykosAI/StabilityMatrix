@@ -69,6 +69,9 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     private readonly SourceCache<HybridModelFile, string> controlNetModelsSource =
         new(p => p.GetId());
 
+    private readonly SourceCache<HybridModelFile, string> downloadableControlNetModelsSource =
+        new(p => p.GetId());
+
     public IObservableCollection<HybridModelFile> ControlNetModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
@@ -119,10 +122,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         controlNetModelsSource
             .Connect()
-            .SortBy(
-                f => f.ShortDisplayName,
-                SortDirection.Ascending,
-                SortOptimisations.ComparesImmutableValuesOnly
+            .Or(downloadableControlNetModelsSource.Connect())
+            .Sort(
+                SortExpressionComparer<HybridModelFile>
+                    .Ascending(f => f.Type)
+                    .ThenByAscending(f => f.ShortDisplayName)
             )
             .DeferUntilLoaded()
             .Bind(ControlNetModels)
@@ -271,6 +275,15 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             modelIndexService
                 .GetFromModelIndex(SharedFolderType.ControlNet)
                 .Select(HybridModelFile.FromLocal),
+            HybridModelFile.Comparer
+        );
+
+        // Downloadable ControlNet models
+        var downloadableControlNets = RemoteModels.ControlNetModels.Where(
+            u => !modelUpscalersSource.Lookup(u.GetId()).HasValue
+        );
+        downloadableControlNetModelsSource.EditDiff(
+            downloadableControlNets,
             HybridModelFile.Comparer
         );
 

@@ -8,6 +8,8 @@
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
     x:DataType="vmInference:ControlNetCardViewModel">
     <Design.PreviewWith>
         <StackPanel Width="350" Height="400">
@@ -59,12 +61,48 @@
                             Text="{x:Static lang:Resources.Label_Model}"
                             TextAlignment="Left" />
                         <ui:FAComboBox
+                            x:Name="PART_ModelComboBox"
                             Grid.Row="3"
                             Grid.Column="1"
                             HorizontalAlignment="Stretch"
                             ItemsSource="{Binding ClientManager.ControlNetModels}"
                             SelectedItem="{Binding SelectedModel}"
-                            Theme="{StaticResource FAComboBoxHybridModelTheme}" />
+                            ItemContainerTheme="{StaticResource FAComboBoxItemHybridModelTheme}">
+                            
+                            <ui:FAComboBox.Resources>
+                                    <input:StandardUICommand 
+                                        x:Key="RemoteDownloadCommand" 
+                                        Command="{Binding RemoteDownloadCommand}"/>
+                                </ui:FAComboBox.Resources>
+                                
+                                <ui:FAComboBox.DataTemplates>
+                                    <controls:HybridModelTemplateSelector>
+                                        <DataTemplate DataType="models:HybridModelFile" x:Key="{x:Static models:HybridModelType.Downloadable}">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock
+                                                    Text="{Binding ShortDisplayName}"
+                                                    Foreground="{DynamicResource ThemeGreyColor}"/>
+                                                <Button 
+                                                    Grid.Column="1" 
+                                                    Classes="transparent-full"
+                                                    Margin="8,0,0,0"
+                                                    Padding="0">
+                                                    <fluentIcons:SymbolIcon
+                                                        VerticalAlignment="Center"
+                                                        FontSize="18"
+                                                        Foreground="{DynamicResource ThemeGreyColor}"
+                                                        IsFilled="True"
+                                                        Symbol="CloudArrowDown" />
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                        <DataTemplate DataType="models:HybridModelFile" x:Key="{x:Static models:HybridModelType.None}">
+                                            <TextBlock Text="{Binding ShortDisplayName}"/>
+                                        </DataTemplate>
+                                    </controls:HybridModelTemplateSelector>
+                                </ui:FAComboBox.DataTemplates>
+                            
+                        </ui:FAComboBox>
 
                         <sg:SpacedGrid
                             RowDefinitions="Auto,Auto,Auto,Auto"

@@ -24,15 +24,15 @@ public class HybridModelTemplateSelector : IDataTemplate
     // Build the DataTemplate here
     public Control Build(object? data)
     {
-        if (data is not HybridModelTemplateSelector card)
+        if (data is not HybridModelFile modelFile)
             throw new ArgumentException(null, nameof(data));
 
-        if (Templates.TryGetValue(card.Type, out var type))
+        if (Templates.TryGetValue(modelFile.Type, out var type))
         {
-            return type.Build(card)!;
+            return type.Build(modelFile)!;
         }
 
         // Fallback to Local
-        return Templates[HybridModelType.Local].Build(card)!;
+        return Templates[HybridModelType.None].Build(modelFile)!;
     }
 }

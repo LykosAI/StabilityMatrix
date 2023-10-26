@@ -1,10 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -13,6 +22,10 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [Transient]
 public partial class ControlNetCardViewModel : LoadableViewModelBase
 {
+    private readonly ITrackedDownloadService trackedDownloadService;
+    private readonly ISettingsManager settingsManager;
+    private readonly ServiceManager<ViewModelBase> vmFactory;
+
     [ObservableProperty]
     [Required]
     private HybridModelFile? selectedModel;
@@ -41,11 +54,50 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
     public IInferenceClientManager ClientManager { get; }
 
     public ControlNetCardViewModel(
+        ITrackedDownloadService trackedDownloadService,
+        ISettingsManager settingsManager,
         IInferenceClientManager clientManager,
         ServiceManager<ViewModelBase> vmFactory
     )
     {
+        this.trackedDownloadService = trackedDownloadService;
+        this.settingsManager = settingsManager;
+        this.vmFactory = vmFactory;
+
         ClientManager = clientManager;
         SelectImageCardViewModel = vmFactory.Get<SelectImageCardViewModel>();
+    }
+
+    [RelayCommand]
+    private async Task RemoteDownload(HybridModelFile? modelFile)
+    {
+        if (modelFile?.DownloadableResource is not { } resource)
+            return;
+
+        var sharedFolderType =
+            resource.ContextType as SharedFolderType?
+            ?? throw new InvalidOperationException("ContextType is not SharedFolderType");
+
+        var confirmDialog = vmFactory.Get<DownloadResourceViewModel>();
+        confirmDialog.Resource = resource;
+        confirmDialog.FileName = modelFile.FileName;
+
+        if (await confirmDialog.GetDialog().ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        var modelsDir = new DirectoryPath(settingsManager.ModelsDirectory).JoinDir(
+            sharedFolderType.GetStringValue()
+        );
+
+        var download = trackedDownloadService.NewDownload(
+            resource.Url,
+            modelsDir.JoinFile(modelFile.FileName)
+        );
+        download.ContextAction = new ModelPostDownloadContextAction();
+        download.Start();
+
+        EventManager.Instance.OnToggleProgressFlyout();
     }
 }

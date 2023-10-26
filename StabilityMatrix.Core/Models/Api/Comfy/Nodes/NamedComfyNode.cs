@@ -51,5 +51,5 @@ public record NamedComfyNode<TOutput1, TOutput2, TOutput3>(string Name) : NamedC
 
     public TOutput2 Output2 => new() { Data = GetOutput(1) };
 
-    public TOutput2 Output3 => new() { Data = GetOutput(2) };
+    public TOutput3 Output3 => new() { Data = GetOutput(2) };
 }

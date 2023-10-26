@@ -68,7 +68,7 @@ public abstract record ComfyTypedNodeBase<TOutput1, TOutput2> : ComfyTypedNodeBa
     public TOutput1 Output1 => new() { Data = new object[] { Name, 0 } };
 
     [JsonIgnore]
-    public TOutput1 Output2 => new() { Data = new object[] { Name, 1 } };
+    public TOutput2 Output2 => new() { Data = new object[] { Name, 1 } };
 
     public static implicit operator NamedComfyNode<TOutput1, TOutput2>(
         ComfyTypedNodeBase<TOutput1, TOutput2> node
@@ -84,10 +84,10 @@ public abstract record ComfyTypedNodeBase<TOutput1, TOutput2, TOutput3> : ComfyT
     public TOutput1 Output1 => new() { Data = new object[] { Name, 0 } };
 
     [JsonIgnore]
-    public TOutput1 Output2 => new() { Data = new object[] { Name, 1 } };
+    public TOutput2 Output2 => new() { Data = new object[] { Name, 1 } };
 
     [JsonIgnore]
-    public TOutput1 Output3 => new() { Data = new object[] { Name, 2 } };
+    public TOutput3 Output3 => new() { Data = new object[] { Name, 2 } };
 
     public static implicit operator NamedComfyNode<TOutput1, TOutput2, TOutput3>(
         ComfyTypedNodeBase<TOutput1, TOutput2, TOutput3> node

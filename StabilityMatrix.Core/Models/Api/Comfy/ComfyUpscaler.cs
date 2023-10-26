@@ -92,17 +92,6 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
     }
 
     /// <summary>
-    /// Static root of huggingface upscalers
-    /// </summary>
-    private static Uri HuggingFaceRoot { get; } = new("https://huggingface.co/LykosAI/Upscalers/");
-
-    /// <summary>
-    /// Static root of huggingface upscalers at the main branch
-    /// </summary>
-    private static Uri HuggingFaceRootMain { get; } =
-        new("https://huggingface.co/LykosAI/Upscalers/blob/main/");
-
-    /// <summary>
     /// Default remote downloadable models
     /// </summary>
     public static IReadOnlyList<ComfyUpscaler> DefaultDownloadableModels { get; } =

@@ -29,6 +29,8 @@ public record HybridModelFile
     /// </summary>
     public RemoteResource? DownloadableResource { get; init; }
 
+    public HybridModelType Type { get; init; }
+
     [MemberNotNullWhen(true, nameof(RemoteName))]
     [MemberNotNullWhen(false, nameof(Local))]
     [JsonIgnore]
@@ -66,17 +68,21 @@ public record HybridModelFile
 
     public static HybridModelFile FromLocal(LocalModelFile local)
     {
-        return new HybridModelFile { Local = local };
+        return new HybridModelFile { Local = local, Type = HybridModelType.Local };
     }
 
     public static HybridModelFile FromRemote(string remoteName)
     {
-        return new HybridModelFile { RemoteName = remoteName };
+        return new HybridModelFile { RemoteName = remoteName, Type = HybridModelType.Remote };
     }
 
     public static HybridModelFile FromDownloadable(RemoteResource resource)
     {
-        return new HybridModelFile { DownloadableResource = resource };
+        return new HybridModelFile
+        {
+            DownloadableResource = resource,
+            Type = HybridModelType.Downloadable
+        };
     }
 
     public string GetId()

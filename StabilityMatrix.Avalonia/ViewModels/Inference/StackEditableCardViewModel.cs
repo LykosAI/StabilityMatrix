@@ -65,6 +65,14 @@ public partial class StackEditableCardViewModel : StackViewModelBase
         }
     }
 
+    public T AddModule<T>()
+        where T : ModuleBase
+    {
+        var card = vmFactory.Get<T>();
+        AddCards(card);
+        return card;
+    }
+
     [RelayCommand]
     private void AddModule(Type type)
     {

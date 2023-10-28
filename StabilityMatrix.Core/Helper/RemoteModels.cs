@@ -161,6 +161,10 @@ public static class RemoteModels
             ControlNetCommon(
                 "models/control_sd15_depth.pth",
                 "726cd0b472c4b5c0341b01afcb7fdc4a7b4ab7c37fe797fd394c9805cbef60bf"
+            ),
+            ControlNetCommon(
+                "models/control_sd15_openpose.pth",
+                "d19ffffeeaff6d9feb2204b234c3e1b9aec039ab3e63fca07f4fe5646f2ef591"
             )
         };
 

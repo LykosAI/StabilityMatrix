@@ -31,12 +31,14 @@ public partial class StackEditableCardViewModel : StackViewModelBase
     /// <summary>
     /// Available module types for user creation
     /// </summary>
+    [JsonIgnore]
     public IReadOnlyList<Type> AvailableModules { get; set; } = Array.Empty<Type>();
 
     /// <summary>
     /// Default modules that are used when no modules are loaded
     /// This is a subset of <see cref="AvailableModules"/>
     /// </summary>
+    [JsonIgnore]
     public IReadOnlyList<Type> DefaultModules { get; set; } = Array.Empty<Type>();
 
     /// <inheritdoc />

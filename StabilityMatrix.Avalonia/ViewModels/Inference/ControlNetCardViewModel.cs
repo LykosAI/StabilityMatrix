@@ -22,6 +22,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [Transient]
 public partial class ControlNetCardViewModel : LoadableViewModelBase
 {
+    public const string ModuleKey = "ControlNet";
+
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> vmFactory;

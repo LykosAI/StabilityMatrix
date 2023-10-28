@@ -193,7 +193,7 @@
                                 ColumnDefinitions="*" 
                                 RowDefinitions="*">
                                 <controls:StackEditableCard
-                                    DataContext="{Binding StackEditableCardViewModel}"/>
+                                    DataContext="{Binding ModulesCardViewModel}"/>
                             </Grid>
                         </StackPanel>
                     </StackPanel>

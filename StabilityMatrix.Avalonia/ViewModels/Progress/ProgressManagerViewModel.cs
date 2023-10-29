@@ -22,6 +22,8 @@ using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels.Progress;
 
 [View(typeof(ProgressManagerPage))]
+[ManagedService]
+[Singleton]
 public partial class ProgressManagerViewModel : PageViewModelBase
 {
     private readonly INotificationService notificationService;
@@ -120,19 +122,22 @@ public partial class ProgressManagerViewModel : PageViewModelBase
         }
     }
 
-    private async Task AddPackageInstall(IPackageModificationRunner packageModificationRunner)
+    private Task AddPackageInstall(IPackageModificationRunner packageModificationRunner)
     {
         if (ProgressItems.Any(vm => vm.Id == packageModificationRunner.Id))
         {
-            return;
+            return Task.CompletedTask;
         }
 
-        var vm = new PackageInstallProgressItemViewModel(packageModificationRunner);
+        var vm = new PackageInstallProgressItemViewModel(
+            packageModificationRunner,
+            packageModificationRunner.HideCloseButton
+        );
         ProgressItems.Add(vm);
-        if (packageModificationRunner.ShowDialogOnStart)
-        {
-            await vm.ShowProgressDialog();
-        }
+
+        return packageModificationRunner.ShowDialogOnStart
+            ? vm.ShowProgressDialog()
+            : Task.CompletedTask;
     }
 
     private void ShowFailedNotification(string title, string message)

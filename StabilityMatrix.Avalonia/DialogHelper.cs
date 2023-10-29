@@ -14,11 +14,9 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit;
 using AvaloniaEdit.TextMate;
-using CommunityToolkit.Mvvm.ComponentModel.__Internals;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Markdown.Avalonia;
-using Markdown.Avalonia.SyntaxHigh.Extensions;
 using NLog;
 using Refit;
 using StabilityMatrix.Avalonia.Controls;
@@ -26,7 +24,6 @@ using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Services;
 using TextMateSharp.Grammars;
 using Process = FuzzySharp.Process;
@@ -427,7 +424,7 @@ public static class DialogHelper
                 AllowScrollBelowDocument = false
             }
         };
-        TextEditorConfigs.ConfigForPrompt(textEditor);
+        TextEditorConfigs.Configure(textEditor, TextEditorPreset.Prompt);
 
         textEditor.Document.Text = errorLineFormatted;
         textEditor.TextArea.Caret.Offset = textEditor.Document.Lines[0].EndOffset;

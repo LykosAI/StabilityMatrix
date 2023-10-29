@@ -170,29 +170,43 @@ public abstract class BaseGitPackage : BasePackage
         IProgress<ProgressReport>? progress = null
     )
     {
-        var downloadUrl = GetDownloadUrl(versionOptions);
-
-        if (!Directory.Exists(DownloadLocation.Replace($"{Name}.zip", "")))
+        if (!string.IsNullOrWhiteSpace(versionOptions.VersionTag))
         {
-            Directory.CreateDirectory(DownloadLocation.Replace($"{Name}.zip", ""));
+            await PrerequisiteHelper
+                .RunGit(
+                    null,
+                    null,
+                    "clone",
+                    "--branch",
+                    versionOptions.VersionTag,
+                    GithubUrl,
+                    $"\"{installLocation}\""
+                )
+                .ConfigureAwait(false);
+        }
+        else if (!string.IsNullOrWhiteSpace(versionOptions.BranchName))
+        {
+            await PrerequisiteHelper
+                .RunGit(
+                    null,
+                    null,
+                    "clone",
+                    "--branch",
+                    versionOptions.BranchName,
+                    GithubUrl,
+                    $"\"{installLocation}\""
+                )
+                .ConfigureAwait(false);
         }
 
-        await DownloadService
-            .DownloadToFileAsync(downloadUrl, DownloadLocation, progress: progress)
-            .ConfigureAwait(false);
+        if (!versionOptions.IsLatest && !string.IsNullOrWhiteSpace(versionOptions.CommitHash))
+        {
+            await PrerequisiteHelper
+                .RunGit(installLocation, null, "checkout", versionOptions.CommitHash)
+                .ConfigureAwait(false);
+        }
 
         progress?.Report(new ProgressReport(100, message: "Download Complete"));
-    }
-
-    public override async Task InstallPackage(
-        string installLocation,
-        TorchVersion torchVersion,
-        IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
-    )
-    {
-        await UnzipPackage(installLocation, progress).ConfigureAwait(false);
-        File.Delete(DownloadLocation);
     }
 
     protected Task UnzipPackage(string installLocation, IProgress<ProgressReport>? progress = null)
@@ -279,6 +293,7 @@ public abstract class BaseGitPackage : BasePackage
     public override async Task<InstalledPackageVersion> Update(
         InstalledPackage installedPackage,
         TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         bool includePrerelease = false,
         Action<ProcessOutput>? onConsoleOutput = null
@@ -287,47 +302,146 @@ public abstract class BaseGitPackage : BasePackage
         if (installedPackage.Version == null)
             throw new NullReferenceException("Version is null");
 
-        if (installedPackage.Version.IsReleaseMode)
+        if (!Directory.Exists(Path.Combine(installedPackage.FullPath!, ".git")))
         {
-            var releases = await GetAllReleases().ConfigureAwait(false);
-            var latestRelease = releases.First(x => includePrerelease || !x.Prerelease);
+            Logger.Info("not a git repo, initializing...");
+            progress?.Report(
+                new ProgressReport(-1f, "Initializing git repo", isIndeterminate: true)
+            );
+            await PrerequisiteHelper
+                .RunGit(installedPackage.FullPath!, onConsoleOutput, "init")
+                .ConfigureAwait(false);
+            await PrerequisiteHelper
+                .RunGit(
+                    installedPackage.FullPath!,
+                    onConsoleOutput,
+                    "remote",
+                    "add",
+                    "origin",
+                    GithubUrl
+                )
+                .ConfigureAwait(false);
+        }
 
-            await DownloadPackage(
-                    installedPackage.FullPath,
-                    new DownloadPackageVersionOptions { VersionTag = latestRelease.TagName },
-                    progress
+        if (!string.IsNullOrWhiteSpace(versionOptions.VersionTag))
+        {
+            progress?.Report(new ProgressReport(-1f, "Fetching tags...", isIndeterminate: true));
+            await PrerequisiteHelper
+                .RunGit(installedPackage.FullPath!, onConsoleOutput, "fetch", "--tags")
+                .ConfigureAwait(false);
+
+            progress?.Report(
+                new ProgressReport(
+                    -1f,
+                    $"Checking out {versionOptions.VersionTag}",
+                    isIndeterminate: true
+                )
+            );
+            await PrerequisiteHelper
+                .RunGit(
+                    installedPackage.FullPath!,
+                    onConsoleOutput,
+                    "checkout",
+                    versionOptions.VersionTag,
+                    "--force"
                 )
                 .ConfigureAwait(false);
 
-            await InstallPackage(installedPackage.FullPath, torchVersion, progress, onConsoleOutput)
+            await InstallPackage(
+                    installedPackage.FullPath!,
+                    torchVersion,
+                    new DownloadPackageVersionOptions
+                    {
+                        VersionTag = versionOptions.VersionTag,
+                        IsLatest = versionOptions.IsLatest
+                    },
+                    progress,
+                    onConsoleOutput
+                )
                 .ConfigureAwait(false);
 
-            return new InstalledPackageVersion { InstalledReleaseVersion = latestRelease.TagName };
+            return new InstalledPackageVersion
+            {
+                InstalledReleaseVersion = versionOptions.VersionTag
+            };
         }
 
-        // Commit mode
-        var allCommits = await GetAllCommits(installedPackage.Version.InstalledBranch)
+        // fetch
+        progress?.Report(new ProgressReport(-1f, "Fetching data...", isIndeterminate: true));
+        await PrerequisiteHelper
+            .RunGit(installedPackage.FullPath!, onConsoleOutput, "fetch")
             .ConfigureAwait(false);
-        var latestCommit = allCommits?.First();
 
-        if (latestCommit is null || string.IsNullOrEmpty(latestCommit.Sha))
+        if (versionOptions.IsLatest)
         {
-            throw new Exception("No commits found for branch");
+            // checkout
+            progress?.Report(
+                new ProgressReport(
+                    -1f,
+                    $"Checking out {installedPackage.Version.InstalledBranch}...",
+                    isIndeterminate: true
+                )
+            );
+            await PrerequisiteHelper
+                .RunGit(
+                    installedPackage.FullPath!,
+                    onConsoleOutput,
+                    "checkout",
+                    versionOptions.BranchName,
+                    "--force"
+                )
+                .ConfigureAwait(false);
+
+            // pull
+            progress?.Report(new ProgressReport(-1f, "Pulling changes...", isIndeterminate: true));
+            await PrerequisiteHelper
+                .RunGit(
+                    installedPackage.FullPath!,
+                    onConsoleOutput,
+                    "pull",
+                    "origin",
+                    installedPackage.Version.InstalledBranch
+                )
+                .ConfigureAwait(false);
+        }
+        else
+        {
+            // checkout
+            progress?.Report(
+                new ProgressReport(
+                    -1f,
+                    $"Checking out {installedPackage.Version.InstalledBranch}...",
+                    isIndeterminate: true
+                )
+            );
+            await PrerequisiteHelper
+                .RunGit(
+                    installedPackage.FullPath!,
+                    onConsoleOutput,
+                    "checkout",
+                    versionOptions.CommitHash,
+                    "--force"
+                )
+                .ConfigureAwait(false);
         }
 
-        await DownloadPackage(
+        await InstallPackage(
                 installedPackage.FullPath,
-                new DownloadPackageVersionOptions { CommitHash = latestCommit.Sha },
-                progress
+                torchVersion,
+                new DownloadPackageVersionOptions
+                {
+                    CommitHash = versionOptions.CommitHash,
+                    IsLatest = versionOptions.IsLatest
+                },
+                progress,
+                onConsoleOutput
             )
-            .ConfigureAwait(false);
-        await InstallPackage(installedPackage.FullPath, torchVersion, progress, onConsoleOutput)
             .ConfigureAwait(false);
 
         return new InstalledPackageVersion
         {
-            InstalledBranch = installedPackage.Version.InstalledBranch,
-            InstalledCommitSha = latestCommit.Sha
+            InstalledBranch = versionOptions.BranchName,
+            InstalledCommitSha = versionOptions.CommitHash
         };
     }
 
@@ -372,7 +486,37 @@ public abstract class BaseGitPackage : BasePackage
     {
         if (SharedFolders is not null && sharedFolderMethod == SharedFolderMethod.Symlink)
         {
-            StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(this, installDirectory);
+            StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(
+                SharedFolders,
+                installDirectory
+            );
+        }
+        return Task.CompletedTask;
+    }
+
+    public override Task SetupOutputFolderLinks(DirectoryPath installDirectory)
+    {
+        if (SharedOutputFolders is { } sharedOutputFolders)
+        {
+            return StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(
+                sharedOutputFolders,
+                SettingsManager.ImagesDirectory,
+                installDirectory,
+                recursiveDelete: true
+            );
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public override Task RemoveOutputFolderLinks(DirectoryPath installDirectory)
+    {
+        if (SharedOutputFolders is { } sharedOutputFolders)
+        {
+            StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(
+                sharedOutputFolders,
+                installDirectory
+            );
         }
         return Task.CompletedTask;
     }

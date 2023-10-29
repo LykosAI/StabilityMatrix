@@ -22,6 +22,8 @@ using StabilityMatrix.Core.Updater;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(UpdateDialog))]
+[ManagedService]
+[Singleton]
 public partial class UpdateViewModel : ContentDialogViewModelBase
 {
     private readonly ISettingsManager settingsManager;

@@ -1,14 +1,17 @@
 ﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
+[Singleton(typeof(BasePackage))]
 public class Fooocus : BaseGitPackage
 {
     public Fooocus(
@@ -40,6 +43,12 @@ public class Fooocus : BaseGitPackage
         {
             new LaunchOptionDefinition
             {
+                Name = "Preset",
+                Type = LaunchOptionType.Bool,
+                Options = { "--preset anime", "--preset realistic" }
+            },
+            new LaunchOptionDefinition
+            {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 Description = "Sets the listen port",
@@ -58,6 +67,49 @@ public class Fooocus : BaseGitPackage
                 Type = LaunchOptionType.String,
                 Description = "Set the listen interface",
                 Options = { "--listen" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Output Directory",
+                Type = LaunchOptionType.String,
+                Description = "Override the output directory",
+                Options = { "--output-directory" }
+            },
+            new()
+            {
+                Name = "VRAM",
+                Type = LaunchOptionType.Bool,
+                InitialValue = HardwareHelper
+                    .IterGpuInfo()
+                    .Select(gpu => gpu.MemoryLevel)
+                    .Max() switch
+                {
+                    Level.Low => "--lowvram",
+                    Level.Medium => "--normalvram",
+                    _ => null
+                },
+                Options = { "--highvram", "--normalvram", "--lowvram", "--novram" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Use DirectML",
+                Type = LaunchOptionType.Bool,
+                Description = "Use pytorch with DirectML support",
+                InitialValue = HardwareHelper.PreferDirectML(),
+                Options = { "--directml" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Disable Xformers",
+                Type = LaunchOptionType.Bool,
+                InitialValue = !HardwareHelper.HasNvidiaGpu(),
+                Options = { "--disable-xformers" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Auto-Launch",
+                Type = LaunchOptionType.Bool,
+                Options = { "--auto-launch" }
             },
             LaunchOptionDefinition.Extras
         };
@@ -83,48 +135,57 @@ public class Fooocus : BaseGitPackage
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" }
         };
 
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+        new() { [SharedOutputType.Text2Img] = new[] { "outputs" } };
+
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
+        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm };
 
     public override Task<string> GetLatestVersion() => Task.FromResult("main");
 
     public override bool ShouldIgnoreReleases => true;
 
+    public override string OutputFolderName => "outputs";
+
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
         var venvRunner = await SetupVenv(installLocation, forceRecreate: true)
             .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
 
-        var torchVersionStr = "cpu";
-
-        switch (torchVersion)
+        if (torchVersion == TorchVersion.DirectMl)
         {
-            case TorchVersion.Cuda:
-                torchVersionStr = "cu118";
-                break;
-            case TorchVersion.Rocm:
-                torchVersionStr = "rocm5.4.2";
-                break;
-            case TorchVersion.Cpu:
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);
+            await venvRunner
+                .PipInstall(new PipInstallArgs().WithTorchDirectML(), onConsoleOutput)
+                .ConfigureAwait(false);
         }
+        else
+        {
+            var extraIndex = torchVersion switch
+            {
+                TorchVersion.Cpu => "cpu",
+                TorchVersion.Cuda => "cu121",
+                TorchVersion.Rocm => "rocm5.4.2",
+                _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+            };
 
-        await venvRunner
-            .PipInstall(
-                $"torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/{torchVersionStr}",
-                onConsoleOutput
-            )
-            .ConfigureAwait(false);
+            await venvRunner
+                .PipInstall(
+                    new PipInstallArgs()
+                        .WithTorch("==2.1.0")
+                        .WithTorchVision("==0.16.0")
+                        .WithTorchExtraIndex(extraIndex),
+                    onConsoleOutput
+                )
+                .ConfigureAwait(false);
+        }
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
         await venvRunner

@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 using AsyncAwaitBestPractices;
 using NLog;
 using Refit;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -15,6 +16,7 @@ using StabilityMatrix.Core.Python;
 
 namespace StabilityMatrix.Core.Services;
 
+[Singleton(typeof(ISettingsManager))]
 public class SettingsManager : ISettingsManager
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -163,7 +165,8 @@ public class SettingsManager : ISettingsManager
         T source,
         Expression<Func<T, TValue>> sourceProperty,
         Expression<Func<Settings, TValue>> settingsProperty,
-        bool setInitial = false
+        bool setInitial = false,
+        TimeSpan? delay = null
     )
         where T : INotifyPropertyChanged
     {
@@ -215,7 +218,14 @@ public class SettingsManager : ISettingsManager
 
             if (IsLibraryDirSet)
             {
-                SaveSettingsAsync().SafeFireAndForget();
+                if (delay != null)
+                {
+                    SaveSettingsDelayed(delay.Value).SafeFireAndForget();
+                }
+                else
+                {
+                    SaveSettingsAsync().SafeFireAndForget();
+                }
             }
             else
             {
@@ -653,5 +663,38 @@ public class SettingsManager : ISettingsManager
     private Task SaveSettingsAsync()
     {
         return Task.Run(SaveSettings);
+    }
+
+    private CancellationTokenSource? delayedSaveCts;
+
+    private Task SaveSettingsDelayed(TimeSpan delay)
+    {
+        var cts = new CancellationTokenSource();
+
+        var oldCancellationToken = Interlocked.Exchange(ref delayedSaveCts, cts);
+
+        try
+        {
+            oldCancellationToken?.Cancel();
+        }
+        catch (ObjectDisposedException) { }
+
+        return Task.Run(
+            async () =>
+            {
+                try
+                {
+                    await Task.Delay(delay, cts.Token);
+
+                    await SaveSettingsAsync();
+                }
+                catch (TaskCanceledException) { }
+                finally
+                {
+                    cts.Dispose();
+                }
+            },
+            CancellationToken.None
+        );
     }
 }

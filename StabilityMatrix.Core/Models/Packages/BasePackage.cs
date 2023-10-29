@@ -38,6 +38,8 @@ public abstract class BasePackage
 
     public virtual bool IsInferenceCompatible => false;
 
+    public abstract string OutputFolderName { get; }
+
     public abstract Task DownloadPackage(
         string installLocation,
         DownloadPackageVersionOptions versionOptions,
@@ -47,6 +49,7 @@ public abstract class BasePackage
     public abstract Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
     );
@@ -63,6 +66,7 @@ public abstract class BasePackage
     public abstract Task<InstalledPackageVersion> Update(
         InstalledPackage installedPackage,
         TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         bool includePrerelease = false,
         Action<ProcessOutput>? onConsoleOutput = null
@@ -93,7 +97,12 @@ public abstract class BasePackage
         SharedFolderMethod sharedFolderMethod
     );
 
+    public abstract Task SetupOutputFolderLinks(DirectoryPath installDirectory);
+    public abstract Task RemoveOutputFolderLinks(DirectoryPath installDirectory);
+
     public abstract IEnumerable<TorchVersion> AvailableTorchVersions { get; }
+
+    public virtual bool IsCompatible => GetRecommendedTorchVersion() != TorchVersion.Cpu;
 
     public virtual TorchVersion GetRecommendedTorchVersion()
     {
@@ -142,7 +151,11 @@ public abstract class BasePackage
     /// The shared folders that this package supports.
     /// Mapping of <see cref="SharedFolderType"/> to the relative paths from the package root.
     /// </summary>
-    public virtual Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
+    public abstract Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
+    public abstract Dictionary<
+        SharedOutputType,
+        IReadOnlyList<string>
+    >? SharedOutputFolders { get; }
 
     public abstract Task<string> GetLatestVersion();
     public abstract Task<PackageVersionOptions> GetAllVersionOptions();
@@ -176,9 +189,14 @@ public abstract class BasePackage
         );
 
         await venvRunner
-            .PipInstall(PyVenvRunner.TorchPipInstallArgsCuda, onConsoleOutput)
+            .PipInstall(
+                new PipInstallArgs()
+                    .WithTorch("==2.0.1")
+                    .WithXFormers("==0.0.20")
+                    .WithTorchExtraIndex("cu118"),
+                onConsoleOutput
+            )
             .ConfigureAwait(false);
-        await venvRunner.PipInstall("xformers==0.0.20", onConsoleOutput).ConfigureAwait(false);
     }
 
     protected Task InstallDirectMlTorch(
@@ -191,7 +209,7 @@ public abstract class BasePackage
             new ProgressReport(-1f, "Installing PyTorch for DirectML", isIndeterminate: true)
         );
 
-        return venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsDirectML, onConsoleOutput);
+        return venvRunner.PipInstall(new PipInstallArgs().WithTorchDirectML(), onConsoleOutput);
     }
 
     protected Task InstallCpuTorch(
@@ -204,6 +222,9 @@ public abstract class BasePackage
             new ProgressReport(-1f, "Installing PyTorch for CPU", isIndeterminate: true)
         );
 
-        return venvRunner.PipInstall(PyVenvRunner.TorchPipInstallArgsCpu, onConsoleOutput);
+        return venvRunner.PipInstall(
+            new PipInstallArgs().WithTorch("==2.0.1").WithTorchVision(),
+            onConsoleOutput
+        );
     }
 }

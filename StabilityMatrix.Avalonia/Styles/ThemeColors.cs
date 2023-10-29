@@ -1,5 +1,4 @@
-﻿using Avalonia;
-using Avalonia.Media;
+﻿using Avalonia.Media;
 
 namespace StabilityMatrix.Avalonia.Styles;
 

@@ -11,7 +11,6 @@ public class FilePath : FileSystemPath, IPathObject
 {
     private FileInfo? _info;
 
-    // ReSharper disable once MemberCanBePrivate.Global
     [JsonIgnore]
     public FileInfo Info => _info ??= new FileInfo(FullPath);
 
@@ -161,7 +160,21 @@ public class FilePath : FileSystemPath, IPathObject
     /// </summary>
     public async Task<FilePath> MoveToAsync(FilePath destinationFile)
     {
-        await Task.Run(() => Info.MoveTo(destinationFile.FullPath)).ConfigureAwait(false);
+        await Task.Run(() =>
+            {
+                var path = destinationFile.FullPath;
+                if (destinationFile.Exists)
+                {
+                    var num = Random.Shared.NextInt64(0, 10000);
+                    path = path.Replace(
+                        destinationFile.NameWithoutExtension,
+                        $"{destinationFile.NameWithoutExtension}_{num}"
+                    );
+                }
+
+                Info.MoveTo(path);
+            })
+            .ConfigureAwait(false);
         // Return the new path
         return destinationFile;
     }

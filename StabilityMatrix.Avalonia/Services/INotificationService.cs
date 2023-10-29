@@ -2,6 +2,8 @@
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.Notifications;
+using Microsoft.Extensions.Logging;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Avalonia.Services;
@@ -11,7 +13,8 @@ public interface INotificationService
     public void Initialize(
         Visual? visual,
         NotificationPosition position = NotificationPosition.BottomRight,
-        int maxItems = 3);
+        int maxItems = 3
+    );
 
     public void Show(INotification notification);
 
@@ -26,7 +29,8 @@ public interface INotificationService
         Task<T> task,
         string title = "Error",
         string? message = null,
-        NotificationType appearance = NotificationType.Error);
+        NotificationType appearance = NotificationType.Error
+    );
 
     /// <summary>
     /// Attempt to run the given void task, showing a generic error notification if it fails.
@@ -40,16 +44,18 @@ public interface INotificationService
         Task task,
         string title = "Error",
         string? message = null,
-        NotificationType appearance = NotificationType.Error);
+        NotificationType appearance = NotificationType.Error
+    );
 
     /// <summary>
     /// Show a notification with the given parameters.
     /// </summary>
     void Show(
-        string title, 
+        string title,
         string message,
         NotificationType appearance = NotificationType.Information,
-        TimeSpan? expiration = null);
+        TimeSpan? expiration = null
+    );
 
     /// <summary>
     /// Show a notification that will not auto-dismiss.
@@ -60,5 +66,15 @@ public interface INotificationService
     void ShowPersistent(
         string title,
         string message,
-        NotificationType appearance = NotificationType.Information);
+        NotificationType appearance = NotificationType.Information
+    );
+
+    /// <summary>
+    /// Show a notification for a <see cref="AppException"/> that will not auto-dismiss.
+    /// </summary>
+    void ShowPersistent(
+        AppException exception,
+        NotificationType appearance = NotificationType.Error,
+        LogLevel logLevel = LogLevel.Warning
+    );
 }

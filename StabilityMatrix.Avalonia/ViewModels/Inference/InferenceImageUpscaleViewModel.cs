@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
-using Avalonia.Controls.Shapes;
-using Avalonia.Threading;
 using DynamicData.Binding;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
@@ -19,6 +16,7 @@ using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Services;
 using Path = System.IO.Path;
 
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
@@ -27,6 +25,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceImageUpscaleView), persistent: true)]
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
+[ManagedService]
+[Transient]
 public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -60,9 +60,10 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
     public InferenceImageUpscaleViewModel(
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
+        ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> vmFactory
     )
-        : base(vmFactory, inferenceClientManager, notificationService)
+        : base(vmFactory, inferenceClientManager, notificationService, settingsManager)
     {
         this.notificationService = notificationService;
 

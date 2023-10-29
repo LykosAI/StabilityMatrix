@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using DynamicData;
 using DynamicData.Binding;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
@@ -47,6 +48,17 @@ public partial class MockInferenceClientManager : ObservableObject, IInferenceCl
 
     /// <inheritdoc />
     public bool CanUserDisconnect => IsConnected && !IsConnecting;
+
+    public MockInferenceClientManager()
+    {
+        Models.AddRange(
+            new[]
+            {
+                HybridModelFile.FromRemote("v1-5-pruned-emaonly.safetensors"),
+                HybridModelFile.FromRemote("artshaper1.safetensors"),
+            }
+        );
+    }
 
     /// <inheritdoc />
     public Task CopyImageToInputAsync(

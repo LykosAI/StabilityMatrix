@@ -15,12 +15,14 @@ namespace StabilityMatrix.Avalonia.Controls;
 [SuppressMessage("ReSharper", "PropertyCanBeMadeInitOnly.Global")]
 public class FASymbolIconSource : PathIconSource
 {
-    public static readonly StyledProperty<string> SymbolProperty =
-        AvaloniaProperty.Register<FASymbolIconSource, string>(nameof(Symbol));
-    
-    public static readonly StyledProperty<double> FontSizeProperty = TextElement.FontSizeProperty.AddOwner<FASymbolIconSource>();
+    public static readonly StyledProperty<string> SymbolProperty = AvaloniaProperty.Register<
+        FASymbolIconSource,
+        string
+    >(nameof(Symbol));
 
-    
+    public static readonly StyledProperty<double> FontSizeProperty =
+        TextElement.FontSizeProperty.AddOwner<FASymbolIconSource>();
+
     public FASymbolIconSource()
     {
         Stretch = Stretch.None;
@@ -52,11 +54,11 @@ public class FASymbolIconSource : PathIconSource
 
     private void InvalidateData()
     {
-        var path = IconProvider.Current.GetIconPath(Symbol);
+        var path = IconProvider.Current.GetIcon(Symbol).Path;
         var geometry = Geometry.Parse(path);
-        
+
         var scale = FontSize / 20;
-        
+
         Data = geometry;
         // TODO: Scaling not working
         Data.Transform = new ScaleTransform(scale, scale);
@@ -74,14 +76,15 @@ public class FASymbolIconSourceConverter : TypeConverter
         return base.CanConvertFrom(context, sourceType);
     }
 
-    public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
+    public override object? ConvertFrom(
+        ITypeDescriptorContext? context,
+        CultureInfo? culture,
+        object value
+    )
     {
         return value switch
         {
-            string val => new FASymbolIconSource
-            {
-                Symbol = val,
-            },
+            string val => new FASymbolIconSource { Symbol = val, },
             _ => base.ConvertFrom(context, culture, value)
         };
     }

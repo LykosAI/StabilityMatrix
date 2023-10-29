@@ -6,6 +6,7 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
@@ -117,25 +118,20 @@ public class FooocusMre : BaseGitPackage
 
         progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
 
-        var torchVersionStr = "cpu";
-
-        switch (torchVersion)
+        var extraIndex = torchVersion switch
         {
-            case TorchVersion.Cuda:
-                torchVersionStr = "cu118";
-                break;
-            case TorchVersion.Rocm:
-                torchVersionStr = "rocm5.4.2";
-                break;
-            case TorchVersion.Cpu:
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);
-        }
+            TorchVersion.Cpu => "cpu",
+            TorchVersion.Cuda => "cu118",
+            TorchVersion.Rocm => "rocm5.4.2",
+            _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+        };
 
         await venvRunner
             .PipInstall(
-                $"torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/{torchVersionStr}",
+                new PipInstallArgs()
+                    .WithTorch("==2.0.1")
+                    .WithTorchVision("==0.15.2")
+                    .WithTorchExtraIndex(extraIndex),
                 onConsoleOutput
             )
             .ConfigureAwait(false);

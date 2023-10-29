@@ -71,8 +71,6 @@ public record HybridModelFile
         }
     }
 
-    private HybridModelFile() { }
-
     public static HybridModelFile FromLocal(LocalModelFile local)
     {
         return new HybridModelFile { Local = local, Type = HybridModelType.Local };

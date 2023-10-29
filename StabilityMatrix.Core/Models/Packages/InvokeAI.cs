@@ -63,19 +63,34 @@ public class InvokeAI : BaseGitPackage
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
         {
-            [SharedFolderType.StableDiffusion] = new[] { RelativeRootPath + "/autoimport/main" },
-            [SharedFolderType.Lora] = new[] { RelativeRootPath + "/autoimport/lora" },
+            [SharedFolderType.StableDiffusion] = new[]
+            {
+                Path.Combine(RelativeRootPath, "autoimport", "main")
+            },
+            [SharedFolderType.Lora] = new[]
+            {
+                Path.Combine(RelativeRootPath, "autoimport", "lora")
+            },
             [SharedFolderType.TextualInversion] = new[]
             {
-                RelativeRootPath + "/autoimport/embedding"
+                Path.Combine(RelativeRootPath, "autoimport", "embedding")
             },
-            [SharedFolderType.ControlNet] = new[] { RelativeRootPath + "/autoimport/controlnet" },
+            [SharedFolderType.ControlNet] = new[]
+            {
+                Path.Combine(RelativeRootPath, "autoimport", "controlnet")
+            }
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
-        new() { [SharedOutputType.Text2Img] = new[] { "invokeai-root/outputs/images" } };
+        new()
+        {
+            [SharedOutputType.Text2Img] = new[]
+            {
+                Path.Combine("invokeai-root", "outputs", "images")
+            }
+        };
 
-    public override string OutputFolderName => "invokeai-root/outputs/images";
+    public override string OutputFolderName => Path.Combine("invokeai-root", "outputs", "images");
 
     // https://github.com/invoke-ai/InvokeAI/blob/main/docs/features/CONFIGURATION.md
     public override List<LaunchOptionDefinition> LaunchOptions =>

@@ -141,6 +141,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Consolidate.
+        /// </summary>
+        public static string Action_Consolidate {
+            get {
+                return ResourceManager.GetString("Action_Consolidate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Continue.
         /// </summary>
         public static string Action_Continue {
@@ -555,6 +564,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure?.
+        /// </summary>
+        public static string Label_AreYouSure {
+            get {
+                return ResourceManager.GetString("Label_AreYouSure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Automatically scroll to end of console output.
         /// </summary>
         public static string Label_AutoScrollToEnd {
@@ -704,6 +722,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_ConnectingEllipsis {
             get {
                 return ResourceManager.GetString("Label_ConnectingEllipsis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This will move all generated images from the selected packages to the root of the shared outputs folder. This action cannot be undone..
+        /// </summary>
+        public static string Label_ConsolidateExplanation {
+            get {
+                return ResourceManager.GetString("Label_ConsolidateExplanation", resourceCulture);
             }
         }
         

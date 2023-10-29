@@ -79,6 +79,27 @@
                      Margin="4, 0"
                      VerticalContentAlignment="Center"
                      MinWidth="150"/>
+            
+            <Button Grid.Row="1"
+                    Grid.Column="3"
+                    VerticalAlignment="Stretch"
+                    Margin="8, 0"
+                    IsEnabled="{Binding !IsConsolidating}"
+                    Command="{Binding ConsolidateImages}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock
+                        Text="{x:Static lang:Resources.Action_Consolidate}"
+                        VerticalAlignment="Center"/>
+                    <controls:ProgressRing
+                        MinHeight="16"
+                        Margin="8, 0"
+                        IsIndeterminate="True"
+                        VerticalAlignment="Center"
+                        BorderThickness="4"
+                        IsVisible="{Binding IsConsolidating}"
+                        MinWidth="16" />
+                </StackPanel>
+            </Button>
 
             <TextBlock Grid.Row="1"
                        Grid.Column="4" 

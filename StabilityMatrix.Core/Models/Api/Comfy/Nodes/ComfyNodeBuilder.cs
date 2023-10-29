@@ -230,13 +230,9 @@ public class ComfyNodeBuilder
         };
     }
 
-    public static NamedComfyNode<VAENodeConnection> VAELoader(string name, string vaeModelName)
+    public record VAELoader : ComfyTypedNodeBase<VAENodeConnection>
     {
-        return new NamedComfyNode<VAENodeConnection>(name)
-        {
-            ClassType = "VAELoader",
-            Inputs = new Dictionary<string, object?> { ["vae_name"] = vaeModelName }
-        };
+        public required string VaeName { get; init; }
     }
 
     public static NamedComfyNode<ModelNodeConnection, ClipNodeConnection> LoraLoader(
@@ -262,16 +258,10 @@ public class ComfyNodeBuilder
         };
     }
 
-    public static NamedComfyNode<ModelNodeConnection> CheckpointLoaderSimple(
-        string name,
-        string modelName
-    )
+    public record CheckpointLoaderSimple
+        : ComfyTypedNodeBase<ModelNodeConnection, ClipNodeConnection, VAENodeConnection>
     {
-        return new NamedComfyNode<ModelNodeConnection>(name)
-        {
-            ClassType = "CheckpointLoaderSimple",
-            Inputs = new Dictionary<string, object?> { ["ckpt_name"] = modelName }
-        };
+        public required string CkptName { get; init; }
     }
 
     public static NamedComfyNode<ModelNodeConnection> FreeU(
@@ -740,6 +730,22 @@ public class ComfyNodeBuilder
     }
 
     /// <summary>
+    /// Get or convert latest primary connection to latent
+    /// </summary>
+    public LatentNodeConnection GetPrimaryAsLatent(VAENodeConnection vae)
+    {
+        if (Connections.Primary?.IsT0 == true)
+        {
+            return Connections.Primary.AsT0;
+        }
+
+        return GetPrimaryAsLatent(
+            Connections.Primary ?? throw new NullReferenceException("No primary connection"),
+            vae
+        );
+    }
+
+    /// <summary>
     /// Get or convert latest primary connection to image
     /// </summary>
     public ImageNodeConnection GetPrimaryAsImage()
@@ -764,6 +770,22 @@ public class ComfyNodeBuilder
     )
     {
         return primary.Match(latent => Lambda_LatentToImage(latent, vae), image => image);
+    }
+
+    /// <summary>
+    /// Get or convert latest primary connection to image
+    /// </summary>
+    public ImageNodeConnection GetPrimaryAsImage(VAENodeConnection vae)
+    {
+        if (Connections.Primary?.IsT1 == true)
+        {
+            return Connections.Primary.AsT1;
+        }
+
+        return GetPrimaryAsImage(
+            Connections.Primary ?? throw new NullReferenceException("No primary connection"),
+            vae
+        );
     }
 
     /// <summary>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 using System.Linq;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -209,33 +210,18 @@ public class InferenceTextToImageViewModel
             builder.Connections.Seed = Convert.ToUInt64(SeedCardViewModel.Seed);
         }
 
+        // Load models
+        ModelCardViewModel.ApplyStep(args);
+
         // Setup empty latent
         builder.SetupLatentSource(BatchSizeCardViewModel, SamplerCardViewModel);
 
-        // Setup base stage
+        // Setup base sampling stage
         builder.SetupBaseSampler(
             SamplerCardViewModel,
             PromptCardViewModel,
             ModelCardViewModel,
-            modelIndexService,
-            postModelLoad: x =>
-            {
-                if (IsFreeUEnabled)
-                {
-                    builder.Connections.BaseModel = nodes
-                        .AddNamedNode(
-                            ComfyNodeBuilder.FreeU(
-                                "FreeU",
-                                x.Connections.BaseModel!,
-                                FreeUCardViewModel.B1,
-                                FreeUCardViewModel.B2,
-                                FreeUCardViewModel.S1,
-                                FreeUCardViewModel.S2
-                            )
-                        )
-                        .Output;
-                }
-            }
+            modelIndexService
         );
 
         // Setup refiner stage if enabled
@@ -248,40 +234,22 @@ public class InferenceTextToImageViewModel
                 SamplerCardViewModel,
                 PromptCardViewModel,
                 ModelCardViewModel,
-                modelIndexService,
-                postModelLoad: x =>
-                {
-                    if (IsFreeUEnabled)
-                    {
-                        builder.Connections.RefinerModel = nodes
-                            .AddNamedNode(
-                                ComfyNodeBuilder.FreeU(
-                                    "Refiner_FreeU",
-                                    x.Connections.RefinerModel!,
-                                    FreeUCardViewModel.B1,
-                                    FreeUCardViewModel.B2,
-                                    FreeUCardViewModel.S1,
-                                    FreeUCardViewModel.S2
-                                )
-                            )
-                            .Output;
-                    }
-                }
+                modelIndexService
             );
         }
 
         // Override with custom VAE if enabled
-        if (ModelCardViewModel is { IsVaeSelectionEnabled: true, SelectedVae.IsDefault: false })
+        /*if (ModelCardViewModel is { IsVaeSelectionEnabled: true, SelectedVae.IsDefault: false })
         {
             var customVaeLoader = nodes.AddNamedNode(
                 ComfyNodeBuilder.VAELoader("VAELoader", ModelCardViewModel.SelectedVae.RelativePath)
             );
 
             builder.Connections.PrimaryVAE = customVaeLoader.Output;
-        }
+        }*/
 
         // If hi-res fix is enabled, add the LatentUpscale node and another KSampler node
-        if (args.Overrides.IsHiresFixEnabled ?? IsHiresFixEnabled)
+        /*if (args.Overrides.IsHiresFixEnabled ?? IsHiresFixEnabled)
         {
             // Get new latent size
             var hiresSize = builder.Connections.PrimarySize.WithScale(
@@ -329,10 +297,10 @@ public class InferenceTextToImageViewModel
             // Set as primary
             builder.Connections.Primary = hiresSampler.Output;
             builder.Connections.PrimarySize = hiresSize;
-        }
+        }*/
 
         // If upscale is enabled, add another upscale group
-        if (IsUpscaleEnabled)
+        /*if (IsUpscaleEnabled)
         {
             var upscaleSize = builder.Connections.PrimarySize.WithScale(
                 UpscalerCardViewModel.Scale
@@ -349,9 +317,18 @@ public class InferenceTextToImageViewModel
 
             builder.Connections.Primary = upscaleResult;
             builder.Connections.PrimarySize = upscaleSize;
-        }
+        }*/
 
         builder.SetupOutputImage();
+    }
+
+    /// <inheritdoc />
+    protected override IEnumerable<ImageSource> GetInputImages()
+    {
+        // TODO support hires in some generic way
+        return SamplerCardViewModel.ModulesCardViewModel.Cards
+            .OfType<ControlNetModule>()
+            .SelectMany(m => m.GetInputImages());
     }
 
     /// <inheritdoc />
@@ -434,5 +411,23 @@ public class InferenceTextToImageViewModel
         parameters.Seed = (ulong)SeedCardViewModel.Seed;
 
         return parameters;
+    }
+
+    // Migration for v2 deserialization
+    public override void LoadStateFromJsonObject(JsonObject state, int version)
+    {
+        if (version > 2)
+        {
+            LoadStateFromJsonObject(state);
+        }
+
+        ModulesCardViewModel.Clear();
+
+        // Add by default the original cards - FreeU, HiresFix, Upscaler
+        var hiresFix = ModulesCardViewModel.AddModule<HiresFixModule>();
+        var upscaler = ModulesCardViewModel.AddModule<UpscalerModule>();
+
+        hiresFix.IsEnabled = state.GetPropertyValueOrDefault<bool>("IsHiresFixEnabled");
+        upscaler.IsEnabled = state.GetPropertyValueOrDefault<bool>("IsUpscaleEnabled");
     }
 }

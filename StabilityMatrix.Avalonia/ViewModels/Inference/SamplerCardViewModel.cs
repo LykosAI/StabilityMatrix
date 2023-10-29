@@ -1,8 +1,10 @@
-﻿using System.Linq;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
@@ -16,7 +18,10 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(SamplerCard))]
 [ManagedService]
 [Transient]
-public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLoadableState
+public partial class SamplerCardViewModel
+    : LoadableViewModelBase,
+        IParametersLoadableState,
+        IComfyStep
 {
     public const string ModuleKey = "Sampler";
 
@@ -54,15 +59,18 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     private bool isSamplerSelectionEnabled;
 
     [ObservableProperty]
+    [Required]
     private ComfySampler? selectedSampler = ComfySampler.EulerAncestral;
 
     [ObservableProperty]
     private bool isSchedulerSelectionEnabled;
 
     [ObservableProperty]
+    [Required]
     private ComfyScheduler? selectedScheduler = ComfyScheduler.Normal;
 
-    public StackEditableCardViewModel StackEditableCardViewModel { get; }
+    [JsonPropertyName("Modules")]
+    public StackEditableCardViewModel ModulesCardViewModel { get; }
 
     [JsonIgnore]
     public IInferenceClientManager ClientManager { get; }
@@ -73,12 +81,33 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     )
     {
         ClientManager = clientManager;
-        StackEditableCardViewModel = vmFactory.Get<StackEditableCardViewModel>(modulesCard =>
+        ModulesCardViewModel = vmFactory.Get<StackEditableCardViewModel>(modulesCard =>
         {
             modulesCard.Title = "Addons";
-            modulesCard.AvailableModules = new[] { typeof(ControlNetModule) };
+            modulesCard.AvailableModules = new[] { typeof(FreeUModule), typeof(ControlNetModule) };
             modulesCard.InitializeDefaults();
         });
+
+        ModulesCardViewModel.CardAdded += (
+            (sender, item) =>
+            {
+                if (item is ControlNetModule module)
+                {
+                    // Inherit our edit state
+                    // module.IsEditEnabled = IsEditEnabled;
+                }
+            }
+        );
+    }
+
+    /// <inheritdoc />
+    public void ApplyStep(ModuleApplyStepEventArgs e)
+    {
+        // Apply steps from our modules
+        foreach (var module in ModulesCardViewModel.Cards.Cast<ModuleBase>())
+        {
+            module.ApplyStep(e);
+        }
     }
 
     /// <inheritdoc />

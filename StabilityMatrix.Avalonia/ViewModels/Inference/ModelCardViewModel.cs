@@ -1,20 +1,27 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text.Json.Nodes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ModelCard))]
 [ManagedService]
 [Transient]
-public partial class ModelCardViewModel : LoadableViewModelBase, IParametersLoadableState
+public partial class ModelCardViewModel
+    : LoadableViewModelBase,
+        IParametersLoadableState,
+        IComfyStep
 {
     [ObservableProperty]
     private HybridModelFile? selectedModel;
@@ -40,6 +47,59 @@ public partial class ModelCardViewModel : LoadableViewModelBase, IParametersLoad
     public ModelCardViewModel(IInferenceClientManager clientManager)
     {
         ClientManager = clientManager;
+    }
+
+    /// <inheritdoc />
+    public void ApplyStep(ModuleApplyStepEventArgs e)
+    {
+        // Load base checkpoint
+        var baseLoader = e.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.CheckpointLoaderSimple
+            {
+                Name = "CheckpointLoader",
+                CkptName =
+                    SelectedModel?.RelativePath
+                    ?? throw new ValidationException("Model not selected")
+            }
+        );
+
+        e.Builder.Connections.BaseModel = baseLoader.Output1;
+        e.Builder.Connections.BaseClip = baseLoader.Output2;
+        e.Builder.Connections.BaseVAE = baseLoader.Output3;
+
+        // Load refiner
+        if (IsRefinerSelectionEnabled && SelectedRefiner is { IsNone: false })
+        {
+            var refinerLoader = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.CheckpointLoaderSimple
+                {
+                    Name = "Refiner_CheckpointLoader",
+                    CkptName =
+                        SelectedRefiner?.RelativePath
+                        ?? throw new ValidationException("Refiner Model enabled but not selected")
+                }
+            );
+
+            e.Builder.Connections.RefinerModel = refinerLoader.Output1;
+            e.Builder.Connections.RefinerClip = refinerLoader.Output2;
+            e.Builder.Connections.RefinerVAE = refinerLoader.Output3;
+        }
+
+        // Load custom VAE
+        if (IsVaeSelectionEnabled && SelectedVae is { IsNone: false, IsDefault: false })
+        {
+            var vaeLoader = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.VAELoader
+                {
+                    Name = "VAELoader",
+                    VaeName =
+                        SelectedVae?.RelativePath
+                        ?? throw new ValidationException("VAE enabled but not selected")
+                }
+            );
+
+            e.Builder.Connections.PrimaryVAE = vaeLoader.Output;
+        }
     }
 
     /// <inheritdoc />

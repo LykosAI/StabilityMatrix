@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Drawing;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
@@ -58,7 +59,7 @@ public static class ComfyNodeBuilderExtensions
         Action<ComfyNodeBuilder>? postModelLoad = null
     )
     {
-        // Load base checkpoint
+        /*// Load base checkpoint
         var checkpointLoader = builder.Nodes.AddNamedNode(
             ComfyNodeBuilder.CheckpointLoaderSimple(
                 "CheckpointLoader",
@@ -73,7 +74,7 @@ public static class ComfyNodeBuilderExtensions
         builder.Connections.PrimaryVAE = builder.Connections.BaseVAE;
 
         // Run post model load action
-        postModelLoad?.Invoke(builder);
+        postModelLoad?.Invoke(builder);*/
 
         // Load prompts
         var prompt = promptCardViewModel.GetPrompt();
@@ -115,6 +116,28 @@ public static class ComfyNodeBuilderExtensions
         builder.Connections.BaseConditioning = positiveClip.Output;
         builder.Connections.BaseNegativeConditioning = negativeClip.Output;
 
+        // Apply sampler addons (FreeU / ControlNet) to model and conditioning
+        var samplerStepArgs = new ModuleApplyStepEventArgs
+        {
+            Builder = builder,
+            Temp =
+            {
+                Model = builder.Connections.BaseModel,
+                Conditioning = (positiveClip.Output, negativeClip.Output)
+            }
+        };
+
+        samplerCardViewModel.ApplyStep(samplerStepArgs);
+        var model = samplerStepArgs.Temp.Model;
+        var conditioning = samplerStepArgs.Temp.Conditioning;
+
+        // Primary latent encoding vae
+        var vae =
+            builder.Connections.PrimaryVAE
+            ?? builder.Connections.BaseVAE
+            ?? throw new ValidationException("No Primary or Base VAE");
+        var latent = builder.GetPrimaryAsLatent(vae);
+
         // Add base sampler (without refiner)
         if (
             modelCardViewModel
@@ -124,18 +147,17 @@ public static class ComfyNodeBuilderExtensions
             var sampler = builder.Nodes.AddNamedNode(
                 ComfyNodeBuilder.KSampler(
                     "Sampler",
-                    builder.Connections.BaseModel,
+                    model,
                     builder.Connections.Seed,
                     samplerCardViewModel.Steps,
                     samplerCardViewModel.CfgScale,
                     samplerCardViewModel.SelectedSampler
                         ?? throw new ValidationException("Sampler not selected"),
                     samplerCardViewModel.SelectedScheduler
-                        ?? throw new ValidationException("Sampler not selected"),
-                    positiveClip.Output,
-                    negativeClip.Output,
-                    builder.GetPrimaryAsLatent()
-                        ?? throw new ValidationException("Latent source not set"),
+                        ?? throw new ValidationException("Scheduler not selected"),
+                    conditioning.Positive,
+                    conditioning.Negative,
+                    latent,
                     samplerCardViewModel.DenoiseStrength
                 )
             );
@@ -150,7 +172,7 @@ public static class ComfyNodeBuilderExtensions
             var sampler = builder.Nodes.AddNamedNode(
                 ComfyNodeBuilder.KSamplerAdvanced(
                     "Sampler",
-                    builder.Connections.BaseModel,
+                    model,
                     true,
                     builder.Connections.Seed,
                     totalSteps,
@@ -159,9 +181,9 @@ public static class ComfyNodeBuilderExtensions
                         ?? throw new ValidationException("Sampler not selected"),
                     samplerCardViewModel.SelectedScheduler
                         ?? throw new ValidationException("Sampler not selected"),
-                    positiveClip.Output,
-                    negativeClip.Output,
-                    builder.GetPrimaryAsLatent(),
+                    conditioning.Positive,
+                    conditioning.Negative,
+                    latent,
                     0,
                     samplerCardViewModel.Steps,
                     true
@@ -180,7 +202,7 @@ public static class ComfyNodeBuilderExtensions
         Action<ComfyNodeBuilder>? postModelLoad = null
     )
     {
-        // Load refiner checkpoint
+        /*// Load refiner checkpoint
         var checkpointLoader = builder.Nodes.AddNamedNode(
             ComfyNodeBuilder.CheckpointLoaderSimple(
                 "Refiner_CheckpointLoader",
@@ -195,7 +217,7 @@ public static class ComfyNodeBuilderExtensions
         builder.Connections.PrimaryVAE = builder.Connections.RefinerVAE;
 
         // Run post model load action
-        postModelLoad?.Invoke(builder);
+        postModelLoad?.Invoke(builder);*/
 
         // Load prompts
         var prompt = promptCardViewModel.GetPrompt();
@@ -272,7 +294,11 @@ public static class ComfyNodeBuilderExtensions
             new ComfyNodeBuilder.PreviewImage
             {
                 Name = "SaveImage",
-                Images = builder.GetPrimaryAsImage()
+                Images = builder.GetPrimaryAsImage(
+                    builder.Connections.PrimaryVAE
+                        ?? builder.Connections.RefinerVAE
+                        ?? builder.Connections.BaseVAE
+                )
             }
         );
 

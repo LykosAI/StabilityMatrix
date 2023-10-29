@@ -14,13 +14,7 @@ public class ModuleApplyStepEventArgs : EventArgs
 
     public NodeDictionary Nodes => Builder.Nodes;
 
-    /// <summary>
-    /// Temporary conditioning apply step, used by samplers to apply control net.
-    /// </summary>
-    public (
-        ConditioningNodeConnection Positive,
-        ConditioningNodeConnection Negative
-    ) Conditioning { get; set; }
+    public ModuleApplyStepTemporaryArgs Temp { get; } = new();
 
     /// <summary>
     /// Index of the step in the pipeline.
@@ -37,4 +31,20 @@ public class ModuleApplyStepEventArgs : EventArgs
     /// </summary>
     public IReadOnlyDictionary<Type, bool> IsEnabledOverrides { get; init; } =
         new Dictionary<Type, bool>();
+
+    public class ModuleApplyStepTemporaryArgs
+    {
+        /// <summary>
+        /// Temporary conditioning apply step, used by samplers to apply control net.
+        /// </summary>
+        public (
+            ConditioningNodeConnection Positive,
+            ConditioningNodeConnection Negative
+        ) Conditioning { get; set; }
+
+        /// <summary>
+        /// Temporary model apply step, used by samplers to apply control net.
+        /// </summary>
+        public ModelNodeConnection? Model { get; set; }
+    }
 }

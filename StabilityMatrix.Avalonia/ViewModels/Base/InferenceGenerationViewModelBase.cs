@@ -22,6 +22,7 @@ using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -602,5 +603,21 @@ public abstract partial class InferenceGenerationViewModelBase
         public ComfyNodeBuilder Builder { get; } = new();
         public GenerateOverrides Overrides { get; init; } = new();
         public long? SeedOverride { get; init; }
+
+        public static implicit operator ModuleApplyStepEventArgs(BuildPromptEventArgs args)
+        {
+            var overrides = new Dictionary<Type, bool>();
+
+            if (args.Overrides.IsHiresFixEnabled.HasValue)
+            {
+                overrides[typeof(HiresFixModule)] = args.Overrides.IsHiresFixEnabled.Value;
+            }
+
+            return new ModuleApplyStepEventArgs
+            {
+                Builder = args.Builder,
+                IsEnabledOverrides = overrides
+            };
+        }
     }
 }

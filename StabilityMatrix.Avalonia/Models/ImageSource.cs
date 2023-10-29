@@ -128,6 +128,11 @@ public record ImageSource : IDisposable
         return guid + extension;
     }
 
+    public string GetHashGuidFileNameCached(string pathPrefix)
+    {
+        return Path.Combine(pathPrefix, GetHashGuidFileNameCached());
+    }
+
     /// <summary>
     /// Clears the cached bitmap
     /// </summary>

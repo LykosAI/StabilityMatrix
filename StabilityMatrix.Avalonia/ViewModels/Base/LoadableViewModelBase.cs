@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
@@ -13,11 +14,15 @@ using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
-[JsonDerivedType(typeof(FreeUCardViewModel), FreeUCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(StackExpanderViewModel), StackExpanderViewModel.ModuleKey)]
-[JsonDerivedType(typeof(UpscalerCardViewModel), UpscalerCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(SamplerCardViewModel), SamplerCardViewModel.ModuleKey)]
+[JsonDerivedType(typeof(FreeUCardViewModel), FreeUCardViewModel.ModuleKey)]
+[JsonDerivedType(typeof(UpscalerCardViewModel), UpscalerCardViewModel.ModuleKey)]
+[JsonDerivedType(typeof(ControlNetCardViewModel), ControlNetCardViewModel.ModuleKey)]
+[JsonDerivedType(typeof(FreeUModule))]
+[JsonDerivedType(typeof(HiresFixModule))]
 [JsonDerivedType(typeof(UpscalerModule))]
+[JsonDerivedType(typeof(ControlNetModule))]
 public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -28,10 +33,10 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
         typeof(IRelayCommand)
     };
 
-    private static readonly string[] SerializerIgnoredNames = { nameof(HasErrors), };
+    private static readonly string[] SerializerIgnoredNames = { nameof(HasErrors) };
 
     private static readonly JsonSerializerOptions SerializerOptions =
-        new() { IgnoreReadOnlyProperties = true, };
+        new() { IgnoreReadOnlyProperties = true };
 
     private static bool ShouldIgnoreProperty(PropertyInfo property)
     {
@@ -278,6 +283,11 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
         }
 
         return state;
+    }
+
+    public virtual void LoadStateFromJsonObject(JsonObject state, int version)
+    {
+        LoadStateFromJsonObject(state);
     }
 
     /// <summary>

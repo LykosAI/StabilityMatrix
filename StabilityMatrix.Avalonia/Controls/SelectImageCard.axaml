@@ -87,6 +87,7 @@
                                         
                                         <Button
                                             FontSize="{TemplateBinding FontSize}"
+                                            Command="{Binding SelectImageFromFilePickerCommand}"
                                             Content="Browse"
                                             Margin="4,0"
                                             Padding="4"/>

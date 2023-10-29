@@ -9,6 +9,7 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
@@ -18,6 +19,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using Size = System.Drawing.Size;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -67,6 +69,28 @@ public partial class SelectImageCardViewModel : ViewModelBase, IDropTarget
 
         // Cache the hash for later upload use
         image.GetBlake3HashAsync().SafeFireAndForget();
+    }
+
+    [RelayCommand]
+    private async Task SelectImageFromFilePickerAsync()
+    {
+        var files = await App.StorageProvider.OpenFilePickerAsync(
+            new FilePickerOpenOptions
+            {
+                FileTypeFilter = new List<FilePickerFileType>
+                {
+                    new("Png") { Patterns = new[] { "*.png" } },
+                    new("Jpg") { Patterns = new[] { "*.jpg", "*.jpeg" } }
+                }
+            }
+        );
+
+        if (files.Count == 0)
+            return;
+
+        var image = new ImageSource(files[0].TryGetLocalPath()!);
+
+        LoadUserImage(image);
     }
 
     /// <inheritdoc />

@@ -54,8 +54,8 @@ public record GenerationParameters
 
         var splitFirstPart = joinedLines.Split("Negative prompt: ", 2);
 
-        var positivePrompt = splitFirstPart.ElementAtOrDefault(0);
-        var negativePrompt = splitFirstPart.ElementAtOrDefault(1);
+        var positivePrompt = splitFirstPart.ElementAtOrDefault(0)?.Trim();
+        var negativePrompt = splitFirstPart.ElementAtOrDefault(1)?.Trim();
 
         // Parse last line
         var lineFields = ParseLine(lastLine);

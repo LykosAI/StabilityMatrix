@@ -160,23 +160,32 @@ public class Fooocus : BaseGitPackage
 
         progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
 
-        var extraIndex = torchVersion switch
+        if (torchVersion == TorchVersion.DirectMl)
         {
-            TorchVersion.Cpu => "cpu",
-            TorchVersion.Cuda => "cu121",
-            TorchVersion.Rocm => "rocm5.4.2",
-            _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
-        };
+            await venvRunner
+                .PipInstall(new PipInstallArgs().WithTorchDirectML(), onConsoleOutput)
+                .ConfigureAwait(false);
+        }
+        else
+        {
+            var extraIndex = torchVersion switch
+            {
+                TorchVersion.Cpu => "cpu",
+                TorchVersion.Cuda => "cu121",
+                TorchVersion.Rocm => "rocm5.4.2",
+                _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+            };
 
-        await venvRunner
-            .PipInstall(
-                new PipInstallArgs()
-                    .WithTorch("==2.1.0")
-                    .WithTorchVision("==0.16.0")
-                    .WithTorchExtraIndex(extraIndex),
-                onConsoleOutput
-            )
-            .ConfigureAwait(false);
+            await venvRunner
+                .PipInstall(
+                    new PipInstallArgs()
+                        .WithTorch("==2.1.0")
+                        .WithTorchVision("==0.16.0")
+                        .WithTorchExtraIndex(extraIndex),
+                    onConsoleOutput
+                )
+                .ConfigureAwait(false);
+        }
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
         await venvRunner

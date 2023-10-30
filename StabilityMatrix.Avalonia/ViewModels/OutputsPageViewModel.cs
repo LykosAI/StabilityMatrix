@@ -17,6 +17,7 @@ using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
@@ -51,8 +52,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.Grid, IsFilled = true };
 
-    public SourceCache<OutputImageViewModel, string> OutputsCache { get; } =
-        new(p => p.ImageFile.AbsolutePath);
+    public SourceCache<LocalImageFile, string> OutputsCache { get; } =
+        new(file => file.AbsolutePath);
 
     public IObservableCollection<OutputImageViewModel> Outputs { get; set; } =
         new ObservableCollectionExtended<OutputImageViewModel>();
@@ -101,35 +102,20 @@ public partial class OutputsPageViewModel : PageViewModelBase
         this.navigationService = navigationService;
         this.logger = logger;
 
-        var predicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
-            .Throttle(TimeSpan.FromMilliseconds(50))!
-            .Select<PropertyValue<OutputsPageViewModel, string>, Func<OutputImageViewModel, bool>>(
-                propertyValue =>
-                    output =>
-                    {
-                        if (string.IsNullOrWhiteSpace(propertyValue.Value))
-                            return true;
+        var searcher = new ImageSearcher();
 
-                        return output.ImageFile.FileName.Contains(
-                                propertyValue.Value,
-                                StringComparison.OrdinalIgnoreCase
-                            )
-                            || (
-                                output.ImageFile.GenerationParameters?.PositivePrompt != null
-                                && output.ImageFile.GenerationParameters.PositivePrompt.Contains(
-                                    propertyValue.Value,
-                                    StringComparison.OrdinalIgnoreCase
-                                )
-                            );
-                    }
-            )
+        // Observable predicate from SearchQuery changes
+        var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
+            .Throttle(TimeSpan.FromMilliseconds(50))!
+            .Select(property => searcher.GetPredicate(property.Value))
             .AsObservable();
 
         OutputsCache
             .Connect()
             .DeferUntilLoaded()
-            .Filter(predicate)
-            .SortBy(x => x.ImageFile.CreatedAt, SortDirection.Descending)
+            .Filter(searchPredicate)
+            .SortBy(file => file.CreatedAt, SortDirection.Descending)
+            .Transform(file => new OutputImageViewModel(file))
             .Bind(Outputs)
             .WhenPropertyChanged(p => p.IsSelected)
             .Subscribe(_ =>
@@ -314,7 +300,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
             return;
         }
 
-        OutputsCache.Remove(item);
+        OutputsCache.Remove(item.ImageFile);
 
         // Invalidate cache
         if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
@@ -378,7 +364,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
             {
                 continue;
             }
-            OutputsCache.Remove(output);
+            OutputsCache.Remove(output.ImageFile);
 
             // Invalidate cache
             if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
@@ -402,11 +388,10 @@ public partial class OutputsPageViewModel : PageViewModelBase
             return;
         }
 
-        var list = Directory
+        var files = Directory
             .EnumerateFiles(directory, "*.png", SearchOption.AllDirectories)
-            .Select(file => new OutputImageViewModel(LocalImageFile.FromPath(file)))
-            .OrderByDescending(f => f.ImageFile.CreatedAt);
+            .Select(file => LocalImageFile.FromPath(file));
 
-        OutputsCache.EditDiff(list, (x, y) => x.ImageFile.AbsolutePath == y.ImageFile.AbsolutePath);
+        OutputsCache.EditDiff(files, LocalImageFile.Comparer);
     }
 }

@@ -66,17 +66,18 @@ public partial class ImageFolderCardViewModel : ViewModelBase
         this.settingsManager = settingsManager;
         this.notificationService = notificationService;
 
-        var predicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
+        var searcher = new ImageSearcher();
+
+        // Observable predicate from SearchQuery changes
+        var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
             .Throttle(TimeSpan.FromMilliseconds(50))!
-            .Select<PropertyValue<ImageFolderCardViewModel, string>, Func<LocalImageFile, bool>>(
-                p => file => SearchPredicate(file, p.Value)
-            )
+            .Select(property => searcher.GetPredicate(property.Value))
             .AsObservable();
 
         imageIndexService.InferenceImages.ItemsSource
             .Connect()
             .DeferUntilLoaded()
-            .Filter(predicate)
+            .Filter(searchPredicate)
             .SortBy(file => file.LastModifiedAt, SortDirection.Descending)
             .Bind(LocalImages)
             .Subscribe();

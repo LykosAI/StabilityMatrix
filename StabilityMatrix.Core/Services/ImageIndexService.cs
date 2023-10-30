@@ -61,10 +61,11 @@ public class ImageIndexService : IImageIndexService
 
         await Task.Run(() =>
             {
-                var files = imagesDir.Info
+                var files = imagesDir
                     .EnumerateFiles("*.*", SearchOption.AllDirectories)
-                    .Where(info => LocalImageFile.SupportedImageExtensions.Contains(info.Extension))
-                    .Select(info => new FilePath(info));
+                    .Where(
+                        file => LocalImageFile.SupportedImageExtensions.Contains(file.Extension)
+                    );
 
                 Parallel.ForEach(
                     files,

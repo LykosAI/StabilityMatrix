@@ -1,4 +1,4 @@
-﻿using LiteDB;
+﻿using DynamicData.Tests;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using JsonSerializer = System.Text.Json.JsonSerializer;
@@ -9,7 +9,7 @@ namespace StabilityMatrix.Core.Models.Database;
 /// <summary>
 /// Represents a locally indexed image file.
 /// </summary>
-public class LocalImageFile
+public record LocalImageFile
 {
     public required string AbsolutePath { get; init; }
 
@@ -117,40 +117,4 @@ public class LocalImageFile
 
     public static readonly HashSet<string> SupportedImageExtensions =
         new() { ".png", ".jpg", ".jpeg", ".webp" };
-
-    private sealed class LocalImageFileEqualityComparer : IEqualityComparer<LocalImageFile>
-    {
-        public bool Equals(LocalImageFile? x, LocalImageFile? y)
-        {
-            if (ReferenceEquals(x, y))
-                return true;
-            if (ReferenceEquals(x, null))
-                return false;
-            if (ReferenceEquals(y, null))
-                return false;
-            if (x.GetType() != y.GetType())
-                return false;
-            return x.AbsolutePath == y.AbsolutePath
-                && x.ImageType == y.ImageType
-                && x.CreatedAt.Equals(y.CreatedAt)
-                && x.LastModifiedAt.Equals(y.LastModifiedAt)
-                && Equals(x.GenerationParameters, y.GenerationParameters)
-                && Nullable.Equals(x.ImageSize, y.ImageSize);
-        }
-
-        public int GetHashCode(LocalImageFile obj)
-        {
-            return HashCode.Combine(
-                obj.AbsolutePath,
-                obj.ImageType,
-                obj.CreatedAt,
-                obj.LastModifiedAt,
-                obj.GenerationParameters,
-                obj.ImageSize
-            );
-        }
-    }
-
-    public static IEqualityComparer<LocalImageFile> Comparer { get; } =
-        new LocalImageFileEqualityComparer();
 }

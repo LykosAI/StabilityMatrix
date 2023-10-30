@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using DynamicData;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Services;
@@ -51,7 +52,7 @@ public class MockImageIndexService : IImageIndexService
             )
         };
 
-        indexCollection.ItemsSource.EditDiff(toAdd, LocalImageFile.Comparer);
+        indexCollection.ItemsSource.EditDiff(toAdd);
 
         return Task.CompletedTask;
     }

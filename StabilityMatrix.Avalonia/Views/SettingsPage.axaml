@@ -1,4 +1,4 @@
-﻿<controls:UserControlBase
+<controls:UserControlBase
     x:Class="StabilityMatrix.Avalonia.Views.SettingsPage"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -11,6 +11,7 @@
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
     xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
@@ -21,6 +22,10 @@
     x:CompileBindings="True"
     x:DataType="vm:SettingsViewModel"
     mc:Ignorable="d">
+    
+    <controls:UserControlBase.Resources>
+        <converters:CultureInfoDisplayConverter x:Key="CultureInfoDisplayConverter" />
+    </controls:UserControlBase.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="8,16" Spacing="8">
@@ -51,7 +56,7 @@
                         <ComboBox
                             MinWidth="100"
                             ItemsSource="{Binding AvailableLanguages}"
-                            DisplayMemberBinding="{Binding NativeName}"
+                            DisplayMemberBinding="{Binding Converter={StaticResource CultureInfoDisplayConverter}}"
                             SelectedItem="{Binding SelectedLanguage}" />
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>

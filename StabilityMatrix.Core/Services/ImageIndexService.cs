@@ -4,6 +4,7 @@ using AsyncAwaitBestPractices;
 using DynamicData;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
@@ -79,7 +80,7 @@ public class ImageIndexService : IImageIndexService
 
         var indexElapsed = stopwatch.Elapsed;
 
-        indexCollection.ItemsSource.EditDiff(toAdd, LocalImageFile.Comparer);
+        indexCollection.ItemsSource.EditDiff(toAdd);
 
         // End
         stopwatch.Stop();

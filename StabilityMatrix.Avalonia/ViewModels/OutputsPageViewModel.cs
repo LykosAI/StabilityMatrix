@@ -25,6 +25,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.OutputsPage;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
@@ -392,6 +393,6 @@ public partial class OutputsPageViewModel : PageViewModelBase
             .EnumerateFiles(directory, "*.png", SearchOption.AllDirectories)
             .Select(file => LocalImageFile.FromPath(file));
 
-        OutputsCache.EditDiff(files, LocalImageFile.Comparer);
+        OutputsCache.EditDiff(files);
     }
 }

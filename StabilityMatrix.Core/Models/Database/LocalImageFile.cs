@@ -1,4 +1,5 @@
-﻿using StabilityMatrix.Core.Helper;
+﻿using DynamicData.Tests;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 using Size = System.Drawing.Size;
@@ -116,21 +117,4 @@ public record LocalImageFile
 
     public static readonly HashSet<string> SupportedImageExtensions =
         new() { ".png", ".jpg", ".jpeg", ".webp" };
-
-    private sealed class LocalImageFileEqualityComparer : IEqualityComparer<LocalImageFile>
-    {
-        /// <inheritdoc />
-        public bool Equals(LocalImageFile x, LocalImageFile y)
-        {
-            return x == y;
-        }
-
-        public int GetHashCode(LocalImageFile obj)
-        {
-            return obj.GetHashCode();
-        }
-    }
-
-    public static IEqualityComparer<LocalImageFile> Comparer { get; } =
-        new LocalImageFileEqualityComparer();
 }

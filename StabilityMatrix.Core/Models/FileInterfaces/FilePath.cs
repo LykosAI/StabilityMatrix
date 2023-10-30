@@ -33,6 +33,9 @@ public class FilePath : FileSystemPath, IPathObject
     [JsonIgnore]
     public string NameWithoutExtension => Path.GetFileNameWithoutExtension(Info.Name);
 
+    [JsonIgnore]
+    public string Extension => Info.Extension;
+
     /// <summary>
     /// Get the directory of the file.
     /// </summary>

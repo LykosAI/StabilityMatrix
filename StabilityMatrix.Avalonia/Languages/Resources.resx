@@ -726,4 +726,13 @@
   <data name="Label_OneImageSelected" xml:space="preserve">
     <value>1 image selected</value>
   </data>
+  <data name="Action_Consolidate" xml:space="preserve">
+    <value>Consolidate</value>
+  </data>
+  <data name="Label_AreYouSure" xml:space="preserve">
+    <value>Are you sure?</value>
+  </data>
+  <data name="Label_ConsolidateExplanation" xml:space="preserve">
+    <value>This will move all generated images from the selected packages to the Consolidated directory of the shared outputs folder. This action cannot be undone.</value>
+  </data>
 </root>

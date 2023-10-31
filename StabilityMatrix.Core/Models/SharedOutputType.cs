@@ -8,5 +8,6 @@ public enum SharedOutputType
     Extras,
     Text2ImgGrids,
     Img2ImgGrids,
-    Saved
+    Saved,
+    Consolidated
 }

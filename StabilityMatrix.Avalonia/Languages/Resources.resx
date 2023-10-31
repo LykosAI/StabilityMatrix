@@ -733,6 +733,6 @@
     <value>Are you sure?</value>
   </data>
   <data name="Label_ConsolidateExplanation" xml:space="preserve">
-    <value>This will move all generated images from the selected packages to the root of the shared outputs folder. This action cannot be undone.</value>
+    <value>This will move all generated images from the selected packages to the Consolidated directory of the shared outputs folder. This action cannot be undone.</value>
   </data>
 </root>

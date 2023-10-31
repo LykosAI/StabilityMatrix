@@ -726,7 +726,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This will move all generated images from the selected packages to the root of the shared outputs folder. This action cannot be undone..
+        ///   Looks up a localized string similar to This will move all generated images from the selected packages to the Consolidated directory of the shared outputs folder. This action cannot be undone..
         /// </summary>
         public static string Label_ConsolidateExplanation {
             get {

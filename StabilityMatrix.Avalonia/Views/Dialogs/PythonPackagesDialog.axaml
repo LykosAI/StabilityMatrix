@@ -54,8 +54,14 @@
                 </Style>
             </ui:CommandBar.Styles>
             <ui:CommandBar.PrimaryCommands>
-                <ui:CommandBarButton IconSource="Add" Label="{x:Static lang:Resources.Action_Save}" />
-                <ui:CommandBarButton IconSource="Remove" Label="{x:Static lang:Resources.Action_Remove}">
+                <ui:CommandBarButton 
+                    IconSource="Add" 
+                    Command="{Binding InstallPackageCommand}"
+                    Label="{x:Static lang:Resources.Action_Save}" />
+                <ui:CommandBarButton 
+                    IconSource="Remove" 
+                    Command="{Binding UninstallSelectedPackageCommand}"
+                    Label="{x:Static lang:Resources.Action_Remove}">
                     <!--<ui:CommandBarButton.IsEnabled>
                             <MultiBinding Converter="{x:Static BoolConverters.And}">
                                 <Binding Path="!EnvVarsView.IsEmpty" />

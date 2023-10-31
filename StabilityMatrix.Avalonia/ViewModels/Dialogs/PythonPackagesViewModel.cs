@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls.Primitives;
@@ -16,6 +17,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Python;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -98,6 +100,89 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
     public void AddPackages(params PipPackageInfo[] packages)
     {
         packageSource.AddOrUpdate(packages);
+    }
+
+    [RelayCommand]
+    private async Task InstallPackage()
+    {
+        if (VenvPath is null)
+            return;
+
+        // Dialog
+        var fields = new TextBoxField[]
+        {
+            new() { Label = "Package Name", InnerLeftText = "pip install" }
+        };
+
+        var dialog = DialogHelper.CreateTextEntryDialog("Install Package", "", fields);
+        var result = await dialog.ShowAsync();
+
+        if (result != ContentDialogResult.Primary || fields[0].Text is not { } packageName)
+        {
+            return;
+        }
+
+        var steps = new List<IPackageStep>
+        {
+            new PipStep
+            {
+                VenvDirectory = VenvPath,
+                WorkingDirectory = VenvPath.Parent,
+                Args = new[] { "install", packageName }
+            }
+        };
+
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            HideCloseButton = true,
+        };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+        await runner.ExecuteSteps(steps);
+
+        // Refresh
+        Dispatcher.UIThread.InvokeAsync(Refresh).SafeFireAndForget();
+    }
+
+    [RelayCommand]
+    private async Task UninstallSelectedPackage()
+    {
+        if (VenvPath is null || SelectedPackage?.Package is not { } package)
+            return;
+
+        // Confirmation dialog
+        var dialog = DialogHelper.CreateMarkdownDialog(
+            $"This will uninstall the package '{package.Name}'",
+            Resources.Label_ConfirmQuestion
+        );
+        dialog.PrimaryButtonText = Resources.Action_Uninstall;
+        dialog.CloseButtonText = Resources.Action_Cancel;
+
+        if (await dialog.ShowAsync() is not ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        var steps = new List<IPackageStep>
+        {
+            new PipStep
+            {
+                VenvDirectory = VenvPath,
+                WorkingDirectory = VenvPath.Parent,
+                Args = new[] { "uninstall", package.Name }
+            }
+        };
+
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            HideCloseButton = true,
+        };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+        await runner.ExecuteSteps(steps);
+
+        // Refresh
+        Dispatcher.UIThread.InvokeAsync(Refresh).SafeFireAndForget();
     }
 
     public BetterContentDialog GetDialog()

@@ -4,6 +4,7 @@ using AsyncAwaitBestPractices;
 using DynamicData;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
@@ -61,10 +62,11 @@ public class ImageIndexService : IImageIndexService
 
         await Task.Run(() =>
             {
-                var files = imagesDir.Info
+                var files = imagesDir
                     .EnumerateFiles("*.*", SearchOption.AllDirectories)
-                    .Where(info => LocalImageFile.SupportedImageExtensions.Contains(info.Extension))
-                    .Select(info => new FilePath(info));
+                    .Where(
+                        file => LocalImageFile.SupportedImageExtensions.Contains(file.Extension)
+                    );
 
                 Parallel.ForEach(
                     files,
@@ -78,7 +80,7 @@ public class ImageIndexService : IImageIndexService
 
         var indexElapsed = stopwatch.Elapsed;
 
-        indexCollection.ItemsSource.EditDiff(toAdd, LocalImageFile.Comparer);
+        indexCollection.ItemsSource.EditDiff(toAdd);
 
         // End
         stopwatch.Stop();

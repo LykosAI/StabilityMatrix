@@ -34,6 +34,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed Inference Prompt Completion window sometimes not showing while typing
 - Fixed "Show Model Images" toggle on Checkpoints page sometimes displaying cut-off model images
 
+## v2.5.6
+### Added
+- Added Russian UI language option, thanks to aolko for the translation
+
 ## v2.5.5
 ### Added
 - Added Spanish UI language options, thanks to Carlos Baena and Lautaroturina for the translations

@@ -120,8 +120,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
             .Connect()
             .DeferUntilLoaded()
             .Filter(searchPredicate)
-            .SortBy(file => file.CreatedAt, SortDirection.Descending)
             .Transform(file => new OutputImageViewModel(file))
+            .SortBy(vm => vm.ImageFile.CreatedAt, SortDirection.Descending)
             .Bind(Outputs)
             .WhenPropertyChanged(p => p.IsSelected)
             .Subscribe(_ =>
@@ -424,6 +424,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         IsConsolidating = true;
 
+        Directory.CreateDirectory(settingsManager.ConsolidatedImagesDirectory);
+
         foreach (
             var category in stackPanel.Children.OfType<CheckBox>().Where(c => c.IsChecked == true)
         )
@@ -445,7 +447,15 @@ public partial class OutputsPageViewModel : PageViewModelBase
                 try
                 {
                     var file = new FilePath(path);
-                    await file.MoveToAsync(settingsManager.ImagesDirectory + file.Name);
+                    var newPath = settingsManager.ConsolidatedImagesDirectory + file.Name;
+                    if (file.FullPath == newPath)
+                        continue;
+
+                    // ignore inference
+                    if (file.FullPath.Contains(settingsManager.ImagesInferenceDirectory))
+                        continue;
+
+                    await file.MoveToAsync(newPath);
                 }
                 catch (Exception e)
                 {

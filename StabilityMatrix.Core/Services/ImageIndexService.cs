@@ -56,13 +56,13 @@ public class ImageIndexService : IImageIndexService
 
         // Start
         var stopwatch = Stopwatch.StartNew();
-        logger.LogInformation("Refreshing images index at {ImagesDir}...", imagesDir);
+        logger.LogInformation("Refreshing images index at {SearchDir}...", searchDir);
 
         var toAdd = new ConcurrentBag<LocalImageFile>();
 
         await Task.Run(() =>
             {
-                var files = imagesDir
+                var files = searchDir
                     .EnumerateFiles("*.*", SearchOption.AllDirectories)
                     .Where(
                         file => LocalImageFile.SupportedImageExtensions.Contains(file.Extension)

@@ -46,6 +46,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             .Connect()
             .DeferUntilLoaded()
             .Transform(p => new PythonPackagesItemViewModel { Package = p })
+            .SortBy(vm => vm.Package.Name)
             .Bind(Packages)
             .Subscribe();
     }

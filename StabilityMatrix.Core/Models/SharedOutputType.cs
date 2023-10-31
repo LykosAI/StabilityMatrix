@@ -3,7 +3,6 @@
 public enum SharedOutputType
 {
     All,
-    Inference,
     Text2Img,
     Img2Img,
     Extras,

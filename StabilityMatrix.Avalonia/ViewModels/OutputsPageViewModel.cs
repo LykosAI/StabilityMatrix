@@ -146,6 +146,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
             return;
 
         Directory.CreateDirectory(settingsManager.ImagesDirectory);
+
         var packageCategories = settingsManager.Settings.InstalledPackages
             .Where(x => !x.UseSharedOutputFolder)
             .Select(p =>
@@ -168,6 +169,15 @@ public partial class OutputsPageViewModel : PageViewModelBase
             {
                 Path = settingsManager.ImagesDirectory,
                 Name = "Shared Output Folder"
+            }
+        );
+
+        packageCategories.Insert(
+            1,
+            new PackageOutputCategory
+            {
+                Path = settingsManager.ImagesInferenceDirectory,
+                Name = "Inference"
             }
         );
 
@@ -436,9 +446,11 @@ public partial class OutputsPageViewModel : PageViewModelBase
             )
                 continue;
 
+            var directory = category.Tag.ToString();
+
             foreach (
                 var path in Directory.EnumerateFiles(
-                    category.Tag.ToString(),
+                    directory,
                     "*.png",
                     SearchOption.AllDirectories
                 )
@@ -451,9 +463,14 @@ public partial class OutputsPageViewModel : PageViewModelBase
                     if (file.FullPath == newPath)
                         continue;
 
-                    // ignore inference
-                    if (file.FullPath.Contains(settingsManager.ImagesInferenceDirectory))
+                    // ignore inference if not in inference directory
+                    if (
+                        file.FullPath.Contains(settingsManager.ImagesInferenceDirectory)
+                        && directory != settingsManager.ImagesInferenceDirectory
+                    )
+                    {
                         continue;
+                    }
 
                     await file.MoveToAsync(newPath);
                 }

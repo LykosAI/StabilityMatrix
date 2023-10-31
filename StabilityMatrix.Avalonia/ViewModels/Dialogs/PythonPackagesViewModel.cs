@@ -156,6 +156,8 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             Resources.Label_ConfirmQuestion
         );
         dialog.PrimaryButtonText = Resources.Action_Uninstall;
+        dialog.IsPrimaryButtonEnabled = true;
+        dialog.DefaultButton = ContentDialogButton.Primary;
         dialog.CloseButtonText = Resources.Action_Cancel;
 
         if (await dialog.ShowAsync() is not ContentDialogResult.Primary)

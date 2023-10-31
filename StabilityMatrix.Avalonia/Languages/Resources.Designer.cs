@@ -321,6 +321,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Refresh.
+        /// </summary>
+        public static string Action_Refresh {
+            get {
+                return ResourceManager.GetString("Action_Refresh", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Relaunch.
         /// </summary>
         public static string Action_Relaunch {
@@ -1379,6 +1388,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_PreviousPage {
             get {
                 return ResourceManager.GetString("Label_PreviousPage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Packages.
+        /// </summary>
+        public static string Label_PythonPackages {
+            get {
+                return ResourceManager.GetString("Label_PythonPackages", resourceCulture);
             }
         }
         

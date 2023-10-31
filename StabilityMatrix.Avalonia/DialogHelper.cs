@@ -9,6 +9,7 @@ using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
+using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -93,6 +94,18 @@ public static class DialogHelper
                 Watermark = field.Watermark,
                 DataContext = field,
             };
+
+            if (!string.IsNullOrEmpty(field.InnerLeftText))
+            {
+                textBox.InnerLeftContent = new TextBlock()
+                {
+                    Text = field.InnerLeftText,
+                    Foreground = Brushes.Gray,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(8, 0, -4, 0)
+                };
+            }
+
             stackPanel.Children.Add(textBox);
 
             // When IsValid property changes, update invalid count and primary button
@@ -515,15 +528,6 @@ public static class DialogHelper
             XamlRoot = App.VisualRoot
         };
     }
-
-    /// <summary>
-    /// Creates a connection help dialog.
-    /// </summary>
-    public static BetterContentDialog CreateConnectionHelpDialog()
-    {
-        // TODO
-        return new BetterContentDialog();
-    }
 }
 
 // Text fields
@@ -537,6 +541,9 @@ public sealed class TextBoxField : INotifyPropertyChanged
 
     // Watermark text
     public string Watermark { get; init; } = string.Empty;
+
+    // Inner left value
+    public string? InnerLeftText { get; init; }
 
     /// <summary>
     /// Validation action on text changes. Throw exception if invalid.

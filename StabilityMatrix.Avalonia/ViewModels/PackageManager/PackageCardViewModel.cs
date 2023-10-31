@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
@@ -362,6 +363,20 @@ public partial class PackageCardViewModel : ProgressViewModel
             return;
 
         await ProcessRunner.OpenFolderBrowser(Package.FullPath);
+    }
+
+    [RelayCommand]
+    public async Task OpenPythonPackagesDialog()
+    {
+        if (Package is not { FullPath: not null })
+            return;
+
+        var vm = vmFactory.Get<PythonPackagesViewModel>(vm =>
+        {
+            vm.VenvPath = new DirectoryPath(Package.FullPath, "venv");
+        });
+
+        await vm.GetDialog().ShowAsync();
     }
 
     private async Task<bool> HasUpdate()

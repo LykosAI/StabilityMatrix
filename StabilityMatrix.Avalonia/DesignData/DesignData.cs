@@ -533,6 +533,15 @@ The gallery images are often inpainted, but you will get something very similar 
             viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair> { new("UWU", "TRUE"), };
         });
 
+    public static PythonPackagesViewModel PythonPackagesViewModel =>
+        DialogFactory.Get<PythonPackagesViewModel>(vm =>
+        {
+            vm.AddPackages(
+                new PipPackageInfo("pip", "1.0.0"),
+                new PipPackageInfo("torch", "2.1.0+cu121")
+            );
+        });
+
     public static InferenceTextToImageViewModel InferenceTextToImageViewModel =>
         DialogFactory.Get<InferenceTextToImageViewModel>(vm =>
         {

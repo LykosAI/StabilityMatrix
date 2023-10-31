@@ -1,4 +1,5 @@
 ﻿using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -38,5 +39,7 @@ public class PipStep : IPackageStep
         args.AddRange(Args.ToArray());
 
         venvRunner.RunDetached(args.ToArray(), progress.AsProcessOutputHandler());
+
+        await ProcessRunner.WaitForExitConditionAsync(venvRunner.Process).ConfigureAwait(false);
     }
 }

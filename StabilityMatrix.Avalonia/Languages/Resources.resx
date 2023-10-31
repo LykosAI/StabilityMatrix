@@ -726,6 +726,9 @@
   <data name="Label_OneImageSelected" xml:space="preserve">
     <value>1 image selected</value>
   </data>
+  <data name="Label_PythonPackages" xml:space="preserve">
+    <value>Python Packages</value>
+  </data>
   <data name="Action_Consolidate" xml:space="preserve">
     <value>Consolidate</value>
   </data>
@@ -734,5 +737,8 @@
   </data>
   <data name="Label_ConsolidateExplanation" xml:space="preserve">
     <value>This will move all generated images from the selected packages to the Consolidated directory of the shared outputs folder. This action cannot be undone.</value>
+  </data>
+  <data name="Action_Refresh" xml:space="preserve">
+    <value>Refresh</value>
   </data>
 </root>

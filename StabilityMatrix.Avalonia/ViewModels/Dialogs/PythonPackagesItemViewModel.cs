@@ -19,7 +19,7 @@ public partial class PythonPackagesItemViewModel : ViewModelBase
     /// <summary>
     /// Loads the pip show result if not already loaded
     /// </summary>
-    public async Task LoadPipShowResult(DirectoryPath venvPath)
+    public async Task LoadExtraInfo(DirectoryPath venvPath)
     {
         if (PipShowResult is not null)
         {

@@ -128,7 +128,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             {
                 VenvDirectory = VenvPath,
                 WorkingDirectory = VenvPath.Parent,
-                Args = new[] { "install", packageName }
+                Args = new[] { "install", "--yes", packageName }
             }
         };
 
@@ -171,7 +171,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             {
                 VenvDirectory = VenvPath,
                 WorkingDirectory = VenvPath.Parent,
-                Args = new[] { "uninstall", package.Name }
+                Args = new[] { "uninstall", "--yes", package.Name }
             }
         };
 

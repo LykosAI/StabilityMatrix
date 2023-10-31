@@ -7,7 +7,7 @@
                           xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
                           xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                           xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
-                          xmlns:faicon="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+                          xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
                           xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
                           xmlns:system="clr-namespace:System;assembly=System.Runtime"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -76,7 +76,8 @@
                                                 IsVisible="{Binding !IsUnknownPackage}"
                                                 Command="{Binding OpenPythonPackagesDialogCommand}">
                                                 <MenuItem.Icon>
-                                                    <controls:FASymbolIconSource Symbol="fa-brands fa-python"/>
+                                                    <icons:Icon
+                                                        Value="fa-brands fa-python" />
                                                 </MenuItem.Icon>
                                             </MenuItem>
                                             <MenuItem Header="{x:Static lang:Resources.Label_SharedModelStrategyShort}"
@@ -209,7 +210,7 @@
                                             HorizontalAlignment="Stretch"
                                             Command="{Binding Launch}">
                                         <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
-                                            <faicon:Icon Value="fa-solid fa-rocket"
+                                            <icons:Icon Value="fa-solid fa-rocket"
                                                          Margin="0,0,8,0"
                                                          FontSize="14" />
                                             <TextBlock Text="{x:Static lang:Resources.Action_Launch}" />
@@ -220,7 +221,7 @@
                                             HorizontalAlignment="Stretch"
                                             Command="{Binding Update}">
                                         <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
-                                            <faicon:Icon Value="fa-solid fa-download"
+                                            <icons:Icon Value="fa-solid fa-download"
                                                          Margin="0,0,8,0"
                                                          FontSize="14" />
                                             <TextBlock Text="{x:Static lang:Resources.Action_Update}" />
@@ -244,7 +245,7 @@
                                         </MultiBinding>
                                     </Button.IsVisible>
                                     <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
-                                        <faicon:Icon Value="fa-solid fa-rocket"
+                                        <icons:Icon Value="fa-solid fa-rocket"
                                                      Margin="0,0,8,0"
                                                      FontSize="14" />
                                         <TextBlock Text="{x:Static lang:Resources.Action_Launch}" />
@@ -259,7 +260,7 @@
                                         Command="{Binding Import}"
                                         IsVisible="{Binding IsUnknownPackage}">
                                     <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
-                                        <faicon:Icon Value="fa-solid fa-circle-question"
+                                        <icons:Icon Value="fa-solid fa-circle-question"
                                                      Margin="0,0,8,0"
                                                      FontSize="14" />
                                         <TextBlock Text="{x:Static lang:Resources.Action_Import}" />

@@ -144,6 +144,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         {
             ShowDialogOnStart = true,
             HideCloseButton = true,
+            ModificationCompleteMessage = $"Installed Python Package '{packageName}'"
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
         await runner.ExecuteSteps(steps);
@@ -187,6 +188,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         {
             ShowDialogOnStart = true,
             HideCloseButton = true,
+            ModificationCompleteMessage = $"Uninstalled Python Package '{package.Name}'"
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
         await runner.ExecuteSteps(steps);

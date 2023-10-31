@@ -51,7 +51,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             .Subscribe();
     }
 
-    public async Task Refresh()
+    private async Task Refresh()
     {
         if (VenvPath is null)
             return;
@@ -71,6 +71,18 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         }
     }
 
+    private async Task RefreshBackground()
+    {
+        if (VenvPath is null)
+            return;
+
+        await using var venvRunner = new PyVenvRunner(VenvPath);
+
+        var packages = await venvRunner.PipList();
+
+        Dispatcher.UIThread.Post(() => packageSource.EditDiff(packages));
+    }
+
     /// <summary>
     /// Load the selected package's show info if not already loaded
     /// </summary>
@@ -83,21 +95,15 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
 
         if (value.PipShowResult is null)
         {
-            value.LoadPipShowResult(VenvPath!).SafeFireAndForget();
+            value.LoadExtraInfo(VenvPath!).SafeFireAndForget();
         }
     }
 
     /// <inheritdoc />
-    public override void OnLoaded()
+    public override Task OnLoadedAsync()
     {
-        Dispatcher.UIThread.InvokeAsync(Refresh).SafeFireAndForget();
+        return Refresh();
     }
-
-    /*/// <inheritdoc />
-    public override async Task OnLoadedAsync()
-    {
-        await Refresh();
-    }*/
 
     public void AddPackages(params PipPackageInfo[] packages)
     {
@@ -143,7 +149,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         await runner.ExecuteSteps(steps);
 
         // Refresh
-        Dispatcher.UIThread.InvokeAsync(Refresh).SafeFireAndForget();
+        RefreshBackground().SafeFireAndForget();
     }
 
     [RelayCommand]
@@ -186,7 +192,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         await runner.ExecuteSteps(steps);
 
         // Refresh
-        Dispatcher.UIThread.InvokeAsync(Refresh).SafeFireAndForget();
+        RefreshBackground().SafeFireAndForget();
     }
 
     public BetterContentDialog GetDialog()

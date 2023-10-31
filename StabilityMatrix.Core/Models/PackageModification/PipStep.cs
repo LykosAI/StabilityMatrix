@@ -40,6 +40,6 @@ public class PipStep : IPackageStep
 
         venvRunner.RunDetached(args.ToArray(), progress.AsProcessOutputHandler());
 
-        await ProcessRunner.ValidateExitConditionAsync(venvRunner.Process).ConfigureAwait(false);
+        await ProcessRunner.WaitForExitConditionAsync(venvRunner.Process).ConfigureAwait(false);
     }
 }

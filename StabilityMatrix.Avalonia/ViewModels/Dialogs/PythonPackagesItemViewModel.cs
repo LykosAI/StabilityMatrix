@@ -1,6 +1,8 @@
 ﻿using System.Threading.Tasks;
+using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Python;
 
@@ -30,13 +32,27 @@ public partial class PythonPackagesItemViewModel : ViewModelBase
 
         try
         {
-            await using var venvRunner = new PyVenvRunner(venvPath);
+            if (Design.IsDesignMode)
+            {
+                await LoadExtraInfoDesignMode();
+            }
+            else
+            {
+                await using var venvRunner = new PyVenvRunner(venvPath);
 
-            PipShowResult = await venvRunner.PipShow(Package.Name);
+                PipShowResult = await venvRunner.PipShow(Package.Name);
+            }
         }
         finally
         {
             IsLoading = false;
         }
+    }
+
+    private async Task LoadExtraInfoDesignMode()
+    {
+        await using var _ = new MinimumDelay(200, 300);
+
+        PipShowResult = new PipShowResult { Name = Package.Name, Version = Package.Version };
     }
 }

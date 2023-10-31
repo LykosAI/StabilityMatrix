@@ -321,6 +321,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Refresh.
+        /// </summary>
+        public static string Action_Refresh {
+            get {
+                return ResourceManager.GetString("Action_Refresh", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Relaunch.
         /// </summary>
         public static string Action_Relaunch {

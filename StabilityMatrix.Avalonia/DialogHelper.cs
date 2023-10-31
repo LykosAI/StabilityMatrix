@@ -528,15 +528,6 @@ public static class DialogHelper
             XamlRoot = App.VisualRoot
         };
     }
-
-    /// <summary>
-    /// Creates a connection help dialog.
-    /// </summary>
-    public static BetterContentDialog CreateConnectionHelpDialog()
-    {
-        // TODO
-        return new BetterContentDialog();
-    }
 }
 
 // Text fields

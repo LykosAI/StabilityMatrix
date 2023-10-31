@@ -407,6 +407,11 @@ public partial class OutputsPageViewModel : PageViewModelBase
         );
         foreach (var category in Categories)
         {
+            if (category.Name == "Shared Output Folder")
+            {
+                continue;
+            }
+
             stackPanel.Children.Add(
                 new CheckBox
                 {
@@ -490,7 +495,13 @@ public partial class OutputsPageViewModel : PageViewModelBase
         if (!settingsManager.IsLibraryDirSet)
             return;
 
-        if (!Directory.Exists(directory) && SelectedOutputType != SharedOutputType.All)
+        if (
+            !Directory.Exists(directory)
+            && (
+                SelectedCategory.Path != settingsManager.ImagesDirectory
+                || SelectedOutputType != SharedOutputType.All
+            )
+        )
         {
             Directory.CreateDirectory(directory);
             return;
@@ -498,8 +509,16 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         var files = Directory
             .EnumerateFiles(directory, "*.png", SearchOption.AllDirectories)
-            .Select(file => LocalImageFile.FromPath(file));
+            .Select(file => LocalImageFile.FromPath(file))
+            .ToList();
 
-        OutputsCache.EditDiff(files);
+        if (files.Count == 0)
+        {
+            OutputsCache.Clear();
+        }
+        else
+        {
+            OutputsCache.EditDiff(files);
+        }
     }
 }

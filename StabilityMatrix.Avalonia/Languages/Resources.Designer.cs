@@ -1356,6 +1356,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Python Packages.
+        /// </summary>
+        public static string Label_PythonPackages {
+            get {
+                return ResourceManager.GetString("Label_PythonPackages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python Version Info.
         /// </summary>
         public static string Label_PythonVersionInfo {

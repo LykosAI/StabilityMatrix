@@ -726,4 +726,7 @@
   <data name="Label_OneImageSelected" xml:space="preserve">
     <value>1 image selected</value>
   </data>
+  <data name="Label_PythonPackages" xml:space="preserve">
+    <value>Python Packages</value>
+  </data>
 </root>

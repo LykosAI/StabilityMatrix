@@ -128,7 +128,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             {
                 VenvDirectory = VenvPath,
                 WorkingDirectory = VenvPath.Parent,
-                Args = new[] { "install", "--yes", packageName }
+                Args = new[] { "install", packageName }
             }
         };
 

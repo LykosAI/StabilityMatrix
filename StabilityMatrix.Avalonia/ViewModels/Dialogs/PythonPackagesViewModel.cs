@@ -29,7 +29,8 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
 {
     public DirectoryPath? VenvPath { get; set; }
 
-    public bool IsLoading { get; set; }
+    [ObservableProperty]
+    private bool isLoading;
 
     private readonly SourceCache<PipPackageInfo, string> packageSource = new(p => p.Name);
 

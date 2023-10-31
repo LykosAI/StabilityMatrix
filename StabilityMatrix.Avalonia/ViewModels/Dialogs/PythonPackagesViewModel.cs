@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
+using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -60,10 +61,17 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
 
         try
         {
-            await using var venvRunner = new PyVenvRunner(VenvPath);
+            if (Design.IsDesignMode)
+            {
+                await Task.Delay(250);
+            }
+            else
+            {
+                await using var venvRunner = new PyVenvRunner(VenvPath);
 
-            var packages = await venvRunner.PipList();
-            packageSource.EditDiff(packages);
+                var packages = await venvRunner.PipList();
+                packageSource.EditDiff(packages);
+            }
         }
         finally
         {
@@ -71,6 +79,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         }
     }
 
+    [RelayCommand]
     private async Task RefreshBackground()
     {
         if (VenvPath is null)

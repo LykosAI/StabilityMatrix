@@ -136,6 +136,10 @@ internal static class Assets
             )
         );
 
+    [SupportedOSPlatform("windows")]
+    public static AvaloniaResource TkinterZip =>
+        new("avares://StabilityMatrix.Avalonia/Assets/win-x64/tkinter_3_10_7.zip");
+
     public static IReadOnlyList<RemoteResource> DefaultCompletionTags { get; } =
         new[]
         {

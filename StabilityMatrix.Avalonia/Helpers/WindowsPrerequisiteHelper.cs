@@ -43,6 +43,8 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     private string PortableGitInstallDir => Path.Combine(HomeDir, "PortableGit");
     private string PortableGitDownloadPath => Path.Combine(HomeDir, "PortableGit.7z.exe");
     private string GitExePath => Path.Combine(PortableGitInstallDir, "bin", "git.exe");
+    private string TkinterZipPath => Path.Combine(AssetsDir, "tkinter.zip");
+    private string TkinterExtractPath => PythonDir;
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
 
     public bool IsPythonInstalled => File.Exists(PythonDllPath);
@@ -223,6 +225,9 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
             pythonPthContent = pythonPthContent.Replace("#import site", "import site");
             await File.WriteAllTextAsync(pythonPthPath, pythonPthContent);
 
+            // Install TKinter
+            await InstallTkinterIfNecessary(progress);
+
             progress?.Report(new ProgressReport(1f, "Python install complete"));
         }
         finally
@@ -233,6 +238,17 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
                 File.Delete(PythonDownloadPath);
             }
         }
+    }
+
+    [SupportedOSPlatform("windows")]
+    public async Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        if (!File.Exists(TkinterZipPath))
+        {
+            await Assets.TkinterZip.ExtractTo(TkinterZipPath);
+        }
+
+        await ArchiveHelper.Extract(TkinterZipPath, TkinterExtractPath, progress);
     }
 
     public async Task InstallGitIfNecessary(IProgress<ProgressReport>? progress = null)

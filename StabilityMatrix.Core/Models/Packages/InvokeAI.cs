@@ -46,8 +46,6 @@ public class InvokeAI : BaseGitPackage
             "https://raw.githubusercontent.com/invoke-ai/InvokeAI/main/docs/assets/canvas_preview.png"
         );
 
-    public override bool ShouldIgnoreReleases => true;
-
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
@@ -146,7 +144,11 @@ public class InvokeAI : BaseGitPackage
             LaunchOptionDefinition.Extras
         };
 
-    public override Task<string> GetLatestVersion() => Task.FromResult("main");
+    public override async Task<string> GetLatestVersion()
+    {
+        var release = await GetLatestRelease().ConfigureAwait(false);
+        return release.TagName!;
+    }
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm, TorchVersion.Mps };

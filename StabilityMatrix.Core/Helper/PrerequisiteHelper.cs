@@ -87,6 +87,11 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         return output;
     }
 
+    public Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         await InstallVcRedistIfNecessary(progress);

@@ -42,7 +42,65 @@ public class KohyaSs : BaseGitPackage
 
     public override TorchVersion GetRecommendedTorchVersion() => TorchVersion.Cuda;
 
+    public override string Disclaimer => "Nvidia GPU with at least 8GB VRAM is recommended";
+
     public override bool OfferInOneClickInstaller => false;
+    public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
+    public override IEnumerable<TorchVersion> AvailableTorchVersions => new[] { TorchVersion.Cuda };
+    public override List<LaunchOptionDefinition> LaunchOptions =>
+        new()
+        {
+            new LaunchOptionDefinition
+            {
+                Name = "Listen Address",
+                Type = LaunchOptionType.String,
+                DefaultValue = "127.0.0.1",
+                Options = new List<string> { "--listen" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Port",
+                Type = LaunchOptionType.String,
+                Options = new List<string> { "--port" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Username",
+                Type = LaunchOptionType.String,
+                Options = new List<string> { "--username" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Password",
+                Type = LaunchOptionType.String,
+                Options = new List<string> { "--password" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Auto-Launch Browser",
+                Type = LaunchOptionType.Bool,
+                Options = new List<string> { "--inbrowser" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Share",
+                Type = LaunchOptionType.Bool,
+                Options = new List<string> { "--share" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Headless",
+                Type = LaunchOptionType.Bool,
+                Options = new List<string> { "--headless" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Language",
+                Type = LaunchOptionType.String,
+                Options = new List<string> { "--language" }
+            },
+            LaunchOptionDefinition.Extras
+        };
 
     public override async Task InstallPackage(
         string installLocation,
@@ -91,14 +149,29 @@ public class KohyaSs : BaseGitPackage
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
-        var process = ProcessRunner.StartProcess(
-            Path.Combine(installedPackagePath, "venv", "Scripts", "accelerate.exe"),
-            "env",
-            installedPackagePath,
-            s => onConsoleOutput?.Invoke(new ProcessOutput { Text = s })
-        );
+        // update gui files to point to venv accelerate
+        var filesToUpdate = new[]
+        {
+            "lora_gui.py",
+            "dreambooth_gui.py",
+            "textual_inversion_gui.py",
+            Path.Combine("library", "wd14_caption_gui.py"),
+            "finetune_gui.py"
+        };
 
-        await process.WaitForExitAsync().ConfigureAwait(false);
+        foreach (var file in filesToUpdate)
+        {
+            var path = Path.Combine(installedPackagePath, file);
+            var text = await File.ReadAllTextAsync(path).ConfigureAwait(false);
+            var replacementAcceleratePath = Compat.IsWindows
+                ? @".\\venv\\scripts\\accelerate"
+                : "./venv/bin/accelerate";
+            text = text.Replace(
+                "run_cmd = f'accelerate launch",
+                $"run_cmd = f'{replacementAcceleratePath} launch"
+            );
+            await File.WriteAllTextAsync(path, text).ConfigureAwait(false);
+        }
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -118,14 +191,10 @@ public class KohyaSs : BaseGitPackage
 
         var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
-        VenvRunner.EnvironmentVariables = GetEnvVars();
+        VenvRunner.EnvironmentVariables = GetEnvVars(installedPackagePath);
         VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
     }
 
-    public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
-    public override IEnumerable<TorchVersion> AvailableTorchVersions => new[] { TorchVersion.Cuda };
-    public override List<LaunchOptionDefinition> LaunchOptions =>
-        new() { LaunchOptionDefinition.Extras };
     public override Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
     public override Dictionary<
         SharedOutputType,
@@ -138,7 +207,7 @@ public class KohyaSs : BaseGitPackage
         return release.TagName!;
     }
 
-    private Dictionary<string, string> GetEnvVars()
+    private Dictionary<string, string> GetEnvVars(string installDirectory)
     {
         // Set additional required environment variables
         var env = new Dictionary<string, string>();
@@ -156,6 +225,9 @@ public class KohyaSs : BaseGitPackage
         );
         env["TCL_LIBRARY"] = tkPath;
         env["TK_LIBRARY"] = tkPath;
+        env["PATH"] = Compat.GetEnvPathWithExtensions(
+            Path.Combine(installDirectory, "venv", "Scripts")
+        );
 
         return env;
     }

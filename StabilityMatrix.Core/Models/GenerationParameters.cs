@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Models.Api.Comfy;
 
@@ -29,12 +30,26 @@ public record GenerationParameters
             return false;
         }
 
+        try
+        {
+            generationParameters = Parse(text);
+        }
+        catch (Exception)
+        {
+            generationParameters = null;
+            return false;
+        }
+
+        return true;
+    }
+
+    public static GenerationParameters Parse(string text)
+    {
         var lines = text.Split('\n');
 
         if (lines.LastOrDefault() is not { } lastLine)
         {
-            generationParameters = null;
-            return false;
+            throw new ValidationException("Fields line not found");
         }
 
         if (lastLine.StartsWith("Steps:") != true)
@@ -44,8 +59,7 @@ public record GenerationParameters
 
             if (lastLine.StartsWith("Steps:") != true)
             {
-                generationParameters = null;
-                return false;
+                throw new ValidationException("Unable to locate starting marker of last line");
             }
         }
 
@@ -60,7 +74,7 @@ public record GenerationParameters
         // Parse last line
         var lineFields = ParseLine(lastLine);
 
-        generationParameters = new GenerationParameters
+        var generationParameters = new GenerationParameters
         {
             PositivePrompt = positivePrompt,
             NegativePrompt = negativePrompt,
@@ -85,7 +99,7 @@ public record GenerationParameters
             }
         }
 
-        return true;
+        return generationParameters;
     }
 
     /// <summary>

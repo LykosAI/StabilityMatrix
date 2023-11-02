@@ -124,20 +124,31 @@ public class KohyaSs : BaseGitPackage
         venvRunner.WorkingDirectory = installLocation;
         await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
-        var setupSmPath = Path.Combine(installLocation, "setup", "setup_sm.py");
-        var setupText = """
-                        import setup_windows
-                        import setup_common
-                        
-                        setup_common.install_requirements('requirements_windows_torch2.txt', check_no_verify_flag=False)
-                        setup_windows.sync_bits_and_bytes_files()
-                        setup_common.configure_accelerate(run_accelerate=False)
-                        """;
-        await File.WriteAllTextAsync(setupSmPath, setupText).ConfigureAwait(false);
+        if (Compat.IsWindows)
+        {
+            var setupSmPath = Path.Combine(installLocation, "setup", "setup_sm.py");
+            var setupText = """
+                            import setup_windows
+                            import setup_common
 
-        // Install
-        venvRunner.RunDetached("setup/setup_sm.py", onConsoleOutput);
-        await venvRunner.Process.WaitForExitAsync().ConfigureAwait(false);
+                            setup_common.install_requirements('requirements_windows_torch2.txt', check_no_verify_flag=False)
+                            setup_windows.sync_bits_and_bytes_files()
+                            setup_common.configure_accelerate(run_accelerate=False)
+                            """;
+            await File.WriteAllTextAsync(setupSmPath, setupText).ConfigureAwait(false);
+
+            // Install
+            venvRunner.RunDetached("setup/setup_sm.py", onConsoleOutput);
+            await venvRunner.Process.WaitForExitAsync().ConfigureAwait(false);
+        }
+        else if (Compat.IsLinux)
+        {
+            venvRunner.RunDetached(
+                "setup/setup_linux.py --platform-requirements-file=requirements_linux.txt --no_run_accelerate",
+                onConsoleOutput
+            );
+            await venvRunner.Process.WaitForExitAsync().ConfigureAwait(false);
+        }
     }
 
     public override async Task RunPackage(

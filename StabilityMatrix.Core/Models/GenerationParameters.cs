@@ -1,12 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Models.Api.Comfy;
 
 namespace StabilityMatrix.Core.Models;
 
 [JsonSerializable(typeof(GenerationParameters))]
-public record GenerationParameters
+public partial record GenerationParameters
 {
     public string? PositivePrompt { get; set; }
     public string? NegativePrompt { get; set; }
@@ -111,19 +113,32 @@ public record GenerationParameters
     {
         var dict = new Dictionary<string, string>();
 
-        foreach (var field in fields.Split(','))
+        // Values main contain commas or colons
+        foreach (var match in ParametersFieldsRegex().Matches(fields).Cast<Match>())
         {
-            var split = field.Split(':', 2);
-            if (split.Length < 2)
+            if (!match.Success)
                 continue;
 
-            var key = split[0].Trim();
-            var value = split[1].Trim();
+            var key = match.Groups[1].Value.Trim();
+            var value = UnquoteValue(match.Groups[2].Value.Trim());
 
             dict.Add(key, value);
         }
 
         return dict;
+    }
+
+    /// <summary>
+    /// Unquotes a quoted value field if required
+    /// </summary>
+    private static string UnquoteValue(string quotedField)
+    {
+        if (!(quotedField.StartsWith('"') && quotedField.EndsWith('"')))
+        {
+            return quotedField;
+        }
+
+        return JsonNode.Parse(quotedField)?.GetValue<string>() ?? "";
     }
 
     /// <summary>
@@ -183,4 +198,7 @@ public record GenerationParameters
             Sampler = "DPM++ 2M Karras"
         };
     }
+
+    [GeneratedRegex("""\s*([\w ]+):\s*("(?:\\.|[^\\"])+"|[^,]*)(?:,|$)""")]
+    private static partial Regex ParametersFieldsRegex();
 }

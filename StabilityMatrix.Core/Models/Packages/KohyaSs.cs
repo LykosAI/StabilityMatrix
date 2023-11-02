@@ -227,6 +227,9 @@ public class KohyaSs : BaseGitPackage
             env.Update(SettingsManager.Settings.EnvironmentVariables);
         }
 
+        if (!Compat.IsWindows)
+            return env;
+
         var tkPath = Path.Combine(
             SettingsManager.LibraryDir,
             "Assets",
@@ -236,9 +239,6 @@ public class KohyaSs : BaseGitPackage
         );
         env["TCL_LIBRARY"] = tkPath;
         env["TK_LIBRARY"] = tkPath;
-        env["PATH"] = Compat.GetEnvPathWithExtensions(
-            Path.Combine(installDirectory, "venv", "Scripts")
-        );
 
         return env;
     }

@@ -17,6 +17,7 @@ using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
+using Nito.Disposables.Internals;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
@@ -149,18 +150,19 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         var packageCategories = settingsManager.Settings.InstalledPackages
             .Where(x => !x.UseSharedOutputFolder)
-            .Select(p =>
-            {
-                var basePackage = packageFactory[p.PackageName!];
-                if (basePackage is null)
-                    return null;
-
-                return new PackageOutputCategory
-                {
-                    Path = Path.Combine(p.FullPath, basePackage.OutputFolderName),
-                    Name = p.DisplayName
-                };
-            })
+            .Select(packageFactory.GetPackagePair)
+            .WhereNotNull()
+            .Select(
+                pair =>
+                    new PackageOutputCategory
+                    {
+                        Path = Path.Combine(
+                            pair.InstalledPackage.FullPath!,
+                            pair.BasePackage.OutputFolderName
+                        ),
+                        Name = pair.InstalledPackage.DisplayName ?? ""
+                    }
+            )
             .ToList();
 
         packageCategories.Insert(

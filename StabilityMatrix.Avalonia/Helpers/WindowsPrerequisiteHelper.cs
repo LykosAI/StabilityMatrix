@@ -263,6 +263,8 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
             );
 
             await ArchiveHelper.Extract(TkinterZipPath, TkinterExtractPath, progress);
+
+            File.Delete(TkinterZipPath);
         }
 
         progress?.Report(

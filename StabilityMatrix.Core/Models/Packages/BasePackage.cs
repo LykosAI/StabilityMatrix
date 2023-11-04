@@ -192,6 +192,7 @@ public abstract class BasePackage
             .PipInstall(
                 new PipInstallArgs()
                     .WithTorch("==2.0.1")
+                    .WithTorchVision("==0.15.2")
                     .WithXFormers("==0.0.20")
                     .WithTorchExtraIndex("cu118"),
                 onConsoleOutput

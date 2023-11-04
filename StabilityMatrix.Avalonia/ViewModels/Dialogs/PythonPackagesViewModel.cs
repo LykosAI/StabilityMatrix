@@ -23,6 +23,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -136,13 +137,22 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
     private Task ModifySelectedPackage(PythonPackagesItemViewModel? item)
     {
         return item?.SelectedVersion != null
-            ? UpgradePackageVersion(item.Package.Name, item.SelectedVersion, item.CanDowngrade)
+            ? UpgradePackageVersion(
+                item.Package.Name,
+                item.SelectedVersion,
+                PythonPackagesItemViewModel.GetKnownIndexUrl(
+                    item.Package.Name,
+                    item.SelectedVersion
+                ),
+                isDowngrade: item.CanDowngrade
+            )
             : Task.CompletedTask;
     }
 
     private async Task UpgradePackageVersion(
         string packageName,
         string version,
+        string? extraIndexUrl = null,
         bool isDowngrade = false
     )
     {
@@ -169,13 +179,20 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             return;
         }
 
+        var args = new ProcessArgsBuilder("install", $"{packageName}=={version}");
+
+        if (extraIndexUrl != null)
+        {
+            args = args.AddArg(("--extra-index-url", extraIndexUrl));
+        }
+
         var steps = new List<IPackageStep>
         {
             new PipStep
             {
                 VenvDirectory = VenvPath,
                 WorkingDirectory = VenvPath.Parent,
-                Args = new[] { "install", $"{packageName}=={version}" }
+                Args = args
             }
         };
 

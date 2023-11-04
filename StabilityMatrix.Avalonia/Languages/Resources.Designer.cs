@@ -177,6 +177,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Downgrade.
+        /// </summary>
+        public static string Action_Downgrade {
+            get {
+                return ResourceManager.GetString("Action_Downgrade", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Edit.
         /// </summary>
         public static string Action_Edit {
@@ -506,6 +515,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Action_Update {
             get {
                 return ResourceManager.GetString("Action_Update", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upgrade.
+        /// </summary>
+        public static string Action_Upgrade {
+            get {
+                return ResourceManager.GetString("Action_Upgrade", resourceCulture);
             }
         }
         

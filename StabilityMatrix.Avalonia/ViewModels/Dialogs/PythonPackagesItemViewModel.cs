@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -83,10 +84,28 @@ public partial class PythonPackagesItemViewModel : ViewModelBase
 
                 PipShowResult = await venvRunner.PipShow(Package.Name);
 
-                if (await venvRunner.PipIndex(Package.Name) is { } pipIndexResult)
+                // Special case, include index for torch packages with + in the version
+                var torchPackages = new[] { "torch", "torchvision", "torchaudio" };
+                if (torchPackages.Contains(Package.Name) && Package.Version.Contains('+'))
                 {
-                    AvailableVersions = pipIndexResult.AvailableVersions;
-                    SelectedVersion = Package.Version;
+                    // Get the metadata for the current version (everything after the +)
+                    var indexName = Package.Version.Split('+', 2).Last();
+
+                    var indexUrl = $"https://download.pytorch.org/whl/{indexName}";
+
+                    if (await venvRunner.PipIndex(Package.Name, indexUrl) is { } pipIndexResult)
+                    {
+                        AvailableVersions = pipIndexResult.AvailableVersions;
+                        SelectedVersion = Package.Version;
+                    }
+                }
+                else
+                {
+                    if (await venvRunner.PipIndex(Package.Name) is { } pipIndexResult)
+                    {
+                        AvailableVersions = pipIndexResult.AvailableVersions;
+                        SelectedVersion = Package.Version;
+                    }
                 }
             }
         }

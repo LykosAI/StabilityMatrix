@@ -235,6 +235,13 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
 
     [UnsupportedOSPlatform("Linux")]
     [UnsupportedOSPlatform("macOS")]
+    public Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        throw new PlatformNotSupportedException();
+    }
+
+    [UnsupportedOSPlatform("Linux")]
+    [UnsupportedOSPlatform("macOS")]
     public Task InstallVcRedistIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         throw new PlatformNotSupportedException();

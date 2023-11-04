@@ -43,6 +43,8 @@ public class FooocusMre : BaseGitPackage
     public override string Disclaimer =>
         "This package may no longer receive updates from its author. It may be removed from Stability Matrix in the future.";
 
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Impossible;
+
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new()
         {

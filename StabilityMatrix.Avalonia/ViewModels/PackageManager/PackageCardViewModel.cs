@@ -67,7 +67,13 @@ public partial class PackageCardViewModel : ProgressViewModel
     private bool canUseConfigMethod;
 
     [ObservableProperty]
+    private bool canUseSymlinkMethod;
+
+    [ObservableProperty]
     private bool useSharedOutput;
+
+    [ObservableProperty]
+    private bool canUseSharedOutput;
 
     public PackageCardViewModel(
         ILogger<PackageCardViewModel> logger,
@@ -110,7 +116,11 @@ public partial class PackageCardViewModel : ProgressViewModel
             CanUseConfigMethod =
                 basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Configuration)
                 ?? false;
+            CanUseSymlinkMethod =
+                basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Symlink)
+                ?? false;
             UseSharedOutput = Package?.UseSharedOutputFolder ?? false;
+            CanUseSharedOutput = basePackage?.SharedOutputFolders != null;
         }
     }
 

@@ -27,4 +27,5 @@ public interface IPrerequisiteHelper
         params string[] args
     );
     Task<string> GetGitOutput(string? workingDirectory = null, params string[] args);
+    Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null);
 }

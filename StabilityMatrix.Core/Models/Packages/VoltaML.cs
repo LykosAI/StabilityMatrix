@@ -26,6 +26,8 @@ public class VoltaML : BaseGitPackage
             "https://github.com/LykosAI/StabilityMatrix/assets/13956642/d9a908ed-5665-41a5-a380-98458f4679a8"
         );
 
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
+
     // There are releases but the manager just downloads the latest commit anyways,
     // so we'll just limit to commit mode to be more consistent
     public override bool ShouldIgnoreReleases => true;

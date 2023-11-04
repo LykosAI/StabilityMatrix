@@ -28,6 +28,8 @@ public class UnknownPackage : BasePackage
 
     public override string OutputFolderName { get; }
 
+    public override PackageDifficulty InstallerSortOrder { get; }
+
     public override Task DownloadPackage(
         string installLocation,
         DownloadPackageVersionOptions versionOptions,

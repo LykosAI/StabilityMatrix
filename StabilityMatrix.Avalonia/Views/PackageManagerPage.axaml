@@ -80,6 +80,9 @@
                                                         Value="fa-brands fa-python" />
                                                 </MenuItem.Icon>
                                             </MenuItem>
+                                            
+                                            <Separator IsVisible="{Binding CanUseSharedOutput}" />
+                                            
                                             <MenuItem Header="{x:Static lang:Resources.Label_SharedModelStrategyShort}"
                                                       IsVisible="{Binding !IsUnknownPackage}">
                                                 <MenuItem.Icon>
@@ -87,7 +90,8 @@
                                                 </MenuItem.Icon>
                                                 <!-- ReSharper disable Xaml.RedundantResource -->
                                                 <MenuItem Header="Symlink"
-                                                          Command="{Binding ToggleSharedModelSymlink}">
+                                                          Command="{Binding ToggleSharedModelSymlink}"
+                                                          IsVisible="{Binding CanUseSymlinkMethod}">
                                                     <MenuItem.Icon>
                                                         <CheckBox IsChecked="{Binding IsSharedModelSymlink}"
                                                                   Margin="8,0,0,0"
@@ -131,7 +135,7 @@
                                             <MenuItem
                                                 Header="{x:Static lang:Resources.Label_UseSharedOutputFolder}"
                                                 Command="{Binding ToggleSharedOutput}"
-                                                IsVisible="{Binding !IsUnknownPackage}">
+                                                IsVisible="{Binding CanUseSharedOutput}">
                                                 <MenuItem.Icon>
                                                     <CheckBox Margin="8,0,0,0"
                                                               Padding="0"

@@ -246,7 +246,7 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     [SupportedOSPlatform("windows")]
     public async Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null)
     {
-        if (!File.Exists(TkinterExistsPath))
+        if (!Directory.Exists(TkinterExistsPath))
         {
             Logger.Info("Downloading Tkinter");
             await downloadService.DownloadToFileAsync(

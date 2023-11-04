@@ -23,7 +23,7 @@ public class KohyaSs : BaseGitPackage
         : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
 
     public override string Name => "kohya_ss";
-    public override string DisplayName { get; set; } = "Kohya's GUI";
+    public override string DisplayName { get; set; } = "kohya_ss";
     public override string Author => "bmaltais";
     public override string Blurb =>
         "A Windows-focused Gradio GUI for Kohya's Stable Diffusion trainers";
@@ -42,7 +42,8 @@ public class KohyaSs : BaseGitPackage
 
     public override TorchVersion GetRecommendedTorchVersion() => TorchVersion.Cuda;
 
-    public override string Disclaimer => "Nvidia GPU with at least 8GB VRAM is recommended";
+    public override string Disclaimer =>
+        "Nvidia GPU with at least 8GB VRAM is recommended. May be unstable on Linux.";
 
     public override bool OfferInOneClickInstaller => false;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;

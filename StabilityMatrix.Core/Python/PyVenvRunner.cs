@@ -381,6 +381,63 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     }
 
     /// <summary>
+    /// Run a pip index command, return result as PipIndexResult.
+    /// </summary>
+    public async Task<PipIndexResult?> PipIndex(string packageName, string? indexUrl = null)
+    {
+        if (!File.Exists(PipPath))
+        {
+            throw new FileNotFoundException("pip not found", PipPath);
+        }
+
+        SetPyvenvCfg(PyRunner.PythonDir);
+
+        var args = new ProcessArgsBuilder(
+            "-m",
+            "pip",
+            "index",
+            "versions",
+            packageName,
+            "--no-color",
+            "--disable-pip-version-check"
+        );
+
+        if (indexUrl is not null)
+        {
+            args = args.AddArg(("--index-url", indexUrl));
+        }
+
+        var result = await ProcessRunner
+            .GetProcessResultAsync(
+                PythonPath,
+                args,
+                WorkingDirectory?.FullPath,
+                EnvironmentVariables
+            )
+            .ConfigureAwait(false);
+
+        // Check return code
+        if (result.ExitCode != 0)
+        {
+            throw new ProcessException(
+                $"pip index failed with code {result.ExitCode}: {result.StandardOutput}, {result.StandardError}"
+            );
+        }
+
+        if (
+            string.IsNullOrEmpty(result.StandardOutput)
+            || result.StandardOutput!
+                .SplitLines()
+                .Any(l => l.StartsWith("ERROR: No matching distribution found"))
+        )
+        {
+            return null;
+        }
+
+        return PipIndexResult.Parse(result.StandardOutput);
+    }
+
+    /// <summary>
     /// Run a custom install command. Waits for the process to exit.
     /// workingDirectory defaults to RootPath.
     /// </summary>

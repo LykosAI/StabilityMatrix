@@ -61,6 +61,24 @@ public partial class PythonPackagesItemViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Return the known index URL for a package, currently this is torch, torchvision and torchaudio
+    /// </summary>
+    public static string? GetKnownIndexUrl(string packageName, string version)
+    {
+        var torchPackages = new[] { "torch", "torchvision", "torchaudio" };
+        if (torchPackages.Contains(packageName) && version.Contains('+'))
+        {
+            // Get the metadata for the current version (everything after the +)
+            var indexName = version.Split('+', 2).Last();
+
+            var indexUrl = $"https://download.pytorch.org/whl/{indexName}";
+            return indexUrl;
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Loads the pip show result if not already loaded
     /// </summary>
     public async Task LoadExtraInfo(DirectoryPath venvPath)
@@ -84,28 +102,13 @@ public partial class PythonPackagesItemViewModel : ViewModelBase
 
                 PipShowResult = await venvRunner.PipShow(Package.Name);
 
-                // Special case, include index for torch packages with + in the version
-                var torchPackages = new[] { "torch", "torchvision", "torchaudio" };
-                if (torchPackages.Contains(Package.Name) && Package.Version.Contains('+'))
-                {
-                    // Get the metadata for the current version (everything after the +)
-                    var indexName = Package.Version.Split('+', 2).Last();
+                // Attempt to get known index url
+                var indexUrl = GetKnownIndexUrl(Package.Name, Package.Version);
 
-                    var indexUrl = $"https://download.pytorch.org/whl/{indexName}";
-
-                    if (await venvRunner.PipIndex(Package.Name, indexUrl) is { } pipIndexResult)
-                    {
-                        AvailableVersions = pipIndexResult.AvailableVersions;
-                        SelectedVersion = Package.Version;
-                    }
-                }
-                else
+                if (await venvRunner.PipIndex(Package.Name, indexUrl) is { } pipIndexResult)
                 {
-                    if (await venvRunner.PipIndex(Package.Name) is { } pipIndexResult)
-                    {
-                        AvailableVersions = pipIndexResult.AvailableVersions;
-                        SelectedVersion = Package.Version;
-                    }
+                    AvailableVersions = pipIndexResult.AvailableVersions;
+                    SelectedVersion = Package.Version;
                 }
             }
         }

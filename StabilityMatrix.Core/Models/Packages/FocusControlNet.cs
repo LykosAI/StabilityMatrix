@@ -12,9 +12,9 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [Singleton(typeof(BasePackage))]
-public class Fooocus : BaseGitPackage
+public class FocusControlNet : BaseGitPackage
 {
-    public Fooocus(
+    public FocusControlNet(
         IGithubApiCache githubApi,
         ISettingsManager settingsManager,
         IDownloadService downloadService,
@@ -22,21 +22,20 @@ public class Fooocus : BaseGitPackage
     )
         : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
 
-    public override string Name => "Fooocus";
-    public override string DisplayName { get; set; } = "Fooocus";
-    public override string Author => "lllyasviel";
+    public override string Name => "Fooocus-ControlNet-SDXL";
+    public override string DisplayName { get; set; } = "Fooocus-ControlNet";
+    public override string Author => "fenneishi";
 
     public override string Blurb =>
-        "Fooocus is a rethinking of Stable Diffusion and Midjourney’s designs";
+        "Fooocus-ControlNet adds more control to the original Fooocus software.";
 
     public override string LicenseType => "GPL-3.0";
-    public override string LicenseUrl => "https://github.com/lllyasviel/Fooocus/blob/main/LICENSE";
+    public override string LicenseUrl =>
+        "https://github.com/fenneishi/Fooocus-ControlNet-SDXL/blob/main/LICENSE";
     public override string LaunchCommand => "launch.py";
 
     public override Uri PreviewImageUri =>
-        new(
-            "https://user-images.githubusercontent.com/19834515/261830306-f79c5981-cf80-4ee3-b06b-3fef3f8bfbc7.png"
-        );
+        new("https://github.com/fenneishi/Fooocus-ControlNet-SDXL/raw/main/asset/canny/snip.png");
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new()
@@ -147,7 +146,7 @@ public class Fooocus : BaseGitPackage
 
     public override string OutputFolderName => "outputs";
 
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
 
     public override async Task InstallPackage(
         string installLocation,

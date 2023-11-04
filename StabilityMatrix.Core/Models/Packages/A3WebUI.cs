@@ -211,7 +211,7 @@ public class A3WebUI : BaseGitPackage
                 throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);
         }
 
-        if (versionOptions.VersionTag.Contains("1.6.0"))
+        if (versionOptions.VersionTag?.Contains("1.6.0") ?? false)
         {
             await venvRunner.PipInstall("httpx==0.24.1", onConsoleOutput);
         }

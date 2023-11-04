@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -92,7 +93,16 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
 
         var packages = await venvRunner.PipList();
 
-        Dispatcher.UIThread.Post(() => packageSource.EditDiff(packages));
+        Dispatcher.UIThread.Post(() =>
+        {
+            // Backup selected package
+            var currentPackageName = SelectedPackage?.Package.Name;
+
+            packageSource.EditDiff(packages);
+
+            // Restore selected package
+            SelectedPackage = Packages.FirstOrDefault(p => p.Package.Name == currentPackageName);
+        });
     }
 
     /// <summary>

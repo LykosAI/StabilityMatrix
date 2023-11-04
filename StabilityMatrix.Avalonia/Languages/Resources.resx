@@ -741,4 +741,10 @@
   <data name="Action_Refresh" xml:space="preserve">
     <value>Refresh</value>
   </data>
+  <data name="Action_Upgrade" xml:space="preserve">
+    <value>Upgrade</value>
+  </data>
+  <data name="Action_Downgrade" xml:space="preserve">
+    <value>Downgrade</value>
+  </data>
 </root>

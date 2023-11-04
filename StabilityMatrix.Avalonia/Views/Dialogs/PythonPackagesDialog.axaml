@@ -15,6 +15,8 @@
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
     xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     d:DataContext="{x:Static mocks:DesignData.PythonPackagesViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -131,18 +133,64 @@
             HorizontalAlignment="Stretch"
             HorizontalContentAlignment="Stretch"
             Content="{Binding SelectedPackage}">
+            
+            <TransitioningContentControl.Resources>
+                <input:StandardUICommand 
+                    x:Key="ModifySelectedPackageCommand" 
+                    Command="{Binding ModifySelectedPackageCommand}"/>
+            </TransitioningContentControl.Resources>
+            
             <TransitioningContentControl.ContentTemplate>
                 <DataTemplate DataType="{x:Type vmDialogs:PythonPackagesItemViewModel}">
-                    <sg:SpacedGrid RowDefinitions="Auto,Auto,*">
+                    <sg:SpacedGrid RowDefinitions="Auto,Auto,*" RowSpacing="16">
                         <TextBlock 
                             Text="{Binding Package.Name}"
                             Theme="{DynamicResource TitleTextBlockStyle}" />
-                        <TextBlock
+
+                        <StackPanel
                             Grid.Row="1"
-                            Text="{Binding Package.Version}" />
+                            Spacing="4"
+                            Orientation="Horizontal">
+                            <ComboBox
+                                ItemsSource="{Binding AvailableVersions}"
+                                SelectedItem="{Binding SelectedVersion}"/>
+                            
+                            <!-- Upgrade button -->
+                            <Button 
+                                Command="{StaticResource ModifySelectedPackageCommand}"
+                                CommandParameter="{Binding}"
+                                ToolTip.Tip="{x:Static lang:Resources.Action_Upgrade}"
+                                IsVisible="{Binding CanUpgrade}"
+                                Padding="5,5">
+                                <fluentIcons:SymbolIcon
+                                    VerticalAlignment="Center"
+                                    FontSize="18"
+                                    Foreground="#3592c4"
+                                    Symbol="ArrowCircleUpRight" />
+                            </Button>
+                            
+                            <!-- Downgrade button -->
+                            <Button 
+                                Command="{StaticResource ModifySelectedPackageCommand}"
+                                CommandParameter="{Binding}"
+                                ToolTip.Tip="{x:Static lang:Resources.Action_Downgrade}"
+                                IsVisible="{Binding CanDowngrade}"
+                                Padding="5,5">
+                                <fluentIcons:SymbolIcon
+                                    VerticalAlignment="Center"
+                                    FontSize="18"
+                                    Symbol="ArrowCircleDownRight" />
+                            </Button>
+                            
+                        </StackPanel>
+
                         
                         <!-- Loaded content -->
-                        <StackPanel Grid.Row="2" IsVisible="{Binding !IsLoading}">
+                        <StackPanel
+                            HorizontalAlignment="Left"
+                            MaxWidth="200"
+                            Grid.Row="2" 
+                            IsVisible="{Binding !IsLoading}">
                             <TextBlock
                                 TextWrapping="WrapWithOverflow"
                                 Text="{Binding PipShowResult.Author}" />

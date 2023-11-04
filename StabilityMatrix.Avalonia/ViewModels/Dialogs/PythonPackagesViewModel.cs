@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -17,8 +20,10 @@ using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -89,7 +94,16 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
 
         var packages = await venvRunner.PipList();
 
-        Dispatcher.UIThread.Post(() => packageSource.EditDiff(packages));
+        Dispatcher.UIThread.Post(() =>
+        {
+            // Backup selected package
+            var currentPackageName = SelectedPackage?.Package.Name;
+
+            packageSource.EditDiff(packages);
+
+            // Restore selected package
+            SelectedPackage = Packages.FirstOrDefault(p => p.Package.Name == currentPackageName);
+        });
     }
 
     /// <summary>
@@ -117,6 +131,83 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
     public void AddPackages(params PipPackageInfo[] packages)
     {
         packageSource.AddOrUpdate(packages);
+    }
+
+    [RelayCommand]
+    private Task ModifySelectedPackage(PythonPackagesItemViewModel? item)
+    {
+        return item?.SelectedVersion != null
+            ? UpgradePackageVersion(
+                item.Package.Name,
+                item.SelectedVersion,
+                PythonPackagesItemViewModel.GetKnownIndexUrl(
+                    item.Package.Name,
+                    item.SelectedVersion
+                ),
+                isDowngrade: item.CanDowngrade
+            )
+            : Task.CompletedTask;
+    }
+
+    private async Task UpgradePackageVersion(
+        string packageName,
+        string version,
+        string? extraIndexUrl = null,
+        bool isDowngrade = false
+    )
+    {
+        if (VenvPath is null || SelectedPackage?.Package is not { } package)
+            return;
+
+        // Confirmation dialog
+        var dialog = DialogHelper.CreateMarkdownDialog(
+            isDowngrade
+                ? $"Downgrade **{package.Name}** to **{version}**?"
+                : $"Upgrade **{package.Name}** to **{version}**?",
+            Resources.Label_ConfirmQuestion
+        );
+
+        dialog.PrimaryButtonText = isDowngrade
+            ? Resources.Action_Downgrade
+            : Resources.Action_Upgrade;
+        dialog.IsPrimaryButtonEnabled = true;
+        dialog.DefaultButton = ContentDialogButton.Primary;
+        dialog.CloseButtonText = Resources.Action_Cancel;
+
+        if (await dialog.ShowAsync() is not ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        var args = new ProcessArgsBuilder("install", $"{packageName}=={version}");
+
+        if (extraIndexUrl != null)
+        {
+            args = args.AddArg(("--extra-index-url", extraIndexUrl));
+        }
+
+        var steps = new List<IPackageStep>
+        {
+            new PipStep
+            {
+                VenvDirectory = VenvPath,
+                WorkingDirectory = VenvPath.Parent,
+                Args = args
+            }
+        };
+
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            ModificationCompleteMessage = isDowngrade
+                ? $"Downgraded Python Package '{packageName}' to {version}"
+                : $"Upgraded Python Package '{packageName}' to {version}"
+        };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+        await runner.ExecuteSteps(steps);
+
+        // Refresh
+        RefreshBackground().SafeFireAndForget();
     }
 
     [RelayCommand]
@@ -152,7 +243,6 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         var runner = new PackageModificationRunner
         {
             ShowDialogOnStart = true,
-            HideCloseButton = true,
             ModificationCompleteMessage = $"Installed Python Package '{packageName}'"
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
@@ -196,7 +286,6 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         var runner = new PackageModificationRunner
         {
             ShowDialogOnStart = true,
-            HideCloseButton = true,
             ModificationCompleteMessage = $"Uninstalled Python Package '{package.Name}'"
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);

@@ -40,6 +40,12 @@ public abstract class BasePackage
 
     public abstract string OutputFolderName { get; }
 
+    public abstract IEnumerable<TorchVersion> AvailableTorchVersions { get; }
+
+    public virtual bool IsCompatible => GetRecommendedTorchVersion() != TorchVersion.Cpu;
+
+    public abstract PackageDifficulty InstallerSortOrder { get; }
+
     public abstract Task DownloadPackage(
         string installLocation,
         DownloadPackageVersionOptions versionOptions,
@@ -99,10 +105,6 @@ public abstract class BasePackage
 
     public abstract Task SetupOutputFolderLinks(DirectoryPath installDirectory);
     public abstract Task RemoveOutputFolderLinks(DirectoryPath installDirectory);
-
-    public abstract IEnumerable<TorchVersion> AvailableTorchVersions { get; }
-
-    public virtual bool IsCompatible => GetRecommendedTorchVersion() != TorchVersion.Cpu;
 
     public virtual TorchVersion GetRecommendedTorchVersion()
     {

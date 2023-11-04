@@ -45,9 +45,14 @@ public class KohyaSs : BaseGitPackage
     public override string Disclaimer =>
         "Nvidia GPU with at least 8GB VRAM is recommended. May be unstable on Linux.";
 
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.UltraNightmare;
+
     public override bool OfferInOneClickInstaller => false;
-    public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
+    public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
     public override IEnumerable<TorchVersion> AvailableTorchVersions => new[] { TorchVersion.Cuda };
+    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
+        new[] { SharedFolderMethod.None };
+
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new()
         {

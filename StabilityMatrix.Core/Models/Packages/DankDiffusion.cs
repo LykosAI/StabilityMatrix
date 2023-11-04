@@ -32,6 +32,7 @@ public class DankDiffusion : BaseGitPackage
     public override Uri PreviewImageUri { get; }
 
     public override string OutputFolderName { get; }
+    public override PackageDifficulty InstallerSortOrder { get; }
 
     public override Task InstallPackage(
         string installLocation,

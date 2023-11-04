@@ -19,7 +19,7 @@ public class PackageFactory : IPackageFactory
 
     public IEnumerable<BasePackage> GetAllAvailablePackages()
     {
-        return basePackages.Values;
+        return basePackages.Values.OrderBy(p => p.InstallerSortOrder).ThenBy(p => p.DisplayName);
     }
 
     public BasePackage? FindPackageByName(string? packageName)

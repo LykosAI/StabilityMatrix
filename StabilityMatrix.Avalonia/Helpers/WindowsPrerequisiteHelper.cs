@@ -23,6 +23,8 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     private readonly ISettingsManager settingsManager;
 
     private const string VcRedistDownloadUrl = "https://aka.ms/vs/16/release/vc_redist.x64.exe";
+    private const string TkinterDownloadUrl =
+        "https://cdn.lykos.ai/tkinter-cpython-embedded-3.10.11-win-x64.zip";
 
     private string HomeDir => settingsManager.LibraryDir;
 
@@ -45,6 +47,7 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     private string GitExePath => Path.Combine(PortableGitInstallDir, "bin", "git.exe");
     private string TkinterZipPath => Path.Combine(AssetsDir, "tkinter.zip");
     private string TkinterExtractPath => PythonDir;
+    private string TkinterExistsPath => Path.Combine(PythonDir, "tkinter");
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
 
     public bool IsPythonInstalled => File.Exists(PythonDllPath);
@@ -243,12 +246,32 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     [SupportedOSPlatform("windows")]
     public async Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null)
     {
-        if (!File.Exists(TkinterZipPath))
+        if (!File.Exists(TkinterExistsPath))
         {
-            await Assets.TkinterZip.ExtractTo(TkinterZipPath);
+            Logger.Info("Downloading Tkinter");
+            await downloadService.DownloadToFileAsync(
+                TkinterDownloadUrl,
+                TkinterZipPath,
+                progress: progress
+            );
+            progress?.Report(
+                new ProgressReport(
+                    progress: 1f,
+                    message: "Tkinter download complete",
+                    type: ProgressType.Download
+                )
+            );
+
+            await ArchiveHelper.Extract(TkinterZipPath, TkinterExtractPath, progress);
         }
 
-        await ArchiveHelper.Extract(TkinterZipPath, TkinterExtractPath, progress);
+        progress?.Report(
+            new ProgressReport(
+                progress: 1f,
+                message: "Tkinter install complete",
+                type: ProgressType.Generic
+            )
+        );
     }
 
     public async Task InstallGitIfNecessary(IProgress<ProgressReport>? progress = null)

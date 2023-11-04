@@ -23,11 +23,11 @@ public class InvokeAI : BaseGitPackage
     public override string DisplayName { get; set; } = "InvokeAI";
     public override string Author => "invoke-ai";
     public override string LicenseType => "Apache-2.0";
-
     public override string LicenseUrl => "https://github.com/invoke-ai/InvokeAI/blob/main/LICENSE";
 
     public override string Blurb => "Professional Creative Tools for Stable Diffusion";
     public override string LaunchCommand => "invokeai-web";
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Nightmare;
 
     public override IReadOnlyList<string> ExtraLaunchCommands =>
         new[]

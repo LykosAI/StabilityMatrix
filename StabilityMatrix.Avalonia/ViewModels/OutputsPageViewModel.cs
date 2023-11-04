@@ -152,6 +152,11 @@ public partial class OutputsPageViewModel : PageViewModelBase
             .Where(x => !x.UseSharedOutputFolder)
             .Select(packageFactory.GetPackagePair)
             .WhereNotNull()
+            .Where(
+                p =>
+                    p.BasePackage.SharedOutputFolders != null
+                    && p.BasePackage.SharedOutputFolders.Any()
+            )
             .Select(
                 pair =>
                     new PackageOutputCategory

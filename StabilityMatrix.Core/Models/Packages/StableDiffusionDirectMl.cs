@@ -34,6 +34,8 @@ public class StableDiffusionDirectMl : BaseGitPackage
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
+
     public StableDiffusionDirectMl(
         IGithubApiCache githubApi,
         ISettingsManager settingsManager,

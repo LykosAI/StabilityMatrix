@@ -31,6 +31,8 @@ public class A3WebUI : BaseGitPackage
         new("https://github.com/AUTOMATIC1111/stable-diffusion-webui/raw/master/screenshot.png");
     public string RelativeArgsDefinitionScriptPath => "modules.cmd_args";
 
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
+
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
     public A3WebUI(
@@ -224,10 +226,6 @@ public class A3WebUI : BaseGitPackage
         await venvRunner
             .PipInstallFromRequirements(requirements, onConsoleOutput, excludes: "torch")
             .ConfigureAwait(false);
-
-        progress?.Report(
-            new ProgressReport(1f, "Installing Package Requirements", isIndeterminate: false)
-        );
 
         progress?.Report(new ProgressReport(-1f, "Updating configuration", isIndeterminate: true));
 

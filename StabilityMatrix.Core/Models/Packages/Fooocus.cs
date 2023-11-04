@@ -147,6 +147,8 @@ public class Fooocus : BaseGitPackage
 
     public override string OutputFolderName => "outputs";
 
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
+
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,

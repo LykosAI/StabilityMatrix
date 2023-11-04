@@ -34,6 +34,7 @@ public class VladAutomatic : BaseGitPackage
     public override bool ShouldIgnoreReleases => true;
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm };

@@ -174,7 +174,7 @@ public class Fooocus : BaseGitPackage
             {
                 TorchVersion.Cpu => "cpu",
                 TorchVersion.Cuda => "cu121",
-                TorchVersion.Rocm => "rocm5.4.2",
+                TorchVersion.Rocm => "rocm5.6",
                 _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
             };
 

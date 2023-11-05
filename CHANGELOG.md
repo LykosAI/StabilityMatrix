@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added [Stable Diffusion WebUI/UX](https://github.com/anapnoe/stable-diffusion-webui-ux) package
 - Added [Stable Diffusion WebUI-DirectML](https://github.com/lshqqytiger/stable-diffusion-webui-directml) package
 - Added [kohya_ss](https://github.com/bmaltais/kohya_ss) package
+- Added [Fooocus-ControlNet-SDXL](https://github.com/fenneishi/Fooocus-ControlNet-SDXL) package
 - Added GPU compatibility badges to the installers
 - Added filtering of "incompatible" packages (ones that do not support your GPU) to all installers 
   - This can be overridden by checking the new "Show All Packages" checkbox
@@ -35,6 +36,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed Inference Prompt Completion window sometimes not showing while typing
 - Fixed "Show Model Images" toggle on Checkpoints page sometimes displaying cut-off model images
 - Fixed missing httpx package during Automatic1111 install
+- Fixed some instances of localized text being cut off from controls being too small
 
 ## v2.5.6
 ### Added

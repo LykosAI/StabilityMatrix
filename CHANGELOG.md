@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.5.7
 ### Fixed
 - Fixed error `got an unexpected keyword argument 'socket_options'` on fresh installs of Automatic1111 Stable Diffusion WebUI
+due to missing httpx dependency specification from gradio
 
 ## v2.5.6
 ### Added

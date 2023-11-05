@@ -7,9 +7,11 @@ using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Views;
 
+[Singleton]
 public partial class InferencePage : UserControlBase
 {
     private Button? _addButton;

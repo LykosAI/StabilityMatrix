@@ -39,42 +39,25 @@ using Polly.Extensions.Http;
 using Polly.Timeout;
 using Refit;
 using Sentry;
-using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
-using StabilityMatrix.Avalonia.Models;
-using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
-using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
-using StabilityMatrix.Avalonia.ViewModels.Dialogs;
-using StabilityMatrix.Avalonia.ViewModels.Inference;
-using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
-using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Avalonia.Views;
-using StabilityMatrix.Avalonia.Views.Dialogs;
-using StabilityMatrix.Avalonia.Views.Inference;
-using StabilityMatrix.Avalonia.Views.Settings;
 using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Helper.Cache;
-using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.FileInterfaces;
-using StabilityMatrix.Core.Models.PackageModification;
-using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Settings;
-using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
-using StabilityMatrix.Core.Updater;
 using Application = Avalonia.Application;
 using DrawingColor = System.Drawing.Color;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
@@ -249,18 +232,6 @@ public sealed class App : Application
 
     internal static void ConfigurePageViewModels(IServiceCollection services)
     {
-        services
-            .AddSingleton<PackageManagerViewModel>()
-            .AddSingleton<SettingsViewModel>()
-            .AddSingleton<InferenceSettingsViewModel>()
-            .AddSingleton<CheckpointBrowserViewModel>()
-            .AddSingleton<CheckpointsPageViewModel>()
-            .AddSingleton<NewCheckpointsPageViewModel>()
-            .AddSingleton<LaunchPageViewModel>()
-            .AddSingleton<ProgressManagerViewModel>()
-            .AddSingleton<InferenceViewModel>()
-            .AddSingleton<ProgressManagerViewModel>();
-
         services.AddSingleton<MainWindowViewModel>(
             provider =>
                 new MainWindowViewModel(
@@ -278,6 +249,7 @@ public sealed class App : Application
                         provider.GetRequiredService<PackageManagerViewModel>(),
                         provider.GetRequiredService<CheckpointsPageViewModel>(),
                         provider.GetRequiredService<CheckpointBrowserViewModel>(),
+                        provider.GetRequiredService<OutputsPageViewModel>()
                     },
                     FooterPages = { provider.GetRequiredService<SettingsViewModel>() }
                 }
@@ -287,186 +259,103 @@ public sealed class App : Application
         services.AddSingleton<IDisposable>(p => p.GetRequiredService<LaunchPageViewModel>());
     }
 
-    internal static void ConfigureDialogViewModels(IServiceCollection services)
+    internal static void ConfigureDialogViewModels(
+        IServiceCollection services,
+        Type[] exportedTypes
+    )
     {
-        // Dialog view models (transient)
-        services.AddTransient<InstallerViewModel>();
-        services.AddTransient<OneClickInstallViewModel>();
-        services.AddTransient<SelectModelVersionViewModel>();
-        services.AddTransient<SelectDataDirectoryViewModel>();
-        services.AddTransient<LaunchOptionsViewModel>();
-        services.AddTransient<ExceptionViewModel>();
-        services.AddTransient<EnvVarsViewModel>();
-        services.AddTransient<ImageViewerViewModel>();
-        services.AddTransient<PackageImportViewModel>();
-        services.AddTransient<InferenceConnectionHelpViewModel>();
-        services.AddTransient<DownloadResourceViewModel>();
-
-        // Dialog view models (singleton)
-        services.AddSingleton<FirstLaunchSetupViewModel>();
-        services.AddSingleton<UpdateViewModel>();
-
-        // Other transients (usually sub view models)
-        services.AddTransient<CheckpointFolder>();
-        services.AddTransient<CheckpointFile>();
-        services.AddTransient<InferenceTextToImageViewModel>();
-        services.AddTransient<InferenceImageUpscaleViewModel>();
-        services.AddTransient<CheckpointBrowserCardViewModel>();
-        services.AddTransient<PackageCardViewModel>();
-
-        // Global progress
-        services.AddSingleton<ProgressManagerViewModel>();
-
-        // Controls
-        services.AddTransient<RefreshBadgeViewModel>();
-
-        // Inference controls
-        services.AddTransient<SeedCardViewModel>();
-        services.AddTransient<SamplerCardViewModel>();
-        services.AddTransient<UpscalerCardViewModel>();
-        services.AddTransient<ImageGalleryCardViewModel>();
-        services.AddTransient<ImageFolderCardViewModel>();
-        services.AddTransient<PromptCardViewModel>();
-        services.AddTransient<StackCardViewModel>();
-        services.AddTransient<StackExpanderViewModel>();
-        services.AddTransient<ModelCardViewModel>();
-        services.AddTransient<BatchSizeCardViewModel>();
-        services.AddTransient<SelectImageCardViewModel>();
-        services.AddTransient<SharpenCardViewModel>();
-        services.AddTransient<FreeUCardViewModel>();
-
         // Dialog factory
-        services.AddSingleton<ServiceManager<ViewModelBase>>(
-            provider =>
-                new ServiceManager<ViewModelBase>()
-                    .Register(provider.GetRequiredService<InstallerViewModel>)
-                    .Register(provider.GetRequiredService<OneClickInstallViewModel>)
-                    .Register(provider.GetRequiredService<SelectModelVersionViewModel>)
-                    .Register(provider.GetRequiredService<SelectDataDirectoryViewModel>)
-                    .Register(provider.GetRequiredService<LaunchOptionsViewModel>)
-                    .Register(provider.GetRequiredService<UpdateViewModel>)
-                    .Register(provider.GetRequiredService<CheckpointBrowserCardViewModel>)
-                    .Register(provider.GetRequiredService<CheckpointFolder>)
-                    .Register(provider.GetRequiredService<CheckpointFile>)
-                    .Register(provider.GetRequiredService<PackageCardViewModel>)
-                    .Register(provider.GetRequiredService<RefreshBadgeViewModel>)
-                    .Register(provider.GetRequiredService<ExceptionViewModel>)
-                    .Register(provider.GetRequiredService<EnvVarsViewModel>)
-                    .Register(provider.GetRequiredService<ProgressManagerViewModel>)
-                    .Register(provider.GetRequiredService<InferenceTextToImageViewModel>)
-                    .Register(provider.GetRequiredService<InferenceImageUpscaleViewModel>)
-                    .Register(provider.GetRequiredService<SeedCardViewModel>)
-                    .Register(provider.GetRequiredService<SamplerCardViewModel>)
-                    .Register(provider.GetRequiredService<ImageGalleryCardViewModel>)
-                    .Register(provider.GetRequiredService<ImageFolderCardViewModel>)
-                    .Register(provider.GetRequiredService<PromptCardViewModel>)
-                    .Register(provider.GetRequiredService<StackCardViewModel>)
-                    .Register(provider.GetRequiredService<StackExpanderViewModel>)
-                    .Register(provider.GetRequiredService<UpscalerCardViewModel>)
-                    .Register(provider.GetRequiredService<ModelCardViewModel>)
-                    .Register(provider.GetRequiredService<BatchSizeCardViewModel>)
-                    .Register(provider.GetRequiredService<ImageViewerViewModel>)
-                    .Register(provider.GetRequiredService<FirstLaunchSetupViewModel>)
-                    .Register(provider.GetRequiredService<PackageImportViewModel>)
-                    .Register(provider.GetRequiredService<SelectImageCardViewModel>)
-                    .Register(provider.GetRequiredService<InferenceConnectionHelpViewModel>)
-                    .Register(provider.GetRequiredService<SharpenCardViewModel>)
-                    .Register(provider.GetRequiredService<DownloadResourceViewModel>)
-                    .Register(provider.GetRequiredService<FreeUCardViewModel>)
-        );
+        services.AddSingleton<ServiceManager<ViewModelBase>>(provider =>
+        {
+            var serviceManager = new ServiceManager<ViewModelBase>();
+
+            var serviceManagedTypes = exportedTypes
+                .Select(
+                    t =>
+                        new
+                        {
+                            t,
+                            attributes = t.GetCustomAttributes(
+                                typeof(ManagedServiceAttribute),
+                                true
+                            )
+                        }
+                )
+                .Where(t1 => t1.attributes is { Length: > 0 })
+                .Select(t1 => t1.t)
+                .ToList();
+
+            foreach (var type in serviceManagedTypes)
+            {
+                ViewModelBase? GetInstance() => provider.GetRequiredService(type) as ViewModelBase;
+                serviceManager.Register(type, GetInstance);
+            }
+
+            return serviceManager;
+        });
     }
 
-    internal static void ConfigureViews(IServiceCollection services)
-    {
-        // Pages
-        services.AddSingleton<CheckpointsPage>();
-        services.AddSingleton<LaunchPageView>();
-        services.AddSingleton<PackageManagerPage>();
-        services.AddSingleton<SettingsPage>();
-        services.AddSingleton<InferenceSettingsPage>();
-        services.AddSingleton<CheckpointBrowserPage>();
-        services.AddSingleton<ProgressManagerPage>();
-        services.AddSingleton<InferencePage>();
-        services.AddSingleton<NewCheckpointsPage>();
-
-        // Inference tabs
-        services.AddTransient<InferenceTextToImageView>();
-        services.AddTransient<InferenceImageUpscaleView>();
-
-        // Inference controls
-        services.AddTransient<ImageGalleryCard>();
-        services.AddTransient<ImageFolderCard>();
-        services.AddTransient<SeedCard>();
-        services.AddTransient<SamplerCard>();
-        services.AddTransient<PromptCard>();
-        services.AddTransient<StackCard>();
-        services.AddTransient<StackExpander>();
-        services.AddTransient<UpscalerCard>();
-        services.AddTransient<ModelCard>();
-        services.AddTransient<BatchSizeCard>();
-        services.AddTransient<SelectImageCard>();
-        services.AddTransient<SharpenCard>();
-        services.AddTransient<FreeUCard>();
-
-        // Dialogs
-        services.AddTransient<SelectDataDirectoryDialog>();
-        services.AddTransient<LaunchOptionsDialog>();
-        services.AddTransient<UpdateDialog>();
-        services.AddTransient<ExceptionDialog>();
-        services.AddTransient<EnvVarsDialog>();
-        services.AddTransient<ImageViewerDialog>();
-        services.AddTransient<PackageImportDialog>();
-        services.AddTransient<InferenceConnectionHelpDialog>();
-        services.AddTransient<DownloadResourceDialog>();
-
-        // Controls
-        services.AddTransient<RefreshBadge>();
-
-        // Windows
-        services.AddSingleton<MainWindow>();
-        services.AddSingleton<FirstLaunchSetupWindow>();
-    }
-
-    internal static void ConfigurePackages(IServiceCollection services)
-    {
-        services.AddSingleton<BasePackage, A3WebUI>();
-        services.AddSingleton<BasePackage, Fooocus>();
-        services.AddSingleton<BasePackage, VladAutomatic>();
-        services.AddSingleton<BasePackage, InvokeAI>();
-        services.AddSingleton<BasePackage, ComfyUI>();
-        services.AddSingleton<BasePackage, VoltaML>();
-        services.AddSingleton<BasePackage, FooocusMre>();
-    }
-
-    private static IServiceCollection ConfigureServices()
+    internal static IServiceCollection ConfigureServices()
     {
         var services = new ServiceCollection();
-
         services.AddMemoryCache();
 
+        var exportedTypes = AppDomain.CurrentDomain
+            .GetAssemblies()
+            .Where(a => a.FullName?.StartsWith("StabilityMatrix") == true)
+            .SelectMany(a => a.GetExportedTypes())
+            .ToArray();
+
+        var transientTypes = exportedTypes
+            .Select(
+                t => new { t, attributes = t.GetCustomAttributes(typeof(TransientAttribute), true) }
+            )
+            .Where(
+                t1 =>
+                    t1.attributes is { Length: > 0 }
+                    && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
+            )
+            .Select(t1 => new { Type = t1.t, Attribute = (TransientAttribute)t1.attributes[0] });
+
+        foreach (var typePair in transientTypes)
+        {
+            if (typePair.Attribute.InterfaceType is null)
+            {
+                services.AddTransient(typePair.Type);
+            }
+            else
+            {
+                services.AddTransient(typePair.Attribute.InterfaceType, typePair.Type);
+            }
+        }
+
+        var singletonTypes = exportedTypes
+            .Select(
+                t => new { t, attributes = t.GetCustomAttributes(typeof(SingletonAttribute), true) }
+            )
+            .Where(
+                t1 =>
+                    t1.attributes is { Length: > 0 }
+                    && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
+            )
+            .Select(t1 => new { Type = t1.t, Attribute = (SingletonAttribute)t1.attributes[0] });
+
+        foreach (var typePair in singletonTypes)
+        {
+            if (typePair.Attribute.InterfaceType is null)
+            {
+                services.AddSingleton(typePair.Type);
+            }
+            else
+            {
+                services.AddSingleton(typePair.Attribute.InterfaceType, typePair.Type);
+            }
+        }
+
         ConfigurePageViewModels(services);
-        ConfigureDialogViewModels(services);
-        ConfigurePackages(services);
+        ConfigureDialogViewModels(services, exportedTypes);
 
         // Other services
-        services.AddSingleton<ISettingsManager, SettingsManager>();
-        services.AddSingleton<ISharedFolders, SharedFolders>();
-        services.AddSingleton<SharedState>();
-        services.AddSingleton<ModelFinder>();
-        services.AddSingleton<IPackageFactory, PackageFactory>();
-        services.AddSingleton<IDownloadService, DownloadService>();
-        services.AddSingleton<IGithubApiCache, GithubApiCache>();
-        services.AddSingleton<INotificationService, NotificationService>();
-        services.AddSingleton<IPyRunner, PyRunner>();
-        services.AddSingleton<IUpdateHelper, UpdateHelper>();
-        services.AddSingleton<INavigationService, NavigationService>();
-        services.AddSingleton<IInferenceClientManager, InferenceClientManager>();
-        services.AddSingleton<ICompletionProvider, CompletionProvider>();
-        services.AddSingleton<ITokenizerProvider, TokenizerProvider>();
-        services.AddSingleton<IModelIndexService, ModelIndexService>();
-        services.AddTransient<IPackageModificationRunner, PackageModificationRunner>();
-        services.AddSingleton<IImageIndexService, ImageIndexService>();
-
         services.AddSingleton<ITrackedDownloadService, TrackedDownloadService>();
         services.AddSingleton<IDisposable>(
             provider => (IDisposable)provider.GetRequiredService<ITrackedDownloadService>()
@@ -494,13 +383,7 @@ public sealed class App : Application
             services.AddSingleton<IPrerequisiteHelper, UnixPrerequisiteHelper>();
         }
 
-        ConfigureViews(services);
-
-        if (Design.IsDesignMode)
-        {
-            services.AddSingleton<ILiteDbContext, MockLiteDbContext>();
-        }
-        else
+        if (!Design.IsDesignMode)
         {
             services.AddSingleton<ILiteDbContext, LiteDbContext>();
             services.AddSingleton<IDisposable>(p => p.GetRequiredService<ILiteDbContext>());

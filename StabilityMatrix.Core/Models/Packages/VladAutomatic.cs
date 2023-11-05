@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using NLog;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -14,6 +15,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
+[Singleton(typeof(BasePackage))]
 public class VladAutomatic : BaseGitPackage
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -32,9 +34,10 @@ public class VladAutomatic : BaseGitPackage
     public override bool ShouldIgnoreReleases => true;
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Rocm, TorchVersion.DirectMl, TorchVersion.Cuda };
+        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm };
 
     public VladAutomatic(
         IGithubApiCache githubApi,
@@ -66,6 +69,19 @@ public class VladAutomatic : BaseGitPackage
             [SharedFolderType.LyCORIS] = new[] { "models/LyCORIS" },
             [SharedFolderType.ControlNet] = new[] { "models/ControlNet" }
         };
+
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+        new()
+        {
+            [SharedOutputType.Text2Img] = new[] { "outputs/text" },
+            [SharedOutputType.Img2Img] = new[] { "outputs/image" },
+            [SharedOutputType.Extras] = new[] { "outputs/extras" },
+            [SharedOutputType.Img2ImgGrids] = new[] { "outputs/grids" },
+            [SharedOutputType.Text2ImgGrids] = new[] { "outputs/grids" },
+            [SharedOutputType.Saved] = new[] { "outputs/save" },
+        };
+
+    public override string OutputFolderName => "outputs";
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
     public override List<LaunchOptionDefinition> LaunchOptions =>
@@ -161,6 +177,7 @@ public class VladAutomatic : BaseGitPackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
     )
@@ -225,6 +242,7 @@ public class VladAutomatic : BaseGitPackage
             await PrerequisiteHelper
                 .RunGit(
                     installDir.Parent ?? "",
+                    null,
                     "clone",
                     "https://github.com/vladmandic/automatic",
                     installDir.Name
@@ -232,7 +250,7 @@ public class VladAutomatic : BaseGitPackage
                 .ConfigureAwait(false);
 
             await PrerequisiteHelper
-                .RunGit(installLocation, "checkout", downloadOptions.CommitHash)
+                .RunGit(installLocation, null, "checkout", downloadOptions.CommitHash)
                 .ConfigureAwait(false);
         }
         else if (!string.IsNullOrWhiteSpace(downloadOptions.BranchName))
@@ -240,6 +258,7 @@ public class VladAutomatic : BaseGitPackage
             await PrerequisiteHelper
                 .RunGit(
                     installDir.Parent ?? "",
+                    null,
                     "clone",
                     "-b",
                     downloadOptions.BranchName,
@@ -288,16 +307,12 @@ public class VladAutomatic : BaseGitPackage
     public override async Task<InstalledPackageVersion> Update(
         InstalledPackage installedPackage,
         TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         bool includePrerelease = false,
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        if (installedPackage.Version is null)
-        {
-            throw new Exception("Version is null");
-        }
-
         progress?.Report(
             new ProgressReport(
                 -1f,
@@ -308,7 +323,12 @@ public class VladAutomatic : BaseGitPackage
         );
 
         await PrerequisiteHelper
-            .RunGit(installedPackage.FullPath, "checkout", installedPackage.Version.InstalledBranch)
+            .RunGit(
+                installedPackage.FullPath,
+                onConsoleOutput,
+                "checkout",
+                versionOptions.BranchName
+            )
             .ConfigureAwait(false);
 
         var venvRunner = new PyVenvRunner(Path.Combine(installedPackage.FullPath!, "venv"));
@@ -327,7 +347,7 @@ public class VladAutomatic : BaseGitPackage
 
             return new InstalledPackageVersion
             {
-                InstalledBranch = installedPackage.Version.InstalledBranch,
+                InstalledBranch = versionOptions.BranchName,
                 InstalledCommitSha = output.Replace(Environment.NewLine, "").Replace("\n", "")
             };
         }

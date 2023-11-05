@@ -50,6 +50,7 @@ public class InstalledPackage : IJsonOnDeserialized
     public bool UpdateAvailable { get; set; }
     public TorchVersion? PreferredTorchVersion { get; set; }
     public SharedFolderMethod? PreferredSharedFolderMethod { get; set; }
+    public bool UseSharedOutputFolder { get; set; }
 
     /// <summary>
     /// Get the launch args host option value.

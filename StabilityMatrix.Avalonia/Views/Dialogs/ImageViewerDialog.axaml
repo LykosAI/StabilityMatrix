@@ -106,6 +106,20 @@
                         Grid.Row="1"
                         Text="{Binding NegativePrompt}" />
                 </Grid>
+                
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Text="Model" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <SelectableTextBlock
+                        Grid.Row="1"
+                        Text="{Binding ModelName}" />
+                </Grid>
+                
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Text="Seed" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <SelectableTextBlock
+                        Grid.Row="1"
+                        Text="{Binding Seed}" />
+                </Grid>
             </StackPanel>
 
         </ui:TeachingTip>

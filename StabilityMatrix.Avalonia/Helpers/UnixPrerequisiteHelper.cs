@@ -126,7 +126,11 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         }
     }
 
-    public async Task RunGit(string? workingDirectory = null, params string[] args)
+    public async Task RunGit(
+        string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null,
+        params string[] args
+    )
     {
         var command =
             args.Length == 0 ? "git" : "git " + string.Join(" ", args.Select(ProcessRunner.Quote));
@@ -227,6 +231,13 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
     public Task<string> GetGitOutput(string? workingDirectory = null, params string[] args)
     {
         throw new NotImplementedException();
+    }
+
+    [UnsupportedOSPlatform("Linux")]
+    [UnsupportedOSPlatform("macOS")]
+    public Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        throw new PlatformNotSupportedException();
     }
 
     [UnsupportedOSPlatform("Linux")]

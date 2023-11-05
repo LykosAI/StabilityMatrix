@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Converters.Json;
 
@@ -6,7 +7,7 @@ namespace StabilityMatrix.Core.Models.FileInterfaces;
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 [JsonConverter(typeof(StringJsonConverter<DirectoryPath>))]
-public class DirectoryPath : FileSystemPath, IPathObject
+public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystemPath>
 {
     private DirectoryInfo? info;
 
@@ -133,7 +134,49 @@ public class DirectoryPath : FileSystemPath, IPathObject
     public FilePath JoinFile(params FilePath[] paths) =>
         new(Path.Combine(FullPath, Path.Combine(paths.Select(path => path.FullPath).ToArray())));
 
+    /// <summary>
+    /// Returns an enumerable collection of files that matches
+    /// a specified search pattern and search subdirectory option.
+    /// </summary>
+    public IEnumerable<FilePath> EnumerateFiles(
+        string searchPattern = "*",
+        SearchOption searchOption = SearchOption.TopDirectoryOnly
+    ) => Info.EnumerateFiles(searchPattern, searchOption).Select(file => new FilePath(file));
+
+    /// <summary>
+    /// Returns an enumerable collection of directories that matches
+    /// a specified search pattern and search subdirectory option.
+    /// </summary>
+    public IEnumerable<DirectoryPath> EnumerateDirectories(
+        string searchPattern = "*",
+        SearchOption searchOption = SearchOption.TopDirectoryOnly
+    ) =>
+        Info.EnumerateDirectories(searchPattern, searchOption)
+            .Select(directory => new DirectoryPath(directory));
+
     public override string ToString() => FullPath;
+
+    /// <inheritdoc />
+    public IEnumerator<FileSystemPath> GetEnumerator()
+    {
+        return Info.EnumerateFileSystemInfos("*", SearchOption.TopDirectoryOnly)
+            .Select<FileSystemInfo, FileSystemPath>(
+                fsInfo =>
+                    fsInfo switch
+                    {
+                        FileInfo file => new FilePath(file),
+                        DirectoryInfo directory => new DirectoryPath(directory),
+                        _ => throw new InvalidOperationException("Unknown file system info type")
+                    }
+            )
+            .GetEnumerator();
+    }
+
+    /// <inheritdoc />
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
     // DirectoryPath + DirectoryPath = DirectoryPath
     public static DirectoryPath operator +(DirectoryPath path, DirectoryPath other) =>

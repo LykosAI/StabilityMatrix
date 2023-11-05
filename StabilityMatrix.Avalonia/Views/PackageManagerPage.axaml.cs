@@ -5,10 +5,12 @@ using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Navigation;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Packages;
 
 namespace StabilityMatrix.Avalonia.Views;
 
+[Singleton]
 public partial class PackageManagerPage : UserControlBase
 {
     public PackageManagerPage()

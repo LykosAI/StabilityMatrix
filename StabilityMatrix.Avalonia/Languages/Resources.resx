@@ -379,7 +379,7 @@
     <value>Drop file here to import</value>
   </data>
   <data name="Label_ImportAsConnected" xml:space="preserve">
-    <value>Import as Connected</value>
+    <value>Import with Metadata</value>
   </data>
   <data name="Label_ImportAsConnectedExplanation" xml:space="preserve">
     <value>Search for connected metadata on new local imports</value>
@@ -678,7 +678,73 @@
   <data name="Action_RestoreDefaultLayout" xml:space="preserve">
     <value>Restore Default Layout</value>
   </data>
+  <data name="Label_UseSharedOutputFolder" xml:space="preserve">
+    <value>Output Sharing</value>
+  </data>
   <data name="Label_BatchIndex" xml:space="preserve">
     <value>Batch Index</value>
+  </data>
+  <data name="Action_Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Action_OpenInViewer" xml:space="preserve">
+    <value>Open in Image Viewer</value>
+  </data>
+  <data name="Label_NumImagesSelected" xml:space="preserve">
+    <value>{0} images selected</value>
+  </data>
+  <data name="Label_OutputFolder" xml:space="preserve">
+    <value>Output Folder</value>
+  </data>
+  <data name="Label_OutputType" xml:space="preserve">
+    <value>Output Type</value>
+  </data>
+  <data name="Action_ClearSelection" xml:space="preserve">
+    <value>Clear Selection</value>
+  </data>
+  <data name="Action_SelectAll" xml:space="preserve">
+    <value>Select All</value>
+  </data>
+  <data name="Action_SendToInference" xml:space="preserve">
+    <value>Send to Inference</value>
+  </data>
+  <data name="Label_TextToImage" xml:space="preserve">
+    <value>Text to Image</value>
+  </data>
+  <data name="Label_ImageToImage" xml:space="preserve">
+    <value>Image to Image</value>
+  </data>
+  <data name="Label_Inpainting" xml:space="preserve">
+    <value>Inpainting</value>
+  </data>
+  <data name="Label_Upscale" xml:space="preserve">
+    <value>Upscale</value>
+  </data>
+  <data name="Label_OutputsPageTitle" xml:space="preserve">
+    <value>Output Browser</value>
+  </data>
+  <data name="Label_OneImageSelected" xml:space="preserve">
+    <value>1 image selected</value>
+  </data>
+  <data name="Label_PythonPackages" xml:space="preserve">
+    <value>Python Packages</value>
+  </data>
+  <data name="Action_Consolidate" xml:space="preserve">
+    <value>Consolidate</value>
+  </data>
+  <data name="Label_AreYouSure" xml:space="preserve">
+    <value>Are you sure?</value>
+  </data>
+  <data name="Label_ConsolidateExplanation" xml:space="preserve">
+    <value>This will move all generated images from the selected packages to the Consolidated directory of the shared outputs folder. This action cannot be undone.</value>
+  </data>
+  <data name="Action_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Action_Upgrade" xml:space="preserve">
+    <value>Upgrade</value>
+  </data>
+  <data name="Action_Downgrade" xml:space="preserve">
+    <value>Downgrade</value>
   </data>
 </root>

@@ -1,10 +1,11 @@
 ﻿using Avalonia;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Views.Dialogs;
 
+[Transient]
 public partial class ImageViewerDialog : UserControlBase
 {
     public static readonly StyledProperty<bool> IsFooterEnabledProperty = AvaloniaProperty.Register<

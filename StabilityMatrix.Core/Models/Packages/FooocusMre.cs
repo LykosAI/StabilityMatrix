@@ -1,14 +1,17 @@
 ﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
+[Singleton(typeof(BasePackage))]
 public class FooocusMre : BaseGitPackage
 {
     public FooocusMre(
@@ -36,6 +39,11 @@ public class FooocusMre : BaseGitPackage
         new(
             "https://user-images.githubusercontent.com/130458190/265366059-ce430ea0-0995-4067-98dd-cef1d7dc1ab6.png"
         );
+
+    public override string Disclaimer =>
+        "This package may no longer receive updates from its author. It may be removed from Stability Matrix in the future.";
+
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Impossible;
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new()
@@ -85,6 +93,9 @@ public class FooocusMre : BaseGitPackage
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" }
         };
 
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+        new() { [SharedOutputType.Text2Img] = new[] { "outputs" } };
+
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
 
@@ -94,41 +105,47 @@ public class FooocusMre : BaseGitPackage
         return release.TagName!;
     }
 
+    public override string OutputFolderName => "outputs";
+
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
         var venvRunner = await SetupVenv(installLocation, forceRecreate: true)
             .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
 
-        var torchVersionStr = "cpu";
-
-        switch (torchVersion)
+        if (torchVersion == TorchVersion.DirectMl)
         {
-            case TorchVersion.Cuda:
-                torchVersionStr = "cu118";
-                break;
-            case TorchVersion.Rocm:
-                torchVersionStr = "rocm5.4.2";
-                break;
-            case TorchVersion.Cpu:
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);
+            await venvRunner
+                .PipInstall(new PipInstallArgs().WithTorchDirectML(), onConsoleOutput)
+                .ConfigureAwait(false);
         }
+        else
+        {
+            var extraIndex = torchVersion switch
+            {
+                TorchVersion.Cpu => "cpu",
+                TorchVersion.Cuda => "cu118",
+                TorchVersion.Rocm => "rocm5.4.2",
+                _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+            };
 
-        await venvRunner
-            .PipInstall(
-                $"torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/{torchVersionStr}",
-                onConsoleOutput
-            )
-            .ConfigureAwait(false);
+            await venvRunner
+                .PipInstall(
+                    new PipInstallArgs()
+                        .WithTorch("==2.0.1")
+                        .WithTorchVision("==0.15.2")
+                        .WithTorchExtraIndex(extraIndex),
+                    onConsoleOutput
+                )
+                .ConfigureAwait(false);
+        }
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
         await venvRunner

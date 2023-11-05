@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
@@ -14,6 +15,7 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
@@ -26,6 +28,8 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
+[ManagedService]
+[Transient]
 public partial class PackageCardViewModel : ProgressViewModel
 {
     private readonly ILogger<PackageCardViewModel> logger;
@@ -61,6 +65,15 @@ public partial class PackageCardViewModel : ProgressViewModel
 
     [ObservableProperty]
     private bool canUseConfigMethod;
+
+    [ObservableProperty]
+    private bool canUseSymlinkMethod;
+
+    [ObservableProperty]
+    private bool useSharedOutput;
+
+    [ObservableProperty]
+    private bool canUseSharedOutput;
 
     public PackageCardViewModel(
         ILogger<PackageCardViewModel> logger,
@@ -103,6 +116,11 @@ public partial class PackageCardViewModel : ProgressViewModel
             CanUseConfigMethod =
                 basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Configuration)
                 ?? false;
+            CanUseSymlinkMethod =
+                basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Symlink)
+                ?? false;
+            UseSharedOutput = Package?.UseSharedOutputFolder ?? false;
+            CanUseSharedOutput = basePackage?.SharedOutputFolders != null;
         }
     }
 
@@ -243,7 +261,29 @@ public partial class PackageCardViewModel : ProgressViewModel
             {
                 ModificationCompleteMessage = $"{packageName} Update Complete"
             };
-            var updatePackageStep = new UpdatePackageStep(settingsManager, Package, basePackage);
+
+            var versionOptions = new DownloadPackageVersionOptions { IsLatest = true };
+            if (Package.Version.IsReleaseMode)
+            {
+                versionOptions.VersionTag = await basePackage.GetLatestVersion();
+            }
+            else
+            {
+                var commits = await basePackage.GetAllCommits(Package.Version.InstalledBranch);
+                var latest = commits?.FirstOrDefault();
+                if (latest == null)
+                    throw new Exception("Could not find latest commit");
+
+                versionOptions.BranchName = Package.Version.InstalledBranch;
+                versionOptions.CommitHash = latest.Sha;
+            }
+
+            var updatePackageStep = new UpdatePackageStep(
+                settingsManager,
+                Package,
+                versionOptions,
+                basePackage
+            );
             var steps = new List<IPackageStep> { updatePackageStep };
 
             EventManager.Instance.OnPackageInstallProgressAdded(runner);
@@ -335,6 +375,20 @@ public partial class PackageCardViewModel : ProgressViewModel
         await ProcessRunner.OpenFolderBrowser(Package.FullPath);
     }
 
+    [RelayCommand]
+    public async Task OpenPythonPackagesDialog()
+    {
+        if (Package is not { FullPath: not null })
+            return;
+
+        var vm = vmFactory.Get<PythonPackagesViewModel>(vm =>
+        {
+            vm.VenvPath = new DirectoryPath(Package.FullPath, "venv");
+        });
+
+        await vm.GetDialog().ShowAsync();
+    }
+
     private async Task<bool> HasUpdate()
     {
         if (Package == null || IsUnknownPackage || Design.IsDesignMode)
@@ -373,6 +427,33 @@ public partial class PackageCardViewModel : ProgressViewModel
     public void ToggleSharedModelConfig() => IsSharedModelConfig = !IsSharedModelConfig;
 
     public void ToggleSharedModelNone() => IsSharedModelDisabled = !IsSharedModelDisabled;
+
+    public void ToggleSharedOutput() => UseSharedOutput = !UseSharedOutput;
+
+    partial void OnUseSharedOutputChanged(bool value)
+    {
+        if (Package == null)
+            return;
+
+        if (value == Package.UseSharedOutputFolder)
+            return;
+
+        using var st = settingsManager.BeginTransaction();
+        Package.UseSharedOutputFolder = value;
+
+        var basePackage = packageFactory[Package.PackageName!];
+        if (basePackage == null)
+            return;
+
+        if (value)
+        {
+            basePackage.SetupOutputFolderLinks(Package.FullPath!);
+        }
+        else
+        {
+            basePackage.RemoveOutputFolderLinks(Package.FullPath!);
+        }
+    }
 
     // fake radio button stuff
     partial void OnIsSharedModelSymlinkChanged(bool oldValue, bool newValue)

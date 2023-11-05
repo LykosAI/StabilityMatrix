@@ -19,6 +19,8 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(SelectDataDirectoryDialog))]
+[ManagedService]
+[Transient]
 public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

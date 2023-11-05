@@ -38,6 +38,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed missing httpx package during Automatic1111 install
 - Fixed some instances of localized text being cut off from controls being too small
 
+## v2.5.7
+### Fixed
+- Fixed error `got an unexpected keyword argument 'socket_options'` on fresh installs of Automatic1111 Stable Diffusion WebUI due to missing httpx dependency specification from gradio
+
 ## v2.5.6
 ### Added
 - Added Russian UI language option, thanks to aolko for the translation

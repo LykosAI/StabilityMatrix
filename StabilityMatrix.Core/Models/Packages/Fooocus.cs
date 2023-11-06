@@ -141,7 +141,7 @@ public class Fooocus : BaseGitPackage
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm };
 
-    public override Task<string> GetLatestVersion() => Task.FromResult("main");
+    public override string MainBranch => "main";
 
     public override bool ShouldIgnoreReleases => true;
 
@@ -152,6 +152,7 @@ public class Fooocus : BaseGitPackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null

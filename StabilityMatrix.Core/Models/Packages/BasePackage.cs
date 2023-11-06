@@ -55,6 +55,7 @@ public abstract class BasePackage
     public abstract Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
@@ -159,7 +160,6 @@ public abstract class BasePackage
         IReadOnlyList<string>
     >? SharedOutputFolders { get; }
 
-    public abstract Task<string> GetLatestVersion();
     public abstract Task<PackageVersionOptions> GetAllVersionOptions();
     public abstract Task<IEnumerable<GitCommit>?> GetAllCommits(
         string branch,
@@ -168,6 +168,10 @@ public abstract class BasePackage
     );
     public abstract Task<IEnumerable<Branch>> GetAllBranches();
     public abstract Task<IEnumerable<Release>> GetAllReleases();
+    public abstract Task<DownloadPackageVersionOptions> GetLatestVersion(
+        bool includePrerelease = false
+    );
+    public abstract string MainBranch { get; }
     public event EventHandler<int>? Exited;
     public event EventHandler<string>? StartupComplete;
 

@@ -50,6 +50,8 @@ public class InvokeAI : BaseGitPackage
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
+    public override string MainBranch => "main";
+
     public InvokeAI(
         IGithubApiCache githubApi,
         ISettingsManager settingsManager,
@@ -76,6 +78,10 @@ public class InvokeAI : BaseGitPackage
             [SharedFolderType.ControlNet] = new[]
             {
                 Path.Combine(RelativeRootPath, "autoimport", "controlnet")
+            },
+            [SharedFolderType.IpAdapter] = new[]
+            {
+                Path.Combine(RelativeRootPath, "autoimport", "ip_adapter")
             }
         };
 
@@ -144,12 +150,6 @@ public class InvokeAI : BaseGitPackage
             LaunchOptionDefinition.Extras
         };
 
-    public override async Task<string> GetLatestVersion()
-    {
-        var release = await GetLatestRelease().ConfigureAwait(false);
-        return release.TagName!;
-    }
-
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm, TorchVersion.Mps };
 
@@ -166,6 +166,7 @@ public class InvokeAI : BaseGitPackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
@@ -228,14 +229,20 @@ public class InvokeAI : BaseGitPackage
 
         progress?.Report(new ProgressReport(-1f, "Configuring InvokeAI", isIndeterminate: true));
 
+        // need to setup model links before running invokeai-configure so it can do its conversion
+        await SetupModelFolders(installLocation, selectedSharedFolderMethod).ConfigureAwait(false);
+
         await RunInvokeCommand(
                 installLocation,
                 "invokeai-configure",
                 "--yes --skip-sd-weights",
-                false,
-                onConsoleOutput
+                true,
+                onConsoleOutput,
+                spam3: true
             )
             .ConfigureAwait(false);
+
+        await VenvRunner.Process.WaitForExitAsync();
 
         progress?.Report(new ProgressReport(1f, "Done!", isIndeterminate: false));
     }
@@ -252,9 +259,15 @@ public class InvokeAI : BaseGitPackage
         string command,
         string arguments,
         bool runDetached,
-        Action<ProcessOutput>? onConsoleOutput
+        Action<ProcessOutput>? onConsoleOutput,
+        bool spam3 = false
     )
     {
+        if (spam3 && !runDetached)
+        {
+            throw new InvalidOperationException("Cannot spam 3 if not running detached");
+        }
+
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
         arguments = command switch
@@ -304,9 +317,31 @@ public class InvokeAI : BaseGitPackage
 
         if (runDetached)
         {
+            var foundPrompt = false;
+
             void HandleConsoleOutput(ProcessOutput s)
             {
                 onConsoleOutput?.Invoke(s);
+
+                if (
+                    spam3
+                    && s.Text.Contains(
+                        "[3] Accept the best guess;  you can fix it in the Web UI later",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
+                {
+                    foundPrompt = true;
+                    Task.Delay(100)
+                        .ContinueWith(_ => VenvRunner.Process?.StandardInput.WriteLine("3"));
+                    return;
+                }
+
+                if (foundPrompt)
+                {
+                    VenvRunner.Process?.StandardInput.WriteLine("3");
+                    foundPrompt = false;
+                }
 
                 if (!s.Text.Contains("running on", StringComparison.OrdinalIgnoreCase))
                     return;

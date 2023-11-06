@@ -239,14 +239,19 @@ public class InstalledPackage : IJsonOnDeserialized
         )
         {
             // release mode
-            Version = new InstalledPackageVersion { InstalledReleaseVersion = PackageVersion };
+            Version = new InstalledPackageVersion
+            {
+                InstalledReleaseVersion = PackageVersion,
+                IsPrerelease = false
+            };
         }
         else if (!string.IsNullOrWhiteSpace(PackageVersion))
         {
             Version = new InstalledPackageVersion
             {
                 InstalledBranch = InstalledBranch,
-                InstalledCommitSha = PackageVersion
+                InstalledCommitSha = PackageVersion,
+                IsPrerelease = false
             };
         }
     }

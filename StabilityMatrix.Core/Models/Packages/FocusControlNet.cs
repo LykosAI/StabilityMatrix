@@ -33,5 +33,6 @@ public class FocusControlNet : Fooocus
     public override string LaunchCommand => "launch.py";
     public override Uri PreviewImageUri =>
         new("https://github.com/fenneishi/Fooocus-ControlNet-SDXL/raw/main/asset/canny/snip.png");
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
+    public override bool OfferInOneClickInstaller => false;
 }

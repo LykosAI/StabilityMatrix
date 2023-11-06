@@ -172,11 +172,12 @@ public class VladAutomatic : BaseGitPackage
 
     public override string ExtraLaunchArguments => "";
 
-    public override Task<string> GetLatestVersion() => Task.FromResult("master");
+    public override string MainBranch => "master";
 
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
@@ -348,7 +349,8 @@ public class VladAutomatic : BaseGitPackage
             return new InstalledPackageVersion
             {
                 InstalledBranch = versionOptions.BranchName,
-                InstalledCommitSha = output.Replace(Environment.NewLine, "").Replace("\n", "")
+                InstalledCommitSha = output.Replace(Environment.NewLine, "").Replace("\n", ""),
+                IsPrerelease = false
             };
         }
         catch (Exception e)
@@ -369,7 +371,8 @@ public class VladAutomatic : BaseGitPackage
 
         return new InstalledPackageVersion
         {
-            InstalledBranch = installedPackage.Version.InstalledBranch
+            InstalledBranch = installedPackage.Version.InstalledBranch,
+            IsPrerelease = false
         };
     }
 

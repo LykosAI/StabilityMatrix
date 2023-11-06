@@ -111,6 +111,7 @@ public class KohyaSs : BaseGitPackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
@@ -218,11 +219,7 @@ public class KohyaSs : BaseGitPackage
         IReadOnlyList<string>
     >? SharedOutputFolders { get; }
 
-    public override async Task<string> GetLatestVersion()
-    {
-        var release = await GetLatestRelease().ConfigureAwait(false);
-        return release.TagName!;
-    }
+    public override string MainBranch => "master";
 
     private Dictionary<string, string> GetEnvVars(string installDirectory)
     {

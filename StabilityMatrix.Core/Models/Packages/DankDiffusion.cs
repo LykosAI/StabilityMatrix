@@ -37,6 +37,7 @@ public class DankDiffusion : BaseGitPackage
     public override Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
@@ -89,8 +90,5 @@ public class DankDiffusion : BaseGitPackage
         IReadOnlyList<string>
     >? SharedOutputFolders { get; }
 
-    public override Task<string> GetLatestVersion()
-    {
-        throw new NotImplementedException();
-    }
+    public override string MainBranch { get; }
 }

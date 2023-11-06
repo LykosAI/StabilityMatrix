@@ -174,17 +174,14 @@ public class A3WebUI : BaseGitPackage
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
 
-    public override async Task<string> GetLatestVersion()
-    {
-        var release = await GetLatestRelease().ConfigureAwait(false);
-        return release.TagName!;
-    }
+    public override string MainBranch => "master";
 
     public override string OutputFolderName => "outputs";
 
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null

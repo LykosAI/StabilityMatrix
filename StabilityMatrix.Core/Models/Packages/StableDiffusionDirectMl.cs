@@ -14,7 +14,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [Singleton(typeof(BasePackage))]
-public class StableDiffusionDirectMl : BaseGitPackage
+public class StableDiffusionDirectMl : A3WebUI
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -44,145 +44,15 @@ public class StableDiffusionDirectMl : BaseGitPackage
     )
         : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
 
-    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
-        new()
-        {
-            [SharedFolderType.StableDiffusion] = new[] { "models/Stable-diffusion" },
-            [SharedFolderType.ESRGAN] = new[] { "models/ESRGAN" },
-            [SharedFolderType.RealESRGAN] = new[] { "models/RealESRGAN" },
-            [SharedFolderType.SwinIR] = new[] { "models/SwinIR" },
-            [SharedFolderType.Lora] = new[] { "models/Lora" },
-            [SharedFolderType.LyCORIS] = new[] { "models/LyCORIS" },
-            [SharedFolderType.ApproxVAE] = new[] { "models/VAE-approx" },
-            [SharedFolderType.VAE] = new[] { "models/VAE" },
-            [SharedFolderType.DeepDanbooru] = new[] { "models/deepbooru" },
-            [SharedFolderType.Karlo] = new[] { "models/karlo" },
-            [SharedFolderType.TextualInversion] = new[] { "embeddings" },
-            [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
-            [SharedFolderType.ControlNet] = new[] { "models/ControlNet" },
-            [SharedFolderType.Codeformer] = new[] { "models/Codeformer" },
-            [SharedFolderType.LDSR] = new[] { "models/LDSR" },
-            [SharedFolderType.AfterDetailer] = new[] { "models/adetailer" }
-        };
-
-    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
-        new()
-        {
-            [SharedOutputType.Extras] = new[] { "outputs/extras-images" },
-            [SharedOutputType.Saved] = new[] { "log/images" },
-            [SharedOutputType.Img2Img] = new[] { "outputs/img2img-images" },
-            [SharedOutputType.Text2Img] = new[] { "outputs/txt2img-images" },
-            [SharedOutputType.Img2ImgGrids] = new[] { "outputs/img2img-grids" },
-            [SharedOutputType.Text2ImgGrids] = new[] { "outputs/txt2img-grids" }
-        };
-
-    [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
-    public override List<LaunchOptionDefinition> LaunchOptions =>
-        new()
-        {
-            new()
-            {
-                Name = "Host",
-                Type = LaunchOptionType.String,
-                DefaultValue = "localhost",
-                Options = new() { "--server-name" }
-            },
-            new()
-            {
-                Name = "Port",
-                Type = LaunchOptionType.String,
-                DefaultValue = "7860",
-                Options = new() { "--port" }
-            },
-            new()
-            {
-                Name = "VRAM",
-                Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper
-                    .IterGpuInfo()
-                    .Select(gpu => gpu.MemoryLevel)
-                    .Max() switch
-                {
-                    Level.Low => "--lowvram",
-                    Level.Medium => "--medvram",
-                    _ => null
-                },
-                Options = new() { "--lowvram", "--medvram", "--medvram-sdxl" }
-            },
-            new()
-            {
-                Name = "Xformers",
-                Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.HasNvidiaGpu(),
-                Options = new() { "--xformers" }
-            },
-            new()
-            {
-                Name = "API",
-                Type = LaunchOptionType.Bool,
-                InitialValue = true,
-                Options = new() { "--api" }
-            },
-            new()
-            {
-                Name = "Auto Launch Web UI",
-                Type = LaunchOptionType.Bool,
-                InitialValue = false,
-                Options = new() { "--autolaunch" }
-            },
-            new()
-            {
-                Name = "Skip Torch CUDA Check",
-                Type = LaunchOptionType.Bool,
-                InitialValue = !HardwareHelper.HasNvidiaGpu(),
-                Options = new() { "--skip-torch-cuda-test" }
-            },
-            new()
-            {
-                Name = "Skip Python Version Check",
-                Type = LaunchOptionType.Bool,
-                InitialValue = true,
-                Options = new() { "--skip-python-version-check" }
-            },
-            new()
-            {
-                Name = "No Half",
-                Type = LaunchOptionType.Bool,
-                Description = "Do not switch the model to 16-bit floats",
-                InitialValue = HardwareHelper.HasAmdGpu(),
-                Options = new() { "--no-half" }
-            },
-            new()
-            {
-                Name = "Skip SD Model Download",
-                Type = LaunchOptionType.Bool,
-                InitialValue = false,
-                Options = new() { "--no-download-sd-model" }
-            },
-            new()
-            {
-                Name = "Skip Install",
-                Type = LaunchOptionType.Bool,
-                Options = new() { "--skip-install" }
-            },
-            LaunchOptionDefinition.Extras
-        };
-
-    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
-        new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
-
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.DirectMl };
 
-    public override Task<string> GetLatestVersion() => Task.FromResult("master");
-
     public override bool ShouldIgnoreReleases => true;
-
-    public override string OutputFolderName => "outputs";
 
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
@@ -205,6 +75,8 @@ public class StableDiffusionDirectMl : BaseGitPackage
                 break;
         }
 
+        await venvRunner.PipInstall("httpx==0.24.1").ConfigureAwait(false);
+
         // Install requirements file
         progress?.Report(
             new ProgressReport(-1f, "Installing Package Requirements", isIndeterminate: true)
@@ -217,35 +89,5 @@ public class StableDiffusionDirectMl : BaseGitPackage
             .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
-    }
-
-    public override async Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
-    )
-    {
-        await SetupVenv(installedPackagePath).ConfigureAwait(false);
-
-        void HandleConsoleOutput(ProcessOutput s)
-        {
-            onConsoleOutput?.Invoke(s);
-
-            if (!s.Text.Contains("Running on", StringComparison.OrdinalIgnoreCase))
-                return;
-
-            var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
-            var match = regex.Match(s.Text);
-            if (!match.Success)
-                return;
-
-            WebUrl = match.Value;
-            OnStartupComplete(WebUrl);
-        }
-
-        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
-
-        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
     }
 }

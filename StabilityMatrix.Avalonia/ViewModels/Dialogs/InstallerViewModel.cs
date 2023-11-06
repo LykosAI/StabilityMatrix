@@ -249,8 +249,10 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                 ?? throw new NullReferenceException("Selected version is null");
             downloadOptions.IsLatest =
                 AvailableVersions?.First().TagName == downloadOptions.VersionTag;
+            downloadOptions.IsPrerelease = SelectedVersion.IsPrerelease;
 
             installedVersion.InstalledReleaseVersion = downloadOptions.VersionTag;
+            installedVersion.IsPrerelease = SelectedVersion.IsPrerelease;
         }
         else
         {
@@ -275,6 +277,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         var installStep = new InstallPackageStep(
             SelectedPackage,
             SelectedTorchVersion,
+            SelectedSharedFolderMethod,
             downloadOptions,
             installLocation
         );
@@ -337,14 +340,12 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         {
             SelectedVersion = null;
         }
-        else if (SelectedPackage is FooocusMre)
-        {
-            SelectedVersion = AvailableVersions.FirstOrDefault(x => x.TagName == "moonride-main");
-        }
         else
         {
-            // First try to find master
-            var version = AvailableVersions.FirstOrDefault(x => x.TagName == "master");
+            // First try to find the package-defined main branch
+            var version = AvailableVersions.FirstOrDefault(
+                x => x.TagName == SelectedPackage.MainBranch
+            );
             // If not found, try main
             version ??= AvailableVersions.FirstOrDefault(x => x.TagName == "main");
 

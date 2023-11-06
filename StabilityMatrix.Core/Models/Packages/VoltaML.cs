@@ -26,7 +26,7 @@ public class VoltaML : BaseGitPackage
             "https://github.com/LykosAI/StabilityMatrix/assets/13956642/d9a908ed-5665-41a5-a380-98458f4679a8"
         );
 
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
 
     // There are releases but the manager just downloads the latest commit anyways,
     // so we'll just limit to commit mode to be more consistent
@@ -146,11 +146,12 @@ public class VoltaML : BaseGitPackage
             LaunchOptionDefinition.Extras
         };
 
-    public override Task<string> GetLatestVersion() => Task.FromResult("main");
+    public override string MainBranch => "main";
 
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null

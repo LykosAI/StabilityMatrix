@@ -43,6 +43,7 @@ public class UnknownPackage : BasePackage
     public override Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
@@ -144,7 +145,14 @@ public class UnknownPackage : BasePackage
         IReadOnlyList<string>
     >? SharedOutputFolders { get; }
 
-    public override Task<string> GetLatestVersion() => Task.FromResult(string.Empty);
+    public override Task<DownloadPackageVersionOptions> GetLatestVersion(
+        bool includePrerelease = false
+    )
+    {
+        throw new NotImplementedException();
+    }
+
+    public override string MainBranch { get; }
 
     public override Task<PackageVersionOptions> GetAllVersionOptions() =>
         Task.FromResult(new PackageVersionOptions());

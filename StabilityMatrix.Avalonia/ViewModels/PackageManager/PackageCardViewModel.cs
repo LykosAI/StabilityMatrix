@@ -265,7 +265,7 @@ public partial class PackageCardViewModel : ProgressViewModel
             var versionOptions = new DownloadPackageVersionOptions { IsLatest = true };
             if (Package.Version.IsReleaseMode)
             {
-                versionOptions.VersionTag = await basePackage.GetLatestVersion();
+                versionOptions = await basePackage.GetLatestVersion(Package.Version.IsPrerelease);
             }
             else
             {

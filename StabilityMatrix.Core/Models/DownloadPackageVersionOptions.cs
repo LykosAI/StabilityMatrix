@@ -6,4 +6,5 @@ public class DownloadPackageVersionOptions
     public string? CommitHash { get; set; }
     public string? VersionTag { get; set; }
     public bool IsLatest { get; set; }
+    public bool IsPrerelease { get; set; }
 }

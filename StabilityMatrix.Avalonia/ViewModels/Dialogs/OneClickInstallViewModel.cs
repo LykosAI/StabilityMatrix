@@ -140,8 +140,12 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
             SelectedPackage.Name
         );
 
-        var downloadVersion = new DownloadPackageVersionOptions { IsLatest = true };
-        var installedVersion = new InstalledPackageVersion();
+        var downloadVersion = new DownloadPackageVersionOptions
+        {
+            IsLatest = true,
+            IsPrerelease = false
+        };
+        var installedVersion = new InstalledPackageVersion { IsPrerelease = false };
 
         var versionOptions = await SelectedPackage.GetAllVersionOptions();
         if (versionOptions.AvailableVersions != null && versionOptions.AvailableVersions.Any())
@@ -151,7 +155,8 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
         }
         else
         {
-            downloadVersion.BranchName = await SelectedPackage.GetLatestVersion();
+            var latestVersion = await SelectedPackage.GetLatestVersion();
+            downloadVersion.BranchName = latestVersion.BranchName;
             downloadVersion.CommitHash =
                 (await SelectedPackage.GetAllCommits(downloadVersion.BranchName))
                     ?.FirstOrDefault()
@@ -174,6 +179,7 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
         var installStep = new InstallPackageStep(
             SelectedPackage,
             torchVersion,
+            recommendedSharedFolderMethod,
             downloadVersion,
             installLocation
         );

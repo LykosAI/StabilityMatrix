@@ -175,7 +175,7 @@ public class StableDiffusionUx : BaseGitPackage
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
 
-    public override Task<string> GetLatestVersion() => Task.FromResult("master");
+    public override string MainBranch => "master";
 
     public override bool ShouldIgnoreReleases => true;
 
@@ -184,6 +184,7 @@ public class StableDiffusionUx : BaseGitPackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null

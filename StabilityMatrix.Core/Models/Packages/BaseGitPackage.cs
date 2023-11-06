@@ -82,7 +82,7 @@ public abstract class BaseGitPackage : BasePackage
             {
                 IsLatest = true,
                 IsPrerelease = false,
-                VersionTag = MainBranch
+                BranchName = MainBranch
             };
         }
 

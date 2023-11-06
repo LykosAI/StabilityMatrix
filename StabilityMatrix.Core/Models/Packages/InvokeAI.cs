@@ -317,8 +317,6 @@ public class InvokeAI : BaseGitPackage
 
         if (runDetached)
         {
-            var foundPrompt = false;
-
             void HandleConsoleOutput(ProcessOutput s)
             {
                 onConsoleOutput?.Invoke(s);
@@ -326,21 +324,13 @@ public class InvokeAI : BaseGitPackage
                 if (
                     spam3
                     && s.Text.Contains(
-                        "[3] Accept the best guess;  you can fix it in the Web UI later",
+                        "[3] Accept the best guess;",
                         StringComparison.OrdinalIgnoreCase
                     )
                 )
                 {
-                    foundPrompt = true;
-                    Task.Delay(100)
-                        .ContinueWith(_ => VenvRunner.Process?.StandardInput.WriteLine("3"));
-                    return;
-                }
-
-                if (foundPrompt)
-                {
                     VenvRunner.Process?.StandardInput.WriteLine("3");
-                    foundPrompt = false;
+                    return;
                 }
 
                 if (!s.Text.Contains("running on", StringComparison.OrdinalIgnoreCase))

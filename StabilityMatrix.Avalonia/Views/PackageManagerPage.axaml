@@ -81,6 +81,16 @@
                                                 </MenuItem.Icon>
                                             </MenuItem>
                                             
+                                            <MenuItem
+                                                Header="{x:Static lang:Resources.Action_OpenGithub}"
+                                                IsVisible="{Binding !IsUnknownPackage}"
+                                                Command="{Binding OpenOnGitHubCommand}">
+                                                <MenuItem.Icon>
+                                                    <icons:Icon
+                                                        Value="fa-brands fa-github" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            
                                             <Separator IsVisible="{Binding CanUseSharedOutput}" />
                                             
                                             <MenuItem Header="{x:Static lang:Resources.Label_SharedModelStrategyShort}"

@@ -258,6 +258,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open on GitHub.
+        /// </summary>
+        public static string Action_OpenGithub {
+            get {
+                return ResourceManager.GetString("Action_OpenGithub", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open in Browser.
         /// </summary>
         public static string Action_OpenInBrowser {

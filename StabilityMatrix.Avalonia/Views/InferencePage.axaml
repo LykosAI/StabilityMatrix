@@ -49,13 +49,15 @@
                 <ui:CommandBarButton
                     IconSource="ImageCopy"
                     IsEnabled="False"
+                    IsVisible="False"
                     Label="Image to Image"
-                    ToolTip.Tip="Image to Image" />
+                    ToolTip.Tip="Not yet implemented, coming soon!" />
                 <ui:CommandBarButton
                     IconSource="ImageEdit"
                     IsEnabled="False"
+                    IsVisible="False"
                     Label="Inpaint"
-                    ToolTip.Tip="Inpaint" />
+                    ToolTip.Tip="Not yet implemented, coming soon!" />
                 <ui:CommandBarButton
                     Click="AddTabMenu_Upscale_OnClick"
                     Label="Upscale"

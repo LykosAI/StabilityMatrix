@@ -74,6 +74,9 @@ public sealed class App : Application
 
     public static TopLevel TopLevel => TopLevel.GetTopLevel(VisualRoot)!;
 
+    internal static bool IsHeadlessMode =>
+        TopLevel.TryGetPlatformHandle()?.HandleDescriptor is null or "STUB";
+
     [NotNull]
     public static IStorageProvider? StorageProvider { get; internal set; }
 

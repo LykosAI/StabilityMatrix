@@ -353,8 +353,8 @@
   },
   Background: #ff101010,
   FontFamily: Segoe UI Variable Text,
-  Width: 1100.0,
-  Height: 750.0,
+  Width: 1400.0,
+  Height: 900.0,
   IsVisible: true,
   DataContext: {
     Greeting: Welcome to Avalonia!,

@@ -102,7 +102,10 @@ public partial class MainWindowViewModel : ViewModelBase
         // Index checkpoints if we dont have
         Task.Run(() => settingsManager.IndexCheckpoints()).SafeFireAndForget();
 
-        PreloadPages();
+        if (!App.IsHeadlessMode)
+        {
+            PreloadPages();
+        }
 
         Program.StartupTimer.Stop();
         var startupTime = CodeTimer.FormatTime(Program.StartupTimer.Elapsed);

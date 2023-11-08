@@ -624,7 +624,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         if (Process is not null)
         {
             Process.CancelStreamReaders();
-            Process.Kill();
+            Process.Kill(true);
             Process.Dispose();
         }
 
@@ -639,7 +639,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     {
         if (Process is { HasExited: false })
         {
-            Process.Kill();
+            Process.Kill(true);
             try
             {
                 await Process

@@ -203,12 +203,14 @@
                                             HotKey="{x:Null}"
                                             Text="{x:Static lang:Resources.Label_ImageToImage}"
                                             IsEnabled="False"
+                                            IsVisible="False"
                                             IconSource="ImageCopy"
                                             CommandParameter="{Binding }" />
                                         <ui:MenuFlyoutItem
                                             Text="{x:Static lang:Resources.Label_Inpainting}"
                                             IconSource="ImageEdit"
                                             IsEnabled="False"
+                                            IsVisible="False"
                                             HotKey="{x:Null}"
                                             CommandParameter="{Binding }" />
                                         <ui:MenuFlyoutItem

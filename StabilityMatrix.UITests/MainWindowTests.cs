@@ -13,6 +13,7 @@ using StabilityMatrix.Avalonia.Views.Dialogs;
 namespace StabilityMatrix.UITests;
 
 [UsesVerify]
+[Collection("TempDir")]
 public class MainWindowTests
 {
     private static IServiceProvider Services => App.Services;
@@ -72,6 +73,8 @@ public class MainWindowTests
 
         window.Show();
 
+        await Task.Delay(800);
+
         // Find the select data directory dialog
         var selectDataDirectoryDialog = await WaitHelper.WaitForNotNullAsync(
             () => GetWindowDialog(window)
@@ -91,6 +94,8 @@ public class MainWindowTests
             d => d?.Content is OneClickInstallDialog
         );
         Assert.NotNull(oneClickDialog);
+
+        await Task.Delay(1000);
 
         await Verify(window, Settings);
     }

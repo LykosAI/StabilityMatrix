@@ -9,7 +9,13 @@ public class TempDirFixture : IDisposable
     static TempDirFixture()
     {
         var tempDir = Path.Combine(Path.GetTempPath(), "StabilityMatrixTest");
+
+        if (Directory.Exists(tempDir))
+        {
+            Directory.Delete(tempDir, true);
+        }
         Directory.CreateDirectory(tempDir);
+
         ModuleTempDir = tempDir;
 
         // ReSharper disable once LocalizableElement
@@ -17,7 +23,6 @@ public class TempDirFixture : IDisposable
     }
 
     /// <inheritdoc />
-    [MethodImpl(MethodImplOptions.Synchronized)]
     public void Dispose()
     {
         if (Directory.Exists(ModuleTempDir))

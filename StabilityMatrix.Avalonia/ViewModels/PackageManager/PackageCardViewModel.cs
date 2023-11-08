@@ -389,6 +389,25 @@ public partial class PackageCardViewModel : ProgressViewModel
         await vm.GetDialog().ShowAsync();
     }
 
+    [RelayCommand]
+    private void OpenOnGitHub()
+    {
+        if (Package is null)
+            return;
+
+        var basePackage = packageFactory[Package.PackageName!];
+        if (basePackage == null)
+        {
+            logger.LogWarning(
+                "Could not find package {SelectedPackagePackageName}",
+                Package.PackageName
+            );
+            return;
+        }
+
+        ProcessRunner.OpenUrl(basePackage.GithubUrl);
+    }
+
     private async Task<bool> HasUpdate()
     {
         if (Package == null || IsUnknownPackage || Design.IsDesignMode)

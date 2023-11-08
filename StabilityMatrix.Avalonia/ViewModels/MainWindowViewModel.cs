@@ -52,8 +52,6 @@ public partial class MainWindowViewModel : ViewModelBase
     public ProgressManagerViewModel ProgressManagerViewModel { get; init; }
     public UpdateViewModel UpdateViewModel { get; init; }
 
-    internal BetterContentDialog? CurrentDialog { get; private set; }
-
     public MainWindowViewModel(
         ISettingsManager settingsManager,
         IDiscordRichPresenceService discordRichPresenceService,
@@ -240,9 +238,6 @@ public partial class MainWindowViewModel : ViewModelBase
             IsFooterVisible = false,
             Content = new SelectDataDirectoryDialog { DataContext = viewModel }
         };
-
-        CurrentDialog = dialog;
-        dialog.Closed += (_, _) => CurrentDialog = null;
 
         var result = await dialog.ShowAsync(App.TopLevel);
         if (result == ContentDialogResult.Primary)

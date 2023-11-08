@@ -13,6 +13,8 @@ public static class ModuleInit
     [ModuleInitializer]
     public static void ConfigureVerify()
     {
+        VerifyPhash.RegisterComparer("png");
+
         DerivePathInfo(
             (sourceFile, projectDirectory, type, method) =>
                 new PathInfo(

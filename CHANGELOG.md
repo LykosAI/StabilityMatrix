@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added more launch options for Fooocus, such as the `--preset` option
 - Added Ctrl+ScrollWheel to change image size in the inference output gallery and new Outputs page
 - Added "No Images Found" placeholder for non-connected models on the Checkpoints tab
+- Added "Open on GitHub" option to the three-dots menu on the Packages page
 ### Changed
 - If ComfyUI for Inference is chosen during the One-Click Installer, the Inference page will be opened after installation instead of the Launch page
 - Changed all package installs & updates to use git commands instead of downloading zip files

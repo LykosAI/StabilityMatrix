@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix.Avalonia", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix.Avalonia.Diagnostics", "StabilityMatrix.Avalonia.Diagnostics\StabilityMatrix.Avalonia.Diagnostics.csproj", "{6D088B89-12D4-4EA0-BA6B-305C7D10C084}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix.UITests", "StabilityMatrix.UITests\StabilityMatrix.UITests.csproj", "{8C7EDDD1-7FC1-4A15-B379-910A8DA7BCA6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,10 @@ Global
 		{6D088B89-12D4-4EA0-BA6B-305C7D10C084}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D088B89-12D4-4EA0-BA6B-305C7D10C084}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6D088B89-12D4-4EA0-BA6B-305C7D10C084}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C7EDDD1-7FC1-4A15-B379-910A8DA7BCA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C7EDDD1-7FC1-4A15-B379-910A8DA7BCA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C7EDDD1-7FC1-4A15-B379-910A8DA7BCA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C7EDDD1-7FC1-4A15-B379-910A8DA7BCA6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

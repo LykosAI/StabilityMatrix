@@ -46,7 +46,15 @@ public static class Compat
     /// <summary>
     /// AppData + AppName (e.g. %AppData%\StabilityMatrix)
     /// </summary>
-    public static DirectoryPath AppDataHome { get; }
+    public static DirectoryPath AppDataHome { get; private set; }
+
+    /// <summary>
+    /// Set AppDataHome to a custom path. Used for testing.
+    /// </summary>
+    internal static void SetAppDataHome(string path)
+    {
+        AppDataHome = path;
+    }
 
     /// <summary>
     /// Current directory the app is in.
@@ -127,7 +135,18 @@ public static class Compat
         }
 
         AppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        AppDataHome = AppData + AppName;
+
+        if (
+            Environment.GetEnvironmentVariable("STABILITY_MATRIX_APPDATAHOME") is
+            { } appDataOverride
+        )
+        {
+            AppDataHome = appDataOverride;
+        }
+        else
+        {
+            AppDataHome = AppData + AppName;
+        }
     }
 
     /// <summary>

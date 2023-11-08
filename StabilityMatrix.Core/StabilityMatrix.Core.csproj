@@ -10,7 +10,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <InternalsVisibleTo Include="StabilityMatrix.Tests" />
+        <InternalsVisibleTo Include="StabilityMatrix.Tests" />
+        <InternalsVisibleTo Include="StabilityMatrix.UITests" />
     </ItemGroup>
 
     <ItemGroup>

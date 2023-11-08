@@ -1,0 +1,444 @@
+﻿{
+  Type: MainWindow,
+  Title: Stability Matrix,
+  Icon: {},
+  Content: {
+    Type: Grid,
+    Children: [
+      {
+        Type: Grid,
+        Background: Transparent,
+        Height: 32.0,
+        Name: TitleBarHost,
+        Children: [
+          {
+            Type: Image,
+            Source: {
+              Dpi: {
+                X: 96.0,
+                Y: 96.0,
+                Length: 135.7645019878171,
+                SquaredLength: 18432.0
+              },
+              Size: {
+                AspectRatio: 1.0,
+                Width: 256.0,
+                Height: 256.0
+              },
+              PixelSize: {
+                AspectRatio: 1.0,
+                Width: 256,
+                Height: 256
+              },
+              Format: {
+                BitsPerPixel: 32
+              }
+            },
+            IsHitTestVisible: false,
+            Width: 18.0,
+            Height: 18.0,
+            Margin: 12,4,12,4,
+            IsVisible: true,
+            Name: WindowIcon
+          },
+          {
+            Type: TextBlock,
+            FontSize: 12.0,
+            Text: Stability Matrix,
+            IsHitTestVisible: false,
+            VerticalAlignment: Center,
+            IsVisible: true
+          },
+          {
+            Type: Border,
+            Padding: 6
+          }
+        ]
+      },
+      {
+        Type: NavigationView,
+        Content: {
+          Type: Frame,
+          Content: {
+            Type: LaunchPageView,
+            Content: {
+              Type: Grid,
+              Children: [
+                {
+                  Type: Grid,
+                  Margin: 0,8,0,8,
+                  Children: [
+                    {
+                      Type: Grid,
+                      Margin: 16,8,0,0,
+                      Children: [
+                        {
+                          Type: Grid,
+                          Column: 0,
+                          Row: 0,
+                          Name: LaunchButtonGrid,
+                          Children: [
+                            {
+                              Type: Button,
+                              Command: LaunchPageViewModel.LaunchAsync(string command),
+                              Content: Launch,
+                              Width: 95.0,
+                              HorizontalAlignment: Left,
+                              VerticalAlignment: Stretch,
+                              IsVisible: false
+                            },
+                            {
+                              Type: SplitButton,
+                              Command: LaunchPageViewModel.LaunchAsync(string command),
+                              Flyout: {
+                                Type: FAMenuFlyout
+                              },
+                              Content: Launch,
+                              Width: 104.0,
+                              HorizontalAlignment: Left,
+                              VerticalAlignment: Stretch,
+                              IsVisible: false
+                            }
+                          ]
+                        },
+                        {
+                          Type: TeachingTip,
+                          Name: TeachingTip1
+                        },
+                        {
+                          Type: Grid,
+                          Column: 0,
+                          Row: 0,
+                          IsVisible: false,
+                          Name: StopButtonGrid,
+                          Children: [
+                            {
+                              Type: Button,
+                              Command: {},
+                              Content: Stop,
+                              Width: 95.0,
+                              HorizontalAlignment: Left,
+                              VerticalAlignment: Stretch,
+                              IsVisible: false
+                            },
+                            {
+                              Type: Button,
+                              Command: {},
+                              Content: Stop,
+                              Width: 104.0,
+                              HorizontalAlignment: Left,
+                              VerticalAlignment: Stretch,
+                              IsVisible: false
+                            }
+                          ]
+                        },
+                        {
+                          Type: Button,
+                          Command: LaunchPageViewModel.Config(),
+                          Content: {
+                            Type: SymbolIcon
+                          },
+                          FontSize: 16.0,
+                          Width: 48.0,
+                          Margin: 8,0,0,0,
+                          HorizontalAlignment: Left,
+                          VerticalAlignment: Stretch
+                        }
+                      ]
+                    },
+                    {
+                      Type: ComboBox,
+                      SelectedIndex: -1,
+                      Selection: {
+                        SingleSelect: true,
+                        SelectedIndex: -1,
+                        AnchorIndex: -1
+                      },
+                      SelectionMode: Single,
+                      ItemTemplate: {
+                        DataType: InstalledPackage,
+                        Content: {
+                          Type: Func<IServiceProvider, object>,
+                          Target: XamlIlRuntimeHelpers.<>c__DisplayClass1_0<Control>,
+                          Method: System.Object DeferredTransformationFactoryV2(System.IServiceProvider)
+                        }
+                      },
+                      IsEnabled: true,
+                      Margin: 8,8,0,0,
+                      HorizontalAlignment: Stretch,
+                      VerticalAlignment: Top,
+                      Name: SelectPackageComboBox
+                    },
+                    {
+                      Type: ToggleButton,
+                      IsChecked: true,
+                      Content: {
+                        Type: Icon,
+                        Template: {
+                          Content: {
+                            Type: Func<IServiceProvider, object>,
+                            Target: XamlIlRuntimeHelpers.<>c__DisplayClass1_0<Control>,
+                            Method: System.Object DeferredTransformationFactoryV2(System.IServiceProvider)
+                          }
+                        },
+                        RenderTransform: {
+                          Type: TransformGroup,
+                          Children: [
+                            {
+                              Type: RotateTransform
+                            }
+                          ]
+                        }
+                      },
+                      FontSize: 16.0,
+                      Width: 48.0,
+                      Margin: 8,8,0,0,
+                      HorizontalAlignment: Left,
+                      VerticalAlignment: Stretch
+                    },
+                    {
+                      Type: ToggleButton,
+                      IsChecked: false,
+                      Content: {
+                        Type: SymbolIcon
+                      },
+                      FontSize: 16.0,
+                      Width: 48.0,
+                      Margin: 8,8,16,0,
+                      HorizontalAlignment: Left,
+                      VerticalAlignment: Stretch
+                    }
+                  ]
+                },
+                {
+                  Type: TextEditor,
+                  FontFamily: Cascadia Code,
+                  Margin: 8,8,16,10,
+                  DataContext: {
+                    IsUpdatesRunning: false,
+                    WriteCursorLockTimeout: 00:00:00.1000000,
+                    Document: {
+                      _undoStack: {
+                        IsOriginalFile: true,
+                        AcceptChanges: true,
+                        CanUndo: false,
+                        CanRedo: false,
+                        SizeLimit: 2147483647
+                      },
+                      Text: ,
+                      Version: {},
+                      IsInUpdate: false,
+                      Lines: [
+                        {
+                          IsDeleted: false,
+                          LineNumber: 1
+                        }
+                      ],
+                      LineTrackers: [
+                        {}
+                      ],
+                      UndoStack: {
+                        IsOriginalFile: true,
+                        AcceptChanges: true,
+                        CanUndo: false,
+                        CanRedo: false,
+                        SizeLimit: 2147483647
+                      },
+                      LineCount: 1
+                    }
+                  },
+                  Name: Console
+                },
+                {
+                  Type: Grid,
+                  Row: 1,
+                  Children: [
+                    {
+                      Type: StackPanel,
+                      Spacing: 4.0,
+                      Margin: 8,
+                      Children: [
+                        {
+                          Type: InfoBar,
+                          Margin: 0
+                        },
+                        {
+                          Type: InfoBar,
+                          Margin: 0
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  Type: Button,
+                  Command: {},
+                  Content: Open Web UI,
+                  FontSize: 12.0,
+                  Margin: 24,0,24,8,
+                  HorizontalAlignment: Stretch,
+                  IsVisible: false
+                }
+              ]
+            },
+            DataContext: {
+              Title: Launch,
+              IconSource: {
+                Type: SymbolIconSource
+              },
+              Console: {
+                IsUpdatesRunning: false,
+                WriteCursorLockTimeout: 00:00:00.1000000,
+                Document: {
+                  _undoStack: {
+                    IsOriginalFile: true,
+                    AcceptChanges: true,
+                    CanUndo: false,
+                    CanRedo: false,
+                    SizeLimit: 2147483647
+                  },
+                  Text: ,
+                  Version: {},
+                  IsInUpdate: false,
+                  Lines: [
+                    {
+                      IsDeleted: false,
+                      LineNumber: 1
+                    }
+                  ],
+                  LineTrackers: [
+                    {}
+                  ],
+                  UndoStack: {
+                    IsOriginalFile: true,
+                    AcceptChanges: true,
+                    CanUndo: false,
+                    CanRedo: false,
+                    SizeLimit: 2147483647
+                  },
+                  LineCount: 1
+                }
+              },
+              LaunchButtonVisibility: false,
+              StopButtonVisibility: false,
+              IsLaunchTeachingTipsOpen: false,
+              ShowWebUiButton: false,
+              AutoScrollToEnd: true,
+              ShowManualInputPrompt: false,
+              ShowConfirmInputPrompt: false,
+              LaunchCommand: LaunchPageViewModel.LaunchAsync(string command),
+              ConfigCommand: LaunchPageViewModel.Config(),
+              SendConfirmInputCommand: LaunchPageViewModel.SendConfirmInput(bool value),
+              SendManualInputCommand: LaunchPageViewModel.SendManualInput(string input),
+              CanNavigateNext: false,
+              CanNavigatePrevious: false,
+              HasErrors: false
+            }
+          },
+          Name: FrameView
+        },
+        Name: NavigationView
+      },
+      {
+        Type: TeachingTip,
+        Name: UpdateAvailableTeachingTip
+      }
+    ]
+  },
+  FontFamily: Segoe UI Variable Text,
+  Width: 1100.0,
+  Height: 750.0,
+  IsVisible: true,
+  DataContext: {
+    Greeting: Welcome to Avalonia!,
+    ProgressManagerViewModel: {
+      Title: Download Manager,
+      IconSource: {
+        Type: SymbolIconSource
+      },
+      IsOpen: false,
+      CanNavigateNext: false,
+      CanNavigatePrevious: false,
+      HasErrors: false
+    },
+    UpdateViewModel: {
+      IsUpdateAvailable: true,
+      UpdateInfo: {
+        Version: {
+          Major: 2,
+          Minor: 999,
+          Prerelease: ,
+          IsPrerelease: false,
+          IsRelease: true,
+          Metadata: 
+        },
+        ReleaseDate: DateTimeOffset_1,
+        Channel: Stable,
+        Type: Normal,
+        DownloadUrl: https://example.org,
+        ChangelogUrl: https://example.org,
+        HashBlake3: 46e11a5216c55d4c9d3c54385f62f3e1022537ae191615237f05e06d6f8690d0,
+        Signature: IX5/CCXWJQG0oGkYWVnuF34gTqF/dJSrDrUd6fuNMYnncL39G3HSvkXrjvJvR18MA2rQNB5z13h3/qBSf9c7DA==
+      },
+      ShowProgressBar: false,
+      CurrentVersionText: v1.0.0,
+      NewVersionText: v2.999.0,
+      InstallUpdateCommand: UpdateViewModel.InstallUpdate(),
+      HasErrors: false
+    },
+    SelectedCategory: {
+      Title: Launch,
+      IconSource: {
+        Type: SymbolIconSource
+      },
+      Console: {
+        IsUpdatesRunning: false,
+        WriteCursorLockTimeout: 00:00:00.1000000,
+        Document: {
+          _undoStack: {
+            IsOriginalFile: true,
+            AcceptChanges: true,
+            CanUndo: false,
+            CanRedo: false,
+            SizeLimit: 2147483647
+          },
+          Text: ,
+          Version: {},
+          IsInUpdate: false,
+          Lines: [
+            {
+              IsDeleted: false,
+              LineNumber: 1
+            }
+          ],
+          LineTrackers: [
+            {}
+          ],
+          UndoStack: {
+            IsOriginalFile: true,
+            AcceptChanges: true,
+            CanUndo: false,
+            CanRedo: false,
+            SizeLimit: 2147483647
+          },
+          LineCount: 1
+        }
+      },
+      LaunchButtonVisibility: false,
+      StopButtonVisibility: false,
+      IsLaunchTeachingTipsOpen: false,
+      ShowWebUiButton: false,
+      AutoScrollToEnd: true,
+      ShowManualInputPrompt: false,
+      ShowConfirmInputPrompt: false,
+      LaunchCommand: LaunchPageViewModel.LaunchAsync(string command),
+      ConfigCommand: LaunchPageViewModel.Config(),
+      SendConfirmInputCommand: LaunchPageViewModel.SendConfirmInput(bool value),
+      SendManualInputCommand: LaunchPageViewModel.SendManualInput(string input),
+      CanNavigateNext: false,
+      CanNavigatePrevious: false,
+      HasErrors: false
+    },
+    HasErrors: false
+  }
+}

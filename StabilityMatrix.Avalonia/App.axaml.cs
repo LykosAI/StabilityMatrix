@@ -70,13 +70,15 @@ public sealed class App : Application
     public static IServiceProvider? Services { get; private set; }
 
     [NotNull]
-    public static Visual? VisualRoot { get; private set; }
+    public static Visual? VisualRoot { get; internal set; }
+
+    public static TopLevel TopLevel => TopLevel.GetTopLevel(VisualRoot)!;
 
     [NotNull]
-    public static IStorageProvider? StorageProvider { get; private set; }
+    public static IStorageProvider? StorageProvider { get; internal set; }
 
     [NotNull]
-    public static IClipboard? Clipboard { get; private set; }
+    public static IClipboard? Clipboard { get; internal set; }
 
     // ReSharper disable once MemberCanBePrivate.Global
     [NotNull]
@@ -85,6 +87,12 @@ public sealed class App : Application
     // ReSharper disable once MemberCanBePrivate.Global
     public IClassicDesktopStyleApplicationLifetime? DesktopLifetime =>
         ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
+
+    /// <summary>
+    /// Called before <see cref="Services"/> is built.
+    /// Can be used by UI tests to override services.
+    /// </summary>
+    internal static event EventHandler<IServiceCollection>? BeforeBuildServiceProvider;
 
     public override void Initialize()
     {
@@ -214,6 +222,9 @@ public sealed class App : Application
     private static void ConfigureServiceProvider()
     {
         var services = ConfigureServices();
+
+        BeforeBuildServiceProvider?.Invoke(null, services);
+
         Services = services.BuildServiceProvider();
 
         var settingsManager = Services.GetRequiredService<ISettingsManager>();

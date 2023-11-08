@@ -83,13 +83,21 @@ public class Program
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 
-    // Avalonia configuration, don't remove; also used by visual designer.
-    public static AppBuilder BuildAvaloniaApp()
+    /// <summary>
+    /// Called in <see cref="BuildAvaloniaApp"/> and UI tests to setup static configurations
+    /// </summary>
+    internal static void SetupAvaloniaApp()
     {
         IconProvider.Current.Register<FontAwesomeIconProvider>();
         // Use our custom image loader for custom local load error handling
         ImageLoader.AsyncImageLoader.Dispose();
         ImageLoader.AsyncImageLoader = new FallbackRamCachedWebImageLoader();
+    }
+
+    // Avalonia configuration, don't remove; also used by visual designer.
+    public static AppBuilder BuildAvaloniaApp()
+    {
+        SetupAvaloniaApp();
 
         var app = AppBuilder.Configure<App>().UsePlatformDetect().WithInterFont().LogToTrace();
 

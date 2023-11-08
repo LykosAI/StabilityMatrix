@@ -2,6 +2,12 @@
   Type: MainWindow,
   Title: Stability Matrix,
   Icon: {},
+  TransparencyLevelHint: [
+    {},
+    {},
+    {}
+  ],
+  TransparencyBackgroundFallback: Transparent,
   Content: {
     Type: Grid,
     Children: [
@@ -345,6 +351,7 @@
       }
     ]
   },
+  Background: #ff101010,
   FontFamily: Segoe UI Variable Text,
   Width: 1100.0,
   Height: 750.0,

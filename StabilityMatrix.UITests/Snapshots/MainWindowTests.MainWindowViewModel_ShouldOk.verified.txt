@@ -1,0 +1,39 @@
+﻿{
+  Greeting: Welcome to Avalonia!,
+  ProgressManagerViewModel: {
+    Title: Download Manager,
+    IconSource: {
+      Type: SymbolIconSource
+    },
+    IsOpen: false,
+    CanNavigateNext: false,
+    CanNavigatePrevious: false,
+    HasErrors: false
+  },
+  UpdateViewModel: {
+    IsUpdateAvailable: true,
+    UpdateInfo: {
+      Version: {
+        Major: 2,
+        Minor: 999,
+        Prerelease: ,
+        IsPrerelease: false,
+        IsRelease: true,
+        Metadata: 
+      },
+      ReleaseDate: DateTimeOffset_1,
+      Channel: Stable,
+      Type: Normal,
+      DownloadUrl: https://example.org,
+      ChangelogUrl: https://example.org,
+      HashBlake3: 46e11a5216c55d4c9d3c54385f62f3e1022537ae191615237f05e06d6f8690d0,
+      Signature: IX5/CCXWJQG0oGkYWVnuF34gTqF/dJSrDrUd6fuNMYnncL39G3HSvkXrjvJvR18MA2rQNB5z13h3/qBSf9c7DA==
+    },
+    ShowProgressBar: false,
+    CurrentVersionText: v1.0.0,
+    NewVersionText: v2.999.0,
+    InstallUpdateCommand: UpdateViewModel.InstallUpdate(),
+    HasErrors: false
+  },
+  HasErrors: false
+}

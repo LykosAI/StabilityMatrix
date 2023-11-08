@@ -643,12 +643,12 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
             try
             {
                 await Process
-                    .WaitForExitAsync(new CancellationTokenSource(1000).Token)
+                    .WaitForExitAsync(new CancellationTokenSource(5000).Token)
                     .ConfigureAwait(false);
             }
             catch (OperationCanceledException e)
             {
-                Logger.Error(e, "Venv Process did not exit in time in DisposeAsync");
+                Logger.Warn(e, "Venv Process did not exit in time in DisposeAsync");
 
                 Process.CancelStreamReaders();
             }

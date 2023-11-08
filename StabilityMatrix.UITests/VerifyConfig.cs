@@ -10,5 +10,6 @@ internal static class VerifyConfig
     {
         Default = new VerifySettings();
         Default.IgnoreMembersWithType<WeakEventManager>();
+        Default.DisableDiff();
     }
 }

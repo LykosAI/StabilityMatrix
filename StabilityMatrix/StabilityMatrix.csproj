@@ -46,7 +46,7 @@
       <PackageReference Include="Simple.Wpf.Terminal" Version="2.3.57" />
       <PackageReference Include="System.Reactive" Version="6.0.0" />
       <PackageReference Include="WebView2.Runtime.AutoInstaller" Version="1.0.0" />
-      <PackageReference Include="WPF-UI" Version="3.0.0-preview.2" />
+      <PackageReference Include="WPF-UI" Version="3.0.0-preview.8" />
       <PackageReference Include="pythonnet" Version="3.0.1" />
   </ItemGroup>
 

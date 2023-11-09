@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Progress;
@@ -8,6 +9,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
+[Singleton(typeof(BasePackage))]
 public class VoltaML : BaseGitPackage
 {
     public override string Name => "voltaML-fast-stable-diffusion";
@@ -23,6 +25,8 @@ public class VoltaML : BaseGitPackage
         new(
             "https://github.com/LykosAI/StabilityMatrix/assets/13956642/d9a908ed-5665-41a5-a380-98458f4679a8"
         );
+
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
 
     // There are releases but the manager just downloads the latest commit anyways,
     // so we'll just limit to commit mode to be more consistent
@@ -45,9 +49,20 @@ public class VoltaML : BaseGitPackage
             [SharedFolderType.TextualInversion] = new[] { "data/textual-inversion" },
         };
 
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+        new()
+        {
+            [SharedOutputType.Text2Img] = new[] { "data/outputs/txt2img" },
+            [SharedOutputType.Extras] = new[] { "data/outputs/extra" },
+            [SharedOutputType.Img2Img] = new[] { "data/outputs/img2img" },
+        };
+
+    public override string OutputFolderName => "data/outputs";
+
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
-    public override IEnumerable<TorchVersion> AvailableTorchVersions => new[] { TorchVersion.None };
+    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
+        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Mps };
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
@@ -131,17 +146,17 @@ public class VoltaML : BaseGitPackage
             LaunchOptionDefinition.Extras
         };
 
-    public override Task<string> GetLatestVersion() => Task.FromResult("main");
+    public override string MainBranch => "main";
 
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
-
         // Setup venv
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));

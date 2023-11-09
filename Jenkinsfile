@@ -35,11 +35,6 @@ node("Diligence") {
             stage('Publish Linux') {
                 sh "/home/jenkins/.dotnet/tools/pupnet --runtime linux-x64 --kind appimage --app-version ${version} --clean -y"
             }
-            
-            stage ('Archive Artifacts') {
-                archiveArtifacts artifacts: 'out/*.exe', followSymlinks: false
-                archiveArtifacts artifacts: 'Release/linux-x64/*.AppImage', followSymlinks: false
-            }
         }
     } finally {
         stage('Cleanup') {

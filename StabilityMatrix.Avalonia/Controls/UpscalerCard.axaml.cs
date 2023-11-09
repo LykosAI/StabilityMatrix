@@ -1,13 +1,14 @@
-﻿using System;
-using AsyncAwaitBestPractices;
+﻿using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Api.Comfy;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
+[Transient]
 public class UpscalerCard : TemplatedControl
 {
     /// <inheritdoc />

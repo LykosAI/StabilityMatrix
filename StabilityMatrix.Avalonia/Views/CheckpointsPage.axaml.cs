@@ -1,17 +1,29 @@
-﻿using Avalonia.Controls;
+﻿using System;
+using System.Linq;
+using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Avalonia.VisualTree;
+using DynamicData.Binding;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 using CheckpointFolder = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFolder;
 
 namespace StabilityMatrix.Avalonia.Views;
 
+[Singleton]
 public partial class CheckpointsPage : UserControlBase
 {
+    private ItemsControl? repeater;
+    private IDisposable? subscription;
+
     public CheckpointsPage()
     {
         InitializeComponent();
-        
+
         AddHandler(DragDrop.DragEnterEvent, OnDragEnter);
         AddHandler(DragDrop.DragLeaveEvent, OnDragExit);
         AddHandler(DragDrop.DropEvent, OnDrop);
@@ -21,6 +33,34 @@ public partial class CheckpointsPage : UserControlBase
     {
         AvaloniaXamlLoader.Load(this);
     }
+
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+
+        subscription?.Dispose();
+        subscription = null;
+
+        if (DataContext is CheckpointsPageViewModel vm)
+        {
+            subscription = vm.WhenPropertyChanged(m => m.ShowConnectedModelImages)
+                .Subscribe(_ => InvalidateRepeater());
+        }
+    }
+
+    private void InvalidateRepeater()
+    {
+        repeater ??= this.FindControl<ItemsControl>("FilesRepeater");
+        repeater?.InvalidateArrange();
+        repeater?.InvalidateMeasure();
+
+        foreach (var child in this.GetVisualDescendants().OfType<ItemsRepeater>())
+        {
+            child?.InvalidateArrange();
+            child?.InvalidateMeasure();
+        }
+    }
+
     private static async void OnDrop(object? sender, DragEventArgs e)
     {
         var sourceDataContext = (e.Source as Control)?.DataContext;
@@ -29,7 +69,7 @@ public partial class CheckpointsPage : UserControlBase
             await folder.OnDrop(e);
         }
     }
-    
+
     private static void OnDragExit(object? sender, DragEventArgs e)
     {
         var sourceDataContext = (e.Source as Control)?.DataContext;
@@ -38,7 +78,7 @@ public partial class CheckpointsPage : UserControlBase
             folder.IsCurrentDragTarget = false;
         }
     }
-    
+
     private static void OnDragEnter(object? sender, DragEventArgs e)
     {
         // Only allow Copy or Link as Drop Operations.
@@ -47,9 +87,9 @@ public partial class CheckpointsPage : UserControlBase
         // Only allow if the dragged data contains text or filenames.
         if (!e.Data.Contains(DataFormats.Text) && !e.Data.Contains(DataFormats.Files))
         {
-            e.DragEffects = DragDropEffects.None;  
+            e.DragEffects = DragDropEffects.None;
         }
-        
+
         // Forward to view model
         var sourceDataContext = (e.Source as Control)?.DataContext;
         if (sourceDataContext is CheckpointFolder folder)

@@ -1,16 +1,18 @@
 ﻿using System;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
-using Avalonia.Media;
 using Avalonia.Threading;
 using AvaloniaEdit;
-using AvaloniaEdit.TextMate;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
-using TextMateSharp.Grammars;
 
 namespace StabilityMatrix.Avalonia.Views;
 
+[Singleton]
 public partial class LaunchPageView : UserControlBase
 {
     private const int LineOffset = 5;
@@ -18,25 +20,14 @@ public partial class LaunchPageView : UserControlBase
     public LaunchPageView()
     {
         InitializeComponent();
-        var editor = this.FindControl<TextEditor>("Console");
-        if (editor is not null)
-        {
-            var options = new RegistryOptions(ThemeName.DarkPlus);
+    }
 
-            // Config hyperlinks
-            editor.TextArea.Options.EnableHyperlinks = true;
-            editor.TextArea.Options.RequireControlModifierForHyperlinkClick = false;
-            editor.TextArea.TextView.LinkTextForegroundBrush = Brushes.Coral;
+    /// <inheritdoc />
+    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+    {
+        base.OnApplyTemplate(e);
 
-            var textMate = editor.InstallTextMate(options);
-            var scope = options.GetScopeByLanguageId("log");
-
-            if (scope is null)
-                throw new InvalidOperationException("Scope is null");
-
-            textMate.SetGrammar(scope);
-            textMate.SetTheme(options.LoadTheme(ThemeName.DarkPlus));
-        }
+        TextEditorConfigs.Configure(Console, TextEditorPreset.Console);
     }
 
     protected override void OnUnloaded(RoutedEventArgs e)

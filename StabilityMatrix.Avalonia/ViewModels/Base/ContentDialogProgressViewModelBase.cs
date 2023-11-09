@@ -1,10 +1,14 @@
 ﻿using System;
+using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
-public class ContentDialogProgressViewModelBase : ConsoleProgressViewModel
+public partial class ContentDialogProgressViewModelBase : ConsoleProgressViewModel
 {
+    [ObservableProperty]
+    private bool hideCloseButton;
+
     public event EventHandler<ContentDialogResult>? PrimaryButtonClick;
     public event EventHandler<ContentDialogResult>? SecondaryButtonClick;
     public event EventHandler<ContentDialogResult>? CloseButtonClick;

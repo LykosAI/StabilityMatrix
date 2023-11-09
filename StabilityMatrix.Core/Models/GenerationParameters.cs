@@ -1,4 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Models.Api.Comfy;
@@ -30,12 +32,26 @@ public partial record GenerationParameters
             return false;
         }
 
+        try
+        {
+            generationParameters = Parse(text);
+        }
+        catch (Exception)
+        {
+            generationParameters = null;
+            return false;
+        }
+
+        return true;
+    }
+
+    public static GenerationParameters Parse(string text)
+    {
         var lines = text.Split('\n');
 
         if (lines.LastOrDefault() is not { } lastLine)
         {
-            generationParameters = null;
-            return false;
+            throw new ValidationException("Fields line not found");
         }
 
         if (lastLine.StartsWith("Steps:") != true)
@@ -45,47 +61,84 @@ public partial record GenerationParameters
 
             if (lastLine.StartsWith("Steps:") != true)
             {
-                generationParameters = null;
-                return false;
+                throw new ValidationException("Unable to locate starting marker of last line");
             }
         }
 
         // Join lines before last line, split at 'Negative prompt: '
-        var joinedLines = string.Join("\n", lines[..^1]);
+        var joinedLines = string.Join("\n", lines[..^1]).Trim();
 
-        var splitFirstPart = joinedLines.Split("Negative prompt: ");
-        if (splitFirstPart.Length != 2)
-        {
-            generationParameters = null;
-            return false;
-        }
+        var splitFirstPart = joinedLines.Split("Negative prompt: ", 2);
 
-        var positivePrompt = splitFirstPart[0];
-        var negativePrompt = splitFirstPart[1];
+        var positivePrompt = splitFirstPart.ElementAtOrDefault(0)?.Trim();
+        var negativePrompt = splitFirstPart.ElementAtOrDefault(1)?.Trim();
 
         // Parse last line
-        var match = ParseLastLineRegex().Match(lastLine);
-        if (!match.Success)
-        {
-            generationParameters = null;
-            return false;
-        }
+        var lineFields = ParseLine(lastLine);
 
-        generationParameters = new GenerationParameters
+        var generationParameters = new GenerationParameters
         {
             PositivePrompt = positivePrompt,
             NegativePrompt = negativePrompt,
-            Steps = int.Parse(match.Groups["Steps"].Value),
-            Sampler = match.Groups["Sampler"].Value,
-            CfgScale = double.Parse(match.Groups["CfgScale"].Value),
-            Seed = ulong.Parse(match.Groups["Seed"].Value),
-            Height = int.Parse(match.Groups["Height"].Value),
-            Width = int.Parse(match.Groups["Width"].Value),
-            ModelHash = match.Groups["ModelHash"].Value,
-            ModelName = match.Groups["ModelName"].Value,
+            Steps = int.Parse(lineFields.GetValueOrDefault("Steps", "0")),
+            Sampler = lineFields.GetValueOrDefault("Sampler"),
+            CfgScale = double.Parse(lineFields.GetValueOrDefault("CFG scale", "0")),
+            Seed = ulong.Parse(lineFields.GetValueOrDefault("Seed", "0")),
+            ModelHash = lineFields.GetValueOrDefault("Model hash"),
+            ModelName = lineFields.GetValueOrDefault("Model"),
         };
 
-        return true;
+        if (lineFields.GetValueOrDefault("Size") is { } size)
+        {
+            var split = size.Split('x', 2);
+            if (split.Length == 2)
+            {
+                generationParameters = generationParameters with
+                {
+                    Width = int.Parse(split[0]),
+                    Height = int.Parse(split[1])
+                };
+            }
+        }
+
+        return generationParameters;
+    }
+
+    /// <summary>
+    /// Parse A1111 metadata fields in a single line where
+    /// fields are separated by commas and key-value pairs are separated by colons.
+    /// i.e. "key1: value1, key2: value2"
+    /// </summary>
+    internal static Dictionary<string, string> ParseLine(string fields)
+    {
+        var dict = new Dictionary<string, string>();
+
+        // Values main contain commas or colons
+        foreach (var match in ParametersFieldsRegex().Matches(fields).Cast<Match>())
+        {
+            if (!match.Success)
+                continue;
+
+            var key = match.Groups[1].Value.Trim();
+            var value = UnquoteValue(match.Groups[2].Value.Trim());
+
+            dict.Add(key, value);
+        }
+
+        return dict;
+    }
+
+    /// <summary>
+    /// Unquotes a quoted value field if required
+    /// </summary>
+    private static string UnquoteValue(string quotedField)
+    {
+        if (!(quotedField.StartsWith('"') && quotedField.EndsWith('"')))
+        {
+            return quotedField;
+        }
+
+        return JsonNode.Parse(quotedField)?.GetValue<string>() ?? "";
     }
 
     /// <summary>
@@ -126,9 +179,26 @@ public partial record GenerationParameters
         return (sampler, scheduler);
     }
 
-    // Example: Steps: 30, Sampler: DPM++ 2M Karras, CFG scale: 7, Seed: 2216407431, Size: 640x896, Model hash: eb2h052f91, Model: anime_v1
-    [GeneratedRegex(
-        """^Steps: (?<Steps>\d+), Sampler: (?<Sampler>.+?), CFG scale: (?<CfgScale>\d+(\.\d+)?), Seed: (?<Seed>\d+), Size: (?<Width>\d+)x(?<Height>\d+), Model hash: (?<ModelHash>.+?), Model: (?<ModelName>.+)$"""
-    )]
-    private static partial Regex ParseLastLineRegex();
+    /// <summary>
+    /// Return a sample parameters for UI preview
+    /// </summary>
+    public static GenerationParameters GetSample()
+    {
+        return new GenerationParameters
+        {
+            PositivePrompt = "(cat:1.2), by artist, detailed, [shaded]",
+            NegativePrompt = "blurry, jpg artifacts",
+            Steps = 30,
+            CfgScale = 7,
+            Width = 640,
+            Height = 896,
+            Seed = 124825529,
+            ModelName = "ExampleMix7",
+            ModelHash = "b899d188a1ac7356bfb9399b2277d5b21712aa360f8f9514fba6fcce021baff7",
+            Sampler = "DPM++ 2M Karras"
+        };
+    }
+
+    [GeneratedRegex("""\s*([\w ]+):\s*("(?:\\.|[^\\"])+"|[^,]*)(?:,|$)""")]
+    private static partial Regex ParametersFieldsRegex();
 }

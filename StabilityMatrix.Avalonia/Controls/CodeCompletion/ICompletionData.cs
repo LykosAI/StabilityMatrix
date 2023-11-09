@@ -19,10 +19,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls.Documents;
-using Avalonia.Media;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
-using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Models;
 
 namespace StabilityMatrix.Avalonia.Controls.CodeCompletion;

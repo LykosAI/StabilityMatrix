@@ -102,7 +102,10 @@ public partial class MainWindowViewModel : ViewModelBase
         // Index checkpoints if we dont have
         Task.Run(() => settingsManager.IndexCheckpoints()).SafeFireAndForget();
 
-        PreloadPages();
+        if (!App.IsHeadlessMode)
+        {
+            PreloadPages();
+        }
 
         Program.StartupTimer.Stop();
         var startupTime = CodeTimer.FormatTime(Program.StartupTimer.Elapsed);
@@ -128,7 +131,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 EventManager.Instance.OnTeachingTooltipNeeded();
             };
 
-            await dialog.ShowAsync();
+            await dialog.ShowAsync(App.TopLevel);
         }
     }
 
@@ -239,7 +242,7 @@ public partial class MainWindowViewModel : ViewModelBase
             Content = new SelectDataDirectoryDialog { DataContext = viewModel }
         };
 
-        var result = await dialog.ShowAsync();
+        var result = await dialog.ShowAsync(App.TopLevel);
         if (result == ContentDialogResult.Primary)
         {
             // 1. For portable mode, call settings.SetPortableMode()

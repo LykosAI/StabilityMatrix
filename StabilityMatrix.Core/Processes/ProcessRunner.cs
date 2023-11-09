@@ -163,6 +163,55 @@ public static class ProcessRunner
         return output;
     }
 
+    public static async Task<ProcessResult> GetProcessResultAsync(
+        string fileName,
+        ProcessArgs arguments,
+        string? workingDirectory = null,
+        IReadOnlyDictionary<string, string>? environmentVariables = null
+    )
+    {
+        Logger.Debug($"Starting process '{fileName}' with arguments '{arguments}'");
+
+        var info = new ProcessStartInfo
+        {
+            FileName = fileName,
+            Arguments = arguments,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+
+        if (environmentVariables != null)
+        {
+            foreach (var (key, value) in environmentVariables)
+            {
+                info.EnvironmentVariables[key] = value;
+            }
+        }
+
+        if (workingDirectory != null)
+        {
+            info.WorkingDirectory = workingDirectory;
+        }
+
+        using var process = new Process();
+        process.StartInfo = info;
+        StartTrackedProcess(process);
+
+        var stdout = await process.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
+        var stderr = await process.StandardError.ReadToEndAsync().ConfigureAwait(false);
+
+        await process.WaitForExitAsync().ConfigureAwait(false);
+
+        return new ProcessResult
+        {
+            ExitCode = process.ExitCode,
+            StandardOutput = stdout,
+            StandardError = stderr
+        };
+    }
+
     public static Process StartProcess(
         string fileName,
         string arguments,

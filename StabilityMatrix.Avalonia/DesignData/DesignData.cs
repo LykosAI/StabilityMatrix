@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Http;
 using System.Text;
 using AvaloniaEdit.Utils;
+using DynamicData;
+using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
-using StabilityMatrix.Avalonia.Controls;
+using NSubstitute;
+using NSubstitute.ReturnsExtensions;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
@@ -20,6 +22,7 @@ using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Avalonia.ViewModels.OutputsPage;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Database;
@@ -29,7 +32,9 @@ using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.Comfy;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.PackageModification;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
@@ -52,7 +57,7 @@ public static class DesignData
         if (isInitialized)
             throw new InvalidOperationException("DesignData is already initialized.");
 
-        var services = new ServiceCollection();
+        var services = App.ConfigureServices();
 
         var activePackageId = Guid.NewGuid();
         services.AddSingleton<ISettingsManager, MockSettingsManager>(
@@ -106,18 +111,18 @@ public static class DesignData
 
         // Mock services
         services
-            .AddSingleton<INotificationService, MockNotificationService>()
-            .AddSingleton<ISharedFolders, MockSharedFolders>()
-            .AddSingleton<IDownloadService, MockDownloadService>()
-            .AddSingleton<IHttpClientFactory, MockHttpClientFactory>()
-            .AddSingleton<IApiFactory, MockApiFactory>()
+            .AddSingleton(Substitute.For<INotificationService>())
+            .AddSingleton(Substitute.For<ISharedFolders>())
+            .AddSingleton(Substitute.For<IDownloadService>())
+            .AddSingleton(Substitute.For<IHttpClientFactory>())
+            .AddSingleton(Substitute.For<IApiFactory>())
+            .AddSingleton(Substitute.For<IDiscordRichPresenceService>())
+            .AddSingleton(Substitute.For<ITrackedDownloadService>())
+            .AddSingleton(Substitute.For<ILiteDbContext>())
             .AddSingleton<IInferenceClientManager, MockInferenceClientManager>()
-            .AddSingleton<IDiscordRichPresenceService, MockDiscordRichPresenceService>()
             .AddSingleton<ICompletionProvider, MockCompletionProvider>()
             .AddSingleton<IModelIndexService, MockModelIndexService>()
-            .AddSingleton<IImageIndexService, MockImageIndexService>()
-            .AddSingleton<ITrackedDownloadService, MockTrackedDownloadService>()
-            .AddSingleton<IPackageModificationRunner, PackageModificationRunner>();
+            .AddSingleton<IImageIndexService, MockImageIndexService>();
 
         // Placeholder services that nobody should need during design time
         services
@@ -127,12 +132,6 @@ public static class DesignData
             .AddSingleton<IGithubApiCache>(_ => null!)
             .AddSingleton<ITokenizerProvider>(_ => null!)
             .AddSingleton<IPrerequisiteHelper>(_ => null!);
-
-        // Using some default service implementations from App
-        App.ConfigurePackages(services);
-        App.ConfigurePageViewModels(services);
-        App.ConfigureDialogViewModels(services);
-        App.ConfigureViews(services);
 
         // Override Launch page with mock
         services.Remove(ServiceDescriptor.Singleton<LaunchPageViewModel, LaunchPageViewModel>());
@@ -172,11 +171,60 @@ public static class DesignData
         LaunchOptionsViewModel.UpdateFilterCards();
 
         InstallerViewModel = Services.GetRequiredService<InstallerViewModel>();
-        InstallerViewModel.AvailablePackages = packageFactory
-            .GetAllAvailablePackages()
-            .ToImmutableArray();
+        InstallerViewModel.AvailablePackages = new ObservableCollectionExtended<BasePackage>(
+            packageFactory.GetAllAvailablePackages()
+        );
         InstallerViewModel.SelectedPackage = InstallerViewModel.AvailablePackages[0];
         InstallerViewModel.ReleaseNotes = "## Release Notes\nThis is a test release note.";
+
+        ObservableCacheEx.AddOrUpdate(
+            CheckpointsPageViewModel.CheckpointFoldersCache,
+            new CheckpointFolder[]
+            {
+                new(settingsManager, downloadService, modelFinder, notificationService)
+                {
+                    DirectoryPath = "Models/StableDiffusion",
+                    DisplayedCheckpointFiles = new ObservableCollectionExtended<CheckpointFile>()
+                    {
+                        new()
+                        {
+                            FilePath = "~/Models/StableDiffusion/electricity-light.safetensors",
+                            Title = "Auroral Background",
+                            PreviewImagePath =
+                                "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
+                                + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
+                            ConnectedModel = new ConnectedModelInfo
+                            {
+                                VersionName = "Lightning Auroral",
+                                BaseModel = "SD 1.5",
+                                ModelName = "Auroral Background",
+                                ModelType = CivitModelType.Model,
+                                FileMetadata = new CivitFileMetadata
+                                {
+                                    Format = CivitModelFormat.SafeTensor,
+                                    Fp = CivitModelFpType.fp16,
+                                    Size = CivitModelSize.pruned,
+                                }
+                            }
+                        },
+                        new()
+                        {
+                            FilePath = "~/Models/Lora/model.safetensors",
+                            Title = "Some model"
+                        },
+                    },
+                },
+                new(settingsManager, downloadService, modelFinder, notificationService)
+                {
+                    Title = "Lora",
+                    DirectoryPath = "Packages/Lora",
+                    DisplayedCheckpointFiles = new ObservableCollectionExtended<CheckpointFile>
+                    {
+                        new() { FilePath = "~/Models/Lora/lora_v2.pt", Title = "Best Lora v2", }
+                    }
+                }
+            }
+        );
 
         /*// Checkpoints page
         CheckpointsPageViewModel.CheckpointFolders =
@@ -336,6 +384,26 @@ public static class DesignData
     public static LaunchPageViewModel LaunchPageViewModel =>
         Services.GetRequiredService<LaunchPageViewModel>();
 
+    public static OutputsPageViewModel OutputsPageViewModel
+    {
+        get
+        {
+            var vm = Services.GetRequiredService<OutputsPageViewModel>();
+            vm.Outputs = new ObservableCollectionExtended<OutputImageViewModel>
+            {
+                new(
+                    new LocalImageFile
+                    {
+                        AbsolutePath =
+                            "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
+                        ImageType = LocalImageFileType.TextToImage
+                    }
+                )
+            };
+            return vm;
+        }
+    }
+
     public static PackageManagerViewModel PackageManagerViewModel
     {
         get
@@ -463,6 +531,15 @@ The gallery images are often inpainted, but you will get something very similar 
         DialogFactory.Get<EnvVarsViewModel>(viewModel =>
         {
             viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair> { new("UWU", "TRUE"), };
+        });
+
+    public static PythonPackagesViewModel PythonPackagesViewModel =>
+        DialogFactory.Get<PythonPackagesViewModel>(vm =>
+        {
+            vm.AddPackages(
+                new PipPackageInfo("pip", "1.0.0"),
+                new PipPackageInfo("torch", "2.1.0+cu121")
+            );
         });
 
     public static InferenceTextToImageViewModel InferenceTextToImageViewModel =>
@@ -603,8 +680,8 @@ The gallery images are often inpainted, but you will get something very similar 
         get
         {
             var list = new CompletionList { IsFiltering = true };
-            list.CompletionData.AddRange(SampleCompletionData);
-            list.FilteredCompletionData.AddRange(list.CompletionData);
+            ExtensionMethods.AddRange(list.CompletionData, SampleCompletionData);
+            ExtensionMethods.AddRange(list.FilteredCompletionData, list.CompletionData);
             list.SelectItem("te", true);
             return list;
         }

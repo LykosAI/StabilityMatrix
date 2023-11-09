@@ -20,10 +20,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -31,8 +29,6 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml.Templates;
 using AvaloniaEdit.Utils;
-using StabilityMatrix.Avalonia.Models.TagCompletion;
-using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Avalonia.Controls.CodeCompletion;
@@ -202,11 +198,11 @@ public class CompletionList : TemplatedControl
         {
             case Key.Down:
                 e.Handled = true;
-                _listBox.SelectIndex(_listBox.SelectedIndex + 1);
+                _listBox.SelectNextIndexWithLoop();
                 break;
             case Key.Up:
                 e.Handled = true;
-                _listBox.SelectIndex(_listBox.SelectedIndex - 1);
+                _listBox.SelectPreviousIndexWithLoop();
                 break;
             case Key.PageDown:
                 e.Handled = true;
@@ -325,7 +321,7 @@ public class CompletionList : TemplatedControl
             return;
         }
 
-        using var _ = new CodeTimer();
+        using var _ = CodeTimer.StartDebug();
 
         if (_listBox == null)
         {

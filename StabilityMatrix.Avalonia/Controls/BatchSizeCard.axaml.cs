@@ -1,9 +1,7 @@
-﻿using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
+﻿using Avalonia.Controls.Primitives;
+using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-public class BatchSizeCard : TemplatedControl
-{
-}
+[Transient]
+public class BatchSizeCard : TemplatedControl { }

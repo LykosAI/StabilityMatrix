@@ -54,6 +54,7 @@ public class PackageModificationRunner : IPackageModificationRunner
         IsRunning = false;
     }
 
+    public bool HideCloseButton { get; init; }
     public string? ModificationCompleteMessage { get; init; }
     public bool ShowDialogOnStart { get; init; }
 

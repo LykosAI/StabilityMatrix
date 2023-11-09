@@ -23,6 +23,8 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ImageGalleryCard))]
+[ManagedService]
+[Transient]
 public partial class ImageGalleryCardViewModel : ViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

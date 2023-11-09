@@ -1,5 +1,4 @@
 ﻿using System.Text.Json.Serialization;
-using StabilityMatrix.Avalonia.ViewModels.Inference;
 
 namespace StabilityMatrix.Avalonia.Models.Inference;
 

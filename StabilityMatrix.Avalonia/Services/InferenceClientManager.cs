@@ -13,6 +13,7 @@ using SkiaSharp;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
@@ -27,6 +28,7 @@ namespace StabilityMatrix.Avalonia.Services;
 /// Manager for the current inference client
 /// Has observable shared properties for shared info like model names
 /// </summary>
+[Singleton(typeof(IInferenceClientManager))]
 public partial class InferenceClientManager : ObservableObject, IInferenceClientManager
 {
     private readonly ILogger<InferenceClientManager> logger;
@@ -345,6 +347,44 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         return ConnectAsyncImpl(new Uri("http://127.0.0.1:8188"), cancellationToken);
     }
 
+    private async Task MigrateLinksIfNeeded(PackagePair packagePair)
+    {
+        if (packagePair.InstalledPackage.FullPath is not { } packagePath)
+        {
+            throw new ArgumentException("Package path is null", nameof(packagePair));
+        }
+
+        var inferenceDir = settingsManager.ImagesInferenceDirectory;
+        inferenceDir.Create();
+
+        // For locally installed packages only
+        // Delete ./output/Inference
+
+        var legacyInferenceLinkDir = new DirectoryPath(
+            packagePair.InstalledPackage.FullPath
+        ).JoinDir("output", "Inference");
+
+        if (legacyInferenceLinkDir.Exists)
+        {
+            logger.LogInformation(
+                "Deleting legacy inference link at {LegacyDir}",
+                legacyInferenceLinkDir
+            );
+
+            if (legacyInferenceLinkDir.IsSymbolicLink)
+            {
+                await legacyInferenceLinkDir.DeleteAsync(false);
+            }
+            else
+            {
+                logger.LogWarning(
+                    "Legacy inference link at {LegacyDir} is not a symbolic link, skipping",
+                    legacyInferenceLinkDir
+                );
+            }
+        }
+    }
+
     /// <inheritdoc />
     public async Task ConnectAsync(
         PackagePair packagePair,
@@ -367,11 +407,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
                 logger.LogError(ex, "Error setting up completion provider");
             });
 
-        // Setup image folder links
-        await comfyPackage.SetupInferenceOutputFolderLinks(
-            packagePair.InstalledPackage.FullPath
-                ?? throw new InvalidOperationException("Package does not have a Path")
-        );
+        await MigrateLinksIfNeeded(packagePair);
 
         // Get user defined host and port
         var host = packagePair.InstalledPackage.GetLaunchArgsHost();

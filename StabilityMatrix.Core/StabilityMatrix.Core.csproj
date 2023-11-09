@@ -10,39 +10,42 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <InternalsVisibleTo Include="StabilityMatrix.Tests" />
+        <InternalsVisibleTo Include="StabilityMatrix.Tests" />
+        <InternalsVisibleTo Include="StabilityMatrix.UITests" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="AsyncAwaitBestPractices" Version="6.0.6" />
-      <PackageReference Include="Blake3" Version="0.5.1" />
+      <PackageReference Include="Blake3" Version="1.0.0" />
       <PackageReference Include="Crc32.NET" Version="1.2.0" />
-      <PackageReference Include="DeviceId" Version="6.3.0" />
+      <PackageReference Include="DeviceId" Version="6.4.0" />
       <PackageReference Include="DeviceId.Linux" Version="6.3.0" />
       <PackageReference Include="DeviceId.Mac" Version="6.2.0" />
-      <PackageReference Include="DeviceId.Windows" Version="6.2.0" />
-      <PackageReference Include="DeviceId.Windows.Wmi" Version="6.2.1" />
-      <PackageReference Include="DynamicData" Version="7.14.2" />
-      <PackageReference Include="LiteDB" Version="5.0.16" />
-      <PackageReference Include="LiteDB.Async" Version="0.1.6" />
+      <PackageReference Include="DeviceId.Windows" Version="6.4.0" />
+      <PackageReference Include="DeviceId.Windows.Wmi" Version="6.5.0" />
+      <PackageReference Include="DynamicData" Version="8.1.1" />
+      <PackageReference Include="LiteDB" Version="5.0.17" />
+      <PackageReference Include="LiteDB.Async" Version="0.1.7" />
       <PackageReference Include="MetadataExtractor" Version="2.8.1" />
       <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
-      <PackageReference Include="NLog" Version="5.2.2" />
-      <PackageReference Include="NLog.Extensions.Logging" Version="5.3.2" />
+      <PackageReference Include="NLog" Version="5.2.5" />
+      <PackageReference Include="NLog.Extensions.Logging" Version="5.3.5" />
       <PackageReference Include="NSec.Cryptography" Version="22.4.0" />
-      <PackageReference Include="Octokit" Version="7.0.1" />
+      <PackageReference Include="Octokit" Version="8.1.1" />
+      <PackageReference Include="OneOf" Version="3.0.263" />
+      <PackageReference Include="OneOf.SourceGenerator" Version="3.0.263" />
       <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
-      <PackageReference Include="pythonnet" Version="3.0.1" />
+      <PackageReference Include="pythonnet" Version="3.0.3" />
       <PackageReference Include="Refit" Version="7.0.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="7.0.0" />
       <PackageReference Include="RockLib.Reflection.Optimized" Version="2.0.0" />
       <PackageReference Include="Salaros.ConfigParser" Version="0.3.8" />
       <PackageReference Include="Semver" Version="3.0.0-beta.1" />
-      <PackageReference Include="Sentry.NLog" Version="3.33.1" />
-      <PackageReference Include="SharpCompress" Version="0.33.0" />
-      <PackageReference Include="Websocket.Client" Version="4.6.1" />
-      <PackageReference Include="YamlDotNet" Version="13.1.1" />
+      <PackageReference Include="Sentry.NLog" Version="3.40.1" />
+      <PackageReference Include="SharpCompress" Version="0.34.1" />
+      <PackageReference Include="Websocket.Client" Version="5.0.0" />
+      <PackageReference Include="YamlDotNet" Version="13.7.1" />
       <PackageReference Include="Yoh.Text.Json.NamingPolicies" Version="1.0.0" />
     </ItemGroup>
 </Project>

@@ -18,8 +18,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -43,6 +41,8 @@ public class CompletionWindow : CompletionWindowBase
 
     private PopupWithCustomPosition? _toolTip;
     private ContentControl? _toolTipContent;
+
+    public bool ToolTipIsOpen => _toolTip is not null;
 
     /// <summary>
     /// Max number of items in the completion list.
@@ -93,7 +93,11 @@ public class CompletionWindow : CompletionWindowBase
 
         LogicalChildren.Add(_toolTip);
 
-        //_toolTip.Closed += (o, e) => ((Popup)o).Child = null;
+        _toolTip.Closed += (s, e) =>
+        {
+            Hide();
+            // (s as Popup)!.Child = null;
+        };
 
         AttachEvents();
     }

@@ -20,6 +20,8 @@
                  <ResourceInclude Source="Controls/CodeCompletion/CompletionListThemes.axaml"/>
                  <ResourceInclude Source="Styles/ContextMenuStyles.axaml"/>
                  <ResourceInclude Source="Controls/EditorFlyouts.axaml"/>
+                 <ResourceInclude Source="Controls/Scroll/BetterScrollViewer.axaml"/>
+                 <ResourceInclude Source="Controls/ImageFolderCard.axaml"/>
              </ResourceDictionary.MergedDictionaries>
              
              <idcr:ControlRecycling x:Key="ControlRecyclingKey" />
@@ -56,10 +58,10 @@
         <StyleInclude Source="Controls/FrameCarousel.axaml"/>
         <StyleInclude Source="Controls/CodeCompletion/CompletionWindow.axaml"/>
         <StyleInclude Source="Controls/SelectImageCard.axaml"/>
-        <StyleInclude Source="Controls/ImageFolderCard.axaml"/>
         <StyleInclude Source="Controls/SharpenCard.axaml"/>
         <StyleInclude Source="Controls/FreeUCard.axaml"/>
         <StyleInclude Source="Controls/Paginator.axaml"/>
+        <StyleInclude Source="Controls/SelectableImageCard/SelectableImageButton.axaml"/>
         
         <Style Selector="DockControl">
             <Setter Property="(DockProperties.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />

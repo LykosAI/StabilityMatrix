@@ -6,9 +6,12 @@ using AvaloniaEdit;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Utils;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
+[Transient]
 public class PromptCard : TemplatedControl
 {
     /// <inheritdoc />
@@ -31,7 +34,7 @@ public class PromptCard : TemplatedControl
         {
             if (editor is not null)
             {
-                TextEditorConfigs.ConfigForPrompt(editor);
+                TextEditorConfigs.Configure(editor, TextEditorPreset.Prompt);
                 editor.TextArea.Margin = new Thickness(0, 0, 4, 0);
 
                 if (editor.TextArea.ActiveInputHandler is TextAreaInputHandler inputHandler)

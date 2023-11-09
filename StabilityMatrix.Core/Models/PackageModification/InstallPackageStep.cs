@@ -8,12 +8,22 @@ public class InstallPackageStep : IPackageStep
 {
     private readonly BasePackage package;
     private readonly TorchVersion torchVersion;
+    private readonly SharedFolderMethod selectedSharedFolderMethod;
+    private readonly DownloadPackageVersionOptions versionOptions;
     private readonly string installPath;
 
-    public InstallPackageStep(BasePackage package, TorchVersion torchVersion, string installPath)
+    public InstallPackageStep(
+        BasePackage package,
+        TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
+        DownloadPackageVersionOptions versionOptions,
+        string installPath
+    )
     {
         this.package = package;
         this.torchVersion = torchVersion;
+        this.selectedSharedFolderMethod = selectedSharedFolderMethod;
+        this.versionOptions = versionOptions;
         this.installPath = installPath;
     }
 
@@ -25,9 +35,16 @@ public class InstallPackageStep : IPackageStep
         }
 
         await package
-            .InstallPackage(installPath, torchVersion, progress, OnConsoleOutput)
+            .InstallPackage(
+                installPath,
+                torchVersion,
+                selectedSharedFolderMethod,
+                versionOptions,
+                progress,
+                OnConsoleOutput
+            )
             .ConfigureAwait(false);
     }
 
-    public string ProgressTitle => "Installing package...";
+    public string ProgressTitle => $"Installing {package.DisplayName}...";
 }

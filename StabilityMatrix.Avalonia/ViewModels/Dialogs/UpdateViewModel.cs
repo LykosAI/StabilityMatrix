@@ -22,6 +22,8 @@ using StabilityMatrix.Core.Updater;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(UpdateDialog))]
+[ManagedService]
+[Singleton]
 public partial class UpdateViewModel : ContentDialogViewModelBase
 {
     private readonly ISettingsManager settingsManager;
@@ -122,24 +124,30 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         if (UpdateInfo is null)
             return;
 
+        ReleaseNotes = await GetReleaseNotes(UpdateInfo.ChangelogUrl);
+    }
+
+    internal async Task<string> GetReleaseNotes(string changelogUrl)
+    {
         using var client = httpClientFactory.CreateClient();
-        var response = await client.GetAsync(UpdateInfo.ChangelogUrl);
+        var response = await client.GetAsync(changelogUrl);
         if (response.IsSuccessStatusCode)
         {
             var changelog = await response.Content.ReadAsStringAsync();
 
             // Formatting for new changelog format
             // https://keepachangelog.com/en/1.1.0/
-            if (UpdateInfo.ChangelogUrl.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+            if (changelogUrl.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
             {
-                ReleaseNotes =
-                    FormatChangelog(changelog, Compat.AppVersion)
+                return FormatChangelog(changelog, Compat.AppVersion)
                     ?? "## Unable to format release notes";
             }
+
+            return changelog;
         }
         else
         {
-            ReleaseNotes = "## Unable to load release notes";
+            return "## Unable to load release notes";
         }
     }
 

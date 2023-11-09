@@ -1,9 +1,11 @@
 ﻿using Octokit;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Models.Database;
 
 namespace StabilityMatrix.Core.Helper.Cache;
 
+[Singleton(typeof(IGithubApiCache))]
 public class GithubApiCache : IGithubApiCache
 {
     private readonly ILiteDbContext dbContext;
@@ -30,7 +32,7 @@ public class GithubApiCache : IGithubApiCache
         {
             return null;
         }
-        
+
         var cacheEntry = new GithubCacheEntry
         {
             CacheKey = cacheKey,
@@ -55,7 +57,7 @@ public class GithubApiCache : IGithubApiCache
         {
             return new List<Release>().OrderByDescending(x => x.CreatedAt);
         }
-        
+
         var newCacheEntry = new GithubCacheEntry
         {
             CacheKey = cacheKey,
@@ -80,18 +82,20 @@ public class GithubApiCache : IGithubApiCache
         {
             return new List<Branch>();
         }
-        
-        var newCacheEntry = new GithubCacheEntry
-        {
-            CacheKey = cacheKey,
-            Branches = branches
-        };
+
+        var newCacheEntry = new GithubCacheEntry { CacheKey = cacheKey, Branches = branches };
         await dbContext.UpsertGithubCacheEntry(newCacheEntry);
 
         return newCacheEntry.Branches;
     }
 
-    public async Task<IEnumerable<GitCommit>?> GetAllCommits(string username, string repository, string branch, int page = 1, int perPage = 10)
+    public async Task<IEnumerable<GitCommit>?> GetAllCommits(
+        string username,
+        string repository,
+        string branch,
+        int page = 1,
+        int perPage = 10
+    )
     {
         var cacheKey = $"Commits-{username}-{repository}-{branch}-{page}-{perPage}";
         var cacheEntry = await dbContext.GetGithubCacheEntry(cacheKey);
@@ -100,18 +104,23 @@ public class GithubApiCache : IGithubApiCache
             return cacheEntry.Commits;
         }
 
-        var commits = await githubApi.Repository.Commit.GetAll(username, repository, new CommitRequest {Sha = branch}, new ApiOptions
-        {
-            PageCount = page,
-            PageSize = perPage,
-            StartPage = page
-        });
-        
+        var commits = await githubApi.Repository.Commit.GetAll(
+            username,
+            repository,
+            new CommitRequest { Sha = branch },
+            new ApiOptions
+            {
+                PageCount = page,
+                PageSize = perPage,
+                StartPage = page
+            }
+        );
+
         if (commits == null)
         {
             return new List<GitCommit>();
         }
-        
+
         var newCacheEntry = new GithubCacheEntry
         {
             CacheKey = cacheKey,
@@ -121,6 +130,7 @@ public class GithubApiCache : IGithubApiCache
 
         return newCacheEntry.Commits;
     }
-    
-    private bool IsCacheExpired(DateTimeOffset expiration) => expiration.Add(cacheDuration) < DateTimeOffset.UtcNow;
+
+    private bool IsCacheExpired(DateTimeOffset expiration) =>
+        expiration.Add(cacheDuration) < DateTimeOffset.UtcNow;
 }

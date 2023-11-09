@@ -7,6 +7,7 @@ public class InstalledPackageVersion
     public string? InstalledReleaseVersion { get; set; }
     public string? InstalledBranch { get; set; }
     public string? InstalledCommitSha { get; set; }
+    public bool IsPrerelease { get; set; }
 
     [JsonIgnore]
     public bool IsReleaseMode => string.IsNullOrWhiteSpace(InstalledBranch);

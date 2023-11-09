@@ -1,0 +1,51 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:selectableImageCard="clr-namespace:StabilityMatrix.Avalonia.Controls.SelectableImageCard"
+        xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <!-- Add Controls for Previewer Here -->
+            <selectableImageCard:SelectableImageButton 
+                Source="https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg" />
+        </Border>
+    </Design.PreviewWith>
+
+    <!-- Add Styles Here -->
+    <Style Selector="selectableImageCard|SelectableImageButton">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid
+                    Width="{Binding ImageWidth, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                    Height="{Binding ImageHeight, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                    <CheckBox VerticalAlignment="Top"
+                              HorizontalAlignment="Right"
+                              Margin="14,8"
+                              Padding="0"
+                              IsChecked="{Binding IsSelected, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                              ZIndex="100">
+                        <CheckBox.RenderTransform>
+                            <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
+                        </CheckBox.RenderTransform>
+                        <CheckBox.Styles>
+                            <Style Selector="CheckBox">
+                                <Setter Property="CornerRadius" Value="16" />
+                            </Style>
+                        </CheckBox.Styles>
+                    </CheckBox>
+                    <Button
+                        Margin="0"
+                        Padding="4"
+                        CornerRadius="12"
+                        Command="{TemplateBinding Command}"
+                        CommandParameter="{TemplateBinding CommandParameter}">
+                        <controls:BetterAdvancedImage
+                            Stretch="UniformToFill"
+                            CornerRadius="8"
+                            ContextFlyout="{TemplateBinding ContextFlyout}"
+                            Source="{TemplateBinding Source}" />
+                    </Button>
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

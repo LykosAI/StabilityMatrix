@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using Avalonia.Controls;
 using Avalonia.Controls.Documents;
-using Avalonia.Media;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Editing;
 using StabilityMatrix.Avalonia.Models;

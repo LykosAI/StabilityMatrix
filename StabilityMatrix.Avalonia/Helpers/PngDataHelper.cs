@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
-using Avalonia;
 using Force.Crc32;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Models;
@@ -15,6 +14,17 @@ public static class PngDataHelper
     private static readonly byte[] Idat = { 0x49, 0x44, 0x41, 0x54 };
     private static readonly byte[] Text = { 0x74, 0x45, 0x58, 0x74 };
     private static readonly byte[] Iend = { 0x49, 0x45, 0x4E, 0x44 };
+
+    public static byte[] AddMetadata(
+        Stream inputStream,
+        GenerationParameters generationParameters,
+        InferenceProjectDocument projectDocument
+    )
+    {
+        using var ms = new MemoryStream();
+        inputStream.CopyTo(ms);
+        return AddMetadata(ms.ToArray(), generationParameters, projectDocument);
+    }
 
     public static byte[] AddMetadata(
         byte[] inputImage,

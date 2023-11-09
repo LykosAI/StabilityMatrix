@@ -21,6 +21,8 @@ using Size = StabilityMatrix.Core.Helper.Size;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(ImageViewerDialog))]
+[ManagedService]
+[Transient]
 public partial class ImageViewerViewModel : ContentDialogViewModelBase
 {
     [ObservableProperty]

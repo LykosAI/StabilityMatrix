@@ -17,7 +17,10 @@ public class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
     private readonly IPackageModificationRunner packageModificationRunner;
     private BetterContentDialog? dialog;
 
-    public PackageInstallProgressItemViewModel(IPackageModificationRunner packageModificationRunner)
+    public PackageInstallProgressItemViewModel(
+        IPackageModificationRunner packageModificationRunner,
+        bool hideCloseButton = false
+    )
     {
         this.packageModificationRunner = packageModificationRunner;
         Id = packageModificationRunner.Id;
@@ -25,6 +28,7 @@ public class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
         Progress.Value = packageModificationRunner.CurrentProgress.Percentage;
         Progress.Text = packageModificationRunner.ConsoleOutput.LastOrDefault();
         Progress.IsIndeterminate = packageModificationRunner.CurrentProgress.IsIndeterminate;
+        Progress.HideCloseButton = hideCloseButton;
 
         Progress.Console.StartUpdates();
 

@@ -17,6 +17,7 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
@@ -27,6 +28,8 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
+[ManagedService]
+[Transient]
 public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -254,16 +257,17 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
 
     private static string PruneDescription(CivitModel model)
     {
-        var prunedDescription = model.Description
-            .Replace("<br/>", $"{Environment.NewLine}{Environment.NewLine}")
-            .Replace("<br />", $"{Environment.NewLine}{Environment.NewLine}")
-            .Replace("</p>", $"{Environment.NewLine}{Environment.NewLine}")
-            .Replace("</h1>", $"{Environment.NewLine}{Environment.NewLine}")
-            .Replace("</h2>", $"{Environment.NewLine}{Environment.NewLine}")
-            .Replace("</h3>", $"{Environment.NewLine}{Environment.NewLine}")
-            .Replace("</h4>", $"{Environment.NewLine}{Environment.NewLine}")
-            .Replace("</h5>", $"{Environment.NewLine}{Environment.NewLine}")
-            .Replace("</h6>", $"{Environment.NewLine}{Environment.NewLine}");
+        var prunedDescription =
+            model.Description
+                ?.Replace("<br/>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("<br />", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</p>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</h1>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</h2>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</h3>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</h4>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</h5>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</h6>", $"{Environment.NewLine}{Environment.NewLine}") ?? string.Empty;
         prunedDescription = HtmlRegex().Replace(prunedDescription, string.Empty);
         return prunedDescription;
     }

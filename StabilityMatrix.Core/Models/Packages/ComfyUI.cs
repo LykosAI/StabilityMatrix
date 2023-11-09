@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
 using NLog;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -14,6 +15,7 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
+[Singleton(typeof(BasePackage))]
 public class ComfyUI : BaseGitPackage
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -30,6 +32,9 @@ public class ComfyUI : BaseGitPackage
         new("https://github.com/comfyanonymous/ComfyUI/raw/master/comfyui_screenshot.png");
     public override bool ShouldIgnoreReleases => true;
     public override bool IsInferenceCompatible => true;
+    public override string OutputFolderName => "output";
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
+
     public override SharedFolderMethod RecommendedSharedFolderMethod =>
         SharedFolderMethod.Configuration;
 
@@ -57,6 +62,9 @@ public class ComfyUI : BaseGitPackage
             [SharedFolderType.ESRGAN] = new[] { "models/upscale_models" },
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
         };
+
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+        new() { [SharedOutputType.Text2Img] = new[] { "output" } };
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new List<LaunchOptionDefinition>
@@ -138,20 +146,27 @@ public class ComfyUI : BaseGitPackage
             LaunchOptionDefinition.Extras
         };
 
-    public override Task<string> GetLatestVersion() => Task.FromResult("master");
+    public override string MainBranch => "master";
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm };
+        new[]
+        {
+            TorchVersion.Cpu,
+            TorchVersion.Cuda,
+            TorchVersion.DirectMl,
+            TorchVersion.Rocm,
+            TorchVersion.Mps
+        };
 
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
-
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
@@ -165,13 +180,36 @@ public class ComfyUI : BaseGitPackage
                 await InstallCpuTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
                 break;
             case TorchVersion.Cuda:
-                await InstallCudaTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
+                await venvRunner
+                    .PipInstall(
+                        new PipInstallArgs()
+                            .WithTorch("~=2.1.0")
+                            .WithTorchVision()
+                            .WithXFormers("==0.0.22.post4")
+                            .AddArg("--upgrade")
+                            .WithTorchExtraIndex("cu121"),
+                        onConsoleOutput
+                    )
+                    .ConfigureAwait(false);
+                break;
+            case TorchVersion.DirectMl:
+                await venvRunner
+                    .PipInstall(new PipInstallArgs().WithTorchDirectML(), onConsoleOutput)
+                    .ConfigureAwait(false);
                 break;
             case TorchVersion.Rocm:
                 await InstallRocmTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
                 break;
-            case TorchVersion.DirectMl:
-                await InstallDirectMlTorch(venvRunner, progress, onConsoleOutput)
+            case TorchVersion.Mps:
+                await venvRunner
+                    .PipInstall(
+                        new PipInstallArgs()
+                            .AddArg("--pre")
+                            .WithTorch()
+                            .WithTorchVision()
+                            .WithTorchExtraIndex("nightly/cpu"),
+                        onConsoleOutput
+                    )
                     .ConfigureAwait(false);
                 break;
             default:
@@ -441,7 +479,13 @@ public class ComfyUI : BaseGitPackage
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         await venvRunner
-            .PipInstall(PyVenvRunner.TorchPipInstallArgsRocm542, onConsoleOutput)
+            .PipInstall(
+                new PipInstallArgs()
+                    .WithTorch("==2.0.1")
+                    .WithTorchVision()
+                    .WithTorchExtraIndex("rocm5.6"),
+                onConsoleOutput
+            )
             .ConfigureAwait(false);
     }
 

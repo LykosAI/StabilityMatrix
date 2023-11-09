@@ -10,11 +10,6 @@ public interface IImageIndexService
     IndexCollection<LocalImageFile, string> InferenceImages { get; }
 
     /// <summary>
-    /// Gets a list of local images that start with the given path prefix
-    /// </summary>
-    Task<IReadOnlyList<LocalImageFile>> GetLocalImagesByPrefix(string pathPrefix);
-
-    /// <summary>
     /// Refresh index for all collections
     /// </summary>
     Task RefreshIndexForAllCollections();
@@ -25,9 +20,4 @@ public interface IImageIndexService
     /// Refreshes the index of local images in the background
     /// </summary>
     void BackgroundRefreshIndex();
-
-    /// <summary>
-    /// Removes a local image from the database
-    /// </summary>
-    Task RemoveImage(LocalImageFile imageFile);
 }

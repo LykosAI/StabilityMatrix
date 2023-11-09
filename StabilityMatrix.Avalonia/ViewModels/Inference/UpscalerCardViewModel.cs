@@ -20,6 +20,8 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(UpscalerCard))]
+[ManagedService]
+[Transient]
 public partial class UpscalerCardViewModel : LoadableViewModelBase
 {
     private readonly INotificationService notificationService;

@@ -21,6 +21,7 @@ public interface ISettingsManager
     List<string> PackageInstallsInProgress { get; set; }
 
     Settings Settings { get; }
+    DirectoryPath ConsolidatedImagesDirectory { get; }
 
     /// <summary>
     /// Event fired when the library directory is changed
@@ -69,7 +70,8 @@ public interface ISettingsManager
         T source,
         Expression<Func<T, TValue>> sourceProperty,
         Expression<Func<Settings, TValue>> settingsProperty,
-        bool setInitial = false
+        bool setInitial = false,
+        TimeSpan? delay = null
     )
         where T : INotifyPropertyChanged;
 

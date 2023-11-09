@@ -2,6 +2,7 @@
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using NLog;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -12,6 +13,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
+[Singleton(typeof(BasePackage))]
 public class A3WebUI : BaseGitPackage
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -28,6 +30,8 @@ public class A3WebUI : BaseGitPackage
     public override Uri PreviewImageUri =>
         new("https://github.com/AUTOMATIC1111/stable-diffusion-webui/raw/master/screenshot.png");
     public string RelativeArgsDefinitionScriptPath => "modules.cmd_args";
+
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
@@ -59,6 +63,17 @@ public class A3WebUI : BaseGitPackage
             [SharedFolderType.Codeformer] = new[] { "models/Codeformer" },
             [SharedFolderType.LDSR] = new[] { "models/LDSR" },
             [SharedFolderType.AfterDetailer] = new[] { "models/adetailer" }
+        };
+
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+        new()
+        {
+            [SharedOutputType.Extras] = new[] { "outputs/extras-images" },
+            [SharedOutputType.Saved] = new[] { "log/images" },
+            [SharedOutputType.Img2Img] = new[] { "outputs/img2img-images" },
+            [SharedOutputType.Text2Img] = new[] { "outputs/txt2img-images" },
+            [SharedOutputType.Img2ImgGrids] = new[] { "outputs/img2img-grids" },
+            [SharedOutputType.Text2ImgGrids] = new[] { "outputs/txt2img-grids" }
         };
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
@@ -157,23 +172,21 @@ public class A3WebUI : BaseGitPackage
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm };
+        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
 
-    public override async Task<string> GetLatestVersion()
-    {
-        var release = await GetLatestRelease().ConfigureAwait(false);
-        return release.TagName!;
-    }
+    public override string MainBranch => "master";
+
+    public override string OutputFolderName => "outputs";
 
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
+        DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        await base.InstallPackage(installLocation, torchVersion, progress).ConfigureAwait(false);
-
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
@@ -191,15 +204,14 @@ public class A3WebUI : BaseGitPackage
             case TorchVersion.Rocm:
                 await InstallRocmTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
                 break;
-            case TorchVersion.DirectMl:
-                await InstallDirectMlTorch(venvRunner, progress, onConsoleOutput)
-                    .ConfigureAwait(false);
-                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);
         }
 
-        await venvRunner.PipInstall("httpx==0.24.1", onConsoleOutput);
+        if (versionOptions.VersionTag?.Contains("1.6.0") ?? false)
+        {
+            await venvRunner.PipInstall("httpx==0.24.1", onConsoleOutput);
+        }
 
         // Install requirements file
         progress?.Report(
@@ -211,10 +223,6 @@ public class A3WebUI : BaseGitPackage
         await venvRunner
             .PipInstallFromRequirements(requirements, onConsoleOutput, excludes: "torch")
             .ConfigureAwait(false);
-
-        progress?.Report(
-            new ProgressReport(1f, "Installing Package Requirements", isIndeterminate: false)
-        );
 
         progress?.Report(new ProgressReport(-1f, "Updating configuration", isIndeterminate: true));
 
@@ -273,7 +281,13 @@ public class A3WebUI : BaseGitPackage
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         await venvRunner
-            .PipInstall(PyVenvRunner.TorchPipInstallArgsRocm511, onConsoleOutput)
+            .PipInstall(
+                new PipInstallArgs()
+                    .WithTorch("==2.0.1")
+                    .WithTorchVision()
+                    .WithTorchExtraIndex("rocm5.1.1"),
+                onConsoleOutput
+            )
             .ConfigureAwait(false);
     }
 }

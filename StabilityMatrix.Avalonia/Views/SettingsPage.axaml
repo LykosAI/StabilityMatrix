@@ -1,4 +1,4 @@
-﻿<controls:UserControlBase
+<controls:UserControlBase
     x:Class="StabilityMatrix.Avalonia.Views.SettingsPage"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -6,11 +6,16 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+    xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
+    xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
+    Focusable="True"
     d:DataContext="{x:Static mocks:DesignData.SettingsViewModel}"
     d:DesignHeight="700"
     d:DesignWidth="800"
@@ -88,10 +93,10 @@
             </Grid>
             
             <!-- Inference UI -->
-            <Grid Margin="0,8,0,0" RowDefinitions="auto,*,*">
+            <Grid Margin="0,8,0,0" RowDefinitions="auto,*,*,*">
                 <TextBlock 
                     FontWeight="Medium"
-                    Text="Inference UI" 
+                    Text="Inference" 
                     Margin="0,0,0,8" />
                 <!-- Auto Completion -->
                 <ui:SettingsExpander  Grid.Row="1"
@@ -160,6 +165,43 @@
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
                 </ui:SettingsExpander>
+                
+                <!-- Output Image Files -->
+                <ui:SettingsExpander  Grid.Row="3"
+                                      Header="Output Image Files"
+                                      Margin="8,0,8,4">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource Symbol="TabDesktopImage"/>
+                    </ui:SettingsExpander.IconSource>
+                    <!-- File name pattern  -->
+                    <ui:SettingsExpanderItem
+                        Content="File name pattern"
+                        Description="{Binding OutputImageFileNameFormatSample}"
+                        IconSource="Rename">
+                        <ui:SettingsExpanderItem.Footer>
+                            <TextBox
+                                Name="OutputImageFileNameFormatTextBox"
+                                Watermark="{x:Static inference:FileNameFormat.DefaultTemplate}"
+                                FontSize="13"
+                                MinWidth="150"
+                                Text="{Binding OutputImageFileNameFormat}"
+                                FontFamily="Cascadia Code,Consolas,Menlo,Monospace"/>
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                </ui:SettingsExpander>
+                
+                <ui:TeachingTip 
+                    IsOpen="{Binding #OutputImageFileNameFormatTextBox.IsFocused}"
+                    Target="{Binding #OutputImageFileNameFormatTextBox, Mode=OneWay}"
+                    PreferredPlacement="Top"
+                    Title="Format Variables"
+                    Grid.Row="3">
+                    <DataGrid 
+                        AutoGenerateColumns="True"
+                        ItemsSource="{Binding OutputImageFileNameFormatVars}" />
+                    <!--<mdxaml:MarkdownScrollViewer
+                        Markdown="{Binding OutputImageFileNameFormatGuideMarkdown}"/>-->
+                </ui:TeachingTip>
             </Grid>
             
             <!--  Environment Options  -->

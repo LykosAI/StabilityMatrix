@@ -22,7 +22,6 @@ using AsyncAwaitBestPractices;
 using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;

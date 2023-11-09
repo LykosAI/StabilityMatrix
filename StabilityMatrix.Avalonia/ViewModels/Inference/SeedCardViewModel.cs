@@ -10,6 +10,8 @@ using StabilityMatrix.Core.Attributes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(SeedCard))]
+[ManagedService]
+[Transient]
 public partial class SeedCardViewModel : LoadableViewModelBase
 {
     [ObservableProperty, NotifyPropertyChangedFor(nameof(RandomizeButtonToolTip))]

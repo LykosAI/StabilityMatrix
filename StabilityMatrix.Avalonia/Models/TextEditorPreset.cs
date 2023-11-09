@@ -3,5 +3,6 @@
 public enum TextEditorPreset
 {
     None,
-    Prompt
+    Prompt,
+    Console
 }

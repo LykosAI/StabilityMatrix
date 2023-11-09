@@ -1,6 +1,7 @@
 ﻿using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
@@ -29,6 +30,21 @@ public class DankDiffusion : BaseGitPackage
     public override IReadOnlyList<string> ExtraLaunchCommands => new[] { "test-config", };
 
     public override Uri PreviewImageUri { get; }
+
+    public override string OutputFolderName { get; }
+    public override PackageDifficulty InstallerSortOrder { get; }
+
+    public override Task InstallPackage(
+        string installLocation,
+        TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
+        DownloadPackageVersionOptions versionOptions,
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null
+    )
+    {
+        throw new NotImplementedException();
+    }
 
     public override Task RunPackage(
         string installedPackagePath,
@@ -68,8 +84,11 @@ public class DankDiffusion : BaseGitPackage
 
     public override List<LaunchOptionDefinition> LaunchOptions { get; }
 
-    public override Task<string> GetLatestVersion()
-    {
-        throw new NotImplementedException();
-    }
+    public override Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
+    public override Dictionary<
+        SharedOutputType,
+        IReadOnlyList<string>
+    >? SharedOutputFolders { get; }
+
+    public override string MainBranch { get; }
 }

@@ -1,7 +1,10 @@
-﻿using StabilityMatrix.Core.Models.Packages;
+﻿using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Packages;
 
 namespace StabilityMatrix.Core.Helper.Factory;
 
+[Singleton(typeof(IPackageFactory))]
 public class PackageFactory : IPackageFactory
 {
     /// <summary>
@@ -13,17 +16,27 @@ public class PackageFactory : IPackageFactory
     {
         this.basePackages = basePackages.ToDictionary(x => x.Name);
     }
-    
+
     public IEnumerable<BasePackage> GetAllAvailablePackages()
     {
-        return basePackages.Values;
+        return basePackages.Values.OrderBy(p => p.InstallerSortOrder).ThenBy(p => p.DisplayName);
     }
 
     public BasePackage? FindPackageByName(string? packageName)
     {
-        return packageName == null ? null : 
-            basePackages.GetValueOrDefault(packageName);
+        return packageName == null ? null : basePackages.GetValueOrDefault(packageName);
     }
 
     public BasePackage? this[string packageName] => basePackages[packageName];
+
+    /// <inheritdoc />
+    public PackagePair? GetPackagePair(InstalledPackage? installedPackage)
+    {
+        if (installedPackage?.PackageName is not { } packageName)
+            return null;
+
+        return !basePackages.TryGetValue(packageName, out var basePackage)
+            ? null
+            : new PackagePair(installedPackage, basePackage);
+    }
 }

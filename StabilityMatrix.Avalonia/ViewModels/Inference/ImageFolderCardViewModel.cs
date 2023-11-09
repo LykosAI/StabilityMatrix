@@ -4,7 +4,6 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader;
-using Avalonia;
 using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
@@ -26,6 +25,7 @@ using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using SortDirection = DynamicData.Binding.SortDirection;
@@ -33,6 +33,8 @@ using SortDirection = DynamicData.Binding.SortDirection;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ImageFolderCard))]
+[ManagedService]
+[Transient]
 public partial class ImageFolderCardViewModel : ViewModelBase
 {
     private readonly ILogger<ImageFolderCardViewModel> logger;
@@ -42,6 +44,9 @@ public partial class ImageFolderCardViewModel : ViewModelBase
 
     [ObservableProperty]
     private string? searchQuery;
+
+    [ObservableProperty]
+    private Size imageSize = new(150, 190);
 
     /// <summary>
     /// Collection of local image files
@@ -61,20 +66,28 @@ public partial class ImageFolderCardViewModel : ViewModelBase
         this.settingsManager = settingsManager;
         this.notificationService = notificationService;
 
-        var predicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
+        var searcher = new ImageSearcher();
+
+        // Observable predicate from SearchQuery changes
+        var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
             .Throttle(TimeSpan.FromMilliseconds(50))!
-            .Select<PropertyValue<ImageFolderCardViewModel, string>, Func<LocalImageFile, bool>>(
-                p => file => SearchPredicate(file, p.Value)
-            )
+            .Select(property => searcher.GetPredicate(property.Value))
             .AsObservable();
 
         imageIndexService.InferenceImages.ItemsSource
             .Connect()
             .DeferUntilLoaded()
-            .Filter(predicate)
+            .Filter(searchPredicate)
             .SortBy(file => file.LastModifiedAt, SortDirection.Descending)
             .Bind(LocalImages)
             .Subscribe();
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.ImageSize,
+            settings => settings.InferenceImageSize,
+            delay: TimeSpan.FromMilliseconds(250)
+        );
     }
 
     private static bool SearchPredicate(LocalImageFile file, string? query)
@@ -116,8 +129,33 @@ public partial class ImageFolderCardViewModel : ViewModelBase
     public override async Task OnLoadedAsync()
     {
         await base.OnLoadedAsync();
-
+        ImageSize = settingsManager.Settings.InferenceImageSize;
         imageIndexService.RefreshIndexForAllCollections().SafeFireAndForget();
+    }
+
+    /// <summary>
+    /// Gets the image path if it exists, returns null.
+    /// If the image path is resolved but the file doesn't exist, it will be removed from the index.
+    /// </summary>
+    private FilePath? GetImagePathIfExists(LocalImageFile item)
+    {
+        var imageFile = new FilePath(item.AbsolutePath);
+
+        if (!imageFile.Exists)
+        {
+            // Remove from index
+            imageIndexService.InferenceImages.Remove(item);
+
+            // Invalidate cache
+            if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
+            {
+                loader.RemoveAllNamesFromCache(imageFile.Name);
+            }
+
+            return null;
+        }
+
+        return imageFile;
     }
 
     /// <summary>
@@ -126,14 +164,14 @@ public partial class ImageFolderCardViewModel : ViewModelBase
     [RelayCommand]
     private async Task OnImageClick(LocalImageFile item)
     {
-        if (item.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
+        if (GetImagePathIfExists(item) is not { } imageFile)
         {
             return;
         }
 
         var currentIndex = LocalImages.IndexOf(item);
 
-        var image = new ImageSource(new FilePath(imagePath));
+        var image = new ImageSource(imageFile);
 
         // Preload
         await image.GetBitmapAsync();
@@ -156,14 +194,12 @@ public partial class ImageFolderCardViewModel : ViewModelBase
                         if (newIndex >= 0 && newIndex < LocalImages.Count)
                         {
                             var newImage = LocalImages[newIndex];
-                            var newImageSource = new ImageSource(
-                                new FilePath(newImage.GetFullPath(settingsManager.ImagesDirectory))
-                            );
+                            var newImageSource = new ImageSource(newImage.AbsolutePath);
 
                             // Preload
                             await newImageSource.GetBitmapAsync();
 
-                            var oldImageSource = sender.ImageSource;
+                            // var oldImageSource = sender.ImageSource;
 
                             sender.ImageSource = newImageSource;
                             sender.LocalImageFile = newImage;
@@ -185,13 +221,12 @@ public partial class ImageFolderCardViewModel : ViewModelBase
     [RelayCommand]
     private async Task OnImageDelete(LocalImageFile? item)
     {
-        if (item?.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
+        if (item is null || GetImagePathIfExists(item) is not { } imageFile)
         {
             return;
         }
 
         // Delete the file
-        var imageFile = new FilePath(imagePath);
         var result = await notificationService.TryAsync(imageFile.DeleteAsync());
 
         if (!result.IsSuccessful)
@@ -215,14 +250,14 @@ public partial class ImageFolderCardViewModel : ViewModelBase
     [RelayCommand]
     private async Task OnImageCopy(LocalImageFile? item)
     {
-        if (item?.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
+        if (item is null || GetImagePathIfExists(item) is not { } imageFile)
         {
             return;
         }
 
         var clipboard = App.Clipboard;
 
-        await clipboard.SetFileDataObjectAsync(imagePath);
+        await clipboard.SetFileDataObjectAsync(imageFile.FullPath);
     }
 
     /// <summary>
@@ -231,12 +266,12 @@ public partial class ImageFolderCardViewModel : ViewModelBase
     [RelayCommand]
     private async Task OnImageOpen(LocalImageFile? item)
     {
-        if (item?.GetFullPath(settingsManager.ImagesDirectory) is not { } imagePath)
+        if (item is null || GetImagePathIfExists(item) is not { } imageFile)
         {
             return;
         }
 
-        await ProcessRunner.OpenFileBrowser(imagePath);
+        await ProcessRunner.OpenFileBrowser(imageFile);
     }
 
     /// <summary>
@@ -248,12 +283,10 @@ public partial class ImageFolderCardViewModel : ViewModelBase
         bool includeMetadata = false
     )
     {
-        if (item?.GetFullPath(settingsManager.ImagesDirectory) is not { } sourcePath)
+        if (item is null || GetImagePathIfExists(item) is not { } sourceFile)
         {
             return;
         }
-
-        var sourceFile = new FilePath(sourcePath);
 
         var formatName = format.ToString();
 

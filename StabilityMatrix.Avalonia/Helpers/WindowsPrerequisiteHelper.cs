@@ -17,70 +17,87 @@ namespace StabilityMatrix.Avalonia.Helpers;
 public class WindowsPrerequisiteHelper : IPrerequisiteHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    
+
     private readonly IGitHubClient gitHubClient;
     private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
-    
+
     private const string VcRedistDownloadUrl = "https://aka.ms/vs/16/release/vc_redist.x64.exe";
-    
+    private const string TkinterDownloadUrl =
+        "https://cdn.lykos.ai/tkinter-cpython-embedded-3.10.11-win-x64.zip";
+
     private string HomeDir => settingsManager.LibraryDir;
-    
+
     private string VcRedistDownloadPath => Path.Combine(HomeDir, "vcredist.x64.exe");
 
     private string AssetsDir => Path.Combine(HomeDir, "Assets");
     private string SevenZipPath => Path.Combine(AssetsDir, "7za.exe");
-    
+
     private string PythonDownloadPath => Path.Combine(AssetsDir, "python-3.10.11-embed-amd64.zip");
     private string PythonDir => Path.Combine(AssetsDir, "Python310");
     private string PythonDllPath => Path.Combine(PythonDir, "python310.dll");
     private string PythonLibraryZipPath => Path.Combine(PythonDir, "python310.zip");
     private string GetPipPath => Path.Combine(PythonDir, "get-pip.pyc");
+
     // Temporary directory to extract venv to during python install
     private string VenvTempDir => Path.Combine(PythonDir, "venv");
-    
+
     private string PortableGitInstallDir => Path.Combine(HomeDir, "PortableGit");
     private string PortableGitDownloadPath => Path.Combine(HomeDir, "PortableGit.7z.exe");
     private string GitExePath => Path.Combine(PortableGitInstallDir, "bin", "git.exe");
+    private string TkinterZipPath => Path.Combine(AssetsDir, "tkinter.zip");
+    private string TkinterExtractPath => PythonDir;
+    private string TkinterExistsPath => Path.Combine(PythonDir, "tkinter");
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
-    
+
     public bool IsPythonInstalled => File.Exists(PythonDllPath);
 
     public WindowsPrerequisiteHelper(
         IGitHubClient gitHubClient,
-        IDownloadService downloadService, 
-        ISettingsManager settingsManager)
+        IDownloadService downloadService,
+        ISettingsManager settingsManager
+    )
     {
         this.gitHubClient = gitHubClient;
         this.downloadService = downloadService;
         this.settingsManager = settingsManager;
     }
 
-    public async Task RunGit(string? workingDirectory = null, params string[] args)
+    public async Task RunGit(
+        string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null,
+        params string[] args
+    )
     {
-        var process = ProcessRunner.StartAnsiProcess(GitExePath, args, 
+        var process = ProcessRunner.StartAnsiProcess(
+            GitExePath,
+            args,
             workingDirectory: workingDirectory,
             environmentVariables: new Dictionary<string, string>
             {
-                {"PATH", Compat.GetEnvPathWithExtensions(GitBinPath)}
-            });
-        
+                { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) }
+            },
+            outputDataReceived: onProcessOutput
+        );
+
         await ProcessRunner.WaitForExitConditionAsync(process);
     }
 
     public async Task<string> GetGitOutput(string? workingDirectory = null, params string[] args)
     {
         var process = await ProcessRunner.GetProcessOutputAsync(
-            GitExePath, string.Join(" ", args),
+            GitExePath,
+            string.Join(" ", args),
             workingDirectory: workingDirectory,
             environmentVariables: new Dictionary<string, string>
             {
-                {"PATH", Compat.GetEnvPathWithExtensions(GitBinPath)}
-            });
-        
+                { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) }
+            }
+        );
+
         return process;
     }
-    
+
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         await InstallVcRedistIfNecessary(progress);
@@ -97,16 +114,20 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
             (Assets.SevenZipExecutable, AssetsDir),
             (Assets.SevenZipLicense, AssetsDir),
         };
-        
-        progress?.Report(new ProgressReport(0, message: "Unpacking resources", isIndeterminate: true));
-        
+
+        progress?.Report(
+            new ProgressReport(0, message: "Unpacking resources", isIndeterminate: true)
+        );
+
         Directory.CreateDirectory(AssetsDir);
         foreach (var (asset, extractDir) in assets)
         {
             await asset.ExtractToDir(extractDir);
         }
-        
-        progress?.Report(new ProgressReport(1, message: "Unpacking resources", isIndeterminate: false));
+
+        progress?.Report(
+            new ProgressReport(1, message: "Unpacking resources", isIndeterminate: false)
+        );
     }
 
     public async Task InstallPythonIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -120,7 +141,7 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
         Logger.Info("Python not found at {PythonDllPath}, downloading...", PythonDllPath);
 
         Directory.CreateDirectory(AssetsDir);
-        
+
         // Delete existing python zip if it exists
         if (File.Exists(PythonLibraryZipPath))
         {
@@ -130,44 +151,45 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
         var remote = Assets.PythonDownloadUrl;
         var url = remote.Url.ToString();
         Logger.Info($"Downloading Python from {url} to {PythonLibraryZipPath}");
-        
+
         // Cleanup to remove zip if download fails
         try
         {
             // Download python zip
             await downloadService.DownloadToFileAsync(url, PythonDownloadPath, progress: progress);
-        
+
             // Verify python hash
             var downloadHash = await FileHash.GetSha256Async(PythonDownloadPath, progress);
             if (downloadHash != remote.HashSha256)
             {
                 var fileExists = File.Exists(PythonDownloadPath);
                 var fileSize = new FileInfo(PythonDownloadPath).Length;
-                var msg = $"Python download hash mismatch: {downloadHash} != {remote.HashSha256} " +
-                          $"(file exists: {fileExists}, size: {fileSize})";
+                var msg =
+                    $"Python download hash mismatch: {downloadHash} != {remote.HashSha256} "
+                    + $"(file exists: {fileExists}, size: {fileSize})";
                 throw new Exception(msg);
             }
-            
+
             progress?.Report(new ProgressReport(progress: 1f, message: "Python download complete"));
-        
+
             progress?.Report(new ProgressReport(-1, "Installing Python...", isIndeterminate: true));
-            
+
             // We also need 7z if it's not already unpacked
             if (!File.Exists(SevenZipPath))
             {
                 await Assets.SevenZipExecutable.ExtractToDir(AssetsDir);
                 await Assets.SevenZipLicense.ExtractToDir(AssetsDir);
             }
-        
+
             // Delete existing python dir
             if (Directory.Exists(PythonDir))
             {
                 Directory.Delete(PythonDir, true);
             }
-            
+
             // Unzip python
             await ArchiveHelper.Extract7Z(PythonDownloadPath, PythonDir);
-        
+
             try
             {
                 // Extract embedded venv folder
@@ -185,7 +207,7 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
                     await resource.ExtractTo(path);
                 }
                 // Add venv to python's library zip
-                
+
                 await ArchiveHelper.AddToArchive7Z(PythonLibraryZipPath, VenvTempDir);
             }
             finally
@@ -196,16 +218,19 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
                     Directory.Delete(VenvTempDir, true);
                 }
             }
-            
+
             // Extract get-pip.pyc
             await Assets.PyScriptGetPip.ExtractToDir(PythonDir);
-        
+
             // We need to uncomment the #import site line in python310._pth for pip to work
             var pythonPthPath = Path.Combine(PythonDir, "python310._pth");
             var pythonPthContent = await File.ReadAllTextAsync(pythonPthPath);
             pythonPthContent = pythonPthContent.Replace("#import site", "import site");
             await File.WriteAllTextAsync(pythonPthPath, pythonPthContent);
-        
+
+            // Install TKinter
+            await InstallTkinterIfNecessary(progress);
+
             progress?.Report(new ProgressReport(1f, "Python install complete"));
         }
         finally
@@ -218,6 +243,39 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
         }
     }
 
+    [SupportedOSPlatform("windows")]
+    public async Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        if (!Directory.Exists(TkinterExistsPath))
+        {
+            Logger.Info("Downloading Tkinter");
+            await downloadService.DownloadToFileAsync(
+                TkinterDownloadUrl,
+                TkinterZipPath,
+                progress: progress
+            );
+            progress?.Report(
+                new ProgressReport(
+                    progress: 1f,
+                    message: "Tkinter download complete",
+                    type: ProgressType.Download
+                )
+            );
+
+            await ArchiveHelper.Extract(TkinterZipPath, TkinterExtractPath, progress);
+
+            File.Delete(TkinterZipPath);
+        }
+
+        progress?.Report(
+            new ProgressReport(
+                progress: 1f,
+                message: "Tkinter install complete",
+                type: ProgressType.Generic
+            )
+        );
+    }
+
     public async Task InstallGitIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         if (File.Exists(GitExePath))
@@ -225,7 +283,7 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
             Logger.Debug("Git already installed at {GitExePath}", GitExePath);
             return;
         }
-        
+
         Logger.Info("Git not found at {GitExePath}, downloading...", GitExePath);
 
         var portableGitUrl =
@@ -233,7 +291,11 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
 
         if (!File.Exists(PortableGitDownloadPath))
         {
-            await downloadService.DownloadToFileAsync(portableGitUrl, PortableGitDownloadPath, progress: progress);
+            await downloadService.DownloadToFileAsync(
+                portableGitUrl,
+                PortableGitDownloadPath,
+                progress: progress
+            );
             progress?.Report(new ProgressReport(progress: 1f, message: "Git download complete"));
         }
 
@@ -245,7 +307,9 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     {
         var registry = Registry.LocalMachine;
         var key = registry.OpenSubKey(
-            @"SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64", false);
+            @"SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64",
+            false
+        );
         if (key != null)
         {
             var buildId = Convert.ToUInt32(key.GetValue("Bld"));
@@ -254,20 +318,44 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
                 return;
             }
         }
-        
+
         Logger.Info("Downloading VC Redist");
 
-        await downloadService.DownloadToFileAsync(VcRedistDownloadUrl, VcRedistDownloadPath, progress: progress);
-        progress?.Report(new ProgressReport(progress: 1f, message: "Visual C++ download complete",
-            type: ProgressType.Download));
-        
+        await downloadService.DownloadToFileAsync(
+            VcRedistDownloadUrl,
+            VcRedistDownloadPath,
+            progress: progress
+        );
+        progress?.Report(
+            new ProgressReport(
+                progress: 1f,
+                message: "Visual C++ download complete",
+                type: ProgressType.Download
+            )
+        );
+
         Logger.Info("Installing VC Redist");
-        progress?.Report(new ProgressReport(progress: 0.5f, isIndeterminate: true, type: ProgressType.Generic, message: "Installing prerequisites..."));
-        var process = ProcessRunner.StartAnsiProcess(VcRedistDownloadPath, "/install /quiet /norestart");
+        progress?.Report(
+            new ProgressReport(
+                progress: 0.5f,
+                isIndeterminate: true,
+                type: ProgressType.Generic,
+                message: "Installing prerequisites..."
+            )
+        );
+        var process = ProcessRunner.StartAnsiProcess(
+            VcRedistDownloadPath,
+            "/install /quiet /norestart"
+        );
         await process.WaitForExitAsync();
-        progress?.Report(new ProgressReport(progress: 1f, message: "Visual C++ install complete",
-            type: ProgressType.Generic));
-        
+        progress?.Report(
+            new ProgressReport(
+                progress: 1f,
+                message: "Visual C++ install complete",
+                type: ProgressType.Generic
+            )
+        );
+
         File.Delete(VcRedistDownloadPath);
     }
 
@@ -286,5 +374,4 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
 
         File.Delete(PortableGitDownloadPath);
     }
-
 }

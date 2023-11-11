@@ -103,7 +103,6 @@ public static class DesignData
         // General services
         services
             .AddLogging()
-            .AddSingleton<INavigationService, NavigationService>()
             .AddSingleton<IPackageFactory, PackageFactory>()
             .AddSingleton<IUpdateHelper, UpdateHelper>()
             .AddSingleton<ModelFinder>()
@@ -436,6 +435,9 @@ public static class DesignData
 
     public static InferenceSettingsViewModel InferenceSettingsViewModel =>
         Services.GetRequiredService<InferenceSettingsViewModel>();
+
+    public static MainSettingsViewModel MainSettingsViewModel =>
+        Services.GetRequiredService<MainSettingsViewModel>();
 
     public static CheckpointBrowserViewModel CheckpointBrowserViewModel =>
         Services.GetRequiredService<CheckpointBrowserViewModel>();

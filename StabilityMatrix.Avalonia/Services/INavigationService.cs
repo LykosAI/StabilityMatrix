@@ -1,11 +1,15 @@
-﻿using FluentAvalonia.UI.Controls;
+﻿using System;
+using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 
 namespace StabilityMatrix.Avalonia.Services;
 
-public interface INavigationService
+public interface INavigationService<T>
 {
+    event EventHandler<TypedNavigationEventArgs>? TypedNavigation;
+
     /// <summary>
     /// Set the frame to use for navigation.
     /// </summary>

@@ -4,9 +4,9 @@ using StabilityMatrix.Core.Attributes;
 namespace StabilityMatrix.Avalonia.Views.Settings;
 
 [Singleton]
-public partial class InferenceSettingsPage : UserControlBase
+public partial class MainSettingsPage : UserControlBase
 {
-    public InferenceSettingsPage()
+    public MainSettingsPage()
     {
         InitializeComponent();
     }

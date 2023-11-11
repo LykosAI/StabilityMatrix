@@ -352,17 +352,31 @@ public sealed class App : Application
                     t1.attributes is { Length: > 0 }
                     && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
             )
-            .Select(t1 => new { Type = t1.t, Attribute = (SingletonAttribute)t1.attributes[0] });
+            .Select(
+                t1 =>
+                    new
+                    {
+                        Type = t1.t,
+                        Attributes = t1.attributes.Cast<SingletonAttribute>().ToArray()
+                    }
+            );
 
         foreach (var typePair in singletonTypes)
         {
-            if (typePair.Attribute.InterfaceType is null)
+            foreach (var attribute in typePair.Attributes)
             {
-                services.AddSingleton(typePair.Type);
-            }
-            else
-            {
-                services.AddSingleton(typePair.Attribute.InterfaceType, typePair.Type);
+                if (attribute.InterfaceType is null)
+                {
+                    services.AddSingleton(typePair.Type);
+                }
+                else if (attribute.ImplType is not null)
+                {
+                    services.AddSingleton(attribute.InterfaceType, attribute.ImplType);
+                }
+                else
+                {
+                    services.AddSingleton(attribute.InterfaceType, typePair.Type);
+                }
             }
         }
 

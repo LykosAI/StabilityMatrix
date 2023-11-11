@@ -27,6 +27,8 @@
              <idcr:ControlRecycling x:Key="ControlRecyclingKey" />
              <x:Double x:Key="ContentDialogMaxWidth">700</x:Double>
              
+             <x:Double x:Key="BreadcrumbBarItemThemeFontSize">32</x:Double>
+             
              <SolidColorBrush x:Key="ToolTipBackground" Color="#1E1F22"/>
              <SolidColorBrush x:Key="ToolTipForeground" Color="#9FBDC3"/>
              <FontFamily x:Key="NotoSansJP">avares://StabilityMatrix.Avalonia/Assets/Fonts/NotoSansJP#Noto Sans JP</FontFamily>
@@ -39,6 +41,7 @@
         <StyleInclude Source="avares://Dock.Avalonia/Themes/DockFluentTheme.axaml" />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
+        <StyleInclude Source="avares://FluentAvalonia.BreadcrumbBar/Styling/Styles.axaml" />
         <StyleInclude Source="Styles/ProgressRing.axaml"/>
         <StyleInclude Source="Styles/ButtonStyles.axaml"/>
         <StyleInclude Source="Styles/SplitButtonStyles.axaml"/>

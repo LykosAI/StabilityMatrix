@@ -4,6 +4,7 @@ using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
 using FluentAvalonia.UI.Navigation;
 using StabilityMatrix.Avalonia.Animations;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
@@ -11,10 +12,19 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Services;
 
-[Singleton(typeof(INavigationService))]
-public class NavigationService : INavigationService
+[Singleton(
+    ImplType = typeof(NavigationService<MainWindowViewModel>),
+    InterfaceType = typeof(INavigationService<MainWindowViewModel>)
+)]
+[Singleton(
+    ImplType = typeof(NavigationService<SettingsViewModel>),
+    InterfaceType = typeof(INavigationService<SettingsViewModel>)
+)]
+public class NavigationService<T> : INavigationService<T>
 {
     private Frame? _frame;
+
+    public event EventHandler<TypedNavigationEventArgs>? TypedNavigation;
 
     /// <inheritdoc />
     public void SetFrame(Frame frame)
@@ -60,18 +70,10 @@ public class NavigationService : INavigationService
             }
         );
 
-        if (!typeof(TViewModel).IsAssignableTo(typeof(PageViewModelBase)))
-            return;
-
-        if (
-            App.Services.GetService(typeof(MainWindowViewModel))
-            is MainWindowViewModel mainViewModel
-        )
-        {
-            mainViewModel.SelectedCategory = mainViewModel.Pages.FirstOrDefault(
-                x => x.GetType() == typeof(TViewModel)
-            );
-        }
+        TypedNavigation?.Invoke(
+            this,
+            new TypedNavigationEventArgs { ViewModelType = typeof(TViewModel) }
+        );
     }
 
     /// <inheritdoc />
@@ -104,6 +106,15 @@ public class NavigationService : INavigationService
             {
                 IsNavigationStackEnabled = true,
                 TransitionInfoOverride = transitionInfo ?? new SuppressNavigationTransitionInfo()
+            }
+        );
+
+        TypedNavigation?.Invoke(
+            this,
+            new TypedNavigationEventArgs
+            {
+                ViewModelType = viewModel.GetType(),
+                ViewModel = viewModel
             }
         );
     }

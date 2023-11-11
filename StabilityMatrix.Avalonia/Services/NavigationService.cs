@@ -83,7 +83,7 @@ public class NavigationService<T> : INavigationService<T>
         object? param = null
     )
     {
-        if (!viewModelType.IsAssignableFrom(typeof(ViewModelBase)))
+        if (!viewModelType.IsAssignableTo(typeof(ViewModelBase)))
         {
             // ReSharper disable once LocalizableElement
             throw new ArgumentException("Type must be a ViewModelBase.", nameof(viewModelType));

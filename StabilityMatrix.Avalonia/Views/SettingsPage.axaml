@@ -20,14 +20,12 @@
     
     <controls:UserControlBase.Resources>
         <x:Double x:Key="BreadcrumbBarItemThemeFontSize">24</x:Double>
+        <x:Double x:Key="BreadcrumbBarChevronFontSize">17</x:Double>
+        <Thickness x:Key="BreadcrumbBarChevronPadding">6,3</Thickness>
+        <FontWeight x:Key="BreadcrumbBarItemFontWeight">Medium</FontWeight>
     </controls:UserControlBase.Resources>
     
     <Grid RowDefinitions="Auto,*">
-        <Button
-            Grid.Row="1">
-            
-            
-        </Button>
         <ui:BreadcrumbBar
             Grid.Row="0"
             Margin="16,8"

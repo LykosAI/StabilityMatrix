@@ -23,6 +23,8 @@ public partial class SettingsPage : UserControlBase
 {
     private readonly INavigationService<SettingsViewModel> settingsNavigationService;
 
+    private bool hasLoaded;
+
     private SettingsViewModel ViewModel => (SettingsViewModel)DataContext!;
 
     [DesignOnly(true)]
@@ -47,16 +49,19 @@ public partial class SettingsPage : UserControlBase
     {
         base.OnLoaded(e);
 
-        Dispatcher.UIThread.Post(
-            () =>
-                settingsNavigationService.NavigateTo(
-                    ViewModel.SubPages[0],
-                    new BetterSlideNavigationTransition
-                    {
-                        Effect = SlideNavigationTransitionEffect.FromBottom
-                    }
-                )
-        );
+        if (!hasLoaded)
+        {
+            // Initial load, navigate to first page
+            Dispatcher.UIThread.Post(
+                () =>
+                    settingsNavigationService.NavigateTo(
+                        ViewModel.SubPages[0],
+                        new SuppressNavigationTransitionInfo()
+                    )
+            );
+
+            hasLoaded = true;
+        }
     }
 
     private void NavigationService_OnTypedNavigation(object? sender, TypedNavigationEventArgs e)
@@ -81,7 +86,8 @@ public partial class SettingsPage : UserControlBase
         BreadcrumbBarItemClickedEventArgs args
     )
     {
-        if (args.Item is not PageViewModelBase viewModel)
+        // Skip if already on same page
+        if (args.Item is not PageViewModelBase viewModel || viewModel == ViewModel.CurrentPage)
         {
             return;
         }

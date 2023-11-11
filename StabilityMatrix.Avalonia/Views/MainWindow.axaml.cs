@@ -167,9 +167,9 @@ public partial class MainWindow : AppWindowBase
     {
         var mainViewModel = (MainWindowViewModel)DataContext!;
 
-        mainViewModel.SelectedCategory = mainViewModel.Pages.FirstOrDefault(
-            x => x.GetType() == e.ViewModelType
-        );
+        mainViewModel.SelectedCategory = mainViewModel.Pages
+            .Concat(mainViewModel.FooterPages)
+            .FirstOrDefault(x => x.GetType() == e.ViewModelType);
     }
 
     private void OnUpdateAvailable(object? sender, UpdateInfo? updateInfo)

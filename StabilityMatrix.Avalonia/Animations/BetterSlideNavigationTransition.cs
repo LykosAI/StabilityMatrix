@@ -112,18 +112,18 @@ public class BetterSlideNavigationTransition : BaseTransitionInfo
     public static BetterSlideNavigationTransition PageSlideFromLeft =>
         new()
         {
-            Duration = TimeSpan.FromMilliseconds(400),
+            Duration = TimeSpan.FromMilliseconds(300),
             Effect = SlideNavigationTransitionEffect.FromLeft,
             FromHorizontalOffset = 150,
-            Easing = new SplineEasing(0.7, 0.4, 0.1, 0.2)
+            Easing = new SplineEasing(0.6, 0.4, 0.1, 0.1)
         };
 
     public static BetterSlideNavigationTransition PageSlideFromRight =>
         new()
         {
-            Duration = TimeSpan.FromMilliseconds(400),
+            Duration = TimeSpan.FromMilliseconds(300),
             Effect = SlideNavigationTransitionEffect.FromRight,
             FromHorizontalOffset = 150,
-            Easing = new SplineEasing(0.7, 0.4, 0.1, 0.2)
+            Easing = new SplineEasing(0.6, 0.4, 0.1, 0.1)
         };
 }

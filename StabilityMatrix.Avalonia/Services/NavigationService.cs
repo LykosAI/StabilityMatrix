@@ -77,6 +77,56 @@ public class NavigationService<T> : INavigationService<T>
     }
 
     /// <inheritdoc />
+    public void NavigateTo(
+        Type viewModelType,
+        NavigationTransitionInfo? transitionInfo = null,
+        object? param = null
+    )
+    {
+        if (!viewModelType.IsAssignableFrom(typeof(ViewModelBase)))
+        {
+            // ReSharper disable once LocalizableElement
+            throw new ArgumentException("Type must be a ViewModelBase.", nameof(viewModelType));
+        }
+
+        if (_frame is null)
+        {
+            throw new InvalidOperationException("SetFrame was not called before NavigateTo.");
+        }
+
+        if (App.Services.GetService(typeof(ISettingsManager)) is ISettingsManager settingsManager)
+        {
+            // Handle animation scale
+            switch (transitionInfo)
+            {
+                // If the transition info is null or animation scale is 0, suppress the transition
+                case null:
+                case BaseTransitionInfo when settingsManager.Settings.AnimationScale == 0f:
+                    transitionInfo = new SuppressNavigationTransitionInfo();
+                    break;
+                case BaseTransitionInfo baseTransitionInfo:
+                    baseTransitionInfo.Duration *= settingsManager.Settings.AnimationScale;
+                    break;
+            }
+        }
+
+        _frame.NavigateToType(
+            viewModelType,
+            param,
+            new FrameNavigationOptions
+            {
+                IsNavigationStackEnabled = true,
+                TransitionInfoOverride = transitionInfo ?? new SuppressNavigationTransitionInfo()
+            }
+        );
+
+        TypedNavigation?.Invoke(
+            this,
+            new TypedNavigationEventArgs { ViewModelType = viewModelType }
+        );
+    }
+
+    /// <inheritdoc />
     public void NavigateTo(ViewModelBase viewModel, NavigationTransitionInfo? transitionInfo = null)
     {
         if (_frame is null)

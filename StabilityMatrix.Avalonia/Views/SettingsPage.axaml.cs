@@ -94,10 +94,7 @@ public partial class SettingsPage : UserControlBase
 
         settingsNavigationService.NavigateTo(
             viewModel,
-            new BetterSlideNavigationTransition
-            {
-                Effect = SlideNavigationTransitionEffect.FromLeft
-            }
+            BetterSlideNavigationTransition.PageSlideFromLeft
         );
     }
 }

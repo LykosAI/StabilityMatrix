@@ -1,22 +1,25 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Media;
 using Avalonia.Styling;
 using FluentAvalonia.UI.Media.Animation;
+using Projektanker.Icons.Avalonia;
 
 namespace StabilityMatrix.Avalonia.Animations;
 
 public class BetterSlideNavigationTransition : BaseTransitionInfo
 {
     public override TimeSpan Duration { get; set; } = TimeSpan.FromMilliseconds(167);
-    
+
     /// <summary>
     /// Gets or sets the type of animation effect to play during the slide transition.
     /// </summary>
-    public SlideNavigationTransitionEffect Effect { get; set; } = SlideNavigationTransitionEffect.FromRight;
+    public SlideNavigationTransitionEffect Effect { get; set; } =
+        SlideNavigationTransitionEffect.FromRight;
 
     /// <summary>
     /// Gets or sets the HorizontalOffset used when animating from the Left or Right
@@ -27,7 +30,12 @@ public class BetterSlideNavigationTransition : BaseTransitionInfo
     /// Gets or sets the VerticalOffset used when animating from the Top or Bottom
     /// </summary>
     public double FromVerticalOffset { get; set; } = 56;
-    
+
+    /// <summary>
+    /// Gets or sets the easing function applied to the slide transition.
+    /// </summary>
+    public Easing Easing { get; set; } = new SplineEasing(0.1, 0.9, 0.2, 1.0);
+
     public override async void RunAnimation(Animatable ctrl, CancellationToken cancellationToken)
     {
         double length = 0;
@@ -52,24 +60,26 @@ public class BetterSlideNavigationTransition : BaseTransitionInfo
 
         var animation = new Animation
         {
-            Easing = new SplineEasing(0.1, 0.9, 0.2, 1.0),
+            Easing = Easing,
             Children =
             {
                 new KeyFrame
                 {
                     Setters =
                     {
-                        new Setter(isVertical ? TranslateTransform.YProperty : TranslateTransform.XProperty, length),
+                        new Setter(
+                            isVertical
+                                ? TranslateTransform.YProperty
+                                : TranslateTransform.XProperty,
+                            length
+                        ),
                         new Setter(Visual.OpacityProperty, 0d)
                     },
                     Cue = new Cue(0d)
                 },
                 new KeyFrame
                 {
-                    Setters=
-                    {
-                        new Setter(Visual.OpacityProperty, 1d)
-                    },
+                    Setters = { new Setter(Visual.OpacityProperty, 1d) },
                     Cue = new Cue(0.05d)
                 },
                 new KeyFrame
@@ -77,7 +87,12 @@ public class BetterSlideNavigationTransition : BaseTransitionInfo
                     Setters =
                     {
                         new Setter(Visual.OpacityProperty, 1d),
-                        new Setter(isVertical ? TranslateTransform.YProperty : TranslateTransform.XProperty, 0.0)
+                        new Setter(
+                            isVertical
+                                ? TranslateTransform.YProperty
+                                : TranslateTransform.XProperty,
+                            0.0
+                        )
                     },
                     Cue = new Cue(1d)
                 }
@@ -93,4 +108,22 @@ public class BetterSlideNavigationTransition : BaseTransitionInfo
             visual.Opacity = 1;
         }
     }
+
+    public static BetterSlideNavigationTransition PageSlideFromLeft =>
+        new()
+        {
+            Duration = TimeSpan.FromMilliseconds(400),
+            Effect = SlideNavigationTransitionEffect.FromLeft,
+            FromHorizontalOffset = 150,
+            Easing = new SplineEasing(0.7, 0.4, 0.1, 0.2)
+        };
+
+    public static BetterSlideNavigationTransition PageSlideFromRight =>
+        new()
+        {
+            Duration = TimeSpan.FromMilliseconds(400),
+            Effect = SlideNavigationTransitionEffect.FromRight,
+            FromHorizontalOffset = 150,
+            Easing = new SplineEasing(0.7, 0.4, 0.1, 0.2)
+        };
 }

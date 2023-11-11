@@ -371,10 +371,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         Dispatcher.UIThread.Post(
             () =>
                 settingsNavigationService.NavigateTo<InferenceSettingsViewModel>(
-                    new BetterSlideNavigationTransition
-                    {
-                        Effect = SlideNavigationTransitionEffect.FromRight
-                    }
+                    BetterSlideNavigationTransition.PageSlideFromRight
                 )
         );
     }

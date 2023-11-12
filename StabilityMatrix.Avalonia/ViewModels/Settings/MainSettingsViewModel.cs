@@ -189,6 +189,11 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
         SharedState = sharedState;
 
+        if (Program.Args.DebugMode)
+        {
+            SharedState.IsDebugMode = true;
+        }
+
         SelectedTheme = settingsManager.Settings.Theme ?? AvailableThemes[1];
         SelectedLanguage = Cultures.GetSupportedCultureOrDefault(settingsManager.Settings.Language);
         RemoveSymlinksOnShutdown = settingsManager.Settings.RemoveFolderLinksOnShutdown;

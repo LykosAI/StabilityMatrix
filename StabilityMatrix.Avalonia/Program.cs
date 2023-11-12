@@ -48,6 +48,7 @@ public class Program
     {
         StartupTimer.Start();
 
+        Args.DebugMode = args.Contains("--debug");
         Args.DebugExceptionDialog = args.Contains("--debug-exception-dialog");
         Args.DebugSentry = args.Contains("--debug-sentry");
         Args.DebugOneClickInstall = args.Contains("--debug-one-click-install");

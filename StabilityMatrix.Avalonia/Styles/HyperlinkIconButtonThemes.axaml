@@ -1,0 +1,43 @@
+﻿<ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:ui="using:FluentAvalonia.UI.Controls">
+
+    <!-- ReSharper disable once Xaml.StaticResourceNotResolved -->
+    <ControlTheme
+        x:Key="{x:Type controls:HyperlinkIconButton}"
+        BasedOn="{StaticResource {x:Type ui:HyperlinkButton}}"
+        TargetType="controls:HyperlinkIconButton">
+        <Setter Property="ContentTemplate">
+            <DataTemplate DataType="x:String">
+                <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon
+                        Margin="0,1,4,0"
+                        FontSize="15"
+                        Foreground="{DynamicResource HyperlinkButtonForeground}"
+                        Symbol="Link" />
+                    <TextBlock Foreground="{DynamicResource HyperlinkButtonForeground}" Text="{Binding}" />
+                </StackPanel>                
+            </DataTemplate>
+        </Setter>
+        <!-- Override template to not set Underline TextDecoration -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <ContentPresenter Name="ContentPresenter"
+                                  Background="{TemplateBinding Background}"
+                                  BorderBrush="{TemplateBinding BorderBrush}"
+                                  BorderThickness="{TemplateBinding BorderThickness}"
+                                  Content="{TemplateBinding Content}"
+                                  ContentTemplate="{TemplateBinding ContentTemplate}"
+                                  Padding="{TemplateBinding Padding}"
+                                  CornerRadius="{TemplateBinding CornerRadius}"
+                                  HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                  VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                  Foreground="{TemplateBinding Foreground}">
+                </ContentPresenter>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+
+</ResourceDictionary>

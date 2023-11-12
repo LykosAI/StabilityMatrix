@@ -507,6 +507,15 @@ public sealed class App : Application
             })
             .AddPolicyHandler(retryPolicy);
 
+        services
+            .AddRefitClient<ICivitTRPCApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri("https://civitai.com");
+                c.Timeout = TimeSpan.FromSeconds(15);
+            })
+            .AddPolicyHandler(retryPolicy);
+
         // Add Refit client managers
         services
             .AddHttpClient("A3Client")

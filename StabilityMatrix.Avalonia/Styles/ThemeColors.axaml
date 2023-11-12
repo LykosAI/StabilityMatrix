@@ -22,6 +22,7 @@
     <Color x:Key="ThemeDarkGreenColor">#3A783C</Color>
     <Color x:Key="ThemeGreenColor">#4BA04F</Color>
     <Color x:Key="ThemeGreenColorTransparent">#AA4BA04F</Color>
+    <Color x:Key="ThemeMediumSeaGreenColor">#6CCB5F</Color>
     <Color x:Key="ThemeLightGreenColor">#8BC34A</Color>
     <Color x:Key="ThemeLimeColor">#CDDC39</Color>
     <Color x:Key="ThemeYellowColor">#FFEB3B</Color>

@@ -15,6 +15,7 @@
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     Focusable="True"
     d:DataContext="{x:Static mocks:DesignData.MainSettingsViewModel}"
     d:DesignHeight="700"
@@ -65,13 +66,14 @@
                     IsVisible="{Binding SharedState.IsDebugMode}"
                     Margin="8,0,8,4"
                     IsClickEnabled="True"
-                    Command="{Binding NavigateToInferenceSettingsCommand}"
+                    Command="{Binding NavigateToSubPageCommand}"
+                    CommandParameter="{x:Type vmSettings:InferenceSettingsViewModel}"
                     Header="Inference (Test)"
                     IconSource="Code"
                     ActionIconSource="ChevronRight">
                 </ui:SettingsExpander>
             </Grid>
-
+            
             <!--  Checkpoints Manager Options  -->
             <Grid RowDefinitions="auto,*,Auto">
                 <TextBlock
@@ -244,13 +246,29 @@
             </Grid>
 
             <!--  Integrations  -->
-            <Grid RowDefinitions="auto,*">
+            <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4">
                 <TextBlock
-                    Margin="0,0,0,8"
+                    Margin="0,0,0,4"
                     FontWeight="Medium"
                     Text="{x:Static lang:Resources.Label_Integrations}" />
                 <ui:SettingsExpander
                     Grid.Row="1"
+                    Margin="8,0"
+                    IsClickEnabled="True"
+                    IsVisible="{Binding SharedState.IsDebugMode}"
+                    Command="{Binding NavigateToSubPageCommand}"
+                    CommandParameter="{x:Type vmSettings:AccountSettingsViewModel}"
+                    Header="Accounts"
+                    ActionIconSource="ChevronRight">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource
+                            FontSize="10"
+                            IsFilled="True"
+                            Symbol="Person"/>
+                    </ui:SettingsExpander.IconSource>
+                </ui:SettingsExpander>
+                <ui:SettingsExpander
+                    Grid.Row="2"
                     Margin="8,0,8,4"
                     Header="{x:Static lang:Resources.Label_DiscordRichPresence}">
                     <ui:SettingsExpander.IconSource>
@@ -260,7 +278,7 @@
                         <ToggleSwitch IsChecked="{Binding IsDiscordRichPresenceEnabled}" />
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
-            </Grid>
+            </sg:SpacedGrid>
 
             <!--  System Options  -->
             <Grid RowDefinitions="auto, auto, auto">

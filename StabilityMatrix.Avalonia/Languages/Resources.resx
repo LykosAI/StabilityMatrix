@@ -750,4 +750,10 @@
   <data name="Action_OpenGithub" xml:space="preserve">
     <value>Open on GitHub</value>
   </data>
+  <data name="Label_Connected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="Action_Disconnect" xml:space="preserve">
+    <value>Disconnect</value>
+  </data>
 </root>

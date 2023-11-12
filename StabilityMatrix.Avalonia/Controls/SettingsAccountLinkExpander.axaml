@@ -1,0 +1,98 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
+    <Design.PreviewWith>
+        <StackPanel Width="600" Height="400">
+            <controls:SettingsAccountLinkExpander
+                Header="Service 1"
+                IconSource="OtherUser"
+                OffDescription="Manage account services like A, B, and C" />
+
+            <controls:SettingsAccountLinkExpander
+                Header="Service 2"
+                IconSource="CloudFilled"
+                IsConnected="True"
+                OffDescription="Manage account services like A, B, and C" />
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|SettingsAccountLinkExpander">
+        <!--  Set Defaults  -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <ui:SettingsExpander IconSource="{TemplateBinding IconSource}">
+                    <ui:SettingsExpander.Header>
+                        <StackPanel>
+                            <TextBlock Text="{TemplateBinding Header}" />
+
+                            <TextBlock
+                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                IsVisible="{TemplateBinding IsConnected,
+                                                            Mode=OneWay,
+                                                            Converter={x:Static BoolConverters.Not}}"
+                                Text="{TemplateBinding OffDescription}"
+                                TextWrapping="Wrap"
+                                Theme="{DynamicResource CaptionTextBlockStyle}" />
+
+                            <StackPanel
+                                x:Name="PART_OnDescriptionPanel"
+                                IsVisible="{TemplateBinding IsConnected,
+                                                            Mode=OneWay}"
+                                Orientation="Horizontal"
+                                Spacing="4">
+                                <Ellipse
+                                    Width="5"
+                                    Height="5"
+                                    Fill="{StaticResource ThemeMediumSeaGreenColor}" />
+                                <TextBlock
+                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                    Text="{TemplateBinding OnDescription}"
+                                    TextWrapping="Wrap"
+                                    Theme="{DynamicResource CaptionTextBlockStyle}" />
+                            </StackPanel>
+                        </StackPanel>
+
+                    </ui:SettingsExpander.Header>
+
+                    <ui:SettingsExpander.Footer>
+                        <StackPanel Margin="0,0,12,0">
+                            <!--  for some reason direct bind to IsConnected doesn't work here  -->
+
+                            <!--  Connect button  -->
+                            <Button
+                                x:Name="PART_ConnectButton"
+                                Command="{TemplateBinding ConnectCommand}"
+                                Padding="32,6"
+                                Content="{x:Static lang:Resources.Action_Connect}"
+                                IsVisible="{Binding !IsVisible, ElementName=PART_OnDescriptionPanel}" />
+
+                            <!--  Disconnect button  -->
+                            <Button
+                                x:Name="PART_DisconnectButton"
+                                HorizontalAlignment="Right"
+                                IsVisible="{Binding IsVisible, ElementName=PART_OnDescriptionPanel}"
+                                Padding="6,8"
+                                Classes="transparent"
+                                BorderThickness="0">
+                                <ui:SymbolIcon FontSize="20" Symbol="More" />
+                                <Button.Flyout>
+                                    <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
+                                        <ui:MenuFlyoutItem
+                                            x:Name="PART_DisconnectMenuItem"
+                                            Command="{TemplateBinding DisconnectCommand}"
+                                            Text="{x:Static lang:Resources.Action_Disconnect}"/>
+                                    </ui:FAMenuFlyout>
+                                </Button.Flyout>
+                            </Button>
+                        </StackPanel>
+
+                    </ui:SettingsExpander.Footer>
+
+                </ui:SettingsExpander>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

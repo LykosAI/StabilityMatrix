@@ -366,13 +366,15 @@ public partial class MainSettingsViewModel : PageViewModelBase
     }
 
     [RelayCommand]
-    private void NavigateToInferenceSettings()
+    private void NavigateToSubPage(Type viewModelType)
     {
         Dispatcher.UIThread.Post(
             () =>
-                settingsNavigationService.NavigateTo<InferenceSettingsViewModel>(
+                settingsNavigationService.NavigateTo(
+                    viewModelType,
                     BetterSlideNavigationTransition.PageSlideFromRight
-                )
+                ),
+            DispatcherPriority.Send
         );
     }
 

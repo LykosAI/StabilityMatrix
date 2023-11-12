@@ -439,6 +439,9 @@ public static class DesignData
     public static MainSettingsViewModel MainSettingsViewModel =>
         Services.GetRequiredService<MainSettingsViewModel>();
 
+    public static AccountSettingsViewModel AccountSettingsViewModel =>
+        Services.GetRequiredService<AccountSettingsViewModel>();
+
     public static CheckpointBrowserViewModel CheckpointBrowserViewModel =>
         Services.GetRequiredService<CheckpointBrowserViewModel>();
 

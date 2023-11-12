@@ -177,6 +177,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Disconnect.
+        /// </summary>
+        public static string Action_Disconnect {
+            get {
+                return ResourceManager.GetString("Action_Disconnect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Downgrade.
         /// </summary>
         public static string Action_Downgrade {
@@ -740,6 +749,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_ConfirmQuestion {
             get {
                 return ResourceManager.GetString("Label_ConfirmQuestion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connected.
+        /// </summary>
+        public static string Label_Connected {
+            get {
+                return ResourceManager.GetString("Label_Connected", resourceCulture);
             }
         }
         

@@ -1,11 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
-using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
-using NLog;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
@@ -20,8 +17,6 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 [Singleton]
 public partial class SettingsViewModel : PageViewModelBase
 {
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
     public override string Title => "Settings";
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
@@ -40,6 +35,7 @@ public partial class SettingsViewModel : PageViewModelBase
         {
             vmFactory.Get<MainSettingsViewModel>(),
             vmFactory.Get<InferenceSettingsViewModel>(),
+            vmFactory.Get<AccountSettingsViewModel>()
         };
 
         CurrentPagePath.AddRange(SubPages);

@@ -25,21 +25,22 @@ public class GlobalUserSecrets
 
     public Dictionary<string, string> PatreonCookies { get; set; } = new();
 
+    public string? CivitApiToken { get; set; }
+
     private static string? GetComputerSid()
     {
         var deviceId = new DeviceIdBuilder()
             .AddMachineName()
             .AddOsVersion()
-            .OnWindows(windows => windows
-                .AddProcessorId()
-                .AddMotherboardSerialNumber()
-                .AddSystemDriveSerialNumber())
-            .OnLinux(linux => linux
-                .AddMotherboardSerialNumber()
-                .AddSystemDriveSerialNumber())
-            .OnMac(mac => mac
-                .AddSystemDriveSerialNumber()
-                .AddPlatformSerialNumber())
+            .OnWindows(
+                windows =>
+                    windows
+                        .AddProcessorId()
+                        .AddMotherboardSerialNumber()
+                        .AddSystemDriveSerialNumber()
+            )
+            .OnLinux(linux => linux.AddMotherboardSerialNumber().AddSystemDriveSerialNumber())
+            .OnMac(mac => mac.AddSystemDriveSerialNumber().AddPlatformSerialNumber())
             .ToString();
 
         return deviceId;
@@ -63,14 +64,24 @@ public class GlobalUserSecrets
         return result;
     }
 
-    private static KeyInfo DeriveKeyWithSalt(SecureString password, int saltLength, int iterations, int keyLength)
+    private static KeyInfo DeriveKeyWithSalt(
+        SecureString password,
+        int saltLength,
+        int iterations,
+        int keyLength
+    )
     {
         var salt = RandomNumberGenerator.GetBytes(saltLength);
         var key = DeriveKey(password, salt, iterations, keyLength);
         return new KeyInfo(key, salt, iterations);
     }
 
-    private static byte[] DeriveKey(SecureString password, byte[] salt, int iterations, int keyLength)
+    private static byte[] DeriveKey(
+        SecureString password,
+        byte[] salt,
+        int iterations,
+        int keyLength
+    )
     {
         var ptr = Marshal.SecureStringToBSTR(password);
         try
@@ -102,9 +113,8 @@ public class GlobalUserSecrets
 
     private static (byte[], byte[]) EncryptBytes(byte[] data)
     {
-        var keyInfo =
-            DeriveKeyWithSalt(GetComputerKeyPhrase(), SaltSize, Iterations, KeySize);
-        
+        var keyInfo = DeriveKeyWithSalt(GetComputerKeyPhrase(), SaltSize, Iterations, KeySize);
+
         using var aes = Aes.Create();
         aes.Key = keyInfo.Key;
         aes.IV = keyInfo.Salt;
@@ -114,11 +124,10 @@ public class GlobalUserSecrets
         var transform = aes.CreateEncryptor();
         return (transform.TransformFinalBlock(data, 0, data.Length), keyInfo.Salt);
     }
-    
+
     private static byte[] DecryptBytes(IReadOnlyCollection<byte> encryptedData, byte[] salt)
     {
-        var key =
-            DeriveKey(GetComputerKeyPhrase(), salt, Iterations, KeySize);
+        var key = DeriveKey(GetComputerKeyPhrase(), salt, Iterations, KeySize);
 
         using var aes = Aes.Create();
         aes.Key = key;
@@ -136,18 +145,26 @@ public class GlobalUserSecrets
         var (encrypted, salt) = EncryptBytes(json);
         // Prepend salt to encrypted json
         var fileBytes = salt.Concat(encrypted).ToArray();
+
         File.WriteAllBytes(fileBytes);
     }
 
     public static GlobalUserSecrets? LoadFromFile()
     {
+        File.Info.Refresh();
+
+        if (!File.Exists)
+        {
+            return new GlobalUserSecrets();
+        }
+
         var fileBytes = File.ReadAllBytes();
-        
+
         // Get salt from start of file
         var salt = fileBytes.AsSpan(0, SaltSize).ToArray();
         // Get encrypted json from rest of file
         var encryptedJson = fileBytes.AsSpan(SaltSize).ToArray();
-        
+
         var json = DecryptBytes(encryptedJson, salt);
         return JsonSerializer.Deserialize<GlobalUserSecrets>(json);
     }

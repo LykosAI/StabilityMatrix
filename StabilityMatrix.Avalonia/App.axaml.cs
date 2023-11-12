@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Data.Core.Plugins;
 using Avalonia.Input.Platform;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media.Imaging;
@@ -110,6 +111,16 @@ public sealed class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // Remove DataAnnotations validation plugin since we're using INotifyDataErrorInfo from MvvmToolkit
+        var dataValidationPluginsToRemove = BindingPlugins.DataValidators
+            .OfType<DataAnnotationsValidationPlugin>()
+            .ToArray();
+
+        foreach (var plugin in dataValidationPluginsToRemove)
+        {
+            BindingPlugins.DataValidators.Remove(plugin);
+        }
+
         base.OnFrameworkInitializationCompleted();
 
         if (Design.IsDesignMode)

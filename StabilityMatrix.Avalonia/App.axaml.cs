@@ -325,6 +325,7 @@ public sealed class App : Application
     {
         var services = new ServiceCollection();
         services.AddMemoryCache();
+        services.AddLazyInstance();
 
         var exportedTypes = AppDomain.CurrentDomain
             .GetAssemblies()

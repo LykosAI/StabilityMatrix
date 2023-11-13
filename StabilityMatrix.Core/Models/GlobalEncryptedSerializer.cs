@@ -2,31 +2,45 @@
 using System.Security;
 using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using DeviceId;
-using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Core.Models;
 
 internal record struct KeyInfo(byte[] Key, byte[] Salt, int Iterations);
 
 /// <summary>
-/// Global instance of user secrets.
-/// Stored in %APPDATA%\StabilityMatrix\user-secrets.data
+/// Encrypted MessagePack Serializer that uses a global key derived from the computer's SID.
+/// Header contains additional random entropy as a salt that is used in decryption.
 /// </summary>
-public class GlobalUserSecrets
+public static class GlobalEncryptedSerializer
 {
     private const int KeySize = 32;
     private const int Iterations = 300;
     private const int SaltSize = 16;
 
-    [JsonIgnore]
-    public static FilePath File { get; } = GlobalConfig.HomeDir + "user-secrets.data";
+    public static T Deserialize<T>(ReadOnlySpan<byte> data)
+    {
+        // Get salt from start of file
+        var salt = data[..SaltSize].ToArray();
+        // Get encrypted json from rest of file
+        var encryptedJson = data[SaltSize..];
 
-    public string? LykosAccessToken { get; set; }
+        var json = DecryptBytes(encryptedJson, salt);
+        
+        return JsonSerializer.Deserialize<T>(json)
+               ?? throw new Exception("Deserialize returned null");
+    }
 
-    public string? LykosRefreshToken { get; set; }
-
+    public static byte[] Serialize<T>(T obj)
+    {
+        var json = JsonSerializer.SerializeToUtf8Bytes(obj);
+        var (encrypted, salt) = EncryptBytes(json);
+        // Prepend salt to encrypted json
+        var fileBytes = salt.Concat(encrypted).ToArray();
+        
+        return fileBytes;
+    }
+    
     private static string? GetComputerSid()
     {
         var deviceId = new DeviceIdBuilder()
@@ -45,7 +59,7 @@ public class GlobalUserSecrets
 
         return deviceId;
     }
-
+    
     private static SecureString GetComputerKeyPhrase()
     {
         var keySource = GetComputerSid();
@@ -95,8 +109,8 @@ public class GlobalUserSecrets
                 {
                     passwordByteArray[i] = Marshal.ReadByte(ptr, i);
                 }
-
-                using var rfc2898 = new Rfc2898DeriveBytes(passwordByteArray, salt, iterations);
+                
+                using var rfc2898 = new Rfc2898DeriveBytes(passwordByteArray, salt, iterations, HashAlgorithmName.SHA512);
                 return rfc2898.GetBytes(keyLength);
             }
             finally
@@ -125,7 +139,7 @@ public class GlobalUserSecrets
         return (transform.TransformFinalBlock(data, 0, data.Length), keyInfo.Salt);
     }
 
-    private static byte[] DecryptBytes(IReadOnlyCollection<byte> encryptedData, byte[] salt)
+    private static byte[] DecryptBytes(ReadOnlySpan<byte> encryptedData, byte[] salt)
     {
         var key = DeriveKey(GetComputerKeyPhrase(), salt, Iterations, KeySize);
 
@@ -136,38 +150,6 @@ public class GlobalUserSecrets
         aes.Mode = CipherMode.CBC;
 
         var transform = aes.CreateDecryptor();
-        return transform.TransformFinalBlock(encryptedData.ToArray(), 0, encryptedData.Count);
-    }
-
-    public void SaveToFile()
-    {
-        var json = JsonSerializer.SerializeToUtf8Bytes(this);
-        var (encrypted, salt) = EncryptBytes(json);
-        // Prepend salt to encrypted json
-        var fileBytes = salt.Concat(encrypted).ToArray();
-
-        File.WriteAllBytes(fileBytes);
-    }
-
-    public static GlobalUserSecrets LoadFromFile()
-    {
-        File.Info.Refresh();
-
-        if (!File.Exists)
-        {
-            return new GlobalUserSecrets();
-        }
-
-        var fileBytes = File.ReadAllBytes();
-
-        // Get salt from start of file
-        var salt = fileBytes.AsSpan(0, SaltSize).ToArray();
-        // Get encrypted json from rest of file
-        var encryptedJson = fileBytes.AsSpan(SaltSize).ToArray();
-
-        var json = DecryptBytes(encryptedJson, salt);
-
-        return JsonSerializer.Deserialize<GlobalUserSecrets>(json)
-            ?? throw new Exception("Deserialized user secrets is null");
+        return transform.TransformFinalBlock(encryptedData.ToArray(), 0, encryptedData.Length);
     }
 }

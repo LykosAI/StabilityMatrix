@@ -25,4 +25,10 @@ public interface ILykosAuthApi
         [Body] PostLoginRequest request,
         CancellationToken cancellationToken = default
     );
+
+    [Post("/api/Login/Refresh")]
+    Task<LykosAccountTokens> PostLoginRefresh(
+        [Body] PostLoginRefreshRequest request,
+        CancellationToken cancellationToken = default
+    );
 }

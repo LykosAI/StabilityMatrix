@@ -529,20 +529,20 @@ public sealed class App : Application
             })
             .AddPolicyHandler(retryPolicy);
 
-        var lykosAuthRefitSettings = new RefitSettings
-        {
-            ContentSerializer = new SystemTextJsonContentSerializer(jsonSerializerOptions),
-            AuthorizationHeaderValueGetter = (_, ct) =>
-                Task.FromResult(GlobalUserSecrets.LoadFromFile().LykosAccessToken ?? "")
-        };
         services
-            .AddRefitClient<ILykosAuthApi>(lykosAuthRefitSettings)
+            .AddRefitClient<ILykosAuthApi>(defaultRefitSettings)
             .ConfigureHttpClient(c =>
             {
                 c.BaseAddress = new Uri("https://stableauthentication.azurewebsites.net");
                 c.Timeout = TimeSpan.FromSeconds(15);
             })
-            .AddPolicyHandler(retryPolicy);
+            .AddPolicyHandler(retryPolicy)
+            .AddHttpMessageHandler(
+                serviceProvider =>
+                    new TokenAuthHeaderHandler(
+                        serviceProvider.GetRequiredService<LykosAuthTokenProvider>()
+                    )
+            );
 
         // Add Refit client managers
         services

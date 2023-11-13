@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Octokit;
@@ -6,6 +7,7 @@ using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Lykos;
+using StabilityMatrix.Core.Services;
 using ApiException = Refit.ApiException;
 
 namespace StabilityMatrix.Avalonia.Services;
@@ -14,6 +16,7 @@ namespace StabilityMatrix.Avalonia.Services;
 public class AccountsService : IAccountsService
 {
     private readonly ILogger<AccountsService> logger;
+    private readonly ISecretsManager secretsManager;
     private readonly ILykosAuthApi lykosAuthApi;
     private readonly ICivitTRPCApi civitTRPCApi;
 
@@ -24,11 +27,13 @@ public class AccountsService : IAccountsService
 
     public AccountsService(
         ILogger<AccountsService> logger,
+        ISecretsManager secretsManager,
         ILykosAuthApi lykosAuthApi,
         ICivitTRPCApi civitTRPCApi
     )
     {
         this.logger = logger;
+        this.secretsManager = secretsManager;
         this.lykosAuthApi = lykosAuthApi;
         this.civitTRPCApi = civitTRPCApi;
 
@@ -38,55 +43,48 @@ public class AccountsService : IAccountsService
 
     public async Task LykosLoginAsync(string email, string password)
     {
-        var secrets = GlobalUserSecrets.LoadFromFile();
+        var secrets = await secretsManager.SafeLoadAsync();
 
         var tokens = await lykosAuthApi.PostLogin(new PostLoginRequest(email, password));
 
-        secrets.LykosAccessToken = tokens.AccessToken;
-        secrets.LykosRefreshToken = tokens.RefreshToken;
-        secrets.SaveToFile();
+        await secretsManager.SaveAsync(secrets with { LykosAccount = tokens });
 
         await RefreshAsync();
     }
 
     public async Task LykosSignupAsync(string email, string password, string username)
     {
-        var secrets = GlobalUserSecrets.LoadFromFile();
+        var secrets = await secretsManager.SafeLoadAsync();
 
         var tokens = await lykosAuthApi.PostAccount(
             new PostAccountRequest(email, password, password, username)
         );
 
-        secrets.LykosAccessToken = tokens.AccessToken;
-        secrets.LykosRefreshToken = tokens.RefreshToken;
-        secrets.SaveToFile();
+        secrets = secrets with { LykosAccount = tokens };
 
-        await RefreshAsync();
-    }
-
-    public Task LykosLogoutAsync()
-    {
-        var secrets = GlobalUserSecrets.LoadFromFile();
-
-        secrets.LykosAccessToken = null;
-        secrets.LykosRefreshToken = null;
-        secrets.SaveToFile();
-
-        OnLykosAccountStatusUpdate(LykosAccountStatusUpdateEventArgs.Disconnected);
-
-        return Task.CompletedTask;
-    }
-
-    public async Task RefreshAsync()
-    {
-        var secrets = GlobalUserSecrets.LoadFromFile();
+        await secretsManager.SaveAsync(secrets);
 
         await RefreshLykosAsync(secrets);
     }
 
-    private async Task RefreshLykosAsync(GlobalUserSecrets secrets)
+    public async Task LykosLogoutAsync()
     {
-        if (secrets.LykosAccessToken is { } accessToken && !string.IsNullOrEmpty(accessToken))
+        var secrets = await secretsManager.SafeLoadAsync();
+        await secretsManager.SaveAsync(secrets with { LykosAccount = null });
+
+        OnLykosAccountStatusUpdate(LykosAccountStatusUpdateEventArgs.Disconnected);
+    }
+
+    public async Task RefreshAsync()
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+
+        await RefreshLykosAsync(secrets);
+    }
+
+    private async Task RefreshLykosAsync(Secrets secrets)
+    {
+        if (secrets.LykosAccount is not null)
         {
             try
             {
@@ -100,17 +98,36 @@ public class AccountsService : IAccountsService
             }
             catch (OperationCanceledException)
             {
-                logger.LogWarning("Timed out");
+                logger.LogWarning("Timed out while fetching Lykos Auth user info");
             }
             catch (ApiException e)
             {
-                logger.LogWarning(e, "Failed to get user info from Lykos");
+                if (e.StatusCode is HttpStatusCode.Unauthorized) { }
+                else
+                {
+                    logger.LogWarning(e, "Failed to get user info from Lykos");
+                }
             }
         }
 
         OnLykosAccountStatusUpdate(LykosAccountStatusUpdateEventArgs.Disconnected);
     }
 
-    private void OnLykosAccountStatusUpdate(LykosAccountStatusUpdateEventArgs e) =>
+    private void OnLykosAccountStatusUpdate(LykosAccountStatusUpdateEventArgs e)
+    {
+        if (!e.IsConnected && LykosStatus?.IsConnected == true)
+        {
+            logger.LogInformation("Lykos account disconnected");
+        }
+        else if (e.IsConnected && LykosStatus?.IsConnected == false)
+        {
+            logger.LogInformation(
+                "Lykos account connected: {Id} ({Username})",
+                e.User?.Id,
+                e.User?.Account.Name
+            );
+        }
+
         LykosAccountStatusUpdate?.Invoke(this, e);
+    }
 }

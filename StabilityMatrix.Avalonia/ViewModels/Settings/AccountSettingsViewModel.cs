@@ -2,7 +2,9 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -74,20 +76,25 @@ public partial class AccountSettingsViewModel : PageViewModelBase
 
         accountsService.LykosAccountStatusUpdate += (_, args) =>
         {
-            IsLykosConnected = args.IsConnected;
-            LykosUser = args.User;
+            Dispatcher.UIThread.Post(() =>
+            {
+                IsLykosConnected = args.IsConnected;
+                LykosUser = args.User;
+            });
         };
     }
 
     /// <inheritdoc />
-    public override async Task OnLoadedAsync()
+    public override void OnLoaded()
     {
+        base.OnLoaded();
+
         if (Design.IsDesignMode)
         {
             return;
         }
 
-        await accountsService.RefreshAsync();
+        accountsService.RefreshAsync().SafeFireAndForget();
     }
 
     [RelayCommand]

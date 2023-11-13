@@ -89,7 +89,7 @@
                 Header="Lykos"
                 IsConnected="{Binding IsLykosConnected}"
                 ConnectCommand="{Binding ConnectLykosCommand}"
-                DisconnectCommand="{Binding DisconnectCivitCommand}"
+                DisconnectCommand="{Binding DisconnectLykosCommand}"
                 OffDescription="Manage additional integrations with Stability Matrix">
                 <controls:SettingsAccountLinkExpander.IconSource>
                     <ui:ImageIconSource Source="{StaticResource BrandsLykos}" />

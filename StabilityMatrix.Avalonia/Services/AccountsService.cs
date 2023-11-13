@@ -5,6 +5,7 @@ using Octokit;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Lykos;
 using ApiException = Refit.ApiException;
 
 namespace StabilityMatrix.Avalonia.Services;

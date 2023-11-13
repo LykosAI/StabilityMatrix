@@ -13,6 +13,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
@@ -68,6 +69,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly IModelIndexService modelIndexService;
     private readonly INavigationService<SettingsViewModel> settingsNavigationService;
+    private readonly IAccountsService accountsService;
 
     public SharedState SharedState { get; }
 
@@ -174,7 +176,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
         SharedState sharedState,
         ICompletionProvider completionProvider,
         IModelIndexService modelIndexService,
-        INavigationService<SettingsViewModel> settingsNavigationService
+        INavigationService<SettingsViewModel> settingsNavigationService,
+        IAccountsService accountsService
     )
     {
         this.notificationService = notificationService;
@@ -186,6 +189,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         this.completionProvider = completionProvider;
         this.modelIndexService = modelIndexService;
         this.settingsNavigationService = settingsNavigationService;
+        this.accountsService = accountsService;
 
         SharedState = sharedState;
 
@@ -289,6 +293,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
         await notificationService.TryAsync(completionProvider.Setup());
 
         UpdateAvailableTagCompletionCsvs();
+
+        // Start accounts update
+        accountsService.RefreshAsync().SafeFireAndForget();
     }
 
     public static ValidationResult ValidateOutputImageFileNameFormat(

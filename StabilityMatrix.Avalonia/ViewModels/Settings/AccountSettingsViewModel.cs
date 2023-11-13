@@ -58,6 +58,10 @@ public partial class AccountSettingsViewModel : PageViewModelBase
 
             LykosProfileImageUrl = $"https://gravatar.com/avatar/{hash}?s=512&d=retro";
         }
+        else
+        {
+            LykosProfileImageUrl = null;
+        }
     }
 
     public AccountSettingsViewModel(

@@ -23,9 +23,9 @@ public class GlobalUserSecrets
     [JsonIgnore]
     public static FilePath File { get; } = GlobalConfig.HomeDir + "user-secrets.data";
 
-    public Dictionary<string, string> PatreonCookies { get; set; } = new();
+    public string? LykosAccessToken { get; set; }
 
-    public string? CivitApiToken { get; set; }
+    public string? LykosRefreshToken { get; set; }
 
     private static string? GetComputerSid()
     {
@@ -149,7 +149,7 @@ public class GlobalUserSecrets
         File.WriteAllBytes(fileBytes);
     }
 
-    public static GlobalUserSecrets? LoadFromFile()
+    public static GlobalUserSecrets LoadFromFile()
     {
         File.Info.Refresh();
 
@@ -166,6 +166,8 @@ public class GlobalUserSecrets
         var encryptedJson = fileBytes.AsSpan(SaltSize).ToArray();
 
         var json = DecryptBytes(encryptedJson, salt);
-        return JsonSerializer.Deserialize<GlobalUserSecrets>(json);
+
+        return JsonSerializer.Deserialize<GlobalUserSecrets>(json)
+            ?? throw new Exception("Deserialized user secrets is null");
     }
 }

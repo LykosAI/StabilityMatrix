@@ -547,6 +547,9 @@ The gallery images are often inpainted, but you will get something very similar 
             );
         });
 
+    public static LykosLoginViewModel LykosLoginViewModel =>
+        DialogFactory.Get<LykosLoginViewModel>();
+
     public static InferenceTextToImageViewModel InferenceTextToImageViewModel =>
         DialogFactory.Get<InferenceTextToImageViewModel>(vm =>
         {

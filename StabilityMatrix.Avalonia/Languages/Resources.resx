@@ -756,4 +756,22 @@
   <data name="Action_Disconnect" xml:space="preserve">
     <value>Disconnect</value>
   </data>
+  <data name="Label_Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Label_Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="Label_Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Action_Login" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="Action_Signup" xml:space="preserve">
+    <value>Signup</value>
+  </data>
+  <data name="Label_ConfirmPassword" xml:space="preserve">
+    <value>Confirm Password</value>
+  </data>
 </root>

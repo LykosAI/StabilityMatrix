@@ -249,6 +249,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Login.
+        /// </summary>
+        public static string Action_Login {
+            get {
+                return ResourceManager.GetString("Action_Login", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to New.
         /// </summary>
         public static string Action_New {
@@ -510,6 +519,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Signup.
+        /// </summary>
+        public static string Action_Signup {
+            get {
+                return ResourceManager.GetString("Action_Signup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Stop.
         /// </summary>
         public static string Action_Stop {
@@ -744,6 +762,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Confirm Password.
+        /// </summary>
+        public static string Label_ConfirmPassword {
+            get {
+                return ResourceManager.GetString("Label_ConfirmPassword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Confirm?.
         /// </summary>
         public static string Label_ConfirmQuestion {
@@ -902,6 +929,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_DropFileToImport {
             get {
                 return ResourceManager.GetString("Label_DropFileToImport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Email.
+        /// </summary>
+        public static string Label_Email {
+            get {
+                return ResourceManager.GetString("Label_Email", resourceCulture);
             }
         }
         
@@ -1383,6 +1419,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Password.
+        /// </summary>
+        public static string Label_Password {
+            get {
+                return ResourceManager.GetString("Label_Password", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please choose a different name or select a different install location..
         /// </summary>
         public static string Label_PleaseChooseDifferentName {
@@ -1739,6 +1784,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Upscale {
             get {
                 return ResourceManager.GetString("Label_Upscale", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Username.
+        /// </summary>
+        public static string Label_Username {
+            get {
+                return ResourceManager.GetString("Label_Username", resourceCulture);
             }
         }
         

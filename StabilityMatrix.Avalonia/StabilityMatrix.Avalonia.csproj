@@ -43,6 +43,7 @@
         <PackageReference Include="FluentIcons.Avalonia" Version="1.1.220" />
         <PackageReference Include="FluentIcons.FluentAvalonia" Version="1.1.220" />
         <PackageReference Include="FuzzySharp" Version="2.0.2" />
+        <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
         <PackageReference Include="Markdown.Avalonia" Version="11.0.2" />
         <PackageReference Include="MetadataExtractor" Version="2.8.1" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />

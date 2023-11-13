@@ -1,22 +1,14 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
+﻿using System.Threading.Tasks;
 using Avalonia.Controls;
-using AvaloniaEdit.Utils;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
-using Refit;
-using StabilityMatrix.Avalonia.Diagnostics.LogViewer.Core.ViewModels;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Settings;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.Api.CivitTRPC;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
@@ -26,7 +18,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Settings;
 [Singleton, ManagedService]
 public partial class AccountSettingsViewModel : PageViewModelBase
 {
-    private readonly ICivitTRPCApi civitTRPCApi;
+    private readonly IAccountsService accountsService;
+    private readonly ServiceManager<ViewModelBase> vmFactory;
 
     /// <inheritdoc />
     public override string Title => "Accounts";
@@ -41,46 +34,29 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool isCivitConnected;
 
-    public AccountSettingsViewModel(ICivitTRPCApi civitTRPCApi)
+    [ObservableProperty]
+    private bool isLykosConnected;
+
+    public AccountSettingsViewModel(
+        IAccountsService accountsService,
+        ServiceManager<ViewModelBase> vmFactory
+    )
     {
-        this.civitTRPCApi = civitTRPCApi;
+        this.accountsService = accountsService;
+        this.vmFactory = vmFactory;
     }
 
     /// <inheritdoc />
-    public override void OnLoaded()
+    public override async Task OnLoadedAsync()
     {
-        base.OnLoaded();
-
         if (Design.IsDesignMode)
         {
             return;
         }
 
-        // RefreshCivitAccount().SafeFireAndForget();
-    }
+        await accountsService.RefreshAsync();
 
-    private async Task RefreshCivitAccount()
-    {
-        var secrets = GlobalUserSecrets.LoadFromFile()!;
-
-        if (secrets.CivitApiToken is null)
-            return;
-
-        var provisionalUser = Guid.NewGuid().ToString()[..8];
-
-        try
-        {
-            var result = await civitTRPCApi.GetUserProfile(
-                new CivitUserProfileRequest { Username = "ionite", Authed = true },
-                secrets.CivitApiToken
-            );
-
-            CivitStatus = $"Connected with API Key as user '{result.Username}'";
-        }
-        catch (ApiException e)
-        {
-            Debug.WriteLine(e);
-        }
+        IsLykosConnected = accountsService.IsLykosConnected;
     }
 
     [RelayCommand]
@@ -98,12 +74,8 @@ public partial class AccountSettingsViewModel : PageViewModelBase
             return;
         }
 
-        var secrets = GlobalUserSecrets.LoadFromFile()!;
-        secrets.CivitApiToken = json;
-        secrets.SaveToFile();
-
         // TODO
-        await Task.Delay(1000);
+        await Task.Delay(200);
 
         IsCivitConnected = true;
     }
@@ -111,7 +83,26 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     [RelayCommand]
     private async Task DisconnectCivit()
     {
+        await Task.Yield();
+
         IsCivitConnected = false;
+    }
+
+    [RelayCommand]
+    private async Task ConnectLykos()
+    {
+        var vm = vmFactory.Get<LykosLoginViewModel>();
+        if (await vm.ShowDialogAsync() == TaskDialogStandardResult.OK)
+        {
+            IsLykosConnected = true;
+        }
+    }
+
+    [RelayCommand]
+    private async Task DisconnectLykos()
+    {
+        await accountsService.LykosLogoutAsync();
+        IsLykosConnected = false;
     }
 
     /*[RelayCommand]

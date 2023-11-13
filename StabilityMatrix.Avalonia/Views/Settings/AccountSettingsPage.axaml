@@ -85,18 +85,16 @@
                 </StackPanel>
             </sg:SpacedGrid>
 
-            <ui:SettingsExpander Header="Lykos" IsExpanded="True">
-                <ui:SettingsExpander.IconSource>
+            <controls:SettingsAccountLinkExpander
+                Header="Lykos"
+                IsConnected="{Binding IsLykosConnected}"
+                ConnectCommand="{Binding ConnectLykosCommand}"
+                DisconnectCommand="{Binding DisconnectCivitCommand}"
+                OffDescription="Manage additional integrations with Stability Matrix">
+                <controls:SettingsAccountLinkExpander.IconSource>
                     <ui:ImageIconSource Source="{StaticResource BrandsLykos}" />
-                </ui:SettingsExpander.IconSource>
-                
-                <ui:SettingsExpander.Footer>
-                    <Button Content="Login" />
-                </ui:SettingsExpander.Footer>
-                
-                <ui:SettingsExpanderItem Content="Profile"
-                                         Description="Test" />
-            </ui:SettingsExpander>
+                </controls:SettingsAccountLinkExpander.IconSource>
+            </controls:SettingsAccountLinkExpander>
             
             <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4">
                 <TextBlock

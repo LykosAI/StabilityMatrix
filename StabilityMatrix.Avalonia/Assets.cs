@@ -153,6 +153,8 @@ internal static class Assets
 
     public static Uri PatreonUrl { get; } = new("https://patreon.com/StabilityMatrix");
 
+    public static Uri LykosForgotPasswordUrl { get; } = new("https://lykos.ai/forgot-password");
+
     /// <summary>
     /// Yield AvaloniaResources given a relative directory path within the 'Assets' folder.
     /// </summary>

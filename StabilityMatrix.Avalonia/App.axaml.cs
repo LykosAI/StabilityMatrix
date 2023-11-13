@@ -54,6 +54,7 @@ using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -523,6 +524,21 @@ public sealed class App : Application
             .ConfigureHttpClient(c =>
             {
                 c.BaseAddress = new Uri("https://civitai.com");
+                c.Timeout = TimeSpan.FromSeconds(15);
+            })
+            .AddPolicyHandler(retryPolicy);
+
+        var lykosAuthRefitSettings = new RefitSettings
+        {
+            ContentSerializer = new SystemTextJsonContentSerializer(jsonSerializerOptions),
+            AuthorizationHeaderValueGetter = (_, ct) =>
+                Task.FromResult(GlobalUserSecrets.LoadFromFile().LykosAccessToken ?? "")
+        };
+        services
+            .AddRefitClient<ILykosAuthApi>(lykosAuthRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri("https://stableauthentication.azurewebsites.net");
                 c.Timeout = TimeSpan.FromSeconds(15);
             })
             .AddPolicyHandler(retryPolicy);

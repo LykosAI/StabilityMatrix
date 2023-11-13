@@ -65,55 +65,60 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="16,16" Spacing="6">
 
-            <sg:SpacedGrid ColumnDefinitions="*,*" Margin="0,4,0,16">
+            <sg:SpacedGrid Margin="0,4,0,16" ColumnDefinitions="*,*">
                 <StackPanel Orientation="Horizontal" Spacing="16">
-                    <controls:BetterAdvancedImage
+                    <fluentIcons:SymbolIcon
+                        Width="64"
+                        Height="64"
+                        IsFilled="True"
+                        FontSize="64"
+                        Symbol="Person" />
+                    <!--<controls:BetterAdvancedImage
                         HorizontalAlignment="Left"
                         Source="Avares://StabilityMatrix.Avalonia/Assets/noimage.png"
                         Width="64"
                         Height="64"
-                        CornerRadius="8" />
+                        CornerRadius="8" />-->
 
                     <StackPanel>
                         <TextBlock
                             Margin="-1,0,0,0"
-                            Theme="{DynamicResource SubtitleTextBlockStyle}"
-                            Text="Ionite"/>
-                        <TextBlock
-                            Text="user@example.org"/>
+                            Text="{Binding LykosUser.AccountId, FallbackValue=''}"
+                            Theme="{DynamicResource SubtitleTextBlockStyle}" />
+                        <TextBlock Text="{Binding LykosUser.Id, FallbackValue=''}" />
                     </StackPanel>
                 </StackPanel>
             </sg:SpacedGrid>
 
             <controls:SettingsAccountLinkExpander
-                Header="Lykos"
-                IsConnected="{Binding IsLykosConnected}"
                 ConnectCommand="{Binding ConnectLykosCommand}"
                 DisconnectCommand="{Binding DisconnectLykosCommand}"
+                Header="Lykos"
+                IsConnected="{Binding IsLykosConnected}"
                 OffDescription="Manage additional integrations with Stability Matrix">
                 <controls:SettingsAccountLinkExpander.IconSource>
                     <ui:ImageIconSource Source="{StaticResource BrandsLykos}" />
                 </controls:SettingsAccountLinkExpander.IconSource>
             </controls:SettingsAccountLinkExpander>
-            
+
             <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4">
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
                     Text="{x:Static lang:Resources.Label_Integrations}" />
-                
+
                 <controls:SettingsAccountLinkExpander
-                    Grid.Row="1" 
-                    Header="CivitAI"
-                    IsConnected="{Binding IsCivitConnected}"
+                    Grid.Row="1"
                     ConnectCommand="{Binding ConnectCivitCommand}"
                     DisconnectCommand="{Binding DisconnectCivitCommand}"
+                    Header="CivitAI"
+                    IsConnected="{Binding IsCivitConnected}"
                     OffDescription="Connect to Download Models that require login">
                     <controls:SettingsAccountLinkExpander.IconSource>
                         <ui:BitmapIconSource UriSource="avares://StabilityMatrix.Avalonia/Assets/brands-civitai.png" />
                     </controls:SettingsAccountLinkExpander.IconSource>
                 </controls:SettingsAccountLinkExpander>
-                
+
             </sg:SpacedGrid>
 
         </StackPanel>

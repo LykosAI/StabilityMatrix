@@ -17,7 +17,10 @@ public class AccountsService : IAccountsService
     private readonly ILykosAuthApi lykosAuthApi;
     private readonly ICivitTRPCApi civitTRPCApi;
 
-    public bool IsLykosConnected { get; private set; }
+    /// <inheritdoc />
+    public event EventHandler<LykosAccountStatusUpdateEventArgs>? LykosAccountStatusUpdate;
+
+    public LykosAccountStatusUpdateEventArgs? LykosStatus { get; private set; }
 
     public AccountsService(
         ILogger<AccountsService> logger,
@@ -28,6 +31,9 @@ public class AccountsService : IAccountsService
         this.logger = logger;
         this.lykosAuthApi = lykosAuthApi;
         this.civitTRPCApi = civitTRPCApi;
+
+        // Update our own status when the Lykos account status changes
+        LykosAccountStatusUpdate += (_, args) => LykosStatus = args;
     }
 
     public async Task LykosLoginAsync(string email, string password)
@@ -40,7 +46,7 @@ public class AccountsService : IAccountsService
         secrets.LykosRefreshToken = loginResponse.RefreshToken;
         secrets.SaveToFile();
 
-        IsLykosConnected = true;
+        await RefreshAsync();
     }
 
     public Task LykosLogoutAsync()
@@ -51,7 +57,7 @@ public class AccountsService : IAccountsService
         secrets.LykosRefreshToken = null;
         secrets.SaveToFile();
 
-        IsLykosConnected = false;
+        OnLykosAccountStatusUpdate(LykosAccountStatusUpdateEventArgs.Disconnected);
 
         return Task.CompletedTask;
     }
@@ -60,15 +66,22 @@ public class AccountsService : IAccountsService
     {
         var secrets = GlobalUserSecrets.LoadFromFile();
 
-        IsLykosConnected = false;
+        await RefreshLykosAsync(secrets);
+    }
 
+    private async Task RefreshLykosAsync(GlobalUserSecrets secrets)
+    {
         if (secrets.LykosAccessToken is { } accessToken && !string.IsNullOrEmpty(accessToken))
         {
             try
             {
                 var user = await lykosAuthApi.GetUser("dev@ionite.io");
 
-                IsLykosConnected = true;
+                OnLykosAccountStatusUpdate(
+                    new LykosAccountStatusUpdateEventArgs { IsConnected = true, User = user }
+                );
+
+                return;
             }
             catch (OperationCanceledException)
             {
@@ -76,8 +89,13 @@ public class AccountsService : IAccountsService
             }
             catch (ApiException e)
             {
-                logger.LogError(e, "Failed to get user info from Lykos");
+                logger.LogWarning(e, "Failed to get user info from Lykos");
             }
         }
+
+        OnLykosAccountStatusUpdate(LykosAccountStatusUpdateEventArgs.Disconnected);
     }
+
+    private void OnLykosAccountStatusUpdate(LykosAccountStatusUpdateEventArgs e) =>
+        LykosAccountStatusUpdate?.Invoke(this, e);
 }

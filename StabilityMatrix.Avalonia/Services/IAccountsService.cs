@@ -1,10 +1,14 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
+using StabilityMatrix.Core.Models.Api.Lykos;
 
 namespace StabilityMatrix.Avalonia.Services;
 
 public interface IAccountsService
 {
-    bool IsLykosConnected { get; }
+    event EventHandler<LykosAccountStatusUpdateEventArgs>? LykosAccountStatusUpdate;
+
+    LykosAccountStatusUpdateEventArgs? LykosStatus { get; }
 
     Task LykosLoginAsync(string email, string password);
 

@@ -7,8 +7,8 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Settings;
-using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Models.Api.Lykos;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
@@ -37,6 +37,9 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool isLykosConnected;
 
+    [ObservableProperty]
+    private GetUserResponse? lykosUser;
+
     public AccountSettingsViewModel(
         IAccountsService accountsService,
         ServiceManager<ViewModelBase> vmFactory
@@ -44,6 +47,12 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     {
         this.accountsService = accountsService;
         this.vmFactory = vmFactory;
+
+        accountsService.LykosAccountStatusUpdate += (_, args) =>
+        {
+            IsLykosConnected = args.IsConnected;
+            LykosUser = args.User;
+        };
     }
 
     /// <inheritdoc />
@@ -55,8 +64,6 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         }
 
         await accountsService.RefreshAsync();
-
-        IsLykosConnected = accountsService.IsLykosConnected;
     }
 
     [RelayCommand]
@@ -95,6 +102,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         if (await vm.ShowDialogAsync() == TaskDialogStandardResult.OK)
         {
             IsLykosConnected = true;
+            await accountsService.RefreshAsync();
         }
     }
 
@@ -102,7 +110,6 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     private async Task DisconnectLykos()
     {
         await accountsService.LykosLogoutAsync();
-        IsLykosConnected = false;
     }
 
     /*[RelayCommand]

@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -38,7 +41,24 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     private bool isLykosConnected;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LykosProfileImageUrl))]
     private GetUserResponse? lykosUser;
+
+    [ObservableProperty]
+    private string? lykosProfileImageUrl;
+
+    partial void OnLykosUserChanged(GetUserResponse? value)
+    {
+        if (value?.Id is { } userEmail)
+        {
+            userEmail = userEmail.Trim().ToLowerInvariant();
+
+            var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(userEmail));
+            var hash = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+
+            LykosProfileImageUrl = $"https://gravatar.com/avatar/{hash}?s=512&d=retro";
+        }
+    }
 
     public AccountSettingsViewModel(
         IAccountsService accountsService,

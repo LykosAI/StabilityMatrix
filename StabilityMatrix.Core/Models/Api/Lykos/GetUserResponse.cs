@@ -2,7 +2,7 @@
 
 public record GetUserResponse(
     string Id,
-    string AccountId,
+    LykosAccount Account,
     int UserLevel,
     string PatreonId,
     bool IsEmailVerified

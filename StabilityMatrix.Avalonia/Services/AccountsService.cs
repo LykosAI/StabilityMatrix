@@ -40,10 +40,25 @@ public class AccountsService : IAccountsService
     {
         var secrets = GlobalUserSecrets.LoadFromFile();
 
-        var loginResponse = await lykosAuthApi.PostLogin(new PostLoginRequest(email, password));
+        var tokens = await lykosAuthApi.PostLogin(new PostLoginRequest(email, password));
 
-        secrets.LykosAccessToken = loginResponse.AccessToken;
-        secrets.LykosRefreshToken = loginResponse.RefreshToken;
+        secrets.LykosAccessToken = tokens.AccessToken;
+        secrets.LykosRefreshToken = tokens.RefreshToken;
+        secrets.SaveToFile();
+
+        await RefreshAsync();
+    }
+
+    public async Task LykosSignupAsync(string email, string password, string username)
+    {
+        var secrets = GlobalUserSecrets.LoadFromFile();
+
+        var tokens = await lykosAuthApi.PostAccount(
+            new PostAccountRequest(email, password, password, username)
+        );
+
+        secrets.LykosAccessToken = tokens.AccessToken;
+        secrets.LykosRefreshToken = tokens.RefreshToken;
         secrets.SaveToFile();
 
         await RefreshAsync();
@@ -75,7 +90,7 @@ public class AccountsService : IAccountsService
         {
             try
             {
-                var user = await lykosAuthApi.GetUser("dev@ionite.io");
+                var user = await lykosAuthApi.GetUserSelf();
 
                 OnLykosAccountStatusUpdate(
                     new LykosAccountStatusUpdateEventArgs { IsConnected = true, User = user }

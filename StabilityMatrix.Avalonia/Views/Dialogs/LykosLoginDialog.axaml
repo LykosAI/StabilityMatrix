@@ -29,7 +29,7 @@
                 
                 <sg:SpacedGrid
                     Margin="-4,32,-4,8"
-                    RowDefinitions="Auto,Auto,*"
+                    RowDefinitions="Auto,Auto,Auto,*"
                     RowSpacing="8">
                     <!--  Username  -->
                     <TextBox
@@ -44,11 +44,18 @@
                         Watermark="{x:Static lang:Resources.Label_Password}"
                         Grid.Row="1" />
                     
+                    <ui:InfoBar 
+                        Severity="Error"
+                        IsOpen="{Binding LoginError, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        Title="{Binding LoginError.Message}"
+                        Message="{Binding LoginError.Details}"
+                        Grid.Row="2"/>
+                    
                     <controls:HyperlinkIconButton
                         VerticalAlignment="Bottom"
                         Content="Forgot Password?"
                         NavigateUri="{x:Static sm:Assets.LykosForgotPasswordUrl}"
-                        Grid.Row="2"/>
+                        Grid.Row="3"/>
                 </sg:SpacedGrid>
                 
             </TabItem>
@@ -58,7 +65,7 @@
                 
                 <sg:SpacedGrid
                     Margin="-4,32,-4,8"
-                    RowDefinitions="Auto,Auto,Auto,Auto"
+                    RowDefinitions="Auto,Auto,Auto,Auto,Auto"
                     RowSpacing="8">
                     <!--  Email  -->
                     <TextBox
@@ -86,6 +93,13 @@
                         Watermark="{x:Static lang:Resources.Label_ConfirmPassword}"
                         UseFloatingWatermark="True"
                         Grid.Row="3" />
+                    
+                    <ui:InfoBar 
+                        Severity="Error"
+                        IsOpen="{Binding SignupError, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        Title="{Binding SignupError.Message}"
+                        Message="{Binding SignupError.Details}"
+                        Grid.Row="4"/>
                 </sg:SpacedGrid>
                 
             </TabItem>

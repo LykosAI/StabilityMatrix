@@ -68,22 +68,24 @@
             <sg:SpacedGrid Margin="0,4,0,16" ColumnDefinitions="*,*">
                 <StackPanel Orientation="Horizontal" Spacing="16">
                     <fluentIcons:SymbolIcon
+                        IsVisible="{Binding LykosProfileImageUrl, Converter={x:Static StringConverters.IsNullOrEmpty}}"
                         Width="64"
                         Height="64"
                         IsFilled="True"
                         FontSize="64"
                         Symbol="Person" />
-                    <!--<controls:BetterAdvancedImage
+                    <controls:BetterAdvancedImage
                         HorizontalAlignment="Left"
-                        Source="Avares://StabilityMatrix.Avalonia/Assets/noimage.png"
+                        IsVisible="{Binding LykosProfileImageUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        Source="{Binding LykosProfileImageUrl}"
                         Width="64"
                         Height="64"
-                        CornerRadius="8" />-->
+                        CornerRadius="8" />
 
                     <StackPanel>
                         <TextBlock
                             Margin="-1,0,0,0"
-                            Text="{Binding LykosUser.AccountId, FallbackValue=''}"
+                            Text="{Binding LykosUser.Account.Name, FallbackValue=''}"
                             Theme="{DynamicResource SubtitleTextBlockStyle}" />
                         <TextBlock Text="{Binding LykosUser.Id, FallbackValue=''}" />
                     </StackPanel>
@@ -99,6 +101,7 @@
                 <controls:SettingsAccountLinkExpander.IconSource>
                     <ui:ImageIconSource Source="{StaticResource BrandsLykos}" />
                 </controls:SettingsAccountLinkExpander.IconSource>
+                
             </controls:SettingsAccountLinkExpander>
 
             <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4">

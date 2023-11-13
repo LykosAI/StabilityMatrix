@@ -5,11 +5,13 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using Refit;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Validators;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -44,6 +46,12 @@ public partial class LykosLoginViewModel : TaskDialogViewModelBase
     [Required, RequiresMatch<string>(nameof(Password))]
     private string? confirmPassword;
 
+    [ObservableProperty]
+    private AppException? loginError;
+
+    [ObservableProperty]
+    private AppException? signupError;
+
     public LykosLoginViewModel(IAccountsService accountsService)
     {
         this.accountsService = accountsService;
@@ -55,7 +63,12 @@ public partial class LykosLoginViewModel : TaskDialogViewModelBase
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteContinueButtonClick))]
-    private async Task OnContinueButtonClick()
+    private Task OnContinueButtonClick()
+    {
+        return IsSignupMode ? SignupAsync() : LoginAsync();
+    }
+
+    private async Task LoginAsync()
     {
         try
         {
@@ -63,9 +76,31 @@ public partial class LykosLoginViewModel : TaskDialogViewModelBase
 
             CloseDialog(TaskDialogStandardResult.OK);
         }
-        catch (Exception e)
+        catch (OperationCanceledException)
         {
-            Console.WriteLine(e);
+            LoginError = new AppException("Request timed out", "Please try again later");
+        }
+        catch (ApiException e)
+        {
+            LoginError = new AppException("Failed to login", $"{e.StatusCode} - {e.Message}");
+        }
+    }
+
+    private async Task SignupAsync()
+    {
+        try
+        {
+            await accountsService.LykosSignupAsync(Email!, Password!, Username!);
+
+            CloseDialog(TaskDialogStandardResult.OK);
+        }
+        catch (OperationCanceledException)
+        {
+            SignupError = new AppException("Request timed out", "Please try again later");
+        }
+        catch (ApiException e)
+        {
+            SignupError = new AppException("Failed to signup", $"{e.StatusCode} - {e.Message}");
         }
     }
 

@@ -10,6 +10,8 @@ public interface IAccountsService
 
     LykosAccountStatusUpdateEventArgs? LykosStatus { get; }
 
+    Task LykosSignupAsync(string email, string password, string username);
+
     Task LykosLoginAsync(string email, string password);
 
     Task LykosLogoutAsync();

@@ -23,7 +23,7 @@ public class TokenAuthHeaderHandler : DelegatingHandler
                 r =>
                     r.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden
                     && r.RequestMessage?.Headers.Authorization
-                        is { Parameter: "Bearer", Scheme: not null }
+                        is { Scheme: "Bearer", Parameter: not null }
             )
             .RetryAsync(
                 async (result, _) =>
@@ -32,9 +32,8 @@ public class TokenAuthHeaderHandler : DelegatingHandler
                         await tokenProvider.GetAccessTokenAsync().ConfigureAwait(false)
                     );
                     Logger.Info(
-                        "Refreshing access token for status ({StatusCode}) {Message}",
-                        result.Result.StatusCode,
-                        result.Exception.Message
+                        "Refreshing access token for status ({StatusCode})",
+                        result.Result.StatusCode
                     );
                     var (newToken, _) = await tokenProvider
                         .RefreshTokensAsync()

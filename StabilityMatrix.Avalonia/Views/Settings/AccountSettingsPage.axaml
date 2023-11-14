@@ -13,6 +13,7 @@
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
+    xmlns:sm="clr-namespace:StabilityMatrix.Avalonia"
     d:DataContext="{x:Static mocks:DesignData.AccountSettingsViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -60,10 +61,17 @@
                 </DrawingGroup>
             </DrawingGroup>
         </DrawingImage>
+        
+        <SolidColorBrush x:Key="BrushB0" Color="#FFFFFFFF" />
+        <DrawingImage x:Key="BrandsPatreonSymbolWhite">
+            <DrawingGroup>
+                <GeometryDrawing Brush="{DynamicResource BrushB0}" Geometry="F1 M1033.05 324.45C1032.86 186.55 925.46 73.53 799.45 32.75C642.97 -17.89 436.59 -10.55 287.17 59.95C106.07 145.41 49.18 332.61 47.06 519.31C45.32 672.81 60.64 1077.1 288.68 1079.98C458.12 1082.13 483.35 863.8 561.75 758.65C617.53 683.84 689.35 662.71 777.76 640.83C929.71 603.22 1033.27 483.3 1033.05 324.45Z" />
+            </DrawingGroup>
+        </DrawingImage>
     </controls:UserControlBase.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="16,16" Spacing="6">
+        <StackPanel Margin="16,16" Spacing="2">
 
             <sg:SpacedGrid Margin="0,4,0,16" ColumnDefinitions="*,*">
                 <StackPanel Orientation="Horizontal" Spacing="16">
@@ -95,26 +103,49 @@
             <controls:SettingsAccountLinkExpander
                 ConnectCommand="{Binding ConnectLykosCommand}"
                 DisconnectCommand="{Binding DisconnectLykosCommand}"
+                IsLoading="{Binding ConnectLykosCommand.IsRunning}"
                 Header="Lykos"
+                HeaderTargetUri="{x:Static sm:Assets.LykosUrl}"
                 IsConnected="{Binding IsLykosConnected}"
-                OffDescription="Manage additional integrations with Stability Matrix">
+                OffDescription="Manage connected features in Stability Matrix">
                 <controls:SettingsAccountLinkExpander.IconSource>
                     <ui:ImageIconSource Source="{StaticResource BrandsLykos}" />
                 </controls:SettingsAccountLinkExpander.IconSource>
-                
+            </controls:SettingsAccountLinkExpander>
+            
+            <controls:SettingsAccountLinkExpander
+                ConnectCommand="{Binding ConnectPatreonCommand}"
+                DisconnectCommand="{Binding DisconnectPatreonCommand}"
+                IsLoading="{Binding ConnectPatreonCommand.IsRunning}"
+                Header="Patreon"
+                IsEnabled="{Binding IsLykosConnected}"
+                HeaderTargetUri="{x:Static sm:Assets.PatreonUrl}"
+                IsConnected="{Binding IsPatreonConnected}"
+                OffDescription="Access Preview and Dev release channels for auto-updates">
+                <controls:SettingsAccountLinkExpander.IconSource>
+                    <ui:ImageIconSource Source="{StaticResource BrandsPatreonSymbolWhite}" />
+                </controls:SettingsAccountLinkExpander.IconSource>
             </controls:SettingsAccountLinkExpander>
 
-            <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4">
+            <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4" Margin="0,6,0,0">
+                <!--<sg:SpacedGrid.Styles>
+                    <Style Selector="sg|SpacedGrid > controls|SettingsAccountLinkExpander">
+                        <Setter Property="IsEnabled" Value="{Binding IsLykosConnected}"/>
+                    </Style>
+                </sg:SpacedGrid.Styles>-->
+                
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
                     Text="{x:Static lang:Resources.Label_Integrations}" />
-
+                
                 <controls:SettingsAccountLinkExpander
-                    Grid.Row="1"
+                    Grid.Row="2"
                     ConnectCommand="{Binding ConnectCivitCommand}"
                     DisconnectCommand="{Binding DisconnectCivitCommand}"
+                    IsLoading="{Binding ConnectCivitCommand.IsRunning}"
                     Header="CivitAI"
+                    HeaderTargetUri="{x:Static sm:Assets.CivitAIUrl}"
                     IsConnected="{Binding IsCivitConnected}"
                     OffDescription="Connect to Download Models that require login">
                     <controls:SettingsAccountLinkExpander.IconSource>

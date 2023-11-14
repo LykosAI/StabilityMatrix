@@ -26,6 +26,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
+using MessagePipe;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -138,6 +139,8 @@ public sealed class App : Application
         {
             DesktopLifetime.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
+            Setup();
+
             // First time setup if needed
             var settingsManager = Services.GetRequiredService<ISettingsManager>();
             if (!settingsManager.IsEulaAccepted())
@@ -174,6 +177,17 @@ public sealed class App : Application
                 ShowMainWindow();
             }
         }
+    }
+
+    /// <summary>
+    /// Setup tasks to be run shortly before any window is shown
+    /// </summary>
+    private void Setup()
+    {
+        using var _ = new CodeTimer();
+
+        // Setup uri handler for `stabilitymatrix://` protocol
+        Program.UriHandler.RegisterUriScheme();
     }
 
     private void ShowMainWindow()
@@ -326,6 +340,9 @@ public sealed class App : Application
         var services = new ServiceCollection();
         services.AddMemoryCache();
         services.AddLazyInstance();
+
+        services.AddMessagePipe();
+        services.AddMessagePipeNamedPipeInterprocess("StabilityMatrix");
 
         var exportedTypes = AppDomain.CurrentDomain
             .GetAssemblies()
@@ -536,6 +553,9 @@ public sealed class App : Application
                 c.BaseAddress = new Uri("https://stableauthentication.azurewebsites.net");
                 c.Timeout = TimeSpan.FromSeconds(15);
             })
+            .ConfigurePrimaryHttpMessageHandler(
+                () => new HttpClientHandler { AllowAutoRedirect = false }
+            )
             .AddPolicyHandler(retryPolicy)
             .AddHttpMessageHandler(
                 serviceProvider =>

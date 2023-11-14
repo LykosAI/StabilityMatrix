@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -8,12 +10,17 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Avalonia.Views.Settings;
+using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Lykos;
+using StabilityMatrix.Core.Processes;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
@@ -25,6 +32,8 @@ public partial class AccountSettingsViewModel : PageViewModelBase
 {
     private readonly IAccountsService accountsService;
     private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly INotificationService notificationService;
+    private readonly ILykosAuthApi lykosAuthApi;
 
     /// <inheritdoc />
     public override string Title => "Accounts";
@@ -32,12 +41,6 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     /// <inheritdoc />
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.Person, IsFilled = true };
-
-    [ObservableProperty]
-    private string? civitStatus;
-
-    [ObservableProperty]
-    private bool isCivitConnected;
 
     [ObservableProperty]
     private bool isLykosConnected;
@@ -48,6 +51,12 @@ public partial class AccountSettingsViewModel : PageViewModelBase
 
     [ObservableProperty]
     private string? lykosProfileImageUrl;
+
+    [ObservableProperty]
+    private bool isPatreonConnected;
+
+    [ObservableProperty]
+    private bool isCivitConnected;
 
     partial void OnLykosUserChanged(GetUserResponse? value)
     {
@@ -68,11 +77,15 @@ public partial class AccountSettingsViewModel : PageViewModelBase
 
     public AccountSettingsViewModel(
         IAccountsService accountsService,
-        ServiceManager<ViewModelBase> vmFactory
+        ServiceManager<ViewModelBase> vmFactory,
+        INotificationService notificationService,
+        ILykosAuthApi lykosAuthApi
     )
     {
         this.accountsService = accountsService;
         this.vmFactory = vmFactory;
+        this.notificationService = notificationService;
+        this.lykosAuthApi = lykosAuthApi;
 
         accountsService.LykosAccountStatusUpdate += (_, args) =>
         {
@@ -80,6 +93,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
             {
                 IsLykosConnected = args.IsConnected;
                 LykosUser = args.User;
+                IsPatreonConnected = args.IsPatreonConnected;
             });
         };
     }
@@ -141,6 +155,41 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     private async Task DisconnectLykos()
     {
         await accountsService.LykosLogoutAsync();
+    }
+
+    [RelayCommand]
+    private async Task ConnectPatreon()
+    {
+        if (LykosUser?.Id is null)
+            return;
+
+        var urlResult = await notificationService.TryAsync(
+            lykosAuthApi.GetPatreonOAuthUrl(
+                Program.MessagePipeUri.Append("/oauth/patreon/callback").ToString()
+            )
+        );
+
+        if (!urlResult.IsSuccessful || urlResult.Result is not { } url)
+        {
+            return;
+        }
+
+        ProcessRunner.OpenUrl(urlResult.Result);
+
+        var dialogVm = vmFactory.Get<OAuthConnectViewModel>();
+        dialogVm.Title = "Connect Patreon Account";
+        dialogVm.Url = url;
+
+        if (await dialogVm.GetDialog().ShowAsync() == ContentDialogResult.Primary)
+        {
+            await accountsService.RefreshAsync();
+        }
+    }
+
+    [RelayCommand]
+    private async Task DisconnectPatreon()
+    {
+        await notificationService.TryAsync(accountsService.LykosPatreonOAuthLogoutAsync());
     }
 
     /*[RelayCommand]

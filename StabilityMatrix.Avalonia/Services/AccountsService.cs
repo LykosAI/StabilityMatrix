@@ -75,6 +75,36 @@ public class AccountsService : IAccountsService
         OnLykosAccountStatusUpdate(LykosAccountStatusUpdateEventArgs.Disconnected);
     }
 
+    /// <inheritdoc />
+    public async Task LykosPatreonOAuthLoginAsync()
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+        if (secrets.LykosAccount is null)
+        {
+            throw new InvalidOperationException(
+                "Lykos account must be connected in to manage OAuth connections"
+            );
+        }
+
+        // TODO
+    }
+
+    /// <inheritdoc />
+    public async Task LykosPatreonOAuthLogoutAsync()
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+        if (secrets.LykosAccount is null)
+        {
+            throw new InvalidOperationException(
+                "Lykos account must be connected in to manage OAuth connections"
+            );
+        }
+
+        await lykosAuthApi.DeletePatreonOAuth();
+
+        await RefreshLykosAsync(secrets);
+    }
+
     public async Task RefreshAsync()
     {
         var secrets = await secretsManager.SafeLoadAsync();

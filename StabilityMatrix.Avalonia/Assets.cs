@@ -151,7 +151,11 @@ internal static class Assets
 
     public static Uri DiscordServerUrl { get; } = new("https://discord.com/invite/TUrgfECxHz");
 
+    public static Uri LykosUrl { get; } = new("https://lykos.ai");
+
     public static Uri PatreonUrl { get; } = new("https://patreon.com/StabilityMatrix");
+
+    public static Uri CivitAIUrl { get; } = new("https://civitai.com");
 
     public static Uri LykosForgotPasswordUrl { get; } = new("https://lykos.ai/forgot-password");
 

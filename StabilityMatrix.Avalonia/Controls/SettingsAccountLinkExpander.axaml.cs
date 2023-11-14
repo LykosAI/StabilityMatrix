@@ -1,15 +1,23 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Metadata;
 using Avalonia.VisualTree;
 using FluentAvalonia.UI.Controls;
+using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
 public class SettingsAccountLinkExpander : TemplatedControl
 {
+    private readonly List<object?> _items = new();
+
+    [Content]
+    public List<object?> Items => _items;
+
     // ReSharper disable MemberCanBePrivate.Global
     public static readonly StyledProperty<object?> HeaderProperty =
         HeaderedItemsControl.HeaderProperty.AddOwner<SettingsAccountLinkExpander>();
@@ -18,6 +26,17 @@ public class SettingsAccountLinkExpander : TemplatedControl
     {
         get => GetValue(HeaderProperty);
         set => SetValue(HeaderProperty, value);
+    }
+
+    public static readonly StyledProperty<Uri?> HeaderTargetUriProperty = AvaloniaProperty.Register<
+        SettingsAccountLinkExpander,
+        Uri?
+    >("HeaderTargetUri");
+
+    public Uri? HeaderTargetUri
+    {
+        get => GetValue(HeaderTargetUriProperty);
+        set => SetValue(HeaderTargetUriProperty, value);
     }
 
     public static readonly StyledProperty<IconSource?> IconSourceProperty =
@@ -67,6 +86,17 @@ public class SettingsAccountLinkExpander : TemplatedControl
             enableDataValidation: true
         );
 
+    public static readonly StyledProperty<bool> IsLoadingProperty = AvaloniaProperty.Register<
+        SettingsAccountLinkExpander,
+        bool
+    >(nameof(IsLoading));
+
+    public bool IsLoading
+    {
+        get => GetValue(IsLoadingProperty);
+        set => SetValue(IsLoadingProperty, value);
+    }
+
     public ICommand? ConnectCommand
     {
         get => GetValue(ConnectCommandProperty);
@@ -91,6 +121,23 @@ public class SettingsAccountLinkExpander : TemplatedControl
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
+
+        // Bind tapped event on header
+        if (
+            HeaderTargetUri is { } headerTargetUri
+            && e.NameScope.Find<TextBlock>("PART_HeaderTextBlock") is { } headerTextBlock
+        )
+        {
+            headerTextBlock.Tapped += (_, _) =>
+            {
+                ProcessRunner.OpenUrl(headerTargetUri.ToString());
+            };
+        }
+
+        if (e.NameScope.Find<SettingsExpander>("PART_SettingsExpander") is { } expander)
+        {
+            expander.ItemsSource = Items;
+        }
 
         if (ConnectCommand is { } command)
         {

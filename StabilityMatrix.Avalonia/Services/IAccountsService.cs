@@ -16,5 +16,9 @@ public interface IAccountsService
 
     Task LykosLogoutAsync();
 
+    Task LykosPatreonOAuthLoginAsync();
+
+    Task LykosPatreonOAuthLogoutAsync();
+
     Task RefreshAsync();
 }

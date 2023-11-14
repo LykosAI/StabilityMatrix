@@ -17,7 +17,8 @@
                         FontSize="15"
                         Foreground="{DynamicResource HyperlinkButtonForeground}"
                         Symbol="Link" />
-                    <TextBlock Foreground="{DynamicResource HyperlinkButtonForeground}" Text="{Binding}" />
+                    <TextBlock 
+                        Foreground="{DynamicResource HyperlinkButtonForeground}" Text="{Binding}" />
                 </StackPanel>                
             </DataTemplate>
         </Setter>

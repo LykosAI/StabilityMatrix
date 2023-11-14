@@ -7,4 +7,6 @@ public class LykosAccountStatusUpdateEventArgs : EventArgs
     public bool IsConnected { get; init; }
 
     public GetUserResponse? User { get; init; }
+
+    public bool IsPatreonConnected => User?.PatreonId != null;
 }

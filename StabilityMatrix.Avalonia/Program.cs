@@ -13,12 +13,14 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
+using FluentAvalonia.Core;
 using NLog;
 using Polly.Contrib.WaitAndRetry;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
 using Semver;
 using Sentry;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
@@ -40,6 +42,10 @@ public class Program
 
     public static Stopwatch StartupTimer { get; } = new();
 
+    public static UriHandler UriHandler { get; } = new("stabilitymatrix", "StabilityMatrix");
+
+    public static Uri MessagePipeUri { get; } = new("stabilitymatrix://app");
+
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
@@ -56,6 +62,19 @@ public class Program
         Args.NoWindowChromeEffects = args.Contains("--no-window-chrome-effects");
         Args.ResetWindowPosition = args.Contains("--reset-window-position");
         Args.DisableGpuRendering = args.Contains("--disable-gpu");
+
+        // Launched for custom URI scheme, send to main process
+        if (args.Contains("--uri"))
+        {
+            var uriArg = args.ElementAtOrDefault(args.IndexOf("--uri") + 1);
+            if (
+                Uri.TryCreate(uriArg, UriKind.Absolute, out var uri)
+                && string.Equals(uri.Scheme, UriHandler.Scheme, StringComparison.OrdinalIgnoreCase)
+            )
+            {
+                UriHandler.SendAndExit(uri);
+            }
+        }
 
         SetDebugBuild();
 

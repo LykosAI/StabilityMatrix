@@ -53,8 +53,11 @@ public partial class OAuthConnectViewModel : ContentDialogViewModelBase
             UriHandler.IpcKeySend,
             receivedUri =>
             {
-                logger.LogDebug("UriHandler Received URI: {Uri}", receivedUri);
-                OnPrimaryButtonClick();
+                logger.LogDebug("UriHandler Received URI: {Uri}", receivedUri.PathAndQuery);
+                if (receivedUri.PathAndQuery.StartsWith("/oauth/patreon/callback"))
+                {
+                    OnPrimaryButtonClick();
+                }
             }
         );
     }

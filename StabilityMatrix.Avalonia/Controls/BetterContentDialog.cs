@@ -270,6 +270,10 @@ public class BetterContentDialog : ContentDialog
     protected void OnDialogButtonClick(object? sender, ContentDialogResult e)
     {
         Dispatcher.UIThread.Post(() =>
+        {
+            Result = e;
+            HideCore();
+        });
     }
 
     protected override void OnDataContextChanged(EventArgs e)

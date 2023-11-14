@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Reactive.Concurrency;
+using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -15,6 +16,8 @@ public class SecretsManager : ISecretsManager
     private readonly ILogger<SecretsManager> logger;
 
     private static FilePath GlobalFile => GlobalConfig.HomeDir.JoinFile("user-secrets.data");
+
+    private static SemaphoreSlim GlobalFileLock { get; } = new(1, 1);
 
     public SecretsManager(ILogger<SecretsManager> logger)
     {
@@ -56,9 +59,18 @@ public class SecretsManager : ISecretsManager
     }
 
     /// <inheritdoc />
-    public Task SaveAsync(Secrets secrets)
+    public async Task SaveAsync(Secrets secrets)
     {
-        var fileBytes = GlobalEncryptedSerializer.Serialize(secrets);
-        return GlobalFile.WriteAllBytesAsync(fileBytes);
+        await GlobalFileLock.WaitAsync().ConfigureAwait(false);
+
+        try
+        {
+            var fileBytes = GlobalEncryptedSerializer.Serialize(secrets);
+            await GlobalFile.WriteAllBytesAsync(fileBytes).ConfigureAwait(false);
+        }
+        finally
+        {
+            GlobalFileLock.Release();
+        }
     }
 }

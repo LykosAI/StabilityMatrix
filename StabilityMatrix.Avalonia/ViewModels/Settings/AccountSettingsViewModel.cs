@@ -183,6 +183,10 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         if (await dialogVm.GetDialog().ShowAsync() == ContentDialogResult.Primary)
         {
             await accountsService.RefreshAsync();
+
+            // Bring main window to front since browser is probably covering
+            var main = App.TopLevel as Window;
+            main?.Activate();
         }
     }
 

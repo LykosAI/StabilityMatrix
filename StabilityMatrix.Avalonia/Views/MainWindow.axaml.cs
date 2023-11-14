@@ -25,7 +25,6 @@ using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Avalonia.Diagnostics.LogViewer.Core.ViewModels;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;

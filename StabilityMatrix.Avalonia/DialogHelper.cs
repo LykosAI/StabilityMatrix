@@ -512,8 +512,9 @@ public static class DialogHelper
             {
                 new TextBlock
                 {
-                    Margin = new Thickness(0, 0, 0, 8),
-                    FontSize = 16,
+                    Margin = new Thickness(0, 2, 0, 8),
+                    FontSize = 20,
+                    FontWeight = FontWeight.DemiBold,
                     Text = title,
                     TextWrapping = TextWrapping.WrapWithOverflow,
                 },

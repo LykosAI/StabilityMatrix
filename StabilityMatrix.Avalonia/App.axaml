@@ -22,7 +22,7 @@
                  <ResourceInclude Source="Controls/EditorFlyouts.axaml"/>
                  <ResourceInclude Source="Controls/Scroll/BetterScrollViewer.axaml"/>
                  <ResourceInclude Source="Controls/ImageFolderCard.axaml"/>
-                 <ResourceInclude Source="Styles/HyperlinkIconButtonThemes.axaml"/>
+                 <ResourceInclude Source="Styles/ControlThemes/HyperlinkIconButtonStyles.axaml"/>
              </ResourceDictionary.MergedDictionaries>
              
              <idcr:ControlRecycling x:Key="ControlRecyclingKey" />

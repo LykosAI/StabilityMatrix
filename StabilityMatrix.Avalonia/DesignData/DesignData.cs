@@ -304,6 +304,7 @@ public static class DesignData
                     {
                         Name = "BB95 Furry Mix",
                         Description = "A furry mix of BB95",
+                        Stats = new CivitModelStats { Rating = 3.5, RatingCount = 24 }
                     };
                 })
             };

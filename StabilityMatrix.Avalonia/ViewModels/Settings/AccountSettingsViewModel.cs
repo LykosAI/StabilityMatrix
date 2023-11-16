@@ -46,6 +46,9 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         new SymbolIconSource { Symbol = Symbol.Person, IsFilled = true };
 
     [ObservableProperty]
+    private bool isInitialUpdateFinished;
+
+    [ObservableProperty]
     private string? lykosProfileImageUrl;
 
     [ObservableProperty]
@@ -78,6 +81,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         {
             Dispatcher.UIThread.Post(() =>
             {
+                IsInitialUpdateFinished = true;
                 LykosStatus = args;
                 IsPatreonConnected = args.IsPatreonConnected;
             });
@@ -87,6 +91,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         {
             Dispatcher.UIThread.Post(() =>
             {
+                IsInitialUpdateFinished = true;
                 CivitStatus = args;
             });
         };
@@ -143,7 +148,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         return true;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(IsInitialUpdateFinished))]
     private async Task ConnectLykos()
     {
         if (!await BeforeConnectCheck())
@@ -159,7 +164,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         return accountsService.LykosLogoutAsync();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(IsInitialUpdateFinished))]
     private async Task ConnectPatreon()
     {
         if (!await BeforeConnectCheck())
@@ -201,7 +206,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         await notificationService.TryAsync(accountsService.LykosPatreonOAuthLogoutAsync());
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(IsInitialUpdateFinished))]
     private async Task ConnectCivit()
     {
         if (!await BeforeConnectCheck())

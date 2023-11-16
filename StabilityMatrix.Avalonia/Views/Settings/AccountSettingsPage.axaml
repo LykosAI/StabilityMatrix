@@ -103,7 +103,6 @@
             <controls:SettingsAccountLinkExpander
                 ConnectCommand="{Binding ConnectLykosCommand}"
                 DisconnectCommand="{Binding DisconnectLykosCommand}"
-                IsLoading="{Binding ConnectLykosCommand.IsRunning}"
                 Header="Lykos"
                 HeaderTargetUri="{x:Static sm:Assets.LykosUrl}"
                 IsConnected="{Binding LykosStatus.IsConnected}"
@@ -111,12 +110,17 @@
                 <controls:SettingsAccountLinkExpander.IconSource>
                     <ui:ImageIconSource Source="{StaticResource BrandsLykos}" />
                 </controls:SettingsAccountLinkExpander.IconSource>
+                <controls:SettingsAccountLinkExpander.IsLoading>
+                    <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                        <Binding Path="ConnectLykosCommand.IsRunning" />
+                        <Binding Path="!IsInitialUpdateFinished" />
+                    </MultiBinding>
+                </controls:SettingsAccountLinkExpander.IsLoading>
             </controls:SettingsAccountLinkExpander>
             
             <controls:SettingsAccountLinkExpander
                 ConnectCommand="{Binding ConnectPatreonCommand}"
                 DisconnectCommand="{Binding DisconnectPatreonCommand}"
-                IsLoading="{Binding ConnectPatreonCommand.IsRunning}"
                 Header="Patreon"
                 IsEnabled="{Binding LykosStatus.IsConnected}"
                 HeaderTargetUri="{x:Static sm:Assets.PatreonUrl}"
@@ -125,6 +129,12 @@
                 <controls:SettingsAccountLinkExpander.IconSource>
                     <ui:ImageIconSource Source="{StaticResource BrandsPatreonSymbolWhite}" />
                 </controls:SettingsAccountLinkExpander.IconSource>
+                <controls:SettingsAccountLinkExpander.IsLoading>
+                    <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                        <Binding Path="ConnectPatreonCommand.IsRunning" />
+                        <Binding Path="!IsInitialUpdateFinished" />
+                    </MultiBinding>
+                </controls:SettingsAccountLinkExpander.IsLoading>
             </controls:SettingsAccountLinkExpander>
 
             <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4" Margin="0,6,0,0">
@@ -148,6 +158,7 @@
                     <controls:SettingsAccountLinkExpander.IsLoading>
                         <MultiBinding Converter="{x:Static BoolConverters.Or}">
                             <Binding Path="ConnectCivitCommand.IsRunning" />
+                            <Binding Path="!IsInitialUpdateFinished" />
                         </MultiBinding>
                     </controls:SettingsAccountLinkExpander.IsLoading>
                 </controls:SettingsAccountLinkExpander>

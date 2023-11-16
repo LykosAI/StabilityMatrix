@@ -118,6 +118,7 @@ public static class DesignData
             .AddSingleton(Substitute.For<IDiscordRichPresenceService>())
             .AddSingleton(Substitute.For<ITrackedDownloadService>())
             .AddSingleton(Substitute.For<ILiteDbContext>())
+            .AddSingleton(Substitute.For<IAccountsService>())
             .AddSingleton<IInferenceClientManager, MockInferenceClientManager>()
             .AddSingleton<ICompletionProvider, MockCompletionProvider>()
             .AddSingleton<IModelIndexService, MockModelIndexService>()
@@ -303,6 +304,7 @@ public static class DesignData
                     {
                         Name = "BB95 Furry Mix",
                         Description = "A furry mix of BB95",
+                        Stats = new CivitModelStats { Rating = 3.5, RatingCount = 24 }
                     };
                 })
             };

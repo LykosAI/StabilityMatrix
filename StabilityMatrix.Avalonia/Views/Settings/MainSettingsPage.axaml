@@ -255,10 +255,9 @@
                     Grid.Row="1"
                     Margin="8,0"
                     IsClickEnabled="True"
-                    IsVisible="{Binding SharedState.IsDebugMode}"
                     Command="{Binding NavigateToSubPageCommand}"
                     CommandParameter="{x:Type vmSettings:AccountSettingsViewModel}"
-                    Header="Accounts"
+                    Header="{x:Static lang:Resources.Label_Accounts}"
                     ActionIconSource="ChevronRight">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource

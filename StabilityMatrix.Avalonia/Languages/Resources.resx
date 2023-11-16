@@ -777,4 +777,7 @@
   <data name="Label_ApiKey" xml:space="preserve">
     <value>API Key</value>
   </data>
+  <data name="Label_Accounts" xml:space="preserve">
+    <value />
+  </data>
 </root>

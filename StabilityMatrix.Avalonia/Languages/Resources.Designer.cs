@@ -582,6 +582,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        public static string Label_Accounts {
+            get {
+                return ResourceManager.GetString("Label_Accounts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add Stability Matrix to the Start Menu.
         /// </summary>
         public static string Label_AddToStartMenu {

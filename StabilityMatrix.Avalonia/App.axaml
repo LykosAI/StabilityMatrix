@@ -67,6 +67,7 @@
         <StyleInclude Source="Controls/Paginator.axaml"/>
         <StyleInclude Source="Controls/SelectableImageCard/SelectableImageButton.axaml"/>
         <StyleInclude Source="Controls/SettingsAccountLinkExpander.axaml"/>
+        <StyleInclude Source="Controls/StarsRating.axaml"/>
         
         <Style Selector="DockControl">
             <Setter Property="(DockProperties.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />

@@ -582,7 +582,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .
+        ///   Looks up a localized string similar to Accounts.
         /// </summary>
         public static string Label_Accounts {
             get {

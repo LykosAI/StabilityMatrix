@@ -142,13 +142,6 @@ public class StarsRating : TemplatedControl
             // Add 1 to tag since its index is 0-based
             var tag = (int)star.Tag! + 1;
 
-            /*// Fill if nearly equal
-            if (Math.Abs(tag - Value) < 0.01)
-            {
-                star.Symbol = Symbol.Star;
-                star.IsFilled = true;
-                star.Foreground = Foreground;
-            }*/
             // Fill if current is equal or lower than floor of Value
             if (tag <= Math.Floor(RoundToHalf(Value)))
             {
@@ -169,7 +162,6 @@ public class StarsRating : TemplatedControl
                 star.Symbol = Symbol.Star;
                 star.IsFilled = false;
                 star.Foreground = new SolidColorBrush(Colors.DarkSlateGray);
-                ;
             }
         }
     }

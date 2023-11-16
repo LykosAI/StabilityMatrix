@@ -127,12 +127,15 @@ public class DownloadService : IDownloadService
             ? httpClientFactory.CreateClient()
             : httpClientFactory.CreateClient(httpClientName);
 
+        using var noRedirectClient = httpClientFactory.CreateClient("DontFollowRedirects");
+
         client.Timeout = TimeSpan.FromMinutes(10);
         client.DefaultRequestHeaders.UserAgent.Add(
             new ProductInfoHeaderValue("StabilityMatrix", "2.0")
         );
 
         await AddConditionalHeaders(client, new Uri(downloadUrl)).ConfigureAwait(false);
+        await AddConditionalHeaders(noRedirectClient, new Uri(downloadUrl)).ConfigureAwait(false);
 
         // Create file if it doesn't exist
         if (!File.Exists(downloadPath))
@@ -156,10 +159,10 @@ public class DownloadService : IDownloadService
         // Total of the original content
         long originalContentLength = 0;
 
-        using var request = new HttpRequestMessage();
-        request.Method = HttpMethod.Get;
-        request.RequestUri = new Uri(downloadUrl);
-        request.Headers.Range = new RangeHeaderValue(existingFileSize, null);
+        using var noRedirectRequest = new HttpRequestMessage();
+        noRedirectRequest.Method = HttpMethod.Get;
+        noRedirectRequest.RequestUri = new Uri(downloadUrl);
+        noRedirectRequest.Headers.Range = new RangeHeaderValue(existingFileSize, null);
 
         HttpResponseMessage? response = null;
         foreach (
@@ -169,9 +172,38 @@ public class DownloadService : IDownloadService
             )
         )
         {
-            response = await client
-                .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+            var noRedirectResponse = await noRedirectClient
+                .SendAsync(
+                    noRedirectRequest,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    cancellationToken
+                )
                 .ConfigureAwait(false);
+
+            if (
+                (int)noRedirectResponse.StatusCode > 299 && (int)noRedirectResponse.StatusCode < 400
+            )
+            {
+                var redirectUrl = noRedirectResponse.Headers.Location?.ToString();
+                if (redirectUrl != null && redirectUrl.Contains("reason=download-auth"))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+
+            using var redirectRequest = new HttpRequestMessage();
+            redirectRequest.Method = HttpMethod.Get;
+            redirectRequest.RequestUri = new Uri(downloadUrl);
+            redirectRequest.Headers.Range = new RangeHeaderValue(existingFileSize, null);
+
+            response = await client
+                .SendAsync(
+                    redirectRequest,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+
             remainingContentLength = response.Content.Headers.ContentLength ?? 0;
             originalContentLength =
                 response.Content.Headers.ContentRange?.Length.GetValueOrDefault() ?? 0;

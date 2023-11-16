@@ -778,6 +778,12 @@
     <value>API Key</value>
   </data>
   <data name="Label_Accounts" xml:space="preserve">
-    <value />
+    <value>Accounts</value>
+  </data>
+  <data name="Label_CivitAiLoginRequired" xml:space="preserve">
+    <value>You must be logged in to download this checkpoint. Please enter a CivitAI API Key in the settings.</value>
+  </data>
+  <data name="Label_DownloadFailed" xml:space="preserve">
+    <value>Download Failed</value>
   </data>
 </root>

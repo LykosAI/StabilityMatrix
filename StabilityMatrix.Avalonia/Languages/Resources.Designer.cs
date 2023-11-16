@@ -582,7 +582,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .
+        ///   Looks up a localized string similar to Accounts.
         /// </summary>
         public static string Label_Accounts {
             get {
@@ -740,6 +740,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_CheckpointManager {
             get {
                 return ResourceManager.GetString("Label_CheckpointManager", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must be logged in to download this checkpoint. Please enter a CivitAI API Key in the settings..
+        /// </summary>
+        public static string Label_CivitAiLoginRequired {
+            get {
+                return ResourceManager.GetString("Label_CivitAiLoginRequired", resourceCulture);
             }
         }
         
@@ -920,6 +929,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_DisplayName {
             get {
                 return ResourceManager.GetString("Label_DisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Download Failed.
+        /// </summary>
+        public static string Label_DownloadFailed {
+            get {
+                return ResourceManager.GetString("Label_DownloadFailed", resourceCulture);
             }
         }
         

@@ -343,7 +343,9 @@ public static class DesignData
                         new ProgressReport(0.5f, "Downloading...")
                     )
                 ),
-                new MockDownloadProgressItemViewModel("Test File 2.exe"),
+                new MockDownloadProgressItemViewModel(
+                    "Very Long Test File Name Need Even More Longness Thanks That's pRobably good 2.exe"
+                ),
                 new PackageInstallProgressItemViewModel(
                     new PackageModificationRunner
                     {

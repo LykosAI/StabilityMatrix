@@ -569,6 +569,13 @@ public sealed class App : Application
             .AddHttpClient("A3Client")
             .AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));
 
+        services
+            .AddHttpClient("DontFollowRedirects")
+            .ConfigurePrimaryHttpMessageHandler(
+                () => new HttpClientHandler { AllowAutoRedirect = false }
+            )
+            .AddPolicyHandler(retryPolicy);
+
         /*services.AddHttpClient("IComfyApi")
             .AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));*/
 

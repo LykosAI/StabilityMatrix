@@ -93,9 +93,9 @@
                     <StackPanel>
                         <TextBlock
                             Margin="-1,0,0,0"
-                            Text="{Binding LykosUser.Account.Name, FallbackValue=''}"
+                            Text="{Binding LykosStatus.User.Account.Name, FallbackValue=''}"
                             Theme="{DynamicResource SubtitleTextBlockStyle}" />
-                        <TextBlock Text="{Binding LykosUser.Id, FallbackValue=''}" />
+                        <TextBlock Text="{Binding LykosStatus.User.Id, FallbackValue=''}" />
                     </StackPanel>
                 </StackPanel>
             </sg:SpacedGrid>
@@ -106,7 +106,7 @@
                 IsLoading="{Binding ConnectLykosCommand.IsRunning}"
                 Header="Lykos"
                 HeaderTargetUri="{x:Static sm:Assets.LykosUrl}"
-                IsConnected="{Binding IsLykosConnected}"
+                IsConnected="{Binding LykosStatus.IsConnected}"
                 OffDescription="Manage connected features in Stability Matrix">
                 <controls:SettingsAccountLinkExpander.IconSource>
                     <ui:ImageIconSource Source="{StaticResource BrandsLykos}" />
@@ -118,7 +118,7 @@
                 DisconnectCommand="{Binding DisconnectPatreonCommand}"
                 IsLoading="{Binding ConnectPatreonCommand.IsRunning}"
                 Header="Patreon"
-                IsEnabled="{Binding IsLykosConnected}"
+                IsEnabled="{Binding LykosStatus.IsConnected}"
                 HeaderTargetUri="{x:Static sm:Assets.PatreonUrl}"
                 IsConnected="{Binding IsPatreonConnected}"
                 OffDescription="Access Preview and Dev release channels for auto-updates">
@@ -128,12 +128,6 @@
             </controls:SettingsAccountLinkExpander>
 
             <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4" Margin="0,6,0,0">
-                <!--<sg:SpacedGrid.Styles>
-                    <Style Selector="sg|SpacedGrid > controls|SettingsAccountLinkExpander">
-                        <Setter Property="IsEnabled" Value="{Binding IsLykosConnected}"/>
-                    </Style>
-                </sg:SpacedGrid.Styles>-->
-                
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
@@ -143,14 +137,19 @@
                     Grid.Row="2"
                     ConnectCommand="{Binding ConnectCivitCommand}"
                     DisconnectCommand="{Binding DisconnectCivitCommand}"
-                    IsLoading="{Binding ConnectCivitCommand.IsRunning}"
                     Header="CivitAI"
                     HeaderTargetUri="{x:Static sm:Assets.CivitAIUrl}"
-                    IsConnected="{Binding IsCivitConnected}"
+                    IsConnected="{Binding CivitStatus.IsConnected}"
+                    OnDescriptionExtra="{Binding CivitStatus.UsernameWithParentheses}"
                     OffDescription="Connect to Download Models that require login">
                     <controls:SettingsAccountLinkExpander.IconSource>
                         <ui:BitmapIconSource UriSource="avares://StabilityMatrix.Avalonia/Assets/brands-civitai.png" />
                     </controls:SettingsAccountLinkExpander.IconSource>
+                    <controls:SettingsAccountLinkExpander.IsLoading>
+                        <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                            <Binding Path="ConnectCivitCommand.IsRunning" />
+                        </MultiBinding>
+                    </controls:SettingsAccountLinkExpander.IsLoading>
                 </controls:SettingsAccountLinkExpander>
 
             </sg:SpacedGrid>

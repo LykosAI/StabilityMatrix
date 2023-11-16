@@ -774,4 +774,7 @@
   <data name="Label_ConfirmPassword" xml:space="preserve">
     <value>Confirm Password</value>
   </data>
+  <data name="Label_ApiKey" xml:space="preserve">
+    <value>API Key</value>
+  </data>
 </root>

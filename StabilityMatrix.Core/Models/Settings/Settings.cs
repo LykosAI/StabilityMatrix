@@ -94,6 +94,8 @@ public class Settings
 
     public HashSet<int> FavoriteModels { get; set; } = new();
 
+    public HashSet<TeachingTip> SeenTeachingTips { get; set; } = new();
+
     public Size InferenceImageSize { get; set; } = new(150, 190);
     public Size OutputsImageSize { get; set; } = new(300, 300);
 

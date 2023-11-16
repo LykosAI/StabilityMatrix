@@ -6,6 +6,8 @@ using Octokit;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Models.Api.CivitTRPC;
 using StabilityMatrix.Core.Models.Api.Lykos;
 using StabilityMatrix.Core.Services;
 using ApiException = Refit.ApiException;
@@ -23,7 +25,12 @@ public class AccountsService : IAccountsService
     /// <inheritdoc />
     public event EventHandler<LykosAccountStatusUpdateEventArgs>? LykosAccountStatusUpdate;
 
+    /// <inheritdoc />
+    public event EventHandler<CivitAccountStatusUpdateEventArgs>? CivitAccountStatusUpdate;
+
     public LykosAccountStatusUpdateEventArgs? LykosStatus { get; private set; }
+
+    public CivitAccountStatusUpdateEventArgs? CivitStatus { get; private set; }
 
     public AccountsService(
         ILogger<AccountsService> logger,
@@ -47,9 +54,11 @@ public class AccountsService : IAccountsService
 
         var tokens = await lykosAuthApi.PostLogin(new PostLoginRequest(email, password));
 
-        await secretsManager.SaveAsync(secrets with { LykosAccount = tokens });
+        secrets = secrets with { LykosAccount = tokens };
 
-        await RefreshAsync();
+        await secretsManager.SaveAsync(secrets);
+
+        await RefreshLykosAsync(secrets);
     }
 
     public async Task LykosSignupAsync(string email, string password, string username)
@@ -76,20 +85,6 @@ public class AccountsService : IAccountsService
     }
 
     /// <inheritdoc />
-    public async Task LykosPatreonOAuthLoginAsync()
-    {
-        var secrets = await secretsManager.SafeLoadAsync();
-        if (secrets.LykosAccount is null)
-        {
-            throw new InvalidOperationException(
-                "Lykos account must be connected in to manage OAuth connections"
-            );
-        }
-
-        // TODO
-    }
-
-    /// <inheritdoc />
     public async Task LykosPatreonOAuthLogoutAsync()
     {
         var secrets = await secretsManager.SafeLoadAsync();
@@ -105,11 +100,43 @@ public class AccountsService : IAccountsService
         await RefreshLykosAsync(secrets);
     }
 
+    public async Task CivitLoginAsync(string apiToken)
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+
+        // Get id first using the api token
+        var userAccount = await civitTRPCApi.GetUserAccountDefault(apiToken);
+        var id = userAccount.Result.Data.Json.Id;
+
+        // Then get the username using the id
+        var account = await civitTRPCApi.GetUserById(
+            new CivitGetUserByIdRequest { Id = id },
+            apiToken
+        );
+        var username = account.Result.Data.Json.Username;
+
+        secrets = secrets with { CivitApi = new CivitApiTokens(apiToken, username) };
+
+        await secretsManager.SaveAsync(secrets);
+
+        await RefreshCivitAsync(secrets);
+    }
+
+    /// <inheritdoc />
+    public async Task CivitLogoutAsync()
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+        await secretsManager.SaveAsync(secrets with { CivitApi = null });
+
+        OnCivitAccountStatusUpdate(CivitAccountStatusUpdateEventArgs.Disconnected);
+    }
+
     public async Task RefreshAsync()
     {
         var secrets = await secretsManager.SafeLoadAsync();
 
         await RefreshLykosAsync(secrets);
+        await RefreshCivitAsync(secrets);
     }
 
     private async Task RefreshLykosAsync(Secrets secrets)
@@ -143,6 +170,40 @@ public class AccountsService : IAccountsService
         OnLykosAccountStatusUpdate(LykosAccountStatusUpdateEventArgs.Disconnected);
     }
 
+    private async Task RefreshCivitAsync(Secrets secrets)
+    {
+        if (secrets.CivitApi is not null)
+        {
+            try
+            {
+                var user = await civitTRPCApi.GetUserProfile(
+                    new CivitUserProfileRequest { Username = secrets.CivitApi.Username },
+                    secrets.CivitApi.ApiToken
+                );
+
+                OnCivitAccountStatusUpdate(
+                    new CivitAccountStatusUpdateEventArgs { IsConnected = true, UserProfile = user }
+                );
+
+                return;
+            }
+            catch (OperationCanceledException)
+            {
+                logger.LogWarning("Timed out while fetching Civit Auth user info");
+            }
+            catch (ApiException e)
+            {
+                if (e.StatusCode is HttpStatusCode.Unauthorized) { }
+                else
+                {
+                    logger.LogWarning(e, "Failed to get user info from Civit");
+                }
+            }
+        }
+
+        OnCivitAccountStatusUpdate(CivitAccountStatusUpdateEventArgs.Disconnected);
+    }
+
     private void OnLykosAccountStatusUpdate(LykosAccountStatusUpdateEventArgs e)
     {
         if (!e.IsConnected && LykosStatus?.IsConnected == true)
@@ -159,5 +220,23 @@ public class AccountsService : IAccountsService
         }
 
         LykosAccountStatusUpdate?.Invoke(this, e);
+    }
+
+    private void OnCivitAccountStatusUpdate(CivitAccountStatusUpdateEventArgs e)
+    {
+        if (!e.IsConnected && CivitStatus?.IsConnected == true)
+        {
+            logger.LogInformation("Civit account disconnected");
+        }
+        else if (e.IsConnected && CivitStatus?.IsConnected == false)
+        {
+            logger.LogInformation(
+                "Civit account connected: {Id} ({Username})",
+                e.UserProfile?.UserId,
+                e.UserProfile?.Username
+            );
+        }
+
+        CivitAccountStatusUpdate?.Invoke(this, e);
     }
 }

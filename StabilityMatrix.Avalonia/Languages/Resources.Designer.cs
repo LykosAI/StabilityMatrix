@@ -618,6 +618,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to API Key.
+        /// </summary>
+        public static string Label_ApiKey {
+            get {
+                return ResourceManager.GetString("Label_ApiKey", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Appearance.
         /// </summary>
         public static string Label_Appearance {

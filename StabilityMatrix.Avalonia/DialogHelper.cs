@@ -13,6 +13,7 @@ using Avalonia.Layout;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using AvaloniaEdit;
 using AvaloniaEdit.TextMate;
 using CommunityToolkit.Mvvm.Input;
@@ -47,9 +48,65 @@ public static class DialogHelper
         IReadOnlyList<TextBoxField> textFields
     )
     {
+        return CreateTextEntryDialog(
+            title,
+            new MarkdownScrollViewer { Markdown = description },
+            textFields
+        );
+    }
+
+    /// <summary>
+    /// Create a generic textbox entry content dialog.
+    /// </summary>
+    public static BetterContentDialog CreateTextEntryDialog(
+        string title,
+        string description,
+        string imageSource,
+        IReadOnlyList<TextBoxField> textFields
+    )
+    {
+        var markdown = new MarkdownScrollViewer { Markdown = description };
+        var image = new BetterAdvancedImage((Uri?)null)
+        {
+            Source = imageSource,
+            Stretch = Stretch.UniformToFill,
+            StretchDirection = StretchDirection.Both,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            MaxWidth = 400,
+        };
+
+        Grid.SetRow(markdown, 0);
+        Grid.SetRow(image, 1);
+
+        var grid = new Grid
+        {
+            RowDefinitions =
+            {
+                new RowDefinition(GridLength.Star),
+                new RowDefinition(GridLength.Auto)
+            },
+            Children = { markdown, image }
+        };
+
+        return CreateTextEntryDialog(title, grid, textFields);
+    }
+
+    /// <summary>
+    /// Create a generic textbox entry content dialog.
+    /// </summary>
+    public static BetterContentDialog CreateTextEntryDialog(
+        string title,
+        Control content,
+        IReadOnlyList<TextBoxField> textFields
+    )
+    {
         Dispatcher.UIThread.VerifyAccess();
 
-        var stackPanel = new StackPanel();
+        var stackPanel = new StackPanel { Spacing = 4 };
+
+        Grid.SetRow(content, 0);
+        Grid.SetRow(stackPanel, 1);
+
         var grid = new Grid
         {
             RowDefinitions =
@@ -57,17 +114,16 @@ public static class DialogHelper
                 new RowDefinition(GridLength.Auto),
                 new RowDefinition(GridLength.Star)
             },
-            Children =
-            {
-                new TextBlock { Text = description },
-                stackPanel
-            }
+            Children = { content, stackPanel }
         };
         grid.Loaded += (_, _) =>
         {
-            // Focus first textbox
-            var firstTextBox = stackPanel.Children.OfType<TextBox>().First();
-            firstTextBox.Focus();
+            // Focus first TextBox
+            var firstTextBox = stackPanel.Children
+                .OfType<StackPanel>()
+                .FirstOrDefault()
+                .FindDescendantOfType<TextBox>();
+            firstTextBox!.Focus();
             firstTextBox.CaretIndex = firstTextBox.Text?.LastIndexOf('.') ?? 0;
         };
 
@@ -85,8 +141,7 @@ public static class DialogHelper
         // Create textboxes
         foreach (var field in textFields)
         {
-            var label = new TextBlock { Text = field.Label };
-            stackPanel.Children.Add(label);
+            var label = new TextBlock { Text = field.Label, Margin = new Thickness(0, 0, 0, 4) };
 
             var textBox = new TextBox
             {
@@ -106,7 +161,7 @@ public static class DialogHelper
                 };
             }
 
-            stackPanel.Children.Add(textBox);
+            stackPanel.Children.Add(new StackPanel { Spacing = 4, Children = { label, textBox } });
 
             // When IsValid property changes, update invalid count and primary button
             field.PropertyChanged += (_, args) =>

@@ -12,6 +12,12 @@
                 OffDescription="Manage account services like A, B, and C" />
 
             <controls:SettingsAccountLinkExpander
+                Header="Service 1 (Loading)"
+                IconSource="OtherUser"
+                IsLoading="True"
+                OffDescription="Manage account services like A, B, and C" />
+
+            <controls:SettingsAccountLinkExpander
                 Header="Service 2"
                 IconSource="CloudFilled"
                 IsConnected="True"
@@ -21,8 +27,8 @@
                 Header="Service 3"
                 IconSource="CloudFilled"
                 IsConnected="True"
-                OffDescription="Manage account services like A, B, and C">
-            </controls:SettingsAccountLinkExpander>
+                OnDescriptionExtra="(account)"
+                OffDescription="Manage account services like A, B, and C" />
         </StackPanel>
     </Design.PreviewWith>
 
@@ -44,6 +50,7 @@
                                 TextWrapping="Wrap"
                                 Theme="{DynamicResource CaptionTextBlockStyle}" />
 
+
                             <StackPanel
                                 x:Name="PART_OnDescriptionPanel"
                                 IsVisible="{TemplateBinding IsConnected,
@@ -59,6 +66,11 @@
                                     Text="{TemplateBinding OnDescription}"
                                     TextWrapping="Wrap"
                                     Theme="{DynamicResource CaptionTextBlockStyle}" />
+                                <TextBlock
+                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                    Text="{TemplateBinding OnDescriptionExtra}"
+                                    TextWrapping="Wrap"
+                                    Theme="{DynamicResource CaptionTextBlockStyle}" />
                             </StackPanel>
                         </StackPanel>
 
@@ -68,12 +80,13 @@
                         <StackPanel Margin="0,0,12,0" Orientation="Horizontal">
                             <!--  for some reason direct bind to IsConnected doesn't work here  -->
 
-                            <!--<controls:ProgressRing
+                            <controls:ProgressRing
                                 Margin="0,0,24,0"
                                 BorderThickness="3"
-                                IsEnabled="{TemplateBinding IsLoading}"
-                                IsIndeterminate="{Binding $self.IsEnabled}"/>-->
-                            
+                                IsIndeterminate="{Binding $parent[controls:SettingsAccountLinkExpander].IsLoading}"
+                                IsVisible="{Binding $parent[controls:SettingsAccountLinkExpander].IsLoading}" />
+
+
                             <!--  Connect button  -->
                             <Button
                                 x:Name="PART_ConnectButton"
@@ -105,80 +118,6 @@
                     </ui:SettingsExpander.Footer>
 
                 </ui:SettingsExpander>
-            </ControlTemplate>
-        </Setter>
-    </Style>
-
-    <Style Selector="controls|SettingsAccountLinkExpander.item">
-        <!--  Set Defaults  -->
-        <Setter Property="Template">
-            <ControlTemplate>
-                <ui:SettingsExpanderItem IconSource="{TemplateBinding IconSource}">
-                    <StackPanel>
-                        <TextBlock x:Name="PART_HeaderTextBlock" Text="{TemplateBinding Header}" />
-
-                        <TextBlock
-                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                            IsVisible="{TemplateBinding IsConnected,
-                                                            Mode=OneWay,
-                                                            Converter={x:Static BoolConverters.Not}}"
-                            Text="{TemplateBinding OffDescription}"
-                            TextWrapping="Wrap"
-                            Theme="{DynamicResource CaptionTextBlockStyle}" />
-
-                        <StackPanel
-                            x:Name="PART_OnDescriptionPanel"
-                            IsVisible="{TemplateBinding IsConnected,
-                                                            Mode=OneWay}"
-                            Orientation="Horizontal"
-                            Spacing="4">
-                            <Ellipse
-                                Width="5"
-                                Height="5"
-                                Fill="{StaticResource ThemeMediumSeaGreenColor}" />
-                            <TextBlock
-                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                Text="{TemplateBinding OnDescription}"
-                                TextWrapping="Wrap"
-                                Theme="{DynamicResource CaptionTextBlockStyle}" />
-                        </StackPanel>
-                    </StackPanel>
-
-                    <ui:SettingsExpanderItem.Footer>
-                        <StackPanel Margin="0,0,12,0">
-                            <!--  for some reason direct bind to IsConnected doesn't work here  -->
-
-                            <!--  Connect button  -->
-                            <Button
-                                x:Name="PART_ConnectButton"
-                                Padding="32,6"
-                                Command="{TemplateBinding ConnectCommand}"
-                                Content="{x:Static lang:Resources.Action_Connect}"
-                                IsVisible="{Binding !IsVisible, ElementName=PART_OnDescriptionPanel}" />
-
-                            <!--  Disconnect button  -->
-                            <Button
-                                x:Name="PART_DisconnectButton"
-                                Padding="6,8"
-                                HorizontalAlignment="Right"
-                                BorderThickness="0"
-                                Classes="transparent"
-                                IsVisible="{Binding IsVisible, ElementName=PART_OnDescriptionPanel}">
-                                <ui:SymbolIcon FontSize="20" Symbol="More" />
-                                <Button.Flyout>
-                                    <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
-                                        <ui:MenuFlyoutItem
-                                            x:Name="PART_DisconnectMenuItem"
-                                            Command="{TemplateBinding DisconnectCommand}"
-                                            Text="{x:Static lang:Resources.Action_Disconnect}" />
-                                    </ui:FAMenuFlyout>
-                                </Button.Flyout>
-                            </Button>
-                        </StackPanel>
-
-                    </ui:SettingsExpanderItem.Footer>
-
-                </ui:SettingsExpanderItem>
             </ControlTemplate>
         </Setter>
     </Style>

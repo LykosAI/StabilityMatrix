@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Polly.Contrib.WaitAndRetry;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Progress;
 
 namespace StabilityMatrix.Core.Services;
@@ -11,12 +12,18 @@ public class DownloadService : IDownloadService
 {
     private readonly ILogger<DownloadService> logger;
     private readonly IHttpClientFactory httpClientFactory;
+    private readonly ISecretsManager secretsManager;
     private const int BufferSize = ushort.MaxValue;
 
-    public DownloadService(ILogger<DownloadService> logger, IHttpClientFactory httpClientFactory)
+    public DownloadService(
+        ILogger<DownloadService> logger,
+        IHttpClientFactory httpClientFactory,
+        ISecretsManager secretsManager
+    )
     {
         this.logger = logger;
         this.httpClientFactory = httpClientFactory;
+        this.secretsManager = secretsManager;
     }
 
     public async Task DownloadToFileAsync(
@@ -35,6 +42,9 @@ public class DownloadService : IDownloadService
         client.DefaultRequestHeaders.UserAgent.Add(
             new ProductInfoHeaderValue("StabilityMatrix", "2.0")
         );
+
+        await AddConditionalHeaders(client, new Uri(downloadUrl)).ConfigureAwait(false);
+
         await using var file = new FileStream(
             downloadPath,
             FileMode.Create,
@@ -121,6 +131,8 @@ public class DownloadService : IDownloadService
         client.DefaultRequestHeaders.UserAgent.Add(
             new ProductInfoHeaderValue("StabilityMatrix", "2.0")
         );
+
+        await AddConditionalHeaders(client, new Uri(downloadUrl)).ConfigureAwait(false);
 
         // Create file if it doesn't exist
         if (!File.Exists(downloadPath))
@@ -234,6 +246,8 @@ public class DownloadService : IDownloadService
             new ProductInfoHeaderValue("StabilityMatrix", "2.0")
         );
 
+        await AddConditionalHeaders(client, new Uri(downloadUrl)).ConfigureAwait(false);
+
         var contentLength = 0L;
 
         foreach (
@@ -265,6 +279,7 @@ public class DownloadService : IDownloadService
         client.DefaultRequestHeaders.UserAgent.Add(
             new ProductInfoHeaderValue("StabilityMatrix", "2.0")
         );
+        await AddConditionalHeaders(client, new Uri(url)).ConfigureAwait(false);
         try
         {
             var response = await client.GetAsync(url).ConfigureAwait(false);
@@ -274,6 +289,32 @@ public class DownloadService : IDownloadService
         {
             logger.LogError(e, "Failed to get image stream from url {Url}", url);
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Adds conditional headers to the HttpClient for the given URL
+    /// </summary>
+    private async Task AddConditionalHeaders(HttpClient client, Uri url)
+    {
+        // Check if civit download
+        if (url.Host.Equals("civitai.com", StringComparison.OrdinalIgnoreCase))
+        {
+            // Add auth if we have it
+            if (
+                await secretsManager.LoadAsync().ConfigureAwait(false) is { CivitApi: { } civitApi }
+            )
+            {
+                logger.LogTrace(
+                    "Adding Civit auth header {Signature} for download {Url}",
+                    ObjectHash.GetStringSignature(civitApi.ApiToken),
+                    url
+                );
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                    "Bearer",
+                    civitApi.ApiToken
+                );
+            }
         }
     }
 }

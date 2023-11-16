@@ -71,6 +71,15 @@ public class SettingsAccountLinkExpander : TemplatedControl
         set => SetValue(OnDescriptionProperty, value);
     }
 
+    public static readonly StyledProperty<object?> OnDescriptionExtraProperty =
+        AvaloniaProperty.Register<SettingsAccountLinkExpander, object?>("OnDescriptionExtra");
+
+    public object? OnDescriptionExtra
+    {
+        get => GetValue(OnDescriptionExtraProperty);
+        set => SetValue(OnDescriptionExtraProperty, value);
+    }
+
     public static readonly StyledProperty<object?> OffDescriptionProperty =
         AvaloniaProperty.Register<SettingsAccountLinkExpander, object?>("OffDescription");
 
@@ -85,17 +94,6 @@ public class SettingsAccountLinkExpander : TemplatedControl
             nameof(ConnectCommand),
             enableDataValidation: true
         );
-
-    public static readonly StyledProperty<bool> IsLoadingProperty = AvaloniaProperty.Register<
-        SettingsAccountLinkExpander,
-        bool
-    >(nameof(IsLoading));
-
-    public bool IsLoading
-    {
-        get => GetValue(IsLoadingProperty);
-        set => SetValue(IsLoadingProperty, value);
-    }
 
     public ICommand? ConnectCommand
     {
@@ -113,6 +111,30 @@ public class SettingsAccountLinkExpander : TemplatedControl
     {
         get => GetValue(DisconnectCommandProperty);
         set => SetValue(DisconnectCommandProperty, value);
+    }
+
+    /*public static readonly StyledProperty<bool> IsLoading2Property = AvaloniaProperty.Register<SettingsAccountLinkExpander, bool>(
+        nameof(IsLoading2));
+
+    public bool IsLoading2
+    {
+        get => GetValue(IsLoading2Property);
+        set => SetValue(IsLoading2Property, value);
+    }*/
+
+    private bool _isLoading;
+
+    public static readonly DirectProperty<SettingsAccountLinkExpander, bool> IsLoadingProperty =
+        AvaloniaProperty.RegisterDirect<SettingsAccountLinkExpander, bool>(
+            "IsLoading",
+            o => o.IsLoading,
+            (o, v) => o.IsLoading = v
+        );
+
+    public bool IsLoading
+    {
+        get => _isLoading;
+        set => SetAndRaise(IsLoadingProperty, ref _isLoading, value);
     }
 
     // ReSharper restore MemberCanBePrivate.Global

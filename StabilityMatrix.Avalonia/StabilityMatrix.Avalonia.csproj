@@ -99,6 +99,7 @@
     <ItemGroup>
         <AvaloniaResource Include="Assets\brands-*.png" />
         <AvaloniaResource Include="Assets\brands-*.svg" />
+        <AvaloniaResource Include="Assets\guide-*.webp"/>
     </ItemGroup>
 
     <ItemGroup>

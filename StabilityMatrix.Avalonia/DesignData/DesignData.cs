@@ -118,6 +118,7 @@ public static class DesignData
             .AddSingleton(Substitute.For<IDiscordRichPresenceService>())
             .AddSingleton(Substitute.For<ITrackedDownloadService>())
             .AddSingleton(Substitute.For<ILiteDbContext>())
+            .AddSingleton(Substitute.For<IAccountsService>())
             .AddSingleton<IInferenceClientManager, MockInferenceClientManager>()
             .AddSingleton<ICompletionProvider, MockCompletionProvider>()
             .AddSingleton<IModelIndexService, MockModelIndexService>()

@@ -29,6 +29,7 @@
     <Color x:Key="ThemeAmberColor">#FFC107</Color>
     <Color x:Key="ThemeOrangeColor">#FF9800</Color>
     <Color x:Key="ThemeDeepOrangeColor">#FF5722</Color>
+    <Color x:Key="ThemeEldenRingOrangeColor">#FF4F00</Color>
     <Color x:Key="ThemeBrownColor">#795548</Color>
     <Color x:Key="ThemeGreyColor">#9E9E9E</Color>
     <Color x:Key="ThemeBlueGreyColor">#607D8B</Color>

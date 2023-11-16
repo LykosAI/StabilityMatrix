@@ -15,38 +15,46 @@ namespace StabilityMatrix.Core.Helper;
 public static class Compat
 {
     private const string AppName = "StabilityMatrix";
-    
+
     public static SemVersion AppVersion { get; set; }
-    
+
     // OS Platform
     public static PlatformKind Platform { get; }
-    
+
     [SupportedOSPlatformGuard("windows")]
     public static bool IsWindows => Platform.HasFlag(PlatformKind.Windows);
-    
+
     [SupportedOSPlatformGuard("linux")]
     public static bool IsLinux => Platform.HasFlag(PlatformKind.Linux);
-    
+
     [SupportedOSPlatformGuard("macos")]
     public static bool IsMacOS => Platform.HasFlag(PlatformKind.MacOS);
-    
+
     [UnsupportedOSPlatformGuard("windows")]
     public static bool IsUnix => Platform.HasFlag(PlatformKind.Unix);
 
     public static bool IsArm => Platform.HasFlag(PlatformKind.Arm);
     public static bool IsX64 => Platform.HasFlag(PlatformKind.X64);
-    
+
     // Paths
-    
+
     /// <summary>
     /// AppData directory path. On Windows this is %AppData%, on Linux and MacOS this is ~/.config
     /// </summary>
     public static DirectoryPath AppData { get; }
-    
+
     /// <summary>
     /// AppData + AppName (e.g. %AppData%\StabilityMatrix)
     /// </summary>
-    public static DirectoryPath AppDataHome { get; }
+    public static DirectoryPath AppDataHome { get; private set; }
+
+    /// <summary>
+    /// Set AppDataHome to a custom path. Used for testing.
+    /// </summary>
+    internal static void SetAppDataHome(string path)
+    {
+        AppDataHome = path;
+    }
 
     /// <summary>
     /// Current directory the app is in.
@@ -57,7 +65,7 @@ public static class Compat
     /// Current path to the app.
     /// </summary>
     public static FilePath AppCurrentPath => AppCurrentDir.JoinFile(GetExecutableName());
-    
+
     // File extensions
     /// <summary>
     /// Platform-specific executable extension.
@@ -70,19 +78,21 @@ public static class Compat
     /// ".dll" on Windows, ".dylib" on MacOS, ".so" on Linux.
     /// </summary>
     public static string DllExtension { get; }
-    
+
     /// <summary>
     /// Delimiter for $PATH environment variable.
     /// </summary>
     public static char PathDelimiter => IsWindows ? ';' : ':';
-    
+
     static Compat()
     {
-        var infoVersion = Assembly.GetCallingAssembly()
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-            
+        var infoVersion = Assembly
+            .GetCallingAssembly()
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion;
+
         AppVersion = SemVersion.Parse(infoVersion ?? "0.0.0", SemVersionStyles.Strict);
-        
+
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             Platform = PlatformKind.Windows;
@@ -100,12 +110,13 @@ public static class Compat
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
             Platform = PlatformKind.Linux | PlatformKind.Unix;
-            
+
             // For AppImage builds, the path is in `$APPIMAGE`
-            var appPath = Environment.GetEnvironmentVariable("APPIMAGE") ??
-                          AppContext.BaseDirectory;
-            AppCurrentDir = Path.GetDirectoryName(appPath) ??
-                            throw new Exception("Could not find application directory");
+            var appPath =
+                Environment.GetEnvironmentVariable("APPIMAGE") ?? AppContext.BaseDirectory;
+            AppCurrentDir =
+                Path.GetDirectoryName(appPath)
+                ?? throw new Exception("Could not find application directory");
             ExeExtension = "";
             DllExtension = ".so";
         }
@@ -113,7 +124,7 @@ public static class Compat
         {
             throw new PlatformNotSupportedException();
         }
-        
+
         if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
         {
             Platform |= PlatformKind.Arm;
@@ -122,9 +133,20 @@ public static class Compat
         {
             Platform |= PlatformKind.X64;
         }
-        
+
         AppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        AppDataHome = AppData + AppName;
+
+        if (
+            Environment.GetEnvironmentVariable("STABILITY_MATRIX_APPDATAHOME") is
+            { } appDataOverride
+        )
+        {
+            AppDataHome = appDataOverride;
+        }
+        else
+        {
+            AppDataHome = AppData + AppName;
+        }
     }
 
     /// <summary>
@@ -142,12 +164,13 @@ public static class Compat
                 return target;
             }
         }
-        
+
         throw new PlatformNotSupportedException(
-            $"Platform {Platform.ToString()} is not in supported targets: " +
-            $"{string.Join(", ", targets.Select(t => t.platform.ToString()))}");
+            $"Platform {Platform.ToString()} is not in supported targets: "
+                + $"{string.Join(", ", targets.Select(t => t.platform.ToString()))}"
+        );
     }
-    
+
     /// <summary>
     /// Get the current application executable name.
     /// </summary>
@@ -172,12 +195,15 @@ public static class Compat
         }
         return Path.GetFileName(fullPath);
     }
-    
+
     public static string GetEnvPathWithExtensions(params string[] paths)
     {
-        var currentPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
+        var currentPath = Environment.GetEnvironmentVariable(
+            "PATH",
+            EnvironmentVariableTarget.Process
+        );
         var newPath = string.Join(PathDelimiter, paths);
-        
+
         if (string.IsNullOrEmpty(currentPath))
         {
             return string.Join(PathDelimiter, paths);

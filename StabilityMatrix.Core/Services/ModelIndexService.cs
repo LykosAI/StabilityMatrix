@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using AsyncAwaitBestPractices;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -10,6 +11,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Core.Services;
 
+[Singleton(typeof(IModelIndexService))]
 public class ModelIndexService : IModelIndexService
 {
     private readonly ILogger<ModelIndexService> logger;

@@ -1,7 +1,7 @@
 ﻿using Avalonia.Controls.Primitives;
+using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-public class SeedCard : TemplatedControl
-{
-}
+[Transient]
+public class SeedCard : TemplatedControl { }

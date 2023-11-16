@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
@@ -8,10 +6,12 @@ using FluentAvalonia.UI.Navigation;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Services;
 
+[Singleton(typeof(INavigationService))]
 public class NavigationService : INavigationService
 {
     private Frame? _frame;

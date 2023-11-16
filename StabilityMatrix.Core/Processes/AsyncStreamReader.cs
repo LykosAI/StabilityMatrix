@@ -13,17 +13,17 @@ namespace StabilityMatrix.Core.Processes;
 
 /// <summary>
 /// Modified from System.Diagnostics.AsyncStreamReader to support terminal processing.
-/// 
+///
 /// Currently has these modifications:
 /// - Carriage returns do not count as newlines '\r'.
 /// - APC messages are sent immediately without needing a newline.
-/// 
+///
 /// <seealso cref="ApcParser"/>
 /// </summary>
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 internal sealed class AsyncStreamReader : IDisposable
 {
-    private const int DefaultBufferSize = 1024;  // Byte buffer size
+    private const int DefaultBufferSize = 1024; // Byte buffer size
 
     private readonly Stream _stream;
     private readonly Decoder _decoder;
@@ -42,10 +42,10 @@ internal sealed class AsyncStreamReader : IDisposable
 
     // Cache the last position scanned in sb when searching for lines.
     private int _currentLinePos;
-    
+
     // (new) Flag to send next buffer immediately
     private bool _sendNextBufferImmediately;
-    
+
     // Creates a new AsyncStreamReader for the given stream. The
     // character encoding is set by encoding and the buffer size,
     // in number of 16-bit characters, is set by bufferSize.
@@ -96,15 +96,19 @@ internal sealed class AsyncStreamReader : IDisposable
         {
             try
             {
-                var bytesRead = await _stream.ReadAsync(new Memory<byte>(_byteBuffer), _cts.Token).ConfigureAwait(false);
+                var bytesRead = await _stream
+                    .ReadAsync(new Memory<byte>(_byteBuffer), _cts.Token)
+                    .ConfigureAwait(false);
                 if (bytesRead == 0)
                     break;
 
                 var charLen = _decoder.GetChars(_byteBuffer, 0, bytesRead, _charBuffer, 0);
-                
-                Debug.WriteLine($"AsyncStreamReader - Read {charLen} chars: " +
-                                $"{new string(_charBuffer, 0, charLen).ToRepr()}");
-                
+
+                Debug.WriteLine(
+                    $"AsyncStreamReader - Read {charLen} chars: "
+                        + $"{new string(_charBuffer, 0, charLen).ToRepr()}"
+                );
+
                 _sb!.Append(_charBuffer, 0, charLen);
                 MoveLinesFromStringBuilderToMessageQueue();
             }
@@ -140,44 +144,49 @@ internal sealed class AsyncStreamReader : IDisposable
                 var remaining = _sb.ToString();
                 _messageQueue.Enqueue(remaining);
                 _sb.Length = 0;
-                Debug.WriteLine($"AsyncStreamReader - Reached EOF, sent remaining buffer: {remaining}");
+                Debug.WriteLine(
+                    $"AsyncStreamReader - Reached EOF, sent remaining buffer: {remaining}"
+                );
             }
             _messageQueue.Enqueue(null);
         }
 
         FlushMessageQueue(rethrowInNewThread: true);
     }
-    
+
     // Send remaining buffer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void SendRemainingBuffer()
     {
         lock (_messageQueue)
         {
-            if (_sb!.Length == 0) return;
-            
+            if (_sb!.Length == 0)
+                return;
+
             _messageQueue.Enqueue(_sb.ToString());
             _sb.Length = 0;
         }
     }
-    
+
     // Send remaining buffer from index
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void SendRemainingBuffer(int startIndex)
     {
         lock (_messageQueue)
         {
-            if (_sb!.Length == 0) return;
-            
+            if (_sb!.Length == 0)
+                return;
+
             _messageQueue.Enqueue(_sb.ToString(startIndex, _sb.Length - startIndex));
             _sb.Length = 0;
         }
     }
-    
+
     // Sends a message to the queue if not null or empty
     private void SendToQueue(string? message)
     {
-        if (string.IsNullOrEmpty(message)) return;
+        if (string.IsNullOrEmpty(message))
+            return;
         lock (_messageQueue)
         {
             _messageQueue.Enqueue(message);
@@ -195,14 +204,6 @@ internal sealed class AsyncStreamReader : IDisposable
         var currentIndex = _currentLinePos;
         var lineStart = 0;
         var len = _sb!.Length;
-        
-        // If flagged, send next buffer immediately
-        if (_sendNextBufferImmediately)
-        {
-            SendRemainingBuffer();
-            _sendNextBufferImmediately = false;
-            return;
-        }
 
         // skip a beginning '\n' character of new block if last block ended
         // with '\r'
@@ -225,7 +226,7 @@ internal sealed class AsyncStreamReader : IDisposable
                     // Include the '\n' as part of line.
                     var line = _sb.ToString(lineStart, currentIndex - lineStart + 1);
                     lineStart = currentIndex + 1;
-                    
+
                     lock (_messageQueue)
                     {
                         _messageQueue.Enqueue(line);
@@ -255,8 +256,9 @@ internal sealed class AsyncStreamReader : IDisposable
                     {
                         // Send buffer up to this point, not including \r
                         // But skip if there's no content
-                        if (currentIndex == lineStart) break;
-                        
+                        if (currentIndex == lineStart)
+                            break;
+
                         var line = _sb.ToString(lineStart, currentIndex - lineStart);
                         lock (_messageQueue)
                         {
@@ -277,7 +279,7 @@ internal sealed class AsyncStreamReader : IDisposable
                     {
                         searchIndex++;
                     }
-                    
+
                     // If we found StEscape, we have a complete APC message
                     if (searchIndex < len)
                     {
@@ -294,9 +296,13 @@ internal sealed class AsyncStreamReader : IDisposable
                         // lineStart = searchIndex + 1;
                         currentIndex = searchIndex;
                         var remainingStart = currentIndex + 1;
-                        var remainingStr =
-                            _sb.ToString(remainingStart, _sb.Length - remainingStart);
-                        Debug.WriteLine($"AsyncStreamReader - Sending remaining buffer: '{remainingStr}'");
+                        var remainingStr = _sb.ToString(
+                            remainingStart,
+                            _sb.Length - remainingStart
+                        );
+                        Debug.WriteLine(
+                            $"AsyncStreamReader - Sending remaining buffer: '{remainingStr}'"
+                        );
                         // Send the rest of the buffer immediately
                         SendRemainingBuffer(currentIndex + 1);
                         return;
@@ -313,19 +319,21 @@ internal sealed class AsyncStreamReader : IDisposable
                     SendToQueue(line);
                     // Set line start to current index
                     lineStart = currentIndex;
-                    
+
                     // Look ahead and match the escape sequence
                     var remaining = _sb.ToString(currentIndex, len - currentIndex);
                     var result = AnsiParser.AnsiEscapeSequenceRegex().Match(remaining);
-                    
+
                     // If we found a match, send the escape sequence match, and move forward
                     if (result.Success)
                     {
                         var escapeSequence = result.Value;
                         SendToQueue(escapeSequence);
-                        
-                        Debug.WriteLine($"AsyncStreamReader - Sent Ansi escape sequence: {escapeSequence.ToRepr()}");
-                        
+
+                        Debug.WriteLine(
+                            $"AsyncStreamReader - Sent Ansi escape sequence: {escapeSequence.ToRepr()}"
+                        );
+
                         // Advance currentIndex and lineStart to end of escape sequence
                         // minus 1 since we will increment currentIndex at the end of the loop
                         lineStart = currentIndex + escapeSequence.Length;
@@ -333,7 +341,9 @@ internal sealed class AsyncStreamReader : IDisposable
                     }
                     else
                     {
-                        Debug.WriteLine($"AsyncStreamReader - No match for Ansi escape sequence: {remaining.ToRepr()}");
+                        Debug.WriteLine(
+                            $"AsyncStreamReader - No match for Ansi escape sequence: {remaining.ToRepr()}"
+                        );
                     }
 
                     break;
@@ -345,7 +355,15 @@ internal sealed class AsyncStreamReader : IDisposable
         {
             _bLastCarriageReturn = true;
         }
-        
+
+        // If flagged, send remaining buffer immediately
+        if (_sendNextBufferImmediately)
+        {
+            SendRemainingBuffer();
+            _sendNextBufferImmediately = false;
+            return;
+        }
+
         // Keep the rest characters which can't form a new line in string builder.
         if (lineStart < len)
         {
@@ -404,7 +422,10 @@ internal sealed class AsyncStreamReader : IDisposable
             // Otherwise, let the exception propagate.
             if (rethrowInNewThread)
             {
-                ThreadPool.QueueUserWorkItem(edi => ((ExceptionDispatchInfo)edi!).Throw(), ExceptionDispatchInfo.Capture(e));
+                ThreadPool.QueueUserWorkItem(
+                    edi => ((ExceptionDispatchInfo)edi!).Throw(),
+                    ExceptionDispatchInfo.Capture(e)
+                );
                 return true;
             }
             throw;

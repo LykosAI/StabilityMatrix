@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Drawing;
+using System.Globalization;
 using System.Text.Json.Serialization;
 using Semver;
 using StabilityMatrix.Core.Converters.Json;
@@ -71,6 +72,11 @@ public class Settings
     public bool IsCompletionRemoveUnderscoresEnabled { get; set; } = true;
 
     /// <summary>
+    /// Format for Inference output image file names
+    /// </summary>
+    public string? InferenceOutputImageFileNameFormat { get; set; }
+
+    /// <summary>
     /// Whether the Inference Image Viewer shows pixel grids at high zoom levels
     /// </summary>
     public bool IsImageViewerPixelGridEnabled { get; set; } = true;
@@ -87,6 +93,9 @@ public class Settings
     public bool AutoScrollLaunchConsoleToEnd { get; set; } = true;
 
     public HashSet<int> FavoriteModels { get; set; } = new();
+
+    public Size InferenceImageSize { get; set; } = new(150, 190);
+    public Size OutputsImageSize { get; set; } = new(300, 300);
 
     public void RemoveInstalledPackageAndUpdateActive(InstalledPackage package)
     {

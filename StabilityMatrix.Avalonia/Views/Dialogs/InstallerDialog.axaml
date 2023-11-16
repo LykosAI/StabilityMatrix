@@ -16,34 +16,140 @@
                           x:Class="StabilityMatrix.Avalonia.Views.Dialogs.InstallerDialog">
 
     <Grid MaxHeight="900"
-          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+          RowDefinitions="Auto,Auto,Auto,2*,*"
           ColumnDefinitions="*,Auto">
         <!-- Title and image -->
         <Grid Grid.Row="0" Grid.Column="0"
               Margin="16, 0, 0, 0"
-              RowDefinitions="Auto, Auto, Auto, Auto, Auto">
+              RowDefinitions="Auto, Auto, Auto, Auto, *, Auto">
             <TextBlock Grid.Row="0" Text="{Binding SelectedPackage.DisplayName}"
                        FontSize="24"
                        Margin="0, 16, 0, 4" />
             <TextBlock Grid.Row="1" Text="{Binding SelectedPackage.Blurb}"
+                       TextWrapping="Wrap"
                        Margin="0, 0, 0, 4" />
             <TextBlock Grid.Row="2" Text="{Binding SelectedPackage.Disclaimer}"
                        Margin="0, 0, 0, 4"
                        TextWrapping="Wrap"
                        Foreground="{DynamicResource ThemeRedColor}"
                        IsVisible="{Binding SelectedPackage.Disclaimer, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            <ItemsRepeater Grid.Row="3"
+                            Margin="0, 0, 0, 8"
+                           ItemsSource="{Binding SelectedPackage.AvailableTorchVersions}">
+                <ItemsRepeater.Layout>
+                    <StackLayout Orientation="Horizontal" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="{x:Type models:TorchVersion}">
+                        <controls:Card
+                            Tag="{Binding }"
+                            HorizontalAlignment="Left"
+                            Padding="4"
+                            Margin="0,8,8,0"
+                            VerticalAlignment="Top">
+
+                            <controls:Card.Styles>
+                                <Style Selector="controls|Card[Tag=Cuda]">
+                                    <Setter Property="Background" Value="{DynamicResource ThemeGreenColorTransparent}" />
+                                    <Setter Property="BorderBrush" Value="{DynamicResource ThemeGreenColorTransparent}" />
+                                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                        <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
+                                    </Style>
+                                    <Setter Property="Content">
+                                        <Template>
+                                            <TextBlock
+                                                FontWeight="Medium"
+                                                HorizontalAlignment="Center"
+                                                Text="NVIDIA"
+                                                TextAlignment="Center"
+                                                VerticalAlignment="Center" />
+                                        </Template>
+                                    </Setter>
+                                </Style>
+                                <Style Selector="controls|Card[Tag=Rocm]">
+                                    <Setter Property="Background" Value="{DynamicResource ThemeDarkRedColor}" />
+                                    <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkRedColor}" />
+                                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                        <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
+                                    </Style>
+                                    <Setter Property="Content">
+                                        <Template>
+                                            <TextBlock
+                                                FontWeight="Medium"
+                                                HorizontalAlignment="Center"
+                                                Text="AMD (Linux)"
+                                                TextAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                ToolTip.Tip="For AMD GPUs that support ROCm on Linux" />
+                                        </Template>
+                                    </Setter>
+                                </Style>
+                                <Style Selector="controls|Card[Tag=DirectMl]">
+                                    <Setter Property="Background" Value="{DynamicResource ThemeDarkBlueColor}" />
+                                    <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkBlueColor}" />
+                                    <Setter Property="Content">
+                                        <Template>
+                                            <TextBlock
+                                                FontWeight="Medium"
+                                                HorizontalAlignment="Center"
+                                                Text="DirectML"
+                                                TextAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                ToolTip.Tip="For any DirectX compatible GPU on Windows" />
+                                        </Template>
+                                    </Setter>
+                                </Style>
+                                <Style Selector="controls|Card[Tag=Mps]">
+                                    <Setter Property="Background" Value="White" />
+                                    <Setter Property="BorderBrush" Value="White" />
+                                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                        <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
+                                    </Style>
+                                    <Setter Property="Content">
+                                        <Template>
+                                            <TextBlock
+                                                FontWeight="Medium"
+                                                HorizontalAlignment="Center"
+                                                Text="macOS"
+                                                TextAlignment="Center"
+                                                Foreground="Black"
+                                                VerticalAlignment="Center" />
+                                        </Template>
+                                    </Setter>
+                                </Style>
+                                <Style Selector="controls|Card[Tag=Cpu]">
+                                    <Setter Property="Background" Value="{DynamicResource ThemeBlueGreyColor}" />
+                                    <Setter Property="BorderBrush" Value="{DynamicResource ThemeBlueGreyColor}" />
+                                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                        <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
+                                    </Style>
+                                    <Setter Property="Content">
+                                        <Template>
+                                            <TextBlock
+                                                FontWeight="Medium"
+                                                HorizontalAlignment="Center"
+                                                Text="CPU"
+                                                TextAlignment="Center"
+                                                VerticalAlignment="Center" />
+                                        </Template>
+                                    </Setter>
+                                </Style>
+                            </controls:Card.Styles>
+                        </controls:Card>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
             <controls:BetterAdvancedImage Grid.Row="4"
-                                          Margin="0, 12,0,0"
                                           Source="{Binding SelectedPackage.PreviewImageUri}"
-                                          HorizontalAlignment="Center"
-                                          MaxHeight="300"
+                                          HorizontalAlignment="Left"
+                                          MaxHeight="250"
                                           MaxWidth="600"
                                           Stretch="UniformToFill" />
         </Grid>
 
         <Grid Grid.Column="0" Grid.Row="2"
               Grid.ColumnSpan="2"
-              Margin="16,0,16,0"
+              Margin="16,16,16,0"
               RowDefinitions="Auto, Auto, Auto, Auto"
               HorizontalAlignment="Center"
               ColumnDefinitions="Auto, Auto, Auto, Auto">
@@ -60,7 +166,7 @@
 
             <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4"
                         Orientation="Horizontal"
-                        Margin="8"
+                        Margin="8,8,8,0"
                         IsVisible="{Binding ShowDuplicateWarning}">
                 <ui:SymbolIcon
                     Foreground="{DynamicResource ThemeRedColor}"
@@ -93,10 +199,10 @@
                     </DataTemplate>
                 </ui:FAComboBox.ItemTemplate>
             </ui:FAComboBox>
-            
+
             <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4"
                         HorizontalAlignment="Center"
-                        Orientation="Horizontal" Margin="0,8,0,8"
+                        Orientation="Horizontal" Margin="0,0,0,8"
                         IsVisible="{Binding IsReleaseModeAvailable}">
                 <ToggleButton
                     Content="{x:Static lang:Resources.Label_Releases}"
@@ -158,7 +264,7 @@
                                     </DataTemplate>
                                 </ui:FAComboBox.ItemTemplate>
                             </ui:FAComboBox>
-                            
+
                             <Label Content="{x:Static lang:Resources.Label_PyTorchVersion}"
                                    IsVisible="{Binding ShowTorchVersionOptions}"
                                    Margin="0,8,0,4" />
@@ -185,7 +291,7 @@
         <!-- Install Button -->
         <UniformGrid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
                      Columns="2"
-                     Margin="0,32,0,0"
+                     Margin="0,16,0,0"
                      HorizontalAlignment="Center">
             <Button
                 Content="{x:Static lang:Resources.Action_Cancel}"
@@ -205,25 +311,39 @@
                 Padding="16, 8, 16, 8" />
         </UniformGrid>
 
+        <CheckBox Grid.Column="0"
+                  Grid.Row="4"
+                  VerticalAlignment="Bottom"
+                  Margin="16,0,0,16"
+                  Content="Show All Packages"
+                  IsChecked="{Binding ShowIncompatiblePackages}"
+                  ToolTip.Tip="Enabling &quot;Show All Packages&quot; will include packages that may not be compatible with your system and may run very slowly as a result."/>
+
+
         <!-- Available Packages -->
-        <ListBox Grid.Column="1" Grid.Row="0"
-                 Margin="8, 16"
-                 ItemsSource="{Binding AvailablePackages}"
-                 SelectedItem="{Binding SelectedPackage}">
-            <ListBox.Template>
-                <ControlTemplate>
-                    <ItemsPresenter />
-                </ControlTemplate>
-            </ListBox.Template>
-            <ListBox.ItemTemplate>
-                <DataTemplate DataType="{x:Type packages:BasePackage}">
-                    <StackPanel Margin="8">
-                        <TextBlock Text="{Binding DisplayName}" />
-                        <TextBlock Text="{Binding ByAuthor}" />
-                    </StackPanel>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+        <ScrollViewer Grid.Column="1" Grid.Row="0"
+                      Margin="8, 16"
+                      MaxHeight="400"
+                      VerticalScrollBarVisibility="Auto">
+            <ListBox
+                ItemsSource="{Binding AvailablePackages}"
+                SelectedItem="{Binding SelectedPackage}"
+                CornerRadius="8">
+                <ListBox.Template>
+                    <ControlTemplate>
+                        <ItemsPresenter />
+                    </ControlTemplate>
+                </ListBox.Template>
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type packages:BasePackage}">
+                        <StackPanel Margin="8">
+                            <TextBlock Text="{Binding DisplayName}" />
+                            <TextBlock Text="{Binding ByAuthor}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </ScrollViewer>
     </Grid>
 
 </controls:UserControlBase>

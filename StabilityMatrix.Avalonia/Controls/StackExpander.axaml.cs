@@ -1,8 +1,10 @@
 ﻿using Avalonia;
 using Avalonia.Controls.Primitives;
+using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
+[Transient]
 public class StackExpander : TemplatedControl
 {
     public static readonly StyledProperty<int> SpacingProperty = AvaloniaProperty.Register<

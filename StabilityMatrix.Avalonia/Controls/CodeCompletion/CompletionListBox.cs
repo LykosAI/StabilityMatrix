@@ -92,6 +92,28 @@ public class CompletionListBox : ListBox
     }
 
     /// <summary>
+    /// Selects the next item. If the last item is already selected, selects the first item.
+    /// </summary>
+    public void SelectNextIndexWithLoop()
+    {
+        if (ItemCount <= 0)
+            return;
+
+        SelectIndex((SelectedIndex + 1) % ItemCount);
+    }
+
+    /// <summary>
+    /// Selects the previous item. If the first item is already selected, selects the last item.
+    /// </summary>
+    public void SelectPreviousIndexWithLoop()
+    {
+        if (ItemCount <= 0)
+            return;
+
+        SelectIndex((SelectedIndex - 1 + ItemCount) % ItemCount);
+    }
+
+    /// <summary>
     /// Selects the item with the specified index and scrolls it into view.
     /// </summary>
     public void SelectIndex(int index)

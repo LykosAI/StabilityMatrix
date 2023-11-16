@@ -12,7 +12,8 @@
              x:Class="StabilityMatrix.Avalonia.Views.Dialogs.PackageModificationDialog">
     <Grid Margin="8" RowDefinitions="Auto, Auto, Auto, *, Auto, Auto">
         <TextBlock Grid.Row="0" Text="{Binding Text}"
-                   FontSize="16"
+                   FontSize="24"
+                   FontWeight="Light"
                    Margin="4"
                    TextWrapping="WrapWithOverflow"
                    TextAlignment="Center"
@@ -47,11 +48,13 @@
         
         <CheckBox Grid.Row="4" IsChecked="{Binding CloseWhenFinished}"
                   HorizontalAlignment="Center"
+                  IsVisible="{Binding !HideCloseButton}"
                   Margin="4" Content="{x:Static lang:Resources.Label_CloseDialogWhenFinished}"/>
         
         <Button Grid.Row="5" Content="{x:Static lang:Resources.Action_Close}"
                 FontSize="20"
                 HorizontalAlignment="Center"
+                IsVisible="{Binding !HideCloseButton}"
                 Command="{Binding OnCloseButtonClick}"/>
     </Grid>
 </controls:UserControlBase>

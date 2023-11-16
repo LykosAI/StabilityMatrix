@@ -11,6 +11,8 @@ using StabilityMatrix.Core.Helper;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(FirstLaunchSetupWindow))]
+[ManagedService]
+[Singleton]
 public partial class FirstLaunchSetupViewModel : ViewModelBase
 {
     [ObservableProperty]
@@ -20,14 +22,17 @@ public partial class FirstLaunchSetupViewModel : ViewModelBase
     private string gpuInfoText = string.Empty;
 
     [ObservableProperty]
-    private RefreshBadgeViewModel checkHardwareBadge = new()
-    {
-        WorkingToolTipText = "We're checking some hardware specifications to determine compatibility.",
-        SuccessToolTipText = "Everything looks good!",
-        FailToolTipText = "We recommend a GPU with CUDA support for the best experience. " +
-                          "You can continue without one, but some packages may not work, and inference may be slower.",
-        FailColorBrush = ThemeColors.ThemeYellow,
-    };
+    private RefreshBadgeViewModel checkHardwareBadge =
+        new()
+        {
+            WorkingToolTipText =
+                "We're checking some hardware specifications to determine compatibility.",
+            SuccessToolTipText = "Everything looks good!",
+            FailToolTipText =
+                "We recommend a GPU with CUDA support for the best experience. "
+                + "You can continue without one, but some packages may not work, and inference may be slower.",
+            FailColorBrush = ThemeColors.ThemeYellow,
+        };
 
     public FirstLaunchSetupViewModel()
     {
@@ -43,14 +48,16 @@ public partial class FirstLaunchSetupViewModel : ViewModelBase
             gpuInfo = await Task.Run(() => HardwareHelper.IterGpuInfo().ToArray());
         }
         // First Nvidia GPU
-        var activeGpu = gpuInfo.FirstOrDefault(gpu => gpu.Name?.ToLowerInvariant().Contains("nvidia") ?? false);
+        var activeGpu = gpuInfo.FirstOrDefault(
+            gpu => gpu.Name?.ToLowerInvariant().Contains("nvidia") ?? false
+        );
         var isNvidia = activeGpu is not null;
         // Otherwise first GPU
         activeGpu ??= gpuInfo.FirstOrDefault();
         GpuInfoText = activeGpu is null
             ? "No GPU detected"
             : $"{activeGpu.Name} ({Size.FormatBytes(activeGpu.MemoryBytes)})";
-        
+
         return isNvidia;
     }
 

@@ -16,96 +16,98 @@
              x:CompileBindings="True"
              x:Class="StabilityMatrix.Avalonia.Views.CheckpointBrowserPage">
 
+    <UserControl.Styles>
+        <Style Selector="Border#HoverBorder Border#ModelCardBottom">
+            <Setter Property="Background" Value="#99000000" />
+        </Style>
+        <Style Selector="Border#HoverBorder:pointerover Border#ModelCardBottom">
+            <Setter Property="Background" Value="#CC000000" />
+        </Style>
+        <Style Selector="Border#HoverBorder">
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="Margin" Value="8" />
+        </Style>
+        <Style Selector="Border#HoverBorder:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColorDark1}" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Margin" Value="8,4,8,12" />
+        </Style>
+        
+        <Style Selector="Border#HoverBorder controls|BetterAdvancedImage">
+        </Style>
+        <Style Selector="Border#HoverBorder:pointerover controls|BetterAdvancedImage">
+        </Style>
+    </UserControl.Styles>
+
     <UserControl.Resources>
         <DataTemplate DataType="{x:Type checkpointBrowser:CheckpointBrowserCardViewModel}" x:Key="CivitModelTemplate">
-            <controls:Card
-                Margin="8"
-                MaxHeight="450"
-                CornerRadius="12"
-                Name="ModelCard"
-                Width="330">
+            <Border
+                Height="404"
+                Width="334"
+                Name="HoverBorder"
+                HorizontalAlignment="Center"
+                CornerRadius="8"
+                Padding="0">
+                <Button
+                    Padding="-1"
+                    CornerRadius="12"
+                    Name="ModelCard"
+                    IsEnabled="{Binding !IsImporting}"
+                    Command="{Binding ShowVersionDialogCommand}"
+                    CommandParameter="{Binding CivitModel}"
+                    HorizontalAlignment="Center"
+                    HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Top">
+                    <Grid RowDefinitions="*, Auto"
+                          HorizontalAlignment="Center">
+                        <controls:BetterAdvancedImage Grid.RowSpan="2"
+                                                      Height="400"
+                                                      Width="330"
+                                                      StretchDirection="Both"
+                                                      CornerRadius="8"
+                                                      VerticalContentAlignment="Top"
+                                                      HorizontalContentAlignment="Center"
+                                                      Source="{Binding CardImage}"
+                                                      Stretch="UniformToFill" />
 
-                <StackPanel Orientation="Vertical">
-                    <Grid ColumnDefinitions="*, Auto"
-                          Margin="0,-4,0,0">
-                        <TextBlock
-                            Foreground="{DynamicResource TextControlForeground}"
-                            Text="{Binding CivitModel.Name}"
-                            VerticalAlignment="Center" />
-                        <Button
-                            Grid.Column="1"
-                            HorizontalContentAlignment="Right"
-                            HorizontalAlignment="Right"
-                            VerticalContentAlignment="Top"
-                            VerticalAlignment="Top"
-                            Padding="4,2"
-                            Margin="4,0,0,0"
-                            Classes="transparent"
-                            Width="24"
-                            BorderThickness="0">
-                            <ui:SymbolIcon FontSize="18" Symbol="MoreVertical" />
-                            <Button.Flyout>
-                                <MenuFlyout>
-                                    <MenuItem Header="{x:Static lang:Resources.Action_OpenOnCivitAi}"
-                                              Command="{Binding OpenModelCommand}">
-                                        <MenuItem.Icon>
-                                            <ui:SymbolIcon Symbol="Open" />
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                </MenuFlyout>
-                            </Button.Flyout>
-                        </Button>
-                    </Grid>
-                    <TextBlock
-                        FontSize="11"
-                        Foreground="{DynamicResource TextControlForeground}"
-                        Margin="0,2,0,0"
-                        Text="{Binding CivitModel.LatestModelVersionName, FallbackValue=''}"
-                        VerticalAlignment="Center" />
-                    <Grid>
-                        <controls:BetterAdvancedImage
-                            Margin="0,8,0,8"
-                            Height="300"
-                            Width="300"
-                            StretchDirection="Both"
-                            CornerRadius="8"
-                            VerticalContentAlignment="Top"
-                            HorizontalContentAlignment="Center"
-                            Source="{Binding CardImage}"
-                            Stretch="UniformToFill" />
-
-                        <Button
-                            Command="{Binding ToggleFavoriteCommand}"
-                            HorizontalAlignment="Right"
-                            Margin="0,16,8,0"
-                            FontSize="20"
-                            Classes="info"
-                            IsVisible="{Binding !IsFavorite}"
-                            VerticalAlignment="Top">
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button
+                                Command="{Binding ToggleFavoriteCommand}"
+                                HorizontalAlignment="Right"
+                                Margin="0,8,8,0"
+                                FontSize="20"
+                                Classes="transparent-info"
+                                IsVisible="{Binding !IsFavorite}"
+                                VerticalAlignment="Top">
                                 <Grid>
                                     <ui:SymbolIcon Symbol="StarAdd" />
                                 </Grid>
-                        </Button>
-                        <Button
-                            Command="{Binding ToggleFavoriteCommand}"
-                            HorizontalAlignment="Right"
-                            Margin="0,16,8,0"
-                            FontSize="20"
-                            Classes="success"
-                            IsVisible="{Binding IsFavorite}"
-                            VerticalAlignment="Top">
-                            <Grid>
-                                <ui:SymbolIcon Symbol="StarFilled" />
-                            </Grid>
-                        </Button>
-                        
-                        <StackPanel Orientation="Horizontal">
+                            </Button>
+                            <Button
+                                Command="{Binding ToggleFavoriteCommand}"
+                                HorizontalAlignment="Right"
+                                Margin="0,8,8,0"
+                                FontSize="20"
+                                Classes="success"
+                                IsVisible="{Binding IsFavorite}"
+                                VerticalAlignment="Top">
+                                <Grid>
+                                    <ui:SymbolIcon Symbol="StarFilled" />
+                                </Grid>
+                            </Button>
+                        </StackPanel>
+
+
+                        <StackPanel Grid.Row="0" Orientation="Horizontal">
                             <controls:Card
                                 Classes="info"
                                 Height="24"
                                 HorizontalAlignment="Left"
                                 Padding="4"
-                                Margin="4,16,0,0"
+                                Margin="8,8,0,0"
                                 VerticalAlignment="Top">
 
                                 <TextBlock
@@ -115,13 +117,12 @@
                                     Text="{Binding CivitModel.Type}"
                                     VerticalAlignment="Center" />
                             </controls:Card>
-                            
                             <controls:Card
                                 Classes="info"
                                 Height="24"
                                 HorizontalAlignment="Left"
                                 Padding="4"
-                                Margin="4,16,0,0"
+                                Margin="4,8,0,0"
                                 VerticalAlignment="Top">
 
                                 <TextBlock
@@ -131,14 +132,13 @@
                                     Text="{Binding CivitModel.BaseModelType}"
                                     VerticalAlignment="Center" />
                             </controls:Card>
-
                             <controls:Card
                                 Classes="success"
                                 Height="24"
                                 HorizontalAlignment="Left"
                                 Padding="4"
                                 IsVisible="{Binding ShowUpdateCard}"
-                                Margin="4,16,0,0"
+                                Margin="4,8,0,0"
                                 VerticalAlignment="Top">
 
                                 <TextBlock
@@ -149,19 +149,22 @@
                                     VerticalAlignment="Center" />
                             </controls:Card>
                         </StackPanel>
-                        <Rectangle
-                            Fill="#DD000000"
-                            RadiusX="8"
-                            RadiusY="8"
-                            HorizontalAlignment="Stretch"
-                            Margin="0,8,0,8"
-                            VerticalAlignment="Stretch"
-                            IsVisible="{Binding IsImporting}" />
-                        <StackPanel
-                            HorizontalAlignment="Stretch"
-                            Orientation="Vertical"
-                            VerticalAlignment="Center"
-                            IsVisible="{Binding IsImporting}">
+                        <Border Grid.Row="0"
+                                Grid.RowSpan="2"
+                                Background="#DD000000"
+                                CornerRadius="8"
+                                HorizontalAlignment="Stretch"
+                                Margin="0,0,0,0"
+                                VerticalAlignment="Stretch"
+                                ZIndex="1"
+                                IsVisible="{Binding IsImporting}" />
+                        <StackPanel Grid.Row="0"
+                                    Grid.RowSpan="2"
+                                    HorizontalAlignment="Stretch"
+                                    Orientation="Vertical"
+                                    VerticalAlignment="Center"
+                                    ZIndex="2"
+                                    IsVisible="{Binding IsImporting}">
                             <controls:ProgressRing
                                 HorizontalAlignment="Center"
                                 IsIndeterminate="False"
@@ -177,40 +180,93 @@
                                 Text="{Binding Text, TargetNullValue=Importing...}"
                                 VerticalAlignment="Center" />
                         </StackPanel>
-                    </Grid>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <Button
-                            Classes="accent"
-                            Margin="0,8,0,0"
-                            Command="{Binding ImportCommand}"
-                            CommandParameter="{Binding CivitModel}"
-                            IsEnabled="{Binding !IsImporting}"
-                            CornerRadius="6"
-                            HorizontalAlignment="Stretch">
-                            <Button.Content>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{x:Static lang:Resources.Label_ImportLatest}" />
-                                    <TextBlock Margin="4,0,0,0"
-                                               Text="{Binding CivitModel.FullFilesSize}" />
-                                </StackPanel>
-                            </Button.Content>
-                        </Button>
 
-                        <Button Grid.Column="1"
-                                CornerRadius="6"
-                                Margin="8,8,0,0"
-                                Classes="accent"
-                                IsEnabled="{Binding !IsImporting}"
-                                Command="{Binding ShowVersionDialogCommand}"
-                                CommandParameter="{Binding CivitModel}"
-                                Content="{x:Static lang:Resources.Label_AllVersions}" />
+                        <Border Grid.Row="1" Name="ModelCardBottom"
+                                CornerRadius="0,0,8,8">
+                            <Grid RowDefinitions="Auto, Auto, Auto"
+                                  ColumnDefinitions="*, Auto">
+
+                                <TextBlock
+                                    Grid.ColumnSpan="2"
+                                    HorizontalAlignment="Left"
+                                    Margin="8,0,8,0"
+                                    FontWeight="SemiBold"
+                                    LetterSpacing="0.33"
+                                    Foreground="{DynamicResource TextControlForeground}"
+                                    Text="{Binding CivitModel.Name}"
+                                    TextTrimming="CharacterEllipsis"
+                                    TextWrapping="NoWrap"
+                                    MaxWidth="250"
+                                    ToolTip.Tip="{Binding CivitModel.Name}"
+                                    VerticalAlignment="Center" />
+
+                                <TextBlock Grid.Row="1"
+                                           Grid.Column="0"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource TextControlForeground}"
+                                           Margin="8,-4,0,0"
+                                           Text="{Binding CivitModel.LatestModelVersionName, FallbackValue=''}"
+                                           VerticalAlignment="Center" />
+                                
+                                <StackPanel Orientation="Horizontal"
+                                            Grid.Column="0"
+                                            Grid.Row="2">
+                                    
+                                    <controls:StarsRating
+                                        FontSize="16"
+                                        Margin="8,8,0,8"
+                                        Value="{Binding CivitModel.Stats.Rating}"
+                                        Foreground="{DynamicResource ThemeEldenRingOrangeColor}"
+                                        Background="#66000000" />
+                                    <TextBlock Text="{Binding CivitModel.Stats.RatingCount}"
+                                               TextAlignment="Center"
+                                               Margin="4,0,0,0"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Row="2"
+                                            Grid.Column="1"
+                                            Orientation="Horizontal"
+                                            HorizontalAlignment="Right">
+                                    <avalonia:Icon Value="fa-solid fa-heart"/>
+                                    <TextBlock Text="{Binding CivitModel.Stats.FavoriteCount}"
+                                               VerticalAlignment="Center"
+                                               Margin="4,0"/>
+                                    
+                                    <avalonia:Icon Value="fa-solid fa-download"
+                                                   Margin="4,0"/>
+                                    <TextBlock Text="{Binding CivitModel.Stats.DownloadCount}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,4,0"/>
+                                </StackPanel>
+                                <Button
+                                    Grid.Row="0" Grid.Column="1"
+                                    HorizontalContentAlignment="Right"
+                                    HorizontalAlignment="Right"
+                                    VerticalContentAlignment="Top"
+                                    VerticalAlignment="Top"
+                                    Margin="0,4,4,0"
+                                    Classes="transparent"
+                                    Width="32"
+                                    BorderThickness="0">
+                                    <ui:SymbolIcon FontSize="18" Symbol="MoreVertical" />
+                                    <Button.Flyout>
+                                        <MenuFlyout>
+                                            <MenuItem Header="{x:Static lang:Resources.Action_OpenOnCivitAi}"
+                                                      Command="{Binding OpenModelCommand}">
+                                                <MenuItem.Icon>
+                                                    <ui:SymbolIcon Symbol="Open" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                        </MenuFlyout>
+                                    </Button.Flyout>
+                                </Button>
+                            </Grid>
+                        </Border>
                     </Grid>
-                </StackPanel>
-            </controls:Card>
+                </Button>
+            </Border>
+
         </DataTemplate>
     </UserControl.Resources>
 
@@ -272,7 +328,7 @@
                         MinWidth="100"
                         SelectedItem="{Binding SelectedModelType}" />
                 </StackPanel>
-                
+
                 <StackPanel Margin="4, 8" Orientation="Vertical">
                     <Label Content="{x:Static lang:Resources.Label_BaseModel}" />
                     <ComboBox
@@ -280,7 +336,7 @@
                         MinWidth="100"
                         SelectedItem="{Binding SelectedBaseModelType}" />
                 </StackPanel>
-                
+
 
                 <CheckBox
                     Content="{x:Static lang:Resources.Label_ShowNsfwContent}"
@@ -325,26 +381,26 @@
                     IsEnabled="{Binding CanGoToFirstPage}"
                     ToolTip.Tip="{x:Static lang:Resources.Label_FirstPage}"
                     Margin="0,0,8,0">
-                    <avalonia:Icon Value="fa-solid fa-backward-fast"/>
+                    <avalonia:Icon Value="fa-solid fa-backward-fast" />
                 </Button>
                 <Button
                     Command="{Binding PreviousPage}"
                     ToolTip.Tip="{x:Static lang:Resources.Label_PreviousPage}"
                     IsEnabled="{Binding CanGoToPreviousPage}"
                     Margin="0,0,8,0">
-                    <avalonia:Icon Value="fa-solid fa-caret-left"/>
+                    <avalonia:Icon Value="fa-solid fa-caret-left" />
                 </Button>
-                <Button Command="{Binding NextPage}" 
+                <Button Command="{Binding NextPage}"
                         IsEnabled="{Binding CanGoToNextPage}"
                         ToolTip.Tip="{x:Static lang:Resources.Label_NextPage}"
                         Margin="0,0,8,0">
-                    <avalonia:Icon Value="fa-solid fa-caret-right"/>
+                    <avalonia:Icon Value="fa-solid fa-caret-right" />
                 </Button>
                 <Button
                     Command="{Binding LastPage}"
                     ToolTip.Tip="{x:Static lang:Resources.Label_LastPage}"
                     IsEnabled="{Binding CanGoToLastPage}">
-                    <avalonia:Icon Value="fa-solid fa-forward-fast"/>
+                    <avalonia:Icon Value="fa-solid fa-forward-fast" />
                 </Button>
             </StackPanel>
         </StackPanel>

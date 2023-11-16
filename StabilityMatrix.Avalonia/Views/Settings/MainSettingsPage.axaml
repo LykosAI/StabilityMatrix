@@ -1,0 +1,550 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Settings.MainSettingsPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+    xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    Focusable="True"
+    d:DataContext="{x:Static mocks:DesignData.MainSettingsViewModel}"
+    d:DesignHeight="700"
+    d:DesignWidth="800"
+    x:CompileBindings="True"
+    x:DataType="vmSettings:MainSettingsViewModel"
+    mc:Ignorable="d">
+    
+    <controls:UserControlBase.Resources>
+        <converters:CultureInfoDisplayConverter x:Key="CultureInfoDisplayConverter" />
+    </controls:UserControlBase.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="8,16" Spacing="8">
+            <!--  Theme  -->
+            <Grid RowDefinitions="Auto,*,*,*">
+                <TextBlock
+                    Margin="0,0,0,8"
+                    FontWeight="Medium"
+                    Text="{x:Static lang:Resources.Label_Appearance}" />
+                <ui:SettingsExpander
+                    Grid.Row="1"
+                    Margin="8,0,8,4"
+                    Header="{x:Static lang:Resources.Label_Theme}"
+                    IconSource="WeatherMoon">
+                    <ui:SettingsExpander.Footer>
+                        <ComboBox
+                            MinWidth="100"
+                            ItemsSource="{Binding AvailableThemes}"
+                            SelectedItem="{Binding SelectedTheme}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+                <ui:SettingsExpander
+                    Grid.Row="2"
+                    Margin="8,0,8,4"
+                    Header="{x:Static lang:Resources.Label_Language}"
+                    IconSource="Character">
+                    <ui:SettingsExpander.Footer>
+                        <ComboBox
+                            MinWidth="100"
+                            DisplayMemberBinding="{Binding Converter={StaticResource CultureInfoDisplayConverter}}"
+                            ItemsSource="{Binding AvailableLanguages}"
+                            SelectedItem="{Binding SelectedLanguage}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+                <ui:SettingsExpander
+                    Grid.Row="3"
+                    IsVisible="{Binding SharedState.IsDebugMode}"
+                    Margin="8,0,8,4"
+                    IsClickEnabled="True"
+                    Command="{Binding NavigateToSubPageCommand}"
+                    CommandParameter="{x:Type vmSettings:InferenceSettingsViewModel}"
+                    Header="Inference (Test)"
+                    IconSource="Code"
+                    ActionIconSource="ChevronRight">
+                </ui:SettingsExpander>
+            </Grid>
+            
+            <!--  Checkpoints Manager Options  -->
+            <Grid RowDefinitions="auto,*,Auto">
+                <TextBlock
+                    Margin="0,0,0,8"
+                    FontWeight="Medium"
+                    Text="{x:Static lang:Resources.Label_CheckpointManager}" />
+                <ui:SettingsExpander
+                    Grid.Row="1"
+                    Margin="8,0"
+                    Description="{x:Static lang:Resources.Label_RemoveSymlinksOnShutdown_Details}"
+                    Header="{x:Static lang:Resources.Label_RemoveSymlinksOnShutdown}"
+                    IconSource="Folder">
+                    <ui:SettingsExpander.Footer>
+                        <CheckBox Margin="8" IsChecked="{Binding RemoveSymlinksOnShutdown}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+                <ui:SettingsExpander
+                    Grid.Row="2"
+                    Margin="8,4"
+                    Description="{x:Static lang:Resources.Label_ResetCheckpointsCache_Details}"
+                    Header="{x:Static lang:Resources.Label_ResetCheckpointsCache}"
+                    IconSource="Refresh">
+                    <ui:SettingsExpander.Footer>
+                        <Button Command="{Binding ResetCheckpointCache}" Content="{x:Static lang:Resources.Label_ResetCheckpointsCache}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+            </Grid>
+
+            <!--  Inference UI  -->
+            <Grid Margin="0,8,0,0" RowDefinitions="auto,*,*,*">
+                <TextBlock
+                    Margin="0,0,0,8"
+                    FontWeight="Medium"
+                    Text="Inference" />
+                <!--  Auto Completion  -->
+                <ui:SettingsExpander
+                    Grid.Row="1"
+                    Margin="8,0,8,4"
+                    Header="Prompt Auto Completion">
+                    <ui:SettingsExpander.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-wand-magic-sparkles" />
+                    </ui:SettingsExpander.IconSource>
+
+                    <!--  Enable toggle  -->
+                    <ui:SettingsExpanderItem Content="Enable">
+                        <ui:SettingsExpanderItem.Footer>
+                            <ToggleSwitch IsChecked="{Binding IsPromptCompletionEnabled}" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+
+                    <!--  Tag csv selection  -->
+                    <ui:SettingsExpanderItem
+                        Content="Tag Source"
+                        Description="Tags to use for completion in .csv format (Compatible with a1111-sd-webui-tagcomplete)"
+                        IconSource="Tag"
+                        IsEnabled="{Binding IsPromptCompletionEnabled}">
+                        <ui:SettingsExpanderItem.Footer>
+                            <ui:FAComboBox ItemsSource="{Binding AvailableTagCompletionCsvs}" SelectedItem="{Binding SelectedTagCompletionCsv}" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+
+                    <!--  Tag csv import  -->
+                    <ui:SettingsExpanderItem
+                        Content="Import Tag Source .csv"
+                        IconSource="Add"
+                        IsEnabled="{Binding IsPromptCompletionEnabled}">
+                        <ui:SettingsExpanderItem.Footer>
+                            <Button Command="{Binding ImportTagCsvCommand}" Content="Import" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+
+                    <!--  Remove underscores  -->
+                    <ui:SettingsExpanderItem
+                        Content="Replace underscores with spaces when inserting completions"
+                        IconSource="Underline"
+                        IsEnabled="{Binding IsPromptCompletionEnabled}">
+                        <ui:SettingsExpanderItem.Footer>
+                            <CheckBox Margin="8" IsChecked="{Binding IsCompletionRemoveUnderscoresEnabled}" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                </ui:SettingsExpander>
+
+                <!--  Image Viewer  -->
+                <ui:SettingsExpander
+                    Grid.Row="2"
+                    Margin="8,0,8,4"
+                    Header="Image Viewer"
+                    IconSource="Image">
+
+                    <!--  Pixel grid  -->
+                    <ui:SettingsExpanderItem Content="Show pixel grid at high zoom levels" IconSource="ViewAll">
+                        <ui:SettingsExpanderItem.Footer>
+                            <CheckBox Margin="8" IsChecked="{Binding IsImageViewerPixelGridEnabled}" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                </ui:SettingsExpander>
+
+                <!--  Output Image Files  -->
+                <ui:SettingsExpander
+                    Grid.Row="3"
+                    Margin="8,0,8,4"
+                    Header="Output Image Files">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource Symbol="TabDesktopImage" />
+                    </ui:SettingsExpander.IconSource>
+                    <!--  File name pattern  -->
+                    <ui:SettingsExpanderItem
+                        Content="File name pattern"
+                        Description="{Binding OutputImageFileNameFormatSample}"
+                        IconSource="Rename">
+                        <ui:SettingsExpanderItem.Footer>
+                            <TextBox
+                                Name="OutputImageFileNameFormatTextBox"
+                                MinWidth="150"
+                                FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                FontSize="13"
+                                Text="{Binding OutputImageFileNameFormat}"
+                                Watermark="{x:Static inference:FileNameFormat.DefaultTemplate}" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                </ui:SettingsExpander>
+
+                <ui:TeachingTip
+                    Title="Format Variables"
+                    Grid.Row="3"
+                    IsOpen="{Binding #OutputImageFileNameFormatTextBox.IsFocused}"
+                    PreferredPlacement="Top"
+                    Target="{Binding #OutputImageFileNameFormatTextBox, Mode=OneWay}">
+                    <DataGrid AutoGenerateColumns="True" ItemsSource="{Binding OutputImageFileNameFormatVars}" />
+                    <!--<mdxaml:MarkdownScrollViewer
+                        Markdown="{Binding OutputImageFileNameFormatGuideMarkdown}"/>-->
+                </ui:TeachingTip>
+            </Grid>
+
+            <!--  Environment Options  -->
+            <Grid RowDefinitions="Auto, Auto, Auto">
+                <TextBlock
+                    Margin="0,0,0,8"
+                    FontWeight="Medium"
+                    Text="{x:Static lang:Resources.Label_PackageEnvironment}" />
+
+                <ui:SettingsExpander
+                    Grid.Row="1"
+                    Margin="8,0"
+                    Header="{x:Static lang:Resources.Label_EnvironmentVariables}"
+                    IconSource="OtherUser">
+                    <ui:SettingsExpander.Footer>
+                        <Button Command="{Binding OpenEnvVarsDialogCommand}" Content="{x:Static lang:Resources.Action_Edit}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+
+                <ui:SettingsExpander
+                    Grid.Row="2"
+                    Margin="8,4"
+                    Header="{x:Static lang:Resources.Label_EmbeddedPython}">
+                    <ui:SettingsExpander.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-brands fa-python" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <StackPanel Orientation="Horizontal" Spacing="16">
+                            <controls:ProgressRing
+                                BorderThickness="3"
+                                IsEnabled="{Binding CheckPythonVersionCommand.IsRunning}"
+                                IsIndeterminate="True"
+                                IsVisible="{Binding CheckPythonVersionCommand.IsRunning}" />
+                            <Button Command="{Binding CheckPythonVersionCommand}" Content="{x:Static lang:Resources.Action_CheckVersion}" />
+                        </StackPanel>
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+            </Grid>
+
+            <!--  Integrations  -->
+            <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4">
+                <TextBlock
+                    Margin="0,0,0,4"
+                    FontWeight="Medium"
+                    Text="{x:Static lang:Resources.Label_Integrations}" />
+                <ui:SettingsExpander
+                    Grid.Row="1"
+                    Margin="8,0"
+                    IsClickEnabled="True"
+                    Command="{Binding NavigateToSubPageCommand}"
+                    CommandParameter="{x:Type vmSettings:AccountSettingsViewModel}"
+                    Header="{x:Static lang:Resources.Label_Accounts}"
+                    ActionIconSource="ChevronRight">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource
+                            FontSize="10"
+                            IsFilled="True"
+                            Symbol="Person"/>
+                    </ui:SettingsExpander.IconSource>
+                </ui:SettingsExpander>
+                <ui:SettingsExpander
+                    Grid.Row="2"
+                    Margin="8,0,8,4"
+                    Header="{x:Static lang:Resources.Label_DiscordRichPresence}">
+                    <ui:SettingsExpander.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-brands fa-discord" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <ToggleSwitch IsChecked="{Binding IsDiscordRichPresenceEnabled}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+            </sg:SpacedGrid>
+
+            <!--  System Options  -->
+            <Grid RowDefinitions="auto, auto, auto">
+                <TextBlock
+                    Margin="0,0,0,8"
+                    FontWeight="Medium"
+                    Text="{x:Static lang:Resources.Label_System}" />
+                <ui:SettingsExpander
+                    Grid.Row="1"
+                    Margin="8,0,8,4"
+                    Description="{x:Static lang:Resources.Label_AddToStartMenu_Details}"
+                    Header="{x:Static lang:Resources.Label_AddToStartMenu}"
+                    IconSource="StarAdd"
+                    ToolTip.Tip="{OnPlatform Default={x:Static lang:Resources.Label_OnlyAvailableOnWindows},
+                                             Windows={x:Null}}">
+                    <ui:SettingsExpander.Footer>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <controls:ProgressRing
+                                BorderThickness="3"
+                                IsEnabled="{Binding IsVisible, RelativeSource={RelativeSource Self}}"
+                                IsIndeterminate="True">
+                                <controls:ProgressRing.IsVisible>
+                                    <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                                        <Binding Path="AddToStartMenuCommand.IsRunning" />
+                                        <Binding Path="AddToGlobalStartMenuCommand.IsRunning" />
+                                    </MultiBinding>
+                                </controls:ProgressRing.IsVisible>
+                            </controls:ProgressRing>
+
+                            <SplitButton
+                                Command="{Binding AddToStartMenuCommand}"
+                                Content="{x:Static lang:Resources.Action_AddForCurrentUser}"
+                                IsEnabled="{OnPlatform Default=False,
+                                                       Windows=True}">
+                                <SplitButton.Flyout>
+                                    <ui:FAMenuFlyout Placement="Bottom">
+                                        <ui:MenuFlyoutItem
+                                            Command="{Binding AddToGlobalStartMenuCommand}"
+                                            IconSource="Admin"
+                                            Text="{x:Static lang:Resources.Action_AddForAllUsers}" />
+                                    </ui:FAMenuFlyout>
+                                </SplitButton.Flyout>
+                            </SplitButton>
+                        </StackPanel>
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+                <ui:SettingsExpander
+                    Grid.Row="2"
+                    Margin="8,0"
+                    Description="{x:Static lang:Resources.Label_SelectNewDataDirectory_Details}"
+                    IconSource="MoveToFolder">
+                    <ui:SettingsExpander.Header>
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="{x:Static lang:Resources.Label_SelectNewDataDirectory}" />
+                            <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                                <Run Text="{x:Static lang:Resources.Label_CurrentDirectory}" />
+                                <Run Text="{Binding DataDirectory}" />
+                            </TextBlock>
+                        </StackPanel>
+                    </ui:SettingsExpander.Header>
+                    <ui:SettingsExpander.Footer>
+                        <Button Command="{Binding PickNewDataDirectory}">
+                            <Grid ColumnDefinitions="Auto, Auto">
+                                <avalonia:Icon
+                                    Grid.Row="0"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Value="fa-solid fa-folder-open" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Text="{x:Static lang:Resources.Action_SelectDirectory}" />
+                            </Grid>
+                        </Button>
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+            </Grid>
+
+            <!--  Debug Options  -->
+            <Grid IsVisible="{Binding SharedState.IsDebugMode}" RowDefinitions="auto,*">
+                <TextBlock
+                    Margin="0,0,0,8"
+                    FontWeight="Medium"
+                    Text="Debug Options" />
+                <ui:SettingsExpander
+                    Grid.Row="1"
+                    Margin="8,0,8,0"
+                    Command="{Binding LoadDebugInfo}"
+                    Header="Debug Options"
+                    IconSource="Code">
+
+                    <ui:SettingsExpanderItem
+                        Margin="4,0"
+                        Description="Paths"
+                        IconSource="Folder">
+                        <SelectableTextBlock
+                            Foreground="{DynamicResource TextControlPlaceholderForeground}"
+                            Text="{Binding DebugPaths}"
+                            TextWrapping="WrapWithOverflow" />
+                    </ui:SettingsExpanderItem>
+
+                    <ui:SettingsExpanderItem
+                        Margin="4,0"
+                        Description="Compat Info"
+                        IconSource="StarFilled">
+                        <SelectableTextBlock
+                            Foreground="{DynamicResource TextControlPlaceholderForeground}"
+                            Text="{Binding DebugCompatInfo}"
+                            TextWrapping="WrapWithOverflow" />
+                    </ui:SettingsExpanderItem>
+
+                    <ui:SettingsExpanderItem
+                        Margin="4,0"
+                        Description="GPU Info"
+                        IconSource="FullScreenMaximize">
+                        <SelectableTextBlock
+                            Foreground="{DynamicResource TextControlPlaceholderForeground}"
+                            Text="{Binding DebugGpuInfo}"
+                            TextWrapping="WrapWithOverflow" />
+                    </ui:SettingsExpanderItem>
+
+                    <ui:SettingsExpanderItem
+                        Margin="4,0"
+                        Content="Animation Scale"
+                        Description="Lower values = faster animations. 0x means animations are instant."
+                        IconSource="Clock">
+                        <ui:SettingsExpanderItem.Footer>
+                            <ComboBox ItemsSource="{Binding AnimationScaleOptions}" SelectedItem="{Binding SelectedAnimationScale}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock>
+                                            <Run Text="{Binding}" /><Run Text="x" />
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+
+                    <ui:SettingsExpanderItem
+                        Margin="4,0"
+                        Content="Notification"
+                        IconSource="CommentAdd">
+                        <ui:SettingsExpanderItem.Footer>
+                            <Button Command="{Binding DebugNotificationCommand}" Content="New Notification" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+
+                    <ui:SettingsExpanderItem
+                        Margin="4,0"
+                        Content="Content Dialog"
+                        IconSource="NewWindow">
+                        <ui:SettingsExpanderItem.Footer>
+                            <Button Command="{Binding DebugContentDialogCommand}" Content="Show Dialog" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+
+                    <ui:SettingsExpanderItem
+                        Margin="4,0"
+                        Content="Exceptions"
+                        IconSource="Flag">
+                        <ui:SettingsExpanderItem.Footer>
+                            <Button Command="{Binding DebugThrowExceptionCommand}" Content="Unhandled Exception" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+
+                    <ui:SettingsExpanderItem
+                        Margin="4,0,4,4"
+                        Content="Download Manager tests"
+                        IconSource="Flag">
+                        <ui:SettingsExpanderItem.Footer>
+                            <Button
+                                Margin="0,8"
+                                Command="{Binding DebugTrackedDownloadCommand}"
+                                Content="Add Tracked Download" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+
+                    <ui:SettingsExpanderItem
+                        Margin="4,0,4,4"
+                        Content="Refresh Models Index"
+                        IconSource="SyncFolder">
+                        <ui:SettingsExpanderItem.Footer>
+                            <Button
+                                Margin="0,8"
+                                Command="{Binding DebugRefreshModelsIndexCommand}"
+                                Content="Refresh Index" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+
+                    <ui:SettingsExpanderItem
+                        Margin="4,0,4,4"
+                        Content="Make image grid"
+                        IconSource="Image">
+                        <ui:SettingsExpanderItem.Footer>
+                            <Button
+                                Margin="0,8"
+                                Command="{Binding DebugMakeImageGridCommand}"
+                                Content="Select images" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+
+                    <ui:SettingsExpanderItem
+                        Margin="4,0,4,4"
+                        Content="Image metadata parser"
+                        IconSource="Flag">
+                        <ui:SettingsExpanderItem.Footer>
+                            <Button
+                                Margin="0,8"
+                                Command="{Binding DebugImageMetadataCommand}"
+                                Content="Choose image" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+
+                </ui:SettingsExpander>
+            </Grid>
+
+            <!--  TODO: Directories card  -->
+
+            <Grid RowDefinitions="auto,*">
+                <StackPanel
+                    Grid.Row="1"
+                    HorizontalAlignment="Left"
+                    Orientation="Vertical">
+                    <TextBlock
+                        Margin="0,8"
+                        FontSize="15"
+                        FontWeight="Bold"
+                        Text="{x:Static lang:Resources.Label_About}" />
+                    <Image
+                        Width="112"
+                        Height="112"
+                        Margin="8"
+                        HorizontalAlignment="Left"
+                        Source="/Assets/Icon.png" />
+                    <TextBlock
+                        Margin="8"
+                        FontWeight="Medium"
+                        Text="{x:Static lang:Resources.Label_StabilityMatrix}" />
+                    <Panel>
+                        <Button
+                            Name="VersionButton"
+                            Margin="8,0,8,8"
+                            Padding="2,0,2,0"
+                            BorderThickness="0"
+                            Classes="transparent"
+                            Command="{Binding OnVersionClick}"
+                            Content="{Binding AppVersion}" />
+                        <ui:TeachingTip
+                            Title="{Binding VersionFlyoutText}"
+                            IsOpen="{Binding IsVersionTapTeachingTipOpen}"
+                            PreferredPlacement="RightTop"
+                            Target="{Binding #VersionButton}" />
+                    </Panel>
+
+                    <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
+                        <Button
+                            Margin="8"
+                            HorizontalAlignment="Left"
+                            Command="{Binding ShowLicensesDialogCommand}"
+                            Content="{x:Static lang:Resources.Label_LicenseAndOpenSourceNotices}" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <!--  Extra space at the bottom  -->
+            <Panel Margin="0,0,0,16" />
+        </StackPanel>
+    </ScrollViewer>
+</controls:UserControlBase>

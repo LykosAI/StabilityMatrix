@@ -35,6 +35,7 @@
       <PackageReference Include="Octokit" Version="8.1.1" />
       <PackageReference Include="OneOf" Version="3.0.263" />
       <PackageReference Include="OneOf.SourceGenerator" Version="3.0.263" />
+      <PackageReference Include="Polly" Version="8.0.0" />
       <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
       <PackageReference Include="pythonnet" Version="3.0.3" />
       <PackageReference Include="Refit" Version="7.0.0" />

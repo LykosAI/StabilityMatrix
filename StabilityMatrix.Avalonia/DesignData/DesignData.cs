@@ -103,7 +103,6 @@ public static class DesignData
         // General services
         services
             .AddLogging()
-            .AddSingleton<INavigationService, NavigationService>()
             .AddSingleton<IPackageFactory, PackageFactory>()
             .AddSingleton<IUpdateHelper, UpdateHelper>()
             .AddSingleton<ModelFinder>()
@@ -119,6 +118,7 @@ public static class DesignData
             .AddSingleton(Substitute.For<IDiscordRichPresenceService>())
             .AddSingleton(Substitute.For<ITrackedDownloadService>())
             .AddSingleton(Substitute.For<ILiteDbContext>())
+            .AddSingleton(Substitute.For<IAccountsService>())
             .AddSingleton<IInferenceClientManager, MockInferenceClientManager>()
             .AddSingleton<ICompletionProvider, MockCompletionProvider>()
             .AddSingleton<IModelIndexService, MockModelIndexService>()
@@ -304,6 +304,7 @@ public static class DesignData
                     {
                         Name = "BB95 Furry Mix",
                         Description = "A furry mix of BB95",
+                        Stats = new CivitModelStats { Rating = 3.5, RatingCount = 24 }
                     };
                 })
             };
@@ -344,7 +345,9 @@ public static class DesignData
                         new ProgressReport(0.5f, "Downloading...")
                     )
                 ),
-                new MockDownloadProgressItemViewModel("Test File 2.exe"),
+                new MockDownloadProgressItemViewModel(
+                    "Very Long Test File Name Need Even More Longness Thanks That's pRobably good 2.exe"
+                ),
                 new PackageInstallProgressItemViewModel(
                     new PackageModificationRunner
                     {
@@ -436,6 +439,12 @@ public static class DesignData
 
     public static InferenceSettingsViewModel InferenceSettingsViewModel =>
         Services.GetRequiredService<InferenceSettingsViewModel>();
+
+    public static MainSettingsViewModel MainSettingsViewModel =>
+        Services.GetRequiredService<MainSettingsViewModel>();
+
+    public static AccountSettingsViewModel AccountSettingsViewModel =>
+        Services.GetRequiredService<AccountSettingsViewModel>();
 
     public static CheckpointBrowserViewModel CheckpointBrowserViewModel =>
         Services.GetRequiredService<CheckpointBrowserViewModel>();
@@ -540,6 +549,20 @@ The gallery images are often inpainted, but you will get something very similar 
                 new PipPackageInfo("pip", "1.0.0"),
                 new PipPackageInfo("torch", "2.1.0+cu121")
             );
+        });
+
+    public static LykosLoginViewModel LykosLoginViewModel =>
+        DialogFactory.Get<LykosLoginViewModel>();
+
+    public static OAuthConnectViewModel OAuthConnectViewModel =>
+        DialogFactory.Get<OAuthConnectViewModel>(vm =>
+        {
+            vm.Url =
+                "https://www.example.org/oauth2/authorize?"
+                + "client_id=66ad566552679cb6e650be01ed6f8d2ae9a0f803c0369850a5c9ee82a2396062&"
+                + "scope=identity%20identity.memberships&"
+                + "response_type=code&state=test%40example.org&"
+                + "redirect_uri=http://localhost:5022/api/oauth/patreon/callback";
         });
 
     public static InferenceTextToImageViewModel InferenceTextToImageViewModel =>

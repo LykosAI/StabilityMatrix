@@ -6,6 +6,11 @@
 public class AppArgs
 {
     /// <summary>
+    /// Whether to enable debug mode
+    /// </summary>
+    public bool DebugMode { get; set; }
+
+    /// <summary>
     /// Whether to use the exception dialog while debugger is attached.
     /// When no debugger is attached, the exception dialog is always used.
     /// </summary>

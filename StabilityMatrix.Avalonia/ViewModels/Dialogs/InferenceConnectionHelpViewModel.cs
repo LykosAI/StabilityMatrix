@@ -27,7 +27,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBase
 {
     private readonly ISettingsManager settingsManager;
-    private readonly INavigationService navigationService;
+    private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly IPackageFactory packageFactory;
 
     [ObservableProperty]
@@ -56,7 +56,7 @@ public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBa
 
     public InferenceConnectionHelpViewModel(
         ISettingsManager settingsManager,
-        INavigationService navigationService,
+        INavigationService<MainWindowViewModel> navigationService,
         IPackageFactory packageFactory
     )
     {

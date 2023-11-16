@@ -1,16 +1,69 @@
-﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
-                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                          xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
-                          xmlns:ui="using:FluentAvalonia.UI.Controls"
-                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
-                          xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
-                          d:DataContext="{x:Static mocks:DesignData.InferenceSettingsViewModel}"
-                          x:DataType="vmSettings:InferenceSettingsViewModel"
-                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-                          x:Class="StabilityMatrix.Avalonia.Views.Settings.InferenceSettingsPage">
-    Welcome to Avalonia!
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Settings.InferenceSettingsPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
+    d:DataContext="{x:Static mocks:DesignData.InferenceSettingsViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="vmSettings:InferenceSettingsViewModel"
+    mc:Ignorable="d">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="8,16" Spacing="8">
+            <!--  Theme  -->
+            <Grid RowDefinitions="Auto,*,*,*">
+                <TextBlock
+                    Margin="0,0,0,8"
+                    FontWeight="Medium"
+                    Text="Stuff" />
+                <ui:SettingsExpander
+                    Grid.Row="1"
+                    Margin="8,0,8,4"
+                    Header="{x:Static lang:Resources.Label_Theme}"
+                    IconSource="WeatherMoon">
+                    <ui:SettingsExpander.Footer>
+                        <ComboBox MinWidth="100" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+                <ui:SettingsExpander
+                    Grid.Row="2"
+                    Margin="8,0,8,4"
+                    Header="{x:Static lang:Resources.Label_Language}"
+                    IconSource="Character">
+                    <ui:SettingsExpander.Footer>
+                        <ComboBox MinWidth="100" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+                <ui:SettingsExpander
+                    Grid.Row="3"
+                    Margin="8,0,8,4"
+                    Header="Inference"
+                    IconSource="Code" />
+            </Grid>
+
+            <!--  Checkpoints Manager Options  -->
+            <Grid RowDefinitions="auto,*,Auto">
+                <TextBlock
+                    Margin="0,0,0,8"
+                    FontWeight="Medium"
+                    Text="Other stuff" />
+                <ui:SettingsExpander
+                    Grid.Row="1"
+                    Margin="8,0"
+                    IconSource="Folder">
+                    <ui:SettingsExpander.Footer>
+                        <CheckBox Margin="8" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
 </controls:UserControlBase>

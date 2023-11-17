@@ -61,15 +61,39 @@ public class UpdateHelper : IUpdateHelper
         UpdateFolder.Create();
         UpdateFolder.Info.Attributes |= FileAttributes.Hidden;
 
-        // download the file from URL
-        await downloadService
-            .DownloadToFileAsync(
-                updateInfo.Url.ToString(),
-                ExecutablePath,
-                progress: progress,
-                httpClientName: "UpdateClient"
-            )
-            .ConfigureAwait(false);
+        var downloadFile = UpdateFolder.JoinFile(Path.GetFileName(updateInfo.Url.ToString()));
+
+        try
+        {
+            // download the file from URL
+            await downloadService
+                .DownloadToFileAsync(
+                    updateInfo.Url.ToString(),
+                    downloadFile,
+                    progress: progress,
+                    httpClientName: "UpdateClient"
+                )
+                .ConfigureAwait(false);
+
+            // Unzip if needed
+            if (downloadFile.Extension == ".zip")
+            {
+                await ArchiveHelper
+                    .Extract(downloadFile, UpdateFolder, progress)
+                    .ConfigureAwait(false);
+                await downloadFile.DeleteAsync().ConfigureAwait(false);
+            }
+            // Otherwise just rename
+            else
+            {
+                downloadFile.Rename(ExecutablePath.Name);
+            }
+        }
+        finally
+        {
+            // Clean up original download
+            await downloadFile.DeleteAsync().ConfigureAwait(false);
+        }
     }
 
     private async Task CheckForUpdate()

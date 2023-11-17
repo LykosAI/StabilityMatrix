@@ -57,7 +57,7 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
     private string? newVersionText;
 
     [GeneratedRegex(
-        @"(##\s*(v[0-9]+\.[0-9]+\.[0-9]+)((?:\n|.)+?))(?=(##\s*v[0-9]+\.[0-9]+\.[0-9]+)|\z)"
+        @"(##\s*(v[0-9]+\.[0-9]+\.[0-9]+(?:-(?:[0-9A-Za-z-.]+))?)((?:\n|.)+?))(?=(##\s*v[0-9]+\.[0-9]+\.[0-9]+)|\z)"
     )]
     private static partial Regex RegexChangelog();
 
@@ -82,7 +82,14 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
     /// <summary>
     /// Formats changelog markdown including up to the current version
     /// </summary>
-    internal static string? FormatChangelog(string markdown, SemVersion currentVersion)
+    /// <param name="markdown">Markdown to format</param>
+    /// <param name="currentVersion">Versions equal or below this are excluded</param>
+    /// <param name="maxChannel">Maximum channel level to include</param>
+    internal static string? FormatChangelog(
+        string markdown,
+        SemVersion currentVersion,
+        UpdateChannel maxChannel = UpdateChannel.Stable
+    )
     {
         var pattern = RegexChangelog();
 
@@ -93,28 +100,59 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
                     new
                     {
                         Block = m.Groups[1].Value.Trim(),
-                        Version = m.Groups[2].Value.Trim(),
+                        Version = SemVersion.TryParse(
+                            m.Groups[2].Value.Trim(),
+                            SemVersionStyles.AllowV,
+                            out var version
+                        )
+                            ? version
+                            : null,
                         Content = m.Groups[3].Value.Trim()
                     }
             )
+            .Where(x => x.Version is not null)
             .ToList();
 
         // Join all blocks until and excluding the current version
         // If we're on a pre-release, include the current release
-
         var currentVersionBlock = results.FindIndex(
-            x => x.Version == $"v{currentVersion.WithoutPrereleaseOrMetadata()}"
+            x => x.Version == currentVersion.WithoutMetadata()
         );
 
+        // Support for previous pre-release without changelogs
         if (currentVersionBlock == -1)
         {
-            return null;
+            currentVersionBlock = results.FindIndex(
+                x => x.Version == currentVersion.WithoutPrereleaseOrMetadata()
+            );
+
+            // Add 1 if found to include the current release
+            if (currentVersionBlock != -1)
+            {
+                currentVersionBlock++;
+            }
         }
 
+        // Still not found, just include all
+        if (currentVersionBlock == -1)
+        {
+            currentVersionBlock = results.Count;
+        }
+
+        // Filter out pre-releases
         var blocks = results
-            .Take(currentVersionBlock + (currentVersion.IsPrerelease ? 1 : 0))
-            .Select(x => x.Block)
-            .ToList();
+            .Take(currentVersionBlock)
+            .Where(
+                x =>
+                    x.Version!.PrereleaseIdentifiers.Count == 0
+                    || x.Version.PrereleaseIdentifiers[0].Value switch
+                    {
+                        "pre" when maxChannel >= UpdateChannel.Preview => true,
+                        "dev" when maxChannel >= UpdateChannel.Development => true,
+                        _ => false
+                    }
+            )
+            .Select(x => x.Block);
 
         return string.Join(Environment.NewLine + Environment.NewLine, blocks);
     }

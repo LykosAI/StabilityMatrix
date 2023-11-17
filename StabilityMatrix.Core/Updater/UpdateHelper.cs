@@ -62,6 +62,7 @@ public class UpdateHelper : IUpdateHelper
         UpdateFolder.Info.Attributes |= FileAttributes.Hidden;
 
         var downloadFile = UpdateFolder.JoinFile(Path.GetFileName(updateInfo.Url.ToString()));
+
         var extractDir = UpdateFolder.JoinDir("extract");
 
         try
@@ -79,7 +80,7 @@ public class UpdateHelper : IUpdateHelper
             // Unzip if needed
             if (downloadFile.Extension == ".zip")
             {
-                await extractDir.DeleteAsync().ConfigureAwait(false);
+                await extractDir.DeleteAsync(true).ConfigureAwait(false);
                 extractDir.Create();
 
                 await ArchiveHelper
@@ -103,7 +104,7 @@ public class UpdateHelper : IUpdateHelper
             // Clean up original download
             await downloadFile.DeleteAsync().ConfigureAwait(false);
             // Clean up extract dir
-            await extractDir.DeleteAsync().ConfigureAwait(false);
+            await extractDir.DeleteAsync(true).ConfigureAwait(false);
         }
     }
 

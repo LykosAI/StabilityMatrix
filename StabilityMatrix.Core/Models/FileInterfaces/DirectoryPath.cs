@@ -106,7 +106,7 @@ public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystem
     /// <summary>
     /// Deletes the directory.
     /// </summary>
-    public void Delete() => Directory.Delete(FullPath);
+    public void Delete() => Info.Delete();
 
     /// <summary> Deletes the directory asynchronously. </summary>
     public Task DeleteAsync() => Task.Run(Delete);

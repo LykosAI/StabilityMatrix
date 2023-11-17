@@ -235,7 +235,7 @@ jobs:
           python-version: '3.11'
           
       - name: Install Python Dependencies
-        run: pip install stability-matrix-tools
+        run: pip install stability-matrix-tools~=0.2.7
         
       - name: Publish Auto-Update Release
         run: sm-tools updates publish-matrix -v $RELEASE_VERSION -y
@@ -258,7 +258,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install Python Dependencies
-        run: pip install stability-matrix-tools
+        run: pip install stability-matrix-tools~=0.2.7
 
       - name: Download Changelog
         run: >

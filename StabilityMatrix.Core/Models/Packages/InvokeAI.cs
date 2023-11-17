@@ -218,8 +218,15 @@ public class InvokeAI : BaseGitPackage
                     var args = new List<Argument>();
                     if (exists)
                     {
-                        args.Add("--upgrade");
-                        args.Add("--force-reinstall");
+                        var pipPackages = await venvRunner.PipList().ConfigureAwait(false);
+                        var hasCuda121 = pipPackages.Any(
+                            p => p.Name == "torch" && p.Version.Contains("cu121")
+                        );
+                        if (!hasCuda121)
+                        {
+                            args.Add("--upgrade");
+                            args.Add("--force-reinstall");
+                        }
                     }
 
                     await venvRunner

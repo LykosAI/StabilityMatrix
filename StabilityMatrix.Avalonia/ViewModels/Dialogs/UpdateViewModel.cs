@@ -124,7 +124,7 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         if (UpdateInfo is null)
             return;
 
-        ReleaseNotes = await GetReleaseNotes(UpdateInfo.ChangelogUrl);
+        ReleaseNotes = await GetReleaseNotes(UpdateInfo.Changelog.ToString());
     }
 
     internal async Task<string> GetReleaseNotes(string changelogUrl)

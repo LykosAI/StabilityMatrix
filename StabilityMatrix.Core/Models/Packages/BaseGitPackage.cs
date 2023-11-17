@@ -86,29 +86,17 @@ public abstract class BaseGitPackage : BasePackage
             };
         }
 
-        var release = await GetLatestRelease(includePrerelease).ConfigureAwait(false);
+        var releases = await GithubApi.GetAllReleases(Author, Name).ConfigureAwait(false);
+        var latestRelease = includePrerelease
+            ? releases.First()
+            : releases.First(x => !x.Prerelease);
+
         return new DownloadPackageVersionOptions
         {
             IsLatest = true,
-            IsPrerelease = release.Prerelease,
-            VersionTag = release.TagName!
+            IsPrerelease = latestRelease.Prerelease,
+            VersionTag = latestRelease.TagName!
         };
-    }
-
-    protected async Task<Release> GetLatestRelease(bool includePrerelease = false)
-    {
-        var releases = await GithubApi.GetAllReleases(Author, Name).ConfigureAwait(false);
-        return includePrerelease ? releases.First() : releases.First(x => !x.Prerelease);
-    }
-
-    public override Task<IEnumerable<Branch>> GetAllBranches()
-    {
-        return GithubApi.GetAllBranches(Author, Name);
-    }
-
-    public override Task<IEnumerable<Release>> GetAllReleases()
-    {
-        return GithubApi.GetAllReleases(Author, Name);
     }
 
     public override Task<IEnumerable<GitCommit>?> GetAllCommits(
@@ -126,7 +114,7 @@ public abstract class BaseGitPackage : BasePackage
 
         if (!ShouldIgnoreReleases)
         {
-            var allReleases = await GetAllReleases().ConfigureAwait(false);
+            var allReleases = await GithubApi.GetAllReleases(Author, Name).ConfigureAwait(false);
             var releasesList = allReleases.ToList();
             if (releasesList.Any())
             {
@@ -143,7 +131,7 @@ public abstract class BaseGitPackage : BasePackage
         }
 
         // Branch mode
-        var allBranches = await GetAllBranches().ConfigureAwait(false);
+        var allBranches = await GithubApi.GetAllBranches(Author, Name).ConfigureAwait(false);
         packageVersionOptions.AvailableBranches = allBranches.Select(
             b => new PackageVersion { TagName = $"{b.Name}", ReleaseNotesMarkdown = string.Empty }
         );
@@ -423,6 +411,7 @@ public abstract class BaseGitPackage : BasePackage
                     installedPackage.FullPath!,
                     onConsoleOutput,
                     "pull",
+                    "--autostash",
                     "origin",
                     installedPackage.Version.InstalledBranch
                 )

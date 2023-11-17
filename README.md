@@ -18,9 +18,9 @@
 
 [civitai]: https://civitai.com/
 
-Multi-Platform Package Manager for Stable Diffusion
+Multi-Platform Package Manager and Inference UI for Stable Diffusion
 
-### ✨ New in 2.5 - [Inference](#inference), a built-in Stable Diffusion interface powered by ComfyUI
+### ✨ New in 2.5 - [Inference](#inference-A-reimagined-built-in-Stable-Diffusion-experience), a built-in interface for Stable Diffusion powered by ComfyUI
 
 ### 🖱️ One click install and update for Stable Diffusion Web UI Packages
 - Supports [Automatic 1111][auto1111], [Comfy UI][comfy], [SD.Next (Vladmandic)][sdnext], [VoltaML][voltaml], [InvokeAI][invokeai], [Fooocus][fooocus], and [Fooocus MRE][fooocus-mre]
@@ -106,6 +106,9 @@ Stability Matrix is now available in the following languages, thanks to our comm
   - aolko
 
 If you would like to contribute a translation, please create an issue or contact us on Discord. Include an email where we'll send an invite to our [POEditor](https://poeditor.com/) project.
+
+## Disclaimers
+All trademarks, logos, and brand names are the property of their respective owners. All company, product and service names used in this document and licensed applications are for identification purposes only. Use of these names, trademarks, and brands does not imply endorsement.
 
 ## License
 

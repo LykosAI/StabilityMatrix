@@ -188,14 +188,66 @@ public class InvokeAI : BaseGitPackage
         var pipCommandArgs =
             "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu";
 
+        var installTorch21 = versionOptions.IsLatest;
+
+        if (!string.IsNullOrWhiteSpace(versionOptions.VersionTag) && !versionOptions.IsLatest)
+        {
+            if (
+                Version.TryParse(versionOptions.VersionTag, out var version)
+                && version >= new Version(3, 4)
+            )
+            {
+                installTorch21 = true;
+            }
+        }
+
         switch (torchVersion)
         {
             // If has Nvidia Gpu, install CUDA version
             case TorchVersion.Cuda:
-                await InstallCudaTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
-                Logger.Info("Starting InvokeAI install (CUDA)...");
-                pipCommandArgs =
-                    "-e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu118";
+                if (installTorch21)
+                {
+                    progress?.Report(
+                        new ProgressReport(
+                            -1f,
+                            "Installing PyTorch for CUDA",
+                            isIndeterminate: true
+                        )
+                    );
+
+                    var args = new List<Argument>();
+                    if (exists)
+                    {
+                        args.Add("--upgrade");
+                        args.Add("--force-reinstall");
+                    }
+
+                    await venvRunner
+                        .PipInstall(
+                            new PipInstallArgs(
+                                args.Any() ? args.ToArray() : Array.Empty<Argument>()
+                            )
+                                .WithTorch("==2.1.0")
+                                .WithTorchVision("==0.16.0")
+                                .WithXFormers("==0.0.22post7")
+                                .WithTorchExtraIndex("cu121"),
+                            onConsoleOutput
+                        )
+                        .ConfigureAwait(false);
+
+                    Logger.Info("Starting InvokeAI install (CUDA)...");
+                    pipCommandArgs =
+                        "-e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu121";
+                }
+                else
+                {
+                    await InstallCudaTorch(venvRunner, progress, onConsoleOutput)
+                        .ConfigureAwait(false);
+                    Logger.Info("Starting InvokeAI install (CUDA)...");
+                    pipCommandArgs =
+                        "-e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu118";
+                }
+
                 break;
             // For AMD, Install ROCm version
             case TorchVersion.Rocm:

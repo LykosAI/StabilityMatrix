@@ -111,7 +111,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var startupTime = CodeTimer.FormatTime(Program.StartupTimer.Elapsed);
         Logger.Info($"App started ({startupTime})");
 
-        if (Program.Args.DebugOneClickInstall || !settingsManager.Settings.InstalledPackages.Any())
+        if (Program.Args.DebugOneClickInstall || settingsManager.Settings.InstalledPackages.Any())
         {
             var viewModel = dialogFactory.Get<OneClickInstallViewModel>();
             var dialog = new BetterContentDialog
@@ -180,7 +180,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task<bool> EnsureDataDirectory()
     {
         // If we can't find library, show selection dialog
-        if (!settingsManager.TryFindLibrary())
+        var foundInitially = settingsManager.TryFindLibrary();
+        if (!foundInitially)
         {
             var result = await ShowSelectDataDirectoryDialog();
             if (!result)
@@ -194,7 +195,10 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         // Tell LaunchPage to load any packages if they selected an existing directory
-        EventManager.Instance.OnInstalledPackagesChanged();
+        if (!foundInitially)
+        {
+            EventManager.Instance.OnInstalledPackagesChanged();
+        }
 
         // Check if there are old packages, if so show migration dialog
         // TODO: Migration dialog

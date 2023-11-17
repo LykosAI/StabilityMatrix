@@ -62,6 +62,7 @@ public class UpdateHelper : IUpdateHelper
         UpdateFolder.Info.Attributes |= FileAttributes.Hidden;
 
         var downloadFile = UpdateFolder.JoinFile(Path.GetFileName(updateInfo.Url.ToString()));
+        var extractDir = UpdateFolder.JoinDir("extract");
 
         try
         {
@@ -78,10 +79,18 @@ public class UpdateHelper : IUpdateHelper
             // Unzip if needed
             if (downloadFile.Extension == ".zip")
             {
+                await extractDir.DeleteAsync().ConfigureAwait(false);
+                extractDir.Create();
+
                 await ArchiveHelper
-                    .Extract(downloadFile, UpdateFolder, progress)
+                    .Extract(downloadFile, extractDir, progress)
                     .ConfigureAwait(false);
-                await downloadFile.DeleteAsync().ConfigureAwait(false);
+
+                // Move all (possibly nested) loose files to the root UpdateFolder
+                foreach (var file in extractDir.EnumerateFiles("*.*", SearchOption.AllDirectories))
+                {
+                    await file.MoveToDirectoryAsync(UpdateFolder).ConfigureAwait(false);
+                }
             }
             // Otherwise just rename
             else
@@ -93,6 +102,8 @@ public class UpdateHelper : IUpdateHelper
         {
             // Clean up original download
             await downloadFile.DeleteAsync().ConfigureAwait(false);
+            // Clean up extract dir
+            await extractDir.DeleteAsync().ConfigureAwait(false);
         }
     }
 

@@ -197,8 +197,8 @@ jobs:
       # Zip each build
       - name: Zip Artifacts
         run: |
-          zip -r StabilityMatrix-win-x64.zip StabilityMatrix-win-x64
-          zip -r StabilityMatrix-linux-x64.zip StabilityMatrix-linux-x64
+          zip -r StabilityMatrix-win-x64.zip StabilityMatrix-win-x64/*
+          zip -r StabilityMatrix-linux-x64.zip StabilityMatrix-linux-x64/*
 
       - name: Create Github Release
         id: create_release

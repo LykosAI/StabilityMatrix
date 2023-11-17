@@ -99,7 +99,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
             .Bind(PackageCards)
             .Subscribe();
 
-        timer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(15), IsEnabled = true };
+        timer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(60), IsEnabled = true };
         timer.Tick += async (_, _) => await CheckPackagesForUpdates();
     }
 

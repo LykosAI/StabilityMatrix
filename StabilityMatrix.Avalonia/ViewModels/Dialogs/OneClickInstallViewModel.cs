@@ -140,30 +140,17 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
             SelectedPackage.Name
         );
 
-        var downloadVersion = new DownloadPackageVersionOptions
-        {
-            IsLatest = true,
-            IsPrerelease = false
-        };
+        var downloadVersion = await SelectedPackage.GetLatestVersion();
         var installedVersion = new InstalledPackageVersion { IsPrerelease = false };
 
-        var versionOptions = await SelectedPackage.GetAllVersionOptions();
-        if (versionOptions.AvailableVersions != null && versionOptions.AvailableVersions.Any())
+        if (SelectedPackage.ShouldIgnoreReleases)
         {
-            downloadVersion.VersionTag = versionOptions.AvailableVersions.First().TagName;
-            installedVersion.InstalledReleaseVersion = downloadVersion.VersionTag;
+            installedVersion.InstalledBranch = downloadVersion.BranchName;
+            installedVersion.InstalledCommitSha = downloadVersion.CommitHash;
         }
         else
         {
-            var latestVersion = await SelectedPackage.GetLatestVersion();
-            downloadVersion.BranchName = latestVersion.BranchName;
-            downloadVersion.CommitHash =
-                (await SelectedPackage.GetAllCommits(downloadVersion.BranchName))
-                    ?.FirstOrDefault()
-                    ?.Sha ?? string.Empty;
-
-            installedVersion.InstalledBranch = downloadVersion.BranchName;
-            installedVersion.InstalledCommitSha = downloadVersion.CommitHash;
+            installedVersion.InstalledReleaseVersion = downloadVersion.VersionTag;
         }
 
         var torchVersion = SelectedPackage.GetRecommendedTorchVersion();

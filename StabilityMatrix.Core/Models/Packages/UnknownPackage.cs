@@ -163,12 +163,4 @@ public class UnknownPackage : BasePackage
         int page = 1,
         int perPage = 10
     ) => Task.FromResult<IEnumerable<GitCommit>?>(null);
-
-    /// <inheritdoc />
-    public override Task<IEnumerable<Branch>> GetAllBranches() =>
-        Task.FromResult(Enumerable.Empty<Branch>());
-
-    /// <inheritdoc />
-    public override Task<IEnumerable<Release>> GetAllReleases() =>
-        Task.FromResult(Enumerable.Empty<Release>());
 }

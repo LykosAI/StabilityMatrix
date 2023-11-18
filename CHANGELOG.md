@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.6.2
 ### Changed
 - Backend changes for auto-update schema v3, supporting customizable release channels and faster downloads with zip compression
+### Fixed
+- Better error reporting including outputs for git subprocess errors during package install / update
 
 ## v2.6.1
 ### Changed

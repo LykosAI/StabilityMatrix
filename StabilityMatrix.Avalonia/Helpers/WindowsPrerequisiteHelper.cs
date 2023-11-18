@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Win32;
 using NLog;
 using Octokit;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -64,23 +65,35 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     }
 
     public async Task RunGit(
-        string? workingDirectory = null,
-        Action<ProcessOutput>? onProcessOutput = null,
-        params string[] args
+        ProcessArgs args,
+        Action<ProcessOutput>? onProcessOutput,
+        string? workingDirectory = null
     )
     {
         var process = ProcessRunner.StartAnsiProcess(
             GitExePath,
-            args,
-            workingDirectory: workingDirectory,
+            args.ToArray(),
+            workingDirectory,
+            onProcessOutput,
             environmentVariables: new Dictionary<string, string>
             {
                 { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) }
-            },
-            outputDataReceived: onProcessOutput
+            }
         );
+        await process.WaitForExitAsync().ConfigureAwait(false);
+        if (process.ExitCode != 0)
+        {
+            throw new ProcessException($"Git exited with code {process.ExitCode}");
+        }
+    }
 
-        await ProcessRunner.WaitForExitConditionAsync(process);
+    public async Task RunGit(ProcessArgs args, string? workingDirectory = null)
+    {
+        var result = await ProcessRunner
+            .GetProcessResultAsync(GitExePath, args, workingDirectory)
+            .ConfigureAwait(false);
+
+        result.EnsureSuccessExitCode();
     }
 
     public async Task<string> GetGitOutput(string? workingDirectory = null, params string[] args)

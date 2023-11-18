@@ -15,7 +15,6 @@ namespace StabilityMatrix.Core.Helper;
 public record struct ArchiveInfo(ulong Size, ulong CompressedSize);
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-
 public static partial class ArchiveHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -42,24 +41,24 @@ public static partial class ArchiveHelper
             throw new PlatformNotSupportedException("7z is not supported on this platform.");
         }
     }
-    
+
     // HomeDir is set by ISettingsManager.TryFindLibrary()
     public static string HomeDir { get; set; } = string.Empty;
 
     public static string SevenZipPath => Path.Combine(HomeDir, "Assets", SevenZipFileName);
-    
+
     [GeneratedRegex(@"(?<=Size:\s*)\d+|(?<=Compressed:\s*)\d+")]
     private static partial Regex Regex7ZOutput();
-    
+
     [GeneratedRegex(@"(?<=\s*)\d+(?=%)")]
     private static partial Regex Regex7ZProgressDigits();
-    
+
     [GeneratedRegex(@"(\d+)%.*- (.*)")]
     private static partial Regex Regex7ZProgressFull();
-    
+
     public static async Task<ArchiveInfo> TestArchive(string archivePath)
     {
-        var process = ProcessRunner.StartAnsiProcess(SevenZipPath, new[] {"t", archivePath});
+        var process = ProcessRunner.StartAnsiProcess(SevenZipPath, new[] { "t", archivePath });
         await process.WaitForExitAsync();
         var output = await process.StandardOutput.ReadToEndAsync();
         var matches = Regex7ZOutput().Matches(output);
@@ -67,25 +66,29 @@ public static partial class ArchiveHelper
         var compressed = ulong.Parse(matches[1].Value);
         return new ArchiveInfo(size, compressed);
     }
-    
+
     public static async Task AddToArchive7Z(string archivePath, string sourceDirectory)
     {
         // Start 7z in the parent directory of the source directory
         var sourceParent = Directory.GetParent(sourceDirectory)?.FullName ?? "";
         // We must pass in as `directory\` for archive path to be correct
         var sourceDirName = new DirectoryInfo(sourceDirectory).Name;
-        var process = ProcessRunner.StartAnsiProcess(SevenZipPath, new[]
-        {
-            "a", archivePath, sourceDirName + @"\", "-y"
-        }, workingDirectory: sourceParent);
-        await ProcessRunner.WaitForExitConditionAsync(process);
+
+        var result = await ProcessRunner
+            .GetProcessResultAsync(
+                SevenZipPath,
+                new[] { "a", archivePath, sourceDirName + @"\", "-y" },
+                workingDirectory: sourceParent
+            )
+            .ConfigureAwait(false);
+        result.EnsureSuccessExitCode();
     }
-    
+
     public static async Task<ArchiveInfo> Extract7Z(string archivePath, string extractDirectory)
     {
         var args =
             $"x {ProcessRunner.Quote(archivePath)} -o{ProcessRunner.Quote(extractDirectory)} -y";
-        
+
         Logger.Debug($"Starting process '{SevenZipPath}' with arguments '{args}'");
 
         using var process = new Process();
@@ -99,7 +102,7 @@ public static partial class ArchiveHelper
         process.Start();
         await ProcessRunner.WaitForExitConditionAsync(process);
         var output = await process.StandardOutput.ReadToEndAsync();
-        
+
         try
         {
             var matches = Regex7ZOutput().Matches(output);
@@ -112,14 +115,19 @@ public static partial class ArchiveHelper
             throw new Exception($"Could not parse 7z output [{e.Message}]: {output.ToRepr()}");
         }
     }
-    
-    public static async Task<ArchiveInfo> Extract7Z(string archivePath, string extractDirectory, IProgress<ProgressReport> progress)
+
+    public static async Task<ArchiveInfo> Extract7Z(
+        string archivePath,
+        string extractDirectory,
+        IProgress<ProgressReport> progress
+    )
     {
         var outputStore = new StringBuilder();
         var onOutput = new Action<string?>(s =>
         {
-            if (s == null) return;
-            
+            if (s == null)
+                return;
+
             // Parse progress
             Logger.Trace($"7z: {s}");
             outputStore.AppendLine(s);
@@ -128,23 +136,30 @@ public static partial class ArchiveHelper
             {
                 var percent = int.Parse(match.Groups[1].Value);
                 var currentFile = match.Groups[2].Value;
-                progress.Report(new ProgressReport(percent / (float) 100, "Extracting", currentFile, type: ProgressType.Extract));
+                progress.Report(
+                    new ProgressReport(
+                        percent / (float)100,
+                        "Extracting",
+                        currentFile,
+                        type: ProgressType.Extract
+                    )
+                );
             }
         });
         progress.Report(new ProgressReport(-1, isIndeterminate: true, type: ProgressType.Extract));
-        
+
         // Need -bsp1 for progress reports
         var args =
             $"x {ProcessRunner.Quote(archivePath)} -o{ProcessRunner.Quote(extractDirectory)} -y -bsp1";
         Logger.Debug($"Starting process '{SevenZipPath}' with arguments '{args}'");
-        
+
         var process = ProcessRunner.StartProcess(SevenZipPath, args, outputDataReceived: onOutput);
         await ProcessRunner.WaitForExitConditionAsync(process);
-        
+
         progress.Report(new ProgressReport(1f, "Finished extracting", type: ProgressType.Extract));
-        
+
         var output = outputStore.ToString();
-        
+
         try
         {
             var matches = Regex7ZOutput().Matches(output);
@@ -157,7 +172,7 @@ public static partial class ArchiveHelper
             throw new Exception($"Could not parse 7z output [{e.Message}]: {output.ToRepr()}");
         }
     }
-    
+
     /// <summary>
     /// Extracts a zipped tar (i.e. '.tar.gz') archive.
     /// First extracts the zipped tar, then extracts the tar and removes the tar.
@@ -173,7 +188,7 @@ public static partial class ArchiveHelper
         }
         // Extract the tar.gz to tar
         await Extract7Z(archivePath, extractDirectory);
-        
+
         // Extract the tar
         var tarPath = Path.Combine(extractDirectory, Path.GetFileNameWithoutExtension(archivePath));
         if (!File.Exists(tarPath))
@@ -216,7 +231,11 @@ public static partial class ArchiveHelper
     /// <param name="progress"></param>
     /// <param name="archivePath"></param>
     /// <param name="outputDirectory">Output directory, created if does not exist.</param>
-    public static async Task Extract(string archivePath, string outputDirectory, IProgress<ProgressReport>? progress = default)
+    public static async Task Extract(
+        string archivePath,
+        string outputDirectory,
+        IProgress<ProgressReport>? progress = default
+    )
     {
         Directory.CreateDirectory(outputDirectory);
         progress?.Report(new ProgressReport(-1, isIndeterminate: true));
@@ -229,48 +248,53 @@ public static partial class ArchiveHelper
         // If not available, use the size of the archive file
         if (total == 0)
         {
-            total = (ulong) new FileInfo(archivePath).Length;
+            total = (ulong)new FileInfo(archivePath).Length;
         }
 
         // Create an DispatchTimer that monitors the progress of the extraction
-        var progressMonitor = progress switch {
+        var progressMonitor = progress switch
+        {
             null => null,
             _ => new Timer(TimeSpan.FromMilliseconds(36))
         };
-        
+
         if (progressMonitor != null)
         {
             progressMonitor.Elapsed += (_, _) =>
             {
-                if (count == 0) return;
+                if (count == 0)
+                    return;
                 progress!.Report(new ProgressReport(count, total, message: "Extracting"));
             };
         }
 
-        await Task.Factory.StartNew(() =>
-        {
-            var extractOptions = new ExtractionOptions
+        await Task.Factory.StartNew(
+            () =>
             {
-                Overwrite = true,
-                ExtractFullPath = true,
-            };
-            using var stream = File.OpenRead(archivePath);
-            using var archive = ReaderFactory.Open(stream);
-
-            // Start the progress reporting timer
-            progressMonitor?.Start();
-            
-            while (archive.MoveToNextEntry())
-            {
-                var entry = archive.Entry;
-                if (!entry.IsDirectory)
+                var extractOptions = new ExtractionOptions
                 {
-                    count += (ulong) entry.CompressedSize;
+                    Overwrite = true,
+                    ExtractFullPath = true,
+                };
+                using var stream = File.OpenRead(archivePath);
+                using var archive = ReaderFactory.Open(stream);
+
+                // Start the progress reporting timer
+                progressMonitor?.Start();
+
+                while (archive.MoveToNextEntry())
+                {
+                    var entry = archive.Entry;
+                    if (!entry.IsDirectory)
+                    {
+                        count += (ulong)entry.CompressedSize;
+                    }
+                    archive.WriteEntryToDirectory(outputDirectory, extractOptions);
                 }
-                archive.WriteEntryToDirectory(outputDirectory, extractOptions);
-            }
-        }, TaskCreationOptions.LongRunning);
-        
+            },
+            TaskCreationOptions.LongRunning
+        );
+
         progress?.Report(new ProgressReport(progress: 1, message: "Done extracting"));
         progressMonitor?.Stop();
         Logger.Info("Finished extracting archive {}", archivePath);
@@ -285,7 +309,7 @@ public static partial class ArchiveHelper
         await using var stream = File.OpenRead(archivePath);
         await ExtractManaged(stream, outputDirectory);
     }
-    
+
     /// <summary>
     /// Extract an archive to the output directory, using SharpCompress managed code.
     /// does not require 7z to be installed, but no progress reporting.
@@ -298,7 +322,7 @@ public static partial class ArchiveHelper
         {
             var entry = reader.Entry;
             var outputPath = Path.Combine(outputDirectory, entry.Key);
-            
+
             if (entry.IsDirectory)
             {
                 if (!Directory.Exists(outputPath))
@@ -310,7 +334,7 @@ public static partial class ArchiveHelper
             {
                 var folder = Path.GetDirectoryName(entry.Key)!;
                 var destDir = Path.GetFullPath(Path.Combine(fullOutputDir, folder));
-                
+
                 if (!Directory.Exists(destDir))
                 {
                     if (!destDir.StartsWith(fullOutputDir, StringComparison.Ordinal))
@@ -322,20 +346,24 @@ public static partial class ArchiveHelper
 
                     Directory.CreateDirectory(destDir);
                 }
-                
+
                 // Check if symbolic link
                 if (entry.LinkTarget != null)
                 {
                     // Not sure why but symlink entries have a key that ends with a space
                     // and some broken path suffix, so we'll remove everything after the last space
-                    Logger.Debug($"Checking if output path {outputPath} contains space char: {outputPath.Contains(' ')}");
+                    Logger.Debug(
+                        $"Checking if output path {outputPath} contains space char: {outputPath.Contains(' ')}"
+                    );
                     if (outputPath.Contains(' '))
                     {
                         outputPath = outputPath[..outputPath.LastIndexOf(' ')];
                     }
-                    
-                    Logger.Debug($"Extracting symbolic link [{entry.Key.ToRepr()}] " +
-                                 $"({outputPath.ToRepr()} to {entry.LinkTarget.ToRepr()})");
+
+                    Logger.Debug(
+                        $"Extracting symbolic link [{entry.Key.ToRepr()}] "
+                            + $"({outputPath.ToRepr()} to {entry.LinkTarget.ToRepr()})"
+                    );
                     // Try to write link, if fail, continue copy file
                     try
                     {
@@ -346,10 +374,12 @@ public static partial class ArchiveHelper
                     }
                     catch (IOException e)
                     {
-                        Logger.Warn($"Could not extract symbolic link, copying file instead: {e.Message}");
+                        Logger.Warn(
+                            $"Could not extract symbolic link, copying file instead: {e.Message}"
+                        );
                     }
                 }
-                
+
                 // Write file
                 await using var entryStream = reader.OpenEntryStream();
                 await using var fileStream = File.Create(outputPath);

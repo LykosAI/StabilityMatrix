@@ -185,13 +185,14 @@ public abstract class BaseGitPackage : BasePackage
         {
             await PrerequisiteHelper
                 .RunGit(
-                    null,
-                    null,
-                    "clone",
-                    "--branch",
-                    versionOptions.VersionTag,
-                    GithubUrl,
-                    $"\"{installLocation}\""
+                    new[]
+                    {
+                        "clone",
+                        "--branch",
+                        versionOptions.VersionTag,
+                        GithubUrl,
+                        installLocation
+                    }
                 )
                 .ConfigureAwait(false);
         }
@@ -199,13 +200,14 @@ public abstract class BaseGitPackage : BasePackage
         {
             await PrerequisiteHelper
                 .RunGit(
-                    null,
-                    null,
-                    "clone",
-                    "--branch",
-                    versionOptions.BranchName,
-                    GithubUrl,
-                    $"\"{installLocation}\""
+                    new[]
+                    {
+                        "clone",
+                        "--branch",
+                        versionOptions.BranchName,
+                        GithubUrl,
+                        installLocation
+                    }
                 )
                 .ConfigureAwait(false);
         }
@@ -213,7 +215,7 @@ public abstract class BaseGitPackage : BasePackage
         if (!versionOptions.IsLatest && !string.IsNullOrWhiteSpace(versionOptions.CommitHash))
         {
             await PrerequisiteHelper
-                .RunGit(installLocation, null, "checkout", versionOptions.CommitHash)
+                .RunGit(new[] { "checkout", versionOptions.CommitHash }, installLocation)
                 .ConfigureAwait(false);
         }
 
@@ -327,12 +329,9 @@ public abstract class BaseGitPackage : BasePackage
                 .ConfigureAwait(false);
             await PrerequisiteHelper
                 .RunGit(
-                    installedPackage.FullPath!,
+                    new[] { "remote", "add", "origin", GithubUrl },
                     onConsoleOutput,
-                    "remote",
-                    "add",
-                    "origin",
-                    GithubUrl
+                    installedPackage.FullPath
                 )
                 .ConfigureAwait(false);
         }
@@ -341,7 +340,7 @@ public abstract class BaseGitPackage : BasePackage
         {
             progress?.Report(new ProgressReport(-1f, "Fetching tags...", isIndeterminate: true));
             await PrerequisiteHelper
-                .RunGit(installedPackage.FullPath!, onConsoleOutput, "fetch", "--tags")
+                .RunGit(new[] { "fetch", "--tags" }, onConsoleOutput, installedPackage.FullPath)
                 .ConfigureAwait(false);
 
             progress?.Report(
@@ -353,11 +352,9 @@ public abstract class BaseGitPackage : BasePackage
             );
             await PrerequisiteHelper
                 .RunGit(
-                    installedPackage.FullPath!,
+                    new[] { "checkout", versionOptions.VersionTag, "--force" },
                     onConsoleOutput,
-                    "checkout",
-                    versionOptions.VersionTag,
-                    "--force"
+                    installedPackage.FullPath
                 )
                 .ConfigureAwait(false);
 
@@ -381,7 +378,7 @@ public abstract class BaseGitPackage : BasePackage
         // fetch
         progress?.Report(new ProgressReport(-1f, "Fetching data...", isIndeterminate: true));
         await PrerequisiteHelper
-            .RunGit(installedPackage.FullPath!, onConsoleOutput, "fetch")
+            .RunGit("fetch", onConsoleOutput, installedPackage.FullPath)
             .ConfigureAwait(false);
 
         if (versionOptions.IsLatest)
@@ -396,11 +393,9 @@ public abstract class BaseGitPackage : BasePackage
             );
             await PrerequisiteHelper
                 .RunGit(
-                    installedPackage.FullPath!,
+                    new[] { "checkout", versionOptions.BranchName!, "--force" },
                     onConsoleOutput,
-                    "checkout",
-                    versionOptions.BranchName,
-                    "--force"
+                    installedPackage.FullPath
                 )
                 .ConfigureAwait(false);
 
@@ -408,12 +403,15 @@ public abstract class BaseGitPackage : BasePackage
             progress?.Report(new ProgressReport(-1f, "Pulling changes...", isIndeterminate: true));
             await PrerequisiteHelper
                 .RunGit(
-                    installedPackage.FullPath!,
+                    new[]
+                    {
+                        "pull",
+                        "--autostash",
+                        "origin",
+                        installedPackage.Version.InstalledBranch!
+                    },
                     onConsoleOutput,
-                    "pull",
-                    "--autostash",
-                    "origin",
-                    installedPackage.Version.InstalledBranch
+                    installedPackage.FullPath!
                 )
                 .ConfigureAwait(false);
         }
@@ -429,11 +427,9 @@ public abstract class BaseGitPackage : BasePackage
             );
             await PrerequisiteHelper
                 .RunGit(
-                    installedPackage.FullPath!,
+                    new[] { "checkout", versionOptions.CommitHash!, "--force" },
                     onConsoleOutput,
-                    "checkout",
-                    versionOptions.CommitHash,
-                    "--force"
+                    installedPackage.FullPath
                 )
                 .ConfigureAwait(false);
         }

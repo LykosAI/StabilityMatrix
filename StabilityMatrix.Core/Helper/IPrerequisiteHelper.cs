@@ -22,10 +22,16 @@ public interface IPrerequisiteHelper
     /// Run embedded git with the given arguments.
     /// </summary>
     Task RunGit(
-        string? workingDirectory = null,
-        Action<ProcessOutput>? onProcessOutput = null,
-        params string[] args
+        ProcessArgs args,
+        Action<ProcessOutput>? onProcessOutput,
+        string? workingDirectory = null
     );
+
+    /// <summary>
+    /// Run embedded git with the given arguments.
+    /// </summary>
+    Task RunGit(ProcessArgs args, string? workingDirectory = null);
+
     Task<string> GetGitOutput(string? workingDirectory = null, params string[] args);
     Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null);
 }

@@ -48,6 +48,9 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
     private int progressValue;
 
     [ObservableProperty]
+    private bool isProgressIndeterminate;
+
+    [ObservableProperty]
     private bool showProgressBar;
 
     [ObservableProperty]
@@ -223,11 +226,13 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
             Resources.TextTemplate_UpdatingPackage,
             Resources.Label_StabilityMatrix
         );
+
         await updateHelper.DownloadUpdate(
             UpdateInfo,
             new Progress<ProgressReport>(report =>
             {
                 ProgressValue = Convert.ToInt32(report.Percentage);
+                IsProgressIndeterminate = report.IsIndeterminate;
             })
         );
 

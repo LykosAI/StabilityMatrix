@@ -86,7 +86,9 @@ public class UpdateHelper : IUpdateHelper
                 }
                 extractDir.Create();
 
-                progress.Report(new ProgressReport(-1, "Extracting...", isIndeterminate: true));
+                progress.Report(
+                    new ProgressReport(-1, isIndeterminate: true, type: ProgressType.Extract)
+                );
                 await ArchiveHelper.Extract(downloadFile, extractDir).ConfigureAwait(false);
 
                 // Move all (possibly nested) loose files to the root UpdateFolder

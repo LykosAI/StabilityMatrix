@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.6.2
+### Changed
+- Backend changes for auto-update schema v3, supporting customizable release channels and faster downloads with zip compression
+
 ## v2.6.1
 ### Changed
 - NVIDIA GPU users will be updated to use CUDA 12.1 for the InvokeAI package for a slight performance improvement

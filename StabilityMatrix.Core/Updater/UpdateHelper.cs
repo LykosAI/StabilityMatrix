@@ -1,9 +1,7 @@
-﻿using System.Globalization;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -19,11 +17,12 @@ public class UpdateHelper : IUpdateHelper
     private readonly ILogger<UpdateHelper> logger;
     private readonly IHttpClientFactory httpClientFactory;
     private readonly IDownloadService downloadService;
+    private readonly ISettingsManager settingsManager;
     private readonly DebugOptions debugOptions;
     private readonly System.Timers.Timer timer = new(TimeSpan.FromMinutes(60));
 
     private string UpdateManifestUrl =>
-        debugOptions.UpdateManifestUrl ?? "https://cdn.lykos.ai/update-v2.json";
+        debugOptions.UpdateManifestUrl ?? "https://cdn.lykos.ai/update-v3.json";
 
     public const string UpdateFolderName = ".StabilityMatrixUpdate";
     public static DirectoryPath UpdateFolder => Compat.AppCurrentDir.JoinDir(UpdateFolderName);
@@ -34,12 +33,14 @@ public class UpdateHelper : IUpdateHelper
         ILogger<UpdateHelper> logger,
         IHttpClientFactory httpClientFactory,
         IDownloadService downloadService,
-        IOptions<DebugOptions> debugOptions
+        IOptions<DebugOptions> debugOptions,
+        ISettingsManager settingsManager
     )
     {
         this.logger = logger;
         this.httpClientFactory = httpClientFactory;
         this.downloadService = downloadService;
+        this.settingsManager = settingsManager;
         this.debugOptions = debugOptions.Value;
 
         timer.Elapsed += async (_, _) =>
@@ -57,45 +58,64 @@ public class UpdateHelper : IUpdateHelper
 
     public async Task DownloadUpdate(UpdateInfo updateInfo, IProgress<ProgressReport> progress)
     {
-        var downloadUrl = updateInfo.DownloadUrl;
-
         UpdateFolder.Create();
         UpdateFolder.Info.Attributes |= FileAttributes.Hidden;
 
-        // download the file from URL
-        await downloadService
-            .DownloadToFileAsync(
-                downloadUrl,
-                ExecutablePath,
-                progress: progress,
-                httpClientName: "UpdateClient"
-            )
-            .ConfigureAwait(false);
-    }
+        var downloadFile = UpdateFolder.JoinFile(Path.GetFileName(updateInfo.Url.ToString()));
 
-    /// <summary>
-    /// Format a DatetimeOffset to a culture invariant string for use in signature verification.
-    /// </summary>
-    private static string FormatDateTimeOffsetInvariant(DateTimeOffset dateTimeOffset)
-    {
-        return dateTimeOffset.ToString(
-            @"yyyy-MM-ddTHH\:mm\:ss.ffffffzzz",
-            CultureInfo.InvariantCulture
-        );
-    }
+        var extractDir = UpdateFolder.JoinDir("extract");
 
-    /// <summary>
-    /// Data for use in signature verification.
-    /// Semicolon separated string of fields:
-    /// "version, releaseDate, channel, type, url, changelog, hashBlake3"
-    /// </summary>
-    private static string GetUpdateInfoSignedData(UpdateInfo updateInfo)
-    {
-        var channel = updateInfo.Channel.GetStringValue().ToLowerInvariant();
-        var date = FormatDateTimeOffsetInvariant(updateInfo.ReleaseDate);
-        return $"{updateInfo.Version};{date};{channel};"
-            + $"{(int)updateInfo.Type};{updateInfo.DownloadUrl};{updateInfo.ChangelogUrl};"
-            + $"{updateInfo.HashBlake3}";
+        try
+        {
+            // download the file from URL
+            await downloadService
+                .DownloadToFileAsync(
+                    updateInfo.Url.ToString(),
+                    downloadFile,
+                    progress: progress,
+                    httpClientName: "UpdateClient"
+                )
+                .ConfigureAwait(false);
+
+            // Unzip if needed
+            if (downloadFile.Extension == ".zip")
+            {
+                if (extractDir.Exists)
+                {
+                    await extractDir.DeleteAsync(true).ConfigureAwait(false);
+                }
+                extractDir.Create();
+
+                progress.Report(
+                    new ProgressReport(-1, isIndeterminate: true, type: ProgressType.Extract)
+                );
+                await ArchiveHelper.Extract(downloadFile, extractDir).ConfigureAwait(false);
+
+                // Find binary and move it up to the root
+                var binaryFile = extractDir
+                    .EnumerateFiles("*.*", SearchOption.AllDirectories)
+                    .First(f => f.Extension.ToLowerInvariant() is ".exe" or ".appimage");
+
+                await binaryFile.MoveToAsync(ExecutablePath).ConfigureAwait(false);
+            }
+            // Otherwise just rename
+            else
+            {
+                downloadFile.Rename(ExecutablePath.Name);
+            }
+
+            progress.Report(new ProgressReport(1d));
+        }
+        finally
+        {
+            // Clean up original download
+            await downloadFile.DeleteAsync().ConfigureAwait(false);
+            // Clean up extract dir
+            if (extractDir.Exists)
+            {
+                await extractDir.DeleteAsync(true).ConfigureAwait(false);
+            }
+        }
     }
 
     private async Task CheckForUpdate()
@@ -114,76 +134,32 @@ public class UpdateHelper : IUpdateHelper
                 return;
             }
 
-            var updateCollection = await JsonSerializer
-                .DeserializeAsync<UpdateCollection>(
-                    await response.Content.ReadAsStreamAsync().ConfigureAwait(false)
+            var updateManifest = await JsonSerializer
+                .DeserializeAsync<UpdateManifest>(
+                    await response.Content.ReadAsStreamAsync().ConfigureAwait(false),
+                    new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
                 )
                 .ConfigureAwait(false);
 
-            if (updateCollection is null)
+            if (updateManifest is null)
             {
-                logger.LogError("UpdateCollection is null");
+                logger.LogError("UpdateManifest is null");
                 return;
             }
 
-            // Get the update info for our platform
-            var updateInfo = updateCollection switch
+            foreach (
+                var channel in Enum.GetValues(typeof(UpdateChannel))
+                    .Cast<UpdateChannel>()
+                    .Where(c => c > UpdateChannel.Unknown)
+            )
             {
-                _ when Compat.IsWindows && Compat.IsX64 => updateCollection.WindowsX64,
-                _ when Compat.IsLinux && Compat.IsX64 => updateCollection.LinuxX64,
-                _ => null
-            };
-
-            if (updateInfo is null)
-            {
-                logger.LogWarning(
-                    "Could not find compatible update info for the platform {Platform}",
-                    Compat.Platform
-                );
-                return;
-            }
-
-            logger.LogInformation("UpdateInfo signature: {Signature}", updateInfo.Signature);
-
-            var updateInfoSignData = GetUpdateInfoSignedData(updateInfo);
-            logger.LogInformation("UpdateInfo signed data: {SignData}", updateInfoSignData);
-
-            // Verify signature
-            var checker = new SignatureChecker();
-            if (!checker.Verify(updateInfoSignData, updateInfo.Signature))
-            {
-                logger.LogError("UpdateInfo signature is invalid: {Info}", updateInfo);
-                return;
-            }
-            logger.LogInformation("UpdateInfo signature verified");
-
-            var order = updateInfo.Version.ComparePrecedenceTo(Compat.AppVersion);
-
-            if (order > 0)
-            {
-                // Newer version available
-                logger.LogInformation(
-                    "Update available {AppVer} -> {UpdateVer}",
-                    Compat.AppVersion,
-                    updateInfo.Version
-                );
-                EventManager.Instance.OnUpdateAvailable(updateInfo);
-                return;
-            }
-            if (order == 0)
-            {
-                // Same version available, check if we both have commit hash metadata
-                var updateHash = updateInfo.Version.Metadata;
-                var appHash = Compat.AppVersion.Metadata;
-                // If different, we can update
-                if (updateHash != appHash)
+                if (
+                    updateManifest.Updates.TryGetValue(channel, out var platforms)
+                    && platforms.GetInfoForCurrentPlatform() is { } update
+                    && ValidateUpdate(update)
+                )
                 {
-                    logger.LogInformation(
-                        "Update available {AppVer} -> {UpdateVer}",
-                        Compat.AppVersion,
-                        updateInfo.Version
-                    );
-                    EventManager.Instance.OnUpdateAvailable(updateInfo);
+                    NotifyUpdateAvailable(update);
                     return;
                 }
             }
@@ -194,5 +170,58 @@ public class UpdateHelper : IUpdateHelper
         {
             logger.LogError(e, "Couldn't check for update");
         }
+    }
+
+    private bool ValidateUpdate(UpdateInfo? update)
+    {
+        if (update is null)
+            return false;
+
+        // Verify signature
+        var checker = new SignatureChecker();
+        var signedData = update.GetSignedData();
+
+        if (!checker.Verify(signedData, update.Signature))
+        {
+            logger.LogError(
+                "UpdateInfo signature {Signature} is invalid, Data = {Data}, UpdateInfo = {Info}",
+                update.Signature,
+                signedData,
+                update
+            );
+            return false;
+        }
+
+        switch (update.Version.ComparePrecedenceTo(Compat.AppVersion))
+        {
+            case > 0:
+                // Newer version available
+                return true;
+            case 0:
+            {
+                // Same version available, check if we both have commit hash metadata
+                var updateHash = update.Version.Metadata;
+                var appHash = Compat.AppVersion.Metadata;
+                // If different, we can update
+                if (updateHash != appHash)
+                {
+                    return true;
+                }
+
+                break;
+            }
+        }
+
+        return false;
+    }
+
+    private void NotifyUpdateAvailable(UpdateInfo update)
+    {
+        logger.LogInformation(
+            "Update available {AppVer} -> {UpdateVer}",
+            Compat.AppVersion,
+            update.Version
+        );
+        EventManager.Instance.OnUpdateAvailable(update);
     }
 }

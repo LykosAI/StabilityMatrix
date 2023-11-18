@@ -91,11 +91,12 @@ public class UpdateHelper : IUpdateHelper
                 );
                 await ArchiveHelper.Extract(downloadFile, extractDir).ConfigureAwait(false);
 
-                // Move all (possibly nested) loose files to the root UpdateFolder
-                foreach (var file in extractDir.EnumerateFiles("*.*", SearchOption.AllDirectories))
-                {
-                    await file.MoveToDirectoryAsync(UpdateFolder).ConfigureAwait(false);
-                }
+                // Find binary and move it up to the root
+                var binaryFile = extractDir
+                    .EnumerateFiles("*.*", SearchOption.AllDirectories)
+                    .First(f => f.Extension.ToLowerInvariant() is ".exe" or ".appimage");
+
+                await binaryFile.MoveToAsync(ExecutablePath).ConfigureAwait(false);
             }
             // Otherwise just rename
             else

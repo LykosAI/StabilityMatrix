@@ -103,6 +103,8 @@ public class UpdateHelper : IUpdateHelper
             {
                 downloadFile.Rename(ExecutablePath.Name);
             }
+
+            progress.Report(new ProgressReport(1d));
         }
         finally
         {

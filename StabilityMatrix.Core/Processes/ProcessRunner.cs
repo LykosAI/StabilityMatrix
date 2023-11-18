@@ -208,7 +208,9 @@ public static class ProcessRunner
         {
             ExitCode = process.ExitCode,
             StandardOutput = stdout,
-            StandardError = stderr
+            StandardError = stderr,
+            ProcessName = process.MachineName,
+            Elapsed = process.ExitTime - process.StartTime
         };
     }
 

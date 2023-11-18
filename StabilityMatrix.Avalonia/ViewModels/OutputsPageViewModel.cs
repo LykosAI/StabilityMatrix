@@ -49,7 +49,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly IPackageFactory packageFactory;
     private readonly INotificationService notificationService;
-    private readonly INavigationService navigationService;
+    private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly ILogger<OutputsPageViewModel> logger;
     public override string Title => Resources.Label_OutputsPageTitle;
 
@@ -99,7 +99,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         ISettingsManager settingsManager,
         IPackageFactory packageFactory,
         INotificationService notificationService,
-        INavigationService navigationService,
+        INavigationService<MainWindowViewModel> navigationService,
         ILogger<OutputsPageViewModel> logger
     )
     {

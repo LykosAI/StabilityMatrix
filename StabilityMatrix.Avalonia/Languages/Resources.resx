@@ -750,4 +750,40 @@
   <data name="Action_OpenGithub" xml:space="preserve">
     <value>Open on GitHub</value>
   </data>
+  <data name="Label_Connected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="Action_Disconnect" xml:space="preserve">
+    <value>Disconnect</value>
+  </data>
+  <data name="Label_Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Label_Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="Label_Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Action_Login" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="Action_Signup" xml:space="preserve">
+    <value>Signup</value>
+  </data>
+  <data name="Label_ConfirmPassword" xml:space="preserve">
+    <value>Confirm Password</value>
+  </data>
+  <data name="Label_ApiKey" xml:space="preserve">
+    <value>API Key</value>
+  </data>
+  <data name="Label_Accounts" xml:space="preserve">
+    <value>Accounts</value>
+  </data>
+  <data name="Label_CivitAiLoginRequired" xml:space="preserve">
+    <value>You must be logged in to download this checkpoint. Please enter a CivitAI API Key in the settings.</value>
+  </data>
+  <data name="Label_DownloadFailed" xml:space="preserve">
+    <value>Download Failed</value>
+  </data>
 </root>

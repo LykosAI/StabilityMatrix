@@ -1,0 +1,171 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Settings.AccountSettingsPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
+    xmlns:sm="clr-namespace:StabilityMatrix.Avalonia"
+    d:DataContext="{x:Static mocks:DesignData.AccountSettingsViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="vmSettings:AccountSettingsViewModel"
+    mc:Ignorable="d">
+
+    <controls:UserControlBase.Resources>
+        <SolidColorBrush x:Key="Brush0" Color="#FF3C3C46" />
+        <SolidColorBrush x:Key="Brush1" Color="#FF3E4B77" />
+        <SolidColorBrush x:Key="Brush4" Color="#FF1375D5" />
+        <SolidColorBrush x:Key="Brush7" Color="#FF1B96E3" />
+        <SolidColorBrush x:Key="Brush13" Color="#FF5486BC" />
+        <DrawingImage x:Key="BrandsLykos">
+            <DrawingGroup>
+                <GeometryDrawing Brush="Transparent" Geometry="F1M0,0L587,0L587,618L0,618z" />
+                <DrawingGroup>
+                    <DrawingGroup.Transform>
+                        <MatrixTransform Matrix="0.99998295,0,0,0.99998295,0,0.24023438" />
+                    </DrawingGroup.Transform>
+                    <GeometryDrawing Brush="{DynamicResource Brush0}" Geometry="F0 M359.12 181.81L290.92 263.57L202.31 422.8L296.41 349.51L341.33 282.47L359.12 181.81Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush1}" Geometry="F0 M354.51 195.18L296.41 349.51L287.33 463.38L402.14 326.47L405.15 227.55L342.3 165.1L354.51 195.18Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush1}" Geometry="F0 M354.51 195.18L373.25 246.84L402.14 326.47L475.55 241.31L506.38 172.37L432.6 170.07L354.51 195.18Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush0}" Geometry="F0 M506.38 172.37L402.14 326.47L431.69 421.7L493.66 289.28L506.38 172.37Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush4}" Geometry="F0 M354.51 195.18L431.14 183.67L506.38 172.37L581.91 114.38L577.7 83.96L459.71 128.22L354.51 195.18Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush1}" Geometry="F0 M354.51 195.18L577.7 83.96L587.01 36.06L555.98 24.72L444.52 90.52L354.51 195.18Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush4}" Geometry="F0 M354.51 195.18L451.44 116.55L551.26 35.59L570.72 16.37L543.04 5.86L469.78 26.31L346.91 82.41L330.57 157.07L354.51 195.18Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush7}" Geometry="F0 M258.82 209.64L283.43 257.76L354.51 195.18L354.73 143.18L354.97 88.91L300.3 145.74L258.82 209.64Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush4}" Geometry="F0 M284.89 201.03L283.82 132.98L245.45 133.94L209.32 211.39L209.53 265.05L202.31 422.8L277.33 274.62L284.89 201.03Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush1}" Geometry="F0 M354.51 195.18L318.27 198.22L284.89 201.03L202.31 422.8L268.99 323.08L354.51 195.18Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush1}" Geometry="F0 M209.53 265.05L225.86 205.45L245.45 133.94L157.16 269.41L209.53 265.05Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush4}" Geometry="F0 M245.45 133.94L301.48 136.45L354.97 88.91L275.66 59.42L139 44.21L245.45 133.94Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush7}" Geometry="F0 M139 44.21L287.77 75.01L354.97 88.91L348.14 53.88L306.32 49.68L139 44.21Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush13}" Geometry="F0 M393.94 11.53L306.32 49.68L354.97 88.91L412.38 57.61L441.91 26.85L393.94 11.53Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush7}" Geometry="F0 M441.91 26.85L354.97 88.91L543.04 5.86L571.25 0L441.91 26.85Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush13}" Geometry="F0 M571.25 0L543.04 5.86L551.26 35.59L587.01 36.06L571.25 0Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush13}" Geometry="F0 M151.49 224.62L33.55 321.2L103.23 316.08L151.49 224.62Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush4}" Geometry="F0 M145.63 400.32L200.67 282.86L0 447.89L145.63 400.32Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush13}" Geometry="F0 M262.66 413.33L132.89 597.28L236.55 530.32L262.66 413.33Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush1}" Geometry="F0 M374.93 617.53L350.75 441.52L396.59 364.19L412.64 459.88L374.93 617.53Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush1}" Geometry="F0 M277.5 507.65L312.09 557.16L324.24 472.27L277.5 507.65Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush1}" Geometry="F0 M185.82 455.66L119.65 488.21L183.32 389.39L185.82 455.66Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush4}" Geometry="F0 M441.13 526.17L473.16 366.86L489.5 454.43L441.13 526.17Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush1}" Geometry="F0 M354.97 88.91L354.97 88.91L245.45 133.94L284.89 201.03L316.79 149.99L354.97 88.91Z" />
+                    <GeometryDrawing Brush="{DynamicResource Brush4}" Geometry="F0 M353.83 211.72L346.35 393L402.14 326.47L373.25 246.84L356.02 199.33L354.51 195.18L353.83 211.72Z" />
+                </DrawingGroup>
+            </DrawingGroup>
+        </DrawingImage>
+        
+        <SolidColorBrush x:Key="BrushB0" Color="#FFFFFFFF" />
+        <DrawingImage x:Key="BrandsPatreonSymbolWhite">
+            <DrawingGroup>
+                <GeometryDrawing Brush="{DynamicResource BrushB0}" Geometry="F1 M1033.05 324.45C1032.86 186.55 925.46 73.53 799.45 32.75C642.97 -17.89 436.59 -10.55 287.17 59.95C106.07 145.41 49.18 332.61 47.06 519.31C45.32 672.81 60.64 1077.1 288.68 1079.98C458.12 1082.13 483.35 863.8 561.75 758.65C617.53 683.84 689.35 662.71 777.76 640.83C929.71 603.22 1033.27 483.3 1033.05 324.45Z" />
+            </DrawingGroup>
+        </DrawingImage>
+    </controls:UserControlBase.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="16,16" Spacing="2">
+
+            <sg:SpacedGrid Margin="0,4,0,16" ColumnDefinitions="*,*">
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                    <fluentIcons:SymbolIcon
+                        IsVisible="{Binding LykosProfileImageUrl, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                        Width="64"
+                        Height="64"
+                        IsFilled="True"
+                        FontSize="64"
+                        Symbol="Person" />
+                    <controls:BetterAdvancedImage
+                        HorizontalAlignment="Left"
+                        IsVisible="{Binding LykosProfileImageUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        Source="{Binding LykosProfileImageUrl}"
+                        Width="64"
+                        Height="64"
+                        CornerRadius="8" />
+
+                    <StackPanel>
+                        <TextBlock
+                            Margin="-1,0,0,0"
+                            Text="{Binding LykosStatus.User.Account.Name, FallbackValue=''}"
+                            Theme="{DynamicResource SubtitleTextBlockStyle}" />
+                        <TextBlock Text="{Binding LykosStatus.User.Id, FallbackValue=''}" />
+                    </StackPanel>
+                </StackPanel>
+            </sg:SpacedGrid>
+
+            <controls:SettingsAccountLinkExpander
+                ConnectCommand="{Binding ConnectLykosCommand}"
+                DisconnectCommand="{Binding DisconnectLykosCommand}"
+                Header="Lykos"
+                HeaderTargetUri="{x:Static sm:Assets.LykosUrl}"
+                IsConnected="{Binding LykosStatus.IsConnected}"
+                OffDescription="Manage connected features in Stability Matrix">
+                <controls:SettingsAccountLinkExpander.IconSource>
+                    <ui:ImageIconSource Source="{StaticResource BrandsLykos}" />
+                </controls:SettingsAccountLinkExpander.IconSource>
+                <controls:SettingsAccountLinkExpander.IsLoading>
+                    <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                        <Binding Path="ConnectLykosCommand.IsRunning" />
+                        <Binding Path="!IsInitialUpdateFinished" />
+                    </MultiBinding>
+                </controls:SettingsAccountLinkExpander.IsLoading>
+            </controls:SettingsAccountLinkExpander>
+            
+            <controls:SettingsAccountLinkExpander
+                ConnectCommand="{Binding ConnectPatreonCommand}"
+                DisconnectCommand="{Binding DisconnectPatreonCommand}"
+                Header="Patreon"
+                IsEnabled="{Binding LykosStatus.IsConnected}"
+                HeaderTargetUri="{x:Static sm:Assets.PatreonUrl}"
+                IsConnected="{Binding IsPatreonConnected}"
+                OffDescription="Access Preview and Dev release channels for auto-updates">
+                <controls:SettingsAccountLinkExpander.IconSource>
+                    <ui:ImageIconSource Source="{StaticResource BrandsPatreonSymbolWhite}" />
+                </controls:SettingsAccountLinkExpander.IconSource>
+                <controls:SettingsAccountLinkExpander.IsLoading>
+                    <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                        <Binding Path="ConnectPatreonCommand.IsRunning" />
+                        <Binding Path="!IsInitialUpdateFinished" />
+                    </MultiBinding>
+                </controls:SettingsAccountLinkExpander.IsLoading>
+            </controls:SettingsAccountLinkExpander>
+
+            <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4" Margin="0,6,0,0">
+                <TextBlock
+                    Margin="0,0,0,4"
+                    FontWeight="Medium"
+                    Text="{x:Static lang:Resources.Label_Integrations}" />
+                
+                <controls:SettingsAccountLinkExpander
+                    Grid.Row="2"
+                    ConnectCommand="{Binding ConnectCivitCommand}"
+                    DisconnectCommand="{Binding DisconnectCivitCommand}"
+                    Header="CivitAI"
+                    HeaderTargetUri="{x:Static sm:Assets.CivitAIUrl}"
+                    IsConnected="{Binding CivitStatus.IsConnected}"
+                    OnDescriptionExtra="{Binding CivitStatus.UsernameWithParentheses}"
+                    OffDescription="Connect to Download Models that require login">
+                    <controls:SettingsAccountLinkExpander.IconSource>
+                        <ui:BitmapIconSource UriSource="avares://StabilityMatrix.Avalonia/Assets/brands-civitai.png" />
+                    </controls:SettingsAccountLinkExpander.IconSource>
+                    <controls:SettingsAccountLinkExpander.IsLoading>
+                        <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                            <Binding Path="ConnectCivitCommand.IsRunning" />
+                            <Binding Path="!IsInitialUpdateFinished" />
+                        </MultiBinding>
+                    </controls:SettingsAccountLinkExpander.IsLoading>
+                </controls:SettingsAccountLinkExpander>
+
+            </sg:SpacedGrid>
+
+        </StackPanel>
+    </ScrollViewer>
+
+</controls:UserControlBase>

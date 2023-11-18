@@ -166,8 +166,6 @@ public abstract class BasePackage
         int page = 1,
         int perPage = 10
     );
-    public abstract Task<IEnumerable<Branch>> GetAllBranches();
-    public abstract Task<IEnumerable<Release>> GetAllReleases();
     public abstract Task<DownloadPackageVersionOptions> GetLatestVersion(
         bool includePrerelease = false
     );

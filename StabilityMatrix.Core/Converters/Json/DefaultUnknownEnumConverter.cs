@@ -4,11 +4,16 @@ using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Core.Converters.Json;
 
-public class DefaultUnknownEnumConverter<T> : JsonConverter<T> where T : Enum
+public class DefaultUnknownEnumConverter<T> : JsonConverter<T>
+    where T : Enum
 {
-    public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override T Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options
+    )
     {
-        if (reader.TokenType != JsonTokenType.String) 
+        if (reader.TokenType != JsonTokenType.String)
         {
             throw new JsonException();
         }
@@ -16,15 +21,15 @@ public class DefaultUnknownEnumConverter<T> : JsonConverter<T> where T : Enum
         var enumText = reader.GetString()?.Replace(" ", "_");
         if (Enum.TryParse(typeof(T), enumText, true, out var result))
         {
-            return (T) result!;
+            return (T)result!;
         }
 
         // Unknown value handling
-        if (Enum.TryParse(typeof(T), "Unknown", true, out var unknownResult)) 
+        if (Enum.TryParse(typeof(T), "Unknown", true, out var unknownResult))
         {
-            return (T) unknownResult!;
+            return (T)unknownResult!;
         }
-        
+
         throw new JsonException($"Unable to parse '{enumText}' to enum '{typeof(T)}'.");
     }
 
@@ -37,5 +42,48 @@ public class DefaultUnknownEnumConverter<T> : JsonConverter<T> where T : Enum
         }
 
         writer.WriteStringValue(value.GetStringValue().Replace("_", " "));
+    }
+
+    /// <inheritdoc />
+    public override T ReadAsPropertyName(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options
+    )
+    {
+        if (reader.TokenType != JsonTokenType.PropertyName)
+        {
+            throw new JsonException();
+        }
+
+        var enumText = reader.GetString()?.Replace(" ", "_");
+        if (Enum.TryParse(typeof(T), enumText, true, out var result))
+        {
+            return (T)result!;
+        }
+
+        // Unknown value handling
+        if (Enum.TryParse(typeof(T), "Unknown", true, out var unknownResult))
+        {
+            return (T)unknownResult!;
+        }
+
+        throw new JsonException($"Unable to parse '{enumText}' to enum '{typeof(T)}'.");
+    }
+
+    /// <inheritdoc />
+    public override void WriteAsPropertyName(
+        Utf8JsonWriter writer,
+        T? value,
+        JsonSerializerOptions options
+    )
+    {
+        if (value == null)
+        {
+            writer.WriteNullValue();
+            return;
+        }
+
+        writer.WritePropertyName(value.GetStringValue().Replace("_", " "));
     }
 }

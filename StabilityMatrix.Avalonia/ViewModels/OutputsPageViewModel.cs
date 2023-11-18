@@ -484,7 +484,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
                         continue;
                     }
 
-                    await file.MoveToAsync(newPath);
+                    await file.MoveToWithIncrementAsync(newPath);
                 }
                 catch (Exception e)
                 {

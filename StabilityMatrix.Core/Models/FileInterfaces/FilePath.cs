@@ -174,7 +174,7 @@ public partial class FilePath : FileSystemPath, IPathObject
     /// </summary>
     public async Task<FilePath> MoveToDirectoryAsync(DirectoryPath directory)
     {
-        await Task.Run(() => Info.MoveTo(directory.FullPath)).ConfigureAwait(false);
+        await Task.Run(() => Info.MoveTo(directory.JoinFile(Name), true)).ConfigureAwait(false);
         // Return the new path
         return directory.JoinFile(this);
     }

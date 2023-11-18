@@ -80,7 +80,10 @@ public class UpdateHelper : IUpdateHelper
             // Unzip if needed
             if (downloadFile.Extension == ".zip")
             {
-                await extractDir.DeleteAsync(true).ConfigureAwait(false);
+                if (extractDir.Exists)
+                {
+                    await extractDir.DeleteAsync(true).ConfigureAwait(false);
+                }
                 extractDir.Create();
 
                 await ArchiveHelper
@@ -104,7 +107,10 @@ public class UpdateHelper : IUpdateHelper
             // Clean up original download
             await downloadFile.DeleteAsync().ConfigureAwait(false);
             // Clean up extract dir
-            await extractDir.DeleteAsync(true).ConfigureAwait(false);
+            if (extractDir.Exists)
+            {
+                await extractDir.DeleteAsync(true).ConfigureAwait(false);
+            }
         }
     }
 

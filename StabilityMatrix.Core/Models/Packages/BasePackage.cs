@@ -133,6 +133,11 @@ public abstract class BasePackage
             return TorchVersion.DirectMl;
         }
 
+        if (Compat.IsMacOS && Compat.IsArm && AvailableTorchVersions.Contains(TorchVersion.Mps))
+        {
+            return TorchVersion.Mps;
+        }
+
         return TorchVersion.Cpu;
     }
 

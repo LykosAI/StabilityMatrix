@@ -95,7 +95,9 @@ public class UpdateHelper : IUpdateHelper
 
                 var path = updateInfo.Url.PathAndQuery.StripStart(authedPathPrefix);
                 path = HttpUtility.UrlDecode(path);
-                url = await lykosAuthApi.GetDownloadUrl(path).ConfigureAwait(false);
+                url = (
+                    await lykosAuthApi.GetFilesDownload(path).ConfigureAwait(false)
+                ).DownloadUrl.ToString();
             }
 
             // Download update

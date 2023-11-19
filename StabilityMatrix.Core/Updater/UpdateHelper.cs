@@ -1,7 +1,9 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -18,6 +20,7 @@ public class UpdateHelper : IUpdateHelper
     private readonly IHttpClientFactory httpClientFactory;
     private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
+    private readonly ILykosAuthApi lykosAuthApi;
     private readonly DebugOptions debugOptions;
     private readonly System.Timers.Timer timer = new(TimeSpan.FromMinutes(60));
 
@@ -37,13 +40,15 @@ public class UpdateHelper : IUpdateHelper
         IHttpClientFactory httpClientFactory,
         IDownloadService downloadService,
         IOptions<DebugOptions> debugOptions,
-        ISettingsManager settingsManager
+        ISettingsManager settingsManager,
+        ILykosAuthApi lykosAuthApi
     )
     {
         this.logger = logger;
         this.httpClientFactory = httpClientFactory;
         this.downloadService = downloadService;
         this.settingsManager = settingsManager;
+        this.lykosAuthApi = lykosAuthApi;
         this.debugOptions = debugOptions.Value;
 
         timer.Elapsed += async (_, _) =>
@@ -70,10 +75,31 @@ public class UpdateHelper : IUpdateHelper
 
         try
         {
-            // download the file from URL
+            var url = updateInfo.Url.ToString();
+
+            // check if need authenticated download
+            const string authedPathPrefix = "/s1/";
+            if (
+                updateInfo.Url.Host.Equals("cdn.lykos.ai", StringComparison.OrdinalIgnoreCase)
+                && updateInfo.Url.PathAndQuery.StartsWith(
+                    authedPathPrefix,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            {
+                logger.LogInformation(
+                    "Handling authenticated update download: {Url}",
+                    updateInfo.Url
+                );
+
+                var path = updateInfo.Url.PathAndQuery.StripStart(authedPathPrefix);
+                url = await lykosAuthApi.GetDownloadUrl(path).ConfigureAwait(false);
+            }
+
+            // Download update
             await downloadService
                 .DownloadToFileAsync(
-                    updateInfo.Url.ToString(),
+                    url,
                     downloadFile,
                     progress: progress,
                     httpClientName: "UpdateClient"

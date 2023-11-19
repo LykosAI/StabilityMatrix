@@ -78,7 +78,7 @@ public class UpdateHelper : IUpdateHelper
             var url = updateInfo.Url.ToString();
 
             // check if need authenticated download
-            const string authedPathPrefix = "/s1/";
+            const string authedPathPrefix = "/lykos-s1/";
             if (
                 updateInfo.Url.Host.Equals("cdn.lykos.ai", StringComparison.OrdinalIgnoreCase)
                 && updateInfo.Url.PathAndQuery.StartsWith(

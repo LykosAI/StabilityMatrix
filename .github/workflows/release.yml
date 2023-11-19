@@ -244,7 +244,7 @@ jobs:
           SM_CF_CACHE_PURGE_TOKEN: ${{ secrets.SM_CF_CACHE_PURGE_TOKEN }}
           SM_CF_ZONE_ID: ${{ secrets.SM_CF_ZONE_ID }}
           SM_SIGNING_PRIVATE_KEY: ${{ secrets.SM_SIGNING_PRIVATE_KEY }}
-        run: sm-tools updates publish-matrix -v $RELEASE_VERSION -y
+        run: sm-tools updates publish-matrix -v ${{ github.event.inputs.version }} -y
 
   publish-auto-update-b2:
     name: Publish Auto-Update Release (B2)
@@ -296,8 +296,9 @@ jobs:
           SM_CF_ZONE_ID: ${{ secrets.SM_CF_ZONE_ID }}
           SM_SIGNING_PRIVATE_KEY: ${{ secrets.SM_SIGNING_PRIVATE_KEY }}
         run: >
-          sm-tools updates publish-files-v3 -v $RELEASE_VERSION -y
+          sm-tools updates publish-files-v3 -v ${{ github.event.inputs.version }}
           --channel ${{ github.event.inputs.auto-update-release-channel }}
           --changelog CHANGELOG.md
           --win-x64 StabilityMatrix-win-x64.zip
           --linux-x64 StabilityMatrix-linux-x64.zip
+          -y

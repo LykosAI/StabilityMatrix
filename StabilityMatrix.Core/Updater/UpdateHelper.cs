@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Web;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using StabilityMatrix.Core.Api;
@@ -93,6 +94,7 @@ public class UpdateHelper : IUpdateHelper
                 );
 
                 var path = updateInfo.Url.PathAndQuery.StripStart(authedPathPrefix);
+                path = HttpUtility.UrlDecode(path);
                 url = await lykosAuthApi.GetDownloadUrl(path).ConfigureAwait(false);
             }
 

@@ -235,7 +235,7 @@ jobs:
           python-version: '3.11'
           
       - name: Install Python Dependencies
-        run: pip install stability-matrix-tools>=0.2.9
+        run: pip install stability-matrix-tools>=0.2.10 --upgrade
         
       - name: Publish Auto-Update Release
         env:
@@ -264,7 +264,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install Python Dependencies
-        run: pip install stability-matrix-tools>=0.2.9
+        run: pip install stability-matrix-tools>=0.2.10 --upgrade
       
       # Zip each build
       - name: Zip Artifacts

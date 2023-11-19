@@ -63,4 +63,30 @@ public interface ILykosAuthApi
     [Headers("Authorization: Bearer")]
     [Delete("/api/oauth/patreon")]
     Task DeletePatreonOAuth(CancellationToken cancellationToken = default);
+
+    [Headers("Authorization: Bearer")]
+    [Get("/api/files/download")]
+    Task<HttpResponseMessage> GetDownloadRedirect(
+        string path,
+        CancellationToken cancellationToken = default
+    );
+
+    public async Task<string> GetDownloadUrl(
+        string path,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = await GetDownloadRedirect(path, cancellationToken).ConfigureAwait(false);
+
+        if (result.StatusCode != HttpStatusCode.Redirect)
+        {
+            result.EnsureSuccessStatusCode();
+            throw new InvalidOperationException(
+                $"Expected a redirect 302 response, got {result.StatusCode}"
+            );
+        }
+
+        return result.Headers.Location?.ToString()
+            ?? throw new InvalidOperationException("Expected a redirect URL, but got none");
+    }
 }

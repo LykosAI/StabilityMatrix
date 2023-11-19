@@ -179,7 +179,11 @@ public class UpdateHelper : IUpdateHelper
             foreach (
                 var channel in Enum.GetValues(typeof(UpdateChannel))
                     .Cast<UpdateChannel>()
-                    .Where(c => c > UpdateChannel.Unknown)
+                    .Where(
+                        c =>
+                            c > UpdateChannel.Unknown
+                            && c <= settingsManager.Settings.PreferredUpdateChannel
+                    )
             )
             {
                 if (

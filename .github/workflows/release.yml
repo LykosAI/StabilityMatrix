@@ -301,4 +301,3 @@ jobs:
           --changelog CHANGELOG.md
           --win-x64 StabilityMatrix-win-x64.zip
           --linux-x64 StabilityMatrix-linux-x64.zip
-          --b2-bucket-name ${{ secrets.B2_BUCKET_NAME }}

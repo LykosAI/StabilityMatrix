@@ -9,5 +9,7 @@ public record GetUserResponse
     public bool IsEmailVerified { get; init; }
 
     public bool IsActiveSupporter =>
-        UserRoles.Contains(LykosRole.PatreonSupporter) || UserRoles.Contains(LykosRole.Insider);
+        UserRoles.Contains(LykosRole.PatreonSupporter)
+        || UserRoles.Contains(LykosRole.Insider)
+        || (UserRoles.Contains(LykosRole.Developer) && PatreonId is not null);
 }

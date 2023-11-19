@@ -82,114 +82,12 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         updateHelper.StartCheckingForUpdates().SafeFireAndForget();
     }
 
-    /// <summary>
-    /// Formats changelog markdown including up to the current version
-    /// </summary>
-    /// <param name="markdown">Markdown to format</param>
-    /// <param name="currentVersion">Versions equal or below this are excluded</param>
-    /// <param name="maxChannel">Maximum channel level to include</param>
-    internal static string? FormatChangelog(
-        string markdown,
-        SemVersion currentVersion,
-        UpdateChannel maxChannel = UpdateChannel.Stable
-    )
-    {
-        var pattern = RegexChangelog();
-
-        var results = pattern
-            .Matches(markdown)
-            .Select(
-                m =>
-                    new
-                    {
-                        Block = m.Groups[1].Value.Trim(),
-                        Version = SemVersion.TryParse(
-                            m.Groups[2].Value.Trim(),
-                            SemVersionStyles.AllowV,
-                            out var version
-                        )
-                            ? version
-                            : null,
-                        Content = m.Groups[3].Value.Trim()
-                    }
-            )
-            .Where(x => x.Version is not null)
-            .ToList();
-
-        // Join all blocks until and excluding the current version
-        // If we're on a pre-release, include the current release
-        var currentVersionBlock = results.FindIndex(
-            x => x.Version == currentVersion.WithoutMetadata()
-        );
-
-        // Support for previous pre-release without changelogs
-        if (currentVersionBlock == -1)
-        {
-            currentVersionBlock = results.FindIndex(
-                x => x.Version == currentVersion.WithoutPrereleaseOrMetadata()
-            );
-
-            // Add 1 if found to include the current release
-            if (currentVersionBlock != -1)
-            {
-                currentVersionBlock++;
-            }
-        }
-
-        // Still not found, just include all
-        if (currentVersionBlock == -1)
-        {
-            currentVersionBlock = results.Count;
-        }
-
-        // Filter out pre-releases
-        var blocks = results
-            .Take(currentVersionBlock)
-            .Where(
-                x =>
-                    x.Version!.PrereleaseIdentifiers.Count == 0
-                    || x.Version.PrereleaseIdentifiers[0].Value switch
-                    {
-                        "pre" when maxChannel >= UpdateChannel.Preview => true,
-                        "dev" when maxChannel >= UpdateChannel.Development => true,
-                        _ => false
-                    }
-            )
-            .Select(x => x.Block);
-
-        return string.Join(Environment.NewLine + Environment.NewLine, blocks);
-    }
-
     public async Task Preload()
     {
         if (UpdateInfo is null)
             return;
 
         ReleaseNotes = await GetReleaseNotes(UpdateInfo.Changelog.ToString());
-    }
-
-    internal async Task<string> GetReleaseNotes(string changelogUrl)
-    {
-        using var client = httpClientFactory.CreateClient();
-        var response = await client.GetAsync(changelogUrl);
-        if (response.IsSuccessStatusCode)
-        {
-            var changelog = await response.Content.ReadAsStringAsync();
-
-            // Formatting for new changelog format
-            // https://keepachangelog.com/en/1.1.0/
-            if (changelogUrl.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
-            {
-                return FormatChangelog(changelog, Compat.AppVersion)
-                    ?? "## Unable to format release notes";
-            }
-
-            return changelog;
-        }
-        else
-        {
-            return "## Unable to load release notes";
-        }
     }
 
     partial void OnUpdateInfoChanged(UpdateInfo? value)
@@ -260,5 +158,119 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
 
         Process.Start(UpdateHelper.ExecutablePath);
         App.Shutdown();
+    }
+
+    internal async Task<string> GetReleaseNotes(string changelogUrl)
+    {
+        using var client = httpClientFactory.CreateClient();
+        var response = await client.GetAsync(changelogUrl);
+        if (response.IsSuccessStatusCode)
+        {
+            var changelog = await response.Content.ReadAsStringAsync();
+
+            // Formatting for new changelog format
+            // https://keepachangelog.com/en/1.1.0/
+            if (changelogUrl.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+            {
+                return FormatChangelog(
+                        changelog,
+                        Compat.AppVersion,
+                        settingsManager.Settings.PreferredUpdateChannel
+                    ) ?? "## Unable to format release notes";
+            }
+
+            return changelog;
+        }
+        else
+        {
+            return "## Unable to load release notes";
+        }
+    }
+
+    /// <summary>
+    /// Formats changelog markdown including up to the current version
+    /// </summary>
+    /// <param name="markdown">Markdown to format</param>
+    /// <param name="currentVersion">Versions equal or below this are excluded</param>
+    /// <param name="maxChannel">Maximum channel level to include</param>
+    internal static string? FormatChangelog(
+        string markdown,
+        SemVersion currentVersion,
+        UpdateChannel maxChannel = UpdateChannel.Stable
+    )
+    {
+        var pattern = RegexChangelog();
+
+        var results = pattern
+            .Matches(markdown)
+            .Select(
+                m =>
+                    new
+                    {
+                        Block = m.Groups[1].Value.Trim(),
+                        Version = SemVersion.TryParse(
+                            m.Groups[2].Value.Trim(),
+                            SemVersionStyles.AllowV,
+                            out var version
+                        )
+                            ? version
+                            : null,
+                        Content = m.Groups[3].Value.Trim()
+                    }
+            )
+            .Where(x => x.Version is not null)
+            .ToList();
+
+        // Join all blocks until and excluding the current version
+        // If we're on a pre-release, include the current release
+        var currentVersionBlock = results.FindIndex(
+            x => x.Version == currentVersion.WithoutMetadata()
+        );
+
+        // For mismatching build metadata, add one
+        if (
+            currentVersionBlock != -1
+            && results[currentVersionBlock].Version?.Metadata != currentVersion.Metadata
+        )
+        {
+            currentVersionBlock++;
+        }
+
+        // Support for previous pre-release without changelogs
+        if (currentVersionBlock == -1)
+        {
+            currentVersionBlock = results.FindIndex(
+                x => x.Version == currentVersion.WithoutPrereleaseOrMetadata()
+            );
+
+            // Add 1 if found to include the current release
+            if (currentVersionBlock != -1)
+            {
+                currentVersionBlock++;
+            }
+        }
+
+        // Still not found, just include all
+        if (currentVersionBlock == -1)
+        {
+            currentVersionBlock = results.Count;
+        }
+
+        // Filter out pre-releases
+        var blocks = results
+            .Take(currentVersionBlock)
+            .Where(
+                x =>
+                    x.Version!.PrereleaseIdentifiers.Count == 0
+                    || x.Version.PrereleaseIdentifiers[0].Value switch
+                    {
+                        "pre" when maxChannel >= UpdateChannel.Preview => true,
+                        "dev" when maxChannel >= UpdateChannel.Development => true,
+                        _ => false
+                    }
+            )
+            .Select(x => x.Block);
+
+        return string.Join(Environment.NewLine + Environment.NewLine, blocks);
     }
 }

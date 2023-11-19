@@ -46,6 +46,9 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         new SymbolIconSource { Symbol = Symbol.Person, IsFilled = true };
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ConnectLykosCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ConnectPatreonCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ConnectCivitCommand))]
     private bool isInitialUpdateFinished;
 
     [ObservableProperty]

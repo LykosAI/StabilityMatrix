@@ -219,11 +219,12 @@ public partial class UpdateSettingsViewModel : PageViewModelBase
                 .Select(kv => kv.Value)
                 .MaxBy(info => info.Version, SemVersion.PrecedenceComparer)
                 ?.Version;
-
-            /*card.LatestVersion = value?.UpdateChannels
-                .GetValueOrDefault(card.UpdateChannel)
-                ?.Version;*/
         }
+    }
+
+    partial void OnPreferredUpdateChannelChanged(UpdateChannel value)
+    {
+        CheckForUpdatesCommand.ExecuteAsync(null).SafeFireAndForget();
     }
 
     /// <inheritdoc />

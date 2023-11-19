@@ -29,6 +29,9 @@ public class UpdateHelper : IUpdateHelper
 
     public static FilePath ExecutablePath => UpdateFolder.JoinFile(Compat.GetExecutableName());
 
+    /// <inheritdoc />
+    public event EventHandler<UpdateStatusChangedEventArgs>? UpdateStatusChanged;
+
     public UpdateHelper(
         ILogger<UpdateHelper> logger,
         IHttpClientFactory httpClientFactory,
@@ -118,7 +121,7 @@ public class UpdateHelper : IUpdateHelper
         }
     }
 
-    private async Task CheckForUpdate()
+    public async Task CheckForUpdate()
     {
         try
         {
@@ -159,12 +162,31 @@ public class UpdateHelper : IUpdateHelper
                     && ValidateUpdate(update)
                 )
                 {
-                    NotifyUpdateAvailable(update);
+                    OnUpdateStatusChanged(
+                        new UpdateStatusChangedEventArgs
+                        {
+                            LatestUpdate = update,
+                            UpdateChannels = updateManifest.Updates.ToDictionary(
+                                kv => kv.Key,
+                                kv => kv.Value.GetInfoForCurrentPlatform()
+                            )!
+                        }
+                    );
                     return;
                 }
             }
 
             logger.LogInformation("No update available");
+
+            OnUpdateStatusChanged(
+                new UpdateStatusChangedEventArgs
+                {
+                    UpdateChannels = updateManifest.Updates.ToDictionary(
+                        kv => kv.Key,
+                        kv => kv.Value.GetInfoForCurrentPlatform()
+                    )!
+                }
+            );
         }
         catch (Exception e)
         {
@@ -213,6 +235,22 @@ public class UpdateHelper : IUpdateHelper
         }
 
         return false;
+    }
+
+    private void OnUpdateStatusChanged(UpdateStatusChangedEventArgs args)
+    {
+        UpdateStatusChanged?.Invoke(this, args);
+
+        if (args.LatestUpdate is { } update)
+        {
+            logger.LogInformation(
+                "Update available {AppVer} -> {UpdateVer}",
+                Compat.AppVersion,
+                update.Version
+            );
+
+            EventManager.Instance.OnUpdateAvailable(update);
+        }
     }
 
     private void NotifyUpdateAvailable(UpdateInfo update)

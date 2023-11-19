@@ -25,7 +25,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
-using FluentAvalonia.UI.Media.Animation;
 using NLog;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Animations;

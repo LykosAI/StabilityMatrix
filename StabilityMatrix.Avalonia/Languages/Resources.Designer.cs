@@ -663,6 +663,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Auto Updates.
+        /// </summary>
+        public static string Label_AutoUpdates {
+            get {
+                return ResourceManager.GetString("Label_AutoUpdates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Base Model.
         /// </summary>
         public static string Label_BaseModel {
@@ -1815,6 +1824,33 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Updates.
+        /// </summary>
+        public static string Label_Updates {
+            get {
+                return ResourceManager.GetString("Label_Updates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to For technical users. Be the first to access our Development builds from feature branches as soon as they are available. There may be some rough edges and bugs as we experiment with new features..
+        /// </summary>
+        public static string Label_UpdatesDevChannelDescription {
+            get {
+                return ResourceManager.GetString("Label_UpdatesDevChannelDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to For early adopters. Preview builds will be more reliable than those from the Dev channel, and will be available closer to stable releases. Your feedback will help us greatly in discovering issues and polishing design elements..
+        /// </summary>
+        public static string Label_UpdatesPreviewChannelDescription {
+            get {
+                return ResourceManager.GetString("Label_UpdatesPreviewChannelDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Upscale.
         /// </summary>
         public static string Label_Upscale {
@@ -1883,6 +1919,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Width {
             get {
                 return ResourceManager.GetString("Label_Width", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You&apos;re up to date.
+        /// </summary>
+        public static string Label_YouAreUpToDate {
+            get {
+                return ResourceManager.GetString("Label_YouAreUpToDate", resourceCulture);
             }
         }
         
@@ -2045,6 +2090,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string TextTemplate_ErrorUpdatingPackage {
             get {
                 return ResourceManager.GetString("TextTemplate_ErrorUpdatingPackage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Last checked: {0}.
+        /// </summary>
+        public static string TextTemplate_LastChecked {
+            get {
+                return ResourceManager.GetString("TextTemplate_LastChecked", resourceCulture);
             }
         }
         

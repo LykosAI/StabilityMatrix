@@ -1,0 +1,143 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Settings.UpdateSettingsPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:sm="clr-namespace:StabilityMatrix.Avalonia"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
+    d:DataContext="{x:Static mocks:DesignData.UpdateSettingsViewModel}"
+    d:DesignHeight="550"
+    d:DesignWidth="800"
+    x:DataType="vmSettings:UpdateSettingsViewModel"
+    mc:Ignorable="d">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="16,16,24,16" Spacing="2">
+
+            <sg:SpacedGrid Margin="0,4,0,16" ColumnDefinitions="*,Auto">
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                    <fluentIcons:SymbolIcon
+                        Width="64"
+                        Height="64"
+                        FontSize="64"
+                        IsFilled="True"
+                        Symbol="ArrowSync" />
+
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock
+                            Margin="-1,0,0,0"
+                            HorizontalAlignment="Left"
+                            Text="{Binding HeaderText}"
+                            Theme="{DynamicResource SubtitleTextBlockStyle}" />
+                        <TextBlock 
+                            HorizontalAlignment="Left"
+                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                            Text="{Binding SubtitleText}" />
+                    </StackPanel>
+                </StackPanel>
+                
+                <Button
+                    Grid.Column="1"
+                    Classes="accent"
+                    Content="{x:Static lang:Resources.Action_CheckForUpdates}"
+                    Command="{Binding CheckForUpdatesCommand}"
+                    HorizontalAlignment="Right">
+                </Button>
+            </sg:SpacedGrid>
+
+            <!--  Auto updates toggle  -->
+            <ui:SettingsExpander 
+                Description="Periodically checks for updates" 
+                Header="Notify when updates are ready to install">
+                <ui:SettingsExpander.IconSource>
+                    <fluentIcons:SymbolIconSource Symbol="Megaphone" />
+                </ui:SettingsExpander.IconSource>
+                <ui:SettingsExpander.Footer>
+                    <ToggleSwitch IsChecked="{Binding IsAutoCheckUpdatesEnabled}" />
+                </ui:SettingsExpander.Footer>
+            </ui:SettingsExpander>
+
+            <!--  Channel radio buttons  -->
+            <ui:SettingsExpander Header="Preferred Update Channel" IsExpanded="True">
+                <ui:SettingsExpander.IconSource>
+                    <fluentIcons:SymbolIconSource Symbol="Branch" />
+                </ui:SettingsExpander.IconSource>
+
+                <ui:SettingsExpanderItem>
+                    <ListBox
+                        SelectionChanged="ChannelListBox_OnSelectionChanged"
+                        IsEnabled="{Binding IsAutoCheckUpdatesEnabled}"
+                        ItemContainerTheme="{DynamicResource ListBoxItemBorderlessTheme}"
+                        ItemsSource="{Binding AvailableUpdateChannelCards}"
+                        SelectedItem="{Binding SelectedUpdateChannelCard}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="{x:Type models:UpdateChannelCard}">
+                                <RadioButton 
+                                    GroupName="UpdateChannel"
+                                    IsEnabled="{Binding IsSelectable}"
+                                    IsChecked="{Binding $parent[ListBoxItem].IsSelected}" >
+                                    <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <TextBlock 
+                                                IsEnabled="False"
+                                                VerticalAlignment="Center"
+                                                Text="{Binding DisplayName}" />
+                                            <Ellipse
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Center"
+                                                IsVisible="{Binding LatestVersionString, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                Width="4"
+                                                Height="4"
+                                                Fill="{DynamicResource TextFillColorTertiaryBrush}" />
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                FontSize="13"
+                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                IsVisible="{Binding LatestVersionString, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                Text="{Binding LatestVersionString}" />
+                                            
+                                            <!-- Update available icon -->
+                                            <fluentIcons:SymbolIcon
+                                                ToolTip.Tip="{x:Static lang:Resources.Label_UpdateAvailable}"
+                                                IsVisible="{Binding IsLatestVersionUpdateable}"
+                                                VerticalAlignment="Center"
+                                                FontSize="16"
+                                                Foreground="#3592c4"
+                                                Symbol="ArrowCircleUpRight" />
+                                        </StackPanel>
+
+                                        <TextBlock
+                                            FontSize="13"
+                                            TextAlignment="Start"
+                                            Margin="0,0,0,0"
+                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                            Text="{Binding Description}"
+                                            Theme="{DynamicResource CaptionTextBlockStyle}" />
+                                    </StackPanel>
+                                </RadioButton>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="8" />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                    </ListBox>
+                </ui:SettingsExpanderItem>
+
+
+            </ui:SettingsExpander>
+
+        </StackPanel>
+    </ScrollViewer>
+</controls:UserControlBase>

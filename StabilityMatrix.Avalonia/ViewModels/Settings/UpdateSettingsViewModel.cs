@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using Exceptionless.DateTimeExtensions;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
+using Semver;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
@@ -107,7 +108,7 @@ public partial class UpdateSettingsViewModel : PageViewModelBase
 
         accountsService.LykosAccountStatusUpdate += (_, args) =>
         {
-            var isSelectable = args.IsPatreonConnected;
+            var isBetaChannelsEnabled = args.User?.IsActiveSupporter == true;
 
             foreach (
                 var card in AvailableUpdateChannelCards.Where(
@@ -115,7 +116,7 @@ public partial class UpdateSettingsViewModel : PageViewModelBase
                 )
             )
             {
-                card.IsSelectable = isSelectable;
+                card.IsSelectable = isBetaChannelsEnabled;
             }
         };
 
@@ -171,7 +172,11 @@ public partial class UpdateSettingsViewModel : PageViewModelBase
         Dispatcher.UIThread
             .InvokeAsync(async () =>
             {
-                var dialog = DialogHelper.CreateTaskDialog("Become a Supporter", "uwu");
+                var dialog = DialogHelper.CreateTaskDialog(
+                    "Become a Supporter",
+                    ""
+                        + "Support the Stability Matrix Team and get access to early development builds and be the first to test new features. "
+                );
 
                 dialog.Buttons = new[]
                 {
@@ -205,27 +210,20 @@ public partial class UpdateSettingsViewModel : PageViewModelBase
     partial void OnUpdateStatusChanged(UpdateStatusChangedEventArgs? value)
     {
         // Update the update channel cards
+
+        // Use maximum version from platforms equal or lower than current
         foreach (var card in AvailableUpdateChannelCards)
         {
             card.LatestVersion = value?.UpdateChannels
-                .GetValueOrDefault(card.UpdateChannel)
+                .Where(kv => kv.Key <= card.UpdateChannel)
+                .Select(kv => kv.Value)
+                .MaxBy(info => info.Version, SemVersion.PrecedenceComparer)
                 ?.Version;
-        }
-    }
 
-    partial void OnPreferredUpdateChannelChanged(UpdateChannel oldValue, UpdateChannel newValue)
-    {
-        if (newValue == UpdateChannel.Stable)
-        {
-            return;
+            /*card.LatestVersion = value?.UpdateChannels
+                .GetValueOrDefault(card.UpdateChannel)
+                ?.Version;*/
         }
-
-        if (accountsService.LykosStatus?.User?.IsActiveSupporter == true)
-        {
-            return;
-        }
-
-        PreferredUpdateChannel = UpdateChannel.Stable;
     }
 
     /// <inheritdoc />

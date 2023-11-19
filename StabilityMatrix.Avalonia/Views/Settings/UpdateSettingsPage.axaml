@@ -15,11 +15,16 @@
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     d:DataContext="{x:Static mocks:DesignData.UpdateSettingsViewModel}"
     d:DesignHeight="550"
     d:DesignWidth="800"
     x:DataType="vmSettings:UpdateSettingsViewModel"
     mc:Ignorable="d">
+    
+    <controls:UserControlBase.Resources>
+        <converters:BooleanChoiceMultiConverter x:Key="BoolChoiceMultiConverter" />
+    </controls:UserControlBase.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="16,16,24,16" Spacing="2">
@@ -84,14 +89,20 @@
                             <DataTemplate DataType="{x:Type models:UpdateChannelCard}">
                                 <RadioButton 
                                     GroupName="UpdateChannel"
-                                    IsEnabled="{Binding IsSelectable}"
                                     IsChecked="{Binding $parent[ListBoxItem].IsSelected}" >
                                     <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left">
                                         <StackPanel Orientation="Horizontal" Spacing="5">
                                             <TextBlock 
-                                                IsEnabled="False"
                                                 VerticalAlignment="Center"
-                                                Text="{Binding DisplayName}" />
+                                                Text="{Binding DisplayName}">
+                                                <TextBlock.Foreground>
+                                                    <MultiBinding Converter="{StaticResource BoolChoiceMultiConverter}">
+                                                        <Binding Path="IsSelectable" />
+                                                        <DynamicResource ResourceKey="TextFillColorPrimaryBrush"/>
+                                                        <DynamicResource ResourceKey="TextFillColorTertiaryBrush"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Foreground>
+                                            </TextBlock>
                                             <Ellipse
                                                 HorizontalAlignment="Left"
                                                 VerticalAlignment="Center"

@@ -63,4 +63,11 @@ public interface ILykosAuthApi
     [Headers("Authorization: Bearer")]
     [Delete("/api/oauth/patreon")]
     Task DeletePatreonOAuth(CancellationToken cancellationToken = default);
+
+    [Headers("Authorization: Bearer")]
+    [Get("/api/files/download")]
+    Task<GetFilesDownloadResponse> GetFilesDownload(
+        string path,
+        CancellationToken cancellationToken = default
+    );
 }

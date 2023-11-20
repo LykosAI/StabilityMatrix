@@ -11,6 +11,7 @@ using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using NSubstitute.ReturnsExtensions;
+using Semver;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
@@ -36,6 +37,7 @@ using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
@@ -449,6 +451,37 @@ public static class DesignData
     public static AccountSettingsViewModel AccountSettingsViewModel =>
         Services.GetRequiredService<AccountSettingsViewModel>();
 
+    public static UpdateSettingsViewModel UpdateSettingsViewModel
+    {
+        get
+        {
+            var vm = Services.GetRequiredService<UpdateSettingsViewModel>();
+
+            var update = new UpdateInfo
+            {
+                Version = SemVersion.Parse("2.0.1"),
+                ReleaseDate = DateTimeOffset.Now,
+                Url = new Uri("https://example.org"),
+                Changelog = new Uri("https://example.org"),
+                HashBlake3 = "",
+                Signature = "",
+            };
+            
+            vm.UpdateStatus = new UpdateStatusChangedEventArgs
+            {
+                LatestUpdate = update,
+                UpdateChannels = new Dictionary<UpdateChannel, UpdateInfo>
+                {
+                    [UpdateChannel.Stable] = update,
+                    [UpdateChannel.Preview] = update,
+                    [UpdateChannel.Development] = update
+                },
+                CheckedAt = DateTimeOffset.UtcNow
+            };
+            return vm;
+        }
+    }
+
     public static CheckpointBrowserViewModel CheckpointBrowserViewModel =>
         Services.GetRequiredService<CheckpointBrowserViewModel>();
 
@@ -760,7 +793,7 @@ The gallery images are often inpainted, but you will get something very similar 
             )
         );
 
-    public static Indexer Types => new();
+    public static Indexer Types { get; } = new();
 
     public class Indexer
     {

@@ -11,21 +11,25 @@
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:update="clr-namespace:StabilityMatrix.Core.Models.Update;assembly=StabilityMatrix.Core"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
-    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
-    Focusable="True"
     d:DataContext="{x:Static mocks:DesignData.MainSettingsViewModel}"
     d:DesignHeight="700"
     d:DesignWidth="800"
     x:CompileBindings="True"
     x:DataType="vmSettings:MainSettingsViewModel"
+    Focusable="True"
     mc:Ignorable="d">
-    
+
     <controls:UserControlBase.Resources>
         <converters:CultureInfoDisplayConverter x:Key="CultureInfoDisplayConverter" />
+        <converters:EnumStringConverter x:Key="EnumStringConverter" />
+        <converters:EnumToBooleanConverter x:Key="EnumBoolConverter" />
     </controls:UserControlBase.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -63,17 +67,16 @@
                 </ui:SettingsExpander>
                 <ui:SettingsExpander
                     Grid.Row="3"
-                    IsVisible="{Binding SharedState.IsDebugMode}"
                     Margin="8,0,8,4"
-                    IsClickEnabled="True"
+                    ActionIconSource="ChevronRight"
                     Command="{Binding NavigateToSubPageCommand}"
                     CommandParameter="{x:Type vmSettings:InferenceSettingsViewModel}"
                     Header="Inference (Test)"
                     IconSource="Code"
-                    ActionIconSource="ChevronRight">
-                </ui:SettingsExpander>
+                    IsClickEnabled="True"
+                    IsVisible="{Binding SharedState.IsDebugMode}" />
             </Grid>
-            
+
             <!--  Checkpoints Manager Options  -->
             <Grid RowDefinitions="auto,*,Auto">
                 <TextBlock
@@ -254,16 +257,16 @@
                 <ui:SettingsExpander
                     Grid.Row="1"
                     Margin="8,0"
-                    IsClickEnabled="True"
+                    ActionIconSource="ChevronRight"
                     Command="{Binding NavigateToSubPageCommand}"
                     CommandParameter="{x:Type vmSettings:AccountSettingsViewModel}"
                     Header="{x:Static lang:Resources.Label_Accounts}"
-                    ActionIconSource="ChevronRight">
+                    IsClickEnabled="True">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
                             IsFilled="True"
-                            Symbol="Person"/>
+                            Symbol="Person" />
                     </ui:SettingsExpander.IconSource>
                 </ui:SettingsExpander>
                 <ui:SettingsExpander
@@ -280,14 +283,32 @@
             </sg:SpacedGrid>
 
             <!--  System Options  -->
-            <Grid RowDefinitions="auto, auto, auto">
+            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="4">
                 <TextBlock
-                    Margin="0,0,0,8"
+                    Margin="0,0,0,4"
                     FontWeight="Medium"
                     Text="{x:Static lang:Resources.Label_System}" />
+
+                <!-- Updates page -->
                 <ui:SettingsExpander
                     Grid.Row="1"
-                    Margin="8,0,8,4"
+                    Margin="8,0"
+                    ActionIconSource="ChevronRight"
+                    Command="{Binding NavigateToSubPageCommand}"
+                    CommandParameter="{x:Type vmSettings:UpdateSettingsViewModel}"
+                    Header="{x:Static lang:Resources.Label_Updates}"
+                    IsClickEnabled="True">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource
+                            FontSize="10"
+                            IsFilled="True"
+                            Symbol="ArrowSync" />
+                    </ui:SettingsExpander.IconSource>
+                </ui:SettingsExpander>
+
+                <ui:SettingsExpander
+                    Grid.Row="2"
+                    Margin="8,0"
                     Description="{x:Static lang:Resources.Label_AddToStartMenu_Details}"
                     Header="{x:Static lang:Resources.Label_AddToStartMenu}"
                     IconSource="StarAdd"
@@ -324,8 +345,9 @@
                         </StackPanel>
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
+
                 <ui:SettingsExpander
-                    Grid.Row="2"
+                    Grid.Row="3"
                     Margin="8,0"
                     Description="{x:Static lang:Resources.Label_SelectNewDataDirectory_Details}"
                     IconSource="MoveToFolder">
@@ -354,7 +376,7 @@
                         </Button>
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
-            </Grid>
+            </sg:SpacedGrid>
 
             <!--  Debug Options  -->
             <Grid IsVisible="{Binding SharedState.IsDebugMode}" RowDefinitions="auto,*">

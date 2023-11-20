@@ -242,29 +242,28 @@ public class VladAutomatic : BaseGitPackage
         {
             await PrerequisiteHelper
                 .RunGit(
-                    installDir.Parent ?? "",
-                    null,
-                    "clone",
-                    "https://github.com/vladmandic/automatic",
-                    installDir.Name
+                    new[] { "clone", "https://github.com/vladmandic/automatic", installDir.Name },
+                    installDir.Parent?.FullPath ?? ""
                 )
                 .ConfigureAwait(false);
 
             await PrerequisiteHelper
-                .RunGit(installLocation, null, "checkout", downloadOptions.CommitHash)
+                .RunGit(new[] { "checkout", downloadOptions.CommitHash }, installLocation)
                 .ConfigureAwait(false);
         }
         else if (!string.IsNullOrWhiteSpace(downloadOptions.BranchName))
         {
             await PrerequisiteHelper
                 .RunGit(
-                    installDir.Parent ?? "",
-                    null,
-                    "clone",
-                    "-b",
-                    downloadOptions.BranchName,
-                    "https://github.com/vladmandic/automatic",
-                    installDir.Name
+                    new[]
+                    {
+                        "clone",
+                        "-b",
+                        downloadOptions.BranchName,
+                        "https://github.com/vladmandic/automatic",
+                        installDir.Name
+                    },
+                    installDir.Parent?.FullPath ?? ""
                 )
                 .ConfigureAwait(false);
         }
@@ -325,10 +324,9 @@ public class VladAutomatic : BaseGitPackage
 
         await PrerequisiteHelper
             .RunGit(
-                installedPackage.FullPath,
+                new[] { "checkout", versionOptions.BranchName! },
                 onConsoleOutput,
-                "checkout",
-                versionOptions.BranchName
+                installedPackage.FullPath
             )
             .ConfigureAwait(false);
 

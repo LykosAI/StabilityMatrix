@@ -121,6 +121,7 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         }
 
         ShowProgressBar = true;
+        IsProgressIndeterminate = true;
         UpdateText = string.Format(
             Resources.TextTemplate_UpdatingPackage,
             Resources.Label_StabilityMatrix

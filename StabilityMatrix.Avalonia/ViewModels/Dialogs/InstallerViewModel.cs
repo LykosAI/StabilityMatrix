@@ -16,6 +16,7 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -24,6 +25,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Processes;
@@ -221,7 +223,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         }
     }
 
-    private Task ActuallyInstall()
+    private async Task ActuallyInstall()
     {
         if (string.IsNullOrWhiteSpace(InstallName))
         {
@@ -232,12 +234,18 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                     NotificationType.Error
                 )
             );
-            return Task.CompletedTask;
+            return;
         }
 
         var setPackageInstallingStep = new SetPackageInstallingStep(settingsManager, InstallName);
 
         var installLocation = Path.Combine(settingsManager.LibraryDir, "Packages", InstallName);
+        if (Directory.Exists(installLocation))
+        {
+            var installPath = new DirectoryPath(installLocation);
+            await installPath.DeleteVerboseAsync();
+        }
+
         var prereqStep = new SetupPrerequisitesStep(prerequisiteHelper, pyRunner);
 
         var downloadOptions = new DownloadPackageVersionOptions();
@@ -313,7 +321,6 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         };
 
         Steps = steps;
-        return Task.CompletedTask;
     }
 
     public void Cancel()

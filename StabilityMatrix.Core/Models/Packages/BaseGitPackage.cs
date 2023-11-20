@@ -181,36 +181,20 @@ public abstract class BaseGitPackage : BasePackage
         IProgress<ProgressReport>? progress = null
     )
     {
-        if (!string.IsNullOrWhiteSpace(versionOptions.VersionTag))
-        {
-            await PrerequisiteHelper
-                .RunGit(
-                    new[]
-                    {
-                        "clone",
-                        "--branch",
-                        versionOptions.VersionTag,
-                        GithubUrl,
-                        installLocation
-                    }
-                )
-                .ConfigureAwait(false);
-        }
-        else if (!string.IsNullOrWhiteSpace(versionOptions.BranchName))
-        {
-            await PrerequisiteHelper
-                .RunGit(
-                    new[]
-                    {
-                        "clone",
-                        "--branch",
-                        versionOptions.BranchName,
-                        GithubUrl,
-                        installLocation
-                    }
-                )
-                .ConfigureAwait(false);
-        }
+        await PrerequisiteHelper
+            .RunGit(
+                new[]
+                {
+                    "clone",
+                    "--branch",
+                    !string.IsNullOrWhiteSpace(versionOptions.VersionTag)
+                        ? versionOptions.VersionTag
+                        : versionOptions.BranchName ?? MainBranch,
+                    GithubUrl,
+                    installLocation
+                }
+            )
+            .ConfigureAwait(false);
 
         if (!versionOptions.IsLatest && !string.IsNullOrWhiteSpace(versionOptions.CommitHash))
         {

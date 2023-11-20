@@ -124,8 +124,11 @@ public class PyRunner : IPyRunner
         {
             throw new FileNotFoundException("get-pip not found", GetPipPath);
         }
-        var p = ProcessRunner.StartAnsiProcess(PythonExePath, "-m get-pip");
-        await ProcessRunner.WaitForExitConditionAsync(p);
+
+        var result = await ProcessRunner
+            .GetProcessResultAsync(PythonExePath, "-m get-pip")
+            .ConfigureAwait(false);
+        result.EnsureSuccessExitCode();
     }
 
     /// <summary>
@@ -137,8 +140,10 @@ public class PyRunner : IPyRunner
         {
             throw new FileNotFoundException("pip not found", PipExePath);
         }
-        var p = ProcessRunner.StartAnsiProcess(PipExePath, $"install {package}");
-        await ProcessRunner.WaitForExitConditionAsync(p);
+        var result = await ProcessRunner
+            .GetProcessResultAsync(PipExePath, $"install {package}")
+            .ConfigureAwait(false);
+        result.EnsureSuccessExitCode();
     }
 
     /// <summary>
@@ -159,15 +164,16 @@ public class PyRunner : IPyRunner
         try
         {
             return await Task.Run(
-                () =>
-                {
-                    using (Py.GIL())
+                    () =>
                     {
-                        return func();
-                    }
-                },
-                cancelToken
-            );
+                        using (Py.GIL())
+                        {
+                            return func();
+                        }
+                    },
+                    cancelToken
+                )
+                .ConfigureAwait(false);
         }
         finally
         {
@@ -193,15 +199,16 @@ public class PyRunner : IPyRunner
         try
         {
             await Task.Run(
-                () =>
-                {
-                    using (Py.GIL())
+                    () =>
                     {
-                        action();
-                    }
-                },
-                cancelToken
-            );
+                        using (Py.GIL())
+                        {
+                            action();
+                        }
+                    },
+                    cancelToken
+                )
+                .ConfigureAwait(false);
         }
         finally
         {

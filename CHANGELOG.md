@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.7.0-dev.2
+### Fixed
+- Fixed InvalidOperation errors when signing into accounts shortly after signing out, while the previous account update is still running
+
 ## v2.7.0-dev.1
 ### Added
 - Accounts Settings Subpage

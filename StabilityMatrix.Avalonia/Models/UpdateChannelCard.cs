@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Semver;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -47,6 +48,12 @@ public partial class UpdateChannelCard : ObservableObject
                     // Same version available, check if we both have commit hash metadata
                     var updateHash = LatestVersion.Metadata;
                     var appHash = Compat.AppVersion.Metadata;
+
+                    // Trim both to the lower length, to a minimum of 7 characters
+                    var minLength = Math.Min(7, Math.Min(updateHash.Length, appHash.Length));
+                    updateHash = updateHash[..minLength];
+                    appHash = appHash[..minLength];
+
                     // If different, we can update
                     if (updateHash != appHash)
                     {

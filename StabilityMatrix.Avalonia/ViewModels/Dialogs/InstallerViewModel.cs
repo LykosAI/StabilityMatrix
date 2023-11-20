@@ -14,8 +14,9 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
-using NLog;
+using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -24,6 +25,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Processes;
@@ -36,14 +38,13 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [Transient]
 public partial class InstallerViewModel : ContentDialogViewModelBase
 {
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
     private readonly ISettingsManager settingsManager;
     private readonly IPackageFactory packageFactory;
     private readonly IPyRunner pyRunner;
     private readonly IDownloadService downloadService;
     private readonly INotificationService notificationService;
     private readonly IPrerequisiteHelper prerequisiteHelper;
+    private readonly ILogger<InstallerViewModel> logger;
 
     [ObservableProperty]
     private BasePackage selectedPackage;
@@ -130,7 +131,8 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         IPyRunner pyRunner,
         IDownloadService downloadService,
         INotificationService notificationService,
-        IPrerequisiteHelper prerequisiteHelper
+        IPrerequisiteHelper prerequisiteHelper,
+        ILogger<InstallerViewModel> logger
     )
     {
         this.settingsManager = settingsManager;
@@ -139,6 +141,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         this.downloadService = downloadService;
         this.notificationService = notificationService;
         this.prerequisiteHelper = prerequisiteHelper;
+        this.logger = logger;
 
         var filtered = packageFactory.GetAllAvailablePackages().Where(p => p.IsCompatible).ToList();
 
@@ -187,7 +190,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         }
         catch (Exception e)
         {
-            Logger.Warn("Error getting versions: {Exception}", e.ToString());
+            logger.LogWarning("Error getting versions: {Exception}", e.ToString());
         }
         finally
         {
@@ -209,7 +212,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         else
         {
             var ex = result.Exception!;
-            Logger.Error(ex, $"Error installing package: {ex}");
+            logger.LogError(ex, $"Error installing package: {ex}");
 
             var dialog = new BetterContentDialog
             {
@@ -221,7 +224,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         }
     }
 
-    private Task ActuallyInstall()
+    private async Task ActuallyInstall()
     {
         if (string.IsNullOrWhiteSpace(InstallName))
         {
@@ -232,12 +235,18 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                     NotificationType.Error
                 )
             );
-            return Task.CompletedTask;
+            return;
         }
 
         var setPackageInstallingStep = new SetPackageInstallingStep(settingsManager, InstallName);
 
         var installLocation = Path.Combine(settingsManager.LibraryDir, "Packages", InstallName);
+        if (Directory.Exists(installLocation))
+        {
+            var installPath = new DirectoryPath(installLocation);
+            await installPath.DeleteVerboseAsync(logger);
+        }
+
         var prereqStep = new SetupPrerequisitesStep(prerequisiteHelper, pyRunner);
 
         var downloadOptions = new DownloadPackageVersionOptions();
@@ -313,7 +322,6 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         };
 
         Steps = steps;
-        return Task.CompletedTask;
     }
 
     public void Cancel()
@@ -401,7 +409,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         Dispatcher.UIThread
             .InvokeAsync(async () =>
             {
-                Logger.Debug($"Release mode: {IsReleaseMode}");
+                logger.LogDebug($"Release mode: {IsReleaseMode}");
                 var versionOptions = await SelectedPackage.GetAllVersionOptions();
 
                 AvailableVersions = IsReleaseMode
@@ -413,7 +421,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                     return;
 
                 ReleaseNotes = SelectedVersion.ReleaseNotesMarkdown;
-                Logger.Debug($"Loaded release notes for {ReleaseNotes}");
+                logger.LogDebug($"Loaded release notes for {ReleaseNotes}");
 
                 if (!IsReleaseMode)
                 {
@@ -492,7 +500,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                     }
                     catch (Exception e)
                     {
-                        Logger.Warn($"Error getting commits: {e.Message}");
+                        logger.LogWarning(e, $"Error getting commits: {e.Message}");
                     }
                 })
                 .SafeFireAndForget();

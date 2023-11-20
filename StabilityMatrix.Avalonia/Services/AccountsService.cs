@@ -141,7 +141,11 @@ public class AccountsService : IAccountsService
 
     private async Task RefreshLykosAsync(Secrets secrets)
     {
-        if (secrets.LykosAccount is not null)
+        if (
+            secrets.LykosAccount is not null
+            && !string.IsNullOrWhiteSpace(secrets.LykosAccount?.RefreshToken)
+            && !string.IsNullOrWhiteSpace(secrets.LykosAccount?.AccessToken)
+        )
         {
             try
             {

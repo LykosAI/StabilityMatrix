@@ -5,6 +5,18 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.7.0-dev.1
+### Added
+- Accounts Settings Subpage
+  - Lykos Account sign-up and login - currently for Patreon OAuth connections but GitHub requests caching and settings sync are planned
+  - Supporters can now connect your Patreon accounts, then head to the Updates page to choose to receive auto-updates from the Dev or Preview channels
+  - CivitAI Account login with API key - enables downloading models from the Browser page that require CivitAI logins, more integrations like liking and commenting are also planned
+- Updates Settings Subpage
+  - Toggle auto-update notifications and manually check for updates
+  - Choose between Stable, Preview, and Dev update channels
+## Changed
+- Model Browser page has been redesigned, featuring more information like rating and download counts
+
 ## v2.6.2
 ### Changed
 - Backend changes for auto-update schema v3, supporting customizable release channels and faster downloads with zip compression

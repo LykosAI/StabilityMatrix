@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
@@ -6,9 +7,14 @@ using Avalonia.Collections;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using FluentAvalonia.UI.Media.Animation;
+using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
@@ -27,6 +33,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Progress;
 public partial class ProgressManagerViewModel : PageViewModelBase
 {
     private readonly INotificationService notificationService;
+    private readonly INavigationService<MainWindowViewModel> navigationService;
+    private readonly INavigationService<SettingsViewModel> settingsNavService;
 
     public override string Title => "Download Manager";
     public override IconSource IconSource =>
@@ -38,10 +46,14 @@ public partial class ProgressManagerViewModel : PageViewModelBase
 
     public ProgressManagerViewModel(
         ITrackedDownloadService trackedDownloadService,
-        INotificationService notificationService
+        INotificationService notificationService,
+        INavigationService<MainWindowViewModel> navigationService,
+        INavigationService<SettingsViewModel> settingsNavService
     )
     {
         this.notificationService = notificationService;
+        this.navigationService = navigationService;
+        this.settingsNavService = settingsNavService;
 
         // Attach to the event
         trackedDownloadService.DownloadAdded += TrackedDownloadService_OnDownloadAdded;
@@ -82,8 +94,42 @@ public partial class ProgressManagerViewModel : PageViewModelBase
                     var msg = "";
                     if (download?.Exception is { } exception)
                     {
-                        msg = $"({exception.GetType().Name}) {exception.Message}";
+                        if (
+                            exception is UnauthorizedAccessException
+                            || exception.InnerException is UnauthorizedAccessException
+                        )
+                        {
+                            Dispatcher.UIThread.InvokeAsync(async () =>
+                            {
+                                var errorDialog = new BetterContentDialog
+                                {
+                                    Title = Resources.Label_DownloadFailed,
+                                    Content = Resources.Label_CivitAiLoginRequired,
+                                    PrimaryButtonText = "Go to Settings",
+                                    SecondaryButtonText = "Close",
+                                    DefaultButton = ContentDialogButton.Primary,
+                                };
+
+                                var result = await errorDialog.ShowAsync();
+                                if (result == ContentDialogResult.Primary)
+                                {
+                                    navigationService.NavigateTo<SettingsViewModel>(
+                                        new SuppressNavigationTransitionInfo()
+                                    );
+                                    await Task.Delay(100);
+                                    settingsNavService.NavigateTo<AccountSettingsViewModel>(
+                                        new SuppressNavigationTransitionInfo()
+                                    );
+                                }
+                            });
+
+                            return;
+                        }
+
+                        msg =
+                            $"({exception.GetType().Name}) {exception.InnerException?.Message ?? exception.Message}";
                     }
+
                     Dispatcher.UIThread.Post(() =>
                     {
                         notificationService.ShowPersistent(

@@ -4,6 +4,7 @@ using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
 using FluentAvalonia.UI.Navigation;
 using StabilityMatrix.Avalonia.Animations;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
@@ -11,10 +12,19 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Services;
 
-[Singleton(typeof(INavigationService))]
-public class NavigationService : INavigationService
+[Singleton(
+    ImplType = typeof(NavigationService<MainWindowViewModel>),
+    InterfaceType = typeof(INavigationService<MainWindowViewModel>)
+)]
+[Singleton(
+    ImplType = typeof(NavigationService<SettingsViewModel>),
+    InterfaceType = typeof(INavigationService<SettingsViewModel>)
+)]
+public class NavigationService<T> : INavigationService<T>
 {
     private Frame? _frame;
+
+    public event EventHandler<TypedNavigationEventArgs>? TypedNavigation;
 
     /// <inheritdoc />
     public void SetFrame(Frame frame)
@@ -60,18 +70,60 @@ public class NavigationService : INavigationService
             }
         );
 
-        if (!typeof(TViewModel).IsAssignableTo(typeof(PageViewModelBase)))
-            return;
+        TypedNavigation?.Invoke(
+            this,
+            new TypedNavigationEventArgs { ViewModelType = typeof(TViewModel) }
+        );
+    }
 
-        if (
-            App.Services.GetService(typeof(MainWindowViewModel))
-            is MainWindowViewModel mainViewModel
-        )
+    /// <inheritdoc />
+    public void NavigateTo(
+        Type viewModelType,
+        NavigationTransitionInfo? transitionInfo = null,
+        object? param = null
+    )
+    {
+        if (!viewModelType.IsAssignableTo(typeof(ViewModelBase)))
         {
-            mainViewModel.SelectedCategory = mainViewModel.Pages.FirstOrDefault(
-                x => x.GetType() == typeof(TViewModel)
-            );
+            // ReSharper disable once LocalizableElement
+            throw new ArgumentException("Type must be a ViewModelBase.", nameof(viewModelType));
         }
+
+        if (_frame is null)
+        {
+            throw new InvalidOperationException("SetFrame was not called before NavigateTo.");
+        }
+
+        if (App.Services.GetService(typeof(ISettingsManager)) is ISettingsManager settingsManager)
+        {
+            // Handle animation scale
+            switch (transitionInfo)
+            {
+                // If the transition info is null or animation scale is 0, suppress the transition
+                case null:
+                case BaseTransitionInfo when settingsManager.Settings.AnimationScale == 0f:
+                    transitionInfo = new SuppressNavigationTransitionInfo();
+                    break;
+                case BaseTransitionInfo baseTransitionInfo:
+                    baseTransitionInfo.Duration *= settingsManager.Settings.AnimationScale;
+                    break;
+            }
+        }
+
+        _frame.NavigateToType(
+            viewModelType,
+            param,
+            new FrameNavigationOptions
+            {
+                IsNavigationStackEnabled = true,
+                TransitionInfoOverride = transitionInfo ?? new SuppressNavigationTransitionInfo()
+            }
+        );
+
+        TypedNavigation?.Invoke(
+            this,
+            new TypedNavigationEventArgs { ViewModelType = viewModelType }
+        );
     }
 
     /// <inheritdoc />
@@ -104,6 +156,15 @@ public class NavigationService : INavigationService
             {
                 IsNavigationStackEnabled = true,
                 TransitionInfoOverride = transitionInfo ?? new SuppressNavigationTransitionInfo()
+            }
+        );
+
+        TypedNavigation?.Invoke(
+            this,
+            new TypedNavigationEventArgs
+            {
+                ViewModelType = viewModel.GetType(),
+                ViewModel = viewModel
             }
         );
     }

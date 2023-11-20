@@ -5,8 +5,11 @@ namespace StabilityMatrix.Core.Updater;
 
 public interface IUpdateHelper
 {
+    event EventHandler<UpdateStatusChangedEventArgs>? UpdateStatusChanged;
+
     Task StartCheckingForUpdates();
 
-    Task DownloadUpdate(UpdateInfo updateInfo,
-        IProgress<ProgressReport> progress);
+    Task CheckForUpdate();
+
+    Task DownloadUpdate(UpdateInfo updateInfo, IProgress<ProgressReport> progress);
 }

@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Backend changes for auto-update schema v3, supporting customizable release channels and faster downloads with zip compression
 ### Fixed
 - Better error reporting including outputs for git subprocess errors during package install / update
+- Fixed `'accelerate' is not recognized as an internal or external command` error when starting training in kohya_ss
+- Fixed some instances of `ModuleNotFoundError: No module named 'bitsandbytes.cuda_setup.paths'` error when using 8-bit optimizers in kohya_ss
 
 ## v2.6.1
 ### Changed

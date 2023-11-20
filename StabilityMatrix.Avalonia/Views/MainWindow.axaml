@@ -21,6 +21,15 @@
                         DockProperties.IsDropEnabled="True"
                         x:Class="StabilityMatrix.Avalonia.Views.MainWindow">
     
+    <controls:AppWindowBase.Resources>
+        <SolidColorBrush x:Key="BrushB0" Color="#FFFFFFFF" />
+        <DrawingImage x:Key="BrandsPatreonSymbolWhite">
+            <DrawingGroup>
+                <GeometryDrawing Brush="{DynamicResource BrushB0}" Geometry="F1 M1033.05 324.45C1032.86 186.55 925.46 73.53 799.45 32.75C642.97 -17.89 436.59 -10.55 287.17 59.95C106.07 145.41 49.18 332.61 47.06 519.31C45.32 672.81 60.64 1077.1 288.68 1079.98C458.12 1082.13 483.35 863.8 561.75 758.65C617.53 683.84 689.35 662.71 777.76 640.83C929.71 603.22 1033.27 483.3 1033.05 324.45Z" />
+            </DrawingGroup>
+        </DrawingImage>
+    </controls:AppWindowBase.Resources>
+    
     <Grid RowDefinitions="Auto,Auto,*">
         <Grid Name="TitleBarHost"
               ColumnDefinitions="Auto,Auto,*,Auto"
@@ -101,7 +110,7 @@
                                            Content="{x:Static lang:Resources.Label_BecomeAPatron}"
                                            Tapped="PatreonPatreonItem_OnTapped">
                         <ui:NavigationViewItem.IconSource>
-                            <controls:FASymbolIconSource Symbol="fa-brands fa-patreon"/>
+                            <ui:ImageIconSource Source="{StaticResource BrandsPatreonSymbolWhite}" />
                         </ui:NavigationViewItem.IconSource> 
                     </ui:NavigationViewItem>
                     

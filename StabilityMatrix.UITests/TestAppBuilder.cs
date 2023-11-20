@@ -45,16 +45,18 @@ public static class TestAppBuilder
         serviceCollection.AddSingleton<ISettingsManager>(settingsManager);
 
         // IUpdateHelper
-        var mockUpdateInfo = new UpdateInfo(
-            SemVersion.Parse("2.999.0"),
-            DateTimeOffset.UnixEpoch,
-            UpdateChannel.Stable,
-            UpdateType.Normal,
-            "https://example.org",
-            "https://example.org",
-            "46e11a5216c55d4c9d3c54385f62f3e1022537ae191615237f05e06d6f8690d0",
-            "IX5/CCXWJQG0oGkYWVnuF34gTqF/dJSrDrUd6fuNMYnncL39G3HSvkXrjvJvR18MA2rQNB5z13h3/qBSf9c7DA=="
-        );
+        var mockUpdateInfo = new UpdateInfo()
+        {
+            Version = SemVersion.Parse("2.999.0"),
+            ReleaseDate = DateTimeOffset.UnixEpoch,
+            Channel = UpdateChannel.Stable,
+            Type = UpdateType.Normal,
+            Url = new Uri("https://example.org"),
+            Changelog = new Uri("https://example.org"),
+            HashBlake3 = "46e11a5216c55d4c9d3c54385f62f3e1022537ae191615237f05e06d6f8690d0",
+            Signature =
+                "IX5/CCXWJQG0oGkYWVnuF34gTqF/dJSrDrUd6fuNMYnncL39G3HSvkXrjvJvR18MA2rQNB5z13h3/qBSf9c7DA=="
+        };
 
         var updateHelper = Substitute.For<IUpdateHelper>();
         updateHelper

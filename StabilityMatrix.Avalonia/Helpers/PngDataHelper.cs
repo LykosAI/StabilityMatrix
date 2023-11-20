@@ -104,7 +104,7 @@ public static class PngDataHelper
         var dataBytes = Encoding.UTF8.GetBytes(textData);
         var textDataLength = BitConverter.GetBytes(dataBytes.Length).Reverse();
         var textDataBytes = Text.Concat(dataBytes).ToArray();
-        var crc = BitConverter.GetBytes(Crc32Algorithm.Compute(textDataBytes));
+        var crc = BitConverter.GetBytes(Crc32Algorithm.Compute(textDataBytes)).Reverse();
 
         return textDataLength.Concat(textDataBytes).Concat(crc).ToArray();
     }

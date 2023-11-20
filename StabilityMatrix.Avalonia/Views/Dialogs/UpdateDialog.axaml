@@ -66,6 +66,7 @@
         <ProgressBar Grid.Row="3" 
                      Height="200"
                      Value="{Binding ProgressValue}"
+                     IsIndeterminate="{Binding IsProgressIndeterminate}"
                      IsVisible="{Binding ShowProgressBar}"
                      Margin="32"/>
         

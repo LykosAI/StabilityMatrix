@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -14,6 +15,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Python;
@@ -139,6 +141,11 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
             "Packages",
             SelectedPackage.Name
         );
+        if (Directory.Exists(installLocation))
+        {
+            var installPath = new DirectoryPath(installLocation);
+            await installPath.DeleteVerboseAsync(logger);
+        }
 
         var downloadVersion = await SelectedPackage.GetLatestVersion();
         var installedVersion = new InstalledPackageVersion { IsPrerelease = false };

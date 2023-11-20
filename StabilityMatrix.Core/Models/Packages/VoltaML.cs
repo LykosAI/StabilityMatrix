@@ -62,7 +62,7 @@ public class VoltaML : BaseGitPackage
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Mps };
+        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl };
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };

@@ -208,7 +208,9 @@ public static class ProcessRunner
         {
             ExitCode = process.ExitCode,
             StandardOutput = stdout,
-            StandardError = stderr
+            StandardError = stderr,
+            ProcessName = process.MachineName,
+            Elapsed = process.ExitTime - process.StartTime
         };
     }
 
@@ -425,6 +427,14 @@ public static class ProcessRunner
         CancellationToken cancelToken = default
     )
     {
+        if (process is AnsiProcess)
+        {
+            throw new ArgumentException(
+                $"{nameof(WaitForExitConditionAsync)} does not support AnsiProcess, which uses custom async data reading",
+                nameof(process)
+            );
+        }
+
         var stdout = new StringBuilder();
         var stderr = new StringBuilder();
         process.OutputDataReceived += (_, args) => stdout.Append(args.Data);

@@ -13,6 +13,7 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Update;
@@ -92,8 +93,8 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
 
     partial void OnUpdateInfoChanged(UpdateInfo? value)
     {
-        CurrentVersionText = $"v{Compat.AppVersion}";
-        NewVersionText = $"v{value?.Version}";
+        CurrentVersionText = $"v{Compat.AppVersion.ToDisplayString()}";
+        NewVersionText = $"v{value?.Version.ToDisplayString()}";
     }
 
     public override async Task OnLoadedAsync()

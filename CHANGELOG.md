@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Better error reporting including outputs for git subprocess errors during package install / update
 - Fixed `'accelerate' is not recognized as an internal or external command` error when starting training in kohya_ss
 - Fixed some instances of `ModuleNotFoundError: No module named 'bitsandbytes.cuda_setup.paths'` error when using 8-bit optimizers in kohya_ss
+- Fixed errors preventing Inference outputs from loading in the img2img tabs of other packages 
 
 ## v2.6.1
 ### Changed

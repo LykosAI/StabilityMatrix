@@ -259,18 +259,22 @@ jobs:
           echo "Using version ${{ github.event.inputs.version }}"
           echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $env:GITHUB_ENV
 
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install Python Dependencies
-        run: pip install stability-matrix-tools>=0.2.10 --upgrade
+      # Downloads all previous artifacts to the current working directory
+      - name: Download Artifacts
+        uses: actions/download-artifact@v3
       
       # Zip each build
       - name: Zip Artifacts
         run: |
           cd StabilityMatrix-win-x64 && zip -r ../StabilityMatrix-win-x64.zip ./. && cd $OLDPWD
           cd StabilityMatrix-linux-x64 && zip -r ../StabilityMatrix-linux-x64.zip ./. && cd $OLDPWD
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Python Dependencies
+        run: pip install stability-matrix-tools>=0.2.10 --upgrade
           
       # Check that the zips and CHANGELOG.md are in the current working directory
       - name: Check files

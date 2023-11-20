@@ -144,7 +144,7 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
         if (Directory.Exists(installLocation))
         {
             var installPath = new DirectoryPath(installLocation);
-            await installPath.DeleteVerboseAsync();
+            await installPath.DeleteVerboseAsync(logger);
         }
 
         var downloadVersion = await SelectedPackage.GetLatestVersion();

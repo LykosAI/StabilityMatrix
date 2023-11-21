@@ -297,7 +297,7 @@ public class SettingsManager : ISettingsManager
 
             if (
                 !string.IsNullOrWhiteSpace(librarySettings?.LibraryPath)
-                && Directory.Exists(librarySettings?.LibraryPath)
+                && Directory.Exists(librarySettings.LibraryPath)
             )
             {
                 LibraryDir = librarySettings.LibraryPath;

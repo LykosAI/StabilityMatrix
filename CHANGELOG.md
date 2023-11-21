@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.7.0-dev.2
+### Added
+- Outputs Page 
+  - Added Refresh button to update gallery from file system changes
+### Changed
+- Outputs Page
+  - Updated button and menu layout 
 ### Fixed
 - Fixed InvalidOperation errors when signing into accounts shortly after signing out, while the previous account update is still running
 

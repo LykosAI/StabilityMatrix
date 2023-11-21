@@ -55,6 +55,9 @@ public partial class CheckpointFile : ViewModelBase
     [ObservableProperty]
     private CivitModelType modelType;
 
+    [ObservableProperty]
+    private CheckpointFolder parentFolder;
+
     public string FileName => Path.GetFileName(FilePath);
 
     public ObservableCollection<string> Badges { get; set; } = new();
@@ -220,6 +223,7 @@ public partial class CheckpointFile : ViewModelBase
     /// - {filename}.cm-info.json (connected model info)
     /// </summary>
     public static IEnumerable<CheckpointFile> FromDirectoryIndex(
+        CheckpointFolder parentFolder,
         string directory,
         SearchOption searchOption = SearchOption.TopDirectoryOnly
     )
@@ -267,6 +271,8 @@ public partial class CheckpointFile : ViewModelBase
             {
                 checkpointFile.PreviewImagePath = Assets.NoImage.ToString();
             }
+
+            checkpointFile.ParentFolder = parentFolder;
 
             yield return checkpointFile;
         }
@@ -329,13 +335,14 @@ public partial class CheckpointFile : ViewModelBase
     /// Index with progress reporting.
     /// </summary>
     public static IEnumerable<CheckpointFile> FromDirectoryIndex(
+        CheckpointFolder parentFolder,
         string directory,
         IProgress<ProgressReport> progress,
         SearchOption searchOption = SearchOption.TopDirectoryOnly
     )
     {
         var current = 0ul;
-        foreach (var checkpointFile in FromDirectoryIndex(directory, searchOption))
+        foreach (var checkpointFile in FromDirectoryIndex(parentFolder, directory, searchOption))
         {
             current++;
             progress.Report(new ProgressReport(current, "Indexing", checkpointFile.FileName));

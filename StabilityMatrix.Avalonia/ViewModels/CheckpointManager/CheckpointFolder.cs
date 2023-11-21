@@ -575,7 +575,7 @@ public partial class CheckpointFolder : ViewModelBase
             return Enumerable.Empty<CheckpointFile>();
         }
 
-        return CheckpointFile.FromDirectoryIndex(DirectoryPath);
+        return CheckpointFile.FromDirectoryIndex(this, DirectoryPath);
     }
 
     /// <summary>

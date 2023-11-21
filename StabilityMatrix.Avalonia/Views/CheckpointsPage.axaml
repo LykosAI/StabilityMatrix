@@ -44,7 +44,7 @@
         <!-- Checkpoint File Card -->
         <DataTemplate DataType="{x:Type checkpointManager:CheckpointFile}" x:Key="CheckpointFileDataTemplate">
             <Border
-                DragDrop.AllowDrop="False"
+                DragDrop.AllowDrop="True"
                 Background="Transparent"
                 BorderThickness="2"
                 Margin="4">
@@ -400,10 +400,10 @@
             HorizontalAlignment="Right"
             Margin="16,0"
             Orientation="Horizontal">
-            <TextBox Margin="16, 16"
+            <TextBox Margin="8, 16"
                      Watermark="{x:Static lang:Resources.Action_Search}"
                      Height="16"
-                     MinWidth="150"
+                     MinWidth="220"
                      KeyDown="InputElement_OnKeyDown"
                      Text="{Binding SearchFilter, Mode=TwoWay}">
                 <TextBox.InnerRightContent>
@@ -459,6 +459,7 @@
             Grid.Column="0"
             Grid.ColumnSpan="2"
             Grid.Row="1"
+            x:Name="MainScrollViewer"
             HorizontalScrollBarVisibility="Disabled"
             VerticalScrollBarVisibility="Auto">
             <Grid>

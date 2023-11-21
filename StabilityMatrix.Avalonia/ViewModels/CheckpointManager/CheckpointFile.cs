@@ -136,6 +136,8 @@ public partial class CheckpointFile : ViewModelBase
         RemoveFromParentList();
     }
 
+    public void OnMoved() => RemoveFromParentList();
+
     [RelayCommand]
     private async Task RenameAsync()
     {

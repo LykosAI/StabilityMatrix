@@ -2,14 +2,12 @@
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.VisualTree;
 using DynamicData.Binding;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Helper;
 using CheckpointFolder = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFolder;
 
 namespace StabilityMatrix.Avalonia.Views;
@@ -94,7 +92,16 @@ public partial class CheckpointsPage : UserControlBase
         var sourceDataContext = (e.Source as Control)?.DataContext;
         if (sourceDataContext is CheckpointFolder folder)
         {
+            folder.IsExpanded = true;
             folder.IsCurrentDragTarget = true;
+        }
+    }
+
+    private void InputElement_OnKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape && DataContext is CheckpointsPageViewModel vm)
+        {
+            vm.ClearSearchQuery();
         }
     }
 }

@@ -278,8 +278,17 @@
                 <TextBox
                     HorizontalAlignment="Stretch"
                     Margin="8,0,0,0"
+                    KeyDown="InputElement_OnKeyDown"
                     Watermark="{x:Static lang:Resources.Label_ModelSearchWatermark}"
-                    Text="{Binding SearchQuery, Mode=TwoWay}" />
+                    Text="{Binding SearchQuery, Mode=TwoWay}">
+                    <TextBox.InnerRightContent>
+                        <Button Classes="transparent-full"
+                                IsVisible="{Binding SearchQuery.Length}"
+                                Command="{Binding ClearSearchQuery}">
+                            <ui:SymbolIcon Symbol="Cancel" />
+                        </Button>
+                    </TextBox.InnerRightContent>
+                </TextBox>
 
                 <Button
                     Classes="accent"
@@ -348,7 +357,8 @@
         </StackPanel>
 
         <ScrollViewer Grid.Row="1"
-                      Margin="8,0,8,0">
+                      Margin="8,0,8,0"
+                      ScrollChanged="ScrollViewer_OnScrollChanged">
             <ItemsRepeater ItemTemplate="{StaticResource CivitModelTemplate}"
                            ItemsSource="{Binding ModelCards}">
                 <ItemsRepeater.Layout>

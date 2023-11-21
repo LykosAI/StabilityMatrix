@@ -97,12 +97,21 @@
                 VerticalAlignment="Center"
                 VerticalContentAlignment="Center"
                 Text="{Binding SearchQuery, Mode=TwoWay}"
-                Watermark="{x:Static lang:Resources.Action_Search}">
+                Watermark="{x:Static lang:Resources.Action_Search}"
+                KeyDown="InputElement_OnKeyDown">
                 <TextBox.InnerRightContent>
-                    <ui:SymbolIcon
-                        Margin="0,0,10,0"
-                        FontSize="16"
-                        Symbol="Find" />
+                    <Grid>
+                        <Button Classes="transparent-full"
+                                IsVisible="{Binding SearchQuery.Length}"
+                                Command="{Binding ClearSearchQuery}">
+                                <ui:SymbolIcon Symbol="Cancel" />
+                            </Button>
+                        <ui:SymbolIcon
+                            IsVisible="{Binding !SearchQuery.Length}"
+                            Margin="0,0,10,0"
+                            FontSize="16"
+                            Symbol="Find" />
+                    </Grid>
                 </TextBox.InnerRightContent>
             </TextBox>
 

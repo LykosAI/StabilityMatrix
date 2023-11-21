@@ -48,6 +48,11 @@
                 Background="Transparent"
                 BorderThickness="2"
                 Margin="4">
+                <Interaction.Behaviors>
+                    <BehaviorCollection>
+                        <ContextDragBehavior HorizontalDragThreshold="6" VerticalDragThreshold="6"/>
+                    </BehaviorCollection>
+                </Interaction.Behaviors>
                 
                 <controls:Card MaxWidth="330" Width="330"
                                CornerRadius="12">
@@ -215,6 +220,7 @@
         <!-- Checkpoint Folder Expander -->
         <DataTemplate DataType="{x:Type checkpointManager:CheckpointFolder}" x:Key="CheckpointFolderGridDataTemplate">
             <Expander
+                DragDrop.AllowDrop="True"
                 CornerRadius="8"
                 IsExpanded="{Binding IsExpanded}"
                 Margin="4"
@@ -268,6 +274,7 @@
                           Background="Transparent"
                           DragDrop.AllowDrop="True">
                         <ItemsRepeater
+                            Name="FilesRepeater"
                             ItemTemplate="{StaticResource CheckpointFileDataTemplate}"
                             ItemsSource="{Binding DisplayedCheckpointFiles}">
                             <ItemsRepeater.Layout>
@@ -368,7 +375,8 @@
         
     </controls:UserControlBase.Resources>
     
-    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,*" Margin="4, 0">
+    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,*" Margin="4, 0"
+          x:Name="ParentGrid">
         <!--  Top settings bar  -->
         <StackPanel Grid.Column="0" Grid.Row="0">
             <ToggleSwitch
@@ -396,7 +404,23 @@
                      Watermark="{x:Static lang:Resources.Action_Search}"
                      Height="16"
                      MinWidth="150"
-                     Text="{Binding SearchFilter, Mode=TwoWay}"/>
+                     KeyDown="InputElement_OnKeyDown"
+                     Text="{Binding SearchFilter, Mode=TwoWay}">
+                <TextBox.InnerRightContent>
+                    <Grid>
+                        <Button Classes="transparent-full"
+                                IsVisible="{Binding SearchFilter.Length}"
+                                Command="{Binding ClearSearchQuery}">
+                            <ui:SymbolIcon Symbol="Cancel" />
+                        </Button>
+                        <ui:SymbolIcon
+                            IsVisible="{Binding !SearchFilter.Length}"
+                            Margin="0,0,10,0"
+                            FontSize="16"
+                            Symbol="Find" />
+                    </Grid>
+                </TextBox.InnerRightContent>
+            </TextBox>
             <controls:ProgressRing
                 Width="16"
                 Height="16"

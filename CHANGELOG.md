@@ -7,13 +7,20 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.7.0-dev.2
 ### Added
-- Outputs Page 
-  - Added Refresh button to update gallery from file system changes
-### Changed
-- Outputs Page
-  - Updated button and menu layout 
+#### General
+- Added an X button to all search fields to instantly clear them (Esc key also works) 
+#### Outputs Page 
+- Added Refresh button to update gallery from file system changes
+#### Checkpoints Page
+- Added the ability to drag & drop checkpoints between different folders
+## Changed
+#### Outputs Page
+- Updated button and menu layout
+#### Packages Page
+- Rearranged Add Package dialog slightly to accommodate longer package list
 ### Fixed
 - Fixed InvalidOperation errors when signing into accounts shortly after signing out, while the previous account update is still running
+- Fixed Outputs page reverting back to Shared Output Folder every time the page is reloaded
 
 ## v2.7.0-dev.1
 ### Added

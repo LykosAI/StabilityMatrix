@@ -130,7 +130,6 @@ public class SettingsManager : ISettingsManager
         }
         using var transaction = BeginTransaction();
         func(transaction.Settings);
-        transaction.Dispose();
     }
 
     /// <inheritdoc />

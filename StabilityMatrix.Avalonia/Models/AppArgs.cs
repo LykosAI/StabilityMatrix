@@ -77,4 +77,11 @@ public class AppArgs
     /// </summary>
     [Option("uri", Hidden = true)]
     public string? Uri { get; set; }
+
+    /// <summary>
+    /// If provided, the app will wait for the process with this PID to exit
+    /// before starting up. Mainly used by the updater.
+    /// </summary>
+    [Option("wait-for-exit-pid", Hidden = true)]
+    public int? WaitForExitPid { get; set; }
 }

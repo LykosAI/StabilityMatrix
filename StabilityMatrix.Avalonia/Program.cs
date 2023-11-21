@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -13,7 +12,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
-using FluentAvalonia.Core;
+using CommandLine;
 using NLog;
 using Polly.Contrib.WaitAndRetry;
 using Projektanker.Icons.Avalonia;
@@ -29,14 +28,12 @@ using StabilityMatrix.Core.Updater;
 
 namespace StabilityMatrix.Avalonia;
 
-[SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
-[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-public class Program
+public static class Program
 {
     private static Logger? _logger;
     private static Logger Logger => _logger ??= LogManager.GetCurrentClassLogger();
 
-    public static AppArgs Args { get; } = new();
+    public static AppArgs Args { get; private set; } = new();
 
     public static bool IsDebugBuild { get; private set; }
 
@@ -54,29 +51,45 @@ public class Program
     {
         StartupTimer.Start();
 
-        Args.DebugMode = args.Contains("--debug");
-        Args.DebugExceptionDialog = args.Contains("--debug-exception-dialog");
-        Args.DebugSentry = args.Contains("--debug-sentry");
-        Args.DebugOneClickInstall = args.Contains("--debug-one-click-install");
-        Args.NoSentry = args.Contains("--no-sentry");
-        Args.NoWindowChromeEffects = args.Contains("--no-window-chrome-effects");
-        Args.ResetWindowPosition = args.Contains("--reset-window-position");
-        Args.DisableGpuRendering = args.Contains("--disable-gpu");
+        SetDebugBuild();
 
-        // Launched for custom URI scheme, send to main process
-        if (args.Contains("--uri"))
-        {
-            var uriArg = args.ElementAtOrDefault(args.IndexOf("--uri") + 1);
-            if (
-                Uri.TryCreate(uriArg, UriKind.Absolute, out var uri)
-                && string.Equals(uri.Scheme, UriHandler.Scheme, StringComparison.OrdinalIgnoreCase)
-            )
+        var parseResult = Parser.Default
+            .ParseArguments<AppArgs>(args)
+            .WithNotParsed(errors =>
             {
-                UriHandler.SendAndExit(uri);
+                foreach (var error in errors)
+                {
+                    Console.Error.WriteLine(error.ToString());
+                }
+            });
+
+        Args = parseResult.Value;
+
+        // Launched for custom URI scheme, handle and exit
+        if (Args.Uri is { } uriArg)
+        {
+            try
+            {
+                if (
+                    Uri.TryCreate(uriArg, UriKind.Absolute, out var uri)
+                    && string.Equals(
+                        uri.Scheme,
+                        UriHandler.Scheme,
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
+                {
+                    UriHandler.SendAndExit(uri);
+                }
+
+                Environment.Exit(0);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine($"Uri handler encountered an error: {e.Message}");
+                Environment.Exit(1);
             }
         }
-
-        SetDebugBuild();
 
         HandleUpdateReplacement();
 

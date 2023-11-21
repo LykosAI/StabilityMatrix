@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using Semver;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -27,6 +28,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [Singleton]
 public partial class UpdateViewModel : ContentDialogViewModelBase
 {
+    private readonly ILogger<UpdateViewModel> logger;
     private readonly ISettingsManager settingsManager;
     private readonly IHttpClientFactory httpClientFactory;
     private readonly IUpdateHelper updateHelper;
@@ -66,11 +68,13 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
     private static partial Regex RegexChangelog();
 
     public UpdateViewModel(
+        ILogger<UpdateViewModel> logger,
         ISettingsManager settingsManager,
         IHttpClientFactory httpClientFactory,
         IUpdateHelper updateHelper
     )
     {
+        this.logger = logger;
         this.settingsManager = settingsManager;
         this.httpClientFactory = httpClientFactory;
         this.updateHelper = updateHelper;
@@ -127,14 +131,29 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
             Resources.Label_StabilityMatrix
         );
 
-        await updateHelper.DownloadUpdate(
-            UpdateInfo,
-            new Progress<ProgressReport>(report =>
-            {
-                ProgressValue = Convert.ToInt32(report.Percentage);
-                IsProgressIndeterminate = report.IsIndeterminate;
-            })
-        );
+        try
+        {
+            await updateHelper.DownloadUpdate(
+                UpdateInfo,
+                new Progress<ProgressReport>(report =>
+                {
+                    ProgressValue = Convert.ToInt32(report.Percentage);
+                    IsProgressIndeterminate = report.IsIndeterminate;
+                })
+            );
+        }
+        catch (Exception e)
+        {
+            logger.LogWarning(e, "Failed to download update");
+
+            var dialog = DialogHelper.CreateMarkdownDialog(
+                $"{e.GetType().Name}: {e.Message}",
+                Resources.Label_UnexpectedErrorOccurred
+            );
+
+            await dialog.ShowAsync();
+            return;
+        }
 
         // On unix, we need to set the executable bit
         if (Compat.IsUnix)
@@ -151,14 +170,23 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
             );
         }
 
+        UpdateText = "Getting a few things ready...";
+        await using (new MinimumDelay(500, 1000))
+        {
+            Process.Start(
+                UpdateHelper.ExecutablePath,
+                $"--wait-for-exit-pid {Environment.ProcessId}"
+            );
+        }
+
         UpdateText = "Update complete. Restarting Stability Matrix in 3 seconds...";
         await Task.Delay(1000);
         UpdateText = "Update complete. Restarting Stability Matrix in 2 seconds...";
         await Task.Delay(1000);
         UpdateText = "Update complete. Restarting Stability Matrix in 1 second...";
         await Task.Delay(1000);
+        UpdateText = "Update complete. Restarting Stability Matrix...";
 
-        Process.Start(UpdateHelper.ExecutablePath);
         App.Shutdown();
     }
 

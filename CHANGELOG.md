@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed InvalidOperation errors when signing into accounts shortly after signing out, while the previous account update is still running
 - Fixed Outputs page reverting back to Shared Output Folder every time the page is reloaded
+- Potentially fixed updates sometimes clearing settings or launching in the wrong directory
 
 ## v2.7.0-dev.1
 ### Added

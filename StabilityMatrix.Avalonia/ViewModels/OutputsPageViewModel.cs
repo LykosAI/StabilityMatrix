@@ -297,6 +297,11 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     public Task OpenImage(string imagePath) => ProcessRunner.OpenFileBrowser(imagePath);
 
+    public void Refresh()
+    {
+        Dispatcher.UIThread.Post(OnLoaded);
+    }
+
     public async Task DeleteImage(OutputImageViewModel? item)
     {
         if (item is null)

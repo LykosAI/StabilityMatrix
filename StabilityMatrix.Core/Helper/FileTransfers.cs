@@ -190,35 +190,45 @@ public static class FileTransfers
             var sourceFile = sourceDir.JoinFile(file.Name);
             var destinationFile = destinationDir.JoinFile(file.Name);
 
-            if (destinationFile.Exists)
+            await MoveFileAsync(sourceFile, destinationFile, overwrite, overwriteIfHashMatches)
+                .ConfigureAwait(false);
+        }
+    }
+
+    public static async Task MoveFileAsync(
+        FilePath sourceFile,
+        FilePath destinationFile,
+        bool overwrite = false,
+        bool overwriteIfHashMatches = false
+    )
+    {
+        if (destinationFile.Exists)
+        {
+            if (overwriteIfHashMatches)
             {
-                if (overwriteIfHashMatches)
+                // Check if files hashes are the same
+                var sourceHash = await FileHash.GetBlake3Async(sourceFile).ConfigureAwait(false);
+                var destinationHash = await FileHash
+                    .GetBlake3Async(destinationFile)
+                    .ConfigureAwait(false);
+                // For same hash, just delete original file
+                if (sourceHash == destinationHash)
                 {
-                    // Check if files hashes are the same
-                    var sourceHash = await FileHash
-                        .GetBlake3Async(sourceFile)
-                        .ConfigureAwait(false);
-                    var destinationHash = await FileHash
-                        .GetBlake3Async(destinationFile)
-                        .ConfigureAwait(false);
-                    // For same hash, just delete original file
-                    if (sourceHash == destinationHash)
-                    {
-                        Logger.Info(
-                            $"Deleted source file {file.Name} as it already exists in {destinationDir}."
-                                + $" Matching Blake3 hash: {sourceHash}"
-                        );
-                        sourceFile.Delete();
-                        continue;
-                    }
-                }
-                else if (!overwrite)
-                {
-                    throw new FileTransferExistsException(sourceFile, destinationFile);
+                    Logger.Info(
+                        $"Deleted source file {sourceFile.Name} as it already exists in {Path.GetDirectoryName(destinationFile)}."
+                            + $" Matching Blake3 hash: {sourceHash}"
+                    );
+                    sourceFile.Delete();
+                    return;
                 }
             }
-            // Move the file
-            await sourceFile.MoveToAsync(destinationFile).ConfigureAwait(false);
+            else if (!overwrite)
+            {
+                throw new FileTransferExistsException(sourceFile, destinationFile);
+            }
         }
+
+        // Move the file
+        await sourceFile.MoveToAsync(destinationFile).ConfigureAwait(false);
     }
 }

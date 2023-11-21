@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Linq;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.VisualTree;
 using DynamicData.Binding;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using CheckpointFolder = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFolder;
 
 namespace StabilityMatrix.Avalonia.Views;
@@ -61,12 +62,36 @@ public partial class CheckpointsPage : UserControlBase
         }
     }
 
-    private static async void OnDrop(object? sender, DragEventArgs e)
+    private async void OnDrop(object? sender, DragEventArgs e)
     {
         var sourceDataContext = (e.Source as Control)?.DataContext;
-        if (sourceDataContext is CheckpointFolder folder)
+        switch (sourceDataContext)
         {
-            await folder.OnDrop(e);
+            case CheckpointFolder folder:
+            {
+                if (e.Data.Get("Context") is not CheckpointFile file)
+                    return;
+
+                var filePath = new FilePath(file.FilePath);
+                if (filePath.Directory?.FullPath != folder.DirectoryPath)
+                {
+                    await folder.OnDrop(e);
+                }
+                break;
+            }
+            case CheckpointFile file:
+            {
+                if (e.Data.Get("Context") is not CheckpointFile dragFile)
+                    return;
+
+                var parentFolder = file.ParentFolder;
+                var dragFilePath = new FilePath(dragFile.FilePath);
+                if (dragFilePath.Directory?.FullPath != parentFolder.DirectoryPath)
+                {
+                    await parentFolder.OnDrop(e);
+                }
+                break;
+            }
         }
     }
 
@@ -79,7 +104,7 @@ public partial class CheckpointsPage : UserControlBase
         }
     }
 
-    private static void OnDragEnter(object? sender, DragEventArgs e)
+    private void OnDragEnter(object? sender, DragEventArgs e)
     {
         // Only allow Copy or Link as Drop Operations.
         e.DragEffects &= DragDropEffects.Copy | DragDropEffects.Link;
@@ -92,9 +117,37 @@ public partial class CheckpointsPage : UserControlBase
 
         // Forward to view model
         var sourceDataContext = (e.Source as Control)?.DataContext;
-        if (sourceDataContext is CheckpointFolder folder)
+        switch (sourceDataContext)
         {
-            folder.IsCurrentDragTarget = true;
+            case CheckpointFolder folder:
+            {
+                folder.IsExpanded = true;
+                if (e.Data.Get("Context") is not CheckpointFile file)
+                    return;
+
+                var filePath = new FilePath(file.FilePath);
+                folder.IsCurrentDragTarget = filePath.Directory?.FullPath != folder.DirectoryPath;
+                break;
+            }
+            case CheckpointFile file:
+            {
+                if (e.Data.Get("Context") is not CheckpointFile dragFile)
+                    return;
+
+                var parentFolder = file.ParentFolder;
+                var dragFilePath = new FilePath(dragFile.FilePath);
+                parentFolder.IsCurrentDragTarget =
+                    dragFilePath.Directory?.FullPath != parentFolder.DirectoryPath;
+                break;
+            }
+        }
+    }
+
+    private void InputElement_OnKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape && DataContext is CheckpointsPageViewModel vm)
+        {
+            vm.ClearSearchQuery();
         }
     }
 }

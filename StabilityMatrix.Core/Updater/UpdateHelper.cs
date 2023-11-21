@@ -150,7 +150,11 @@ public class UpdateHelper : IUpdateHelper
             foreach (
                 var channel in Enum.GetValues(typeof(UpdateChannel))
                     .Cast<UpdateChannel>()
-                    .Where(c => c > UpdateChannel.Unknown)
+                    .Where(
+                        c =>
+                            c > UpdateChannel.Unknown
+                            && c <= settingsManager.Settings.PreferredUpdateChannel
+                    )
             )
             {
                 if (
@@ -202,6 +206,12 @@ public class UpdateHelper : IUpdateHelper
                 // Same version available, check if we both have commit hash metadata
                 var updateHash = update.Version.Metadata;
                 var appHash = Compat.AppVersion.Metadata;
+
+                // Trim both to the lower length, to a minimum of 7 characters
+                var minLength = Math.Min(7, Math.Min(updateHash.Length, appHash.Length));
+                updateHash = updateHash[..minLength];
+                appHash = appHash[..minLength];
+
                 // If different, we can update
                 if (updateHash != appHash)
                 {

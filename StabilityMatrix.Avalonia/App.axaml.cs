@@ -258,6 +258,8 @@ public sealed class App : Application
 
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
 
+        settingsManager.LibraryDirOverride = Program.Args.DataDirectoryOverride;
+
         if (settingsManager.TryFindLibrary())
         {
             Cultures.SetSupportedCultureOrDefault(settingsManager.Settings.Language);

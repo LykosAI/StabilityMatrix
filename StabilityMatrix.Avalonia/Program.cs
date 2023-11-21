@@ -65,6 +65,11 @@ public static class Program
 
         Args = parseResult.Value;
 
+        if (Args.HomeDirectoryOverride is { } homeDir)
+        {
+            Compat.SetAppDataHome(homeDir);
+        }
+
         // Launched for custom URI scheme, handle and exit
         if (Args.Uri is { } uriArg)
         {

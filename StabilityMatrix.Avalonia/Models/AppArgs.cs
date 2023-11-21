@@ -58,18 +58,18 @@ public class AppArgs
     public bool DisableGpuRendering { get; set; }
 
     /// <summary>
-    /// Override global app data directory
+    /// Override global app home directory
     /// Defaults to (%APPDATA%|~/.config)/StabilityMatrix
     /// </summary>
-    [Option("global-dir", HelpText = "Override global app data directory")]
-    public string? GlobalDirectory { get; set; }
+    [Option("home-dir", HelpText = "Override global app home directory")]
+    public string? HomeDirectoryOverride { get; set; }
 
     /// <summary>
     /// Override data directory
     /// This takes precedence over relative portable directory and global directory
     /// </summary>
     [Option("data-dir", HelpText = "Override data directory")]
-    public string? DataDirectory { get; set; }
+    public string? DataDirectoryOverride { get; set; }
 
     /// <summary>
     /// Custom Uri protocol handler

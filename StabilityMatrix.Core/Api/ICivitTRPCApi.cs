@@ -45,4 +45,11 @@ public interface ICivitTRPCApi
         [Authorize] string bearerToken,
         CancellationToken cancellationToken = default
     );
+
+    [Post("/api/trpc/user.toggleFavoriteModel")]
+    Task<HttpResponseMessage> ToggleFavoriteModel(
+        [Body] CivitUserToggleFavoriteModelRequest request,
+        [Authorize] string bearerToken,
+        CancellationToken cancellationToken = default
+    );
 }

@@ -204,13 +204,29 @@ public static class ProcessRunner
 
         await process.WaitForExitAsync().ConfigureAwait(false);
 
+        string? processName = null;
+        TimeSpan elapsed = default;
+
+        // Accessing these properties may throw an exception if the process has already exited
+        try
+        {
+            processName = process.ProcessName;
+        }
+        catch (SystemException) { }
+
+        try
+        {
+            elapsed = process.ExitTime - process.StartTime;
+        }
+        catch (SystemException) { }
+
         return new ProcessResult
         {
             ExitCode = process.ExitCode,
             StandardOutput = stdout,
             StandardError = stderr,
-            ProcessName = process.MachineName,
-            Elapsed = process.ExitTime - process.StartTime
+            ProcessName = processName,
+            Elapsed = elapsed
         };
     }
 

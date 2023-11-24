@@ -2040,6 +2040,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Additional folders such as IPAdapters and TextualInversions (embeddings) can be enabled here.
+        /// </summary>
+        public static string TeachingTip_MoreCheckpointCategories {
+            get {
+                return ResourceManager.GetString("TeachingTip_MoreCheckpointCategories", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The app will relaunch after updating.
         /// </summary>
         public static string Text_AppWillRelaunchAfterUpdate {

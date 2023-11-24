@@ -90,8 +90,8 @@ public partial class CheckpointFolder : ViewModelBase
 
     public string TitleWithFilesCount =>
         CheckpointFiles.Any() || SubFolders.Any(f => f.CheckpointFiles.Any())
-            ? $"{Title} ({CheckpointFiles.Count + SubFolders.Sum(folder => folder.CheckpointFiles.Count)})"
-            : Title;
+            ? $"{FolderType.GetDescription() ?? FolderType.GetStringValue()} ({CheckpointFiles.Count + SubFolders.Sum(folder => folder.CheckpointFiles.Count)})"
+            : FolderType.GetDescription() ?? FolderType.GetStringValue();
 
     public ProgressViewModel Progress { get; } = new();
 

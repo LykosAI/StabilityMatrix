@@ -810,4 +810,7 @@
   <data name="Label_TriggerWords" xml:space="preserve">
     <value>Trigger words:</value>
   </data>
+  <data name="TeachingTip_MoreCheckpointCategories" xml:space="preserve">
+    <value>Additional folders such as IPAdapters and TextualInversions (embeddings) can be enabled here</value>
+  </data>
 </root>

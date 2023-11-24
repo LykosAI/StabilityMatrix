@@ -406,7 +406,9 @@
             Grid.Row="1"
             Margin="8,0,8,0"
             ScrollChanged="ScrollViewer_OnScrollChanged">
-            <ItemsRepeater ItemTemplate="{StaticResource CivitModelTemplate}" ItemsSource="{Binding ModelCards}">
+            <ItemsRepeater ItemTemplate="{StaticResource CivitModelTemplate}"
+                           HorizontalAlignment="Center"
+                           ItemsSource="{Binding ModelCards}">
                 <ItemsRepeater.Layout>
                     <UniformGridLayout Orientation="Horizontal" />
                 </ItemsRepeater.Layout>

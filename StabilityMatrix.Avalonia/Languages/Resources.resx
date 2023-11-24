@@ -804,4 +804,10 @@
   <data name="TextTemplate_LastChecked" xml:space="preserve">
     <value>Last checked: {0}</value>
   </data>
+  <data name="Action_CopyTriggerWords" xml:space="preserve">
+    <value>Copy Trigger Words</value>
+  </data>
+  <data name="Label_TriggerWords" xml:space="preserve">
+    <value>Trigger words:</value>
+  </data>
 </root>

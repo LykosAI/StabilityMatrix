@@ -60,6 +60,9 @@ public partial class CheckpointFile : ViewModelBase
 
     public string FileName => Path.GetFileName(FilePath);
 
+    public bool CanShowTriggerWords =>
+        ConnectedModel != null && !string.IsNullOrWhiteSpace(ConnectedModel.TrainedWordsString);
+
     public ObservableCollection<string> Badges { get; set; } = new();
 
     public static readonly string[] SupportedCheckpointExtensions =
@@ -213,6 +216,19 @@ public partial class CheckpointFile : ViewModelBase
         if (ConnectedModel?.ModelId == null)
             return;
         ProcessRunner.OpenUrl($"https://civitai.com/models/{ConnectedModel.ModelId}");
+    }
+
+    [RelayCommand]
+    private Task CopyTriggerWords()
+    {
+        if (ConnectedModel == null)
+            return Task.CompletedTask;
+
+        var words = ConnectedModel.TrainedWordsString;
+        if (string.IsNullOrWhiteSpace(words))
+            return Task.CompletedTask;
+
+        return App.Clipboard.SetTextAsync(words);
     }
 
     /// <summary>

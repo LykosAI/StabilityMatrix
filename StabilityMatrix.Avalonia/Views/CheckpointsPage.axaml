@@ -1,20 +1,21 @@
 ﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
-             xmlns:ui="using:FluentAvalonia.UI.Controls"
-             xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-             xmlns:system="clr-namespace:System;assembly=System.Runtime"
-             xmlns:checkpointManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointManager"
-             xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-             d:DataContext="{x:Static mocks:DesignData.CheckpointsPageViewModel}"
-             x:CompileBindings="True"
-             x:DataType="vm:CheckpointsPageViewModel"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="StabilityMatrix.Avalonia.Views.CheckpointsPage">
-    
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+                          xmlns:ui="using:FluentAvalonia.UI.Controls"
+                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
+                          xmlns:checkpointManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointManager"
+                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+                          xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+                          d:DataContext="{x:Static mocks:DesignData.CheckpointsPageViewModel}"
+                          x:CompileBindings="True"
+                          x:DataType="vm:CheckpointsPageViewModel"
+                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="650"
+                          x:Class="StabilityMatrix.Avalonia.Views.CheckpointsPage">
+
     <controls:UserControlBase.Resources>
         <!--Direction="0"
             ShadowDepth="0"-->
@@ -23,7 +24,7 @@
             Color="#FF000000"
             Opacity="0.2"
             x:Key="TextDropShadowEffect" />
-        
+
         <!--  Template for a single badge  -->
         <DataTemplate DataType="{x:Type system:String}" x:Key="BadgeTemplate">
             <controls:Card
@@ -40,7 +41,7 @@
                     VerticalAlignment="Center" />
             </controls:Card>
         </DataTemplate>
-        
+
         <!-- Checkpoint File Card -->
         <DataTemplate DataType="{x:Type checkpointManager:CheckpointFile}" x:Key="CheckpointFileDataTemplate">
             <Border
@@ -50,28 +51,33 @@
                 Margin="4">
                 <Interaction.Behaviors>
                     <BehaviorCollection>
-                        <ContextDragBehavior HorizontalDragThreshold="6" VerticalDragThreshold="6"/>
+                        <ContextDragBehavior HorizontalDragThreshold="6" VerticalDragThreshold="6" />
                     </BehaviorCollection>
                 </Interaction.Behaviors>
-                
+
                 <controls:Card MaxWidth="330" Width="330"
                                CornerRadius="12">
                     <!-- Right click menu for a checkpoint file -->
                     <controls:Card.ContextFlyout>
                         <ui:FAMenuFlyout>
-                            <ui:MenuFlyoutItem Command="{Binding RenameCommand}" 
+                            <ui:MenuFlyoutItem Command="{Binding RenameCommand}"
                                                Text="{x:Static lang:Resources.Action_Rename}" IconSource="Rename" />
-                            <ui:MenuFlyoutItem Command="{Binding DeleteCommand}" 
+                            <ui:MenuFlyoutItem Command="{Binding DeleteCommand}"
                                                Text="{x:Static lang:Resources.Action_Delete}" IconSource="Delete" />
-                            <ui:MenuFlyoutItem Command="{Binding OpenOnCivitAiCommand}" 
+                            <ui:MenuFlyoutItem Command="{Binding OpenOnCivitAiCommand}"
                                                Text="{x:Static lang:Resources.Action_OpenOnCivitAi}" IconSource="Link"
-                                               IsVisible="{Binding IsConnectedModel}"/>
+                                               IsVisible="{Binding IsConnectedModel}" />
+                            <ui:MenuFlyoutItem Command="{Binding CopyTriggerWordsCommand}"
+                                               IsVisible="{Binding CanShowTriggerWords}"
+                                               Text="{x:Static lang:Resources.Action_CopyTriggerWords}"
+                                               IconSource="Copy" />
                         </ui:FAMenuFlyout>
                     </controls:Card.ContextFlyout>
                     <Grid>
                         <!--  Main contents, hidden when IsLoading is true  -->
                         <StackPanel MinHeight="70">
-                            <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto,*,Auto" IsVisible="{Binding !IsLoading}">
+                            <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto,*,Auto,Auto"
+                                  IsVisible="{Binding !IsLoading}">
                                 <StackPanel
                                     Grid.ColumnSpan="2"
                                     HorizontalAlignment="Left"
@@ -106,6 +112,17 @@
                                                 Source="{Binding PreviewImagePath}"
                                                 Stretch="Uniform"
                                                 IsVisible="{Binding IsConnectedModel}" />
+                                            <TextBlock
+                                                FontSize="13"
+                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                HorizontalAlignment="Left"
+                                                Margin="0,0,0,4"
+                                                TextWrapping="WrapWithOverflow"
+                                                IsVisible="{Binding CanShowTriggerWords}">
+                                                <Run Text="{x:Static lang:Resources.Label_TriggerWords}" />
+                                                <Run
+                                                    Text="{Binding ConnectedModel.TrainedWordsString, FallbackValue=''}" />
+                                            </TextBlock>
                                         </StackPanel>
                                     </ToolTip.Tip>
                                     <TextBlock
@@ -136,7 +153,7 @@
                                                               Height="300"
                                                               Width="300"
                                                               IsVisible="{Binding $parent[ItemsControl].((vm:CheckpointsPageViewModel)DataContext).ShowConnectedModelImages}" />
-                                
+
                                 <Grid Grid.Column="1" Grid.Row="0">
                                     <Button
                                         Background="Transparent"
@@ -179,7 +196,7 @@
                                     Grid.Column="0"
                                     Grid.Row="2"
                                     IsEnabled="True"
-                                    Margin="4,4"
+                                    Margin="0,4"
                                     Text="{Binding FileName}"
                                     TextTrimming="CharacterEllipsis"
                                     ToolTip.Tip="{Binding FileName}"
@@ -191,14 +208,28 @@
                                     ItemTemplate="{StaticResource BadgeTemplate}"
                                     ItemsSource="{Binding Badges}"
                                     VerticalAlignment="Bottom">
-                                    
-                                        <ItemsRepeater.Layout>
-                                            <UniformGridLayout />
-                                        </ItemsRepeater.Layout>
+
+                                    <ItemsRepeater.Layout>
+                                        <UniformGridLayout />
+                                    </ItemsRepeater.Layout>
                                 </ItemsRepeater>
+                                <TextBlock Grid.Row="3" Grid.Column="0"
+                                           Grid.ColumnSpan="2"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                           HorizontalAlignment="Left"
+                                           VerticalAlignment="Bottom"
+                                           Margin="0,4,0,0"
+                                           TextTrimming="CharacterEllipsis"
+                                           TextWrapping="NoWrap"
+                                           ToolTip.Tip="{Binding ConnectedModel.TrainedWordsString, FallbackValue=''}"
+                                           IsVisible="{Binding CanShowTriggerWords}">
+                                    <Run Text="{x:Static lang:Resources.Label_TriggerWords}" />
+                                    <Run Text="{Binding ConnectedModel.TrainedWordsString, FallbackValue=''}" />
+                                </TextBlock>
                             </Grid>
                         </StackPanel>
-                        
+
                         <!--  Progress ring  -->
                         <controls:ProgressRing
                             Grid.Row="0"
@@ -216,7 +247,7 @@
                 </controls:Card>
             </Border>
         </DataTemplate>
-        
+
         <!-- Checkpoint Folder Expander -->
         <DataTemplate DataType="{x:Type checkpointManager:CheckpointFolder}" x:Key="CheckpointFolderGridDataTemplate">
             <Expander
@@ -226,51 +257,52 @@
                 Margin="4"
                 Padding="8,8,8,8"
                 IsVisible="{Binding IsCategoryEnabled, FallbackValue=True}">
-                
+
                 <!-- Right click menu for a checkpoint folder -->
                 <Expander.ContextFlyout>
                     <ui:FAMenuFlyout>
                         <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_ShowInExplorer}" IconSource="Open"
                                            Command="{Binding ShowInExplorerCommand}"
-                                           CommandParameter="{Binding DirectoryPath}"/>
+                                           CommandParameter="{Binding DirectoryPath}" />
                         <!-- Only allow deletion of non-root folders (Parent is not null) -->
                         <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_Delete}" IconSource="Delete"
                                            IsEnabled="{Binding ParentFolder, Converter={x:Static ObjectConverters.IsNotNull}}"
                                            IsVisible="{Binding ParentFolder, Converter={x:Static ObjectConverters.IsNotNull}}"
-                                           Command="{Binding DeleteCommand}"/>
-                        <ui:MenuFlyoutSeparator/>
+                                           Command="{Binding DeleteCommand}" />
+                        <ui:MenuFlyoutSeparator />
                         <ui:MenuFlyoutSubItem Text="{x:Static lang:Resources.Action_New}" IconSource="Add">
                             <ui:MenuFlyoutSubItem.Items>
-                                <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Label_Folder}" IconSource="OpenFolder"
-                                                   Command="{Binding CreateSubFolderCommand}"/>
+                                <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Label_Folder}"
+                                                   IconSource="OpenFolder"
+                                                   Command="{Binding CreateSubFolderCommand}" />
                             </ui:MenuFlyoutSubItem.Items>
                         </ui:MenuFlyoutSubItem>
-                        <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Label_FindConnectedMetadata}" 
+                        <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Label_FindConnectedMetadata}"
                                            IconSource="Find"
-                                           Command="{Binding FindConnectedMetadata}"/>
+                                           Command="{Binding FindConnectedMetadata}" />
                     </ui:FAMenuFlyout>
                 </Expander.ContextFlyout>
-                
+
                 <!-- Editable header -->
                 <Expander.Header>
                     <Grid>
-                        <TextBlock Text="{Binding Title}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
                     </Grid>
                 </Expander.Header>
-                
+
                 <Grid RowDefinitions="Auto, Auto">
                     <!-- Subfolders -->
                     <ItemsRepeater Grid.Row="0"
-                        HorizontalAlignment="Stretch"
-                        ItemTemplate="{DynamicResource CheckpointFolderGridDataTemplate}"
-                        ItemsSource="{Binding SubFolders, Mode=OneWay}"
-                        Margin="8,0,8,8" >
+                                   HorizontalAlignment="Stretch"
+                                   ItemTemplate="{DynamicResource CheckpointFolderGridDataTemplate}"
+                                   ItemsSource="{Binding SubFolders, Mode=OneWay}"
+                                   Margin="8,0,8,8">
                         <ItemsRepeater.Layout>
-                            <StackLayout Orientation="Vertical"/>
+                            <StackLayout Orientation="Vertical" />
                         </ItemsRepeater.Layout>
                     </ItemsRepeater>
                     <!-- Files Grid -->
-                    <Grid Grid.Row="1" Name="FilesGrid" 
+                    <Grid Grid.Row="1" Name="FilesGrid"
                           Background="Transparent"
                           DragDrop.AllowDrop="True">
                         <ItemsRepeater
@@ -278,17 +310,17 @@
                             ItemTemplate="{StaticResource CheckpointFileDataTemplate}"
                             ItemsSource="{Binding DisplayedCheckpointFiles}">
                             <ItemsRepeater.Layout>
-                                <UniformGridLayout Orientation="Horizontal" 
-                                                   MinColumnSpacing="4" MinRowSpacing="4"/>
+                                <UniformGridLayout Orientation="Horizontal"
+                                                   MinColumnSpacing="4" MinRowSpacing="4" />
                             </ItemsRepeater.Layout>
-                            <TextBlock Text="Hi"/>
+                            <TextBlock Text="Hi" />
                         </ItemsRepeater>
                         <TextBlock VerticalAlignment="Center"
                                    TextAlignment="Center"
                                    HorizontalAlignment="Center"
                                    Margin="8,8,8,16"
                                    Text="{x:Static lang:Resources.Label_DragAndDropCheckpointsHereToImport}"
-                                   IsVisible="{Binding !CheckpointFiles.Count}"/>
+                                   IsVisible="{Binding !CheckpointFiles.Count}" />
                         <!-- Blurred background for drag and drop -->
                         <Border
                             CornerRadius="4"
@@ -332,7 +364,7 @@
                 </Grid>
             </Expander>
         </DataTemplate>
-        
+
         <!--  Template for dropdown box  -->
         <ControlTemplate x:Key="CategoryDropDownTemplate">
             <Grid>
@@ -370,37 +402,16 @@
                         </Grid>
                     </Grid>
                 </Border>
-            </Grid>  
+            </Grid>
         </ControlTemplate>
-        
+
     </controls:UserControlBase.Resources>
-    
+
     <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,*" Margin="4, 0"
           x:Name="ParentGrid">
         <!--  Top settings bar  -->
-        <StackPanel Grid.Column="0" Grid.Row="0">
-            <ToggleSwitch
-                OffContent="{x:Static lang:Resources.Label_ImportAsConnected}"
-                OnContent="{x:Static lang:Resources.Label_ImportAsConnected}"
-                IsChecked="{Binding IsImportAsConnected}"
-                Margin="24,4,24,-4"
-                ToolTip.Tip="{x:Static lang:Resources.Label_ImportAsConnectedExplanation}" />
-            
-            <ToggleSwitch
-                OffContent="{x:Static lang:Resources.Label_ShowModelImages}"
-                OnContent="{x:Static lang:Resources.Label_ShowModelImages}"
-                IsChecked="{Binding ShowConnectedModelImages}"
-                Margin="24,-4,24,4" />
-        </StackPanel>
-        
-        <StackPanel
-            Grid.Column="1"
-            Grid.Row="0"
-            Spacing="8"
-            HorizontalAlignment="Right"
-            Margin="16,0"
-            Orientation="Horizontal">
-            <TextBox Margin="8, 16"
+        <StackPanel Orientation="Horizontal">
+            <TextBox Margin="16, 16, 8, 16"
                      Watermark="{x:Static lang:Resources.Action_Search}"
                      Height="16"
                      MinWidth="220"
@@ -421,37 +432,80 @@
                     </Grid>
                 </TextBox.InnerRightContent>
             </TextBox>
-            <controls:ProgressRing
-                Width="16"
-                Height="16"
-                BorderThickness="4"
-                IsIndeterminate="True"
-                IsVisible="{Binding IsIndexing}"/>
-            <TextBlock Text="{x:Static lang:Resources.Label_Indexing}" FontSize="11"
-                       VerticalAlignment="Center"
-                       IsVisible="{Binding IsIndexing}"/>
-            <Button 
-                Command="{Binding OpenModelsFolderCommand}">
-                <TextBlock Text="{x:Static lang:Resources.Label_ModelsFolder}"/>
-            </Button>
             <DropDownButton
                 Content="{x:Static lang:Resources.Label_Categories}"
-                Margin="8"
+                Margin="8,0"
                 VerticalAlignment="Center"
                 HorizontalAlignment="Right">
                 <DropDownButton.Flyout>
-                    <ui:FAMenuFlyout 
+                    <ui:FAMenuFlyout
                         ItemsSource="{Binding CheckpointFolders}">
                         <ui:FAMenuFlyout.ItemTemplate>
                             <DataTemplate DataType="{x:Type checkpointManager:CheckpointFolder}">
-                                <ui:ToggleMenuFlyoutItem 
-                                    Text="{Binding TitleWithFilesCount}" 
-                                    IsChecked="{Binding IsCategoryEnabled, Mode=TwoWay}"/>
+                                <ui:ToggleMenuFlyoutItem
+                                    Text="{Binding TitleWithFilesCount}"
+                                    IsChecked="{Binding IsCategoryEnabled, Mode=TwoWay}" />
                             </DataTemplate>
                         </ui:FAMenuFlyout.ItemTemplate>
                     </ui:FAMenuFlyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
+        </StackPanel>
+        <ui:CommandBar
+            Grid.Row="0"
+            Grid.Column="1"
+            x:Name="CommandBar"
+            Margin="8,0,0,0"
+            VerticalAlignment="Center"
+            VerticalContentAlignment="Center"
+            HorizontalAlignment="Right"
+            HorizontalContentAlignment="Right"
+            DefaultLabelPosition="Right">
+            <ui:CommandBar.PrimaryCommands>
+                <ui:CommandBarButton
+                    IconSource="OpenFolder"
+                    VerticalAlignment="Center"
+                    Label="{x:Static lang:Resources.Label_ModelsFolder}"
+                    Command="{Binding OpenModelsFolderCommand}" />
+                <ui:CommandBarButton
+                    IconSource="Refresh"
+                    VerticalAlignment="Center"
+                    Command="{Binding OnLoaded}"
+                    Label="{x:Static lang:Resources.Action_Refresh}" />
+                <ui:CommandBarToggleButton
+                    IconSource="Image"
+                    Label="{x:Static lang:Resources.Label_ShowModelImages}"
+                    IsChecked="{Binding ShowConnectedModelImages, Mode=TwoWay}">
+                </ui:CommandBarToggleButton>
+            </ui:CommandBar.PrimaryCommands>
+
+            <ui:CommandBar.SecondaryCommands>
+                <ui:CommandBarToggleButton
+                    IconSource="Cloud"
+                    Label="{x:Static lang:Resources.Label_ImportAsConnected}"
+                    IsChecked="{Binding IsImportAsConnected, Mode=TwoWay}">
+                </ui:CommandBarToggleButton>
+            </ui:CommandBar.SecondaryCommands>
+        </ui:CommandBar>
+        
+        <StackPanel
+            IsVisible="False"
+            Grid.Column="1"
+            Grid.Row="0"
+            Spacing="8"
+            HorizontalAlignment="Right"
+            Margin="16,0"
+            Orientation="Horizontal">
+            <controls:ProgressRing
+                Width="16"
+                Height="16"
+                BorderThickness="4"
+                IsIndeterminate="True"
+                IsVisible="{Binding IsIndexing}" />
+            <TextBlock Text="{x:Static lang:Resources.Label_Indexing}" FontSize="11"
+                       VerticalAlignment="Center"
+                       IsVisible="{Binding IsIndexing}" />
+
         </StackPanel>
 
         <!--  Main view with model cards  -->
@@ -463,14 +517,14 @@
             HorizontalScrollBarVisibility="Disabled"
             VerticalScrollBarVisibility="Auto">
             <Grid>
-                <controls:ProgressRing 
+                <controls:ProgressRing
                     Width="128"
                     Height="128"
                     BorderThickness="8"
                     IsIndeterminate="True"
                     IsVisible="{Binding IsLoading}"
                     HorizontalAlignment="Center"
-                    VerticalAlignment="Center"/>
+                    VerticalAlignment="Center" />
                 <StackPanel Orientation="Vertical">
                     <ItemsControl
                         HorizontalAlignment="Stretch"
@@ -482,10 +536,10 @@
                 </StackPanel>
             </Grid>
         </ScrollViewer>
-        
+
         <!-- Overlay for draggable file panels -->
-        <Panel Name="OverlayPanel" 
+        <Panel Name="OverlayPanel"
                Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" />
     </Grid>
-    
+
 </controls:UserControlBase>

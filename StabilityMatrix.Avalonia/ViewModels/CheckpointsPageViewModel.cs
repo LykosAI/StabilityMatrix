@@ -124,6 +124,11 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         Logger.Info($"OnLoadedAsync in {sw.ElapsedMilliseconds}ms");
     }
 
+    public void ClearSearchQuery()
+    {
+        SearchFilter = string.Empty;
+    }
+
     // ReSharper disable once UnusedParameterInPartialMethod
     partial void OnSearchFilterChanged(string value)
     {

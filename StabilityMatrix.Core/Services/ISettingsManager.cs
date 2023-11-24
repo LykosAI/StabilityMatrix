@@ -9,6 +9,7 @@ namespace StabilityMatrix.Core.Services;
 public interface ISettingsManager
 {
     bool IsPortableMode { get; }
+    string? LibraryDirOverride { set; }
     string LibraryDir { get; }
     bool IsLibraryDirSet { get; }
     string DatabasePath { get; }

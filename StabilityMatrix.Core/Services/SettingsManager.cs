@@ -22,10 +22,9 @@ public class SettingsManager : ISettingsManager
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly ReaderWriterLockSlim FileLock = new();
 
-    private static readonly string GlobalSettingsPath = Path.Combine(
-        Compat.AppDataHome,
-        "global.json"
-    );
+    private static string GlobalSettingsPath => Path.Combine(Compat.AppDataHome, "global.json");
+
+    public string? LibraryDirOverride { private get; set; }
 
     private readonly string? originalEnvPath = Environment.GetEnvironmentVariable(
         "PATH",
@@ -130,7 +129,6 @@ public class SettingsManager : ISettingsManager
         }
         using var transaction = BeginTransaction();
         func(transaction.Settings);
-        transaction.Dispose();
     }
 
     /// <inheritdoc />
@@ -275,6 +273,16 @@ public class SettingsManager : ISettingsManager
         if (IsLibraryDirSet && !forceReload)
             return true;
 
+        // 0. Check Override
+        if (!string.IsNullOrEmpty(LibraryDirOverride))
+        {
+            Logger.Info("Using library override path: {Path}", LibraryDirOverride);
+            LibraryDir = LibraryDirOverride;
+            SetStaticLibraryPaths();
+            LoadSettings();
+            return true;
+        }
+
         // 1. Check portable mode
         var appDir = Compat.AppCurrentDir;
         IsPortableMode = File.Exists(Path.Combine(appDir, "Data", ".sm-portable"));
@@ -298,7 +306,7 @@ public class SettingsManager : ISettingsManager
 
             if (
                 !string.IsNullOrWhiteSpace(librarySettings?.LibraryPath)
-                && Directory.Exists(librarySettings?.LibraryPath)
+                && Directory.Exists(librarySettings.LibraryPath)
             )
             {
                 LibraryDir = librarySettings.LibraryPath;

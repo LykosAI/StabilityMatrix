@@ -5,9 +5,44 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.7.0-dev.2
+### Added
+#### General
+- Added an X button to all search fields to instantly clear them (Esc key also works) 
+#### Outputs Page 
+- Added Refresh button to update gallery from file system changes
+#### Checkpoints Page
+- Added the ability to drag & drop checkpoints between different folders
+## Changed
+#### Outputs Page
+- Updated button and menu layout
+#### Packages Page
+- Rearranged Add Package dialog slightly to accommodate longer package list
+### Fixed
+- Fixed InvalidOperation errors when signing into accounts shortly after signing out, while the previous account update is still running
+- Fixed Outputs page reverting back to Shared Output Folder every time the page is reloaded
+- Potentially fixed updates sometimes clearing settings or launching in the wrong directory
+
+## v2.7.0-dev.1
+### Added
+- Accounts Settings Subpage
+  - Lykos Account sign-up and login - currently for Patreon OAuth connections but GitHub requests caching and settings sync are planned
+  - Supporters can now connect your Patreon accounts, then head to the Updates page to choose to receive auto-updates from the Dev or Preview channels
+  - CivitAI Account login with API key - enables downloading models from the Browser page that require CivitAI logins, more integrations like liking and commenting are also planned
+- Updates Settings Subpage
+  - Toggle auto-update notifications and manually check for updates
+  - Choose between Stable, Preview, and Dev update channels
+## Changed
+- Model Browser page has been redesigned, featuring more information like rating and download counts
+
 ## v2.6.3
 ### Fixed
 - Fixed InvalidOperationException during prerequisite installs on certain platforms where process name and duration reporting are not supported
+## v2.7.0-dev.3
+## Changed
+#### Model Browser
+- Improved number formatting with K/M suffixes for download and favorite counts
+- Animated zoom effect on hovering over model images
 
 ## v2.6.2
 ### Changed

@@ -5,6 +5,12 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.7.0-dev.3
+## Changed
+#### Model Browser
+- Improved number formatting with K/M suffixes for download and favorite counts
+- Animated zoom effect on hovering over model images
+
 ## v2.7.0-dev.2
 ### Added
 #### General

@@ -52,6 +52,14 @@ public partial class LykosLoginViewModel : TaskDialogViewModelBase
     [ObservableProperty]
     private AppException? signupError;
 
+    public string SignupFooterMarkdown { get; } =
+        """
+                                                  By signing up, you are creating a
+                                                  [lykos.ai](https://lykos.ai) Account and agree to our
+                                                  [Terms](https://lykos.ai/terms-and-conditions) and
+                                                  [Privacy Policy](https://lykos.ai/privacy)
+                                                  """;
+
     public LykosLoginViewModel(IAccountsService accountsService)
     {
         this.accountsService = accountsService;

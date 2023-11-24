@@ -311,6 +311,30 @@ public static class DesignData
                             new() { Name = "v1.2.2-Inpainting" } 
                         ]
                     };
+                }),
+                dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
+                {
+                    vm.CivitModel = new CivitModel
+                    {
+                        Name = "Another Model",
+                        Description = "A mix of example",
+                        Stats = new CivitModelStats { Rating = 5, RatingCount = 3500 },
+                        ModelVersions = [
+                            new()
+                            {
+                                Name = "v1.2.2-Inpainting",
+                                Images = new List<CivitImage>
+                                {
+                                    new()
+                                    {
+                                        Nsfw = "None",
+                                        Url = "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
+                                              + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg"
+                                    }
+                                }
+                            } 
+                        ]
+                    };
                 })
             };
 

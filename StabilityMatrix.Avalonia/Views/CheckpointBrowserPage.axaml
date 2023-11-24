@@ -13,35 +13,59 @@
     xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointManager"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     d:DataContext="{x:Static designData:DesignData.CheckpointBrowserViewModel}"
     d:DesignHeight="700"
     d:DesignWidth="800"
     x:CompileBindings="True"
     x:DataType="viewModels:CheckpointBrowserViewModel"
     mc:Ignorable="d">
-
+    
     <UserControl.Styles>
-        <Style Selector="Border#HoverBorder Border#ModelCardBottom">
-            <Setter Property="Background" Value="#99000000" />
-        </Style>
-        <Style Selector="Border#HoverBorder:pointerover Border#ModelCardBottom">
-            <Setter Property="Background" Value="#CC000000" />
-        </Style>
         <Style Selector="Border#HoverBorder">
-            <Setter Property="BorderBrush" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Cursor" Value="Arrow" />
-            <Setter Property="Margin" Value="8" />
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.237"/>
+                </Transitions>
+            </Setter>
+            
+            <Style Selector="^ asyncImageLoader|AdvancedImage">
+                <Setter Property="Transitions">
+                    <Transitions>
+                        <TransformOperationsTransition Property="RenderTransform"
+                                                       Duration="0:0:0.237">
+                            <TransformOperationsTransition.Easing>
+                                <QuadraticEaseInOut/>
+                            </TransformOperationsTransition.Easing>
+                        </TransformOperationsTransition>
+                    </Transitions>
+                </Setter>
+            </Style>
+            
+            <Style Selector="^:pointerover">
+                <Setter Property="BoxShadow" Value="0 0 40 0 #60000000"/>
+                <Setter Property="Cursor" Value="Hand" />
+                <Style Selector="^ asyncImageLoader|AdvancedImage">
+                    <Setter Property="CornerRadius" Value="12"/>
+                    <Setter Property="RenderTransform" Value="scale(1.03, 1.03)"/>
+                </Style>
+                <Style Selector="^ Border#ModelCardBottom">
+                    <Setter Property="Background" Value="#CC000000" />
+                </Style>
+            </Style>
+            
+            <Style Selector="^:not(:pointerover)">
+                <Setter Property="BoxShadow" Value="0 0 20 0 #60000000"/>
+                <Setter Property="Cursor" Value="Arrow" />
+                <Style Selector="^ asyncImageLoader|AdvancedImage">
+                    <Setter Property="CornerRadius" Value="8"/>
+                    <Setter Property="RenderTransform" Value="scale(1, 1)"/>
+                </Style>
+                <Style Selector="^ Border#ModelCardBottom">
+                    <Setter Property="Background" Value="#99000000" />
+                </Style>
+            </Style>
         </Style>
-        <Style Selector="Border#HoverBorder:pointerover">
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColorDark1}" />
-            <Setter Property="BorderThickness" Value="0,0,0,1" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Margin" Value="8,4,8,12" />
-        </Style>
-
-        <Style Selector="Border#HoverBorder controls|BetterAdvancedImage" />
-        <Style Selector="Border#HoverBorder:pointerover controls|BetterAdvancedImage" />
     </UserControl.Styles>
 
     <UserControl.Resources>
@@ -49,32 +73,30 @@
         <DataTemplate x:Key="CivitModelTemplate" DataType="{x:Type checkpointBrowser:CheckpointBrowserCardViewModel}">
             <Border
                 Name="HoverBorder"
-                Width="334"
-                Height="404"
                 Padding="0"
-                HorizontalAlignment="Center"
+                BorderThickness="0"
+                Margin="8"
+                ClipToBounds="True"
                 CornerRadius="8">
                 <Button
                     Name="ModelCard"
-                    Padding="-1"
-                    HorizontalAlignment="Center"
-                    HorizontalContentAlignment="Center"
+                    Classes="transparent-full"
+                    Padding="0"
+                    BorderThickness="0"
                     VerticalContentAlignment="Top"
+                    CornerRadius="8"
                     Command="{Binding ShowVersionDialogCommand}"
                     CommandParameter="{Binding CivitModel}"
-                    CornerRadius="12"
                     IsEnabled="{Binding !IsImporting}">
-                    <Grid HorizontalAlignment="Center" RowDefinitions="*, Auto">
+                    <Grid RowDefinitions="*, Auto">
                         <controls:BetterAdvancedImage
                             Grid.RowSpan="2"
+                            CornerRadius="8"
                             Width="330"
                             Height="400"
-                            HorizontalContentAlignment="Center"
-                            VerticalContentAlignment="Top"
-                            CornerRadius="8"
                             Source="{Binding CardImage}"
                             Stretch="UniformToFill"
-                            StretchDirection="Both" />
+                            StretchDirection="Both"/>
 
                         <StackPanel
                             Grid.Row="0"
@@ -191,8 +213,7 @@
 
                         <Border
                             Name="ModelCardBottom"
-                            Grid.Row="1"
-                            CornerRadius="0,0,8,8">
+                            Grid.Row="1">
                             <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto, Auto">
 
                                 <TextBlock

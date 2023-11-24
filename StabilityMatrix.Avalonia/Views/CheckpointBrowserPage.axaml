@@ -78,6 +78,16 @@
                 Margin="8"
                 ClipToBounds="True"
                 CornerRadius="8">
+                <Border.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuItem Header="{x:Static lang:Resources.Action_OpenOnCivitAi}"
+                                  Command="{Binding OpenModelCommand}">
+                            <MenuItem.Icon>
+                                <ui:SymbolIcon Symbol="Open" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuFlyout>
+                </Border.ContextFlyout>
                 <Button
                     Name="ModelCard"
                     Classes="transparent-full"

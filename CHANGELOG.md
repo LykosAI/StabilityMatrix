@@ -5,6 +5,21 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.7.0-dev.3
+### Added
+#### Model Browser
+- Right clicking anywhere on the model card will open the same menu as the three-dots button
+- New model downloads will save trigger words in metadata, if available
+#### Checkpoints Page
+- Added "Copy Trigger Words" option to the three-dots menu on the Checkpoints page (when data is available)
+- Added trigger words on checkpoint card and tooltip
+### Changed
+#### Model Browser
+- Improved number formatting with K/M suffixes for download and favorite counts
+- Animated zoom effect on hovering over model images
+#### Checkpoints Page
+- Rearranged top row layout to use CommandBar
+
 ## v2.7.0-dev.2
 ### Added
 #### General
@@ -38,11 +53,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.6.3
 ### Fixed
 - Fixed InvalidOperationException during prerequisite installs on certain platforms where process name and duration reporting are not supported
-## v2.7.0-dev.3
-## Changed
-#### Model Browser
-- Improved number formatting with K/M suffixes for download and favorite counts
-- Animated zoom effect on hovering over model images
 
 ## v2.6.2
 ### Changed

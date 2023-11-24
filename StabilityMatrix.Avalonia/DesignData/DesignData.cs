@@ -206,7 +206,8 @@ public static class DesignData
                                     Format = CivitModelFormat.SafeTensor,
                                     Fp = CivitModelFpType.fp16,
                                     Size = CivitModelSize.pruned,
-                                }
+                                },
+                                TrainedWords = ["aurora", "lightning"]
                             }
                         },
                         new()

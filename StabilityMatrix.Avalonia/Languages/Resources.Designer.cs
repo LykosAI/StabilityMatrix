@@ -168,6 +168,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy Trigger Words.
+        /// </summary>
+        public static string Action_CopyTriggerWords {
+            get {
+                return ResourceManager.GetString("Action_CopyTriggerWords", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete.
         /// </summary>
         public static string Action_Delete {
@@ -1793,6 +1802,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_TimePeriod {
             get {
                 return ResourceManager.GetString("Label_TimePeriod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Trigger words:.
+        /// </summary>
+        public static string Label_TriggerWords {
+            get {
+                return ResourceManager.GetString("Label_TriggerWords", resourceCulture);
             }
         }
         

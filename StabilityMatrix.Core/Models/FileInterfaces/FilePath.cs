@@ -7,7 +7,7 @@ namespace StabilityMatrix.Core.Models.FileInterfaces;
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 [JsonConverter(typeof(StringJsonConverter<FilePath>))]
-public class FilePath : FileSystemPath, IPathObject
+public partial class FilePath : FileSystemPath, IPathObject
 {
     private FileInfo? _info;
 
@@ -33,6 +33,7 @@ public class FilePath : FileSystemPath, IPathObject
     [JsonIgnore]
     public string NameWithoutExtension => Path.GetFileNameWithoutExtension(Info.Name);
 
+    /// <inheritdoc cref="FileInfo.Extension"/>
     [JsonIgnore]
     public string Extension => Info.Extension;
 
@@ -139,6 +140,26 @@ public class FilePath : FileSystemPath, IPathObject
     }
 
     /// <summary>
+    /// Rename the file.
+    /// </summary>
+    public FilePath Rename(string fileName)
+    {
+        if (
+            Path.GetDirectoryName(FullPath) is { } directory
+            && !string.IsNullOrWhiteSpace(directory)
+        )
+        {
+            var target = Path.Combine(directory, fileName);
+            Info.MoveTo(target, true);
+            return new FilePath(target);
+        }
+
+        throw new InvalidOperationException(
+            "Cannot rename a file path that is empty or has no directory"
+        );
+    }
+
+    /// <summary>
     /// Move the file to a directory.
     /// </summary>
     public FilePath MoveTo(FilePath destinationFile)
@@ -153,7 +174,7 @@ public class FilePath : FileSystemPath, IPathObject
     /// </summary>
     public async Task<FilePath> MoveToDirectoryAsync(DirectoryPath directory)
     {
-        await Task.Run(() => Info.MoveTo(directory.FullPath)).ConfigureAwait(false);
+        await Task.Run(() => Info.MoveTo(directory.JoinFile(Name), true)).ConfigureAwait(false);
         // Return the new path
         return directory.JoinFile(this);
     }
@@ -163,23 +184,39 @@ public class FilePath : FileSystemPath, IPathObject
     /// </summary>
     public async Task<FilePath> MoveToAsync(FilePath destinationFile)
     {
-        await Task.Run(() =>
-            {
-                var path = destinationFile.FullPath;
-                if (destinationFile.Exists)
-                {
-                    var num = Random.Shared.NextInt64(0, 10000);
-                    path = path.Replace(
-                        destinationFile.NameWithoutExtension,
-                        $"{destinationFile.NameWithoutExtension}_{num}"
-                    );
-                }
-
-                Info.MoveTo(path);
-            })
-            .ConfigureAwait(false);
+        await Task.Run(() => Info.MoveTo(destinationFile.FullPath)).ConfigureAwait(false);
         // Return the new path
         return destinationFile;
+    }
+
+    /// <summary>
+    /// Move the file to a target path with auto increment if the file already exists.
+    /// </summary>
+    /// <returns>The new path, possibly with incremented file name</returns>
+    public async Task<FilePath> MoveToWithIncrementAsync(
+        FilePath destinationFile,
+        int maxTries = 100
+    )
+    {
+        await Task.Yield();
+
+        var targetFile = destinationFile;
+
+        for (var i = 1; i < maxTries; i++)
+        {
+            if (!targetFile.Exists)
+            {
+                return await MoveToAsync(targetFile).ConfigureAwait(false);
+            }
+
+            targetFile = destinationFile.WithName(
+                destinationFile.NameWithoutExtension + $" ({i})" + destinationFile.Extension
+            );
+        }
+
+        throw new IOException(
+            $"Could not move file to {destinationFile} because it already exists."
+        );
     }
 
     /// <summary>

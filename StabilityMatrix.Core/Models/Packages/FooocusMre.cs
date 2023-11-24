@@ -43,6 +43,8 @@ public class FooocusMre : BaseGitPackage
     public override string Disclaimer =>
         "This package may no longer receive updates from its author. It may be removed from Stability Matrix in the future.";
 
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Impossible;
+
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new()
         {
@@ -97,17 +99,14 @@ public class FooocusMre : BaseGitPackage
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
 
-    public override async Task<string> GetLatestVersion()
-    {
-        var release = await GetLatestRelease().ConfigureAwait(false);
-        return release.TagName!;
-    }
+    public override string MainBranch => "moonride-main";
 
     public override string OutputFolderName => "outputs";
 
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null

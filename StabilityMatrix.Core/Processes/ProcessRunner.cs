@@ -163,6 +163,73 @@ public static class ProcessRunner
         return output;
     }
 
+    public static async Task<ProcessResult> GetProcessResultAsync(
+        string fileName,
+        ProcessArgs arguments,
+        string? workingDirectory = null,
+        IReadOnlyDictionary<string, string>? environmentVariables = null
+    )
+    {
+        Logger.Debug($"Starting process '{fileName}' with arguments '{arguments}'");
+
+        var info = new ProcessStartInfo
+        {
+            FileName = fileName,
+            Arguments = arguments,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+
+        if (environmentVariables != null)
+        {
+            foreach (var (key, value) in environmentVariables)
+            {
+                info.EnvironmentVariables[key] = value;
+            }
+        }
+
+        if (workingDirectory != null)
+        {
+            info.WorkingDirectory = workingDirectory;
+        }
+
+        using var process = new Process();
+        process.StartInfo = info;
+        StartTrackedProcess(process);
+
+        var stdout = await process.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
+        var stderr = await process.StandardError.ReadToEndAsync().ConfigureAwait(false);
+
+        await process.WaitForExitAsync().ConfigureAwait(false);
+
+        string? processName = null;
+        TimeSpan elapsed = default;
+
+        // Accessing these properties may throw an exception if the process has already exited
+        try
+        {
+            processName = process.ProcessName;
+        }
+        catch (SystemException) { }
+
+        try
+        {
+            elapsed = process.ExitTime - process.StartTime;
+        }
+        catch (SystemException) { }
+
+        return new ProcessResult
+        {
+            ExitCode = process.ExitCode,
+            StandardOutput = stdout,
+            StandardError = stderr,
+            ProcessName = processName,
+            Elapsed = elapsed
+        };
+    }
+
     public static Process StartProcess(
         string fileName,
         string arguments,
@@ -376,6 +443,14 @@ public static class ProcessRunner
         CancellationToken cancelToken = default
     )
     {
+        if (process is AnsiProcess)
+        {
+            throw new ArgumentException(
+                $"{nameof(WaitForExitConditionAsync)} does not support AnsiProcess, which uses custom async data reading",
+                nameof(process)
+            );
+        }
+
         var stdout = new StringBuilder();
         var stderr = new StringBuilder();
         process.OutputDataReceived += (_, args) => stdout.Append(args.Data);

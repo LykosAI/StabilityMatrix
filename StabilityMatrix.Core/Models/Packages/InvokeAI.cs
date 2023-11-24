@@ -23,11 +23,11 @@ public class InvokeAI : BaseGitPackage
     public override string DisplayName { get; set; } = "InvokeAI";
     public override string Author => "invoke-ai";
     public override string LicenseType => "Apache-2.0";
-
     public override string LicenseUrl => "https://github.com/invoke-ai/InvokeAI/blob/main/LICENSE";
 
     public override string Blurb => "Professional Creative Tools for Stable Diffusion";
     public override string LaunchCommand => "invokeai-web";
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Nightmare;
 
     public override IReadOnlyList<string> ExtraLaunchCommands =>
         new[]
@@ -46,11 +46,11 @@ public class InvokeAI : BaseGitPackage
             "https://raw.githubusercontent.com/invoke-ai/InvokeAI/main/docs/assets/canvas_preview.png"
         );
 
-    public override bool ShouldIgnoreReleases => true;
-
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
+
+    public override string MainBranch => "main";
 
     public InvokeAI(
         IGithubApiCache githubApi,
@@ -63,19 +63,38 @@ public class InvokeAI : BaseGitPackage
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
         {
-            [SharedFolderType.StableDiffusion] = new[] { RelativeRootPath + "/autoimport/main" },
-            [SharedFolderType.Lora] = new[] { RelativeRootPath + "/autoimport/lora" },
+            [SharedFolderType.StableDiffusion] = new[]
+            {
+                Path.Combine(RelativeRootPath, "autoimport", "main")
+            },
+            [SharedFolderType.Lora] = new[]
+            {
+                Path.Combine(RelativeRootPath, "autoimport", "lora")
+            },
             [SharedFolderType.TextualInversion] = new[]
             {
-                RelativeRootPath + "/autoimport/embedding"
+                Path.Combine(RelativeRootPath, "autoimport", "embedding")
             },
-            [SharedFolderType.ControlNet] = new[] { RelativeRootPath + "/autoimport/controlnet" },
+            [SharedFolderType.ControlNet] = new[]
+            {
+                Path.Combine(RelativeRootPath, "autoimport", "controlnet")
+            },
+            [SharedFolderType.IpAdapter] = new[]
+            {
+                Path.Combine(RelativeRootPath, "autoimport", "ip_adapter")
+            }
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
-        new() { [SharedOutputType.Text2Img] = new[] { "invokeai-root/outputs/images" } };
+        new()
+        {
+            [SharedOutputType.Text2Img] = new[]
+            {
+                Path.Combine("invokeai-root", "outputs", "images")
+            }
+        };
 
-    public override string OutputFolderName => "invokeai-root/outputs/images";
+    public override string OutputFolderName => Path.Combine("invokeai-root", "outputs", "images");
 
     // https://github.com/invoke-ai/InvokeAI/blob/main/docs/features/CONFIGURATION.md
     public override List<LaunchOptionDefinition> LaunchOptions =>
@@ -131,8 +150,6 @@ public class InvokeAI : BaseGitPackage
             LaunchOptionDefinition.Extras
         };
 
-    public override Task<string> GetLatestVersion() => Task.FromResult("main");
-
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm, TorchVersion.Mps };
 
@@ -149,6 +166,7 @@ public class InvokeAI : BaseGitPackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
@@ -174,10 +192,38 @@ public class InvokeAI : BaseGitPackage
         {
             // If has Nvidia Gpu, install CUDA version
             case TorchVersion.Cuda:
-                await InstallCudaTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
+                progress?.Report(
+                    new ProgressReport(-1f, "Installing PyTorch for CUDA", isIndeterminate: true)
+                );
+
+                var args = new List<Argument>();
+                if (exists)
+                {
+                    var pipPackages = await venvRunner.PipList().ConfigureAwait(false);
+                    var hasCuda121 = pipPackages.Any(
+                        p => p.Name == "torch" && p.Version.Contains("cu121")
+                    );
+                    if (!hasCuda121)
+                    {
+                        args.Add("--upgrade");
+                        args.Add("--force-reinstall");
+                    }
+                }
+
+                await venvRunner
+                    .PipInstall(
+                        new PipInstallArgs(args.Any() ? args.ToArray() : Array.Empty<Argument>())
+                            .WithTorch("==2.1.0")
+                            .WithTorchVision("==0.16.0")
+                            .WithXFormers("==0.0.22post7")
+                            .WithTorchExtraIndex("cu121"),
+                        onConsoleOutput
+                    )
+                    .ConfigureAwait(false);
+
                 Logger.Info("Starting InvokeAI install (CUDA)...");
                 pipCommandArgs =
-                    "-e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu118";
+                    "-e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu121";
                 break;
             // For AMD, Install ROCm version
             case TorchVersion.Rocm:
@@ -211,14 +257,20 @@ public class InvokeAI : BaseGitPackage
 
         progress?.Report(new ProgressReport(-1f, "Configuring InvokeAI", isIndeterminate: true));
 
+        // need to setup model links before running invokeai-configure so it can do its conversion
+        await SetupModelFolders(installLocation, selectedSharedFolderMethod).ConfigureAwait(false);
+
         await RunInvokeCommand(
                 installLocation,
                 "invokeai-configure",
                 "--yes --skip-sd-weights",
-                false,
-                onConsoleOutput
+                true,
+                onConsoleOutput,
+                spam3: true
             )
             .ConfigureAwait(false);
+
+        await VenvRunner.Process.WaitForExitAsync();
 
         progress?.Report(new ProgressReport(1f, "Done!", isIndeterminate: false));
     }
@@ -235,9 +287,15 @@ public class InvokeAI : BaseGitPackage
         string command,
         string arguments,
         bool runDetached,
-        Action<ProcessOutput>? onConsoleOutput
+        Action<ProcessOutput>? onConsoleOutput,
+        bool spam3 = false
     )
     {
+        if (spam3 && !runDetached)
+        {
+            throw new InvalidOperationException("Cannot spam 3 if not running detached");
+        }
+
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
         arguments = command switch
@@ -290,6 +348,18 @@ public class InvokeAI : BaseGitPackage
             void HandleConsoleOutput(ProcessOutput s)
             {
                 onConsoleOutput?.Invoke(s);
+
+                if (
+                    spam3
+                    && s.Text.Contains(
+                        "[3] Accept the best guess;",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
+                {
+                    VenvRunner.Process?.StandardInput.WriteLine("3");
+                    return;
+                }
 
                 if (!s.Text.Contains("running on", StringComparison.OrdinalIgnoreCase))
                     return;

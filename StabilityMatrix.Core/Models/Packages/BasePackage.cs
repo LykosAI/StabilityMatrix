@@ -40,6 +40,12 @@ public abstract class BasePackage
 
     public abstract string OutputFolderName { get; }
 
+    public abstract IEnumerable<TorchVersion> AvailableTorchVersions { get; }
+
+    public virtual bool IsCompatible => GetRecommendedTorchVersion() != TorchVersion.Cpu;
+
+    public abstract PackageDifficulty InstallerSortOrder { get; }
+
     public abstract Task DownloadPackage(
         string installLocation,
         DownloadPackageVersionOptions versionOptions,
@@ -49,6 +55,7 @@ public abstract class BasePackage
     public abstract Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
@@ -99,10 +106,6 @@ public abstract class BasePackage
 
     public abstract Task SetupOutputFolderLinks(DirectoryPath installDirectory);
     public abstract Task RemoveOutputFolderLinks(DirectoryPath installDirectory);
-
-    public abstract IEnumerable<TorchVersion> AvailableTorchVersions { get; }
-
-    public virtual bool IsCompatible => GetRecommendedTorchVersion() != TorchVersion.Cpu;
 
     public virtual TorchVersion GetRecommendedTorchVersion()
     {
@@ -157,15 +160,16 @@ public abstract class BasePackage
         IReadOnlyList<string>
     >? SharedOutputFolders { get; }
 
-    public abstract Task<string> GetLatestVersion();
     public abstract Task<PackageVersionOptions> GetAllVersionOptions();
     public abstract Task<IEnumerable<GitCommit>?> GetAllCommits(
         string branch,
         int page = 1,
         int perPage = 10
     );
-    public abstract Task<IEnumerable<Branch>> GetAllBranches();
-    public abstract Task<IEnumerable<Release>> GetAllReleases();
+    public abstract Task<DownloadPackageVersionOptions> GetLatestVersion(
+        bool includePrerelease = false
+    );
+    public abstract string MainBranch { get; }
     public event EventHandler<int>? Exited;
     public event EventHandler<string>? StartupComplete;
 
@@ -192,6 +196,7 @@ public abstract class BasePackage
             .PipInstall(
                 new PipInstallArgs()
                     .WithTorch("==2.0.1")
+                    .WithTorchVision("==0.15.2")
                     .WithXFormers("==0.0.20")
                     .WithTorchExtraIndex("cu118"),
                 onConsoleOutput

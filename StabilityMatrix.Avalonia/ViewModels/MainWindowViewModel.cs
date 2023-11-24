@@ -102,7 +102,10 @@ public partial class MainWindowViewModel : ViewModelBase
         // Index checkpoints if we dont have
         Task.Run(() => settingsManager.IndexCheckpoints()).SafeFireAndForget();
 
-        PreloadPages();
+        if (!App.IsHeadlessMode)
+        {
+            PreloadPages();
+        }
 
         Program.StartupTimer.Stop();
         var startupTime = CodeTimer.FormatTime(Program.StartupTimer.Elapsed);
@@ -128,7 +131,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 EventManager.Instance.OnTeachingTooltipNeeded();
             };
 
-            await dialog.ShowAsync();
+            await dialog.ShowAsync(App.TopLevel);
         }
     }
 
@@ -177,7 +180,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private async Task<bool> EnsureDataDirectory()
     {
         // If we can't find library, show selection dialog
-        if (!settingsManager.TryFindLibrary())
+        var foundInitially = settingsManager.TryFindLibrary();
+        if (!foundInitially)
         {
             var result = await ShowSelectDataDirectoryDialog();
             if (!result)
@@ -191,7 +195,10 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         // Tell LaunchPage to load any packages if they selected an existing directory
-        EventManager.Instance.OnInstalledPackagesChanged();
+        if (!foundInitially)
+        {
+            EventManager.Instance.OnInstalledPackagesChanged();
+        }
 
         // Check if there are old packages, if so show migration dialog
         // TODO: Migration dialog
@@ -239,7 +246,7 @@ public partial class MainWindowViewModel : ViewModelBase
             Content = new SelectDataDirectoryDialog { DataContext = viewModel }
         };
 
-        var result = await dialog.ShowAsync();
+        var result = await dialog.ShowAsync(App.TopLevel);
         if (result == ContentDialogResult.Primary)
         {
             // 1. For portable mode, call settings.SetPortableMode()

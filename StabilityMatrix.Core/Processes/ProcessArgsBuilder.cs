@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using OneOf;
 
 namespace StabilityMatrix.Core.Processes;
@@ -50,12 +51,14 @@ public record ProcessArgsBuilder
 
 public static class ProcessArgBuilderExtensions
 {
+    [Pure]
     public static T AddArg<T>(this T builder, Argument argument)
         where T : ProcessArgsBuilder
     {
         return builder with { Arguments = builder.Arguments.Append(argument).ToList() };
     }
 
+    [Pure]
     public static T RemoveArgKey<T>(this T builder, string argumentKey)
         where T : ProcessArgsBuilder
     {

@@ -77,4 +77,47 @@ public class DefaultUnknownEnumConverter<T> : JsonConverter<T>
 
         writer.WriteStringValue(value.GetStringValue().Replace("_", " "));
     }
+
+    /// <inheritdoc />
+    public override T ReadAsPropertyName(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options
+    )
+    {
+        if (reader.TokenType != JsonTokenType.PropertyName)
+        {
+            throw new JsonException();
+        }
+
+        var enumText = reader.GetString()?.Replace(" ", "_");
+        if (Enum.TryParse(typeof(T), enumText, true, out var result))
+        {
+            return (T)result!;
+        }
+
+        // Unknown value handling
+        if (Enum.TryParse(typeof(T), "Unknown", true, out var unknownResult))
+        {
+            return (T)unknownResult!;
+        }
+
+        throw new JsonException($"Unable to parse '{enumText}' to enum '{typeof(T)}'.");
+    }
+
+    /// <inheritdoc />
+    public override void WriteAsPropertyName(
+        Utf8JsonWriter writer,
+        T? value,
+        JsonSerializerOptions options
+    )
+    {
+        if (value == null)
+        {
+            writer.WriteNullValue();
+            return;
+        }
+
+        writer.WritePropertyName(value.GetStringValue().Replace("_", " "));
+    }
 }

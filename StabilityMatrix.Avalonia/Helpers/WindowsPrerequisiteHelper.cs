@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Win32;
 using NLog;
 using Octokit;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -23,6 +24,8 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     private readonly ISettingsManager settingsManager;
 
     private const string VcRedistDownloadUrl = "https://aka.ms/vs/16/release/vc_redist.x64.exe";
+    private const string TkinterDownloadUrl =
+        "https://cdn.lykos.ai/tkinter-cpython-embedded-3.10.11-win-x64.zip";
 
     private string HomeDir => settingsManager.LibraryDir;
 
@@ -43,6 +46,9 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     private string PortableGitInstallDir => Path.Combine(HomeDir, "PortableGit");
     private string PortableGitDownloadPath => Path.Combine(HomeDir, "PortableGit.7z.exe");
     private string GitExePath => Path.Combine(PortableGitInstallDir, "bin", "git.exe");
+    private string TkinterZipPath => Path.Combine(AssetsDir, "tkinter.zip");
+    private string TkinterExtractPath => PythonDir;
+    private string TkinterExistsPath => Path.Combine(PythonDir, "tkinter");
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
 
     public bool IsPythonInstalled => File.Exists(PythonDllPath);
@@ -59,23 +65,35 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     }
 
     public async Task RunGit(
-        string? workingDirectory = null,
-        Action<ProcessOutput>? onProcessOutput = null,
-        params string[] args
+        ProcessArgs args,
+        Action<ProcessOutput>? onProcessOutput,
+        string? workingDirectory = null
     )
     {
         var process = ProcessRunner.StartAnsiProcess(
             GitExePath,
-            args,
-            workingDirectory: workingDirectory,
+            args.ToArray(),
+            workingDirectory,
+            onProcessOutput,
             environmentVariables: new Dictionary<string, string>
             {
                 { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) }
-            },
-            outputDataReceived: onProcessOutput
+            }
         );
+        await process.WaitForExitAsync().ConfigureAwait(false);
+        if (process.ExitCode != 0)
+        {
+            throw new ProcessException($"Git exited with code {process.ExitCode}");
+        }
+    }
 
-        await ProcessRunner.WaitForExitConditionAsync(process);
+    public async Task RunGit(ProcessArgs args, string? workingDirectory = null)
+    {
+        var result = await ProcessRunner
+            .GetProcessResultAsync(GitExePath, args, workingDirectory)
+            .ConfigureAwait(false);
+
+        result.EnsureSuccessExitCode();
     }
 
     public async Task<string> GetGitOutput(string? workingDirectory = null, params string[] args)
@@ -223,6 +241,9 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
             pythonPthContent = pythonPthContent.Replace("#import site", "import site");
             await File.WriteAllTextAsync(pythonPthPath, pythonPthContent);
 
+            // Install TKinter
+            await InstallTkinterIfNecessary(progress);
+
             progress?.Report(new ProgressReport(1f, "Python install complete"));
         }
         finally
@@ -233,6 +254,39 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
                 File.Delete(PythonDownloadPath);
             }
         }
+    }
+
+    [SupportedOSPlatform("windows")]
+    public async Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        if (!Directory.Exists(TkinterExistsPath))
+        {
+            Logger.Info("Downloading Tkinter");
+            await downloadService.DownloadToFileAsync(
+                TkinterDownloadUrl,
+                TkinterZipPath,
+                progress: progress
+            );
+            progress?.Report(
+                new ProgressReport(
+                    progress: 1f,
+                    message: "Tkinter download complete",
+                    type: ProgressType.Download
+                )
+            );
+
+            await ArchiveHelper.Extract(TkinterZipPath, TkinterExtractPath, progress);
+
+            File.Delete(TkinterZipPath);
+        }
+
+        progress?.Report(
+            new ProgressReport(
+                progress: 1f,
+                message: "Tkinter install complete",
+                type: ProgressType.Generic
+            )
+        );
     }
 
     public async Task InstallGitIfNecessary(IProgress<ProgressReport>? progress = null)

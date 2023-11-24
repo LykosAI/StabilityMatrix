@@ -9,6 +9,7 @@ namespace StabilityMatrix.Core.Services;
 public interface ISettingsManager
 {
     bool IsPortableMode { get; }
+    string? LibraryDirOverride { set; }
     string LibraryDir { get; }
     bool IsLibraryDirSet { get; }
     string DatabasePath { get; }
@@ -21,6 +22,7 @@ public interface ISettingsManager
     List<string> PackageInstallsInProgress { get; set; }
 
     Settings Settings { get; }
+    DirectoryPath ConsolidatedImagesDirectory { get; }
 
     /// <summary>
     /// Event fired when the library directory is changed

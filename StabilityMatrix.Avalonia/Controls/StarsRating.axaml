@@ -1,0 +1,59 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+        xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+        xmlns:icons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia">
+    <Design.PreviewWith>
+        <StackPanel Width="400" Height="400" Spacing="4">
+            <StackPanel.Styles>
+                <Style Selector="controls|Card">
+                    <Setter Property="Padding" Value="6,4"/>
+                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                </Style>
+            </StackPanel.Styles>
+            
+            <controls:Card>
+                <controls:StarsRating Value="1" />
+            </controls:Card>
+            
+            <controls:Card Classes="transparent">
+                <controls:StarsRating Value="2" />
+            </controls:Card>
+            
+            <controls:Card Classes="transparent">
+                <controls:StarsRating Value="2.5" />
+            </controls:Card>
+            
+        </StackPanel>
+    </Design.PreviewWith>
+    
+    <!--<Styles.Resources>
+        <icons:SymbolIcon 
+            x:Key="StarFilledIcon"
+            FontSize="15"
+            Margin="8,0"
+            VerticalAlignment="Center"
+            Symbol="Star" 
+            IsFilled="True"/>
+    </Styles.Resources>-->
+
+    <Style Selector="controls|StarsRating">
+        <!-- Set Defaults -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <ItemsControl
+                    x:Name="PART_StarsItemsControl">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="2" Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+                <!--<sg:SpacedGrid
+                    x:Name="PART_Grid">
+                    ~1~ Stars filled dynamically @1@
+                </sg:SpacedGrid>-->
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

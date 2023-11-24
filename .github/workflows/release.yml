@@ -26,6 +26,23 @@ on:
         type: boolean
         description: Mark GitHub Release as Prerelease?
         default: false
+      auto-update-release:
+        type: boolean
+        description: Release auto-update?
+        default: false
+      auto-update-release-mode:
+        type: choice
+        description: Release auto-update mode
+        options:
+          - github url
+          - upload to b2
+      auto-update-release-channel:
+        type: choice
+        description: Release auto-update channel
+        options:
+          - stable
+          - preview
+          - development
 
 jobs:
   release-linux:
@@ -65,10 +82,10 @@ jobs:
           sudo apt-get -y install libfuse2
           dotnet tool install --framework net6.0 -g KuiperZone.PupNet
 
-      - name: Set up .NET 7
+      - name: Set up .NET 8
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '7.0.x'
+          dotnet-version: '8.0.x'
       
       - name: PupNet Build
         env:
@@ -126,10 +143,10 @@ jobs:
           echo "Using version ${{ github.event.inputs.version }}"
           echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $env:GITHUB_ENV
 
-      - name: Set up .NET 7
+      - name: Set up .NET 8
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '7.0.x'
+          dotnet-version: '8.0.x'
 
       - name: Install dependencies
         run: dotnet restore
@@ -180,8 +197,8 @@ jobs:
       # Zip each build
       - name: Zip Artifacts
         run: |
-          zip -r StabilityMatrix-win-x64.zip StabilityMatrix-win-x64
-          zip -r StabilityMatrix-linux-x64.zip StabilityMatrix-linux-x64
+          cd StabilityMatrix-win-x64 && zip -r ../StabilityMatrix-win-x64.zip ./. && cd $OLDPWD
+          cd StabilityMatrix-linux-x64 && zip -r ../StabilityMatrix-linux-x64.zip ./. && cd $OLDPWD
 
       - name: Create Github Release
         id: create_release
@@ -199,3 +216,93 @@ jobs:
           body: ${{ steps.release_notes.outputs.release_notes }}
           draft: ${{ github.event.inputs.github-release-draft == 'true' }}
           prerelease: ${{ github.event.inputs.github-release-prerelease == 'true' }} 
+          
+  publish-auto-update-github:
+    name: Publish Auto-Update Release (GitHub)
+    needs: [ release-linux, release-windows ]
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.auto-update-release == 'true' && github.event.inputs.auto-update-release-mode == 'github url' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        
+      - name: Set Version from manual input
+        run: |
+          echo "Using version ${{ github.event.inputs.version }}"
+          echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $env:GITHUB_ENV
+        
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install Python Dependencies
+        run: pip install stability-matrix-tools>=0.2.10 --upgrade
+        
+      - name: Publish Auto-Update Release
+        env:
+          SM_B2_API_ID: ${{ secrets.SM_B2_API_ID }}
+          SM_B2_API_KEY: ${{ secrets.SM_B2_API_KEY }}
+          SM_CF_CACHE_PURGE_TOKEN: ${{ secrets.SM_CF_CACHE_PURGE_TOKEN }}
+          SM_CF_ZONE_ID: ${{ secrets.SM_CF_ZONE_ID }}
+          SM_SIGNING_PRIVATE_KEY: ${{ secrets.SM_SIGNING_PRIVATE_KEY }}
+        run: sm-tools updates publish-matrix -v ${{ github.event.inputs.version }} -y
+
+  publish-auto-update-b2:
+    name: Publish Auto-Update Release (B2)
+    needs: [ release-linux, release-windows ]
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.auto-update-release == 'true' && github.event.inputs.auto-update-release-mode == 'upload to b2' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set Version from manual input
+        run: |
+          echo "Using version ${{ github.event.inputs.version }}"
+          echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $env:GITHUB_ENV
+
+      # Downloads all previous artifacts to the current working directory
+      - name: Download Artifacts
+        uses: actions/download-artifact@v3
+      
+      # Zip each build
+      - name: Zip Artifacts
+        run: |
+          cd StabilityMatrix-win-x64 && zip -r ../StabilityMatrix-win-x64.zip ./. && cd $OLDPWD
+          cd StabilityMatrix-linux-x64 && zip -r ../StabilityMatrix-linux-x64.zip ./. && cd $OLDPWD
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Python Dependencies
+        run: pip install stability-matrix-tools>=0.2.10 --upgrade
+          
+      # Check that the zips and CHANGELOG.md are in the current working directory
+      - name: Check files
+        run: |
+          if [ ! -f StabilityMatrix-win-x64.zip ]; then
+            echo "StabilityMatrix-win-x64.zip not found"
+            exit 1
+          fi
+          if [ ! -f StabilityMatrix-linux-x64.zip ]; then
+            echo "StabilityMatrix-linux-x64.zip not found"
+            exit 1
+          fi
+          if [ ! -f CHANGELOG.md ]; then
+            echo "CHANGELOG.md not found"
+            exit 1
+          fi
+
+      - name: Publish Auto-Update Release
+        env:
+          SM_B2_API_ID: ${{ secrets.SM_B2_API_ID }}
+          SM_B2_API_KEY: ${{ secrets.SM_B2_API_KEY }}
+          SM_CF_CACHE_PURGE_TOKEN: ${{ secrets.SM_CF_CACHE_PURGE_TOKEN }}
+          SM_CF_ZONE_ID: ${{ secrets.SM_CF_ZONE_ID }}
+          SM_SIGNING_PRIVATE_KEY: ${{ secrets.SM_SIGNING_PRIVATE_KEY }}
+        run: >
+          sm-tools updates publish-files-v3 -v ${{ github.event.inputs.version }}
+          --channel ${{ github.event.inputs.auto-update-release-channel }}
+          --changelog CHANGELOG.md
+          --win-x64 StabilityMatrix-win-x64.zip
+          --linux-x64 StabilityMatrix-linux-x64.zip
+          -y

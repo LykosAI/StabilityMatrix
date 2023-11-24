@@ -5,6 +5,73 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.7.0-dev.3
+### Added
+#### Model Browser
+- Right clicking anywhere on the model card will open the same menu as the three-dots button
+- New model downloads will save trigger words in metadata, if available
+#### Checkpoints Page
+- Added "Copy Trigger Words" option to the three-dots menu on the Checkpoints page (when data is available)
+- Added trigger words on checkpoint card and tooltip
+### Changed
+#### Model Browser
+- Improved number formatting with K/M suffixes for download and favorite counts
+- Animated zoom effect on hovering over model images
+#### Checkpoints Page
+- Rearranged top row layout to use CommandBar
+
+## v2.7.0-dev.2
+### Added
+#### General
+- Added an X button to all search fields to instantly clear them (Esc key also works) 
+#### Outputs Page 
+- Added Refresh button to update gallery from file system changes
+#### Checkpoints Page
+- Added the ability to drag & drop checkpoints between different folders
+## Changed
+#### Outputs Page
+- Updated button and menu layout
+#### Packages Page
+- Rearranged Add Package dialog slightly to accommodate longer package list
+### Fixed
+- Fixed InvalidOperation errors when signing into accounts shortly after signing out, while the previous account update is still running
+- Fixed Outputs page reverting back to Shared Output Folder every time the page is reloaded
+- Potentially fixed updates sometimes clearing settings or launching in the wrong directory
+
+## v2.7.0-dev.1
+### Added
+- Accounts Settings Subpage
+  - Lykos Account sign-up and login - currently for Patreon OAuth connections but GitHub requests caching and settings sync are planned
+  - Supporters can now connect your Patreon accounts, then head to the Updates page to choose to receive auto-updates from the Dev or Preview channels
+  - CivitAI Account login with API key - enables downloading models from the Browser page that require CivitAI logins, more integrations like liking and commenting are also planned
+- Updates Settings Subpage
+  - Toggle auto-update notifications and manually check for updates
+  - Choose between Stable, Preview, and Dev update channels
+## Changed
+- Model Browser page has been redesigned, featuring more information like rating and download counts
+
+## v2.6.3
+### Fixed
+- Fixed InvalidOperationException during prerequisite installs on certain platforms where process name and duration reporting are not supported
+
+## v2.6.2
+### Changed
+- Backend changes for auto-update schema v3, supporting customizable release channels and faster downloads with zip compression
+### Fixed
+- Better error reporting including outputs for git subprocess errors during package install / update
+- Fixed `'accelerate' is not recognized as an internal or external command` error when starting training in kohya_ss
+- Fixed some instances of `ModuleNotFoundError: No module named 'bitsandbytes.cuda_setup.paths'` error when using 8-bit optimizers in kohya_ss
+- Fixed errors preventing Inference outputs from loading in the img2img tabs of other packages 
+
+## v2.6.1
+### Changed
+- NVIDIA GPU users will be updated to use CUDA 12.1 for the InvokeAI package for a slight performance improvement
+  - Update will occur the next time the package is updated, or on a fresh install
+  - Note: CUDA 12.1 is only available on Maxwell (GTX 900 series) and newer GPUs  
+### Fixed
+- Reduced the amount of calls to GitHub to help prevent rate limiting
+- Fixed rate limit crash on startup preventing app from starting
+
 ## v2.6.0
 ### Added
 - Added **Output Sharing** option for all packages in the three-dots menu on the Packages page
@@ -13,12 +80,15 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added **Outputs page** for viewing generated images from any package, or the shared output folder
 - Added [Stable Diffusion WebUI/UX](https://github.com/anapnoe/stable-diffusion-webui-ux) package
 - Added [Stable Diffusion WebUI-DirectML](https://github.com/lshqqytiger/stable-diffusion-webui-directml) package
+- Added [kohya_ss](https://github.com/bmaltais/kohya_ss) package
+- Added [Fooocus-ControlNet-SDXL](https://github.com/fenneishi/Fooocus-ControlNet-SDXL) package
 - Added GPU compatibility badges to the installers
 - Added filtering of "incompatible" packages (ones that do not support your GPU) to all installers 
   - This can be overridden by checking the new "Show All Packages" checkbox
 - Added more launch options for Fooocus, such as the `--preset` option
 - Added Ctrl+ScrollWheel to change image size in the inference output gallery and new Outputs page
 - Added "No Images Found" placeholder for non-connected models on the Checkpoints tab
+- Added "Open on GitHub" option to the three-dots menu on the Packages page
 ### Changed
 - If ComfyUI for Inference is chosen during the One-Click Installer, the Inference page will be opened after installation instead of the Launch page
 - Changed all package installs & updates to use git commands instead of downloading zip files
@@ -33,6 +103,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed Inference popup Install button not working on One-Click Installer
 - Fixed Inference Prompt Completion window sometimes not showing while typing
 - Fixed "Show Model Images" toggle on Checkpoints page sometimes displaying cut-off model images
+- Fixed missing httpx package during Automatic1111 install
+- Fixed some instances of localized text being cut off from controls being too small
+
+## v2.5.7
+### Fixed
+- Fixed error `got an unexpected keyword argument 'socket_options'` on fresh installs of Automatic1111 Stable Diffusion WebUI due to missing httpx dependency specification from gradio
 
 ## v2.5.6
 ### Added

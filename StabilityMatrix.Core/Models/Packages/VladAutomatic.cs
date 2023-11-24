@@ -34,6 +34,7 @@ public class VladAutomatic : BaseGitPackage
     public override bool ShouldIgnoreReleases => true;
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm };
@@ -171,11 +172,12 @@ public class VladAutomatic : BaseGitPackage
 
     public override string ExtraLaunchArguments => "";
 
-    public override Task<string> GetLatestVersion() => Task.FromResult("master");
+    public override string MainBranch => "master";
 
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
@@ -240,29 +242,28 @@ public class VladAutomatic : BaseGitPackage
         {
             await PrerequisiteHelper
                 .RunGit(
-                    installDir.Parent ?? "",
-                    null,
-                    "clone",
-                    "https://github.com/vladmandic/automatic",
-                    installDir.Name
+                    new[] { "clone", "https://github.com/vladmandic/automatic", installDir.Name },
+                    installDir.Parent?.FullPath ?? ""
                 )
                 .ConfigureAwait(false);
 
             await PrerequisiteHelper
-                .RunGit(installLocation, null, "checkout", downloadOptions.CommitHash)
+                .RunGit(new[] { "checkout", downloadOptions.CommitHash }, installLocation)
                 .ConfigureAwait(false);
         }
         else if (!string.IsNullOrWhiteSpace(downloadOptions.BranchName))
         {
             await PrerequisiteHelper
                 .RunGit(
-                    installDir.Parent ?? "",
-                    null,
-                    "clone",
-                    "-b",
-                    downloadOptions.BranchName,
-                    "https://github.com/vladmandic/automatic",
-                    installDir.Name
+                    new[]
+                    {
+                        "clone",
+                        "-b",
+                        downloadOptions.BranchName,
+                        "https://github.com/vladmandic/automatic",
+                        installDir.Name
+                    },
+                    installDir.Parent?.FullPath ?? ""
                 )
                 .ConfigureAwait(false);
         }
@@ -323,10 +324,9 @@ public class VladAutomatic : BaseGitPackage
 
         await PrerequisiteHelper
             .RunGit(
-                installedPackage.FullPath,
+                new[] { "checkout", versionOptions.BranchName! },
                 onConsoleOutput,
-                "checkout",
-                versionOptions.BranchName
+                installedPackage.FullPath
             )
             .ConfigureAwait(false);
 
@@ -347,7 +347,8 @@ public class VladAutomatic : BaseGitPackage
             return new InstalledPackageVersion
             {
                 InstalledBranch = versionOptions.BranchName,
-                InstalledCommitSha = output.Replace(Environment.NewLine, "").Replace("\n", "")
+                InstalledCommitSha = output.Replace(Environment.NewLine, "").Replace("\n", ""),
+                IsPrerelease = false
             };
         }
         catch (Exception e)
@@ -368,7 +369,8 @@ public class VladAutomatic : BaseGitPackage
 
         return new InstalledPackageVersion
         {
-            InstalledBranch = installedPackage.Version.InstalledBranch
+            InstalledBranch = installedPackage.Version.InstalledBranch,
+            IsPrerelease = false
         };
     }
 

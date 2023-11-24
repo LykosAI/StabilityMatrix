@@ -141,15 +141,18 @@ public class Fooocus : BaseGitPackage
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm };
 
-    public override Task<string> GetLatestVersion() => Task.FromResult("main");
+    public override string MainBranch => "main";
 
     public override bool ShouldIgnoreReleases => true;
 
     public override string OutputFolderName => "outputs";
 
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
+
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
@@ -172,7 +175,7 @@ public class Fooocus : BaseGitPackage
             {
                 TorchVersion.Cpu => "cpu",
                 TorchVersion.Cuda => "cu121",
-                TorchVersion.Rocm => "rocm5.4.2",
+                TorchVersion.Rocm => "rocm5.6",
                 _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
             };
 

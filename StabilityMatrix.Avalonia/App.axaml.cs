@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Data.Core.Plugins;
 using Avalonia.Input.Platform;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media.Imaging;
@@ -25,6 +26,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
+using MessagePipe;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -53,6 +55,7 @@ using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -70,13 +73,18 @@ public sealed class App : Application
     public static IServiceProvider? Services { get; private set; }
 
     [NotNull]
-    public static Visual? VisualRoot { get; private set; }
+    public static Visual? VisualRoot { get; internal set; }
+
+    public static TopLevel TopLevel => TopLevel.GetTopLevel(VisualRoot)!;
+
+    internal static bool IsHeadlessMode =>
+        TopLevel.TryGetPlatformHandle()?.HandleDescriptor is null or "STUB";
 
     [NotNull]
-    public static IStorageProvider? StorageProvider { get; private set; }
+    public static IStorageProvider? StorageProvider { get; internal set; }
 
     [NotNull]
-    public static IClipboard? Clipboard { get; private set; }
+    public static IClipboard? Clipboard { get; internal set; }
 
     // ReSharper disable once MemberCanBePrivate.Global
     [NotNull]
@@ -85,6 +93,12 @@ public sealed class App : Application
     // ReSharper disable once MemberCanBePrivate.Global
     public IClassicDesktopStyleApplicationLifetime? DesktopLifetime =>
         ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
+
+    /// <summary>
+    /// Called before <see cref="Services"/> is built.
+    /// Can be used by UI tests to override services.
+    /// </summary>
+    internal static event EventHandler<IServiceCollection>? BeforeBuildServiceProvider;
 
     public override void Initialize()
     {
@@ -99,6 +113,16 @@ public sealed class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // Remove DataAnnotations validation plugin since we're using INotifyDataErrorInfo from MvvmToolkit
+        var dataValidationPluginsToRemove = BindingPlugins.DataValidators
+            .OfType<DataAnnotationsValidationPlugin>()
+            .ToArray();
+
+        foreach (var plugin in dataValidationPluginsToRemove)
+        {
+            BindingPlugins.DataValidators.Remove(plugin);
+        }
+
         base.OnFrameworkInitializationCompleted();
 
         if (Design.IsDesignMode)
@@ -114,6 +138,8 @@ public sealed class App : Application
         if (DesktopLifetime is not null)
         {
             DesktopLifetime.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+            Setup();
 
             // First time setup if needed
             var settingsManager = Services.GetRequiredService<ISettingsManager>();
@@ -151,6 +177,17 @@ public sealed class App : Application
                 ShowMainWindow();
             }
         }
+    }
+
+    /// <summary>
+    /// Setup tasks to be run shortly before any window is shown
+    /// </summary>
+    private void Setup()
+    {
+        using var _ = new CodeTimer();
+
+        // Setup uri handler for `stabilitymatrix://` protocol
+        Program.UriHandler.RegisterUriScheme();
     }
 
     private void ShowMainWindow()
@@ -214,9 +251,14 @@ public sealed class App : Application
     private static void ConfigureServiceProvider()
     {
         var services = ConfigureServices();
+
+        BeforeBuildServiceProvider?.Invoke(null, services);
+
         Services = services.BuildServiceProvider();
 
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
+
+        settingsManager.LibraryDirOverride = Program.Args.DataDirectoryOverride;
 
         if (settingsManager.TryFindLibrary())
         {
@@ -299,6 +341,10 @@ public sealed class App : Application
     {
         var services = new ServiceCollection();
         services.AddMemoryCache();
+        services.AddLazyInstance();
+
+        services.AddMessagePipe();
+        services.AddMessagePipeNamedPipeInterprocess("StabilityMatrix");
 
         var exportedTypes = AppDomain.CurrentDomain
             .GetAssemblies()
@@ -340,17 +386,31 @@ public sealed class App : Application
                     t1.attributes is { Length: > 0 }
                     && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
             )
-            .Select(t1 => new { Type = t1.t, Attribute = (SingletonAttribute)t1.attributes[0] });
+            .Select(
+                t1 =>
+                    new
+                    {
+                        Type = t1.t,
+                        Attributes = t1.attributes.Cast<SingletonAttribute>().ToArray()
+                    }
+            );
 
         foreach (var typePair in singletonTypes)
         {
-            if (typePair.Attribute.InterfaceType is null)
+            foreach (var attribute in typePair.Attributes)
             {
-                services.AddSingleton(typePair.Type);
-            }
-            else
-            {
-                services.AddSingleton(typePair.Attribute.InterfaceType, typePair.Type);
+                if (attribute.InterfaceType is null)
+                {
+                    services.AddSingleton(typePair.Type);
+                }
+                else if (attribute.ImplType is not null)
+                {
+                    services.AddSingleton(attribute.InterfaceType, attribute.ImplType);
+                }
+                else
+                {
+                    services.AddSingleton(attribute.InterfaceType, typePair.Type);
+                }
             }
         }
 
@@ -481,10 +541,44 @@ public sealed class App : Application
             })
             .AddPolicyHandler(retryPolicy);
 
+        services
+            .AddRefitClient<ICivitTRPCApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri("https://civitai.com");
+                c.Timeout = TimeSpan.FromSeconds(15);
+            })
+            .AddPolicyHandler(retryPolicy);
+
+        services
+            .AddRefitClient<ILykosAuthApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri("https://stableauthentication.azurewebsites.net");
+                c.Timeout = TimeSpan.FromSeconds(15);
+            })
+            .ConfigurePrimaryHttpMessageHandler(
+                () => new HttpClientHandler { AllowAutoRedirect = false }
+            )
+            .AddPolicyHandler(retryPolicy)
+            .AddHttpMessageHandler(
+                serviceProvider =>
+                    new TokenAuthHeaderHandler(
+                        serviceProvider.GetRequiredService<LykosAuthTokenProvider>()
+                    )
+            );
+
         // Add Refit client managers
         services
             .AddHttpClient("A3Client")
             .AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));
+
+        services
+            .AddHttpClient("DontFollowRedirects")
+            .ConfigurePrimaryHttpMessageHandler(
+                () => new HttpClientHandler { AllowAutoRedirect = false }
+            )
+            .AddPolicyHandler(retryPolicy);
 
         /*services.AddHttpClient("IComfyApi")
             .AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));*/

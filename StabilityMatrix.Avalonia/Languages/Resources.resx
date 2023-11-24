@@ -738,4 +738,88 @@
   <data name="Label_ControlSteps" xml:space="preserve">
     <value>Control Steps</value>
   </data>
+  <data name="Label_PythonPackages" xml:space="preserve">
+    <value>Python Packages</value>
+  </data>
+  <data name="Action_Consolidate" xml:space="preserve">
+    <value>Consolidate</value>
+  </data>
+  <data name="Label_AreYouSure" xml:space="preserve">
+    <value>Are you sure?</value>
+  </data>
+  <data name="Label_ConsolidateExplanation" xml:space="preserve">
+    <value>This will move all generated images from the selected packages to the Consolidated directory of the shared outputs folder. This action cannot be undone.</value>
+  </data>
+  <data name="Action_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Action_Upgrade" xml:space="preserve">
+    <value>Upgrade</value>
+  </data>
+  <data name="Action_Downgrade" xml:space="preserve">
+    <value>Downgrade</value>
+  </data>
+  <data name="Action_OpenGithub" xml:space="preserve">
+    <value>Open on GitHub</value>
+  </data>
+  <data name="Label_Connected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="Action_Disconnect" xml:space="preserve">
+    <value>Disconnect</value>
+  </data>
+  <data name="Label_Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Label_Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="Label_Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Action_Login" xml:space="preserve">
+    <value>Login</value>
+  </data>
+  <data name="Action_Signup" xml:space="preserve">
+    <value>Signup</value>
+  </data>
+  <data name="Label_ConfirmPassword" xml:space="preserve">
+    <value>Confirm Password</value>
+  </data>
+  <data name="Label_ApiKey" xml:space="preserve">
+    <value>API Key</value>
+  </data>
+  <data name="Label_Accounts" xml:space="preserve">
+    <value>Accounts</value>
+  </data>
+  <data name="Label_CivitAiLoginRequired" xml:space="preserve">
+    <value>You must be logged in to download this checkpoint. Please enter a CivitAI API Key in the settings.</value>
+  </data>
+  <data name="Label_DownloadFailed" xml:space="preserve">
+    <value>Download Failed</value>
+  </data>
+  <data name="Label_AutoUpdates" xml:space="preserve">
+    <value>Auto Updates</value>
+  </data>
+  <data name="Label_UpdatesPreviewChannelDescription" xml:space="preserve">
+    <value>For early adopters. Preview builds will be more reliable than those from the Dev channel, and will be available closer to stable releases. Your feedback will help us greatly in discovering issues and polishing design elements.</value>
+  </data>
+  <data name="Label_UpdatesDevChannelDescription" xml:space="preserve">
+    <value>For technical users. Be the first to access our Development builds from feature branches as soon as they are available. There may be some rough edges and bugs as we experiment with new features.</value>
+  </data>
+  <data name="Label_Updates" xml:space="preserve">
+    <value>Updates</value>
+  </data>
+  <data name="Label_YouAreUpToDate" xml:space="preserve">
+    <value>You're up to date</value>
+  </data>
+  <data name="TextTemplate_LastChecked" xml:space="preserve">
+    <value>Last checked: {0}</value>
+  </data>
+  <data name="Action_CopyTriggerWords" xml:space="preserve">
+    <value>Copy Trigger Words</value>
+  </data>
+  <data name="Label_TriggerWords" xml:space="preserve">
+    <value>Trigger words:</value>
+  </data>
 </root>

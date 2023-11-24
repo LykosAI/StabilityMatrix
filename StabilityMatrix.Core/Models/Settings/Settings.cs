@@ -1,8 +1,8 @@
-﻿using System.Drawing;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json.Serialization;
 using Semver;
 using StabilityMatrix.Core.Converters.Json;
+using StabilityMatrix.Core.Models.Update;
 
 namespace StabilityMatrix.Core.Models.Settings;
 
@@ -37,6 +37,16 @@ public class Settings
     public List<string>? PathExtensions { get; set; }
     public string? WebApiHost { get; set; }
     public string? WebApiPort { get; set; }
+
+    /// <summary>
+    /// Preferred update channel
+    /// </summary>
+    public UpdateChannel PreferredUpdateChannel { get; set; } = UpdateChannel.Stable;
+
+    /// <summary>
+    /// Whether to check for updates
+    /// </summary>
+    public bool CheckForUpdates { get; set; } = true;
 
     /// <summary>
     /// The last auto-update version that had a notification dismissed by the user
@@ -93,6 +103,8 @@ public class Settings
     public bool AutoScrollLaunchConsoleToEnd { get; set; } = true;
 
     public HashSet<int> FavoriteModels { get; set; } = new();
+
+    public HashSet<TeachingTip> SeenTeachingTips { get; set; } = new();
 
     public Size InferenceImageSize { get; set; } = new(150, 190);
     public Size OutputsImageSize { get; set; } = new(300, 300);

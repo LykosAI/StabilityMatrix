@@ -72,20 +72,31 @@ public abstract class BaseGitPackage : BasePackage
         PrerequisiteHelper = prerequisiteHelper;
     }
 
-    protected async Task<Release> GetLatestRelease(bool includePrerelease = false)
+    public override async Task<DownloadPackageVersionOptions> GetLatestVersion(
+        bool includePrerelease = false
+    )
     {
+        if (ShouldIgnoreReleases)
+        {
+            return new DownloadPackageVersionOptions
+            {
+                IsLatest = true,
+                IsPrerelease = false,
+                BranchName = MainBranch
+            };
+        }
+
         var releases = await GithubApi.GetAllReleases(Author, Name).ConfigureAwait(false);
-        return includePrerelease ? releases.First() : releases.First(x => !x.Prerelease);
-    }
+        var latestRelease = includePrerelease
+            ? releases.First()
+            : releases.First(x => !x.Prerelease);
 
-    public override Task<IEnumerable<Branch>> GetAllBranches()
-    {
-        return GithubApi.GetAllBranches(Author, Name);
-    }
-
-    public override Task<IEnumerable<Release>> GetAllReleases()
-    {
-        return GithubApi.GetAllReleases(Author, Name);
+        return new DownloadPackageVersionOptions
+        {
+            IsLatest = true,
+            IsPrerelease = latestRelease.Prerelease,
+            VersionTag = latestRelease.TagName!
+        };
     }
 
     public override Task<IEnumerable<GitCommit>?> GetAllCommits(
@@ -103,7 +114,7 @@ public abstract class BaseGitPackage : BasePackage
 
         if (!ShouldIgnoreReleases)
         {
-            var allReleases = await GetAllReleases().ConfigureAwait(false);
+            var allReleases = await GithubApi.GetAllReleases(Author, Name).ConfigureAwait(false);
             var releasesList = allReleases.ToList();
             if (releasesList.Any())
             {
@@ -120,7 +131,7 @@ public abstract class BaseGitPackage : BasePackage
         }
 
         // Branch mode
-        var allBranches = await GetAllBranches().ConfigureAwait(false);
+        var allBranches = await GithubApi.GetAllBranches(Author, Name).ConfigureAwait(false);
         packageVersionOptions.AvailableBranches = allBranches.Select(
             b => new PackageVersion { TagName = $"{b.Name}", ReleaseNotesMarkdown = string.Empty }
         );
@@ -170,39 +181,25 @@ public abstract class BaseGitPackage : BasePackage
         IProgress<ProgressReport>? progress = null
     )
     {
-        if (!string.IsNullOrWhiteSpace(versionOptions.VersionTag))
-        {
-            await PrerequisiteHelper
-                .RunGit(
-                    null,
-                    null,
+        await PrerequisiteHelper
+            .RunGit(
+                new[]
+                {
                     "clone",
                     "--branch",
-                    versionOptions.VersionTag,
+                    !string.IsNullOrWhiteSpace(versionOptions.VersionTag)
+                        ? versionOptions.VersionTag
+                        : versionOptions.BranchName ?? MainBranch,
                     GithubUrl,
-                    $"\"{installLocation}\""
-                )
-                .ConfigureAwait(false);
-        }
-        else if (!string.IsNullOrWhiteSpace(versionOptions.BranchName))
-        {
-            await PrerequisiteHelper
-                .RunGit(
-                    null,
-                    null,
-                    "clone",
-                    "--branch",
-                    versionOptions.BranchName,
-                    GithubUrl,
-                    $"\"{installLocation}\""
-                )
-                .ConfigureAwait(false);
-        }
+                    installLocation
+                }
+            )
+            .ConfigureAwait(false);
 
         if (!versionOptions.IsLatest && !string.IsNullOrWhiteSpace(versionOptions.CommitHash))
         {
             await PrerequisiteHelper
-                .RunGit(installLocation, null, "checkout", versionOptions.CommitHash)
+                .RunGit(new[] { "checkout", versionOptions.CommitHash }, installLocation)
                 .ConfigureAwait(false);
         }
 
@@ -267,14 +264,17 @@ public abstract class BaseGitPackage : BasePackage
         {
             if (currentVersion.IsReleaseMode)
             {
-                var latestVersion = await GetLatestVersion().ConfigureAwait(false);
-                UpdateAvailable = latestVersion != currentVersion.InstalledReleaseVersion;
+                var latestVersion = await GetLatestVersion(currentVersion.IsPrerelease)
+                    .ConfigureAwait(false);
+                UpdateAvailable =
+                    latestVersion.VersionTag != currentVersion.InstalledReleaseVersion;
                 return UpdateAvailable;
             }
 
             var allCommits = (
                 await GetAllCommits(currentVersion.InstalledBranch!).ConfigureAwait(false)
             )?.ToList();
+
             if (allCommits == null || !allCommits.Any())
             {
                 Logger.Warn("No commits found for {Package}", package.PackageName);
@@ -313,12 +313,9 @@ public abstract class BaseGitPackage : BasePackage
                 .ConfigureAwait(false);
             await PrerequisiteHelper
                 .RunGit(
-                    installedPackage.FullPath!,
+                    new[] { "remote", "add", "origin", GithubUrl },
                     onConsoleOutput,
-                    "remote",
-                    "add",
-                    "origin",
-                    GithubUrl
+                    installedPackage.FullPath
                 )
                 .ConfigureAwait(false);
         }
@@ -327,7 +324,7 @@ public abstract class BaseGitPackage : BasePackage
         {
             progress?.Report(new ProgressReport(-1f, "Fetching tags...", isIndeterminate: true));
             await PrerequisiteHelper
-                .RunGit(installedPackage.FullPath!, onConsoleOutput, "fetch", "--tags")
+                .RunGit(new[] { "fetch", "--tags" }, onConsoleOutput, installedPackage.FullPath)
                 .ConfigureAwait(false);
 
             progress?.Report(
@@ -339,22 +336,17 @@ public abstract class BaseGitPackage : BasePackage
             );
             await PrerequisiteHelper
                 .RunGit(
-                    installedPackage.FullPath!,
+                    new[] { "checkout", versionOptions.VersionTag, "--force" },
                     onConsoleOutput,
-                    "checkout",
-                    versionOptions.VersionTag,
-                    "--force"
+                    installedPackage.FullPath
                 )
                 .ConfigureAwait(false);
 
             await InstallPackage(
                     installedPackage.FullPath!,
                     torchVersion,
-                    new DownloadPackageVersionOptions
-                    {
-                        VersionTag = versionOptions.VersionTag,
-                        IsLatest = versionOptions.IsLatest
-                    },
+                    installedPackage.PreferredSharedFolderMethod ?? SharedFolderMethod.Symlink,
+                    versionOptions,
                     progress,
                     onConsoleOutput
                 )
@@ -362,14 +354,15 @@ public abstract class BaseGitPackage : BasePackage
 
             return new InstalledPackageVersion
             {
-                InstalledReleaseVersion = versionOptions.VersionTag
+                InstalledReleaseVersion = versionOptions.VersionTag,
+                IsPrerelease = versionOptions.IsPrerelease
             };
         }
 
         // fetch
         progress?.Report(new ProgressReport(-1f, "Fetching data...", isIndeterminate: true));
         await PrerequisiteHelper
-            .RunGit(installedPackage.FullPath!, onConsoleOutput, "fetch")
+            .RunGit("fetch", onConsoleOutput, installedPackage.FullPath)
             .ConfigureAwait(false);
 
         if (versionOptions.IsLatest)
@@ -384,11 +377,9 @@ public abstract class BaseGitPackage : BasePackage
             );
             await PrerequisiteHelper
                 .RunGit(
-                    installedPackage.FullPath!,
+                    new[] { "checkout", versionOptions.BranchName!, "--force" },
                     onConsoleOutput,
-                    "checkout",
-                    versionOptions.BranchName,
-                    "--force"
+                    installedPackage.FullPath
                 )
                 .ConfigureAwait(false);
 
@@ -396,11 +387,15 @@ public abstract class BaseGitPackage : BasePackage
             progress?.Report(new ProgressReport(-1f, "Pulling changes...", isIndeterminate: true));
             await PrerequisiteHelper
                 .RunGit(
-                    installedPackage.FullPath!,
+                    new[]
+                    {
+                        "pull",
+                        "--autostash",
+                        "origin",
+                        installedPackage.Version.InstalledBranch!
+                    },
                     onConsoleOutput,
-                    "pull",
-                    "origin",
-                    installedPackage.Version.InstalledBranch
+                    installedPackage.FullPath!
                 )
                 .ConfigureAwait(false);
         }
@@ -416,11 +411,9 @@ public abstract class BaseGitPackage : BasePackage
             );
             await PrerequisiteHelper
                 .RunGit(
-                    installedPackage.FullPath!,
+                    new[] { "checkout", versionOptions.CommitHash!, "--force" },
                     onConsoleOutput,
-                    "checkout",
-                    versionOptions.CommitHash,
-                    "--force"
+                    installedPackage.FullPath
                 )
                 .ConfigureAwait(false);
         }
@@ -428,11 +421,8 @@ public abstract class BaseGitPackage : BasePackage
         await InstallPackage(
                 installedPackage.FullPath,
                 torchVersion,
-                new DownloadPackageVersionOptions
-                {
-                    CommitHash = versionOptions.CommitHash,
-                    IsLatest = versionOptions.IsLatest
-                },
+                installedPackage.PreferredSharedFolderMethod ?? SharedFolderMethod.Symlink,
+                versionOptions,
                 progress,
                 onConsoleOutput
             )
@@ -441,7 +431,8 @@ public abstract class BaseGitPackage : BasePackage
         return new InstalledPackageVersion
         {
             InstalledBranch = versionOptions.BranchName,
-            InstalledCommitSha = versionOptions.CommitHash
+            InstalledCommitSha = versionOptions.CommitHash,
+            IsPrerelease = versionOptions.IsPrerelease
         };
     }
 

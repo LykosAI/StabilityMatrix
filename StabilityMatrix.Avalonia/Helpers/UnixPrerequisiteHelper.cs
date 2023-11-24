@@ -126,16 +126,23 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         }
     }
 
-    public async Task RunGit(
-        string? workingDirectory = null,
+    /// <inheritdoc />
+    public Task RunGit(
+        ProcessArgs args,
         Action<ProcessOutput>? onProcessOutput = null,
-        params string[] args
+        string? workingDirectory = null
     )
     {
-        var command =
-            args.Length == 0 ? "git" : "git " + string.Join(" ", args.Select(ProcessRunner.Quote));
+        // Async progress not supported on Unix
+        return RunGit(args, workingDirectory);
+    }
 
-        var result = await ProcessRunner.RunBashCommand(command, workingDirectory ?? "");
+    /// <inheritdoc />
+    public async Task RunGit(ProcessArgs args, string? workingDirectory = null)
+    {
+        var command = args.Prepend("git");
+
+        var result = await ProcessRunner.RunBashCommand(command.ToArray(), workingDirectory ?? "");
         if (result.ExitCode != 0)
         {
             Logger.Error(
@@ -231,6 +238,13 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
     public Task<string> GetGitOutput(string? workingDirectory = null, params string[] args)
     {
         throw new NotImplementedException();
+    }
+
+    [UnsupportedOSPlatform("Linux")]
+    [UnsupportedOSPlatform("macOS")]
+    public Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        throw new PlatformNotSupportedException();
     }
 
     [UnsupportedOSPlatform("Linux")]

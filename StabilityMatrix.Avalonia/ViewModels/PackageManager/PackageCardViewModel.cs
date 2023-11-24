@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
@@ -35,7 +36,7 @@ public partial class PackageCardViewModel : ProgressViewModel
     private readonly IPackageFactory packageFactory;
     private readonly INotificationService notificationService;
     private readonly ISettingsManager settingsManager;
-    private readonly INavigationService navigationService;
+    private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly ServiceManager<ViewModelBase> vmFactory;
 
     [ObservableProperty]
@@ -66,14 +67,20 @@ public partial class PackageCardViewModel : ProgressViewModel
     private bool canUseConfigMethod;
 
     [ObservableProperty]
+    private bool canUseSymlinkMethod;
+
+    [ObservableProperty]
     private bool useSharedOutput;
+
+    [ObservableProperty]
+    private bool canUseSharedOutput;
 
     public PackageCardViewModel(
         ILogger<PackageCardViewModel> logger,
         IPackageFactory packageFactory,
         INotificationService notificationService,
         ISettingsManager settingsManager,
-        INavigationService navigationService,
+        INavigationService<MainWindowViewModel> navigationService,
         ServiceManager<ViewModelBase> vmFactory
     )
     {
@@ -109,7 +116,11 @@ public partial class PackageCardViewModel : ProgressViewModel
             CanUseConfigMethod =
                 basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Configuration)
                 ?? false;
+            CanUseSymlinkMethod =
+                basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Symlink)
+                ?? false;
             UseSharedOutput = Package?.UseSharedOutputFolder ?? false;
+            CanUseSharedOutput = basePackage?.SharedOutputFolders != null;
         }
     }
 
@@ -254,7 +265,7 @@ public partial class PackageCardViewModel : ProgressViewModel
             var versionOptions = new DownloadPackageVersionOptions { IsLatest = true };
             if (Package.Version.IsReleaseMode)
             {
-                versionOptions.VersionTag = await basePackage.GetLatestVersion();
+                versionOptions = await basePackage.GetLatestVersion(Package.Version.IsPrerelease);
             }
             else
             {
@@ -362,6 +373,39 @@ public partial class PackageCardViewModel : ProgressViewModel
             return;
 
         await ProcessRunner.OpenFolderBrowser(Package.FullPath);
+    }
+
+    [RelayCommand]
+    public async Task OpenPythonPackagesDialog()
+    {
+        if (Package is not { FullPath: not null })
+            return;
+
+        var vm = vmFactory.Get<PythonPackagesViewModel>(vm =>
+        {
+            vm.VenvPath = new DirectoryPath(Package.FullPath, "venv");
+        });
+
+        await vm.GetDialog().ShowAsync();
+    }
+
+    [RelayCommand]
+    private void OpenOnGitHub()
+    {
+        if (Package is null)
+            return;
+
+        var basePackage = packageFactory[Package.PackageName!];
+        if (basePackage == null)
+        {
+            logger.LogWarning(
+                "Could not find package {SelectedPackagePackageName}",
+                Package.PackageName
+            );
+            return;
+        }
+
+        ProcessRunner.OpenUrl(basePackage.GithubUrl);
     }
 
     private async Task<bool> HasUpdate()

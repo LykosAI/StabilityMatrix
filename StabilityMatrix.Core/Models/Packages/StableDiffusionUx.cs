@@ -30,10 +30,12 @@ public class StableDiffusionUx : BaseGitPackage
     public override string LaunchCommand => "launch.py";
     public override Uri PreviewImageUri =>
         new(
-            "https://user-images.githubusercontent.com/124302297/227973574-6003142d-0c7c-41c6-9966-0792a94549e9.png"
+            "https://raw.githubusercontent.com/anapnoe/stable-diffusion-webui-ux/master/screenshot.png"
         );
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
+
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
 
     public StableDiffusionUx(
         IGithubApiCache githubApi,
@@ -173,7 +175,7 @@ public class StableDiffusionUx : BaseGitPackage
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
 
-    public override Task<string> GetLatestVersion() => Task.FromResult("master");
+    public override string MainBranch => "master";
 
     public override bool ShouldIgnoreReleases => true;
 
@@ -182,6 +184,7 @@ public class StableDiffusionUx : BaseGitPackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null

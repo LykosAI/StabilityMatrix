@@ -33,6 +33,7 @@ public class ComfyUI : BaseGitPackage
     public override bool ShouldIgnoreReleases => true;
     public override bool IsInferenceCompatible => true;
     public override string OutputFolderName => "output";
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
 
     public override SharedFolderMethod RecommendedSharedFolderMethod =>
         SharedFolderMethod.Configuration;
@@ -145,7 +146,7 @@ public class ComfyUI : BaseGitPackage
             LaunchOptionDefinition.Extras
         };
 
-    public override Task<string> GetLatestVersion() => Task.FromResult("master");
+    public override string MainBranch => "master";
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[]
@@ -160,6 +161,7 @@ public class ComfyUI : BaseGitPackage
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null

@@ -28,6 +28,8 @@ public class UnknownPackage : BasePackage
 
     public override string OutputFolderName { get; }
 
+    public override PackageDifficulty InstallerSortOrder { get; }
+
     public override Task DownloadPackage(
         string installLocation,
         DownloadPackageVersionOptions versionOptions,
@@ -41,6 +43,7 @@ public class UnknownPackage : BasePackage
     public override Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
+        SharedFolderMethod selectedSharedFolderMethod,
         DownloadPackageVersionOptions versionOptions,
         IProgress<ProgressReport>? progress = null,
         Action<ProcessOutput>? onConsoleOutput = null
@@ -142,7 +145,14 @@ public class UnknownPackage : BasePackage
         IReadOnlyList<string>
     >? SharedOutputFolders { get; }
 
-    public override Task<string> GetLatestVersion() => Task.FromResult(string.Empty);
+    public override Task<DownloadPackageVersionOptions> GetLatestVersion(
+        bool includePrerelease = false
+    )
+    {
+        throw new NotImplementedException();
+    }
+
+    public override string MainBranch { get; }
 
     public override Task<PackageVersionOptions> GetAllVersionOptions() =>
         Task.FromResult(new PackageVersionOptions());
@@ -153,12 +163,4 @@ public class UnknownPackage : BasePackage
         int page = 1,
         int perPage = 10
     ) => Task.FromResult<IEnumerable<GitCommit>?>(null);
-
-    /// <inheritdoc />
-    public override Task<IEnumerable<Branch>> GetAllBranches() =>
-        Task.FromResult(Enumerable.Empty<Branch>());
-
-    /// <inheritdoc />
-    public override Task<IEnumerable<Release>> GetAllReleases() =>
-        Task.FromResult(Enumerable.Empty<Release>());
 }

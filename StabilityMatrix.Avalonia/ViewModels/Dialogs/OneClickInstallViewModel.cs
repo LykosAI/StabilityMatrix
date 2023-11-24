@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -14,6 +15,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Python;
@@ -30,7 +32,7 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly ILogger<OneClickInstallViewModel> logger;
     private readonly IPyRunner pyRunner;
-    private readonly INavigationService navigationService;
+    private readonly INavigationService<MainWindowViewModel> navigationService;
     private const string DefaultPackageName = "stable-diffusion-webui";
 
     [ObservableProperty]
@@ -71,7 +73,7 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
         IPrerequisiteHelper prerequisiteHelper,
         ILogger<OneClickInstallViewModel> logger,
         IPyRunner pyRunner,
-        INavigationService navigationService
+        INavigationService<MainWindowViewModel> navigationService
     )
     {
         this.settingsManager = settingsManager;
@@ -139,26 +141,23 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
             "Packages",
             SelectedPackage.Name
         );
-
-        var downloadVersion = new DownloadPackageVersionOptions { IsLatest = true };
-        var installedVersion = new InstalledPackageVersion();
-
-        var versionOptions = await SelectedPackage.GetAllVersionOptions();
-        if (versionOptions.AvailableVersions != null && versionOptions.AvailableVersions.Any())
+        if (Directory.Exists(installLocation))
         {
-            downloadVersion.VersionTag = versionOptions.AvailableVersions.First().TagName;
-            installedVersion.InstalledReleaseVersion = downloadVersion.VersionTag;
+            var installPath = new DirectoryPath(installLocation);
+            await installPath.DeleteVerboseAsync(logger);
+        }
+
+        var downloadVersion = await SelectedPackage.GetLatestVersion();
+        var installedVersion = new InstalledPackageVersion { IsPrerelease = false };
+
+        if (SelectedPackage.ShouldIgnoreReleases)
+        {
+            installedVersion.InstalledBranch = downloadVersion.BranchName;
+            installedVersion.InstalledCommitSha = downloadVersion.CommitHash;
         }
         else
         {
-            downloadVersion.BranchName = await SelectedPackage.GetLatestVersion();
-            downloadVersion.CommitHash =
-                (await SelectedPackage.GetAllCommits(downloadVersion.BranchName))
-                    ?.FirstOrDefault()
-                    ?.Sha ?? string.Empty;
-
-            installedVersion.InstalledBranch = downloadVersion.BranchName;
-            installedVersion.InstalledCommitSha = downloadVersion.CommitHash;
+            installedVersion.InstalledReleaseVersion = downloadVersion.VersionTag;
         }
 
         var torchVersion = SelectedPackage.GetRecommendedTorchVersion();
@@ -174,6 +173,7 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
         var installStep = new InstallPackageStep(
             SelectedPackage,
             torchVersion,
+            recommendedSharedFolderMethod,
             downloadVersion,
             installLocation
         );

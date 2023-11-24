@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using NLog;
 using Salaros.Configuration;
@@ -9,6 +10,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Processes;
+using Yoh.Text.Json.NamingPolicies;
 
 namespace StabilityMatrix.Core.Python;
 
@@ -293,6 +295,149 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     }
 
     /// <summary>
+    /// Run a pip list command, return results as PipPackageInfo objects.
+    /// </summary>
+    public async Task<IReadOnlyList<PipPackageInfo>> PipList()
+    {
+        if (!File.Exists(PipPath))
+        {
+            throw new FileNotFoundException("pip not found", PipPath);
+        }
+
+        SetPyvenvCfg(PyRunner.PythonDir);
+
+        var result = await ProcessRunner
+            .GetProcessResultAsync(
+                PythonPath,
+                "-m pip list --format=json",
+                WorkingDirectory?.FullPath,
+                EnvironmentVariables
+            )
+            .ConfigureAwait(false);
+
+        // Check return code
+        if (result.ExitCode != 0)
+        {
+            throw new ProcessException(
+                $"pip list failed with code {result.ExitCode}: {result.StandardOutput}, {result.StandardError}"
+            );
+        }
+
+        // Use only first line, since there might be pip update messages later
+        if (
+            result.StandardOutput
+                ?.SplitLines(StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .FirstOrDefault()
+            is not { } firstLine
+        )
+        {
+            return new List<PipPackageInfo>();
+        }
+
+        return JsonSerializer.Deserialize<List<PipPackageInfo>>(
+                firstLine,
+                new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicies.SnakeCaseLower
+                }
+            ) ?? new List<PipPackageInfo>();
+    }
+
+    /// <summary>
+    /// Run a pip show command, return results as PipPackageInfo objects.
+    /// </summary>
+    public async Task<PipShowResult?> PipShow(string packageName)
+    {
+        if (!File.Exists(PipPath))
+        {
+            throw new FileNotFoundException("pip not found", PipPath);
+        }
+
+        SetPyvenvCfg(PyRunner.PythonDir);
+
+        var result = await ProcessRunner
+            .GetProcessResultAsync(
+                PythonPath,
+                new[] { "-m", "pip", "show", packageName },
+                WorkingDirectory?.FullPath,
+                EnvironmentVariables
+            )
+            .ConfigureAwait(false);
+
+        // Check return code
+        if (result.ExitCode != 0)
+        {
+            throw new ProcessException(
+                $"pip show failed with code {result.ExitCode}: {result.StandardOutput}, {result.StandardError}"
+            );
+        }
+
+        if (result.StandardOutput!.StartsWith("WARNING: Package(s) not found:"))
+        {
+            return null;
+        }
+
+        return PipShowResult.Parse(result.StandardOutput);
+    }
+
+    /// <summary>
+    /// Run a pip index command, return result as PipIndexResult.
+    /// </summary>
+    public async Task<PipIndexResult?> PipIndex(string packageName, string? indexUrl = null)
+    {
+        if (!File.Exists(PipPath))
+        {
+            throw new FileNotFoundException("pip not found", PipPath);
+        }
+
+        SetPyvenvCfg(PyRunner.PythonDir);
+
+        var args = new ProcessArgsBuilder(
+            "-m",
+            "pip",
+            "index",
+            "versions",
+            packageName,
+            "--no-color",
+            "--disable-pip-version-check"
+        );
+
+        if (indexUrl is not null)
+        {
+            args = args.AddArg(("--index-url", indexUrl));
+        }
+
+        var result = await ProcessRunner
+            .GetProcessResultAsync(
+                PythonPath,
+                args,
+                WorkingDirectory?.FullPath,
+                EnvironmentVariables
+            )
+            .ConfigureAwait(false);
+
+        // Check return code
+        if (result.ExitCode != 0)
+        {
+            throw new ProcessException(
+                $"pip index failed with code {result.ExitCode}: {result.StandardOutput}, {result.StandardError}"
+            );
+        }
+
+        if (
+            string.IsNullOrEmpty(result.StandardOutput)
+            || result.StandardOutput!
+                .SplitLines()
+                .Any(l => l.StartsWith("ERROR: No matching distribution found"))
+        )
+        {
+            return null;
+        }
+
+        return PipIndexResult.Parse(result.StandardOutput);
+    }
+
+    /// <summary>
     /// Run a custom install command. Waits for the process to exit.
     /// workingDirectory defaults to RootPath.
     /// </summary>
@@ -404,7 +549,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         }
 
         // Disable pip caching - uses significant memory for large packages like torch
-        env["PIP_NO_CACHE_DIR"] = "true";
+        // env["PIP_NO_CACHE_DIR"] = "true";
 
         // On windows, add portable git to PATH and binary as GIT
         if (Compat.IsWindows)
@@ -479,7 +624,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         if (Process is not null)
         {
             Process.CancelStreamReaders();
-            Process.Kill();
+            Process.Kill(true);
             Process.Dispose();
         }
 
@@ -494,16 +639,16 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     {
         if (Process is { HasExited: false })
         {
-            Process.Kill();
+            Process.Kill(true);
             try
             {
                 await Process
-                    .WaitForExitAsync(new CancellationTokenSource(1000).Token)
+                    .WaitForExitAsync(new CancellationTokenSource(5000).Token)
                     .ConfigureAwait(false);
             }
             catch (OperationCanceledException e)
             {
-                Logger.Error(e, "Venv Process did not exit in time in DisposeAsync");
+                Logger.Warn(e, "Venv Process did not exit in time in DisposeAsync");
 
                 Process.CancelStreamReaders();
             }

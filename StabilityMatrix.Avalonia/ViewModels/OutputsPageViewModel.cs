@@ -8,13 +8,16 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
+using Nito.Disposables.Internals;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
@@ -46,7 +49,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly IPackageFactory packageFactory;
     private readonly INotificationService notificationService;
-    private readonly INavigationService navigationService;
+    private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly ILogger<OutputsPageViewModel> logger;
     public override string Title => Resources.Label_OutputsPageTitle;
 
@@ -66,10 +69,10 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanShowOutputTypes))]
-    private PackageOutputCategory selectedCategory;
+    private PackageOutputCategory? selectedCategory;
 
     [ObservableProperty]
-    private SharedOutputType selectedOutputType;
+    private SharedOutputType? selectedOutputType;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(NumImagesSelected))]
@@ -80,6 +83,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     [ObservableProperty]
     private Size imageSize = new(300, 300);
+
+    [ObservableProperty]
+    private bool isConsolidating;
 
     public bool CanShowOutputTypes =>
         SelectedCategory?.Name?.Equals("Shared Output Folder") ?? false;
@@ -93,7 +99,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         ISettingsManager settingsManager,
         IPackageFactory packageFactory,
         INotificationService notificationService,
-        INavigationService navigationService,
+        INavigationService<MainWindowViewModel> navigationService,
         ILogger<OutputsPageViewModel> logger
     )
     {
@@ -115,8 +121,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
             .Connect()
             .DeferUntilLoaded()
             .Filter(searchPredicate)
-            .SortBy(file => file.CreatedAt, SortDirection.Descending)
             .Transform(file => new OutputImageViewModel(file))
+            .SortBy(vm => vm.ImageFile.CreatedAt, SortDirection.Descending)
             .Bind(Outputs)
             .WhenPropertyChanged(p => p.IsSelected)
             .Subscribe(_ =>
@@ -130,6 +136,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
             settings => settings.OutputsImageSize,
             delay: TimeSpan.FromMilliseconds(250)
         );
+
+        RefreshCategories();
     }
 
     public override void OnLoaded()
@@ -141,34 +149,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
             return;
 
         Directory.CreateDirectory(settingsManager.ImagesDirectory);
-        var packageCategories = settingsManager.Settings.InstalledPackages
-            .Where(x => !x.UseSharedOutputFolder)
-            .Select(p =>
-            {
-                var basePackage = packageFactory[p.PackageName!];
-                if (basePackage is null)
-                    return null;
 
-                return new PackageOutputCategory
-                {
-                    Path = Path.Combine(p.FullPath, basePackage.OutputFolderName),
-                    Name = p.DisplayName
-                };
-            })
-            .ToList();
-
-        packageCategories.Insert(
-            0,
-            new PackageOutputCategory
-            {
-                Path = settingsManager.ImagesDirectory,
-                Name = "Shared Output Folder"
-            }
-        );
-
-        Categories = new ObservableCollection<PackageOutputCategory>(packageCategories);
-        SelectedCategory = Categories.First();
-        SelectedOutputType = SharedOutputType.All;
+        SelectedCategory ??= Categories.First();
+        SelectedOutputType ??= SharedOutputType.All;
         SearchQuery = string.Empty;
         ImageSize = settingsManager.Settings.OutputsImageSize;
 
@@ -194,19 +177,19 @@ public partial class OutputsPageViewModel : PageViewModelBase
         GetOutputs(path);
     }
 
-    partial void OnSelectedOutputTypeChanged(SharedOutputType oldValue, SharedOutputType newValue)
+    partial void OnSelectedOutputTypeChanged(SharedOutputType? oldValue, SharedOutputType? newValue)
     {
-        if (oldValue == newValue)
+        if (oldValue == newValue || newValue == null)
             return;
 
         var path =
             newValue == SharedOutputType.All
-                ? SelectedCategory.Path
+                ? SelectedCategory?.Path
                 : Path.Combine(SelectedCategory.Path, newValue.ToString());
         GetOutputs(path);
     }
 
-    public async Task OnImageClick(OutputImageViewModel item)
+    public Task OnImageClick(OutputImageViewModel item)
     {
         // Select image if we're in "select mode"
         if (NumItemsSelected > 0)
@@ -215,8 +198,10 @@ public partial class OutputsPageViewModel : PageViewModelBase
         }
         else
         {
-            await ShowImageDialog(item);
+            return ShowImageDialog(item);
         }
+
+        return Task.CompletedTask;
     }
 
     public async Task ShowImageDialog(OutputImageViewModel item)
@@ -265,14 +250,19 @@ public partial class OutputsPageViewModel : PageViewModelBase
         await vm.GetDialog().ShowAsync();
     }
 
-    public async Task CopyImage(string imagePath)
+    public Task CopyImage(string imagePath)
     {
         var clipboard = App.Clipboard;
-
-        await clipboard.SetFileDataObjectAsync(imagePath);
+        return clipboard.SetFileDataObjectAsync(imagePath);
     }
 
-    public async Task OpenImage(string imagePath) => await ProcessRunner.OpenFileBrowser(imagePath);
+    public Task OpenImage(string imagePath) => ProcessRunner.OpenFileBrowser(imagePath);
+
+    public void Refresh()
+    {
+        Dispatcher.UIThread.Post(RefreshCategories);
+        Dispatcher.UIThread.Post(OnLoaded);
+    }
 
     public async Task DeleteImage(OutputImageViewModel? item)
     {
@@ -378,12 +368,119 @@ public partial class OutputsPageViewModel : PageViewModelBase
         ClearSelection();
     }
 
+    public async Task ConsolidateImages()
+    {
+        var stackPanel = new StackPanel();
+        stackPanel.Children.Add(
+            new TextBlock
+            {
+                Text = Resources.Label_ConsolidateExplanation,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 8, 0, 16)
+            }
+        );
+        foreach (var category in Categories)
+        {
+            if (category.Name == "Shared Output Folder")
+            {
+                continue;
+            }
+
+            stackPanel.Children.Add(
+                new CheckBox
+                {
+                    Content = $"{category.Name} ({category.Path})",
+                    IsChecked = true,
+                    Margin = new Thickness(0, 8, 0, 0),
+                    Tag = category.Path
+                }
+            );
+        }
+
+        var confirmationDialog = new BetterContentDialog
+        {
+            Title = Resources.Label_AreYouSure,
+            Content = stackPanel,
+            PrimaryButtonText = Resources.Action_Yes,
+            SecondaryButtonText = Resources.Action_Cancel,
+            DefaultButton = ContentDialogButton.Primary,
+            IsSecondaryButtonEnabled = true,
+        };
+
+        var dialogResult = await confirmationDialog.ShowAsync();
+        if (dialogResult != ContentDialogResult.Primary)
+            return;
+
+        IsConsolidating = true;
+
+        Directory.CreateDirectory(settingsManager.ConsolidatedImagesDirectory);
+
+        foreach (
+            var category in stackPanel.Children.OfType<CheckBox>().Where(c => c.IsChecked == true)
+        )
+        {
+            if (
+                string.IsNullOrWhiteSpace(category.Tag?.ToString())
+                || !Directory.Exists(category.Tag?.ToString())
+            )
+                continue;
+
+            var directory = category.Tag.ToString();
+
+            foreach (
+                var path in Directory.EnumerateFiles(
+                    directory,
+                    "*.png",
+                    SearchOption.AllDirectories
+                )
+            )
+            {
+                try
+                {
+                    var file = new FilePath(path);
+                    var newPath = settingsManager.ConsolidatedImagesDirectory + file.Name;
+                    if (file.FullPath == newPath)
+                        continue;
+
+                    // ignore inference if not in inference directory
+                    if (
+                        file.FullPath.Contains(settingsManager.ImagesInferenceDirectory)
+                        && directory != settingsManager.ImagesInferenceDirectory
+                    )
+                    {
+                        continue;
+                    }
+
+                    await file.MoveToWithIncrementAsync(newPath);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Error when consolidating: ");
+                }
+            }
+        }
+
+        OnLoaded();
+        IsConsolidating = false;
+    }
+
+    public void ClearSearchQuery()
+    {
+        SearchQuery = string.Empty;
+    }
+
     private void GetOutputs(string directory)
     {
         if (!settingsManager.IsLibraryDirSet)
             return;
 
-        if (!Directory.Exists(directory) && SelectedOutputType != SharedOutputType.All)
+        if (
+            !Directory.Exists(directory)
+            && (
+                SelectedCategory.Path != settingsManager.ImagesDirectory
+                || SelectedOutputType != SharedOutputType.All
+            )
+        )
         {
             Directory.CreateDirectory(directory);
             return;
@@ -391,8 +488,72 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         var files = Directory
             .EnumerateFiles(directory, "*.png", SearchOption.AllDirectories)
-            .Select(file => LocalImageFile.FromPath(file));
+            .Select(file => LocalImageFile.FromPath(file))
+            .ToList();
 
-        OutputsCache.EditDiff(files);
+        if (files.Count == 0)
+        {
+            OutputsCache.Clear();
+        }
+        else
+        {
+            OutputsCache.EditDiff(files);
+        }
+    }
+
+    private void RefreshCategories()
+    {
+        if (Design.IsDesignMode)
+            return;
+
+        if (!settingsManager.IsLibraryDirSet)
+            return;
+
+        var previouslySelectedCategory = SelectedCategory;
+
+        var packageCategories = settingsManager.Settings.InstalledPackages
+            .Where(x => !x.UseSharedOutputFolder)
+            .Select(packageFactory.GetPackagePair)
+            .WhereNotNull()
+            .Where(
+                p =>
+                    p.BasePackage.SharedOutputFolders != null
+                    && p.BasePackage.SharedOutputFolders.Any()
+            )
+            .Select(
+                pair =>
+                    new PackageOutputCategory
+                    {
+                        Path = Path.Combine(
+                            pair.InstalledPackage.FullPath!,
+                            pair.BasePackage.OutputFolderName
+                        ),
+                        Name = pair.InstalledPackage.DisplayName ?? ""
+                    }
+            )
+            .ToList();
+
+        packageCategories.Insert(
+            0,
+            new PackageOutputCategory
+            {
+                Path = settingsManager.ImagesDirectory,
+                Name = "Shared Output Folder"
+            }
+        );
+
+        packageCategories.Insert(
+            1,
+            new PackageOutputCategory
+            {
+                Path = settingsManager.ImagesInferenceDirectory,
+                Name = "Inference"
+            }
+        );
+
+        Categories = new ObservableCollection<PackageOutputCategory>(packageCategories);
+        SelectedCategory =
+            Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name)
+            ?? Categories.First();
     }
 }

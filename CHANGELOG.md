@@ -5,12 +5,6 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
-## v2.7.0-dev.3
-## Changed
-#### Model Browser
-- Improved number formatting with K/M suffixes for download and favorite counts
-- Animated zoom effect on hovering over model images
-
 ## v2.7.0-dev.2
 ### Added
 #### General
@@ -40,6 +34,15 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - Choose between Stable, Preview, and Dev update channels
 ## Changed
 - Model Browser page has been redesigned, featuring more information like rating and download counts
+
+## v2.6.3
+### Fixed
+- Fixed InvalidOperationException during prerequisite installs on certain platforms where process name and duration reporting are not supported
+## v2.7.0-dev.3
+## Changed
+#### Model Browser
+- Improved number formatting with K/M suffixes for download and favorite counts
+- Animated zoom effect on hovering over model images
 
 ## v2.6.2
 ### Changed

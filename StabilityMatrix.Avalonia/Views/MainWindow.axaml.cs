@@ -32,6 +32,7 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Processes;
@@ -183,7 +184,7 @@ public partial class MainWindow : AppWindowBase
                 var tip = this.FindControl<TeachingTip>("UpdateAvailableTeachingTip")!;
 
                 tip.Target = target;
-                tip.Subtitle = $"{Compat.AppVersion.WithoutMetadata()} -> {updateInfo.Version}";
+                tip.Subtitle = $"{Compat.AppVersion.ToDisplayString()} -> {updateInfo.Version}";
                 tip.IsOpen = true;
             }
         });

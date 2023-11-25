@@ -183,7 +183,7 @@ public partial class MainWindow : AppWindowBase
                 var tip = this.FindControl<TeachingTip>("UpdateAvailableTeachingTip")!;
 
                 tip.Target = target;
-                tip.Subtitle = $"{Compat.AppVersion} -> {updateInfo.Version}";
+                tip.Subtitle = $"{Compat.AppVersion.WithoutMetadata()} -> {updateInfo.Version}";
                 tip.IsOpen = true;
             }
         });

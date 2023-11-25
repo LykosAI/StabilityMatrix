@@ -78,7 +78,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     // ReSharper disable once MemberCanBeMadeStatic.Global
     public string AppVersion =>
-        $"Version {Compat.AppVersion.ToDisplayString()}" + (Program.IsDebugBuild ? " (Debug)" : "");
+        Program.IsDebugBuild
+            ? $"Version {Compat.AppVersion.ToDisplayString()} (Debug)"
+            : $"Version {Compat.AppVersion.WithoutMetadata()}";
 
     // Theme section
     [ObservableProperty]

@@ -44,6 +44,11 @@ public class Settings
     public UpdateChannel PreferredUpdateChannel { get; set; } = UpdateChannel.Stable;
 
     /// <summary>
+    /// Whether to check for updates
+    /// </summary>
+    public bool CheckForUpdates { get; set; } = true;
+
+    /// <summary>
     /// The last auto-update version that had a notification dismissed by the user
     /// </summary>
     [JsonConverter(typeof(SemVersionJsonConverter))]
@@ -98,6 +103,8 @@ public class Settings
     public bool AutoScrollLaunchConsoleToEnd { get; set; } = true;
 
     public HashSet<int> FavoriteModels { get; set; } = new();
+
+    public HashSet<TeachingTip> SeenTeachingTips { get; set; } = new();
 
     public Size InferenceImageSize { get; set; } = new(150, 190);
     public Size OutputsImageSize { get; set; } = new(300, 300);

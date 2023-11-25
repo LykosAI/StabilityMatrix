@@ -1,7 +1,10 @@
 ﻿using System.Text.Json;
+using System.Web;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -18,6 +21,7 @@ public class UpdateHelper : IUpdateHelper
     private readonly IHttpClientFactory httpClientFactory;
     private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
+    private readonly ILykosAuthApi lykosAuthApi;
     private readonly DebugOptions debugOptions;
     private readonly System.Timers.Timer timer = new(TimeSpan.FromMinutes(60));
 
@@ -29,18 +33,23 @@ public class UpdateHelper : IUpdateHelper
 
     public static FilePath ExecutablePath => UpdateFolder.JoinFile(Compat.GetExecutableName());
 
+    /// <inheritdoc />
+    public event EventHandler<UpdateStatusChangedEventArgs>? UpdateStatusChanged;
+
     public UpdateHelper(
         ILogger<UpdateHelper> logger,
         IHttpClientFactory httpClientFactory,
         IDownloadService downloadService,
         IOptions<DebugOptions> debugOptions,
-        ISettingsManager settingsManager
+        ISettingsManager settingsManager,
+        ILykosAuthApi lykosAuthApi
     )
     {
         this.logger = logger;
         this.httpClientFactory = httpClientFactory;
         this.downloadService = downloadService;
         this.settingsManager = settingsManager;
+        this.lykosAuthApi = lykosAuthApi;
         this.debugOptions = debugOptions.Value;
 
         timer.Elapsed += async (_, _) =>
@@ -67,10 +76,34 @@ public class UpdateHelper : IUpdateHelper
 
         try
         {
-            // download the file from URL
+            var url = updateInfo.Url.ToString();
+
+            // check if need authenticated download
+            const string authedPathPrefix = "/lykos-s1/";
+            if (
+                updateInfo.Url.Host.Equals("cdn.lykos.ai", StringComparison.OrdinalIgnoreCase)
+                && updateInfo.Url.PathAndQuery.StartsWith(
+                    authedPathPrefix,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            {
+                logger.LogInformation(
+                    "Handling authenticated update download: {Url}",
+                    updateInfo.Url
+                );
+
+                var path = updateInfo.Url.PathAndQuery.StripStart(authedPathPrefix);
+                path = HttpUtility.UrlDecode(path);
+                url = (
+                    await lykosAuthApi.GetFilesDownload(path).ConfigureAwait(false)
+                ).DownloadUrl.ToString();
+            }
+
+            // Download update
             await downloadService
                 .DownloadToFileAsync(
-                    updateInfo.Url.ToString(),
+                    url,
                     downloadFile,
                     progress: progress,
                     httpClientName: "UpdateClient"
@@ -118,7 +151,7 @@ public class UpdateHelper : IUpdateHelper
         }
     }
 
-    private async Task CheckForUpdate()
+    public async Task CheckForUpdate()
     {
         try
         {
@@ -163,12 +196,31 @@ public class UpdateHelper : IUpdateHelper
                     && ValidateUpdate(update)
                 )
                 {
-                    NotifyUpdateAvailable(update);
+                    OnUpdateStatusChanged(
+                        new UpdateStatusChangedEventArgs
+                        {
+                            LatestUpdate = update,
+                            UpdateChannels = updateManifest.Updates.ToDictionary(
+                                kv => kv.Key,
+                                kv => kv.Value.GetInfoForCurrentPlatform()
+                            )!
+                        }
+                    );
                     return;
                 }
             }
 
             logger.LogInformation("No update available");
+
+            OnUpdateStatusChanged(
+                new UpdateStatusChangedEventArgs
+                {
+                    UpdateChannels = updateManifest.Updates.ToDictionary(
+                        kv => kv.Key,
+                        kv => kv.Value.GetInfoForCurrentPlatform()
+                    )!
+                }
+            );
         }
         catch (Exception e)
         {
@@ -223,6 +275,22 @@ public class UpdateHelper : IUpdateHelper
         }
 
         return false;
+    }
+
+    private void OnUpdateStatusChanged(UpdateStatusChangedEventArgs args)
+    {
+        UpdateStatusChanged?.Invoke(this, args);
+
+        if (args.LatestUpdate is { } update)
+        {
+            logger.LogInformation(
+                "Update available {AppVer} -> {UpdateVer}",
+                Compat.AppVersion,
+                update.Version
+            );
+
+            EventManager.Instance.OnUpdateAvailable(update);
+        }
     }
 
     private void NotifyUpdateAvailable(UpdateInfo update)

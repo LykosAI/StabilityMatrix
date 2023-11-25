@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.ViewModels;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.UITests.Extensions;
@@ -33,6 +34,7 @@ public class MainWindowTests
                 vm => vm.FooterPages,
                 vm => vm.CurrentPage
             );
+            settings.IgnoreMember<UpdateViewModel>(vm => vm.CurrentVersionText);
             settings.DisableDiff();
             return settings;
         }

@@ -8,7 +8,7 @@ public class ConnectedModelInfo
 {
     [JsonIgnore]
     public const string FileExtension = ".cm-info.json";
-    
+
     public int ModelId { get; set; }
     public string ModelName { get; set; }
     public string ModelDescription { get; set; }
@@ -22,16 +22,20 @@ public class ConnectedModelInfo
     public CivitFileMetadata FileMetadata { get; set; }
     public DateTimeOffset ImportedAt { get; set; }
     public CivitFileHashes Hashes { get; set; }
+    public string[]? TrainedWords { get; set; }
 
     // User settings
     public string? UserTitle { get; set; }
     public string? ThumbnailImageUrl { get; set; }
-    
-    public ConnectedModelInfo()
-    {
-    }
-    
-    public ConnectedModelInfo(CivitModel civitModel, CivitModelVersion civitModelVersion, CivitFile civitFile, DateTimeOffset importedAt)
+
+    public ConnectedModelInfo() { }
+
+    public ConnectedModelInfo(
+        CivitModel civitModel,
+        CivitModelVersion civitModelVersion,
+        CivitFile civitFile,
+        DateTimeOffset importedAt
+    )
     {
         ModelId = civitModel.Id;
         ModelName = civitModel.Name;
@@ -46,11 +50,18 @@ public class ConnectedModelInfo
         BaseModel = civitModelVersion.BaseModel;
         FileMetadata = civitFile.Metadata;
         Hashes = civitFile.Hashes;
+        TrainedWords = civitModelVersion.TrainedWords;
     }
-    
+
     public static ConnectedModelInfo? FromJson(string json)
     {
-        return JsonSerializer.Deserialize<ConnectedModelInfo>(json, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull } );
+        return JsonSerializer.Deserialize<ConnectedModelInfo>(
+            json,
+            new JsonSerializerOptions
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            }
+        );
     }
 
     /// <summary>
@@ -65,4 +76,8 @@ public class ConnectedModelInfo
         var json = JsonSerializer.Serialize(this);
         await File.WriteAllTextAsync(Path.Combine(directoryPath, name), json);
     }
+
+    [JsonIgnore]
+    public string TrainedWordsString =>
+        TrainedWords != null ? string.Join(", ", TrainedWords) : string.Empty;
 }

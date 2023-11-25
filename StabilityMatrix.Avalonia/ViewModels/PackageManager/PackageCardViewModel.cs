@@ -36,7 +36,7 @@ public partial class PackageCardViewModel : ProgressViewModel
     private readonly IPackageFactory packageFactory;
     private readonly INotificationService notificationService;
     private readonly ISettingsManager settingsManager;
-    private readonly INavigationService navigationService;
+    private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly ServiceManager<ViewModelBase> vmFactory;
 
     [ObservableProperty]
@@ -80,7 +80,7 @@ public partial class PackageCardViewModel : ProgressViewModel
         IPackageFactory packageFactory,
         INotificationService notificationService,
         ISettingsManager settingsManager,
-        INavigationService navigationService,
+        INavigationService<MainWindowViewModel> navigationService,
         ServiceManager<ViewModelBase> vmFactory
     )
     {

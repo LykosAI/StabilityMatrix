@@ -5,6 +5,51 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.7.0-dev.3
+### Added
+#### Model Browser
+- Right clicking anywhere on the model card will open the same menu as the three-dots button
+- New model downloads will save trigger words in metadata, if available
+#### Checkpoints Page
+- Added "Copy Trigger Words" option to the three-dots menu on the Checkpoints page (when data is available)
+- Added trigger words on checkpoint card and tooltip
+### Changed
+#### Model Browser
+- Improved number formatting with K/M suffixes for download and favorite counts
+- Animated zoom effect on hovering over model images
+#### Checkpoints Page
+- Rearranged top row layout to use CommandBar
+
+## v2.7.0-dev.2
+### Added
+#### General
+- Added an X button to all search fields to instantly clear them (Esc key also works) 
+#### Outputs Page 
+- Added Refresh button to update gallery from file system changes
+#### Checkpoints Page
+- Added the ability to drag & drop checkpoints between different folders
+## Changed
+#### Outputs Page
+- Updated button and menu layout
+#### Packages Page
+- Rearranged Add Package dialog slightly to accommodate longer package list
+### Fixed
+- Fixed InvalidOperation errors when signing into accounts shortly after signing out, while the previous account update is still running
+- Fixed Outputs page reverting back to Shared Output Folder every time the page is reloaded
+- Potentially fixed updates sometimes clearing settings or launching in the wrong directory
+
+## v2.7.0-dev.1
+### Added
+- Accounts Settings Subpage
+  - Lykos Account sign-up and login - currently for Patreon OAuth connections but GitHub requests caching and settings sync are planned
+  - Supporters can now connect your Patreon accounts, then head to the Updates page to choose to receive auto-updates from the Dev or Preview channels
+  - CivitAI Account login with API key - enables downloading models from the Browser page that require CivitAI logins, more integrations like liking and commenting are also planned
+- Updates Settings Subpage
+  - Toggle auto-update notifications and manually check for updates
+  - Choose between Stable, Preview, and Dev update channels
+## Changed
+- Model Browser page has been redesigned, featuring more information like rating and download counts
+
 ## v2.6.5
 ### Fixed
 - Fixed process errors when installing or updating Pip packages using the Python packages dialog

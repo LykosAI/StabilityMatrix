@@ -9,6 +9,8 @@ namespace StabilityMatrix.Core.Models.Api;
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 public enum CivitModelType
 {
+    Unknown,
+
     [ConvertTo<SharedFolderType>(SharedFolderType.StableDiffusion)]
     Checkpoint,
 
@@ -39,6 +41,5 @@ public enum CivitModelType
     Wildcards,
     Workflows,
     Other,
-    All,
-    Unknown
+    All
 }

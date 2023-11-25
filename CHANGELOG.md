@@ -50,6 +50,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## Changed
 - Model Browser page has been redesigned, featuring more information like rating and download counts
 
+## v2.6.5
+### Fixed
+- Fixed process errors when installing or updating Pip packages using the Python packages dialog
+
+## v2.6.4
+### Fixed
+- Fixed errors preventing Model Browser from finding results with certain search queries
+
 ## v2.6.3
 ### Fixed
 - Fixed InvalidOperationException during prerequisite installs on certain platforms where process name and duration reporting are not supported

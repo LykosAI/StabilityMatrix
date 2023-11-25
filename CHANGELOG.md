@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.7.0-dev.3
 ### Added
+- New package: [RuinedFooocus](https://github.com/runew0lf/RuinedFooocus)
 #### Model Browser
 - Right clicking anywhere on the model card will open the same menu as the three-dots button
 - New model downloads will save trigger words in metadata, if available

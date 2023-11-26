@@ -14,6 +14,7 @@
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointManager"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+    xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
     d:DataContext="{x:Static designData:DesignData.CheckpointBrowserViewModel}"
     d:DesignHeight="700"
     d:DesignWidth="800"
@@ -137,7 +138,49 @@
                                 </Grid>
                             </Button>
                         </StackPanel>
-
+                        
+                        <!-- Username pill card -->
+                        <Border
+                            BoxShadow="inset 1.2 0 80 1.8 #66000000"
+                            CornerRadius="16"
+                            Margin="4"
+                            Grid.Row="0" 
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Bottom">
+                            <Border.Resources>
+                                <DropShadowEffect
+                                    x:Key="TextDropShadowEffect"
+                                    BlurRadius="12"
+                                    Color="#FF000000"
+                                    Opacity="0.9"/>
+                                <DropShadowEffect
+                                    x:Key="ImageDropShadowEffect"
+                                    BlurRadius="12"
+                                    Color="#FF000000"
+                                    Opacity="0.2"/>
+                            </Border.Resources>
+                            <Button
+                                Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
+                                CommandParameter="{Binding CivitModel.Creator.ProfileUrl}"
+                                CornerRadius="16"
+                                Classes="transparent"
+                                Padding="10,4">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <controls:BetterAdvancedImage
+                                        Width="22"
+                                        Height="22"
+                                        Effect="{StaticResource ImageDropShadowEffect}"
+                                        CornerRadius="11"
+                                        RenderOptions.BitmapInterpolationMode="HighQuality"
+                                        IsVisible="{Binding CivitModel.Creator.Image, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                        Source="{Binding CivitModel.Creator.Image}"/>
+                                    <TextBlock 
+                                        VerticalAlignment="Center"
+                                        Effect="{StaticResource TextDropShadowEffect}"
+                                        Text="{Binding CivitModel.Creator.Username}"/>
+                                </StackPanel>
+                            </Button>
+                        </Border>
 
                         <StackPanel Grid.Row="0" Orientation="Horizontal">
                             <controls:Card

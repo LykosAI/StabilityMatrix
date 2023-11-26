@@ -78,7 +78,7 @@ public partial class MainWindowViewModel : ViewModelBase
         SelectedCategory ??= Pages.FirstOrDefault();
     }
 
-    public override async Task OnLoadedAsync()
+    protected override async Task OnInitialLoadedAsync()
     {
         await base.OnLoadedAsync();
 
@@ -111,7 +111,10 @@ public partial class MainWindowViewModel : ViewModelBase
         var startupTime = CodeTimer.FormatTime(Program.StartupTimer.Elapsed);
         Logger.Info($"App started ({startupTime})");
 
-        if (Program.Args.DebugOneClickInstall || !settingsManager.Settings.InstalledPackages.Any())
+        if (
+            Program.Args.DebugOneClickInstall
+            || settingsManager.Settings.InstalledPackages.Count == 0
+        )
         {
             var viewModel = dialogFactory.Get<OneClickInstallViewModel>();
             var dialog = new BetterContentDialog

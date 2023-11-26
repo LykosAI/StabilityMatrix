@@ -310,7 +310,12 @@ public static class DesignData
                         Stats = new CivitModelStats { Rating = 3.5, RatingCount = 24 },
                         ModelVersions = [
                             new() { Name = "v1.2.2-Inpainting" } 
-                        ]
+                        ],
+                        Creator = new CivitCreator
+                        {
+                            Image = "https://gravatar.com/avatar/fe74084ae8a081dc2283f5bde4736756ad?f=y&d=retro",
+                            Username = "creator-1"
+                        }
                     };
                 }),
                 dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
@@ -334,7 +339,12 @@ public static class DesignData
                                     }
                                 }
                             } 
-                        ]
+                        ],
+                        Creator = new CivitCreator
+                        {
+                            Image = "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?f=y&d=retro",
+                            Username = "creator-2"
+                        }
                     };
                 })
             };

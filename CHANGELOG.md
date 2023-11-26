@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 #### Model Browser
 - Right clicking anywhere on the model card will open the same menu as the three-dots button
 - New model downloads will save trigger words in metadata, if available
+- Model author username and avatar display, with clickable link to their profile
 #### Checkpoints Page
 - Added "Copy Trigger Words" option to the three-dots menu on the Checkpoints page (when data is available)
 - Added trigger words on checkpoint card and tooltip
@@ -20,6 +21,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Animated zoom effect on hovering over model images
 #### Checkpoints Page
 - Rearranged top row layout to use CommandBar
+### Fixed
+- Improved startup time and window load time after exiting dialogs
 
 ## v2.7.0-dev.2
 ### Added

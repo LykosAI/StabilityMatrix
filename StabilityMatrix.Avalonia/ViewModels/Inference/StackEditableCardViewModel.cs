@@ -48,9 +48,24 @@ public partial class StackEditableCardViewModel : StackViewModelBase
         this.vmFactory = vmFactory;
     }
 
+    /// <summary>
+    /// Populate <see cref="StackViewModelBase.Cards"/> with new instances of <see cref="DefaultModules"/> types
+    /// </summary>
     public void InitializeDefaults()
     {
-        AddCards(DefaultModules.Select(t => vmFactory.Get(t)).Cast<LoadableViewModelBase>());
+        foreach (var module in DefaultModules)
+        {
+            AddModule(module);
+        }
+    }
+
+    partial void OnIsEditEnabledChanged(bool value)
+    {
+        // Propagate edit state to children
+        foreach (var module in Cards.OfType<ModuleBase>())
+        {
+            module.IsEditEnabled = value;
+        }
     }
 
     /// <inheritdoc />

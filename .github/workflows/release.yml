@@ -209,8 +209,6 @@ jobs:
           files: |
             StabilityMatrix-win-x64.zip
             StabilityMatrix-linux-x64.zip
-            StabilityMatrix-win-x64/StabilityMatrix.exe
-            StabilityMatrix-linux-x64/StabilityMatrix.AppImage
           fail_on_unmatched_files: true
           tag_name: v${{ github.event.inputs.version }}
           body: ${{ steps.release_notes.outputs.release_notes }}
@@ -235,10 +233,10 @@ jobs:
           python-version: '3.11'
           
       - name: Install Python Dependencies
-        run: pip install stability-matrix-tools~=0.2.7
+        run: pip install stability-matrix-tools>=0.2.15
         
       - name: Publish Auto-Update Release
-        run: sm-tools updates publish-matrix -v $RELEASE_VERSION -y
+        run: sm-tools updates publish-matrix-v3 -v ${{ github.event.inputs.version }} -y
 
   publish-auto-update-b2:
     name: Publish Auto-Update Release (B2)

@@ -54,6 +54,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## Changed
 - Model Browser page has been redesigned, featuring more information like rating and download counts
 
+## v2.6.6
+### Fixed
+- Fixed error when receiving unknown model format values from the Model Browser
+
 ## v2.6.5
 ### Fixed
 - Fixed process errors when installing or updating Pip packages using the Python packages dialog

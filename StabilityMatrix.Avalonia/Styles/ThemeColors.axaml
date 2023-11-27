@@ -34,6 +34,7 @@
     <Color x:Key="ThemeEldenRingOrangeColor">#FF4F00</Color>
     <Color x:Key="ThemeBrownColor">#795548</Color>
     <Color x:Key="ThemeGreyColor">#9E9E9E</Color>
+    <Color x:Key="ThemeLightGreyColor">#C0C0C0</Color>
     <Color x:Key="ThemeBlueGreyColor">#607D8B</Color>
     
     <!-- Dark / light dynamic colors -->

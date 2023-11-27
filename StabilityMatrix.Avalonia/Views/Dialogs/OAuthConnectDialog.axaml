@@ -1,0 +1,40 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+                          xmlns:ui="using:FluentAvalonia.UI.Controls"
+                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
+                          xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+                          xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+                          d:DataContext="{x:Static mocks:DesignData.OAuthConnectViewModel}"
+                          x:DataType="vmDialogs:OAuthConnectViewModel"
+                          mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="400"
+                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.OAuthConnectDialog">
+    
+    <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto" Margin="8,4" RowSpacing="12">
+        <sg:SpacedGrid.Styles>
+            <Style Selector="ui|HyperlinkButton > TextBlock">
+                <Setter Property="TextWrapping" Value="WrapWithOverflow"/>
+            </Style>
+        </sg:SpacedGrid.Styles>
+        
+        <ui:HyperlinkButton 
+            Padding="6,0"
+            Content="{Binding Url}"
+            NavigateUri="{Binding Url}"/>
+            
+        <TextBlock
+            Grid.Row="1"
+            Margin="6,0"
+            TextWrapping="WrapWithOverflow"
+            Text="{Binding Description}"/>
+            
+        <ProgressBar
+            IsIndeterminate="True"
+            Grid.Row="2"/>
+    </sg:SpacedGrid>
+</controls:UserControlBase>

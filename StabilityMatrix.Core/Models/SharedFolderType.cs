@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Core.Models;
 
@@ -21,6 +22,8 @@ public enum SharedFolderType
     ApproxVAE = 1 << 11,
     Karlo = 1 << 12,
     DeepDanbooru = 1 << 13,
+
+    [Description("TextualInversion (Embeddings)")]
     TextualInversion = 1 << 14,
     Hypernetwork = 1 << 15,
     ControlNet = 1 << 16,

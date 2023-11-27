@@ -470,12 +470,14 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         }
 
         // See if query is cached
-        var cachedQuery = await liteDbContext.CivitModelQueryCache
-            .IncludeAll()
-            .FindByIdAsync(ObjectHash.GetMd5Guid(modelRequest));
+        var cachedQueryResult = await notificationService.TryAsync(
+            liteDbContext.CivitModelQueryCache
+                .IncludeAll()
+                .FindByIdAsync(ObjectHash.GetMd5Guid(modelRequest))
+        );
 
         // If cached, update model cards
-        if (cachedQuery is not null)
+        if (cachedQueryResult.Result is { } cachedQuery)
         {
             var elapsed = timer.Elapsed;
             Logger.Debug(
@@ -532,6 +534,11 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     public void LastPage()
     {
         CurrentPageNumber = TotalPages;
+    }
+
+    public void ClearSearchQuery()
+    {
+        SearchQuery = string.Empty;
     }
 
     partial void OnShowNsfwChanged(bool value)

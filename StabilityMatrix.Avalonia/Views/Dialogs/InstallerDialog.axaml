@@ -148,7 +148,6 @@
         </Grid>
 
         <Grid Grid.Column="0" Grid.Row="2"
-              Grid.ColumnSpan="2"
               Margin="16,16,16,0"
               RowDefinitions="Auto, Auto, Auto, Auto"
               HorizontalAlignment="Center"
@@ -289,7 +288,7 @@
         </Grid>
 
         <!-- Install Button -->
-        <UniformGrid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
+        <UniformGrid Grid.Row="3" Grid.Column="0"
                      Columns="2"
                      Margin="0,16,0,0"
                      HorizontalAlignment="Center">
@@ -322,8 +321,8 @@
 
         <!-- Available Packages -->
         <ScrollViewer Grid.Column="1" Grid.Row="0"
+                      Grid.RowSpan="4"
                       Margin="8, 16"
-                      MaxHeight="400"
                       VerticalScrollBarVisibility="Auto">
             <ListBox
                 ItemsSource="{Binding AvailablePackages}"
@@ -331,7 +330,7 @@
                 CornerRadius="8">
                 <ListBox.Template>
                     <ControlTemplate>
-                        <ItemsPresenter />
+                        <ItemsPresenter Margin="8,0" />
                     </ControlTemplate>
                 </ListBox.Template>
                 <ListBox.ItemTemplate>

@@ -205,6 +205,12 @@ public class BetterContentDialog : ContentDialog
             viewModel.SecondaryButtonClick += OnDialogButtonClick;
             viewModel.CloseButtonClick += OnDialogButtonClick;
         }
+        else if (Content is ContentDialogViewModelBase viewModelDirect)
+        {
+            viewModelDirect.PrimaryButtonClick += OnDialogButtonClick;
+            viewModelDirect.SecondaryButtonClick += OnDialogButtonClick;
+            viewModelDirect.CloseButtonClick += OnDialogButtonClick;
+        }
         else if (
             (Content as Control)?.DataContext
             is ContentDialogProgressViewModelBase progressViewModel
@@ -263,8 +269,11 @@ public class BetterContentDialog : ContentDialog
 
     protected void OnDialogButtonClick(object? sender, ContentDialogResult e)
     {
-        Result = e;
-        HideCore();
+        Dispatcher.UIThread.Post(() =>
+        {
+            Result = e;
+            HideCore();
+        });
     }
 
     protected override void OnDataContextChanged(EventArgs e)

@@ -149,7 +149,7 @@ public class A3WebUI : BaseGitPackage
                 Name = "No Half",
                 Type = LaunchOptionType.Bool,
                 Description = "Do not switch the model to 16-bit floats",
-                InitialValue = HardwareHelper.HasAmdGpu(),
+                InitialValue = HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML(),
                 Options = new() { "--no-half" }
             },
             new()

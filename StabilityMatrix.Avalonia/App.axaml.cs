@@ -424,6 +424,7 @@ public sealed class App : Application
         jsonSerializerOptions.Converters.Add(new ObjectToInferredTypesConverter());
         jsonSerializerOptions.Converters.Add(new DefaultUnknownEnumConverter<CivitFileType>());
         jsonSerializerOptions.Converters.Add(new DefaultUnknownEnumConverter<CivitModelType>());
+        jsonSerializerOptions.Converters.Add(new DefaultUnknownEnumConverter<CivitModelFormat>());
         jsonSerializerOptions.Converters.Add(
             new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
         );

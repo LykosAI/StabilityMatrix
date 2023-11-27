@@ -7,8 +7,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.6.5
 ### Fixed
-- Fixed process errors when installing or updating Pip packages using the Python packages dialog
 - Fixed error when receiving unknown model format values from the Model Browser
+- Fixed process errors when installing or updating Pip packages using the Python packages dialog
 
 ## v2.6.4
 ### Fixed

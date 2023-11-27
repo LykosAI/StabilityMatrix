@@ -86,22 +86,16 @@ public static partial class ArchiveHelper
 
     public static async Task<ArchiveInfo> Extract7Z(string archivePath, string extractDirectory)
     {
-        var args =
-            $"x {ProcessRunner.Quote(archivePath)} -o{ProcessRunner.Quote(extractDirectory)} -y";
+        var result = await ProcessRunner
+            .GetProcessResultAsync(
+                SevenZipPath,
+                new[] { "x", archivePath, "-o" + ProcessRunner.Quote(extractDirectory), "-y" }
+            )
+            .ConfigureAwait(false);
 
-        Logger.Debug($"Starting process '{SevenZipPath}' with arguments '{args}'");
+        result.EnsureSuccessExitCode();
 
-        using var process = new Process();
-        process.StartInfo = new ProcessStartInfo(SevenZipPath, args)
-        {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        process.Start();
-        await ProcessRunner.WaitForExitConditionAsync(process);
-        var output = await process.StandardOutput.ReadToEndAsync();
+        var output = result.StandardOutput ?? "";
 
         try
         {
@@ -153,8 +147,12 @@ public static partial class ArchiveHelper
             $"x {ProcessRunner.Quote(archivePath)} -o{ProcessRunner.Quote(extractDirectory)} -y -bsp1";
         Logger.Debug($"Starting process '{SevenZipPath}' with arguments '{args}'");
 
-        var process = ProcessRunner.StartProcess(SevenZipPath, args, outputDataReceived: onOutput);
-        await ProcessRunner.WaitForExitConditionAsync(process);
+        using var process = ProcessRunner.StartProcess(
+            SevenZipPath,
+            args,
+            outputDataReceived: onOutput
+        );
+        await ProcessRunner.WaitForExitConditionAsync(process).ConfigureAwait(false);
 
         progress.Report(new ProgressReport(1f, "Finished extracting", type: ProgressType.Extract));
 

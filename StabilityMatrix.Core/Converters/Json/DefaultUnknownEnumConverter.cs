@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.Json;
@@ -84,6 +85,8 @@ public class DefaultUnknownEnumConverter<
             {
                 return enumMemberValue;
             }
+
+            Debug.WriteLine($"Unknown enum member value for {typeToConvert}: {readerString}");
         }
 
         return UnknownValue;

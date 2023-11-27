@@ -12,16 +12,13 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [Singleton(typeof(BasePackage))]
-public class FooocusMre : BaseGitPackage
+public class FooocusMre(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
 {
-    public FooocusMre(
-        IGithubApiCache githubApi,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
-    )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
-
     public override string Name => "Fooocus-MRE";
     public override string DisplayName { get; set; } = "Fooocus-MRE";
     public override string Author => "MoonRide303";

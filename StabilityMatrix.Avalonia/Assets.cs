@@ -32,6 +32,9 @@ internal static class Assets
     public static AvaloniaResource ThemeMatrixDarkJson =>
         new("avares://StabilityMatrix.Avalonia/Assets/ThemeMatrixDark.json");
 
+    public static AvaloniaResource HfPackagesJson =>
+        new("avares://StabilityMatrix.Avalonia/Assets/hf-packages.json");
+
     private const UnixFileMode Unix755 =
         UnixFileMode.UserRead
         | UnixFileMode.UserWrite

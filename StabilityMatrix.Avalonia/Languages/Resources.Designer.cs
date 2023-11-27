@@ -339,6 +339,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open on Hugging Face.
+        /// </summary>
+        public static string Action_OpenOnHuggingFace {
+            get {
+                return ResourceManager.GetString("Action_OpenOnHuggingFace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open Project....
         /// </summary>
         public static string Action_OpenProjectEllipsis {

@@ -1,11 +1,11 @@
 ﻿using Avalonia;
-using Avalonia.Controls.Primitives;
+using Avalonia.Controls;
 using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
 [Transient]
-public class StackExpander : TemplatedControl
+public class StackExpander : Expander
 {
     public static readonly StyledProperty<int> SpacingProperty = AvaloniaProperty.Register<
         StackCard,

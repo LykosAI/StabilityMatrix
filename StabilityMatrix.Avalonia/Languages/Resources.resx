@@ -813,4 +813,7 @@
   <data name="TeachingTip_MoreCheckpointCategories" xml:space="preserve">
     <value>Additional folders such as IPAdapters and TextualInversions (embeddings) can be enabled here</value>
   </data>
+  <data name="Action_OpenOnHuggingFace" xml:space="preserve">
+    <value>Open on Hugging Face</value>
+  </data>
 </root>

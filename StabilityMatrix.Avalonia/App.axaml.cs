@@ -291,7 +291,8 @@ public sealed class App : Application
                         provider.GetRequiredService<PackageManagerViewModel>(),
                         provider.GetRequiredService<CheckpointsPageViewModel>(),
                         provider.GetRequiredService<CheckpointBrowserViewModel>(),
-                        provider.GetRequiredService<OutputsPageViewModel>()
+                        provider.GetRequiredService<OutputsPageViewModel>(),
+                        provider.GetRequiredService<HuggingFacePageViewModel>()
                     },
                     FooterPages = { provider.GetRequiredService<SettingsViewModel>() }
                 }

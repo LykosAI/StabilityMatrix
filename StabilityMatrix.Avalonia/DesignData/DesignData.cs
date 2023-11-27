@@ -426,6 +426,9 @@ public static class DesignData
 
     public static LaunchPageViewModel LaunchPageViewModel =>
         Services.GetRequiredService<LaunchPageViewModel>();
+    
+    public static HuggingFacePageViewModel HuggingFacePageViewModel =>
+        Services.GetRequiredService<HuggingFacePageViewModel>();
 
     public static OutputsPageViewModel OutputsPageViewModel
     {

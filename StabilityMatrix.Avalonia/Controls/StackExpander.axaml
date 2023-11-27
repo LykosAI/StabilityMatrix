@@ -21,6 +21,8 @@
             <ControlTemplate>
                 <Expander
                     VerticalContentAlignment="Top"
+                    ExpandDirection="{TemplateBinding ExpandDirection}"
+                    IsExpanded="{TemplateBinding IsExpanded}"
                     HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
                     VerticalAlignment="{TemplateBinding VerticalAlignment}">
                     

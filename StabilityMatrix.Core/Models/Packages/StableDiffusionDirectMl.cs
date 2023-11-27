@@ -14,7 +14,12 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [Singleton(typeof(BasePackage))]
-public class StableDiffusionDirectMl : A3WebUI
+public class StableDiffusionDirectMl(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper
+) : A3WebUI(githubApi, settingsManager, downloadService, prerequisiteHelper)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -35,14 +40,6 @@ public class StableDiffusionDirectMl : A3WebUI
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
-
-    public StableDiffusionDirectMl(
-        IGithubApiCache githubApi,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
-    )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.DirectMl };

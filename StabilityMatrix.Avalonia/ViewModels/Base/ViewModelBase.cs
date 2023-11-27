@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using JetBrains.Annotations;
 using CommunityToolkit.Mvvm.Input;
@@ -41,7 +42,10 @@ public partial class ViewModelBase : ObservableValidator, IRemovableListItem
         if (!ViewModelState.HasFlag(ViewModelState.InitialLoaded))
         {
             ViewModelState |= ViewModelState.InitialLoaded;
+
             OnInitialLoaded();
+
+            Dispatcher.UIThread.InvokeAsync(OnInitialLoadedAsync).SafeFireAndForget();
         }
     }
 
@@ -56,10 +60,13 @@ public partial class ViewModelBase : ObservableValidator, IRemovableListItem
     /// Runs on the UI thread via Dispatcher.UIThread.InvokeAsync.
     /// The view loading will not wait for this to complete.
     /// </summary>
-    public virtual Task OnLoadedAsync()
-    {
-        return Task.CompletedTask;
-    }
+    public virtual Task OnLoadedAsync() => Task.CompletedTask;
+
+    /// <summary>
+    /// Called the first time the view's LoadedEvent is fired.
+    /// Sets the <see cref="ViewModelState.InitialLoaded"/> flag.
+    /// </summary>
+    protected virtual Task OnInitialLoadedAsync() => Task.CompletedTask;
 
     /// <summary>
     /// Called when the view's UnloadedEvent is fired.
@@ -71,8 +78,5 @@ public partial class ViewModelBase : ObservableValidator, IRemovableListItem
     /// Runs on the UI thread via Dispatcher.UIThread.InvokeAsync.
     /// The view loading will not wait for this to complete.
     /// </summary>
-    public virtual Task OnUnloadedAsync()
-    {
-        return Task.CompletedTask;
-    }
+    public virtual Task OnUnloadedAsync() => Task.CompletedTask;
 }

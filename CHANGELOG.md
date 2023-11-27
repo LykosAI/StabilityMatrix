@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.7.0-dev.3
 ### Added
+- New package: [RuinedFooocus](https://github.com/runew0lf/RuinedFooocus)
 #### Model Browser
 - Right clicking anywhere on the model card will open the same menu as the three-dots button
 - New model downloads will save trigger words in metadata, if available
+- Model author username and avatar display, with clickable link to their profile
 #### Checkpoints Page
 - Added "Copy Trigger Words" option to the three-dots menu on the Checkpoints page (when data is available)
 - Added trigger words on checkpoint card and tooltip
@@ -19,6 +21,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Animated zoom effect on hovering over model images
 #### Checkpoints Page
 - Rearranged top row layout to use CommandBar
+### Fixed
+- Improved startup time and window load time after exiting dialogs
 
 ## v2.7.0-dev.2
 ### Added
@@ -49,6 +53,18 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - Choose between Stable, Preview, and Dev update channels
 ## Changed
 - Model Browser page has been redesigned, featuring more information like rating and download counts
+
+## v2.6.6
+### Fixed
+- Fixed error when receiving unknown model format values from the Model Browser
+
+## v2.6.5
+### Fixed
+- Fixed process errors when installing or updating Pip packages using the Python packages dialog
+
+## v2.6.4
+### Fixed
+- Fixed errors preventing Model Browser from finding results with certain search queries
 
 ## v2.6.3
 ### Fixed

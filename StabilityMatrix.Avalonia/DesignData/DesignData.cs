@@ -11,6 +11,7 @@ using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using NSubstitute.ReturnsExtensions;
+using Semver;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
@@ -36,6 +37,7 @@ using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
@@ -103,7 +105,6 @@ public static class DesignData
         // General services
         services
             .AddLogging()
-            .AddSingleton<INavigationService, NavigationService>()
             .AddSingleton<IPackageFactory, PackageFactory>()
             .AddSingleton<IUpdateHelper, UpdateHelper>()
             .AddSingleton<ModelFinder>()
@@ -119,6 +120,7 @@ public static class DesignData
             .AddSingleton(Substitute.For<IDiscordRichPresenceService>())
             .AddSingleton(Substitute.For<ITrackedDownloadService>())
             .AddSingleton(Substitute.For<ILiteDbContext>())
+            .AddSingleton(Substitute.For<IAccountsService>())
             .AddSingleton<IInferenceClientManager, MockInferenceClientManager>()
             .AddSingleton<ICompletionProvider, MockCompletionProvider>()
             .AddSingleton<IModelIndexService, MockModelIndexService>()
@@ -204,7 +206,8 @@ public static class DesignData
                                     Format = CivitModelFormat.SafeTensor,
                                     Fp = CivitModelFpType.fp16,
                                     Size = CivitModelSize.pruned,
-                                }
+                                },
+                                TrainedWords = ["aurora", "lightning"]
                             }
                         },
                         new()
@@ -304,6 +307,44 @@ public static class DesignData
                     {
                         Name = "BB95 Furry Mix",
                         Description = "A furry mix of BB95",
+                        Stats = new CivitModelStats { Rating = 3.5, RatingCount = 24 },
+                        ModelVersions = [
+                            new() { Name = "v1.2.2-Inpainting" } 
+                        ],
+                        Creator = new CivitCreator
+                        {
+                            Image = "https://gravatar.com/avatar/fe74084ae8a081dc2283f5bde4736756ad?f=y&d=retro",
+                            Username = "creator-1"
+                        }
+                    };
+                }),
+                dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
+                {
+                    vm.CivitModel = new CivitModel
+                    {
+                        Name = "Another Model",
+                        Description = "A mix of example",
+                        Stats = new CivitModelStats { Rating = 5, RatingCount = 3500 },
+                        ModelVersions = [
+                            new()
+                            {
+                                Name = "v1.2.2-Inpainting",
+                                Images = new List<CivitImage>
+                                {
+                                    new()
+                                    {
+                                        Nsfw = "None",
+                                        Url = "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
+                                              + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg"
+                                    }
+                                }
+                            } 
+                        ],
+                        Creator = new CivitCreator
+                        {
+                            Image = "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?f=y&d=retro",
+                            Username = "creator-2"
+                        }
                     };
                 })
             };
@@ -344,7 +385,9 @@ public static class DesignData
                         new ProgressReport(0.5f, "Downloading...")
                     )
                 ),
-                new MockDownloadProgressItemViewModel("Test File 2.exe"),
+                new MockDownloadProgressItemViewModel(
+                    "Very Long Test File Name Need Even More Longness Thanks That's pRobably good 2.exe"
+                ),
                 new PackageInstallProgressItemViewModel(
                     new PackageModificationRunner
                     {
@@ -436,6 +479,43 @@ public static class DesignData
 
     public static InferenceSettingsViewModel InferenceSettingsViewModel =>
         Services.GetRequiredService<InferenceSettingsViewModel>();
+
+    public static MainSettingsViewModel MainSettingsViewModel =>
+        Services.GetRequiredService<MainSettingsViewModel>();
+
+    public static AccountSettingsViewModel AccountSettingsViewModel =>
+        Services.GetRequiredService<AccountSettingsViewModel>();
+
+    public static UpdateSettingsViewModel UpdateSettingsViewModel
+    {
+        get
+        {
+            var vm = Services.GetRequiredService<UpdateSettingsViewModel>();
+
+            var update = new UpdateInfo
+            {
+                Version = SemVersion.Parse("2.0.1"),
+                ReleaseDate = DateTimeOffset.Now,
+                Url = new Uri("https://example.org"),
+                Changelog = new Uri("https://example.org"),
+                HashBlake3 = "",
+                Signature = "",
+            };
+            
+            vm.UpdateStatus = new UpdateStatusChangedEventArgs
+            {
+                LatestUpdate = update,
+                UpdateChannels = new Dictionary<UpdateChannel, UpdateInfo>
+                {
+                    [UpdateChannel.Stable] = update,
+                    [UpdateChannel.Preview] = update,
+                    [UpdateChannel.Development] = update
+                },
+                CheckedAt = DateTimeOffset.UtcNow
+            };
+            return vm;
+        }
+    }
 
     public static CheckpointBrowserViewModel CheckpointBrowserViewModel =>
         Services.GetRequiredService<CheckpointBrowserViewModel>();
@@ -540,6 +620,20 @@ The gallery images are often inpainted, but you will get something very similar 
                 new PipPackageInfo("pip", "1.0.0"),
                 new PipPackageInfo("torch", "2.1.0+cu121")
             );
+        });
+
+    public static LykosLoginViewModel LykosLoginViewModel =>
+        DialogFactory.Get<LykosLoginViewModel>();
+
+    public static OAuthConnectViewModel OAuthConnectViewModel =>
+        DialogFactory.Get<OAuthConnectViewModel>(vm =>
+        {
+            vm.Url =
+                "https://www.example.org/oauth2/authorize?"
+                + "client_id=66ad566552679cb6e650be01ed6f8d2ae9a0f803c0369850a5c9ee82a2396062&"
+                + "scope=identity%20identity.memberships&"
+                + "response_type=code&state=test%40example.org&"
+                + "redirect_uri=http://localhost:5022/api/oauth/patreon/callback";
         });
 
     public static InferenceTextToImageViewModel InferenceTextToImageViewModel =>
@@ -734,7 +828,7 @@ The gallery images are often inpainted, but you will get something very similar 
             )
         );
 
-    public static Indexer Types => new();
+    public static Indexer Types { get; } = new();
 
     public class Indexer
     {

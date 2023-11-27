@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -13,12 +12,14 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
+using CommandLine;
 using NLog;
 using Polly.Contrib.WaitAndRetry;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
 using Semver;
 using Sentry;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
@@ -27,18 +28,20 @@ using StabilityMatrix.Core.Updater;
 
 namespace StabilityMatrix.Avalonia;
 
-[SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
-[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-public class Program
+public static class Program
 {
     private static Logger? _logger;
     private static Logger Logger => _logger ??= LogManager.GetCurrentClassLogger();
 
-    public static AppArgs Args { get; } = new();
+    public static AppArgs Args { get; private set; } = new();
 
     public static bool IsDebugBuild { get; private set; }
 
     public static Stopwatch StartupTimer { get; } = new();
+
+    public static UriHandler UriHandler { get; } = new("stabilitymatrix", "StabilityMatrix");
+
+    public static Uri MessagePipeUri { get; } = new("stabilitymatrix://app");
 
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
@@ -48,17 +51,58 @@ public class Program
     {
         StartupTimer.Start();
 
-        Args.DebugExceptionDialog = args.Contains("--debug-exception-dialog");
-        Args.DebugSentry = args.Contains("--debug-sentry");
-        Args.DebugOneClickInstall = args.Contains("--debug-one-click-install");
-        Args.NoSentry = args.Contains("--no-sentry");
-        Args.NoWindowChromeEffects = args.Contains("--no-window-chrome-effects");
-        Args.ResetWindowPosition = args.Contains("--reset-window-position");
-        Args.DisableGpuRendering = args.Contains("--disable-gpu");
-
         SetDebugBuild();
 
+        var parseResult = Parser.Default
+            .ParseArguments<AppArgs>(args)
+            .WithNotParsed(errors =>
+            {
+                foreach (var error in errors)
+                {
+                    Console.Error.WriteLine(error.ToString());
+                }
+            });
+
+        Args = parseResult.Value;
+
+        if (Args.HomeDirectoryOverride is { } homeDir)
+        {
+            Compat.SetAppDataHome(homeDir);
+        }
+
+        // Launched for custom URI scheme, handle and exit
+        if (Args.Uri is { } uriArg)
+        {
+            try
+            {
+                if (
+                    Uri.TryCreate(uriArg, UriKind.Absolute, out var uri)
+                    && string.Equals(
+                        uri.Scheme,
+                        UriHandler.Scheme,
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
+                {
+                    UriHandler.SendAndExit(uri);
+                }
+
+                Environment.Exit(0);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine($"Uri handler encountered an error: {e.Message}");
+                Environment.Exit(1);
+            }
+        }
+
+        if (Args.WaitForExitPid is { } waitExitPid)
+        {
+            WaitForPidExit(waitExitPid, TimeSpan.FromSeconds(30));
+        }
+
         HandleUpdateReplacement();
+        HandleUpdateCleanup();
 
         var infoVersion = Assembly
             .GetExecutingAssembly()
@@ -126,57 +170,70 @@ public class Program
     private static void HandleUpdateReplacement()
     {
         // Check if we're in the named update folder or the legacy update folder for 1.2.0 -> 2.0.0
-        if (Compat.AppCurrentDir is { Name: UpdateHelper.UpdateFolderName } or { Name: "Update" })
+        if (Compat.AppCurrentDir.Name is not (UpdateHelper.UpdateFolderName or "Update"))
+            return;
+
+        if (Compat.AppCurrentDir.Parent is not { } parentDir)
+            return;
+
+        // Copy our current file to the parent directory, overwriting the old app file
+        var currentExe = Compat.AppCurrentDir.JoinFile(Compat.GetExecutableName());
+        var targetExe = parentDir.JoinFile(Compat.GetExecutableName());
+
+        var isCopied = false;
+
+        foreach (
+            var delay in Backoff.DecorrelatedJitterBackoffV2(
+                TimeSpan.FromMilliseconds(300),
+                retryCount: 6,
+                fastFirst: true
+            )
+        )
         {
-            var parentDir = Compat.AppCurrentDir.Parent;
-            if (parentDir is null)
-                return;
-
-            var retryDelays = Backoff.DecorrelatedJitterBackoffV2(
-                TimeSpan.FromMilliseconds(350),
-                retryCount: 5
-            );
-
-            foreach (var delay in retryDelays)
+            try
             {
-                // Copy our current file to the parent directory, overwriting the old app file
-                var currentExe = Compat.AppCurrentDir.JoinFile(Compat.GetExecutableName());
-                var targetExe = parentDir.JoinFile(Compat.GetExecutableName());
-                try
-                {
-                    currentExe.CopyTo(targetExe, true);
-
-                    // Ensure permissions are set for unix
-                    if (Compat.IsUnix)
-                    {
-                        File.SetUnixFileMode(
-                            targetExe, // 0755
-                            UnixFileMode.UserRead
-                                | UnixFileMode.UserWrite
-                                | UnixFileMode.UserExecute
-                                | UnixFileMode.GroupRead
-                                | UnixFileMode.GroupExecute
-                                | UnixFileMode.OtherRead
-                                | UnixFileMode.OtherExecute
-                        );
-                    }
-
-                    // Start the new app
-                    Process.Start(targetExe);
-
-                    // Shutdown the current app
-                    Environment.Exit(0);
-                }
-                catch (Exception)
-                {
-                    Thread.Sleep(delay);
-                }
+                currentExe.CopyTo(targetExe, true);
+                isCopied = true;
+                break;
+            }
+            catch (Exception)
+            {
+                Thread.Sleep(delay);
             }
         }
 
+        if (!isCopied)
+        {
+            Logger.Error("Failed to copy current executable to parent directory");
+            Environment.Exit(1);
+        }
+
+        // Ensure permissions are set for unix
+        if (Compat.IsUnix)
+        {
+            File.SetUnixFileMode(
+                targetExe, // 0755
+                UnixFileMode.UserRead
+                    | UnixFileMode.UserWrite
+                    | UnixFileMode.UserExecute
+                    | UnixFileMode.GroupRead
+                    | UnixFileMode.GroupExecute
+                    | UnixFileMode.OtherRead
+                    | UnixFileMode.OtherExecute
+            );
+        }
+
+        // Start the new app while passing our own PID to wait for exit
+        Process.Start(targetExe, $"--wait-for-exit-pid {Environment.ProcessId}");
+
+        // Shutdown the current app
+        Environment.Exit(0);
+    }
+
+    private static void HandleUpdateCleanup()
+    {
         // Delete update folder if it exists in current directory
-        var updateDir = UpdateHelper.UpdateFolder;
-        if (updateDir.Exists)
+        if (UpdateHelper.UpdateFolder is { Exists: true } updateDir)
         {
             try
             {
@@ -184,9 +241,39 @@ public class Program
             }
             catch (Exception e)
             {
-                var logger = LogManager.GetCurrentClassLogger();
-                logger.Error(e, "Failed to delete update file");
+                Logger.Error(e, "Failed to delete update folder");
             }
+        }
+    }
+
+    /// <summary>
+    /// Wait for an external process to exit,
+    /// ignores if process is not found, already exited, or throws an exception
+    /// </summary>
+    /// <param name="pid">External process PID</param>
+    /// <param name="timeout">Timeout to wait for process to exit</param>
+    private static void WaitForPidExit(int pid, TimeSpan timeout)
+    {
+        try
+        {
+            var process = Process.GetProcessById(pid);
+            process
+                .WaitForExitAsync(new CancellationTokenSource(timeout).Token)
+                .GetAwaiter()
+                .GetResult();
+        }
+        catch (OperationCanceledException)
+        {
+            Logger.Warn("Timed out ({Timeout:g}) waiting for process {Pid} to exit", timeout, pid);
+        }
+        catch (SystemException e)
+        {
+            Logger.Warn(e, "Failed to wait for process {Pid} to exit", pid);
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Unexpected error during WaitForPidExit");
+            throw;
         }
     }
 

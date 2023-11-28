@@ -184,7 +184,7 @@ public partial class SamplerCardViewModel
                     NoiseSeed = e.Builder.Connections.Seed,
                     Steps = TotalSteps,
                     Cfg = CfgScale,
-                    Sampler = e.Builder.Connections.PrimarySampler?.Name!,
+                    SamplerName = e.Builder.Connections.PrimarySampler?.Name!,
                     Scheduler = e.Builder.Connections.PrimaryScheduler?.Name!,
                     Positive =
                         e.Builder.Connections.BaseConditioning
@@ -194,7 +194,7 @@ public partial class SamplerCardViewModel
                         ?? throw new ArgumentException("No BaseNegativeConditioning"),
                     LatentImage = primaryLatent,
                     StartAtStep = 0,
-                    EndAtStep = TotalSteps,
+                    EndAtStep = Steps,
                     ReturnWithLeftoverNoise = true
                 }
             );
@@ -211,7 +211,7 @@ public partial class SamplerCardViewModel
                     NoiseSeed = e.Builder.Connections.Seed,
                     Steps = TotalSteps,
                     Cfg = CfgScale,
-                    Sampler = e.Builder.Connections.PrimarySampler?.Name!,
+                    SamplerName = e.Builder.Connections.PrimarySampler?.Name!,
                     Scheduler = e.Builder.Connections.PrimaryScheduler?.Name!,
                     Positive =
                         e.Builder.Connections.RefinerConditioning

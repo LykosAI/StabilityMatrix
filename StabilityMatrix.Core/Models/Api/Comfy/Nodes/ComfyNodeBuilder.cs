@@ -127,7 +127,7 @@ public class ComfyNodeBuilder
         public required ulong NoiseSeed { get; init; }
         public required int Steps { get; init; }
         public required double Cfg { get; init; }
-        public required string Sampler { get; init; }
+        public required string SamplerName { get; init; }
         public required string Scheduler { get; init; }
         public required ConditioningNodeConnection Positive { get; init; }
         public required ConditioningNodeConnection Negative { get; init; }
@@ -733,7 +733,7 @@ public class ComfyNodeBuilder
 
         return GetPrimaryAsLatent(
             Connections.Primary ?? throw new NullReferenceException("No primary connection"),
-            Connections.PrimaryVAE ?? throw new NullReferenceException("No primary VAE")
+            Connections.GetDefaultVAE()
         );
     }
 
@@ -776,7 +776,7 @@ public class ComfyNodeBuilder
 
         return GetPrimaryAsImage(
             Connections.Primary ?? throw new NullReferenceException("No primary connection"),
-            Connections.PrimaryVAE ?? throw new NullReferenceException("No primary VAE")
+            Connections.GetDefaultVAE()
         );
     }
 
@@ -861,6 +861,14 @@ public class ComfyNodeBuilder
             return RefinerNegativeConditioning
                 ?? BaseNegativeConditioning
                 ?? throw new NullReferenceException("No Negative Conditioning");
+        }
+
+        public VAENodeConnection GetDefaultVAE()
+        {
+            return PrimaryVAE
+                ?? RefinerVAE
+                ?? BaseVAE
+                ?? throw new NullReferenceException("No VAE");
         }
     }
 

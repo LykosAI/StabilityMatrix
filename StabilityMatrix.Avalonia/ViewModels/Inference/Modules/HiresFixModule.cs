@@ -48,7 +48,7 @@ public class HiresFixModule : ModuleBase
             builder.Connections.Primary = builder.Group_Upscale(
                 "HiresFix",
                 builder.Connections.Primary ?? throw new ArgumentException("No Primary"),
-                builder.Connections.PrimaryVAE ?? throw new ArgumentException("No PrimaryVAE"),
+                builder.Connections.GetDefaultVAE(),
                 selectedUpscaler,
                 hiresSize.Width,
                 hiresSize.Height

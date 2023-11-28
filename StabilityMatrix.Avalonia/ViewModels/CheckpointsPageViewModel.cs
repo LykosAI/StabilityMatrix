@@ -20,6 +20,7 @@ using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
+using TeachingTip = StabilityMatrix.Core.Models.Settings.TeachingTip;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -54,6 +55,9 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
     [ObservableProperty]
     private string searchFilter = string.Empty;
+
+    [ObservableProperty]
+    private bool isCategoryTipOpen;
 
     partial void OnIsImportAsConnectedChanged(bool value)
     {
@@ -114,6 +118,16 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         if (Design.IsDesignMode)
             return;
 
+        if (
+            !settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.CheckpointCategoriesTip)
+        )
+        {
+            IsCategoryTipOpen = true;
+            settingsManager.Transaction(
+                s => s.SeenTeachingTips.Add(TeachingTip.CheckpointCategoriesTip)
+            );
+        }
+
         IsLoading = CheckpointFolders.Count == 0;
         IsIndexing = CheckpointFolders.Count > 0;
         // GetStuff();
@@ -122,6 +136,11 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         IsIndexing = false;
 
         Logger.Info($"OnLoadedAsync in {sw.ElapsedMilliseconds}ms");
+    }
+
+    public void ClearSearchQuery()
+    {
+        SearchFilter = string.Empty;
     }
 
     // ReSharper disable once UnusedParameterInPartialMethod

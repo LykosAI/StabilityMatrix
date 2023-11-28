@@ -499,7 +499,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         }
 
         // If cached, update model cards
-        if (cachedQuery is not null)
+        if (cachedQueryResult.Result is { } cachedQuery)
         {
             var elapsed = timer.Elapsed;
             Logger.Debug(
@@ -556,6 +556,11 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     public void LastPage()
     {
         CurrentPageNumber = TotalPages;
+    }
+
+    public void ClearSearchQuery()
+    {
+        SearchQuery = string.Empty;
     }
 
     partial void OnShowNsfwChanged(bool value)

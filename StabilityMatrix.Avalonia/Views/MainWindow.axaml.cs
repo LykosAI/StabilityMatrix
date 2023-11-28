@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
@@ -26,10 +27,12 @@ using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Processes;
@@ -44,7 +47,7 @@ namespace StabilityMatrix.Avalonia.Views;
 public partial class MainWindow : AppWindowBase
 {
     private readonly INotificationService notificationService;
-    private readonly INavigationService navigationService;
+    private readonly INavigationService<MainWindowViewModel> navigationService;
 
     private FlyoutBase? progressFlyout;
 
@@ -58,7 +61,7 @@ public partial class MainWindow : AppWindowBase
 
     public MainWindow(
         INotificationService notificationService,
-        INavigationService navigationService
+        INavigationService<MainWindowViewModel> navigationService
     )
     {
         this.notificationService = notificationService;
@@ -73,6 +76,8 @@ public partial class MainWindow : AppWindowBase
 #endif
         TitleBar.ExtendsContentIntoTitleBar = true;
         TitleBar.TitleBarHitTestType = TitleBarHitTestType.Complex;
+
+        navigationService.TypedNavigation += NavigationService_OnTypedNavigation;
 
         EventManager.Instance.ToggleProgressFlyout += (_, _) => progressFlyout?.Hide();
         EventManager.Instance.CultureChanged += (_, _) => SetDefaultFonts();
@@ -158,6 +163,15 @@ public partial class MainWindow : AppWindowBase
         }
     }
 
+    private void NavigationService_OnTypedNavigation(object? sender, TypedNavigationEventArgs e)
+    {
+        var mainViewModel = (MainWindowViewModel)DataContext!;
+
+        mainViewModel.SelectedCategory = mainViewModel.Pages
+            .Concat(mainViewModel.FooterPages)
+            .FirstOrDefault(x => x.GetType() == e.ViewModelType);
+    }
+
     private void OnUpdateAvailable(object? sender, UpdateInfo? updateInfo)
     {
         Dispatcher.UIThread.Post(() =>
@@ -170,7 +184,7 @@ public partial class MainWindow : AppWindowBase
                 var tip = this.FindControl<TeachingTip>("UpdateAvailableTeachingTip")!;
 
                 tip.Target = target;
-                tip.Subtitle = $"{Compat.AppVersion} -> {updateInfo.Version}";
+                tip.Subtitle = $"{Compat.AppVersion.ToDisplayString()} -> {updateInfo.Version}";
                 tip.IsOpen = true;
             }
         });

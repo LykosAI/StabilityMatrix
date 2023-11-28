@@ -11,6 +11,7 @@ public class CodeTimer : IDisposable
 
     private readonly string name;
     private readonly Stopwatch stopwatch;
+    private bool isDisposed;
 
     private CodeTimer? ParentTimer { get; }
     private List<CodeTimer> SubTimers { get; } = new();
@@ -97,6 +98,9 @@ public class CodeTimer : IDisposable
 
     public void Dispose()
     {
+        if (isDisposed)
+            return;
+
         stopwatch.Stop();
 
         // Remove ourselves from the stack
@@ -119,6 +123,7 @@ public class CodeTimer : IDisposable
             SubTimers.Clear();
         }
 
+        isDisposed = true;
         GC.SuppressFinalize(this);
     }
 }

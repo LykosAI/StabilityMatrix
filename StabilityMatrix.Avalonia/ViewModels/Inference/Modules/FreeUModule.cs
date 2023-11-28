@@ -1,5 +1,4 @@
-﻿using System;
-using StabilityMatrix.Avalonia.Models.Inference;
+﻿using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
@@ -26,20 +25,41 @@ public class FreeUModule : ModuleBase
     {
         var card = GetCard<FreeUCardViewModel>();
 
-        e.Temp.Model = e.Nodes
-            .AddNamedNode(
-                ComfyNodeBuilder.FreeU(
-                    e.Nodes.GetUniqueName("FreeU"),
-                    e.Temp.Model
-                        ?? throw new ArgumentException(
-                            "Temp.Model not set on ModuleApplyStepEventArgs"
-                        ),
-                    card.B1,
-                    card.B2,
-                    card.S1,
-                    card.S2
+        // Currently applies to both base and refiner model
+        // TODO: Add option to apply to either base or refiner
+
+        if (e.Builder.Connections.BaseModel is not null)
+        {
+            e.Builder.Connections.BaseModel = e.Nodes
+                .AddTypedNode(
+                    new ComfyNodeBuilder.FreeU
+                    {
+                        Name = e.Nodes.GetUniqueName("FreeU"),
+                        Model = e.Builder.Connections.BaseModel,
+                        B1 = card.B1,
+                        B2 = card.B2,
+                        S1 = card.S1,
+                        S2 = card.S2
+                    }
                 )
-            )
-            .Output;
+                .Output;
+        }
+
+        if (e.Builder.Connections.RefinerModel is not null)
+        {
+            e.Builder.Connections.RefinerModel = e.Nodes
+                .AddTypedNode(
+                    new ComfyNodeBuilder.FreeU
+                    {
+                        Name = e.Nodes.GetUniqueName("Refiner_FreeU"),
+                        Model = e.Builder.Connections.RefinerModel,
+                        B1 = card.B1,
+                        B2 = card.B2,
+                        S1 = card.S1,
+                        S2 = card.S2
+                    }
+                )
+                .Output;
+        }
     }
 }

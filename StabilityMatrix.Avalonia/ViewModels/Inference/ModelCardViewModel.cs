@@ -129,13 +129,6 @@ public partial class ModelCardViewModel
             : ClientManager.VaeModels.FirstOrDefault(x => x.RelativePath == model.SelectedVaeName);
     }
 
-    internal class ModelCardModel
-    {
-        public string? SelectedModelName { get; init; }
-        public string? SelectedVaeName { get; init; }
-        public bool IsVaeSelectionEnabled { get; init; }
-    }
-
     /// <inheritdoc />
     public void LoadStateFromParameters(GenerationParameters parameters)
     {
@@ -181,5 +174,12 @@ public partial class ModelCardViewModel
             ModelName = SelectedModel?.FileName,
             ModelHash = SelectedModel?.Local?.ConnectedModelInfo?.Hashes.SHA256
         };
+    }
+
+    internal class ModelCardModel
+    {
+        public string? SelectedModelName { get; init; }
+        public string? SelectedVaeName { get; init; }
+        public bool IsVaeSelectionEnabled { get; init; }
     }
 }

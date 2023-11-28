@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using Yoh.Text.Json.NamingPolicies;
 
@@ -31,6 +32,23 @@ public abstract record ComfyTypedNodeBase
             var key =
                 property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name
                 ?? namingPolicy.ConvertName(property.Name);
+
+            // If theres a BoolStringMember attribute, convert to one of the strings
+            if (property.GetCustomAttribute<BoolStringMemberAttribute>() is { } converter)
+            {
+                if (value is bool boolValue)
+                {
+                    inputs.Add(key, boolValue ? converter.TrueString : converter.FalseString);
+                }
+                else
+                {
+                    throw new InvalidOperationException(
+                        $"Property {property.Name} is not a bool, but has a BoolStringMember attribute"
+                    );
+                }
+
+                continue;
+            }
 
             // For connection types, use data property
             if (value is NodeConnectionBase connection)

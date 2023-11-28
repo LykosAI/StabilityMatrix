@@ -148,37 +148,11 @@ public class InferenceTextToImageViewModel
 
         StackCardViewModel = vmFactory.Get<StackCardViewModel>();
         StackCardViewModel.AddCards(
-            new LoadableViewModelBase[]
-            {
-                ModelCardViewModel,
-                SamplerCardViewModel,
-                ModulesCardViewModel,
-                /*// Free U
-                vmFactory.Get<StackExpanderViewModel>(stackExpander =>
-                {
-                    stackExpander.Title = "FreeU";
-                    stackExpander.AddCards(new LoadableViewModelBase[] { FreeUCardViewModel });
-                }),
-                // Hires Fix
-                vmFactory.Get<StackExpanderViewModel>(stackExpander =>
-                {
-                    stackExpander.Title = "Hires Fix";
-                    stackExpander.AddCards(
-                        new LoadableViewModelBase[]
-                        {
-                            HiresUpscalerCardViewModel,
-                            HiresSamplerCardViewModel
-                        }
-                    );
-                }),
-                vmFactory.Get<StackExpanderViewModel>(stackExpander =>
-                {
-                    stackExpander.Title = "Upscale";
-                    stackExpander.AddCards(new LoadableViewModelBase[] { UpscalerCardViewModel });
-                }),*/
-                SeedCardViewModel,
-                BatchSizeCardViewModel,
-            }
+            ModelCardViewModel,
+            SamplerCardViewModel,
+            ModulesCardViewModel,
+            SeedCardViewModel,
+            BatchSizeCardViewModel
         );
 
         // When refiner is provided in model card, enable for sampler
@@ -196,128 +170,36 @@ public class InferenceTextToImageViewModel
     {
         base.BuildPrompt(args);
 
-        using var _ = CodeTimer.StartDebug();
-
         var builder = args.Builder;
-        var nodes = builder.Nodes;
 
-        if (args.SeedOverride is { } seed)
+        builder.Connections.Seed = args.SeedOverride switch
         {
-            builder.Connections.Seed = Convert.ToUInt64(seed);
-        }
-        else
-        {
-            builder.Connections.Seed = Convert.ToUInt64(SeedCardViewModel.Seed);
-        }
+            { } seed => Convert.ToUInt64(seed),
+            _ => Convert.ToUInt64(SeedCardViewModel.Seed)
+        };
 
         // Load models
         ModelCardViewModel.ApplyStep(args);
 
         // Setup empty latent
-        builder.SetupLatentSource(BatchSizeCardViewModel, SamplerCardViewModel);
-
-        // Setup base sampling stage
-        builder.SetupBaseSampler(
-            SamplerCardViewModel,
-            PromptCardViewModel,
-            ModelCardViewModel,
-            modelIndexService
+        builder.SetupEmptyLatentSource(
+            SamplerCardViewModel.Width,
+            SamplerCardViewModel.Height,
+            BatchSizeCardViewModel.BatchSize,
+            BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null
         );
 
-        // Setup refiner stage if enabled
-        if (
-            ModelCardViewModel is
-            { IsRefinerSelectionEnabled: true, SelectedRefiner.IsDefault: false }
-        )
+        // Prompts and loras
+        PromptCardViewModel.ApplyStep(args);
+
+        // Setup Sampler and Refiner if enabled
+        SamplerCardViewModel.ApplyStep(args);
+
+        // Hires fix if enabled
+        foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())
         {
-            builder.SetupRefinerSampler(
-                SamplerCardViewModel,
-                PromptCardViewModel,
-                ModelCardViewModel,
-                modelIndexService
-            );
+            module.ApplyStep(args);
         }
-
-        // Override with custom VAE if enabled
-        /*if (ModelCardViewModel is { IsVaeSelectionEnabled: true, SelectedVae.IsDefault: false })
-        {
-            var customVaeLoader = nodes.AddNamedNode(
-                ComfyNodeBuilder.VAELoader("VAELoader", ModelCardViewModel.SelectedVae.RelativePath)
-            );
-
-            builder.Connections.PrimaryVAE = customVaeLoader.Output;
-        }*/
-
-        // If hi-res fix is enabled, add the LatentUpscale node and another KSampler node
-        /*if (args.Overrides.IsHiresFixEnabled ?? IsHiresFixEnabled)
-        {
-            // Get new latent size
-            var hiresSize = builder.Connections.PrimarySize.WithScale(
-                HiresUpscalerCardViewModel.Scale
-            );
-
-            // Select between latent upscale and normal upscale based on the upscale method
-            var selectedUpscaler = HiresUpscalerCardViewModel.SelectedUpscaler!.Value;
-
-            // If upscaler selected, upscale latent image first
-            if (selectedUpscaler.Type != ComfyUpscalerType.None)
-            {
-                builder.Connections.Primary = builder.Group_Upscale(
-                    "HiresFix",
-                    builder.Connections.Primary!,
-                    builder.Connections.PrimaryVAE!,
-                    selectedUpscaler,
-                    hiresSize.Width,
-                    hiresSize.Height
-                );
-            }
-
-            // Use refiner model if set, or base if not
-            var hiresSampler = nodes.AddNamedNode(
-                ComfyNodeBuilder.KSampler(
-                    "HiresSampler",
-                    builder.Connections.GetRefinerOrBaseModel(),
-                    builder.Connections.Seed,
-                    HiresSamplerCardViewModel.Steps,
-                    HiresSamplerCardViewModel.CfgScale,
-                    // Use hires sampler name if not null, otherwise use the normal sampler
-                    HiresSamplerCardViewModel.SelectedSampler
-                        ?? SamplerCardViewModel.SelectedSampler
-                        ?? throw new ValidationException("Sampler not selected"),
-                    HiresSamplerCardViewModel.SelectedScheduler
-                        ?? SamplerCardViewModel.SelectedScheduler
-                        ?? throw new ValidationException("Scheduler not selected"),
-                    builder.Connections.GetRefinerOrBaseConditioning(),
-                    builder.Connections.GetRefinerOrBaseNegativeConditioning(),
-                    builder.GetPrimaryAsLatent(),
-                    HiresSamplerCardViewModel.DenoiseStrength
-                )
-            );
-
-            // Set as primary
-            builder.Connections.Primary = hiresSampler.Output;
-            builder.Connections.PrimarySize = hiresSize;
-        }*/
-
-        // If upscale is enabled, add another upscale group
-        /*if (IsUpscaleEnabled)
-        {
-            var upscaleSize = builder.Connections.PrimarySize.WithScale(
-                UpscalerCardViewModel.Scale
-            );
-
-            var upscaleResult = builder.Group_Upscale(
-                "PostUpscale",
-                builder.Connections.Primary!,
-                builder.Connections.PrimaryVAE!,
-                UpscalerCardViewModel.SelectedUpscaler!.Value,
-                upscaleSize.Width,
-                upscaleSize.Height
-            );
-
-            builder.Connections.Primary = upscaleResult;
-            builder.Connections.PrimarySize = upscaleSize;
-        }*/
 
         builder.SetupOutputImage();
     }

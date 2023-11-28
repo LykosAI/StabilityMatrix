@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -46,34 +47,35 @@ public class HiresFixModule : ModuleBase
         {
             builder.Connections.Primary = builder.Group_Upscale(
                 "HiresFix",
-                builder.Connections.Primary!,
-                builder.Connections.PrimaryVAE!,
+                builder.Connections.Primary ?? throw new ArgumentException("No Primary"),
+                builder.Connections.PrimaryVAE ?? throw new ArgumentException("No PrimaryVAE"),
                 selectedUpscaler,
                 hiresSize.Width,
                 hiresSize.Height
             );
         }
 
-        // Use refiner model if set, or base if not
-        var hiresSampler = builder.Nodes.AddNamedNode(
-            ComfyNodeBuilder.KSampler(
-                builder.Nodes.GetUniqueName("HiresFix_Sampler"),
-                builder.Connections.GetRefinerOrBaseModel(),
-                builder.Connections.Seed,
-                samplerCard.Steps,
-                samplerCard.CfgScale,
-                // Use hires sampler name if not null, otherwise use the normal sampler
-                samplerCard.SelectedSampler
-                    ?? samplerCard.SelectedSampler
-                    ?? throw new ValidationException("Sampler not selected"),
-                samplerCard.SelectedScheduler
-                    ?? samplerCard.SelectedScheduler
-                    ?? throw new ValidationException("Scheduler not selected"),
-                builder.Connections.GetRefinerOrBaseConditioning(),
-                builder.Connections.GetRefinerOrBaseNegativeConditioning(),
-                builder.GetPrimaryAsLatent(),
-                samplerCard.DenoiseStrength
-            )
+        var hiresSampler = builder.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.KSampler
+            {
+                Name = builder.Nodes.GetUniqueName("HiresFix_Sampler"),
+                Model = builder.Connections.GetRefinerOrBaseModel(),
+                Seed = builder.Connections.Seed,
+                Steps = samplerCard.Steps,
+                Cfg = samplerCard.CfgScale,
+                SamplerName =
+                    samplerCard.SelectedSampler?.Name
+                    ?? e.Builder.Connections.PrimarySampler?.Name
+                    ?? throw new ArgumentException("No PrimarySampler"),
+                Scheduler =
+                    samplerCard.SelectedScheduler?.Name
+                    ?? e.Builder.Connections.PrimaryScheduler?.Name
+                    ?? throw new ArgumentException("No PrimaryScheduler"),
+                Positive = builder.Connections.GetRefinerOrBaseConditioning(),
+                Negative = builder.Connections.GetRefinerOrBaseNegativeConditioning(),
+                LatentImage = builder.GetPrimaryAsLatent(),
+                Denoise = samplerCard.DenoiseStrength
+            }
         );
 
         // Set as primary

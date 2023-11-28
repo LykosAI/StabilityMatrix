@@ -1,5 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
+using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Database;
@@ -68,7 +71,21 @@ public class ComfyNodeBuilder
         };
     }
 
-    public static NamedComfyNode<LatentNodeConnection> KSampler(
+    public record KSampler : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+        public required ulong Seed { get; init; }
+        public required int Steps { get; init; }
+        public required double Cfg { get; init; }
+        public required string SamplerName { get; init; }
+        public required string Scheduler { get; init; }
+        public required ConditioningNodeConnection Positive { get; init; }
+        public required ConditioningNodeConnection Negative { get; init; }
+        public required LatentNodeConnection LatentImage { get; init; }
+        public required double Denoise { get; init; }
+    }
+
+    /*public static NamedComfyNode<LatentNodeConnection> KSampler(
         string name,
         ModelNodeConnection model,
         ulong seed,
@@ -99,9 +116,30 @@ public class ComfyNodeBuilder
                 ["denoise"] = denoise
             }
         };
+    }*/
+
+    public record KSamplerAdvanced : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+
+        [BoolStringMember("enable", "disable")]
+        public required bool AddNoise { get; init; }
+        public required ulong NoiseSeed { get; init; }
+        public required int Steps { get; init; }
+        public required double Cfg { get; init; }
+        public required string Sampler { get; init; }
+        public required string Scheduler { get; init; }
+        public required ConditioningNodeConnection Positive { get; init; }
+        public required ConditioningNodeConnection Negative { get; init; }
+        public required LatentNodeConnection LatentImage { get; init; }
+        public required int StartAtStep { get; init; }
+        public required int EndAtStep { get; init; }
+
+        [BoolStringMember("enable", "disable")]
+        public bool ReturnWithLeftoverNoise { get; init; }
     }
 
-    public static NamedComfyNode<LatentNodeConnection> KSamplerAdvanced(
+    /*public static NamedComfyNode<LatentNodeConnection> KSamplerAdvanced(
         string name,
         ModelNodeConnection model,
         bool addNoise,
@@ -138,25 +176,13 @@ public class ComfyNodeBuilder
                 ["return_with_leftover_noise"] = returnWithLeftoverNoise ? "enable" : "disable"
             }
         };
-    }
+    }*/
 
-    public static NamedComfyNode<LatentNodeConnection> EmptyLatentImage(
-        string name,
-        int batchSize,
-        int height,
-        int width
-    )
+    public record EmptyLatentImage : ComfyTypedNodeBase<LatentNodeConnection>
     {
-        return new NamedComfyNode<LatentNodeConnection>(name)
-        {
-            ClassType = "EmptyLatentImage",
-            Inputs = new Dictionary<string, object?>
-            {
-                ["batch_size"] = batchSize,
-                ["height"] = height,
-                ["width"] = width,
-            }
-        };
+        public required int BatchSize { get; init; }
+        public required int Height { get; init; }
+        public required int Width { get; init; }
     }
 
     public static NamedComfyNode<LatentNodeConnection> LatentFromBatch(
@@ -264,27 +290,20 @@ public class ComfyNodeBuilder
         public required string CkptName { get; init; }
     }
 
-    public static NamedComfyNode<ModelNodeConnection> FreeU(
-        string name,
-        ModelNodeConnection model,
-        double b1,
-        double b2,
-        double s1,
-        double s2
-    )
+    public record FreeU : ComfyTypedNodeBase<ModelNodeConnection>
     {
-        return new NamedComfyNode<ModelNodeConnection>(name)
-        {
-            ClassType = "FreeU",
-            Inputs = new Dictionary<string, object?>
-            {
-                ["model"] = model.Data,
-                ["b1"] = b1,
-                ["b2"] = b2,
-                ["s1"] = s1,
-                ["s2"] = s2
-            }
-        };
+        public required ModelNodeConnection Model { get; init; }
+        public required double B1 { get; init; }
+        public required double B2 { get; init; }
+        public required double S1 { get; init; }
+        public required double S2 { get; init; }
+    }
+
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    public record CLIPTextEncode : ComfyTypedNodeBase<ConditioningNodeConnection>
+    {
+        public required ClipNodeConnection Clip { get; init; }
+        public required string Text { get; init; }
     }
 
     public static NamedComfyNode<ConditioningNodeConnection> ClipTextEncode(
@@ -817,6 +836,9 @@ public class ComfyNodeBuilder
         public PrimaryNodeConnection? Primary { get; set; }
         public VAENodeConnection? PrimaryVAE { get; set; }
         public Size PrimarySize { get; set; }
+
+        public ComfySampler? PrimarySampler { get; set; }
+        public ComfyScheduler? PrimaryScheduler { get; set; }
 
         public List<NamedComfyNode> OutputNodes { get; } = new();
 

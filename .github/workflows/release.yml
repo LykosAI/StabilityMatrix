@@ -235,10 +235,16 @@ jobs:
           python-version: '3.11'
           
       - name: Install Python Dependencies
-        run: pip install stability-matrix-tools~=0.2.7
+        run: pip install stability-matrix-tools>=0.2.18 --upgrade
         
       - name: Publish Auto-Update Release
-        run: sm-tools updates publish-matrix -v $RELEASE_VERSION -y
+        env:
+          SM_B2_API_ID: ${{ secrets.SM_B2_API_ID }}
+          SM_B2_API_KEY: ${{ secrets.SM_B2_API_KEY }}
+          SM_CF_CACHE_PURGE_TOKEN: ${{ secrets.SM_CF_CACHE_PURGE_TOKEN }}
+          SM_CF_ZONE_ID: ${{ secrets.SM_CF_ZONE_ID }}
+          SM_SIGNING_PRIVATE_KEY: ${{ secrets.SM_SIGNING_PRIVATE_KEY }}
+        run: sm-tools updates publish-matrix-v3 -v $RELEASE_VERSION -y
 
   publish-auto-update-b2:
     name: Publish Auto-Update Release (B2)
@@ -253,24 +259,23 @@ jobs:
           echo "Using version ${{ github.event.inputs.version }}"
           echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $env:GITHUB_ENV
 
+      # Downloads all previous artifacts to the current working directory
+      - name: Download Artifacts
+        uses: actions/download-artifact@v3
+      
+      # Zip each build
+      - name: Zip Artifacts
+        run: |
+          cd StabilityMatrix-win-x64 && zip -r ../StabilityMatrix-win-x64.zip ./. && cd $OLDPWD
+          cd StabilityMatrix-linux-x64 && zip -r ../StabilityMatrix-linux-x64.zip ./. && cd $OLDPWD
+
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
       - name: Install Python Dependencies
-        run: pip install stability-matrix-tools~=0.2.7
-
-      - name: Download Changelog
-        run: >
-          sm-tools updates download-changelog -v $RELEASE_VERSION -y
-          --changelog
+        run: pip install stability-matrix-tools>=0.2.18 --upgrade
       
-      # Zip each build
-      - name: Zip Artifacts
-        run: |
-          zip -r StabilityMatrix-win-x64.zip StabilityMatrix-win-x64/*
-          zip -r StabilityMatrix-linux-x64.zip StabilityMatrix-linux-x64/*
-          
       # Check that the zips and CHANGELOG.md are in the current working directory
       - name: Check files
         run: |
@@ -288,10 +293,16 @@ jobs:
           fi
 
       - name: Publish Auto-Update Release
+        env:
+          SM_B2_API_ID: ${{ secrets.SM_B2_API_ID }}
+          SM_B2_API_KEY: ${{ secrets.SM_B2_API_KEY }}
+          SM_CF_CACHE_PURGE_TOKEN: ${{ secrets.SM_CF_CACHE_PURGE_TOKEN }}
+          SM_CF_ZONE_ID: ${{ secrets.SM_CF_ZONE_ID }}
+          SM_SIGNING_PRIVATE_KEY: ${{ secrets.SM_SIGNING_PRIVATE_KEY }}
         run: >
-          sm-tools updates publish-files-v3 -v $RELEASE_VERSION -y
+          sm-tools updates publish-files-v3 -v ${{ github.event.inputs.version }}
           --channel ${{ github.event.inputs.auto-update-release-channel }}
           --changelog CHANGELOG.md
           --win-x64 StabilityMatrix-win-x64.zip
           --linux-x64 StabilityMatrix-linux-x64.zip
-          --b2-bucket-name ${{ secrets.B2_BUCKET_NAME }}
+          -y

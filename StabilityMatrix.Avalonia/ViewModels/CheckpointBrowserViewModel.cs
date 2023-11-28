@@ -499,7 +499,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         }
 
         // If cached, update model cards
-        if (cachedQueryResult.Result is { } cachedQuery)
+        if (cachedQuery is not null)
         {
             var elapsed = timer.Elapsed;
             Logger.Debug(

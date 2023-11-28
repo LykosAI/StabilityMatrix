@@ -60,10 +60,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.6.6
 ### Fixed
-- Fixed error when receiving unknown model format values from the Model Browser
+- Fixed [#297](https://github.com/LykosAI/StabilityMatrix/issues/297) - Model browser LiteAsyncException occuring when fetching entries with unrecognized values from enum name changes
 
 ## v2.6.5
 ### Fixed
+- Fixed error when receiving unknown model format values from the Model Browser
 - Fixed process errors when installing or updating Pip packages using the Python packages dialog
 
 ## v2.6.4

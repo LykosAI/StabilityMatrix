@@ -19,6 +19,7 @@
     
     <!-- Like StackCard but draggable items -->
     <Style Selector="controls|StackEditableCard">
+        <Setter Property="IsListBoxEditEnabled" Value="{Binding IsEditEnabled, Mode=TwoWay}"/>
         <Setter Property="Template">
             <ControlTemplate>
                 <ScrollViewer>
@@ -36,7 +37,7 @@
                                         VerticalAlignment="Bottom"
                                         CornerRadius="4"
                                         Padding="12,4"
-                                        IsEnabled="{Binding ElementName=PART_ListBox, Path=!!ItemCount}"
+                                        IsEnabled="{Binding !!Cards.Count}"
                                         IsChecked="{Binding IsEditEnabled}">
                                     <fluentIcons:SymbolIcon Symbol="Edit" />
                                 </ToggleButton>

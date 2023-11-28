@@ -7,6 +7,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Primitives;
+using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
@@ -54,38 +55,25 @@ public class StackEditableCard : TemplatedControl
             };
         }
 
-        var addButton = e.NameScope.Find<Button>("PART_AddButton");
-        if (addButton != null)
+        if (e.NameScope.Find<Button>("PART_AddButton") is { } addButton)
         {
             addButton.Flyout = GetAddButtonFlyout();
         }
     }
 
     /// <inheritdoc />
-    protected override void OnDataContextChanged(EventArgs e)
+    protected override void OnLoaded(RoutedEventArgs e)
     {
-        base.OnDataContextChanged(e);
+        base.OnLoaded(e);
 
-        if (listBoxPart is null)
-            return;
+        UpdatePseudoClasses(IsListBoxEditEnabled);
+    }
 
-        if (DataContext is StackEditableCardViewModel vm)
-        {
-            vm.WhenPropertyChanged(x => x.IsEditEnabled)
-                .Subscribe(args =>
-                {
-                    PseudoClasses.Set(":editEnabled", args.Value);
+    private void UpdatePseudoClasses(bool editEnabled)
+    {
+        PseudoClasses.Set(":editEnabled", IsListBoxEditEnabled);
 
-                    ((IPseudoClasses)listBoxPart!.Classes).Set("draggableVirtualizing", args.Value);
-
-                    foreach (
-                        var item in listBoxPart.Items.Cast<StackExpanderViewModel>().WhereNotNull()
-                    )
-                    {
-                        item.IsEditEnabled = args.Value;
-                    }
-                });
-        }
+        listBoxPart?.Classes.Set("draggableVirtualizing", IsListBoxEditEnabled);
     }
 
     /// <inheritdoc />
@@ -95,27 +83,8 @@ public class StackEditableCard : TemplatedControl
 
         if (change.Property == IsListBoxEditEnabledProperty)
         {
-            var value = change.GetNewValue<bool>();
-            PseudoClasses.Set(":editEnabled", value);
-
-            ((IPseudoClasses)listBoxPart!.Classes).Set("draggableVirtualizing", value);
-
-            foreach (var item in listBoxPart.Items.Cast<StackExpanderViewModel>().WhereNotNull())
-            {
-                item.IsEditEnabled = value;
-            }
+            UpdatePseudoClasses(change.GetNewValue<bool>());
         }
-    }
-
-    private string GetModuleDisplayName(Type moduleType)
-    {
-        var name = moduleType.Name;
-        name = name.StripEnd("Module");
-
-        // Add a space between lower and upper case letters, unless one part is 1 letter long
-        /*name = Regex.Replace(name, @"(\P{Ll})(\P{Lu})", "$1 $2");*/
-
-        return name;
     }
 
     private FAMenuFlyout GetAddButtonFlyout()
@@ -135,5 +104,16 @@ public class StackEditableCard : TemplatedControl
         }
 
         return flyout;
+    }
+
+    private static string GetModuleDisplayName(Type moduleType)
+    {
+        var name = moduleType.Name;
+        name = name.StripEnd("Module");
+
+        // Add a space between lower and upper case letters, unless one part is 1 letter long
+        /*name = Regex.Replace(name, @"(\P{Ll})(\P{Lu})", "$1 $2");*/
+
+        return name;
     }
 }

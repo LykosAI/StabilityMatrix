@@ -58,63 +58,12 @@
                     </Setter>
                 </Style>
 
-                <!--<Style Selector="^:pointerover">
-                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                        <Setter Property="Background" Value="{DynamicResource ListViewItemBackgroundPointerOver}" />
-                    </Style>
-                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                        <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundPointerOver}" />
-                    </Style>
-                </Style>-->
-
                 <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                     <Setter Property="Background" Value="{DynamicResource ListViewItemBackgroundPressed}" />
                 </Style>
                 <Style Selector="^ /template/ ContentPresenter">
                     <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundPressed}" />
                 </Style>
-
-
-                <!--<Style Selector="^:selected">
-                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                        <Setter Property="Background" Value="{DynamicResource CompletionSelectionBackgroundBrush}" />
-                    </Style>
-                    <Style Selector="^ /template/ ContentPresenter">
-                        <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundSelected}" />
-                    </Style>
-                    ~1~  Disable selection indicator from fluent theme  @1@
-                    ~1~<Style Selector="^ /template/ Rectangle#SelectionIndicator">
-                        <Setter Property="IsVisible" Value="False" />
-                    </Style>@1@
-                    ~1~<Style Selector="^:not(:focus) /template/ ContentPresenter#PART_ContentPresenter">
-                        <Setter Property="Background" Value="{DynamicResource ListViewItemBackgroundSelected}" />
-                    </Style>
-                    <Style Selector="^:not(:focus) /template/ ContentPresenter#PART_ContentPresenter">
-                        <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundSelected}" />
-                    </Style>@1@
-
-                    ~1~<Style Selector="^:pointerover">
-                        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                            <Setter Property="Background" Value="{DynamicResource ListViewItemBackgroundSelectedPointerOver}" />
-                        </Style>
-                        <Style Selector="^ /template/ ContentPresenter">
-                            <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundSelectedPointerOver}" />
-                        </Style>
-                    </Style>@1@
-
-                    <Style Selector="^:pressed">
-                        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                            <Setter Property="Background" Value="{DynamicResource ListViewItemBackgroundSelectedPressed}" />
-                        </Style>
-                        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                            <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundSelectedPressed}" />
-                        </Style>
-                    </Style>
-
-                    ~1~<Style Selector="^:disabled /template/ Rectangle#SelectionIndicator">
-                        <Setter Property="Fill" Value="{DynamicResource ListViewItemSelectionIndicatorDisabledBrush}" />
-                    </Style>@1@
-                </Style>-->
         
     </ControlTheme>
     

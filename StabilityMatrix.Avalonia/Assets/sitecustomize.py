@@ -46,7 +46,9 @@ def audit(event: str, *args):
 
 # Reconfigure stdout to UTF-8
 # noinspection PyUnresolvedReferences
+sys.stdin.reconfigure(encoding="utf-8")
 sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
 
 # Install the audit hook
 sys.addaudithook(audit)

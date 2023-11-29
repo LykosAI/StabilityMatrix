@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Drawing;
+using System.IO;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
@@ -50,28 +51,32 @@ public static class ComfyNodeBuilderExtensions
 
     public static void SetupImageLatentSource(
         this ComfyNodeBuilder builder,
-        BatchSizeCardViewModel batchSizeCardViewModel,
-        SamplerCardViewModel samplerCardViewModel
+        SelectImageCardViewModel selectImageCardViewModel,
+        int? batchIndex = null
     )
     {
-        var emptyLatent = builder.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.EmptyLatentImage
-            {
-                Name = "EmptyLatentImage",
-                BatchSize = batchSizeCardViewModel.BatchSize,
-                Height = samplerCardViewModel.Height,
-                Width = samplerCardViewModel.Width
-            }
+        // Get source image
+        var sourceImage = selectImageCardViewModel.ImageSource;
+        var sourceImageRelativePath = Path.Combine(
+            "Inference",
+            sourceImage!.GetHashGuidFileNameCached()
+        );
+        var sourceImageSize =
+            selectImageCardViewModel.CurrentBitmapSize
+            ?? throw new InvalidOperationException("Source image size is null");
+
+        // Set source size
+        builder.Connections.PrimarySize = sourceImageSize;
+
+        // Load source
+        var loadImage = builder.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.LoadImage { Name = "LoadImage", Image = sourceImageRelativePath }
         );
 
-        builder.Connections.Primary = emptyLatent.Output;
-        builder.Connections.PrimarySize = new Size(
-            samplerCardViewModel.Width,
-            samplerCardViewModel.Height
-        );
+        builder.Connections.Primary = loadImage.Output1;
 
         // If batch index is selected, add a LatentFromBatch
-        if (batchSizeCardViewModel.IsBatchIndexEnabled)
+        if (batchIndex is not null)
         {
             builder.Connections.Primary = builder.Nodes
                 .AddNamedNode(
@@ -79,7 +84,7 @@ public static class ComfyNodeBuilderExtensions
                         "LatentFromBatch",
                         builder.GetPrimaryAsLatent(),
                         // remote expects a 0-based index, vm is 1-based
-                        batchSizeCardViewModel.BatchIndex - 1,
+                        batchIndex.Value - 1,
                         1
                     )
                 )

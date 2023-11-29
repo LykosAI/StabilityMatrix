@@ -645,6 +645,9 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.OutputProgress.Text = "Sampler 10/30";
         });
 
+    public static InferenceImageToImageViewModel InferenceImageToImageViewModel =>
+        DialogFactory.Get<InferenceImageToImageViewModel>();
+    
     public static InferenceImageUpscaleViewModel InferenceImageUpscaleViewModel =>
         DialogFactory.Get<InferenceImageUpscaleViewModel>();
 

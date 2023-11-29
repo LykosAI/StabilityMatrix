@@ -82,8 +82,6 @@ public class LineDashFrame : Frame
     /// <inheritdoc />
     public override void Render(DrawingContext context)
     {
-        base.Render(context);
-
         var width = Bounds.Width;
         var height = Bounds.Height;
 

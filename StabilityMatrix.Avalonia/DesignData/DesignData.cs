@@ -24,6 +24,7 @@ using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
+using StabilityMatrix.Avalonia.ViewModels.Inference.Video;
 using StabilityMatrix.Avalonia.ViewModels.OutputsPage;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Core.Api;
@@ -644,6 +645,14 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.OutputProgress.Maximum = 30;
             vm.OutputProgress.Text = "Sampler 10/30";
         });
+    
+    public static InferenceImageToVideoViewModel InferenceImageToVideoViewModel =>
+        DialogFactory.Get<InferenceImageToVideoViewModel>(vm =>
+        {
+            vm.OutputProgress.Value = 10;
+            vm.OutputProgress.Maximum = 30;
+            vm.OutputProgress.Text = "Sampler 10/30";
+        });
 
     public static InferenceImageUpscaleViewModel InferenceImageUpscaleViewModel =>
         DialogFactory.Get<InferenceImageUpscaleViewModel>();
@@ -655,6 +664,8 @@ The gallery images are often inpainted, but you will get something very similar 
         new() { State = ProgressState.Success };
 
     public static SeedCardViewModel SeedCardViewModel => new();
+    public static SvdImgToVidConditioningViewModel SvdImgToVidConditioningViewModel => new();
+    public static VideoOutputSettingsCardViewModel VideoOutputSettingsCardViewModel => new();
 
     public static SamplerCardViewModel SamplerCardViewModel =>
         DialogFactory.Get<SamplerCardViewModel>(vm =>
@@ -683,6 +694,9 @@ The gallery images are often inpainted, but you will get something very similar 
         });
 
     public static ModelCardViewModel ModelCardViewModel => DialogFactory.Get<ModelCardViewModel>();
+
+    public static ImgToVidModelCardViewModel ImgToVidModelCardViewModel =>
+        DialogFactory.Get<ImgToVidModelCardViewModel>();
 
     public static ImageGalleryCardViewModel ImageGalleryCardViewModel =>
         DialogFactory.Get<ImageGalleryCardViewModel>(vm =>

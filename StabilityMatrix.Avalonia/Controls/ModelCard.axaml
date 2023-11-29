@@ -12,6 +12,7 @@
         <Panel Width="400" Height="200">
             <StackPanel Width="300" VerticalAlignment="Center">
                 <controls:ModelCard DataContext="{x:Static mocks:DesignData.ModelCardViewModel}" />
+                <controls:ModelCard DataContext="{x:Static mocks:DesignData.ImgToVidModelCardViewModel}" />
             </StackPanel>
         </Panel>
     </Design.PreviewWith>
@@ -135,6 +136,7 @@
                         <Button
                             Grid.Row="0"
                             Grid.Column="2"
+                            IsVisible="{Binding !DisableSettings}"
                             Margin="8,0,0,0">
                             <ui:SymbolIcon FontSize="16" Symbol="Setting" />
                             <Button.Flyout>

@@ -17,3 +17,5 @@ public class ConditioningNodeConnection : NodeConnectionBase { }
 public class ClipNodeConnection : NodeConnectionBase { }
 
 public class ControlNetNodeConnection : NodeConnectionBase { }
+
+public class ClipVisionNodeConnection : NodeConnectionBase { }

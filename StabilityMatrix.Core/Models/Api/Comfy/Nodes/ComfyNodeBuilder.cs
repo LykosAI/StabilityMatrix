@@ -290,6 +290,12 @@ public class ComfyNodeBuilder
         public required string CkptName { get; init; }
     }
 
+    public record ImageOnlyCheckpointLoader
+        : ComfyTypedNodeBase<ModelNodeConnection, ClipVisionNodeConnection, VAENodeConnection>
+    {
+        public required string CkptName { get; init; }
+    }
+
     public record FreeU : ComfyTypedNodeBase<ModelNodeConnection>
     {
         public required ModelNodeConnection Model { get; init; }
@@ -355,6 +361,40 @@ public class ComfyNodeBuilder
         public required double Strength { get; init; }
         public required double StartPercent { get; init; }
         public required double EndPercent { get; init; }
+    }
+
+    public record SVD_img2vid_Conditioning
+        : ComfyTypedNodeBase<
+            ConditioningNodeConnection,
+            ConditioningNodeConnection,
+            LatentNodeConnection
+        >
+    {
+        public required ClipVisionNodeConnection ClipVision { get; init; }
+        public required ImageNodeConnection InitImage { get; init; }
+        public required VAENodeConnection Vae { get; init; }
+        public required int Width { get; init; }
+        public required int Height { get; init; }
+        public required int VideoFrames { get; init; }
+        public required int MotionBucketId { get; init; }
+        public required int Fps { get; set; }
+        public required double AugmentationLevel { get; init; }
+    }
+
+    public record VideoLinearCFGGuidance : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+        public required double MinCfg { get; init; }
+    }
+
+    public record SaveAnimatedWEBP : ComfyTypedNodeBase
+    {
+        public required ImageNodeConnection Images { get; init; }
+        public required string FilenamePrefix { get; init; }
+        public required double Fps { get; init; }
+        public required bool Lossless { get; init; }
+        public required int Quality { get; init; }
+        public required string Method { get; init; }
     }
 
     public ImageNodeConnection Lambda_LatentToImage(
@@ -823,6 +863,7 @@ public class ComfyNodeBuilder
         public ModelNodeConnection? BaseModel { get; set; }
         public VAENodeConnection? BaseVAE { get; set; }
         public ClipNodeConnection? BaseClip { get; set; }
+        public ClipVisionNodeConnection? BaseClipVision { get; set; }
 
         public ConditioningNodeConnection? BaseConditioning { get; set; }
         public ConditioningNodeConnection? BaseNegativeConditioning { get; set; }

@@ -32,6 +32,7 @@ public class InferenceProjectDocument : ICloneable
             {
                 InferenceTextToImageViewModel => InferenceProjectType.TextToImage,
                 InferenceImageUpscaleViewModel => InferenceProjectType.Upscale,
+                InferenceImageToVideoViewModel => InferenceProjectType.ImageToVideo,
                 _
                     => throw new InvalidOperationException(
                         $"Unknown loadable model type: {loadableModel.GetType()}"

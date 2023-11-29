@@ -138,6 +138,18 @@
         <AutoGen>True</AutoGen>
         <DependentUpon>Resources.resx</DependentUpon>
       </Compile>
+      <Compile Update="Views\Inference\InferenceImageToVideoView.axaml.cs">
+        <DependentUpon>InferenceImageToVideoView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Controls\VideoGenerationSettingsCard.axaml.cs">
+        <DependentUpon>VideoGenerationSettingsCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Controls\VideoOutputSettingsCard.axaml.cs">
+        <DependentUpon>VideoOutputSettingsCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 
     <!-- set HUSKY to 0 to disable, or opt-in during CI by setting HUSKY to 1 -->

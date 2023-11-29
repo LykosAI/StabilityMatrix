@@ -68,6 +68,16 @@
                             Symbol="ResizeImage"/>
                     </ui:CommandBarButton.IconSource>
                 </ui:CommandBarButton>
+                <ui:CommandBarButton
+                    Click="AddTabMenu_ImgToVideo_OnClick"
+                    Label="Image to Video"
+                    ToolTip.Tip="Image to Video">
+                    <ui:CommandBarButton.IconSource>
+                        <fluentIcons:SymbolIconSource
+                            FontSize="10"
+                            Symbol="Video"/>
+                    </ui:CommandBarButton.IconSource>
+                </ui:CommandBarButton>
             </ui:CommandBarFlyout.SecondaryCommands>
         </ui:CommandBarFlyout>
     </controls:UserControlBase.Resources>

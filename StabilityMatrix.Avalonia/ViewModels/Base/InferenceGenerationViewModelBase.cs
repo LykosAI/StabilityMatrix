@@ -418,19 +418,34 @@ public abstract partial class InferenceGenerationViewModelBase
                 );
             }
 
-            var bytesWithMetadata = PngDataHelper.AddMetadata(imageArray, parameters, project);
+            if (comfyImage.FileName.EndsWith(".png"))
+            {
+                var bytesWithMetadata = PngDataHelper.AddMetadata(imageArray, parameters, project);
 
-            // Write using generated name
-            var filePath = await WriteOutputImageAsync(
-                new MemoryStream(bytesWithMetadata),
-                args,
-                i + 1,
-                images.Count
-            );
+                // Write using generated name
+                var filePath = await WriteOutputImageAsync(
+                    new MemoryStream(bytesWithMetadata),
+                    args,
+                    i + 1,
+                    images.Count
+                );
 
-            outputImages.Add(new ImageSource(filePath));
+                outputImages.Add(new ImageSource(filePath));
+                EventManager.Instance.OnImageFileAdded(filePath);
+            }
+            else
+            {
+                // Write using generated name
+                var filePath = await WriteOutputImageAsync(
+                    new MemoryStream(imageArray),
+                    args,
+                    i + 1,
+                    images.Count
+                );
 
-            EventManager.Instance.OnImageFileAdded(filePath);
+                outputImages.Add(new ImageSource(filePath));
+                EventManager.Instance.OnImageFileAdded(filePath);
+            }
         }
 
         // Download all images to make grid, if multiple

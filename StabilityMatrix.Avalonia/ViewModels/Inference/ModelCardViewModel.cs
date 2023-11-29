@@ -38,6 +38,9 @@ public partial class ModelCardViewModel
     [ObservableProperty]
     private bool isVaeSelectionEnabled;
 
+    [ObservableProperty]
+    private bool disableSettings;
+
     public string? SelectedModelName => SelectedModel?.RelativePath;
 
     public string? SelectedVaeName => SelectedVae?.RelativePath;
@@ -50,7 +53,7 @@ public partial class ModelCardViewModel
     }
 
     /// <inheritdoc />
-    public void ApplyStep(ModuleApplyStepEventArgs e)
+    public virtual void ApplyStep(ModuleApplyStepEventArgs e)
     {
         // Load base checkpoint
         var baseLoader = e.Nodes.AddTypedNode(

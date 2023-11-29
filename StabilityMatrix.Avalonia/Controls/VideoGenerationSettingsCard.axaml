@@ -1,0 +1,122 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+        x:DataType="video:SvdImgToVidConditioningViewModel"
+        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+        xmlns:video="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference.Video"
+        xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+        xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages">
+    <Design.PreviewWith>
+        <Grid MinWidth="400">
+            <controls:VideoGenerationSettingsCard DataContext="{x:Static mocks:DesignData.SvdImgToVidConditioningViewModel}" />
+        </Grid>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|VideoGenerationSettingsCard">
+        <!-- Set Defaults -->
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card Padding="8" HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
+                    <Grid Margin="4" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto, *">
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            Text="Frames" />
+                        <controls1:NumberBox
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            SelectionHighlightColor="Transparent"
+                            Value="{Binding NumFrames}"
+                            Margin="8,0,0,0"
+                            SimpleNumberFormat="F0"
+                            SmallChange="1"
+                            HorizontalAlignment="Stretch"
+                            SpinButtonPlacementMode="Inline"/>
+                        
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Margin="0,8,8,0"
+                                VerticalAlignment="Center"
+                                Text="Frames Per Second" />
+                            <controls1:NumberBox
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                SelectionHighlightColor="Transparent"
+                                Value="{Binding Fps}"
+                                Margin="8,8,0,0"
+                                SimpleNumberFormat="F0"
+                                SmallChange="1"
+                                HorizontalAlignment="Stretch"
+                                SpinButtonPlacementMode="Inline"/>
+                        
+                            <TextBlock
+                                Grid.Row="2"
+                                Grid.Column="0"
+                                Margin="0,8,8,0"
+                                VerticalAlignment="Center"
+                                Text="Min CFG" />
+                            <controls1:NumberBox
+                                Margin="8,8,0,0"
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                SelectionHighlightColor="Transparent"
+                                Value="{Binding MinCfg}"
+                                SimpleNumberFormat="F0"
+                                SmallChange="1"
+                                HorizontalAlignment="Stretch"
+                                SpinButtonPlacementMode="Inline"/>
+                        
+                            <TextBlock
+                                Margin="0,8,8,0"
+                                Grid.Row="3"
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Text="Motion Bucket ID" />
+                            <controls1:NumberBox
+                                Margin="8,8,0,0"
+                                Grid.Row="3"
+                                Grid.Column="1"
+                                SelectionHighlightColor="Transparent"
+                                Value="{Binding MotionBucketId}"
+                                SimpleNumberFormat="F0"
+                                SmallChange="1"
+                                HorizontalAlignment="Stretch"
+                                SpinButtonPlacementMode="Inline"/>
+                        
+                        <StackPanel Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Grid.Row="4" 
+                                    Margin="0,16,0,0">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock 
+                                    VerticalAlignment="Center"
+                                    Text="Augmentation Level"/>
+                                <controls1:NumberBox
+                                    Grid.Column="1"
+                                    Margin="4,0,0,0"
+                                    ValidationMode="InvalidInputOverwritten"
+                                    SmallChange="0.01"
+                                    SimpleNumberFormat="F2"
+                                    Value="{Binding AugmentationLevel}"
+                                    HorizontalAlignment="Stretch"
+                                    MinWidth="100"
+                                    SpinButtonPlacementMode="Compact"/>
+                            </Grid>
+                            <Slider 
+                                Minimum="0"
+                                Maximum="10"
+                                Value="{Binding AugmentationLevel}"
+                                TickFrequency="1"
+                                Margin="0,0,0,-4"
+                                TickPlacement="BottomRight"/>
+                        </StackPanel>
+                    </Grid>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

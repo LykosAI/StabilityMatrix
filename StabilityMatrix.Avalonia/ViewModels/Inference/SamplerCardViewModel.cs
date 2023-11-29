@@ -108,6 +108,16 @@ public partial class SamplerCardViewModel
     /// <inheritdoc />
     public void ApplyStep(ModuleApplyStepEventArgs e)
     {
+        // Provide temp values
+        e.Temp.Conditioning = (
+            e.Builder.Connections.GetRefinerOrBaseConditioning(),
+            e.Builder.Connections.GetRefinerOrBaseNegativeConditioning()
+        );
+        e.Temp.RefinerConditioning = (
+            e.Builder.Connections.RefinerConditioning!,
+            e.Builder.Connections.RefinerNegativeConditioning!
+        );
+
         // Apply steps from our addons
         ApplyAddonSteps(e);
 
@@ -157,12 +167,8 @@ public partial class SamplerCardViewModel
                     Scheduler = e.Builder.Connections.PrimaryScheduler?.Name!,
                     Steps = Steps,
                     Cfg = CfgScale,
-                    Positive =
-                        e.Builder.Connections.BaseConditioning
-                        ?? throw new ArgumentException("No BaseConditioning"),
-                    Negative =
-                        e.Builder.Connections.BaseNegativeConditioning
-                        ?? throw new ArgumentException("No BaseNegativeConditioning"),
+                    Positive = e.Temp.Conditioning.Positive,
+                    Negative = e.Temp.Conditioning.Negative,
                     LatentImage = primaryLatent,
                     Denoise = DenoiseStrength,
                 }
@@ -186,12 +192,8 @@ public partial class SamplerCardViewModel
                     Cfg = CfgScale,
                     SamplerName = e.Builder.Connections.PrimarySampler?.Name!,
                     Scheduler = e.Builder.Connections.PrimaryScheduler?.Name!,
-                    Positive =
-                        e.Builder.Connections.BaseConditioning
-                        ?? throw new ArgumentException("No BaseConditioning"),
-                    Negative =
-                        e.Builder.Connections.BaseNegativeConditioning
-                        ?? throw new ArgumentException("No BaseNegativeConditioning"),
+                    Positive = e.Temp.Conditioning.Positive,
+                    Negative = e.Temp.Conditioning.Negative,
                     LatentImage = primaryLatent,
                     StartAtStep = 0,
                     EndAtStep = Steps,
@@ -213,12 +215,8 @@ public partial class SamplerCardViewModel
                     Cfg = CfgScale,
                     SamplerName = e.Builder.Connections.PrimarySampler?.Name!,
                     Scheduler = e.Builder.Connections.PrimaryScheduler?.Name!,
-                    Positive =
-                        e.Builder.Connections.RefinerConditioning
-                        ?? throw new ArgumentException("No RefinerConditioning"),
-                    Negative =
-                        e.Builder.Connections.RefinerNegativeConditioning
-                        ?? throw new ArgumentException("No RefinerNegativeConditioning"),
+                    Positive = e.Temp.RefinerConditioning.Positive,
+                    Negative = e.Temp.RefinerConditioning.Negative,
                     // Connect to previous sampler
                     LatentImage = sampler.Output,
                     StartAtStep = Steps,

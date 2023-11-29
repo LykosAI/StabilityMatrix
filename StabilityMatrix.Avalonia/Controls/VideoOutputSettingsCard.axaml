@@ -8,7 +8,8 @@
         xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages">
     <Design.PreviewWith>
         <Grid MinWidth="400">
-            <controls:VideoOutputSettingsCard DataContext="{x:Static mocks:DesignData.SvdImgToVidConditioningViewModel}" />
+            <controls:VideoOutputSettingsCard
+                DataContext="{x:Static mocks:DesignData.SvdImgToVidConditioningViewModel}" />
         </Grid>
     </Design.PreviewWith>
 
@@ -19,14 +20,23 @@
             <ControlTemplate>
                 <controls:Card Padding="8" HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
                     <Grid Margin="4" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto, *">
-                        <TextBlock
+                        <TextBlock 
                             Grid.Row="0"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="2"
+                            Text="Video Output Settings"
+                            FontSize="16"
+                            FontWeight="DemiBold"
+                            Margin="0,0,0,16"
+                            />
+                        <TextBlock
+                            Grid.Row="1"
                             Grid.Column="0"
                             Margin="0,0,8,0"
                             VerticalAlignment="Center"
                             Text="Frames Per Second" />
                         <controls1:NumberBox
-                            Grid.Row="0"
+                            Grid.Row="1"
                             Grid.Column="1"
                             SelectionHighlightColor="Transparent"
                             Value="{Binding Fps}"
@@ -34,50 +44,52 @@
                             SimpleNumberFormat="F0"
                             SmallChange="1"
                             HorizontalAlignment="Stretch"
-                            SpinButtonPlacementMode="Inline"/>
-                        
-                            <TextBlock
-                                Grid.Row="1"
-                                Grid.Column="0"
-                                Margin="0,8,8,0"
-                                VerticalAlignment="Center"
-                                Text="Lossless" />
-                            <CheckBox
-                                Grid.Row="1"
-                                Grid.Column="1"
-                                IsChecked="{Binding Lossless}"
-                                Margin="8,8,0,0"
-                                HorizontalAlignment="Stretch"/>
-                        
-                            <TextBlock
-                                Grid.Row="2"
-                                Grid.Column="0"
-                                Margin="0,8,8,0"
-                                VerticalAlignment="Center"
-                                Text="Quality" />
-                            <controls1:NumberBox
-                                Margin="8,8,0,0"
-                                Grid.Row="2"
-                                Grid.Column="1"
-                                SelectionHighlightColor="Transparent"
-                                Value="{Binding Quality}"
-                                SimpleNumberFormat="F0"
-                                SmallChange="1"
-                                Maximum="100"
-                                HorizontalAlignment="Stretch"
-                                SpinButtonPlacementMode="Inline"/>
-                        
-                            <TextBlock
-                                Margin="0,8,8,0"
-                                Grid.Row="3"
-                                Grid.Column="0"
-                                VerticalAlignment="Center"
-                                Text="Method" />
-                            <ComboBox Grid.Row="3" Grid.Column="1"
-                                      Margin="8,8,0,0"
-                                      MinWidth="100"
-                                      ItemsSource="{Binding AvailableMethods}"
-                                      SelectedIndex="{Binding SelectedMethod}"/>
+                            SpinButtonPlacementMode="Inline" />
+
+                        <TextBlock
+                            Grid.Row="2"
+                            Grid.Column="0"
+                            Margin="0,8,8,0"
+                            VerticalAlignment="Center"
+                            Text="Lossless" />
+                        <CheckBox
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            IsChecked="{Binding Lossless}"
+                            Margin="8,8,0,0"
+                            HorizontalAlignment="Stretch" />
+
+                        <TextBlock
+                            Grid.Row="3"
+                            Grid.Column="0"
+                            Margin="0,8,8,0"
+                            VerticalAlignment="Center"
+                            Text="Quality" />
+                        <controls1:NumberBox
+                            Margin="8,8,0,0"
+                            Grid.Row="3"
+                            Grid.Column="1"
+                            SelectionHighlightColor="Transparent"
+                            Value="{Binding Quality}"
+                            SimpleNumberFormat="F0"
+                            SmallChange="1"
+                            Maximum="100"
+                            HorizontalAlignment="Stretch"
+                            SpinButtonPlacementMode="Inline" />
+
+                        <TextBlock
+                            Margin="0,8,8,0"
+                            Grid.Row="4"
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Text="Method" />
+                        <ComboBox
+                            Grid.Row="4"
+                            Grid.Column="1"
+                            Margin="8,8,0,0"
+                            MinWidth="100"
+                            ItemsSource="{Binding AvailableMethods}"
+                            SelectedIndex="{Binding SelectedMethod}" />
                     </Grid>
                 </controls:Card>
             </ControlTemplate>

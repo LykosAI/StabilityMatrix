@@ -52,3 +52,35 @@ sys.stderr.reconfigure(encoding="utf-8")
 
 # Install the audit hook
 sys.addaudithook(audit)
+
+# Patch Rich terminal detection
+def _patch_rich_console():
+    try:
+        from rich import console
+        
+        class _Console(console.Console):
+            @property
+            def is_terminal(self) -> bool:
+                return True
+        
+        console.Console = _Console
+    except ImportError:
+        pass
+    except Exception as e:
+        print("[sitecustomize error]:", e)
+
+_patch_rich_console()
+
+# Patch tqdm to use stdout instead of stderr
+def _patch_tqdm():
+    try:
+        import sys
+        from tqdm import std
+        
+        sys.stderr = sys.stdout
+    except ImportError:
+        pass
+    except Exception as e:
+        print("[sitecustomize error]:", e)
+
+_patch_tqdm()

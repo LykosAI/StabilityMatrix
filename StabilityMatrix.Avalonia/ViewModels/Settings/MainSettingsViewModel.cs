@@ -102,41 +102,6 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool removeSymlinksOnShutdown;
 
-    // Inference UI section
-    [ObservableProperty]
-    private bool isPromptCompletionEnabled = true;
-
-    [ObservableProperty]
-    private IReadOnlyList<string> availableTagCompletionCsvs = Array.Empty<string>();
-
-    [ObservableProperty]
-    private string? selectedTagCompletionCsv;
-
-    [ObservableProperty]
-    private bool isCompletionRemoveUnderscoresEnabled = true;
-
-    [ObservableProperty]
-    [CustomValidation(typeof(MainSettingsViewModel), nameof(ValidateOutputImageFileNameFormat))]
-    private string? outputImageFileNameFormat;
-
-    [ObservableProperty]
-    private string? outputImageFileNameFormatSample;
-
-    public IEnumerable<FileNameFormatVar> OutputImageFileNameFormatVars =>
-        FileNameFormatProvider
-            .GetSample()
-            .Substitutions.Select(
-                kv =>
-                    new FileNameFormatVar
-                    {
-                        Variable = $"{{{kv.Key}}}",
-                        Example = kv.Value.Invoke()
-                    }
-            );
-
-    [ObservableProperty]
-    private bool isImageViewerPixelGridEnabled = true;
-
     // Integrations section
     [ObservableProperty]
     private bool isDiscordRichPresenceEnabled;
@@ -217,71 +182,10 @@ public partial class MainSettingsViewModel : PageViewModelBase
             settings => settings.AnimationScale
         );
 
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.SelectedTagCompletionCsv,
-            settings => settings.TagCompletionCsv
-        );
-
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.IsPromptCompletionEnabled,
-            settings => settings.IsPromptCompletionEnabled,
-            true
-        );
-
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.IsCompletionRemoveUnderscoresEnabled,
-            settings => settings.IsCompletionRemoveUnderscoresEnabled,
-            true
-        );
-
-        this.WhenPropertyChanged(vm => vm.OutputImageFileNameFormat)
-            .Throttle(TimeSpan.FromMilliseconds(50))
-            .Subscribe(formatProperty =>
-            {
-                var provider = FileNameFormatProvider.GetSample();
-                var template = formatProperty.Value ?? string.Empty;
-
-                if (
-                    !string.IsNullOrEmpty(template)
-                    && provider.Validate(template) == ValidationResult.Success
-                )
-                {
-                    var format = FileNameFormat.Parse(template, provider);
-                    OutputImageFileNameFormatSample = format.GetFileName() + ".png";
-                }
-                else
-                {
-                    // Use default format if empty
-                    var defaultFormat = FileNameFormat.Parse(
-                        FileNameFormat.DefaultTemplate,
-                        provider
-                    );
-                    OutputImageFileNameFormatSample = defaultFormat.GetFileName() + ".png";
-                }
-            });
-
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.OutputImageFileNameFormat,
-            settings => settings.InferenceOutputImageFileNameFormat,
-            true
-        );
-
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.IsImageViewerPixelGridEnabled,
-            settings => settings.IsImageViewerPixelGridEnabled,
-            true
-        );
-
         DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(
             notificationService,
             LogLevel.Warn
         );
-        ImportTagCsvCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
     }
 
     /// <inheritdoc />
@@ -291,18 +195,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
         await notificationService.TryAsync(completionProvider.Setup());
 
-        UpdateAvailableTagCompletionCsvs();
-
         // Start accounts update
         accountsService.RefreshAsync().SafeFireAndForget();
-    }
-
-    public static ValidationResult ValidateOutputImageFileNameFormat(
-        string? format,
-        ValidationContext context
-    )
-    {
-        return FileNameFormatProvider.GetSample().Validate(format ?? string.Empty);
     }
 
     partial void OnSelectedThemeChanged(string? value)
@@ -451,68 +345,6 @@ public partial class MainSettingsViewModel : PageViewModelBase
         await dialog.ShowAsync();
     }
 
-    #endregion
-
-    #region Inference UI
-
-    private void UpdateAvailableTagCompletionCsvs()
-    {
-        if (!settingsManager.IsLibraryDirSet)
-            return;
-
-        var tagsDir = settingsManager.TagsDirectory;
-        if (!tagsDir.Exists)
-            return;
-
-        var csvFiles = tagsDir.Info.EnumerateFiles("*.csv");
-        AvailableTagCompletionCsvs = csvFiles.Select(f => f.Name).ToImmutableArray();
-
-        // Set selected to current if exists
-        var settingsCsv = settingsManager.Settings.TagCompletionCsv;
-        if (settingsCsv is not null && AvailableTagCompletionCsvs.Contains(settingsCsv))
-        {
-            SelectedTagCompletionCsv = settingsCsv;
-        }
-    }
-
-    [RelayCommand(FlowExceptionsToTaskScheduler = true)]
-    private async Task ImportTagCsv()
-    {
-        var storage = App.StorageProvider;
-        var files = await storage.OpenFilePickerAsync(
-            new FilePickerOpenOptions
-            {
-                FileTypeFilter = new List<FilePickerFileType>
-                {
-                    new("CSV") { Patterns = new[] { "*.csv" }, }
-                }
-            }
-        );
-
-        if (files.Count == 0)
-            return;
-
-        var sourceFile = new FilePath(files[0].TryGetLocalPath()!);
-
-        var tagsDir = settingsManager.TagsDirectory;
-        tagsDir.Create();
-
-        // Copy to tags directory
-        var targetFile = tagsDir.JoinFile(sourceFile.Name);
-        await sourceFile.CopyToAsync(targetFile);
-
-        // Update index
-        UpdateAvailableTagCompletionCsvs();
-
-        // Trigger load
-        completionProvider.BackgroundLoadFromFile(targetFile, true);
-
-        notificationService.Show(
-            $"Imported {sourceFile.Name}",
-            $"The {sourceFile.Name} file has been imported.",
-            NotificationType.Success
-        );
-    }
     #endregion
 
     #region System

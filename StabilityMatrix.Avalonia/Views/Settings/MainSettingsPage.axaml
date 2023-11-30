@@ -104,112 +104,30 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
             </Grid>
-
-            <!--  Inference UI  -->
-            <Grid Margin="0,8,0,0" RowDefinitions="auto,*,*,*">
+            
+            <!--  General  -->
+            <sg:SpacedGrid RowDefinitions="Auto,*" RowSpacing="4">
                 <TextBlock
-                    Margin="0,0,0,8"
+                    Margin="0,0,0,4"
                     FontWeight="Medium"
-                    Text="Inference" />
-                <!--  Auto Completion  -->
+                    Text="{x:Static lang:Resources.Label_General}" />
+                <!-- Link to Inference Sub-Settings -->
                 <ui:SettingsExpander
                     Grid.Row="1"
-                    Margin="8,0,8,4"
-                    Header="Prompt Auto Completion">
+                    Margin="8,0"
+                    ActionIconSource="ChevronRight"
+                    Command="{Binding NavigateToSubPageCommand}"
+                    CommandParameter="{x:Type vmSettings:InferenceSettingsViewModel}"
+                    Header="{x:Static lang:Resources.Label_Inference}"
+                    IsClickEnabled="True">
                     <ui:SettingsExpander.IconSource>
-                        <controls:FASymbolIconSource Symbol="fa-solid fa-wand-magic-sparkles" />
+                        <fluentIcons:SymbolIconSource
+                            FontSize="10"
+                            IsFilled="True"
+                            Symbol="AppGeneric" />
                     </ui:SettingsExpander.IconSource>
-
-                    <!--  Enable toggle  -->
-                    <ui:SettingsExpanderItem Content="Enable">
-                        <ui:SettingsExpanderItem.Footer>
-                            <ToggleSwitch IsChecked="{Binding IsPromptCompletionEnabled}" />
-                        </ui:SettingsExpanderItem.Footer>
-                    </ui:SettingsExpanderItem>
-
-                    <!--  Tag csv selection  -->
-                    <ui:SettingsExpanderItem
-                        Content="Tag Source"
-                        Description="Tags to use for completion in .csv format (Compatible with a1111-sd-webui-tagcomplete)"
-                        IconSource="Tag"
-                        IsEnabled="{Binding IsPromptCompletionEnabled}">
-                        <ui:SettingsExpanderItem.Footer>
-                            <ui:FAComboBox ItemsSource="{Binding AvailableTagCompletionCsvs}" SelectedItem="{Binding SelectedTagCompletionCsv}" />
-                        </ui:SettingsExpanderItem.Footer>
-                    </ui:SettingsExpanderItem>
-
-                    <!--  Tag csv import  -->
-                    <ui:SettingsExpanderItem
-                        Content="Import Tag Source .csv"
-                        IconSource="Add"
-                        IsEnabled="{Binding IsPromptCompletionEnabled}">
-                        <ui:SettingsExpanderItem.Footer>
-                            <Button Command="{Binding ImportTagCsvCommand}" Content="Import" />
-                        </ui:SettingsExpanderItem.Footer>
-                    </ui:SettingsExpanderItem>
-
-                    <!--  Remove underscores  -->
-                    <ui:SettingsExpanderItem
-                        Content="Replace underscores with spaces when inserting completions"
-                        IconSource="Underline"
-                        IsEnabled="{Binding IsPromptCompletionEnabled}">
-                        <ui:SettingsExpanderItem.Footer>
-                            <CheckBox Margin="8" IsChecked="{Binding IsCompletionRemoveUnderscoresEnabled}" />
-                        </ui:SettingsExpanderItem.Footer>
-                    </ui:SettingsExpanderItem>
                 </ui:SettingsExpander>
-
-                <!--  Image Viewer  -->
-                <ui:SettingsExpander
-                    Grid.Row="2"
-                    Margin="8,0,8,4"
-                    Header="Image Viewer"
-                    IconSource="Image">
-
-                    <!--  Pixel grid  -->
-                    <ui:SettingsExpanderItem Content="Show pixel grid at high zoom levels" IconSource="ViewAll">
-                        <ui:SettingsExpanderItem.Footer>
-                            <CheckBox Margin="8" IsChecked="{Binding IsImageViewerPixelGridEnabled}" />
-                        </ui:SettingsExpanderItem.Footer>
-                    </ui:SettingsExpanderItem>
-                </ui:SettingsExpander>
-
-                <!--  Output Image Files  -->
-                <ui:SettingsExpander
-                    Grid.Row="3"
-                    Margin="8,0,8,4"
-                    Header="Output Image Files">
-                    <ui:SettingsExpander.IconSource>
-                        <fluentIcons:SymbolIconSource Symbol="TabDesktopImage" />
-                    </ui:SettingsExpander.IconSource>
-                    <!--  File name pattern  -->
-                    <ui:SettingsExpanderItem
-                        Content="File name pattern"
-                        Description="{Binding OutputImageFileNameFormatSample}"
-                        IconSource="Rename">
-                        <ui:SettingsExpanderItem.Footer>
-                            <TextBox
-                                Name="OutputImageFileNameFormatTextBox"
-                                MinWidth="150"
-                                FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
-                                FontSize="13"
-                                Text="{Binding OutputImageFileNameFormat}"
-                                Watermark="{x:Static inference:FileNameFormat.DefaultTemplate}" />
-                        </ui:SettingsExpanderItem.Footer>
-                    </ui:SettingsExpanderItem>
-                </ui:SettingsExpander>
-
-                <ui:TeachingTip
-                    Title="Format Variables"
-                    Grid.Row="3"
-                    IsOpen="{Binding #OutputImageFileNameFormatTextBox.IsFocused}"
-                    PreferredPlacement="Top"
-                    Target="{Binding #OutputImageFileNameFormatTextBox, Mode=OneWay}">
-                    <DataGrid AutoGenerateColumns="True" ItemsSource="{Binding OutputImageFileNameFormatVars}" />
-                    <!--<mdxaml:MarkdownScrollViewer
-                        Markdown="{Binding OutputImageFileNameFormatGuideMarkdown}"/>-->
-                </ui:TeachingTip>
-            </Grid>
+            </sg:SpacedGrid>
 
             <!--  Environment Options  -->
             <Grid RowDefinitions="Auto, Auto, Auto">

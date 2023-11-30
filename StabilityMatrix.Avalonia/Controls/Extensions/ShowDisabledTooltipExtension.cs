@@ -38,7 +38,7 @@ public static class ShowDisabledTooltipExtension
         AvaloniaPropertyChangedEventArgs e
     )
     {
-        if (e.NewValue is bool isEnabledVal && isEnabledVal)
+        if (e.GetNewValue<bool>())
         {
             control.DetachedFromVisualTree += AttachedControl_DetachedFromVisualOrExtension;
             control.AttachedToVisualTree += AttachedControl_AttachedToVisualTree;

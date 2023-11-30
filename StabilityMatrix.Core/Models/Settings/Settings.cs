@@ -59,6 +59,8 @@ public class Settings
     public bool IsNavExpanded { get; set; }
     public bool IsImportAsConnected { get; set; }
     public bool ShowConnectedModelImages { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter<SharedFolderType>))]
     public SharedFolderType? SharedFolderVisibleCategories { get; set; } =
         SharedFolderType.StableDiffusion | SharedFolderType.Lora | SharedFolderType.LyCORIS;
 
@@ -163,3 +165,10 @@ public class Settings
             : new CultureInfo("en-US");
     }
 }
+
+[JsonSourceGenerationOptions(
+    WriteIndented = true,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+[JsonSerializable(typeof(Settings))]
+internal partial class SettingsSerializerContext : JsonSerializerContext;

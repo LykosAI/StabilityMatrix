@@ -1354,6 +1354,7 @@ public class AdvancedImageBox : TemplatedControl
         InvalidateVisual();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void RenderBackgroundGrid(DrawingContext context)
     {
         var size = GridCellSize;
@@ -1387,8 +1388,6 @@ public class AdvancedImageBox : TemplatedControl
 
     public override void Render(DrawingContext context)
     {
-        base.Render(context);
-
         var gridCellSize = GridCellSize;
 
         if (ShowGrid & gridCellSize > 0 && (!IsHorizontalBarVisible || !IsVerticalBarVisible))

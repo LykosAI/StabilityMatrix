@@ -44,6 +44,7 @@ using StabilityMatrix.Avalonia.Views.Settings;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Python;
@@ -116,6 +117,23 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private string? debugGpuInfo;
 
+    #region System Info
+
+    private static Lazy<IReadOnlyList<GpuInfo>> GpuInfosLazy { get; } =
+        new(() => HardwareHelper.IterGpuInfo().ToImmutableArray());
+
+    public static IReadOnlyList<GpuInfo> GpuInfos => GpuInfosLazy.Value;
+
+    [ObservableProperty]
+    private MemoryInfo memoryInfo;
+
+    private readonly DispatcherTimer hardwareInfoUpdateTimer =
+        new() { Interval = TimeSpan.FromSeconds(2.627) };
+
+    public Task<CpuInfo> CpuInfoAsync => HardwareHelper.GetCpuInfoAsync();
+
+    #endregion
+
     // Info section
     private const int VersionTapCountThreshold = 7;
 
@@ -186,6 +204,25 @@ public partial class MainSettingsViewModel : PageViewModelBase
             notificationService,
             LogLevel.Warn
         );
+
+        hardwareInfoUpdateTimer.Tick += OnHardwareInfoUpdateTimerTick;
+    }
+
+    /// <inheritdoc />
+    public override void OnLoaded()
+    {
+        base.OnLoaded();
+
+        hardwareInfoUpdateTimer.Start();
+        OnHardwareInfoUpdateTimerTick(null, null!);
+    }
+
+    /// <inheritdoc />
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
+
+        hardwareInfoUpdateTimer.Stop();
     }
 
     /// <inheritdoc />
@@ -197,6 +234,11 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
         // Start accounts update
         accountsService.RefreshAsync().SafeFireAndForget();
+    }
+
+    private void OnHardwareInfoUpdateTimerTick(object? sender, EventArgs e)
+    {
+        MemoryInfo = HardwareHelper.GetMemoryInfo();
     }
 
     partial void OnSelectedThemeChanged(string? value)

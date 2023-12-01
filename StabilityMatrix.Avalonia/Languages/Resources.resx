@@ -843,4 +843,7 @@
   <data name="Label_PromptTagsDescription" xml:space="preserve">
     <value>Tags file to use for suggesting completions (Supports the a1111-sd-webui-tagcomplete .csv format)</value>
   </data>
+  <data name="Label_Information" xml:space="preserve">
+    <value>Information</value>
+  </data>
 </root>

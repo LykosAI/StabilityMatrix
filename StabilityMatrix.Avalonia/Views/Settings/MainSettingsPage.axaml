@@ -7,6 +7,8 @@
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+    xmlns:hardwareInfo="clr-namespace:StabilityMatrix.Core.Helper.HardwareInfo;assembly=StabilityMatrix.Core"
+    xmlns:helper="clr-namespace:StabilityMatrix.Core.Helper;assembly=StabilityMatrix.Core"
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -28,9 +30,16 @@
 
     <controls:UserControlBase.Resources>
         <converters:CultureInfoDisplayConverter x:Key="CultureInfoDisplayConverter" />
+        <converters:IndexPlusOneConverter x:Key="IndexPlusOneConverter" />
         <converters:EnumStringConverter x:Key="EnumStringConverter" />
         <converters:EnumToBooleanConverter x:Key="EnumBoolConverter" />
     </controls:UserControlBase.Resources>
+
+    <controls:UserControlBase.Styles>
+        <Style Selector="sg|SpacedGrid &gt; ui|SettingsExpander">
+            <Setter Property="Margin" Value="8,0" />
+        </Style>
+    </controls:UserControlBase.Styles>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="8,16" Spacing="8">
@@ -104,14 +113,14 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
             </Grid>
-            
+
             <!--  General  -->
             <sg:SpacedGrid RowDefinitions="Auto,*" RowSpacing="4">
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
                     Text="{x:Static lang:Resources.Label_General}" />
-                <!-- Link to Inference Sub-Settings -->
+                <!--  Link to Inference Sub-Settings  -->
                 <ui:SettingsExpander
                     Grid.Row="1"
                     Margin="8,0"
@@ -201,16 +210,15 @@
             </sg:SpacedGrid>
 
             <!--  System Options  -->
-            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="4">
+            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="4">
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
                     Text="{x:Static lang:Resources.Label_System}" />
 
-                <!-- Updates page -->
+                <!--  Updates page  -->
                 <ui:SettingsExpander
                     Grid.Row="1"
-                    Margin="8,0"
                     ActionIconSource="ChevronRight"
                     Command="{Binding NavigateToSubPageCommand}"
                     CommandParameter="{x:Type vmSettings:UpdateSettingsViewModel}"
@@ -226,7 +234,6 @@
 
                 <ui:SettingsExpander
                     Grid.Row="2"
-                    Margin="8,0"
                     Description="{x:Static lang:Resources.Label_AddToStartMenu_Details}"
                     Header="{x:Static lang:Resources.Label_AddToStartMenu}"
                     IconSource="StarAdd"
@@ -266,7 +273,6 @@
 
                 <ui:SettingsExpander
                     Grid.Row="3"
-                    Margin="8,0"
                     Description="{x:Static lang:Resources.Label_SelectNewDataDirectory_Details}"
                     IconSource="MoveToFolder">
                     <ui:SettingsExpander.Header>
@@ -293,6 +299,131 @@
                             </Grid>
                         </Button>
                     </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+
+                <ui:SettingsExpander Grid.Row="4" Header="{x:Static lang:Resources.Label_Information}">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource
+                            FontSize="10"
+                            IsFilled="True"
+                            Symbol="Info" />
+                    </ui:SettingsExpander.IconSource>
+
+                    <!--  Cpu  -->
+                    <ui:SettingsExpanderItem>
+                        <ui:SettingsExpanderItem.IconSource>
+                            <controls:FASymbolIconSource
+                                FontSize="10"
+                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                Symbol="fa-solid fa-microchip" />
+                        </ui:SettingsExpanderItem.IconSource>
+
+                        <sg:SpacedGrid
+                            DataContext="{Binding CpuInfoAsync^}"
+                            ColumnDefinitions="Auto,Auto"
+                            ColumnSpacing="16"
+                            RowDefinitions="Auto,Auto">
+                            <TextBlock Grid.Column="0" Text="CPU" />
+                            <SelectableTextBlock
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Foreground="{DynamicResource TextControlPlaceholderForeground}"
+                                Text="{Binding ProcessorCaption}"
+                                TextWrapping="WrapWithOverflow" />
+
+                            <!--<TextBlock
+                                Grid.Row="1"
+                                Grid.Column="0" Text="Available Memory" />
+                            <SelectableTextBlock
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Foreground="{DynamicResource TextControlPlaceholderForeground}"
+                                Text="{Binding MemoryInfo.AvailablePhysicalBytes, Converter={x:Static converters:StringFormatConverters.MemoryBytes}}"
+                                TextWrapping="WrapWithOverflow" />-->
+                        </sg:SpacedGrid>
+
+                    </ui:SettingsExpanderItem>
+
+                    <!--  Memory  -->
+                    <ui:SettingsExpanderItem>
+                        <ui:SettingsExpanderItem.IconSource>
+                            <controls:FASymbolIconSource
+                                FontSize="10"
+                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                Symbol="fa-solid fa-memory" />
+                        </ui:SettingsExpanderItem.IconSource>
+
+                        <sg:SpacedGrid
+                            DataContext="{Binding MemoryInfo}"
+                            ColumnDefinitions="Auto,Auto"
+                            ColumnSpacing="16"
+                            RowDefinitions="Auto,Auto">
+                            <TextBlock Grid.Column="0" Text="Total Memory" />
+                            <SelectableTextBlock
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Foreground="{DynamicResource TextControlPlaceholderForeground}"
+                                TextWrapping="WrapWithOverflow">
+                                <SelectableTextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0} ({1} usable)">
+                                        <Binding Path="TotalInstalledBytes" Converter="{x:Static converters:StringFormatConverters.MemoryBytes}"/>
+                                        <Binding Path="TotalPhysicalBytes" Converter="{x:Static converters:StringFormatConverters.MemoryBytes}"/>
+                                    </MultiBinding>
+                                </SelectableTextBlock.Text>
+                            </SelectableTextBlock>
+
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Text="Available Memory" />
+                            <SelectableTextBlock
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Foreground="{DynamicResource TextControlPlaceholderForeground}"
+                                Text="{Binding AvailablePhysicalBytes, Converter={x:Static converters:StringFormatConverters.MemoryBytes}}"
+                                TextWrapping="WrapWithOverflow" />
+                        </sg:SpacedGrid>
+
+                    </ui:SettingsExpanderItem>
+
+                    <!--  GPUs  -->
+                    <ui:SettingsExpanderItem>
+                        <ui:SettingsExpanderItem.IconSource>
+                            <controls:FASymbolIconSource
+                                FontSize="10"
+                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                Symbol="fa-solid fa-tachograph-digital" />
+                        </ui:SettingsExpanderItem.IconSource>
+                        <ItemsControl ItemsSource="{Binding GpuInfos}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="hardwareInfo:GpuInfo">
+                                    <sg:SpacedGrid ColumnDefinitions="Auto,Auto,Auto" RowDefinitions="Auto,Auto">
+                                        <TextBlock Text="{Binding Index, StringFormat={}{0}, Converter={StaticResource IndexPlusOneConverter}}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                                        <SelectableTextBlock
+                                            Grid.Row="0"
+                                            Grid.Column="1"
+                                            Text="{Binding Name}" />
+                                        <SelectableTextBlock
+                                            Grid.Row="1"
+                                            Grid.Column="1"
+                                            Grid.ColumnSpan="2"
+                                            Foreground="{DynamicResource TextControlPlaceholderForeground}"
+                                            IsVisible="{Binding !!MemoryBytes}"
+                                            Text="{Binding MemoryBytes, Converter={x:Static converters:StringFormatConverters.MemoryBytes}}"
+                                            TextWrapping="WrapWithOverflow" />
+                                    </sg:SpacedGrid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Spacing="8" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+
+                        </ItemsControl>
+
+                    </ui:SettingsExpanderItem>
                 </ui:SettingsExpander>
             </sg:SpacedGrid>
 

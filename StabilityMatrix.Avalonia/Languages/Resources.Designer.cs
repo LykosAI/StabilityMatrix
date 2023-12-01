@@ -1194,6 +1194,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Information.
+        /// </summary>
+        public static string Label_Information {
+            get {
+                return ResourceManager.GetString("Label_Information", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Inner exception.
         /// </summary>
         public static string Label_InnerException {

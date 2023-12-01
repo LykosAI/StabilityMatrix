@@ -5,6 +5,7 @@ using NLog;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -103,8 +104,8 @@ public class A3WebUI : BaseGitPackage
                     .Select(gpu => gpu.MemoryLevel)
                     .Max() switch
                 {
-                    Level.Low => "--lowvram",
-                    Level.Medium => "--medvram",
+                    MemoryLevel.Low => "--lowvram",
+                    MemoryLevel.Medium => "--medvram",
                     _ => null
                 },
                 Options = new() { "--lowvram", "--medvram", "--medvram-sdxl" }

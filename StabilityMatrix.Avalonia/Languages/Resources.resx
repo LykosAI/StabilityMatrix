@@ -813,4 +813,37 @@
   <data name="TeachingTip_MoreCheckpointCategories" xml:space="preserve">
     <value>Additional folders such as IPAdapters and TextualInversions (embeddings) can be enabled here</value>
   </data>
+  <data name="Label_General" xml:space="preserve">
+    <value>General</value><comment>A general settings category</comment>
+  </data>
+  <data name="Label_Inference" xml:space="preserve">
+    <value>Inference</value><comment>The Inference feature page</comment>
+  </data>
+  <data name="Label_Prompt" xml:space="preserve">
+    <value>Prompt</value><comment>A settings category for Inference generation prompts</comment>
+  </data>
+  <data name="Label_OutputImageFiles" xml:space="preserve">
+    <value>Output Image Files</value>
+  </data>
+  <data name="Label_ImageViewer" xml:space="preserve">
+    <value>Image Viewer</value>
+  </data>
+  <data name="Label_AutoCompletion" xml:space="preserve">
+    <value>Auto Completion</value>
+  </data>
+  <data name="Label_CompletionReplaceUnderscoresWithSpaces" xml:space="preserve">
+    <value>Replace underscores with spaces when inserting completions</value>
+  </data>
+  <data name="Label_PromptTags" xml:space="preserve">
+    <value>Prompt Tags</value><comment>Tags for image generation prompts</comment>
+  </data>
+  <data name="Label_PromptTagsImport" xml:space="preserve">
+    <value>Import Prompt tags</value>
+  </data>
+  <data name="Label_PromptTagsDescription" xml:space="preserve">
+    <value>Tags file to use for suggesting completions (Supports the a1111-sd-webui-tagcomplete .csv format)</value>
+  </data>
+  <data name="Label_SystemInformation" xml:space="preserve">
+    <value>System Information</value>
+  </data>
 </root>

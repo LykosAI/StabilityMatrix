@@ -6,7 +6,6 @@ using StabilityMatrix.Core.Models.Update;
 
 namespace StabilityMatrix.Core.Models.Settings;
 
-[JsonSerializable(typeof(Settings))]
 public class Settings
 {
     public int? Version { get; set; } = 1;
@@ -59,6 +58,8 @@ public class Settings
     public bool IsNavExpanded { get; set; }
     public bool IsImportAsConnected { get; set; }
     public bool ShowConnectedModelImages { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter<SharedFolderType>))]
     public SharedFolderType? SharedFolderVisibleCategories { get; set; } =
         SharedFolderType.StableDiffusion | SharedFolderType.Lora | SharedFolderType.LyCORIS;
 
@@ -163,3 +164,13 @@ public class Settings
             : new CultureInfo("en-US");
     }
 }
+
+[JsonSourceGenerationOptions(
+    WriteIndented = true,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+[JsonSerializable(typeof(Settings))]
+[JsonSerializable(typeof(bool))]
+[JsonSerializable(typeof(int))]
+[JsonSerializable(typeof(string))]
+internal partial class SettingsSerializerContext : JsonSerializerContext;

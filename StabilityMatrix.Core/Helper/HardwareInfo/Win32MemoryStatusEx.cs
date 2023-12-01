@@ -14,4 +14,6 @@ public struct Win32MemoryStatusEx
     public ulong UllTotalVirtual = 0;
     public ulong UllAvailVirtual = 0;
     public ulong UllAvailExtendedVirtual = 0;
+
+    public Win32MemoryStatusEx() { }
 }

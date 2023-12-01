@@ -86,11 +86,11 @@ public static partial class ArchiveHelper
 
     public static async Task<ArchiveInfo> Extract7Z(string archivePath, string extractDirectory)
     {
+        var args =
+            $"x {ProcessRunner.Quote(archivePath)} -o{ProcessRunner.Quote(extractDirectory)} -y";
+
         var result = await ProcessRunner
-            .GetProcessResultAsync(
-                SevenZipPath,
-                new[] { "x", archivePath, "-o" + ProcessRunner.Quote(extractDirectory), "-y" }
-            )
+            .GetProcessResultAsync(SevenZipPath, args)
             .ConfigureAwait(false);
 
         result.EnsureSuccessExitCode();

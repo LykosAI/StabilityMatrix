@@ -625,6 +625,8 @@ public class SettingsManager : ISettingsManager
 
                 var settingsJson = JsonSerializer.Serialize(Settings);
                 settingsFile.WriteAllText(settingsJson);
+
+                Loaded?.Invoke(this, EventArgs.Empty);
                 return;
             }
 
@@ -645,8 +647,9 @@ public class SettingsManager : ISettingsManager
             )
             {
                 Settings = loadedSettings;
-                Loaded?.Invoke(this, EventArgs.Empty);
             }
+
+            Loaded?.Invoke(this, EventArgs.Empty);
         }
         finally
         {
@@ -671,6 +674,7 @@ public class SettingsManager : ISettingsManager
                 Settings,
                 SettingsSerializerContext.Default.Settings
             );
+
             File.WriteAllBytes(SettingsPath, jsonBytes);
         }
         finally

@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.7.0-pre.2
+### Added
+- Added System Information section to Settings
+### Changed
+- Moved Inference Settings to subpage
 ### Fixed
 - Fixed crash when loading an empty settings file
 - Improve Settings save and load performance with .NET 8 Source Generating Serialization

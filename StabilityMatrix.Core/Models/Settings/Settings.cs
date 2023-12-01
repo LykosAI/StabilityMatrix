@@ -6,7 +6,6 @@ using StabilityMatrix.Core.Models.Update;
 
 namespace StabilityMatrix.Core.Models.Settings;
 
-[JsonSerializable(typeof(Settings))]
 public class Settings
 {
     public int? Version { get; set; } = 1;
@@ -171,4 +170,7 @@ public class Settings
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
 )]
 [JsonSerializable(typeof(Settings))]
+[JsonSerializable(typeof(bool))]
+[JsonSerializable(typeof(int))]
+[JsonSerializable(typeof(string))]
 internal partial class SettingsSerializerContext : JsonSerializerContext;

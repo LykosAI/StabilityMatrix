@@ -301,7 +301,7 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
 
-                <ui:SettingsExpander Grid.Row="4" Header="{x:Static lang:Resources.Label_Information}">
+                <ui:SettingsExpander Grid.Row="4" Header="{x:Static lang:Resources.Label_SystemInformation}">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
@@ -330,16 +330,6 @@
                                 Foreground="{DynamicResource TextControlPlaceholderForeground}"
                                 Text="{Binding ProcessorCaption}"
                                 TextWrapping="WrapWithOverflow" />
-
-                            <!--<TextBlock
-                                Grid.Row="1"
-                                Grid.Column="0" Text="Available Memory" />
-                            <SelectableTextBlock
-                                Grid.Row="1"
-                                Grid.Column="1"
-                                Foreground="{DynamicResource TextControlPlaceholderForeground}"
-                                Text="{Binding MemoryInfo.AvailablePhysicalBytes, Converter={x:Static converters:StringFormatConverters.MemoryBytes}}"
-                                TextWrapping="WrapWithOverflow" />-->
                         </sg:SpacedGrid>
 
                     </ui:SettingsExpanderItem>

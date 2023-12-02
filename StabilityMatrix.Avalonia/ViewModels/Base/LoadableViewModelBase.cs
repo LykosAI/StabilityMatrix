@@ -23,6 +23,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 [JsonDerivedType(typeof(HiresFixModule))]
 [JsonDerivedType(typeof(UpscalerModule))]
 [JsonDerivedType(typeof(ControlNetModule))]
+[JsonDerivedType(typeof(SaveImageModule))]
 public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

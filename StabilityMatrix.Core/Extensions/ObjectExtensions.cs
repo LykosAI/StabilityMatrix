@@ -1,8 +1,10 @@
 ﻿using System.Reflection;
+using JetBrains.Annotations;
 using RockLib.Reflection.Optimized;
 
 namespace StabilityMatrix.Core.Extensions;
 
+[PublicAPI]
 public static class ObjectExtensions
 {
     /// <summary>
@@ -24,6 +26,10 @@ public static class ObjectExtensions
     /// <summary>
     /// Get the value of a named private field from an object
     /// </summary>
+    /// <remarks>
+    /// The field must be defined by the runtime type of <see cref="obj"/> or its first base type.
+    /// For higher inheritance levels, use <see cref="GetPrivateField{TObject,T}"/> to specify the exact defining type.
+    /// </remarks>
     public static T? GetPrivateField<T>(this object obj, string fieldName)
     {
         // Check cache
@@ -42,6 +48,42 @@ public static class ObjectExtensions
             {
                 throw new ArgumentException(
                     $"Field {fieldName} not found on type {obj.GetType().Name}"
+                );
+            }
+
+            // Create a getter for the field
+            fieldGetter = field.CreateGetter();
+
+            // Add to cache
+            fieldGetterCache.Add(fieldName, fieldGetter);
+        }
+
+        return (T?)fieldGetter(obj);
+    }
+
+    /// <summary>
+    /// Get the value of a named private field from an object
+    /// </summary>
+    /// <typeparam name="TObject">Type of the object that defines the field, must be a base class of <see cref="obj"/></typeparam>
+    /// <typeparam name="T">Type of the field</typeparam>
+    public static T? GetPrivateField<TObject, T>(this TObject obj, string fieldName)
+        where TObject : class
+    {
+        // Check cache
+        var fieldGetterCache = FieldGetterTypeCache.GetOrAdd(typeof(TObject));
+
+        if (!fieldGetterCache.TryGetValue(fieldName, out var fieldGetter))
+        {
+            // Get the field
+            var field = typeof(TObject).GetField(
+                fieldName,
+                BindingFlags.Instance | BindingFlags.NonPublic
+            );
+
+            if (field is null)
+            {
+                throw new ArgumentException(
+                    $"Field {typeof(TObject).Name}.{fieldName} not found on type {obj.GetType().Name}"
                 );
             }
 

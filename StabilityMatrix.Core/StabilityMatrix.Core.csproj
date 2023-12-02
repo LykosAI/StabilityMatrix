@@ -25,6 +25,7 @@
       <PackageReference Include="DeviceId.Windows" Version="6.5.0" />
       <PackageReference Include="DeviceId.Windows.Wmi" Version="6.5.1" />
       <PackageReference Include="DynamicData" Version="8.1.1" />
+      <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
       <PackageReference Include="LiteDB" Version="5.0.17" />
       <PackageReference Include="LiteDB.Async" Version="0.1.7" />
       <PackageReference Include="MetadataExtractor" Version="2.8.1" />

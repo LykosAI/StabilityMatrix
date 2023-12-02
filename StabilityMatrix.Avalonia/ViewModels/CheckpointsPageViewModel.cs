@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
@@ -16,6 +18,7 @@ using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
@@ -34,6 +37,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     private readonly ModelFinder modelFinder;
     private readonly IDownloadService downloadService;
     private readonly INotificationService notificationService;
+    private readonly IMetadataImportService metadataImportService;
 
     public override string Title => "Checkpoints";
 
@@ -59,6 +63,9 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     [ObservableProperty]
     private bool isCategoryTipOpen;
 
+    [ObservableProperty]
+    private ProgressReport progress;
+
     partial void OnIsImportAsConnectedChanged(bool value)
     {
         if (
@@ -83,6 +90,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         ISettingsManager settingsManager,
         IDownloadService downloadService,
         INotificationService notificationService,
+        IMetadataImportService metadataImportService,
         ModelFinder modelFinder
     )
     {
@@ -90,6 +98,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         this.settingsManager = settingsManager;
         this.downloadService = downloadService;
         this.notificationService = notificationService;
+        this.metadataImportService = metadataImportService;
         this.modelFinder = modelFinder;
 
         CheckpointFoldersCache
@@ -195,14 +204,16 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
         var sw = Stopwatch.StartNew();
 
-        // Index all folders
+        var updatedFolders = new List<CheckpointFolder>();
 
+        // Index all folders
         foreach (var folder in folders)
         {
             // Get from cache or create new
             if (CheckpointFoldersCache.Lookup(folder) is { HasValue: true } result)
             {
                 result.Value.Index();
+                updatedFolders.Add(result.Value);
             }
             else
             {
@@ -210,7 +221,8 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
                     settingsManager,
                     downloadService,
                     modelFinder,
-                    notificationService
+                    notificationService,
+                    metadataImportService
                 )
                 {
                     Title = Path.GetFileName(folder),
@@ -218,9 +230,11 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
                     IsExpanded = true // Top level folders expanded by default
                 };
                 checkpointFolder.Index();
-                CheckpointFoldersCache.AddOrUpdate(checkpointFolder);
+                updatedFolders.Add(checkpointFolder);
             }
         }
+
+        CheckpointFoldersCache.EditDiff(updatedFolders, (a, b) => a.Title == b.Title);
 
         sw.Stop();
         Logger.Info($"IndexFolders in {sw.Elapsed.TotalMilliseconds:F1}ms");
@@ -230,5 +244,43 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     private async Task OpenModelsFolder()
     {
         await ProcessRunner.OpenFolderBrowser(settingsManager.ModelsDirectory);
+    }
+
+    [RelayCommand]
+    private async Task FindConnectedMetadata()
+    {
+        var progressHandler = new Progress<ProgressReport>(report =>
+        {
+            Progress = report;
+        });
+
+        await metadataImportService.ScanDirectoryForMissingInfo(
+            settingsManager.ModelsDirectory,
+            progressHandler
+        );
+        notificationService.Show(
+            "Scan Complete",
+            "Finished scanning for missing metadata.",
+            NotificationType.Success
+        );
+    }
+
+    [RelayCommand]
+    private async Task UpdateExistingMetadata()
+    {
+        var progressHandler = new Progress<ProgressReport>(report =>
+        {
+            Progress = report;
+        });
+
+        await metadataImportService.UpdateExistingMetadata(
+            settingsManager.ModelsDirectory,
+            progressHandler
+        );
+        notificationService.Show(
+            "Scan Complete",
+            "Finished updating metadata.",
+            NotificationType.Success
+        );
     }
 }

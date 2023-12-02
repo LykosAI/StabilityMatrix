@@ -56,14 +56,13 @@
                 </Interaction.Behaviors>
 
                 <controls:Card MaxWidth="330" Width="330"
+                               Padding="0"
                                CornerRadius="12">
                     <!-- Right click menu for a checkpoint file -->
                     <controls:Card.ContextFlyout>
                         <ui:FAMenuFlyout>
                             <ui:MenuFlyoutItem Command="{Binding RenameCommand}"
                                                Text="{x:Static lang:Resources.Action_Rename}" IconSource="Rename" />
-                            <ui:MenuFlyoutItem Command="{Binding DeleteCommand}"
-                                               Text="{x:Static lang:Resources.Action_Delete}" IconSource="Delete" />
                             <ui:MenuFlyoutItem Command="{Binding OpenOnCivitAiCommand}"
                                                Text="{x:Static lang:Resources.Action_OpenOnCivitAi}" IconSource="Link"
                                                IsVisible="{Binding IsConnectedModel}" />
@@ -71,11 +70,31 @@
                                                IsVisible="{Binding CanShowTriggerWords}"
                                                Text="{x:Static lang:Resources.Action_CopyTriggerWords}"
                                                IconSource="Copy" />
+                            <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Label_FindConnectedMetadata}"
+                                               IconSource="Find"
+                                               Command="{Binding FindConnectedMetadataCommand}"
+                                               IsVisible="{Binding !IsConnectedModel}">
+                                <ui:MenuFlyoutItem.CommandParameter>
+                                    <system:Boolean>False</system:Boolean>
+                                </ui:MenuFlyoutItem.CommandParameter>
+                            </ui:MenuFlyoutItem>
+                            <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_UpdateExistingMetadata}"
+                                               IconSource="Sync"
+                                               Command="{Binding FindConnectedMetadataCommand}"
+                                               IsVisible="{Binding IsConnectedModel}">
+                                <ui:MenuFlyoutItem.CommandParameter>
+                                    <system:Boolean>True</system:Boolean>
+                                </ui:MenuFlyoutItem.CommandParameter>
+                            </ui:MenuFlyoutItem>
+                            <ui:MenuFlyoutItem Command="{Binding DeleteCommand}"
+                                               Text="{x:Static lang:Resources.Action_Delete}" 
+                                               IconSource="Delete" />
                         </ui:FAMenuFlyout>
                     </controls:Card.ContextFlyout>
-                    <Grid>
+                    <Grid RowDefinitions="Auto, Auto">
                         <!--  Main contents, hidden when IsLoading is true  -->
-                        <StackPanel MinHeight="70">
+                        <StackPanel Grid.Row="0" Grid.RowSpan="2"
+                                    MinHeight="70" Margin="14, 16, 14, 16">
                             <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto,*,Auto,Auto"
                                   IsVisible="{Binding !IsLoading}">
                                 <StackPanel
@@ -229,7 +248,20 @@
                                 </TextBlock>
                             </Grid>
                         </StackPanel>
-
+                        
+                        <Border Grid.Row="0" 
+                                Grid.RowSpan="2" 
+                                Background="#AA000000" 
+                                IsVisible="{Binding IsLoading}"
+                                CornerRadius="12"/>
+                        
+                        <TextBlock Grid.Row="1" 
+                                   x:CompileBindings="False"
+                                   Text="{Binding Progress.Title}" 
+                                   TextAlignment="Center"
+                                   IsVisible="{Binding IsLoading}"
+                                   VerticalAlignment="Center"/>
+                        
                         <!--  Progress ring  -->
                         <controls:ProgressRing
                             Grid.Row="0"
@@ -407,7 +439,7 @@
 
     </controls:UserControlBase.Resources>
 
-    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,*" Margin="4, 0"
+    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,*" Margin="4, 0"
           x:Name="ParentGrid">
         <!--  Top settings bar  -->
         <StackPanel Orientation="Horizontal">
@@ -463,6 +495,36 @@
             HorizontalContentAlignment="Right"
             DefaultLabelPosition="Right">
             <ui:CommandBar.PrimaryCommands>
+                <ui:CommandBarElementContainer>
+                    <SplitButton
+                        Classes="transparent-full"
+                        HorizontalAlignment="Left"
+                        FontFamily="{DynamicResource ContentControlThemeFontFamily}"
+                        FontWeight="Normal"
+                        FontSize="12"
+                        Command="{Binding FindConnectedMetadataCommand}"
+                        Padding="8">
+                        <SplitButton.Content>
+                            <Grid ColumnDefinitions="Auto, Auto">
+                                <ui:SymbolIcon Grid.Column="0"
+                                               Symbol="CloudDownload"
+                                               FontSize="18"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{x:Static lang:Resources.Label_FindConnectedMetadata}"
+                                           Margin="8,0,0,0"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                        </SplitButton.Content>
+                        
+                        <SplitButton.Flyout>
+                            <ui:FAMenuFlyout 
+                                Placement="Bottom">
+                                <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_UpdateExistingMetadata}"
+                                                   Command="{Binding UpdateExistingMetadataCommand}"/>
+                            </ui:FAMenuFlyout>
+                        </SplitButton.Flyout>
+                    </SplitButton>
+                </ui:CommandBarElementContainer>
                 <ui:CommandBarButton
                     IconSource="OpenFolder"
                     VerticalAlignment="Center"
@@ -494,6 +556,19 @@
                         Title="{x:Static lang:Resources.TeachingTip_MoreCheckpointCategories}"
                         PreferredPlacement="Bottom"
                         IsOpen="{Binding IsCategoryTipOpen}" />
+        
+        <!-- Metadata scan progress -->
+        <StackPanel Grid.Row="1"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    IsVisible="{Binding !!Progress.Total}"
+                    Orientation="Vertical">
+            <TextBlock Text="{Binding Progress.Title}"
+                       TextAlignment="Center"
+                       Margin="0,0,0,4"/>
+            <ProgressBar Value="{Binding Progress.Percentage}"
+                         Margin="16,4,16,16"/>
+        </StackPanel>
 
         <StackPanel
             IsVisible="False"
@@ -519,7 +594,7 @@
         <ScrollViewer
             Grid.Column="0"
             Grid.ColumnSpan="2"
-            Grid.Row="1"
+            Grid.Row="2"
             x:Name="MainScrollViewer"
             HorizontalScrollBarVisibility="Disabled"
             VerticalScrollBarVisibility="Auto">
@@ -546,7 +621,7 @@
 
         <!-- Overlay for draggable file panels -->
         <Panel Name="OverlayPanel"
-               Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" />
+               Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" />
     </Grid>
 
 </controls:UserControlBase>

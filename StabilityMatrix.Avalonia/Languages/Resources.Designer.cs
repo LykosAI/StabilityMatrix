@@ -573,6 +573,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Update Existing Metadata.
+        /// </summary>
+        public static string Action_UpdateExistingMetadata {
+            get {
+                return ResourceManager.GetString("Action_UpdateExistingMetadata", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Upgrade.
         /// </summary>
         public static string Action_Upgrade {
@@ -1014,7 +1023,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Emebeddings / Textual Inversion.
+        ///   Looks up a localized string similar to Embeddings / Textual Inversion.
         /// </summary>
         public static string Label_EmbeddingsOrTextualInversion {
             get {

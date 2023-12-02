@@ -86,8 +86,8 @@ public class LocalModelFile
     }
 
     public static readonly HashSet<string> SupportedCheckpointExtensions =
-        new() { ".safetensors", ".pt", ".ckpt", ".pth", ".bin" };
+        [".safetensors", ".pt", ".ckpt", ".pth", ".bin"];
     public static readonly HashSet<string> SupportedImageExtensions =
-        new() { ".png", ".jpg", ".jpeg" };
-    public static readonly HashSet<string> SupportedMetadataExtensions = new() { ".json" };
+        [".png", ".jpg", ".jpeg", ".gif"];
+    public static readonly HashSet<string> SupportedMetadataExtensions = [".json"];
 }

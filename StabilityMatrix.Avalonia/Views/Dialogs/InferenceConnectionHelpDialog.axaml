@@ -30,7 +30,7 @@
                 IsOpen="{Binding IsInstallMode}"
                 IsVisible="{Binding IsInstallMode}"
                 Margin="0,4"
-                Title="Would you like to be directed to install ComfyUI now?"/>
+                Title="Would you like to install ComfyUI now?"/>
             
             <ui:InfoBar
                 Severity="Informational"

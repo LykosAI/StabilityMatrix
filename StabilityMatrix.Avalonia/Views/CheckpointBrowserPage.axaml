@@ -279,7 +279,7 @@
                                     Foreground="{DynamicResource TextControlForeground}"
                                     LetterSpacing="0.33"
                                     Text="{Binding CivitModel.Name}"
-                                    TextTrimming="CharacterEllipsis"
+                                    
                                     TextWrapping="NoWrap"
                                     ToolTip.Tip="{Binding CivitModel.Name}" />
 

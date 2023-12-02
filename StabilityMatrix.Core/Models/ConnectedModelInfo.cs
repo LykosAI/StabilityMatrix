@@ -23,6 +23,7 @@ public class ConnectedModelInfo
     public DateTimeOffset ImportedAt { get; set; }
     public CivitFileHashes Hashes { get; set; }
     public string[]? TrainedWords { get; set; }
+    public CivitModelStats Stats { get; set; }
 
     // User settings
     public string? UserTitle { get; set; }
@@ -39,7 +40,7 @@ public class ConnectedModelInfo
     {
         ModelId = civitModel.Id;
         ModelName = civitModel.Name;
-        ModelDescription = civitModel.Description;
+        ModelDescription = civitModel.Description ?? string.Empty;
         Nsfw = civitModel.Nsfw;
         Tags = civitModel.Tags;
         ModelType = civitModel.Type;
@@ -51,6 +52,7 @@ public class ConnectedModelInfo
         FileMetadata = civitFile.Metadata;
         Hashes = civitFile.Hashes;
         TrainedWords = civitModelVersion.TrainedWords;
+        Stats = civitModel.Stats;
     }
 
     public static ConnectedModelInfo? FromJson(string json)

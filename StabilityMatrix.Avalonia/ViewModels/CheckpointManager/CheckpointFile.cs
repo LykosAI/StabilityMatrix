@@ -18,6 +18,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 
@@ -46,6 +47,7 @@ public partial class CheckpointFile : ViewModelBase
     private string? previewImagePath;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsConnectedModel))]
     private ConnectedModelInfo? connectedModel;
     public bool IsConnectedModel => ConnectedModel != null;
 
@@ -57,6 +59,9 @@ public partial class CheckpointFile : ViewModelBase
 
     [ObservableProperty]
     private CheckpointFolder parentFolder;
+
+    [ObservableProperty]
+    private ProgressReport? progress;
 
     public string FileName => Path.GetFileName(FilePath);
 
@@ -231,6 +236,50 @@ public partial class CheckpointFile : ViewModelBase
         return App.Clipboard.SetTextAsync(words);
     }
 
+    [RelayCommand]
+    private async Task FindConnectedMetadata(bool forceReimport = false)
+    {
+        if (
+            App.Services.GetService(typeof(IMetadataImportService))
+            is not IMetadataImportService importService
+        )
+            return;
+
+        IsLoading = true;
+
+        try
+        {
+            var progressReport = new Progress<ProgressReport>(report =>
+            {
+                Progress = report;
+            });
+
+            var cmInfo = await importService.GetMetadataForFile(
+                FilePath,
+                progressReport,
+                forceReimport
+            );
+            if (cmInfo != null)
+            {
+                ConnectedModel = cmInfo;
+                PreviewImagePath = SupportedImageExtensions
+                    .Select(
+                        ext =>
+                            Path.Combine(
+                                ParentFolder.DirectoryPath,
+                                $"{Path.GetFileNameWithoutExtension(FileName)}.preview{ext}"
+                            )
+                    )
+                    .Where(File.Exists)
+                    .FirstOrDefault();
+            }
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
     /// <summary>
     /// Indexes directory and yields all checkpoint files.
     /// First we match all files with supported extensions.
@@ -316,7 +365,7 @@ public partial class CheckpointFile : ViewModelBase
             var checkpointFile = new CheckpointFile
             {
                 Title = Path.GetFileNameWithoutExtension(file),
-                FilePath = file,
+                FilePath = file
             };
 
             var jsonPath = Path.Combine(

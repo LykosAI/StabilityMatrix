@@ -62,7 +62,7 @@ public class ModelFinder
             var version = model.ModelVersions!.First(version => version.Id == versionResponse.Id);
 
             var file = versionResponse.Files.First(
-                file => file.Hashes.BLAKE3?.ToLowerInvariant() == hashBlake3
+                file => file.Hashes.BLAKE3?.ToLowerInvariant() == hashBlake3.ToLowerInvariant()
             );
 
             return new ModelSearchResult(model, version, file);

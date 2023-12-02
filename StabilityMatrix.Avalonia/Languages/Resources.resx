@@ -175,7 +175,7 @@
     <value>Deemphasis</value>
   </data>
   <data name="Label_EmbeddingsOrTextualInversion" xml:space="preserve">
-    <value>Emebeddings / Textual Inversion</value>
+    <value>Embeddings / Textual Inversion</value>
   </data>
   <data name="Label_NetworksLoraOrLycoris" xml:space="preserve">
     <value>Networks (Lora / LyCORIS)</value>
@@ -815,5 +815,8 @@
   </data>
   <data name="Action_OpenOnHuggingFace" xml:space="preserve">
     <value>Open on Hugging Face</value>
+  </data>
+  <data name="Action_UpdateExistingMetadata" xml:space="preserve">
+    <value>Update Existing Metadata</value>
   </data>
 </root>

@@ -124,7 +124,8 @@ public static class DesignData
             .AddSingleton<IInferenceClientManager, MockInferenceClientManager>()
             .AddSingleton<ICompletionProvider, MockCompletionProvider>()
             .AddSingleton<IModelIndexService, MockModelIndexService>()
-            .AddSingleton<IImageIndexService, MockImageIndexService>();
+            .AddSingleton<IImageIndexService, MockImageIndexService>()
+            .AddSingleton<IMetadataImportService, MetadataImportService>();
 
         // Placeholder services that nobody should need during design time
         services
@@ -147,6 +148,7 @@ public static class DesignData
         var modelFinder = Services.GetRequiredService<ModelFinder>();
         var packageFactory = Services.GetRequiredService<IPackageFactory>();
         var notificationService = Services.GetRequiredService<INotificationService>();
+        var modelImportService = Services.GetRequiredService<IMetadataImportService>();
 
         LaunchOptionsViewModel = Services.GetRequiredService<LaunchOptionsViewModel>();
         LaunchOptionsViewModel.Cards = new[]
@@ -183,7 +185,7 @@ public static class DesignData
             CheckpointsPageViewModel.CheckpointFoldersCache,
             new CheckpointFolder[]
             {
-                new(settingsManager, downloadService, modelFinder, notificationService)
+                new(settingsManager, downloadService, modelFinder, notificationService, modelImportService)
                 {
                     DirectoryPath = "Models/StableDiffusion",
                     DisplayedCheckpointFiles = new ObservableCollectionExtended<CheckpointFile>()
@@ -217,7 +219,7 @@ public static class DesignData
                         },
                     },
                 },
-                new(settingsManager, downloadService, modelFinder, notificationService)
+                new(settingsManager, downloadService, modelFinder, notificationService, modelImportService)
                 {
                     Title = "Lora",
                     DirectoryPath = "Packages/Lora",

@@ -84,6 +84,8 @@ public static class TextEditorConfigs
 
         textMate.SetGrammar(scope);
         textMate.SetTheme(registryOptions.LoadTheme(ThemeName.DarkPlus));
+
+        editor.Options.ShowBoxForControlCharacters = false;
     }
 
     private static IRawTheme GetThemeFromStream(Stream stream)

@@ -5,6 +5,28 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.7.0-pre.2
+### Added
+- Added System Information section to Settings
+### Changed
+- Moved Inference Settings to subpage
+### Fixed
+- Fixed crash when loading an empty settings file
+- Improve Settings save and load performance with .NET 8 Source Generating Serialization
+- Fixed ApplicationException during database shutdown
+
+## v2.7.0-pre.1
+### Fixed
+- Fixed control character decoding that caused some progress bars to show as `\u2588`
+- Fixed Python `rich` package's progress bars not showing in console
+- Optimized ProgressRing animation bindings to reduce CPU usage
+- Improved safety checks in custom control rendering to reduce potential graphical artifacts
+- Improved console rendering safety with cursor line increment clamping, as potential fix for [#111](https://github.com/LykosAI/StabilityMatrix/issues/111)
+
+## v2.7.0-dev.4
+### Fixed
+- Fixed [#290](https://github.com/LykosAI/StabilityMatrix/issues/290) - Model browser crash due to text trimming certain unicode characters 
+
 ## v2.7.0-dev.3
 ### Added
 - New package: [RuinedFooocus](https://github.com/runew0lf/RuinedFooocus)
@@ -54,8 +76,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## Changed
 - Model Browser page has been redesigned, featuring more information like rating and download counts
 
+## v2.6.6
+### Fixed
+- Fixed [#297](https://github.com/LykosAI/StabilityMatrix/issues/297) - Model browser LiteAsyncException occuring when fetching entries with unrecognized values from enum name changes
+
 ## v2.6.5
 ### Fixed
+- Fixed error when receiving unknown model format values from the Model Browser
 - Fixed process errors when installing or updating Pip packages using the Python packages dialog
 
 ## v2.6.4

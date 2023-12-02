@@ -269,6 +269,10 @@
                             Grid.Row="1">
                             <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto, Auto">
 
+                                <!--
+                                    TextTrimming causing issues with unicode chars until
+                                    https://github.com/AvaloniaUI/Avalonia/pull/13385 is released
+                                -->
                                 <TextBlock
                                     Grid.ColumnSpan="2"
                                     MaxWidth="250"
@@ -279,7 +283,6 @@
                                     Foreground="{DynamicResource TextControlForeground}"
                                     LetterSpacing="0.33"
                                     Text="{Binding CivitModel.Name}"
-                                    
                                     TextWrapping="NoWrap"
                                     ToolTip.Tip="{Binding CivitModel.Name}" />
 

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.Json;
@@ -80,10 +81,24 @@ public class DefaultUnknownEnumConverter<
 
         if (reader.GetString() is { } readerString)
         {
+            // First try get exact match
             if (EnumMemberValues.TryGetValue(readerString, out var enumMemberValue))
             {
                 return enumMemberValue;
             }
+
+            // Otherwise try get case-insensitive match
+            if (
+                EnumMemberValues.Keys.FirstOrDefault(
+                    key => key.Equals(readerString, StringComparison.OrdinalIgnoreCase)
+                ) is
+                { } enumMemberName
+            )
+            {
+                return EnumMemberValues[enumMemberName];
+            }
+
+            Debug.WriteLine($"Unknown enum member value for {typeToConvert}: {readerString}");
         }
 
         return UnknownValue;

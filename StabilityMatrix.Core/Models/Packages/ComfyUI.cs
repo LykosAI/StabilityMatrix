@@ -488,27 +488,4 @@ public class ComfyUI : BaseGitPackage
             )
             .ConfigureAwait(false);
     }
-
-    public async Task SetupInferenceOutputFolderLinks(DirectoryPath installDirectory)
-    {
-        var inferenceDir = installDirectory.JoinDir("output", "Inference");
-
-        var sharedInferenceDir = SettingsManager.ImagesInferenceDirectory;
-
-        if (inferenceDir.IsSymbolicLink)
-        {
-            if (inferenceDir.Info.ResolveLinkTarget(true)?.FullName == sharedInferenceDir.FullPath)
-            {
-                // Already valid link, skip
-                return;
-            }
-
-            // Otherwise delete so we don't have to move files
-            await sharedInferenceDir.DeleteAsync(false).ConfigureAwait(false);
-        }
-
-        await Helper.SharedFolders
-            .CreateOrUpdateLink(sharedInferenceDir, inferenceDir)
-            .ConfigureAwait(false);
-    }
 }

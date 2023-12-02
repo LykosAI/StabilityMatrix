@@ -194,6 +194,11 @@ public class LiteDbContext : ILiteDbContext
                 database.Dispose();
             }
             catch (ObjectDisposedException) { }
+            catch (ApplicationException)
+            {
+                // Ignores a mutex error from library
+                // https://stability-matrix.sentry.io/share/issue/5c62f37462444e7eab18cea314af231f/
+            }
 
             database = null;
         }

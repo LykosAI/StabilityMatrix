@@ -24,7 +24,7 @@ public partial class SettingsViewModel : PageViewModelBase
     public IReadOnlyList<PageViewModelBase> SubPages { get; }
 
     [ObservableProperty]
-    private ObservableCollection<PageViewModelBase> currentPagePath = new();
+    private ObservableCollection<PageViewModelBase> currentPagePath = [];
 
     [ObservableProperty]
     private PageViewModelBase? currentPage;

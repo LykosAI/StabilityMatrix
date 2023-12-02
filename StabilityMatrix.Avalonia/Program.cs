@@ -24,6 +24,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Updater;
 
 namespace StabilityMatrix.Avalonia;
@@ -68,6 +69,7 @@ public static class Program
         if (Args.HomeDirectoryOverride is { } homeDir)
         {
             Compat.SetAppDataHome(homeDir);
+            GlobalConfig.HomeDir = homeDir;
         }
 
         // Launched for custom URI scheme, handle and exit

@@ -29,8 +29,6 @@
              <idcr:ControlRecycling x:Key="ControlRecyclingKey" />
              <x:Double x:Key="ContentDialogMaxWidth">700</x:Double>
              
-             <x:Double x:Key="BreadcrumbBarItemThemeFontSize">32</x:Double>
-             
              <SolidColorBrush x:Key="ToolTipBackground" Color="#1E1F22"/>
              <SolidColorBrush x:Key="ToolTipForeground" Color="#9FBDC3"/>
              <FontFamily x:Key="NotoSansJP">avares://StabilityMatrix.Avalonia/Assets/Fonts/NotoSansJP#Noto Sans JP</FontFamily>

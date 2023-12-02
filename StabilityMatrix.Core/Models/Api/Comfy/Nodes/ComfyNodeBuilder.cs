@@ -820,6 +820,9 @@ public class ComfyNodeBuilder
     {
         public ulong Seed { get; set; }
 
+        public int BatchSize { get; set; } = 1;
+        public int? BatchIndex { get; set; }
+
         public ModelNodeConnection? BaseModel { get; set; }
         public VAENodeConnection? BaseVAE { get; set; }
         public ClipNodeConnection? BaseClip { get; set; }

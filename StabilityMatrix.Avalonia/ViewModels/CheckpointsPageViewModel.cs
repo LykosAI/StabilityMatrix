@@ -258,11 +258,14 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             settingsManager.ModelsDirectory,
             progressHandler
         );
+
         notificationService.Show(
             "Scan Complete",
             "Finished scanning for missing metadata.",
             NotificationType.Success
         );
+
+        DelayedClearProgress(TimeSpan.FromSeconds(1.5));
     }
 
     [RelayCommand]
@@ -282,5 +285,17 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             "Finished updating metadata.",
             NotificationType.Success
         );
+
+        DelayedClearProgress(TimeSpan.FromSeconds(1.5));
+    }
+
+    private void DelayedClearProgress(TimeSpan delay)
+    {
+        Task.Delay(delay)
+            .ContinueWith(_ =>
+            {
+                IsLoading = false;
+                Progress = new ProgressReport(0, 0);
+            });
     }
 }

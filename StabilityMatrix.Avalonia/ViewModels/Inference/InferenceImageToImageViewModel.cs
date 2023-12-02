@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -114,17 +115,20 @@ public partial class InferenceImageToImageViewModel
 
         var builder = args.Builder;
 
+        // Setup constants
         builder.Connections.Seed = args.SeedOverride switch
         {
             { } seed => Convert.ToUInt64(seed),
             _ => Convert.ToUInt64(SeedCardViewModel.Seed)
         };
 
+        BatchSizeCardViewModel.ApplyStep(args);
+
         // Load models
         ModelCardViewModel.ApplyStep(args);
 
-        // Setup image latent
-        builder.SetupImageLatentSource(SelectImageCardViewModel, BatchSizeCardViewModel.BatchIndex);
+        // Setup image latent source
+        SelectImageCardViewModel.ApplyStep(args);
 
         // Prompts and loras
         PromptCardViewModel.ApplyStep(args);
@@ -132,7 +136,7 @@ public partial class InferenceImageToImageViewModel
         // Setup Sampler and Refiner if enabled
         SamplerCardViewModel.ApplyStep(args);
 
-        // Hires fix if enabled
+        // Apply module steps
         foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())
         {
             module.ApplyStep(args);

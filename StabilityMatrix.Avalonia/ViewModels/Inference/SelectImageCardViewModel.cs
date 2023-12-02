@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -12,7 +13,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
@@ -27,11 +30,12 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(SelectImageCard))]
 [ManagedService]
 [Transient]
-public partial class SelectImageCardViewModel : ViewModelBase, IDropTarget
+public partial class SelectImageCardViewModel(INotificationService notificationService)
+    : ViewModelBase,
+        IDropTarget,
+        IComfyStep
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-    private readonly INotificationService notificationService;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSelectionAvailable))]
@@ -53,9 +57,14 @@ public partial class SelectImageCardViewModel : ViewModelBase, IDropTarget
             Convert.ToInt32(CurrentBitmap?.Size.Height ?? 0)
         );
 
-    public SelectImageCardViewModel(INotificationService notificationService)
+    /// <inheritdoc />
+    public void ApplyStep(ModuleApplyStepEventArgs e)
     {
-        this.notificationService = notificationService;
+        e.Builder.SetupImagePrimarySource(
+            ImageSource ?? throw new ValidationException("Input Image is required"),
+            CurrentBitmapSize ?? throw new ValidationException("Input Image is required"),
+            e.Builder.Connections.BatchIndex
+        );
     }
 
     [MethodImpl(MethodImplOptions.Synchronized)]

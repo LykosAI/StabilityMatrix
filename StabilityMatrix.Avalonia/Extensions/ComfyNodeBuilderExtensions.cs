@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 using System.IO;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
@@ -49,24 +50,18 @@ public static class ComfyNodeBuilderExtensions
         }
     }
 
-    public static void SetupImageLatentSource(
+    /// <summary>
+    /// Setup an image as the <see cref="ComfyNodeBuilder.NodeBuilderConnections.Primary"/> connection
+    /// </summary>
+    public static void SetupImagePrimarySource(
         this ComfyNodeBuilder builder,
-        SelectImageCardViewModel selectImageCardViewModel,
+        ImageSource image,
+        Size imageSize,
         int? batchIndex = null
     )
     {
         // Get source image
-        var sourceImage = selectImageCardViewModel.ImageSource;
-        var sourceImageRelativePath = Path.Combine(
-            "Inference",
-            sourceImage!.GetHashGuidFileNameCached()
-        );
-        var sourceImageSize =
-            selectImageCardViewModel.CurrentBitmapSize
-            ?? throw new InvalidOperationException("Source image size is null");
-
-        // Set source size
-        builder.Connections.PrimarySize = sourceImageSize;
+        var sourceImageRelativePath = Path.Combine("Inference", image.GetHashGuidFileNameCached());
 
         // Load source
         var loadImage = builder.Nodes.AddTypedNode(
@@ -74,6 +69,7 @@ public static class ComfyNodeBuilderExtensions
         );
 
         builder.Connections.Primary = loadImage.Output1;
+        builder.Connections.PrimarySize = imageSize;
 
         // If batch index is selected, add a LatentFromBatch
         if (batchIndex is not null)

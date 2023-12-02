@@ -309,7 +309,7 @@ public abstract class BaseGitPackage : BasePackage
                 new ProgressReport(-1f, "Initializing git repo", isIndeterminate: true)
             );
             await PrerequisiteHelper
-                .RunGit(installedPackage.FullPath!, onConsoleOutput, "init")
+                .RunGit("init", onConsoleOutput, installedPackage.FullPath)
                 .ConfigureAwait(false);
             await PrerequisiteHelper
                 .RunGit(

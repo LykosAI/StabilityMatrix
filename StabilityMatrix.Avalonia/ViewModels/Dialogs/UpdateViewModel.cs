@@ -171,25 +171,34 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
     internal async Task<string> GetReleaseNotes(string changelogUrl)
     {
         using var client = httpClientFactory.CreateClient();
-        var response = await client.GetAsync(changelogUrl);
-        if (response.IsSuccessStatusCode)
-        {
-            var changelog = await response.Content.ReadAsStringAsync();
 
-            // Formatting for new changelog format
-            // https://keepachangelog.com/en/1.1.0/
-            if (changelogUrl.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+        try
+        {
+            var response = await client.GetAsync(changelogUrl);
+            if (response.IsSuccessStatusCode)
             {
-                return FormatChangelog(changelog, Compat.AppVersion)
-                    ?? "## Unable to format release notes";
+                var changelog = await response.Content.ReadAsStringAsync();
+
+                // Formatting for new changelog format
+                // https://keepachangelog.com/en/1.1.0/
+                if (changelogUrl.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+                {
+                    return FormatChangelog(changelog, Compat.AppVersion)
+                        ?? "## Unable to format release notes";
+                }
+
+                return changelog;
             }
 
-            return changelog;
-        }
-        else
-        {
             return "## Unable to load release notes";
         }
+        catch (HttpRequestException e)
+        {
+            return $"## Unable to fetch release notes ({e.StatusCode})\n\n[{changelogUrl}]({changelogUrl})";
+        }
+        catch (TaskCanceledException) { }
+
+        return $"## Unable to fetch release notes\n\n[{changelogUrl}]({changelogUrl})";
     }
 
     partial void OnUpdateInfoChanged(UpdateInfo? value)

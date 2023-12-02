@@ -18,7 +18,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(ModelCard))]
 [ManagedService]
 [Transient]
-public partial class ModelCardViewModel
+public partial class ModelCardViewModel(IInferenceClientManager clientManager)
     : LoadableViewModelBase,
         IParametersLoadableState,
         IComfyStep
@@ -38,16 +38,7 @@ public partial class ModelCardViewModel
     [ObservableProperty]
     private bool isVaeSelectionEnabled;
 
-    public string? SelectedModelName => SelectedModel?.RelativePath;
-
-    public string? SelectedVaeName => SelectedVae?.RelativePath;
-
-    public IInferenceClientManager ClientManager { get; }
-
-    public ModelCardViewModel(IInferenceClientManager clientManager)
-    {
-        ClientManager = clientManager;
-    }
+    public IInferenceClientManager ClientManager { get; } = clientManager;
 
     /// <inheritdoc />
     public void ApplyStep(ModuleApplyStepEventArgs e)
@@ -108,9 +99,11 @@ public partial class ModelCardViewModel
         return SerializeModel(
             new ModelCardModel
             {
-                SelectedModelName = SelectedModelName,
-                SelectedVaeName = SelectedVaeName,
-                IsVaeSelectionEnabled = IsVaeSelectionEnabled
+                SelectedModelName = SelectedModel?.RelativePath,
+                SelectedVaeName = SelectedVae?.RelativePath,
+                SelectedRefinerName = SelectedRefiner?.RelativePath,
+                IsVaeSelectionEnabled = IsVaeSelectionEnabled,
+                IsRefinerSelectionEnabled = IsRefinerSelectionEnabled
             }
         );
     }
@@ -127,6 +120,13 @@ public partial class ModelCardViewModel
         SelectedVae = model.SelectedVaeName is null
             ? HybridModelFile.Default
             : ClientManager.VaeModels.FirstOrDefault(x => x.RelativePath == model.SelectedVaeName);
+
+        SelectedRefiner = model.SelectedRefinerName is null
+            ? HybridModelFile.None
+            : ClientManager.Models.FirstOrDefault(x => x.RelativePath == model.SelectedRefinerName);
+
+        IsVaeSelectionEnabled = model.IsVaeSelectionEnabled;
+        IsRefinerSelectionEnabled = model.IsRefinerSelectionEnabled;
     }
 
     /// <inheritdoc />
@@ -179,7 +179,10 @@ public partial class ModelCardViewModel
     internal class ModelCardModel
     {
         public string? SelectedModelName { get; init; }
+        public string? SelectedRefinerName { get; init; }
         public string? SelectedVaeName { get; init; }
+
         public bool IsVaeSelectionEnabled { get; init; }
+        public bool IsRefinerSelectionEnabled { get; init; }
     }
 }

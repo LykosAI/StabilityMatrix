@@ -29,6 +29,11 @@ public record ImageSource : IDisposable
     /// </summary>
     public Bitmap? Bitmap { get; set; }
 
+    /// <summary>
+    /// Optional label for the image
+    /// </summary>
+    public string? Label { get; set; }
+
     public ImageSource(FilePath localFile)
     {
         LocalFile = localFile;

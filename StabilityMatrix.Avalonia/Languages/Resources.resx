@@ -852,4 +852,7 @@
   <data name="Label_SystemInformation" xml:space="preserve">
     <value>System Information</value>
   </data>
+  <data name="Label_CivitAi" xml:space="preserve">
+    <value>CivitAI</value>
+  </data>
 </root>

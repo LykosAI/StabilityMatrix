@@ -789,6 +789,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CivitAI.
+        /// </summary>
+        public static string Label_CivitAi {
+            get {
+                return ResourceManager.GetString("Label_CivitAi", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must be logged in to download this checkpoint. Please enter a CivitAI API Key in the settings..
         /// </summary>
         public static string Label_CivitAiLoginRequired {

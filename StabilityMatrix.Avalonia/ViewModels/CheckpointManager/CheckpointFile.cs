@@ -70,15 +70,8 @@ public partial class CheckpointFile : ViewModelBase
 
     public ObservableCollection<string> Badges { get; set; } = new();
 
-    public static readonly string[] SupportedCheckpointExtensions =
-    {
-        ".safetensors",
-        ".pt",
-        ".ckpt",
-        ".pth",
-        ".bin"
-    };
-    private static readonly string[] SupportedImageExtensions = { ".png", ".jpg", ".jpeg" };
+    public static readonly string[] SupportedCheckpointExtensions = { ".safetensors", ".pt", ".ckpt", ".pth", ".bin" };
+    private static readonly string[] SupportedImageExtensions = { ".png", ".jpg", ".jpeg", ".gif" };
     private static readonly string[] SupportedMetadataExtensions = { ".json" };
 
     partial void OnConnectedModelChanged(ConnectedModelInfo? value)
@@ -102,9 +95,7 @@ public partial class CheckpointFile : ViewModelBase
     {
         if (string.IsNullOrEmpty(FilePath))
         {
-            throw new InvalidOperationException(
-                "Cannot get connected model info file path when FilePath is empty"
-            );
+            throw new InvalidOperationException("Cannot get connected model info file path when FilePath is empty");
         }
         var modelNameNoExt = Path.GetFileNameWithoutExtension((string?)FilePath);
         var modelDir = Path.GetDirectoryName((string?)FilePath) ?? "";
@@ -201,10 +192,7 @@ public partial class CheckpointFile : ViewModelBase
                     var cmInfoPath = Path.Combine(parentPath, $"{originalNameNoExt}.cm-info.json");
                     if (File.Exists(cmInfoPath))
                     {
-                        File.Move(
-                            cmInfoPath,
-                            Path.Combine(parentPath, $"{nameNoExt}.cm-info.json")
-                        );
+                        File.Move(cmInfoPath, Path.Combine(parentPath, $"{nameNoExt}.cm-info.json"));
                     }
                 }
             }
@@ -239,10 +227,7 @@ public partial class CheckpointFile : ViewModelBase
     [RelayCommand]
     private async Task FindConnectedMetadata(bool forceReimport = false)
     {
-        if (
-            App.Services.GetService(typeof(IMetadataImportService))
-            is not IMetadataImportService importService
-        )
+        if (App.Services.GetService(typeof(IMetadataImportService)) is not IMetadataImportService importService)
             return;
 
         IsLoading = true;
@@ -254,11 +239,7 @@ public partial class CheckpointFile : ViewModelBase
                 Progress = report;
             });
 
-            var cmInfo = await importService.GetMetadataForFile(
-                FilePath,
-                progressReport,
-                forceReimport
-            );
+            var cmInfo = await importService.GetMetadataForFile(FilePath, progressReport, forceReimport);
             if (cmInfo != null)
             {
                 ConnectedModel = cmInfo;
@@ -297,9 +278,7 @@ public partial class CheckpointFile : ViewModelBase
         {
             if (
                 !SupportedCheckpointExtensions.Any(
-                    ext =>
-                        Path.GetExtension(file)
-                            .Equals(ext, StringComparison.InvariantCultureIgnoreCase)
+                    ext => Path.GetExtension(file).Equals(ext, StringComparison.InvariantCultureIgnoreCase)
                 )
             )
                 continue;
@@ -310,10 +289,7 @@ public partial class CheckpointFile : ViewModelBase
                 FilePath = Path.Combine(directory, file),
             };
 
-            var jsonPath = Path.Combine(
-                directory,
-                $"{Path.GetFileNameWithoutExtension(file)}.cm-info.json"
-            );
+            var jsonPath = Path.Combine(directory, $"{Path.GetFileNameWithoutExtension(file)}.cm-info.json");
             if (File.Exists(jsonPath))
             {
                 var json = File.ReadAllText(jsonPath);
@@ -322,13 +298,7 @@ public partial class CheckpointFile : ViewModelBase
             }
 
             checkpointFile.PreviewImagePath = SupportedImageExtensions
-                .Select(
-                    ext =>
-                        Path.Combine(
-                            directory,
-                            $"{Path.GetFileNameWithoutExtension(file)}.preview{ext}"
-                        )
-                )
+                .Select(ext => Path.Combine(directory, $"{Path.GetFileNameWithoutExtension(file)}.preview{ext}"))
                 .Where(File.Exists)
                 .FirstOrDefault();
 
@@ -345,28 +315,16 @@ public partial class CheckpointFile : ViewModelBase
 
     public static IEnumerable<CheckpointFile> GetAllCheckpointFiles(string modelsDirectory)
     {
-        foreach (
-            var file in Directory.EnumerateFiles(
-                modelsDirectory,
-                "*.*",
-                SearchOption.AllDirectories
-            )
-        )
+        foreach (var file in Directory.EnumerateFiles(modelsDirectory, "*.*", SearchOption.AllDirectories))
         {
             if (
                 !SupportedCheckpointExtensions.Any(
-                    ext =>
-                        Path.GetExtension(file)
-                            .Equals(ext, StringComparison.InvariantCultureIgnoreCase)
+                    ext => Path.GetExtension(file).Equals(ext, StringComparison.InvariantCultureIgnoreCase)
                 )
             )
                 continue;
 
-            var checkpointFile = new CheckpointFile
-            {
-                Title = Path.GetFileNameWithoutExtension(file),
-                FilePath = file
-            };
+            var checkpointFile = new CheckpointFile { Title = Path.GetFileNameWithoutExtension(file), FilePath = file };
 
             var jsonPath = Path.Combine(
                 Path.GetDirectoryName(file) ?? "",
@@ -474,6 +432,5 @@ public partial class CheckpointFile : ViewModelBase
         }
     }
 
-    public static IEqualityComparer<CheckpointFile> FilePathComparer { get; } =
-        new FilePathEqualityComparer();
+    public static IEqualityComparer<CheckpointFile> FilePathComparer { get; } = new FilePathEqualityComparer();
 }

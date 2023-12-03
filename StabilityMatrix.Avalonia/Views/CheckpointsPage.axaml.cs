@@ -44,8 +44,7 @@ public partial class CheckpointsPage : UserControlBase
 
         if (DataContext is CheckpointsPageViewModel vm)
         {
-            subscription = vm.WhenPropertyChanged(m => m.ShowConnectedModelImages)
-                .Subscribe(_ => InvalidateRepeater());
+            subscription = vm.WhenPropertyChanged(m => m.ShowConnectedModelImages).Subscribe(_ => InvalidateRepeater());
         }
     }
 
@@ -98,9 +97,14 @@ public partial class CheckpointsPage : UserControlBase
     private static void OnDragExit(object? sender, DragEventArgs e)
     {
         var sourceDataContext = (e.Source as Control)?.DataContext;
-        if (sourceDataContext is CheckpointFolder folder)
+        switch (sourceDataContext)
         {
-            folder.IsCurrentDragTarget = false;
+            case CheckpointFolder folder:
+                folder.IsCurrentDragTarget = false;
+                break;
+            case CheckpointFile file:
+                file.ParentFolder.IsCurrentDragTarget = false;
+                break;
         }
     }
 
@@ -123,7 +127,10 @@ public partial class CheckpointsPage : UserControlBase
             {
                 folder.IsExpanded = true;
                 if (e.Data.Get("Context") is not CheckpointFile file)
-                    return;
+                {
+                    folder.IsCurrentDragTarget = true;
+                    break;
+                }
 
                 var filePath = new FilePath(file.FilePath);
                 folder.IsCurrentDragTarget = filePath.Directory?.FullPath != folder.DirectoryPath;
@@ -132,12 +139,14 @@ public partial class CheckpointsPage : UserControlBase
             case CheckpointFile file:
             {
                 if (e.Data.Get("Context") is not CheckpointFile dragFile)
-                    return;
+                {
+                    file.ParentFolder.IsCurrentDragTarget = true;
+                    break;
+                }
 
                 var parentFolder = file.ParentFolder;
                 var dragFilePath = new FilePath(dragFile.FilePath);
-                parentFolder.IsCurrentDragTarget =
-                    dragFilePath.Directory?.FullPath != parentFolder.DirectoryPath;
+                parentFolder.IsCurrentDragTarget = dragFilePath.Directory?.FullPath != parentFolder.DirectoryPath;
                 break;
             }
         }

@@ -462,57 +462,52 @@
         <TextBlock
             Grid.Row="2"
             Margin="8,8"
-            VerticalAlignment="Bottom"
+            VerticalAlignment="Center"
             Text="{x:Static lang:Resources.Label_DataProvidedByCivitAi}" />
 
-        <StackPanel
-            Grid.Row="2"
-            Margin="8"
-            HorizontalAlignment="Center"
-            IsVisible="{Binding HasSearched}"
-            Orientation="Vertical">
-            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Margin="0,0,0,8">
-                <TextBlock Margin="0,0,4,0" TextAlignment="Center"
-                           Text="{x:Static lang:Resources.Label_Page}"
-                           VerticalAlignment="Center"/>
-                <ui:NumberBox Value="{Binding CurrentPageNumber, FallbackValue=1}"
-                              VerticalAlignment="Center"
-                              SpinButtonPlacementMode="Hidden"
-                              TextAlignment="Center"/>
-                <TextBlock Margin="4,0,0,0" VerticalAlignment="Center">
-                    <Run Text="/"/>
-                    <Run Text="{Binding TotalPages, FallbackValue=5}"/>
-                </TextBlock>
-            </StackPanel>
-            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                <Button
-                    Margin="0,0,8,0"
-                    Command="{Binding FirstPage}"
-                    IsEnabled="{Binding CanGoToFirstPage}"
-                    ToolTip.Tip="{x:Static lang:Resources.Label_FirstPage}">
-                    <avalonia:Icon Value="fa-solid fa-backward-fast" />
-                </Button>
-                <Button
-                    Margin="0,0,8,0"
-                    Command="{Binding PreviousPage}"
-                    IsEnabled="{Binding CanGoToPreviousPage}"
-                    ToolTip.Tip="{x:Static lang:Resources.Label_PreviousPage}">
-                    <avalonia:Icon Value="fa-solid fa-caret-left" />
-                </Button>
-                <Button
-                    Margin="0,0,8,0"
-                    Command="{Binding NextPage}"
-                    IsEnabled="{Binding CanGoToNextPage}"
-                    ToolTip.Tip="{x:Static lang:Resources.Label_NextPage}">
-                    <avalonia:Icon Value="fa-solid fa-caret-right" />
-                </Button>
-                <Button
-                    Command="{Binding LastPage}"
-                    IsEnabled="{Binding CanGoToLastPage}"
-                    ToolTip.Tip="{x:Static lang:Resources.Label_LastPage}">
-                    <avalonia:Icon Value="fa-solid fa-forward-fast" />
-                </Button>
-            </StackPanel>
+        <StackPanel Grid.Row="2"
+                    HorizontalAlignment="Center"
+                    IsVisible="{Binding HasSearched}"
+                    Margin="0,8,0,8"
+                    Orientation="Horizontal">
+            <Button
+                Margin="0,0,8,0"
+                Command="{Binding FirstPage}"
+                IsEnabled="{Binding CanGoToFirstPage}"
+                ToolTip.Tip="{x:Static lang:Resources.Label_FirstPage}">
+                <avalonia:Icon Value="fa-solid fa-backward-fast" />
+            </Button>
+            <Button
+                Margin="0,0,16,0"
+                Command="{Binding PreviousPage}"
+                IsEnabled="{Binding CanGoToPreviousPage}"
+                ToolTip.Tip="{x:Static lang:Resources.Label_PreviousPage}">
+                <avalonia:Icon Value="fa-solid fa-caret-left" />
+            </Button>
+            <TextBlock Margin="8,0,4,0" TextAlignment="Center"
+                       Text="{x:Static lang:Resources.Label_Page}"
+                       VerticalAlignment="Center"/>
+            <ui:NumberBox Value="{Binding CurrentPageNumber, FallbackValue=1}"
+                          VerticalAlignment="Center"
+                          SpinButtonPlacementMode="Hidden"
+                          TextAlignment="Center"/>
+            <TextBlock Margin="4,0,8,0" VerticalAlignment="Center">
+                <Run Text="/"/>
+                <Run Text="{Binding TotalPages, FallbackValue=5}"/>
+            </TextBlock>
+            <Button
+                Margin="16,0,8,0"
+                Command="{Binding NextPage}"
+                IsEnabled="{Binding CanGoToNextPage}"
+                ToolTip.Tip="{x:Static lang:Resources.Label_NextPage}">
+                <avalonia:Icon Value="fa-solid fa-caret-right" />
+            </Button>
+            <Button
+                Command="{Binding LastPage}"
+                IsEnabled="{Binding CanGoToLastPage}"
+                ToolTip.Tip="{x:Static lang:Resources.Label_LastPage}">
+                <avalonia:Icon Value="fa-solid fa-forward-fast" />
+            </Button>
         </StackPanel>
 
         <TextBlock

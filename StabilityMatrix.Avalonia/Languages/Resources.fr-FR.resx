@@ -678,4 +678,7 @@
   <data name="Action_RestoreDefaultLayout" xml:space="preserve">
     <value>Rétablir la présentation par défaut</value>
   </data>
+  <data name="Label_CivitAi" xml:space="preserve">
+    <value>CivitAI</value>
+  </data>
 </root>

@@ -639,4 +639,7 @@
   <data name="Label_Branch" xml:space="preserve">
     <value>分支</value>
   </data>
+  <data name="Label_CivitAi" xml:space="preserve">
+    <value>CivitAI</value>
+  </data>
 </root>

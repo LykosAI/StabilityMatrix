@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.RegularExpressions;
 using NLog;
@@ -59,8 +58,8 @@ public static partial class ArchiveHelper
     public static async Task<ArchiveInfo> TestArchive(string archivePath)
     {
         var process = ProcessRunner.StartAnsiProcess(SevenZipPath, new[] { "t", archivePath });
-        await process.WaitForExitAsync();
-        var output = await process.StandardOutput.ReadToEndAsync();
+        await process.WaitForExitAsync().ConfigureAwait(false);
+        var output = await process.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
         var matches = Regex7ZOutput().Matches(output);
         var size = ulong.Parse(matches[0].Value);
         var compressed = ulong.Parse(matches[1].Value);
@@ -86,11 +85,11 @@ public static partial class ArchiveHelper
 
     public static async Task<ArchiveInfo> Extract7Z(string archivePath, string extractDirectory)
     {
+        var args =
+            $"x {ProcessRunner.Quote(archivePath)} -o{ProcessRunner.Quote(extractDirectory)} -y";
+
         var result = await ProcessRunner
-            .GetProcessResultAsync(
-                SevenZipPath,
-                new[] { "x", archivePath, "-o" + ProcessRunner.Quote(extractDirectory), "-y" }
-            )
+            .GetProcessResultAsync(SevenZipPath, args)
             .ConfigureAwait(false);
 
         result.EnsureSuccessExitCode();
@@ -185,7 +184,7 @@ public static partial class ArchiveHelper
             throw new ArgumentException("Archive must be a zipped tar.");
         }
         // Extract the tar.gz to tar
-        await Extract7Z(archivePath, extractDirectory);
+        await Extract7Z(archivePath, extractDirectory).ConfigureAwait(false);
 
         // Extract the tar
         var tarPath = Path.Combine(extractDirectory, Path.GetFileNameWithoutExtension(archivePath));
@@ -196,7 +195,7 @@ public static partial class ArchiveHelper
 
         try
         {
-            return await Extract7Z(tarPath, extractDirectory);
+            return await Extract7Z(tarPath, extractDirectory).ConfigureAwait(false);
         }
         finally
         {
@@ -215,11 +214,11 @@ public static partial class ArchiveHelper
     {
         if (archivePath.EndsWith(".tar.gz"))
         {
-            return await Extract7ZTar(archivePath, extractDirectory);
+            return await Extract7ZTar(archivePath, extractDirectory).ConfigureAwait(false);
         }
         else
         {
-            return await Extract7Z(archivePath, extractDirectory);
+            return await Extract7Z(archivePath, extractDirectory).ConfigureAwait(false);
         }
     }
 
@@ -241,7 +240,7 @@ public static partial class ArchiveHelper
         var count = 0ul;
 
         // Get true size
-        var (total, _) = await TestArchive(archivePath);
+        var (total, _) = await TestArchive(archivePath).ConfigureAwait(false);
 
         // If not available, use the size of the archive file
         if (total == 0)
@@ -266,32 +265,34 @@ public static partial class ArchiveHelper
             };
         }
 
-        await Task.Factory.StartNew(
-            () =>
-            {
-                var extractOptions = new ExtractionOptions
+        await Task.Factory
+            .StartNew(
+                () =>
                 {
-                    Overwrite = true,
-                    ExtractFullPath = true,
-                };
-                using var stream = File.OpenRead(archivePath);
-                using var archive = ReaderFactory.Open(stream);
-
-                // Start the progress reporting timer
-                progressMonitor?.Start();
-
-                while (archive.MoveToNextEntry())
-                {
-                    var entry = archive.Entry;
-                    if (!entry.IsDirectory)
+                    var extractOptions = new ExtractionOptions
                     {
-                        count += (ulong)entry.CompressedSize;
+                        Overwrite = true,
+                        ExtractFullPath = true,
+                    };
+                    using var stream = File.OpenRead(archivePath);
+                    using var archive = ReaderFactory.Open(stream);
+
+                    // Start the progress reporting timer
+                    progressMonitor?.Start();
+
+                    while (archive.MoveToNextEntry())
+                    {
+                        var entry = archive.Entry;
+                        if (!entry.IsDirectory)
+                        {
+                            count += (ulong)entry.CompressedSize;
+                        }
+                        archive.WriteEntryToDirectory(outputDirectory, extractOptions);
                     }
-                    archive.WriteEntryToDirectory(outputDirectory, extractOptions);
-                }
-            },
-            TaskCreationOptions.LongRunning
-        );
+                },
+                TaskCreationOptions.LongRunning
+            )
+            .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(progress: 1, message: "Done extracting"));
         progressMonitor?.Stop();
@@ -305,7 +306,7 @@ public static partial class ArchiveHelper
     public static async Task ExtractManaged(string archivePath, string outputDirectory)
     {
         await using var stream = File.OpenRead(archivePath);
-        await ExtractManaged(stream, outputDirectory);
+        await ExtractManaged(stream, outputDirectory).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -381,7 +382,7 @@ public static partial class ArchiveHelper
                 // Write file
                 await using var entryStream = reader.OpenEntryStream();
                 await using var fileStream = File.Create(outputPath);
-                await entryStream.CopyToAsync(fileStream);
+                await entryStream.CopyToAsync(fileStream).ConfigureAwait(false);
             }
         }
     }

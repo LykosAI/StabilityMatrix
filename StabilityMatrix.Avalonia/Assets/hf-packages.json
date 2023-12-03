@@ -331,5 +331,214 @@
     ],
     "Subfolder": "shuffle",
     "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "DiffusersClipVision",
+    "ModelName": "IP Adapter Encoder",
+    "RepositoryPath": "InvokeAI/ip_adapter_sd_image_encoder",
+    "Files": [
+      "config.json",
+      "model.safetensors"
+    ],
+    "Subfolder": "ip_adapter_sd_image_encoder",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersClipVision",
+    "ModelName": "IP Adapter Encoder (SDXL)",
+    "RepositoryPath": "InvokeAI/ip_adapter_sdxl_image_encoder",
+    "Files": [
+      "config.json",
+      "model.safetensors"
+    ],
+    "Subfolder": "ip_adapter_sd_image_encoder",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersIpAdapter",
+    "ModelName": "SD 1.5 Adapter",
+    "RepositoryPath": "InvokeAI/ip_adapter_sd15",
+    "Files": [
+      "image_encoder.txt",
+      "ip_adapter.bin"
+    ],
+    "Subfolder": "ip_adapter_sd15",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersIpAdapter",
+    "ModelName": "SD 1.5 Light Adapter",
+    "RepositoryPath": "InvokeAI/ip_adapter_sd15_light",
+    "Files": [
+      "image_encoder.txt",
+      "ip_adapter.bin"
+    ],
+    "Subfolder": "ip_adapter_sd15_light",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersIpAdapter",
+    "ModelName": "SD 1.5 Plus Adapter",
+    "RepositoryPath": "InvokeAI/ip_adapter_plus_sd15",
+    "Files": [
+      "image_encoder.txt",
+      "ip_adapter.bin"
+    ],
+    "Subfolder": "ip_adapter_plus_sd15",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersIpAdapter",
+    "ModelName": "SD 1.5 Face Plus Adapter",
+    "RepositoryPath": "InvokeAI/ip_adapter_plus_face_sd15",
+    "Files": [
+      "image_encoder.txt",
+      "ip_adapter.bin"
+    ],
+    "Subfolder": "ip_adapter_plus_face_sd15",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersIpAdapterXl",
+    "ModelName": "SDXL Adapter",
+    "RepositoryPath": "InvokeAI/ip_adapter_sdxl",
+    "Files": [
+      "image_encoder.txt",
+      "ip_adapter.bin"
+    ],
+    "Subfolder": "ip_adapter_sdxl",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersIpAdapterXl",
+    "ModelName": "SDXL Plus Adapter",
+    "RepositoryPath": "InvokeAI/ip-adapter-plus_sdxl_vit-h",
+    "Files": [
+      "image_encoder.txt",
+      "ip_adapter.bin"
+    ],
+    "Subfolder": "ip_adapter_plus_sdxl_vit-h",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersIpAdapterXl",
+    "ModelName": "SDXL Face Plus Adapter",
+    "RepositoryPath": "InvokeAI/ip-adapter-plus-face_sdxl_vit-h",
+    "Files": [
+      "image_encoder.txt",
+      "ip_adapter.bin"
+    ],
+    "Subfolder": "ip_adapter_plus_face_sdxl_vit-h",
+    "LicenseType": "CreativeML Open RAIL-M"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "Sketch",
+    "RepositoryPath": "TencentARC/t2iadapter_sketch_sd15v2",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.bin"
+    ],
+    "Subfolder": "t2iadapter_sketch_sd15v2",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "Depth",
+    "RepositoryPath": "TencentARC/t2iadapter_depth_sd15v2",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.bin"
+    ],
+    "Subfolder": "t2iadapter_depth_sd15v2",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "Canny",
+    "RepositoryPath": "TencentARC/t2iadapter_canny_sd15v2",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.bin"
+    ],
+    "Subfolder": "t2iadapter_canny_sd15v2",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "Depth-Zoe",
+    "RepositoryPath": "TencentARC/t2iadapter_zoedepth_sd15v1",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.bin"
+    ],
+    "Subfolder": "t2iadapter_zoedepth_sd15v1",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "Sketch (SDXL)",
+    "RepositoryPath": "TencentARC/t2i-adapter-sketch-sdxl-1.0",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.safetensors"
+    ],
+    "Subfolder": "t2i-adapter-sketch-sdxl-1.0",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "Depth-Zoe (SDXL)",
+    "RepositoryPath": "TencentARC/t2i-adapter-depth-zoe-sdxl-1.0",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.safetensors"
+    ],
+    "Subfolder": "t2i-adapter-depth-zoe-sdxl-1.0",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "OpenPose (SDXL)",
+    "RepositoryPath": "TencentARC/t2i-adapter-openpose-sdxl-1.0",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.safetensors"
+    ],
+    "Subfolder": "t2i-adapter-openpose-sdxl-1.0",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "Depth-MiDaS (SDXL)",
+    "RepositoryPath": "TencentARC/t2i-adapter-depth-midas-sdxl-1.0",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.safetensors"
+    ],
+    "Subfolder": "t2i-adapter-depth-midas-sdxl-1.0",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "LineArt (SDXL)",
+    "RepositoryPath": "TencentARC/t2i-adapter-lineart-sdxl-1.0",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.safetensors"
+    ],
+    "Subfolder": "t2i-adapter-lineart-sdxl-1.0",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "Canny (SDXL)",
+    "RepositoryPath": "TencentARC/t2i-adapter-canny-sdxl-1.0",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.safetensors"
+    ],
+    "Subfolder": "t2i-adapter-canny-sdxl-1.0",
+    "LicenseType": "Apache 2.0"
   }
 ]

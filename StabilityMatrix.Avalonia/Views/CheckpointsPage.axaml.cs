@@ -69,7 +69,10 @@ public partial class CheckpointsPage : UserControlBase
             case CheckpointFolder folder:
             {
                 if (e.Data.Get("Context") is not CheckpointFile file)
-                    return;
+                {
+                    await folder.OnDrop(e);
+                    break;
+                }
 
                 var filePath = new FilePath(file.FilePath);
                 if (filePath.Directory?.FullPath != folder.DirectoryPath)
@@ -81,7 +84,10 @@ public partial class CheckpointsPage : UserControlBase
             case CheckpointFile file:
             {
                 if (e.Data.Get("Context") is not CheckpointFile dragFile)
-                    return;
+                {
+                    await file.ParentFolder.OnDrop(e);
+                    break;
+                }
 
                 var parentFolder = file.ParentFolder;
                 var dragFilePath = new FilePath(dragFile.FilePath);

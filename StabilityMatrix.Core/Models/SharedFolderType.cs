@@ -35,4 +35,8 @@ public enum SharedFolderType
     AfterDetailer = 1 << 21,
     IpAdapter = 1 << 22,
     T2IAdapter = 1 << 23,
+
+    InvokeIpAdapters15 = 1 << 24,
+    InvokeIpAdaptersXl = 1 << 25,
+    InvokeClipVision = 1 << 26,
 }

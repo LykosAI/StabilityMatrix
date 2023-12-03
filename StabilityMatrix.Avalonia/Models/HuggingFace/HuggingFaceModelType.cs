@@ -24,9 +24,17 @@ public enum HuggingFaceModelType
     [ConvertTo<SharedFolderType>(SharedFolderType.IpAdapter)]
     IpAdapter,
 
-    [Description("IP Adapters (Diffusers)")]
-    [ConvertTo<SharedFolderType>(SharedFolderType.IpAdapter)]
+    [Description("IP Adapters (Diffusers SD1.5)")]
+    [ConvertTo<SharedFolderType>(SharedFolderType.InvokeIpAdapters15)]
     DiffusersIpAdapter,
+
+    [Description("IP Adapters (Diffusers SDXL)")]
+    [ConvertTo<SharedFolderType>(SharedFolderType.InvokeIpAdaptersXl)]
+    DiffusersIpAdapterXl,
+
+    [Description("CLIP Vision (Diffusers)")]
+    [ConvertTo<SharedFolderType>(SharedFolderType.InvokeClipVision)]
+    DiffusersClipVision,
 
     [Description("T2I Adapters")]
     [ConvertTo<SharedFolderType>(SharedFolderType.T2IAdapter)]

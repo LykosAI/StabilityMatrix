@@ -37,38 +37,16 @@ public class ComfyNodeBuilder
         return name;
     }
 
-    public static NamedComfyNode<LatentNodeConnection> VAEEncode(
-        string name,
-        ImageNodeConnection pixels,
-        VAENodeConnection vae
-    )
+    public record VAEEncode : ComfyTypedNodeBase<LatentNodeConnection>
     {
-        return new NamedComfyNode<LatentNodeConnection>(name)
-        {
-            ClassType = "VAEEncode",
-            Inputs = new Dictionary<string, object?>
-            {
-                ["pixels"] = pixels.Data,
-                ["vae"] = vae.Data
-            }
-        };
+        public required ImageNodeConnection Pixels { get; init; }
+        public required VAENodeConnection Vae { get; init; }
     }
 
-    public static NamedComfyNode<ImageNodeConnection> VAEDecode(
-        string name,
-        LatentNodeConnection samples,
-        VAENodeConnection vae
-    )
+    public record VAEDecode : ComfyTypedNodeBase<ImageNodeConnection>
     {
-        return new NamedComfyNode<ImageNodeConnection>(name)
-        {
-            ClassType = "VAEDecode",
-            Inputs = new Dictionary<string, object?>
-            {
-                ["samples"] = samples.Data,
-                ["vae"] = vae.Data
-            }
-        };
+        public required LatentNodeConnection Samples { get; init; }
+        public required VAENodeConnection Vae { get; init; }
     }
 
     public record KSampler : ComfyTypedNodeBase<LatentNodeConnection>
@@ -363,7 +341,16 @@ public class ComfyNodeBuilder
     )
     {
         var name = GetUniqueName("VAEDecode");
-        return Nodes.AddNamedNode(VAEDecode(name, latent, vae)).Output;
+        return Nodes
+            .AddTypedNode(
+                new VAEDecode
+                {
+                    Name = name,
+                    Samples = latent,
+                    Vae = vae
+                }
+            )
+            .Output;
     }
 
     public LatentNodeConnection Lambda_ImageToLatent(
@@ -372,7 +359,16 @@ public class ComfyNodeBuilder
     )
     {
         var name = GetUniqueName("VAEEncode");
-        return Nodes.AddNamedNode(VAEEncode(name, pixels, vae)).Output;
+        return Nodes
+            .AddTypedNode(
+                new VAEEncode
+                {
+                    Name = name,
+                    Pixels = pixels,
+                    Vae = vae
+                }
+            )
+            .Output;
     }
 
     /// <summary>
@@ -506,7 +502,14 @@ public class ComfyNodeBuilder
         if (upscaleInfo.Type == ComfyUpscalerType.ESRGAN)
         {
             // Convert to image space
-            var samplerImage = Nodes.AddNamedNode(VAEDecode($"{name}_VAEDecode", latent, vae));
+            var samplerImage = Nodes.AddTypedNode(
+                new VAEDecode
+                {
+                    Name = $"{name}_VAEDecode",
+                    Samples = latent,
+                    Vae = vae
+                }
+            );
 
             // Do group upscale
             var modelUpscaler = Group_UpscaleWithModel(
@@ -528,7 +531,14 @@ public class ComfyNodeBuilder
             );
 
             // Convert back to latent space
-            return Nodes.AddNamedNode(VAEEncode($"{name}_VAEEncode", resizedScaled.Output, vae));
+            return Nodes.AddTypedNode(
+                new VAEEncode
+                {
+                    Name = $"{name}_VAEEncode",
+                    Pixels = resizedScaled.Output,
+                    Vae = vae
+                }
+            );
         }
 
         throw new InvalidOperationException($"Unknown upscaler type: {upscaleInfo.Type}");
@@ -564,13 +574,27 @@ public class ComfyNodeBuilder
             );
 
             // Convert to image space
-            return Nodes.AddNamedNode(VAEDecode($"{name}_VAEDecode", latentUpscale.Output, vae));
+            return Nodes.AddTypedNode(
+                new VAEDecode
+                {
+                    Name = $"{name}_VAEDecode",
+                    Samples = latentUpscale.Output,
+                    Vae = vae
+                }
+            );
         }
 
         if (upscaleInfo.Type == ComfyUpscalerType.ESRGAN)
         {
             // Convert to image space
-            var samplerImage = Nodes.AddNamedNode(VAEDecode($"{name}_VAEDecode", latent, vae));
+            var samplerImage = Nodes.AddTypedNode(
+                new VAEDecode
+                {
+                    Name = $"{name}_VAEDecode",
+                    Samples = latent,
+                    Vae = vae
+                }
+            );
 
             // Do group upscale
             var modelUpscaler = Group_UpscaleWithModel(

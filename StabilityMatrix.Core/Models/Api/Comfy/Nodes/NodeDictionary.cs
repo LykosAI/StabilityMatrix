@@ -23,7 +23,7 @@ public class NodeDictionary : Dictionary<string, ComfyNode>
         }
 
         // Ensure new name does not exist
-        const int initialIndex = 2;
+        const int initialIndex = 1;
         var name = $"{nameBase}_{initialIndex}";
 
         if (ContainsKey(name))

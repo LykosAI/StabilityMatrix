@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using StabilityMatrix.Avalonia.Controls;
@@ -23,7 +24,7 @@ public class ControlNetModule : ModuleBase
         AddCards(vmFactory.Get<ControlNetCardViewModel>());
     }
 
-    public IEnumerable<ImageSource> GetInputImages()
+    protected override IEnumerable<ImageSource> GetInputImages()
     {
         if (GetCard<ControlNetCardViewModel>().SelectImageCardViewModel.ImageSource is { } image)
         {
@@ -43,7 +44,7 @@ public class ControlNetModule : ModuleBase
                 Image =
                     card.SelectImageCardViewModel.ImageSource?.GetHashGuidFileNameCached(
                         "Inference"
-                    ) ?? throw new ValidationException()
+                    ) ?? throw new ValidationException("No ImageSource")
             }
         );
 
@@ -51,18 +52,22 @@ public class ControlNetModule : ModuleBase
             new ComfyNodeBuilder.ControlNetLoader
             {
                 Name = e.Nodes.GetUniqueName("ControlNetLoader"),
-                ControlNetName = card.SelectedModel?.FileName ?? throw new ValidationException(),
+                ControlNetName =
+                    card.SelectedModel?.FileName
+                    ?? throw new ValidationException("No SelectedModel"),
             }
         );
 
         var controlNetApply = e.Nodes.AddTypedNode(
             new ComfyNodeBuilder.ControlNetApplyAdvanced
             {
-                Name = e.Nodes.GetUniqueName("ControlNet"),
+                Name = e.Nodes.GetUniqueName("ControlNetApply"),
                 Image = imageLoad.Output1,
                 ControlNet = controlNetLoader.Output,
-                Positive = e.Temp.Conditioning.Positive,
-                Negative = e.Temp.Conditioning.Negative,
+                Positive =
+                    e.Temp.Conditioning?.Positive ?? throw new ArgumentException("No Conditioning"),
+                Negative =
+                    e.Temp.Conditioning?.Negative ?? throw new ArgumentException("No Conditioning"),
                 Strength = card.Strength,
                 StartPercent = card.StartPercent,
                 EndPercent = card.EndPercent,
@@ -70,5 +75,28 @@ public class ControlNetModule : ModuleBase
         );
 
         e.Temp.Conditioning = (controlNetApply.Output1, controlNetApply.Output2);
+
+        // Refiner if available
+        if (e.Temp.RefinerConditioning is not null)
+        {
+            var controlNetRefinerApply = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.ControlNetApplyAdvanced
+                {
+                    Name = e.Nodes.GetUniqueName("Refiner_ControlNetApply"),
+                    Image = imageLoad.Output1,
+                    ControlNet = controlNetLoader.Output,
+                    Positive = e.Temp.RefinerConditioning.Value.Positive,
+                    Negative = e.Temp.RefinerConditioning.Value.Negative,
+                    Strength = card.Strength,
+                    StartPercent = card.StartPercent,
+                    EndPercent = card.EndPercent,
+                }
+            );
+
+            e.Temp.RefinerConditioning = (
+                controlNetRefinerApply.Output1,
+                controlNetRefinerApply.Output2
+            );
+        }
     }
 }

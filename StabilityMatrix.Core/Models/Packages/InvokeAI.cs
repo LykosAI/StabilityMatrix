@@ -42,9 +42,7 @@ public class InvokeAI : BaseGitPackage
         };
 
     public override Uri PreviewImageUri =>
-        new(
-            "https://raw.githubusercontent.com/invoke-ai/InvokeAI/main/docs/assets/canvas_preview.png"
-        );
+        new("https://raw.githubusercontent.com/invoke-ai/InvokeAI/main/docs/assets/canvas_preview.png");
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
@@ -63,92 +61,83 @@ public class InvokeAI : BaseGitPackage
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
         {
-            [SharedFolderType.StableDiffusion] = new[]
+            [SharedFolderType.StableDiffusion] = new[] { Path.Combine(RelativeRootPath, "autoimport", "main") },
+            [SharedFolderType.Lora] = new[] { Path.Combine(RelativeRootPath, "autoimport", "lora") },
+            [SharedFolderType.TextualInversion] = new[] { Path.Combine(RelativeRootPath, "autoimport", "embedding") },
+            [SharedFolderType.ControlNet] = new[] { Path.Combine(RelativeRootPath, "autoimport", "controlnet") },
+            [SharedFolderType.InvokeIpAdapters15] = new[]
             {
-                Path.Combine(RelativeRootPath, "autoimport", "main")
+                Path.Combine(RelativeRootPath, "models", "sd-1", "ip_adapter")
             },
-            [SharedFolderType.Lora] = new[]
+            [SharedFolderType.InvokeIpAdaptersXl] = new[]
             {
-                Path.Combine(RelativeRootPath, "autoimport", "lora")
+                Path.Combine(RelativeRootPath, "models", "sdxl", "ip_adapter")
             },
-            [SharedFolderType.TextualInversion] = new[]
+            [SharedFolderType.InvokeClipVision] = new[]
             {
-                Path.Combine(RelativeRootPath, "autoimport", "embedding")
+                Path.Combine(RelativeRootPath, "models", "any", "clip_vision")
             },
-            [SharedFolderType.ControlNet] = new[]
-            {
-                Path.Combine(RelativeRootPath, "autoimport", "controlnet")
-            },
-            [SharedFolderType.IpAdapter] = new[]
-            {
-                Path.Combine(RelativeRootPath, "autoimport", "ip_adapter")
-            }
+            [SharedFolderType.T2IAdapter] = new[] { Path.Combine(RelativeRootPath, "autoimport", "t2i_adapter") }
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
-        new()
-        {
-            [SharedOutputType.Text2Img] = new[]
-            {
-                Path.Combine("invokeai-root", "outputs", "images")
-            }
-        };
+        new() { [SharedOutputType.Text2Img] = new[] { Path.Combine("invokeai-root", "outputs", "images") } };
 
     public override string OutputFolderName => Path.Combine("invokeai-root", "outputs", "images");
 
     // https://github.com/invoke-ai/InvokeAI/blob/main/docs/features/CONFIGURATION.md
     public override List<LaunchOptionDefinition> LaunchOptions =>
-        new List<LaunchOptionDefinition>
+
+        [
+            new LaunchOptionDefinition
         {
-            new()
-            {
-                Name = "Host",
-                Type = LaunchOptionType.String,
-                DefaultValue = "localhost",
-                Options = new List<string> { "--host" }
-            },
-            new()
-            {
-                Name = "Port",
-                Type = LaunchOptionType.String,
-                DefaultValue = "9090",
-                Options = new List<string> { "--port" }
-            },
-            new()
-            {
-                Name = "Allow Origins",
-                Description =
-                    "List of host names or IP addresses that are allowed to connect to the "
-                    + "InvokeAI API in the format ['host1','host2',...]",
-                Type = LaunchOptionType.String,
-                DefaultValue = "[]",
-                Options = new List<string> { "--allow-origins" }
-            },
-            new()
-            {
-                Name = "Always use CPU",
-                Type = LaunchOptionType.Bool,
-                Options = new List<string> { "--always_use_cpu" }
-            },
-            new()
-            {
-                Name = "Precision",
-                Type = LaunchOptionType.Bool,
-                Options = new List<string>
-                {
-                    "--precision auto",
-                    "--precision float16",
-                    "--precision float32",
-                }
-            },
-            new()
-            {
-                Name = "Aggressively free up GPU memory after each operation",
-                Type = LaunchOptionType.Bool,
-                Options = new List<string> { "--free_gpu_mem" }
-            },
+            Name = "Host",
+            Type = LaunchOptionType.String,
+            DefaultValue = "localhost",
+            Options = ["--host"]
+        },
+            new LaunchOptionDefinition
+        {
+            Name = "Port",
+            Type = LaunchOptionType.String,
+            DefaultValue = "9090",
+            Options = ["--port"]
+        },
+            new LaunchOptionDefinition
+        {
+            Name = "Allow Origins",
+            Description =
+                "List of host names or IP addresses that are allowed to connect to the "
+                + "InvokeAI API in the format ['host1','host2',...]",
+            Type = LaunchOptionType.String,
+            DefaultValue = "[]",
+            Options = ["--allow-origins"]
+        },
+            new LaunchOptionDefinition
+        {
+            Name = "Always use CPU",
+            Type = LaunchOptionType.Bool,
+            Options = ["--always_use_cpu"]
+        },
+            new LaunchOptionDefinition
+        {
+            Name = "Precision",
+            Type = LaunchOptionType.Bool,
+            Options =
+            [
+                "--precision auto",
+                "--precision float16",
+                "--precision float32"
+            ]
+        },
+            new LaunchOptionDefinition
+        {
+            Name = "Aggressively free up GPU memory after each operation",
+            Type = LaunchOptionType.Bool,
+            Options = ["--free_gpu_mem"]
+        },
             LaunchOptionDefinition.Extras
-        };
+        ];
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm, TorchVersion.Mps };
@@ -185,24 +174,19 @@ public class InvokeAI : BaseGitPackage
         venvRunner.EnvironmentVariables = GetEnvVars(installLocation);
         progress?.Report(new ProgressReport(-1f, "Installing Package", isIndeterminate: true));
 
-        var pipCommandArgs =
-            "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu";
+        var pipCommandArgs = "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu";
 
         switch (torchVersion)
         {
             // If has Nvidia Gpu, install CUDA version
             case TorchVersion.Cuda:
-                progress?.Report(
-                    new ProgressReport(-1f, "Installing PyTorch for CUDA", isIndeterminate: true)
-                );
+                progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CUDA", isIndeterminate: true));
 
                 var args = new List<Argument>();
                 if (exists)
                 {
                     var pipPackages = await venvRunner.PipList().ConfigureAwait(false);
-                    var hasCuda121 = pipPackages.Any(
-                        p => p.Name == "torch" && p.Version.Contains("cu121")
-                    );
+                    var hasCuda121 = pipPackages.Any(p => p.Name == "torch" && p.Version.Contains("cu121"));
                     if (!hasCuda121)
                     {
                         args.Add("--upgrade");
@@ -222,23 +206,18 @@ public class InvokeAI : BaseGitPackage
                     .ConfigureAwait(false);
 
                 Logger.Info("Starting InvokeAI install (CUDA)...");
-                pipCommandArgs =
-                    "-e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu121";
+                pipCommandArgs = "-e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu121";
                 break;
             // For AMD, Install ROCm version
             case TorchVersion.Rocm:
                 await venvRunner
                     .PipInstall(
-                        new PipInstallArgs()
-                            .WithTorch("==2.0.1")
-                            .WithTorchVision()
-                            .WithExtraIndex("rocm5.4.2"),
+                        new PipInstallArgs().WithTorch("==2.0.1").WithTorchVision().WithExtraIndex("rocm5.4.2"),
                         onConsoleOutput
                     )
                     .ConfigureAwait(false);
                 Logger.Info("Starting InvokeAI install (ROCm)...");
-                pipCommandArgs =
-                    "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2";
+                pipCommandArgs = "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2";
                 break;
             case TorchVersion.Mps:
                 // For Apple silicon, use MPS
@@ -251,9 +230,7 @@ public class InvokeAI : BaseGitPackage
             .PipInstall($"{pipCommandArgs}{(exists ? " --upgrade" : "")}", onConsoleOutput)
             .ConfigureAwait(false);
 
-        await venvRunner
-            .PipInstall("rich packaging python-dotenv", onConsoleOutput)
-            .ConfigureAwait(false);
+        await venvRunner.PipInstall("rich packaging python-dotenv", onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Configuring InvokeAI", isIndeterminate: true));
 
@@ -349,13 +326,7 @@ public class InvokeAI : BaseGitPackage
             {
                 onConsoleOutput?.Invoke(s);
 
-                if (
-                    spam3
-                    && s.Text.Contains(
-                        "[3] Accept the best guess;",
-                        StringComparison.OrdinalIgnoreCase
-                    )
-                )
+                if (spam3 && s.Text.Contains("[3] Accept the best guess;", StringComparison.OrdinalIgnoreCase))
                 {
                     VenvRunner.Process?.StandardInput.WriteLine("3");
                     return;
@@ -373,17 +344,11 @@ public class InvokeAI : BaseGitPackage
                 OnStartupComplete(WebUrl);
             }
 
-            VenvRunner.RunDetached(
-                $"-c \"{code}\" {arguments}".TrimEnd(),
-                HandleConsoleOutput,
-                OnExit
-            );
+            VenvRunner.RunDetached($"-c \"{code}\" {arguments}".TrimEnd(), HandleConsoleOutput, OnExit);
         }
         else
         {
-            var result = await VenvRunner
-                .Run($"-c \"{code}\" {arguments}".TrimEnd())
-                .ConfigureAwait(false);
+            var result = await VenvRunner.Run($"-c \"{code}\" {arguments}".TrimEnd()).ConfigureAwait(false);
             onConsoleOutput?.Invoke(new ProcessOutput { Text = result.StandardOutput });
         }
     }

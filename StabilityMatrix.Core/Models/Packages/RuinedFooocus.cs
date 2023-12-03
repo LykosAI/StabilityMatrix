@@ -1,27 +1,21 @@
-﻿using System.Diagnostics;
-using System.Text.RegularExpressions;
-using StabilityMatrix.Core.Attributes;
+﻿using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
-using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
 [Singleton(typeof(BasePackage))]
-public class RuinedFooocus : Fooocus
+public class RuinedFooocus(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper
+) : Fooocus(githubApi, settingsManager, downloadService, prerequisiteHelper)
 {
-    public RuinedFooocus(
-        IGithubApiCache githubApi,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
-    )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
-
     public override string Name => "RuinedFooocus";
     public override string DisplayName { get; set; } = "RuinedFooocus";
     public override string Author => "runew0lf";

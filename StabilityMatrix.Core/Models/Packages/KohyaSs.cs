@@ -14,22 +14,14 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [Singleton(typeof(BasePackage))]
-public class KohyaSs : BaseGitPackage
+public class KohyaSs(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyRunner runner)
+    : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
 {
-    private readonly IPyRunner pyRunner;
-
-    public KohyaSs(
-        IGithubApiCache githubApi,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper,
-        IPyRunner pyRunner
-    )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper)
-    {
-        this.pyRunner = pyRunner;
-    }
-
     public override string Name => "kohya_ss";
     public override string DisplayName { get; set; } = "kohya_ss";
     public override string Author => "bmaltais";
@@ -62,59 +54,66 @@ public class KohyaSs : BaseGitPackage
         new[] { SharedFolderMethod.None };
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
-        new()
+    [
+        new LaunchOptionDefinition
         {
-            new LaunchOptionDefinition
-            {
-                Name = "Listen Address",
-                Type = LaunchOptionType.String,
-                DefaultValue = "127.0.0.1",
-                Options = new List<string> { "--listen" }
-            },
-            new LaunchOptionDefinition
-            {
-                Name = "Port",
-                Type = LaunchOptionType.String,
-                Options = new List<string> { "--port" }
-            },
-            new LaunchOptionDefinition
-            {
-                Name = "Username",
-                Type = LaunchOptionType.String,
-                Options = new List<string> { "--username" }
-            },
-            new LaunchOptionDefinition
-            {
-                Name = "Password",
-                Type = LaunchOptionType.String,
-                Options = new List<string> { "--password" }
-            },
-            new LaunchOptionDefinition
-            {
-                Name = "Auto-Launch Browser",
-                Type = LaunchOptionType.Bool,
-                Options = new List<string> { "--inbrowser" }
-            },
-            new LaunchOptionDefinition
-            {
-                Name = "Share",
-                Type = LaunchOptionType.Bool,
-                Options = new List<string> { "--share" }
-            },
-            new LaunchOptionDefinition
-            {
-                Name = "Headless",
-                Type = LaunchOptionType.Bool,
-                Options = new List<string> { "--headless" }
-            },
-            new LaunchOptionDefinition
-            {
-                Name = "Language",
-                Type = LaunchOptionType.String,
-                Options = new List<string> { "--language" }
-            },
-            LaunchOptionDefinition.Extras
-        };
+            Name = "Listen Address",
+            Type = LaunchOptionType.String,
+            DefaultValue = "127.0.0.1",
+            Options = ["--listen"]
+        },
+
+        new LaunchOptionDefinition
+        {
+            Name = "Port",
+            Type = LaunchOptionType.String,
+            Options = ["--port"]
+        },
+
+        new LaunchOptionDefinition
+        {
+            Name = "Username",
+            Type = LaunchOptionType.String,
+            Options = ["--username"]
+        },
+
+        new LaunchOptionDefinition
+        {
+            Name = "Password",
+            Type = LaunchOptionType.String,
+            Options = ["--password"]
+        },
+
+        new LaunchOptionDefinition
+        {
+            Name = "Auto-Launch Browser",
+            Type = LaunchOptionType.Bool,
+            Options = ["--inbrowser"]
+        },
+
+        new LaunchOptionDefinition
+        {
+            Name = "Share",
+            Type = LaunchOptionType.Bool,
+            Options = ["--share"]
+        },
+
+        new LaunchOptionDefinition
+        {
+            Name = "Headless",
+            Type = LaunchOptionType.Bool,
+            Options = ["--headless"]
+        },
+
+        new LaunchOptionDefinition
+        {
+            Name = "Language",
+            Type = LaunchOptionType.String,
+            Options = ["--language"]
+        },
+
+        LaunchOptionDefinition.Extras
+    ];
 
     public override async Task InstallPackage(
         string installLocation,
@@ -178,7 +177,7 @@ public class KohyaSs : BaseGitPackage
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
         // update gui files to point to venv accelerate
-        await pyRunner.RunInThreadWithLock(() =>
+        await runner.RunInThreadWithLock(() =>
         {
             var scope = Py.CreateScope();
             scope.Exec(

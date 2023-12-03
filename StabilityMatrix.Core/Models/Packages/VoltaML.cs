@@ -10,7 +10,12 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [Singleton(typeof(BasePackage))]
-public class VoltaML : BaseGitPackage
+public class VoltaML(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
 {
     public override string Name => "voltaML-fast-stable-diffusion";
     public override string DisplayName { get; set; } = "VoltaML";
@@ -31,14 +36,6 @@ public class VoltaML : BaseGitPackage
     // There are releases but the manager just downloads the latest commit anyways,
     // so we'll just limit to commit mode to be more consistent
     public override bool ShouldIgnoreReleases => true;
-
-    public VoltaML(
-        IGithubApiCache githubApi,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
-    )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
 
     // https://github.com/VoltaML/voltaML-fast-stable-diffusion/blob/main/main.py#L86
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>

@@ -12,16 +12,13 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [Singleton(typeof(BasePackage))]
-public class FocusControlNet : Fooocus
+public class FocusControlNet(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper
+) : Fooocus(githubApi, settingsManager, downloadService, prerequisiteHelper)
 {
-    public FocusControlNet(
-        IGithubApiCache githubApi,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
-    )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
-
     public override string Name => "Fooocus-ControlNet-SDXL";
     public override string DisplayName { get; set; } = "Fooocus-ControlNet";
     public override string Author => "fenneishi";

@@ -37,6 +37,7 @@ public partial class CheckpointFolder : ViewModelBase
     private readonly IDownloadService downloadService;
     private readonly ModelFinder modelFinder;
     private readonly INotificationService notificationService;
+    private readonly IMetadataImportService metadataImportService;
 
     public SourceCache<CheckpointFolder, string> SubFoldersCache { get; } =
         new(x => x.DirectoryPath);
@@ -111,6 +112,7 @@ public partial class CheckpointFolder : ViewModelBase
         IDownloadService downloadService,
         ModelFinder modelFinder,
         INotificationService notificationService,
+        IMetadataImportService metadataImportService,
         bool useCategoryVisibility = true
     )
     {
@@ -118,6 +120,7 @@ public partial class CheckpointFolder : ViewModelBase
         this.downloadService = downloadService;
         this.modelFinder = modelFinder;
         this.notificationService = notificationService;
+        this.metadataImportService = metadataImportService;
         this.useCategoryVisibility = useCategoryVisibility;
 
         checkpointFilesCache
@@ -148,6 +151,12 @@ public partial class CheckpointFolder : ViewModelBase
         SubFoldersCache
             .Connect()
             .DeferUntilLoaded()
+            .SubscribeMany(
+                folder =>
+                    Observable
+                        .FromEventPattern<EventArgs>(folder, nameof(ParentListRemoveRequested))
+                        .Subscribe(_ => SubFoldersCache.Remove(folder))
+            )
             .SortBy(x => x.Title)
             .Bind(SubFolders)
             .Subscribe();
@@ -306,12 +315,13 @@ public partial class CheckpointFolder : ViewModelBase
 
             Directory.CreateDirectory(subFolderPath);
 
-            SubFolders.Add(
+            SubFoldersCache.AddOrUpdate(
                 new CheckpointFolder(
                     settingsManager,
                     downloadService,
                     modelFinder,
                     notificationService,
+                    metadataImportService,
                     useCategoryVisibility: false
                 )
                 {
@@ -393,11 +403,7 @@ public partial class CheckpointFolder : ViewModelBase
     /// <summary>
     /// Imports files to the folder. Reports progress to instance properties.
     /// </summary>
-    public async Task ImportFilesAsync(
-        IEnumerable<string> files,
-        bool convertToConnected = false,
-        bool copyFiles = true
-    )
+    public async Task ImportFilesAsync(IEnumerable<string> files, bool convertToConnected = false)
     {
         try
         {
@@ -418,10 +424,7 @@ public partial class CheckpointFolder : ViewModelBase
                         : $"Importing {report.Title}";
             });
 
-            if (copyFiles)
-            {
-                await FileTransfers.CopyFiles(copyPaths, progress);
-            }
+            await FileTransfers.CopyFiles(copyPaths, progress);
 
             // Hash files and convert them to connected model if found
             if (convertToConnected)
@@ -536,17 +539,32 @@ public partial class CheckpointFolder : ViewModelBase
             .Select(f => f.FilePath)
             .ToList();
 
-        if (files.Any())
+        try
         {
-            await ImportFilesAsync(files, true, false);
+            if (files.Count > 0)
+            {
+                var progress = new Progress<ProgressReport>(report =>
+                {
+                    Progress.IsIndeterminate = report.IsIndeterminate;
+                    Progress.Value = report.Percentage;
+                    Progress.Text = report.Title;
+                });
+                await metadataImportService.ScanDirectoryForMissingInfo(DirectoryPath, progress);
+                BackgroundIndex();
+                notificationService.Show("Scan Complete", "Finished scanning for missing metadata");
+            }
+            else
+            {
+                notificationService.Show(
+                    "Cannot Find Connected Metadata",
+                    "All files in this folder are already connected.",
+                    NotificationType.Warning
+                );
+            }
         }
-        else
+        finally
         {
-            notificationService.Show(
-                "Cannot Find Connected Metadata",
-                "All files in this folder are already connected.",
-                NotificationType.Warning
-            );
+            DelayedClearProgress(TimeSpan.FromSeconds(1.5));
         }
     }
 
@@ -591,6 +609,7 @@ public partial class CheckpointFolder : ViewModelBase
     /// </summary>
     public void Index()
     {
+        var updatedFolders = new List<CheckpointFolder>();
         // Get subfolders
         foreach (var folder in Directory.GetDirectories(DirectoryPath))
         {
@@ -598,6 +617,7 @@ public partial class CheckpointFolder : ViewModelBase
             if (SubFoldersCache.Lookup(folder) is { HasValue: true } result)
             {
                 result.Value.BackgroundIndex();
+                updatedFolders.Add(result.Value);
             }
             else
             {
@@ -607,6 +627,7 @@ public partial class CheckpointFolder : ViewModelBase
                     downloadService,
                     modelFinder,
                     notificationService,
+                    metadataImportService,
                     useCategoryVisibility: false
                 )
                 {
@@ -617,9 +638,11 @@ public partial class CheckpointFolder : ViewModelBase
                     IsExpanded = false, // Subfolders are collapsed by default
                 };
                 subFolder.BackgroundIndex();
-                SubFoldersCache.AddOrUpdate(subFolder);
+                updatedFolders.Add(subFolder);
             }
         }
+
+        SubFoldersCache.EditDiff(updatedFolders, (a, b) => a.Title == b.Title);
 
         // Index files
         Dispatcher.UIThread.Post(

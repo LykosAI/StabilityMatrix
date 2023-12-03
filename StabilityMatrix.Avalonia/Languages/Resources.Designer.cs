@@ -339,6 +339,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open on Hugging Face.
+        /// </summary>
+        public static string Action_OpenOnHuggingFace {
+            get {
+                return ResourceManager.GetString("Action_OpenOnHuggingFace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open Project....
         /// </summary>
         public static string Action_OpenProjectEllipsis {
@@ -564,6 +573,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Update Existing Metadata.
+        /// </summary>
+        public static string Action_UpdateExistingMetadata {
+            get {
+                return ResourceManager.GetString("Action_UpdateExistingMetadata", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Upgrade.
         /// </summary>
         public static string Action_Upgrade {
@@ -767,6 +785,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_CheckpointManager {
             get {
                 return ResourceManager.GetString("Label_CheckpointManager", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CivitAI.
+        /// </summary>
+        public static string Label_CivitAi {
+            get {
+                return ResourceManager.GetString("Label_CivitAi", resourceCulture);
             }
         }
         
@@ -1023,7 +1050,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Emebeddings / Textual Inversion.
+        ///   Looks up a localized string similar to Embeddings / Textual Inversion.
         /// </summary>
         public static string Label_EmbeddingsOrTextualInversion {
             get {
@@ -1127,6 +1154,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Height {
             get {
                 return ResourceManager.GetString("Label_Height", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hugging Face.
+        /// </summary>
+        public static string Label_HuggingFace {
+            get {
+                return ResourceManager.GetString("Label_HuggingFace", resourceCulture);
             }
         }
         

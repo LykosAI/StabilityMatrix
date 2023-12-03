@@ -15,7 +15,12 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [Singleton(typeof(BasePackage))]
-public class A3WebUI : BaseGitPackage
+public class A3WebUI(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper)
+    : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -36,14 +41,6 @@ public class A3WebUI : BaseGitPackage
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
-    public A3WebUI(
-        IGithubApiCache githubApi,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
-    )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
-
     // From https://github.com/AUTOMATIC1111/stable-diffusion-webui/tree/master/models
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
@@ -63,7 +60,9 @@ public class A3WebUI : BaseGitPackage
             [SharedFolderType.ControlNet] = new[] { "models/ControlNet" },
             [SharedFolderType.Codeformer] = new[] { "models/Codeformer" },
             [SharedFolderType.LDSR] = new[] { "models/LDSR" },
-            [SharedFolderType.AfterDetailer] = new[] { "models/adetailer" }
+            [SharedFolderType.AfterDetailer] = new[] { "models/adetailer" },
+            [SharedFolderType.T2IAdapter] = new[] { "models/controlnet" },
+            [SharedFolderType.IpAdapter] = new[] { "models/ipadapter" }
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -79,27 +78,28 @@ public class A3WebUI : BaseGitPackage
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
     public override List<LaunchOptionDefinition> LaunchOptions =>
+    [
         new()
         {
-            new()
-            {
-                Name = "Host",
-                Type = LaunchOptionType.String,
-                DefaultValue = "localhost",
-                Options = new() { "--server-name" }
-            },
-            new()
-            {
-                Name = "Port",
-                Type = LaunchOptionType.String,
-                DefaultValue = "7860",
-                Options = new() { "--port" }
-            },
-            new()
-            {
-                Name = "VRAM",
-                Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper
+            Name = "Host",
+            Type = LaunchOptionType.String,
+            DefaultValue = "localhost",
+            Options = ["--server-name"]
+        },
+
+        new()
+        {
+            Name = "Port",
+            Type = LaunchOptionType.String,
+            DefaultValue = "7860",
+            Options = ["--port"]
+        },
+
+        new()
+        {
+            Name = "VRAM",
+            Type = LaunchOptionType.Bool,
+            InitialValue = HardwareHelper
                     .IterGpuInfo()
                     .Select(gpu => gpu.MemoryLevel)
                     .Max() switch
@@ -108,66 +108,75 @@ public class A3WebUI : BaseGitPackage
                     MemoryLevel.Medium => "--medvram",
                     _ => null
                 },
-                Options = new() { "--lowvram", "--medvram", "--medvram-sdxl" }
-            },
-            new()
-            {
-                Name = "Xformers",
-                Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.HasNvidiaGpu(),
-                Options = new() { "--xformers" }
-            },
-            new()
-            {
-                Name = "API",
-                Type = LaunchOptionType.Bool,
-                InitialValue = true,
-                Options = new() { "--api" }
-            },
-            new()
-            {
-                Name = "Auto Launch Web UI",
-                Type = LaunchOptionType.Bool,
-                InitialValue = false,
-                Options = new() { "--autolaunch" }
-            },
-            new()
-            {
-                Name = "Skip Torch CUDA Check",
-                Type = LaunchOptionType.Bool,
-                InitialValue = !HardwareHelper.HasNvidiaGpu(),
-                Options = new() { "--skip-torch-cuda-test" }
-            },
-            new()
-            {
-                Name = "Skip Python Version Check",
-                Type = LaunchOptionType.Bool,
-                InitialValue = true,
-                Options = new() { "--skip-python-version-check" }
-            },
-            new()
-            {
-                Name = "No Half",
-                Type = LaunchOptionType.Bool,
-                Description = "Do not switch the model to 16-bit floats",
-                InitialValue = HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML(),
-                Options = new() { "--no-half" }
-            },
-            new()
-            {
-                Name = "Skip SD Model Download",
-                Type = LaunchOptionType.Bool,
-                InitialValue = false,
-                Options = new() { "--no-download-sd-model" }
-            },
-            new()
-            {
-                Name = "Skip Install",
-                Type = LaunchOptionType.Bool,
-                Options = new() { "--skip-install" }
-            },
-            LaunchOptionDefinition.Extras
-        };
+            Options = ["--lowvram", "--medvram", "--medvram-sdxl"]
+        },
+
+        new()
+        {
+            Name = "Xformers",
+            Type = LaunchOptionType.Bool,
+            InitialValue = HardwareHelper.HasNvidiaGpu(),
+            Options = ["--xformers"]
+        },
+
+        new()
+        {
+            Name = "API",
+            Type = LaunchOptionType.Bool,
+            InitialValue = true,
+            Options = ["--api"]
+        },
+
+        new()
+        {
+            Name = "Auto Launch Web UI",
+            Type = LaunchOptionType.Bool,
+            InitialValue = false,
+            Options = ["--autolaunch"]
+        },
+
+        new()
+        {
+            Name = "Skip Torch CUDA Check",
+            Type = LaunchOptionType.Bool,
+            InitialValue = !HardwareHelper.HasNvidiaGpu(),
+            Options = ["--skip-torch-cuda-test"]
+        },
+
+        new()
+        {
+            Name = "Skip Python Version Check",
+            Type = LaunchOptionType.Bool,
+            InitialValue = true,
+            Options = ["--skip-python-version-check"]
+        },
+
+        new()
+        {
+            Name = "No Half",
+            Type = LaunchOptionType.Bool,
+            Description = "Do not switch the model to 16-bit floats",
+            InitialValue = HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML(),
+            Options = ["--no-half"]
+        },
+
+        new()
+        {
+            Name = "Skip SD Model Download",
+            Type = LaunchOptionType.Bool,
+            InitialValue = false,
+            Options = ["--no-download-sd-model"]
+        },
+
+        new()
+        {
+            Name = "Skip Install",
+            Type = LaunchOptionType.Bool,
+            Options = ["--skip-install"]
+        },
+
+        LaunchOptionDefinition.Extras
+    ];
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };

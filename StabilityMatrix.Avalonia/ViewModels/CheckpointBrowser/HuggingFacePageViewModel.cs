@@ -94,6 +94,12 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
 
             TotalProgress = new ProgressReport(current: currentSum, total: totalSum);
         };
+    }
+
+    public override void OnLoaded()
+    {
+        if (ItemsCache.Count > 0)
+            return;
 
         using var reader = new StreamReader(Assets.HfPackagesJson.Open());
         var packages =

@@ -44,7 +44,7 @@
                         IsEnabled="{Binding !!NumSelected}"
                         IconSource="Download"
                         Foreground="{DynamicResource AccentButtonBackground}"
-                        Command="{Binding ImportSelected}"
+                        Command="{Binding ImportSelectedCommand}"
                         Label="{x:Static lang:Resources.Action_Import}" />
                     <ui:CommandBarSeparator />
                     <ui:CommandBarButton

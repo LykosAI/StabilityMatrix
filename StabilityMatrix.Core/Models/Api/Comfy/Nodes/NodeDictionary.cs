@@ -23,19 +23,16 @@ public class NodeDictionary : Dictionary<string, ComfyNode>
         }
 
         // Ensure new name does not exist
-        const int initialIndex = 1;
-        var name = $"{nameBase}_{initialIndex}";
-
-        if (ContainsKey(name))
+        if (ContainsKey(nameBase))
         {
             throw new InvalidOperationException(
-                $"Initial unique name {name} already exists for base {nameBase}"
+                $"Initial unique name already exists for base {nameBase}"
             );
         }
 
-        _baseNameIndex.Add(nameBase, initialIndex);
+        _baseNameIndex.Add(nameBase, 1);
 
-        return name;
+        return nameBase;
     }
 
     public TNamedNode AddNamedNode<TNamedNode>(TNamedNode node)

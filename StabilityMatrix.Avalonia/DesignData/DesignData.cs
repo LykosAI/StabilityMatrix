@@ -835,7 +835,10 @@ The gallery images are often inpainted, but you will get something very similar 
             new Uri(
                 "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"
             )
-        );
+        )
+        {
+            Label = "Test Image"
+        };
 
     public static ControlNetCardViewModel ControlNetCardViewModel =>
         DialogFactory.Get<ControlNetCardViewModel>();

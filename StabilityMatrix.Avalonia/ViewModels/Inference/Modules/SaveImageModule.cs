@@ -23,7 +23,7 @@ public class SaveImageModule : ModuleBase
         var preview = e.Builder.Nodes.AddTypedNode(
             new ComfyNodeBuilder.PreviewImage
             {
-                Name = e.Builder.Nodes.GetUniqueName("SaveImage"),
+                Name = e.Builder.Nodes.GetUniqueName("SaveIntermediaryImage"),
                 Images = e.Builder.GetPrimaryAsImage()
             }
         );

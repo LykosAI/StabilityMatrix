@@ -105,7 +105,11 @@ public static class ComfyNodeBuilderExtensions
         );
 
         var previewImage = builder.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.PreviewImage { Name = "SaveImage", Images = image }
+            new ComfyNodeBuilder.PreviewImage
+            {
+                Name = builder.Nodes.GetUniqueName("SaveImage"),
+                Images = image
+            }
         );
 
         builder.Connections.OutputNodes.Add(previewImage);

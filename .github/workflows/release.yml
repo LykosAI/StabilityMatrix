@@ -209,8 +209,6 @@ jobs:
           files: |
             StabilityMatrix-win-x64.zip
             StabilityMatrix-linux-x64.zip
-            StabilityMatrix-win-x64/StabilityMatrix.exe
-            StabilityMatrix-linux-x64/StabilityMatrix.AppImage
           fail_on_unmatched_files: true
           tag_name: v${{ github.event.inputs.version }}
           body: ${{ steps.release_notes.outputs.release_notes }}

@@ -19,6 +19,7 @@ using LiteDB;
 using LiteDB.Async;
 using NLog;
 using Refit;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
@@ -607,5 +608,5 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
             allModelCards.Count > 0 ? $"{allModelCards.Count} results hidden by filters" : "No results found";
     }
 
-    public override string Header => "Civitai";
+    public override string Header => Resources.Label_CivitAi;
 }

@@ -855,4 +855,7 @@
   <data name="Label_CivitAi" xml:space="preserve">
     <value>CivitAI</value>
   </data>
+  <data name="Label_HuggingFace" xml:space="preserve">
+    <value>Hugging Face</value>
+  </data>
 </root>

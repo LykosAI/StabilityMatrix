@@ -189,5 +189,5 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
             });
     }
 
-    public override string Header => "Hugging Face";
+    public override string Header => Resources.Label_HuggingFace;
 }

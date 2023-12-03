@@ -1158,6 +1158,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hugging Face.
+        /// </summary>
+        public static string Label_HuggingFace {
+            get {
+                return ResourceManager.GetString("Label_HuggingFace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Image to Image.
         /// </summary>
         public static string Label_ImageToImage {

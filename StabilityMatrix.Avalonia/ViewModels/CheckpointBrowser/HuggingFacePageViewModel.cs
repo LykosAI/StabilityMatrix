@@ -40,9 +40,8 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly ISettingsManager settingsManager;
     private readonly INotificationService notificationService;
-    
-    public SourceCache<HuggingfaceItem, string> ItemsCache { get; } =
-        new(i => i.RepositoryPath + i.ModelName);
+
+    public SourceCache<HuggingfaceItem, string> ItemsCache { get; } = new(i => i.RepositoryPath + i.ModelName);
 
     public IObservableCollection<CategoryViewModel> Categories { get; set; } =
         new ObservableCollectionExtended<CategoryViewModel>();
@@ -61,8 +60,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
     [NotifyPropertyChangedFor(nameof(DownloadPercentText))]
     private ProgressReport totalProgress;
 
-    private readonly DispatcherTimer progressTimer =
-        new() { Interval = TimeSpan.FromMilliseconds(100) };
+    private readonly DispatcherTimer progressTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
 
     public HuggingFacePageViewModel(
         ITrackedDownloadService trackedDownloadService,
@@ -78,13 +76,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
             .Connect()
             .DeferUntilLoaded()
             .Group(i => i.ModelCategory)
-            .Transform(
-                g =>
-                    new CategoryViewModel(g.Cache.Items)
-                    {
-                        Title = g.Key.GetDescription() ?? g.Key.ToString()
-                    }
-            )
+            .Transform(g => new CategoryViewModel(g.Cache.Items) { Title = g.Key.GetDescription() ?? g.Key.ToString() })
             .SortBy(vm => vm.Title)
             .Bind(Categories)
             .WhenAnyPropertyChanged()
@@ -102,7 +94,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
 
             TotalProgress = new ProgressReport(current: currentSum, total: totalSum);
         };
-        
+
         using var reader = new StreamReader(Assets.HfPackagesJson.Open());
         var packages =
             JsonSerializer.Deserialize<IReadOnlyList<HuggingfaceItem>>(
@@ -111,15 +103,6 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
             ) ?? throw new InvalidOperationException("Failed to read hf-packages.json");
 
         ItemsCache.EditDiff(packages, (a, b) => a.RepositoryPath == b.RepositoryPath);
-
-        var btn = new CommandBarButton();
-        var obs = btn.GetObservable(InputElement.IsEnabledProperty)
-            .Select(_ => NumSelected > 0);
-        btn.Bind(InputElement.IsEnabledProperty, obs);
-        btn.Command = ImportSelectedCommand;
-        btn.Foreground = new SolidColorBrush(Colors.Lime);
-        btn.IconSource = new SymbolIconSource { Symbol = Symbol.Download };
-        PrimaryCommands.Add(btn);
     }
 
     public void ClearSelection()
@@ -148,8 +131,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
         {
             foreach (var file in viewModel.Item.Files)
             {
-                var url =
-                    $"https://huggingface.co/{viewModel.Item.RepositoryPath}/resolve/main/{file}?download=true";
+                var url = $"https://huggingface.co/{viewModel.Item.RepositoryPath}/resolve/main/{file}?download=true";
                 var sharedFolderType = viewModel.Item.ModelCategory.ConvertTo<SharedFolderType>();
                 var downloadPath = new FilePath(
                     Path.Combine(

@@ -124,11 +124,14 @@ public class InferenceTextToImageViewModel
 
         var builder = args.Builder;
 
+        // Load constants
         builder.Connections.Seed = args.SeedOverride switch
         {
             { } seed => Convert.ToUInt64(seed),
             _ => Convert.ToUInt64(SeedCardViewModel.Seed)
         };
+
+        BatchSizeCardViewModel.ApplyStep(args);
 
         // Load models
         ModelCardViewModel.ApplyStep(args);

@@ -1,9 +1,11 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
+using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Database;
-using StabilityMatrix.Core.Models.Tokens;
 
 namespace StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
@@ -15,45 +17,53 @@ public class ComfyNodeBuilder
 {
     public NodeDictionary Nodes { get; } = new();
 
-    public Dictionary<Type, NodeConnectionBase> GlobalConnections { get; } = new();
-
     private static string GetRandomPrefix() => Guid.NewGuid().ToString()[..8];
 
-    public static NamedComfyNode<LatentNodeConnection> VAEEncode(
-        string name,
-        ImageNodeConnection pixels,
-        VAENodeConnection vae
-    )
+    private string GetUniqueName(string nameBase)
     {
-        return new NamedComfyNode<LatentNodeConnection>(name)
+        var name = $"{nameBase}_1";
+        for (var i = 0; Nodes.ContainsKey(name); i++)
         {
-            ClassType = "VAEEncode",
-            Inputs = new Dictionary<string, object?>
+            if (i > 1_000_000)
             {
-                ["pixels"] = pixels.Data,
-                ["vae"] = vae.Data
+                throw new InvalidOperationException(
+                    $"Could not find unique name for base {nameBase}"
+                );
             }
-        };
+
+            name = $"{nameBase}_{i + 1}";
+        }
+
+        return name;
     }
 
-    public static NamedComfyNode<ImageNodeConnection> VAEDecode(
-        string name,
-        LatentNodeConnection samples,
-        VAENodeConnection vae
-    )
+    public record VAEEncode : ComfyTypedNodeBase<LatentNodeConnection>
     {
-        return new NamedComfyNode<ImageNodeConnection>(name)
-        {
-            ClassType = "VAEDecode",
-            Inputs = new Dictionary<string, object?>
-            {
-                ["samples"] = samples.Data,
-                ["vae"] = vae.Data
-            }
-        };
+        public required ImageNodeConnection Pixels { get; init; }
+        public required VAENodeConnection Vae { get; init; }
     }
 
-    public static NamedComfyNode<LatentNodeConnection> KSampler(
+    public record VAEDecode : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        public required LatentNodeConnection Samples { get; init; }
+        public required VAENodeConnection Vae { get; init; }
+    }
+
+    public record KSampler : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+        public required ulong Seed { get; init; }
+        public required int Steps { get; init; }
+        public required double Cfg { get; init; }
+        public required string SamplerName { get; init; }
+        public required string Scheduler { get; init; }
+        public required ConditioningNodeConnection Positive { get; init; }
+        public required ConditioningNodeConnection Negative { get; init; }
+        public required LatentNodeConnection LatentImage { get; init; }
+        public required double Denoise { get; init; }
+    }
+
+    /*public static NamedComfyNode<LatentNodeConnection> KSampler(
         string name,
         ModelNodeConnection model,
         ulong seed,
@@ -84,9 +94,30 @@ public class ComfyNodeBuilder
                 ["denoise"] = denoise
             }
         };
+    }*/
+
+    public record KSamplerAdvanced : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+
+        [BoolStringMember("enable", "disable")]
+        public required bool AddNoise { get; init; }
+        public required ulong NoiseSeed { get; init; }
+        public required int Steps { get; init; }
+        public required double Cfg { get; init; }
+        public required string SamplerName { get; init; }
+        public required string Scheduler { get; init; }
+        public required ConditioningNodeConnection Positive { get; init; }
+        public required ConditioningNodeConnection Negative { get; init; }
+        public required LatentNodeConnection LatentImage { get; init; }
+        public required int StartAtStep { get; init; }
+        public required int EndAtStep { get; init; }
+
+        [BoolStringMember("enable", "disable")]
+        public bool ReturnWithLeftoverNoise { get; init; }
     }
 
-    public static NamedComfyNode<LatentNodeConnection> KSamplerAdvanced(
+    /*public static NamedComfyNode<LatentNodeConnection> KSamplerAdvanced(
         string name,
         ModelNodeConnection model,
         bool addNoise,
@@ -123,25 +154,13 @@ public class ComfyNodeBuilder
                 ["return_with_leftover_noise"] = returnWithLeftoverNoise ? "enable" : "disable"
             }
         };
-    }
+    }*/
 
-    public static NamedComfyNode<LatentNodeConnection> EmptyLatentImage(
-        string name,
-        int batchSize,
-        int height,
-        int width
-    )
+    public record EmptyLatentImage : ComfyTypedNodeBase<LatentNodeConnection>
     {
-        return new NamedComfyNode<LatentNodeConnection>(name)
-        {
-            ClassType = "EmptyLatentImage",
-            Inputs = new Dictionary<string, object?>
-            {
-                ["batch_size"] = batchSize,
-                ["height"] = height,
-                ["width"] = width,
-            }
-        };
+        public required int BatchSize { get; init; }
+        public required int Height { get; init; }
+        public required int Width { get; init; }
     }
 
     public static NamedComfyNode<LatentNodeConnection> LatentFromBatch(
@@ -215,13 +234,9 @@ public class ComfyNodeBuilder
         };
     }
 
-    public static NamedComfyNode<VAENodeConnection> VAELoader(string name, string vaeModelName)
+    public record VAELoader : ComfyTypedNodeBase<VAENodeConnection>
     {
-        return new NamedComfyNode<VAENodeConnection>(name)
-        {
-            ClassType = "VAELoader",
-            Inputs = new Dictionary<string, object?> { ["vae_name"] = vaeModelName }
-        };
+        public required string VaeName { get; init; }
     }
 
     public static NamedComfyNode<ModelNodeConnection, ClipNodeConnection> LoraLoader(
@@ -247,39 +262,26 @@ public class ComfyNodeBuilder
         };
     }
 
-    public static NamedComfyNode<ModelNodeConnection> CheckpointLoaderSimple(
-        string name,
-        string modelName
-    )
+    public record CheckpointLoaderSimple
+        : ComfyTypedNodeBase<ModelNodeConnection, ClipNodeConnection, VAENodeConnection>
     {
-        return new NamedComfyNode<ModelNodeConnection>(name)
-        {
-            ClassType = "CheckpointLoaderSimple",
-            Inputs = new Dictionary<string, object?> { ["ckpt_name"] = modelName }
-        };
+        public required string CkptName { get; init; }
     }
 
-    public static NamedComfyNode<ModelNodeConnection> FreeU(
-        string name,
-        ModelNodeConnection model,
-        double b1,
-        double b2,
-        double s1,
-        double s2
-    )
+    public record FreeU : ComfyTypedNodeBase<ModelNodeConnection>
     {
-        return new NamedComfyNode<ModelNodeConnection>(name)
-        {
-            ClassType = "FreeU",
-            Inputs = new Dictionary<string, object?>
-            {
-                ["model"] = model.Data,
-                ["b1"] = b1,
-                ["b2"] = b2,
-                ["s1"] = s1,
-                ["s2"] = s2
-            }
-        };
+        public required ModelNodeConnection Model { get; init; }
+        public required double B1 { get; init; }
+        public required double B2 { get; init; }
+        public required double S1 { get; init; }
+        public required double S2 { get; init; }
+    }
+
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    public record CLIPTextEncode : ComfyTypedNodeBase<ConditioningNodeConnection>
+    {
+        public required ClipNodeConnection Clip { get; init; }
+        public required string Text { get; init; }
     }
 
     public static NamedComfyNode<ConditioningNodeConnection> ClipTextEncode(
@@ -295,42 +297,42 @@ public class ComfyNodeBuilder
         };
     }
 
-    /// <summary>
-    /// Create a LoadImage node.
-    /// </summary>
-    /// <param name="name">Name of the node</param>
-    /// <param name="relativeInputPath">Path relative to the Comfy input directory</param>
-    public static NamedComfyNode<ImageNodeConnection, ImageMaskConnection> LoadImage(
-        string name,
-        string relativeInputPath
-    )
+    public record LoadImage : ComfyTypedNodeBase<ImageNodeConnection, ImageMaskConnection>
     {
-        return new NamedComfyNode<ImageNodeConnection, ImageMaskConnection>(name)
-        {
-            ClassType = "LoadImage",
-            Inputs = new Dictionary<string, object?> { ["image"] = relativeInputPath }
-        };
+        /// <summary>
+        /// Path relative to the Comfy input directory
+        /// </summary>
+        public required string Image { get; init; }
     }
 
-    public static NamedComfyNode<ImageNodeConnection> ImageSharpen(
-        string name,
-        ImageNodeConnection image,
-        int sharpenRadius,
-        double sigma,
-        double alpha
-    )
+    public record PreviewImage : ComfyTypedNodeBase
     {
-        return new NamedComfyNode<ImageNodeConnection>(name)
-        {
-            ClassType = "ImageSharpen",
-            Inputs = new Dictionary<string, object?>
-            {
-                ["image"] = image.Data,
-                ["sharpen_radius"] = sharpenRadius,
-                ["sigma"] = sigma,
-                ["alpha"] = alpha
-            }
-        };
+        public required ImageNodeConnection Images { get; init; }
+    }
+
+    public record ImageSharpen : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        public required ImageNodeConnection Image { get; init; }
+        public required int SharpenRadius { get; init; }
+        public required double Sigma { get; init; }
+        public required double Alpha { get; init; }
+    }
+
+    public record ControlNetLoader : ComfyTypedNodeBase<ControlNetNodeConnection>
+    {
+        public required string ControlNetName { get; init; }
+    }
+
+    public record ControlNetApplyAdvanced
+        : ComfyTypedNodeBase<ConditioningNodeConnection, ConditioningNodeConnection>
+    {
+        public required ConditioningNodeConnection Positive { get; init; }
+        public required ConditioningNodeConnection Negative { get; init; }
+        public required ControlNetNodeConnection ControlNet { get; init; }
+        public required ImageNodeConnection Image { get; init; }
+        public required double Strength { get; init; }
+        public required double StartPercent { get; init; }
+        public required double EndPercent { get; init; }
     }
 
     public ImageNodeConnection Lambda_LatentToImage(
@@ -338,7 +340,17 @@ public class ComfyNodeBuilder
         VAENodeConnection vae
     )
     {
-        return Nodes.AddNamedNode(VAEDecode($"{GetRandomPrefix()}_VAEDecode", latent, vae)).Output;
+        var name = GetUniqueName("VAEDecode");
+        return Nodes
+            .AddTypedNode(
+                new VAEDecode
+                {
+                    Name = name,
+                    Samples = latent,
+                    Vae = vae
+                }
+            )
+            .Output;
     }
 
     public LatentNodeConnection Lambda_ImageToLatent(
@@ -346,30 +358,17 @@ public class ComfyNodeBuilder
         VAENodeConnection vae
     )
     {
-        return Nodes.AddNamedNode(VAEEncode($"{GetRandomPrefix()}_VAEEncode", pixels, vae)).Output;
-    }
-
-    /// <summary>
-    /// Get a global connection for a given type
-    /// </summary>
-    public TConnection GetConnection<TConnection>()
-        where TConnection : NodeConnectionBase
-    {
-        if (GlobalConnections.TryGetValue(typeof(TConnection), out var connection))
-        {
-            return (TConnection)connection;
-        }
-
-        throw new InvalidOperationException($"No global connection of type {typeof(TConnection)}");
-    }
-
-    /// <summary>
-    /// Set a global connection for a given type
-    /// </summary>
-    public void SetConnection<TConnection>(TConnection connection)
-        where TConnection : NodeConnectionBase
-    {
-        GlobalConnections[typeof(TConnection)] = connection;
+        var name = GetUniqueName("VAEEncode");
+        return Nodes
+            .AddTypedNode(
+                new VAEEncode
+                {
+                    Name = name,
+                    Pixels = pixels,
+                    Vae = vae
+                }
+            )
+            .Output;
     }
 
     /// <summary>
@@ -390,6 +389,84 @@ public class ComfyNodeBuilder
         );
 
         return upscaler;
+    }
+
+    /// <summary>
+    /// Create a group node that scales a given image to image output
+    /// </summary>
+    public PrimaryNodeConnection Group_Upscale(
+        string name,
+        PrimaryNodeConnection primary,
+        VAENodeConnection vae,
+        ComfyUpscaler upscaleInfo,
+        int width,
+        int height
+    )
+    {
+        if (upscaleInfo.Type == ComfyUpscalerType.Latent)
+        {
+            return primary.Match<PrimaryNodeConnection>(
+                latent =>
+                    Nodes
+                        .AddNamedNode(
+                            new NamedComfyNode<LatentNodeConnection>($"{name}_LatentUpscale")
+                            {
+                                ClassType = "LatentUpscale",
+                                Inputs = new Dictionary<string, object?>
+                                {
+                                    ["upscale_method"] = upscaleInfo.Name,
+                                    ["width"] = width,
+                                    ["height"] = height,
+                                    ["crop"] = "disabled",
+                                    ["samples"] = latent.Data,
+                                }
+                            }
+                        )
+                        .Output,
+                image =>
+                    Nodes
+                        .AddNamedNode(
+                            ImageScale(
+                                $"{name}_ImageUpscale",
+                                image,
+                                upscaleInfo.Name,
+                                height,
+                                width,
+                                false
+                            )
+                        )
+                        .Output
+            );
+        }
+
+        if (upscaleInfo.Type == ComfyUpscalerType.ESRGAN)
+        {
+            // Convert to image space if needed
+            var samplerImage = GetPrimaryAsImage(primary, vae);
+
+            // Do group upscale
+            var modelUpscaler = Group_UpscaleWithModel(
+                $"{name}_ModelUpscale",
+                upscaleInfo.Name,
+                samplerImage
+            );
+
+            // Since the model upscale is fixed to model (2x/4x), scale it again to the requested size
+            var resizedScaled = Nodes.AddNamedNode(
+                ImageScale(
+                    $"{name}_ImageScale",
+                    modelUpscaler.Output,
+                    "bilinear",
+                    height,
+                    width,
+                    false
+                )
+            );
+
+            return resizedScaled.Output;
+        }
+
+        throw new InvalidOperationException($"Unknown upscaler type: {upscaleInfo.Type}");
     }
 
     /// <summary>
@@ -425,7 +502,14 @@ public class ComfyNodeBuilder
         if (upscaleInfo.Type == ComfyUpscalerType.ESRGAN)
         {
             // Convert to image space
-            var samplerImage = Nodes.AddNamedNode(VAEDecode($"{name}_VAEDecode", latent, vae));
+            var samplerImage = Nodes.AddTypedNode(
+                new VAEDecode
+                {
+                    Name = $"{name}_VAEDecode",
+                    Samples = latent,
+                    Vae = vae
+                }
+            );
 
             // Do group upscale
             var modelUpscaler = Group_UpscaleWithModel(
@@ -447,7 +531,14 @@ public class ComfyNodeBuilder
             );
 
             // Convert back to latent space
-            return Nodes.AddNamedNode(VAEEncode($"{name}_VAEEncode", resizedScaled.Output, vae));
+            return Nodes.AddTypedNode(
+                new VAEEncode
+                {
+                    Name = $"{name}_VAEEncode",
+                    Pixels = resizedScaled.Output,
+                    Vae = vae
+                }
+            );
         }
 
         throw new InvalidOperationException($"Unknown upscaler type: {upscaleInfo.Type}");
@@ -483,13 +574,27 @@ public class ComfyNodeBuilder
             );
 
             // Convert to image space
-            return Nodes.AddNamedNode(VAEDecode($"{name}_VAEDecode", latentUpscale.Output, vae));
+            return Nodes.AddTypedNode(
+                new VAEDecode
+                {
+                    Name = $"{name}_VAEDecode",
+                    Samples = latentUpscale.Output,
+                    Vae = vae
+                }
+            );
         }
 
         if (upscaleInfo.Type == ComfyUpscalerType.ESRGAN)
         {
             // Convert to image space
-            var samplerImage = Nodes.AddNamedNode(VAEDecode($"{name}_VAEDecode", latent, vae));
+            var samplerImage = Nodes.AddTypedNode(
+                new VAEDecode
+                {
+                    Name = $"{name}_VAEDecode",
+                    Samples = latent,
+                    Vae = vae
+                }
+            );
 
             // Do group upscale
             var modelUpscaler = Group_UpscaleWithModel(
@@ -641,6 +746,92 @@ public class ComfyNodeBuilder
     }
 
     /// <summary>
+    /// Get or convert latest primary connection to latent
+    /// </summary>
+    public LatentNodeConnection GetPrimaryAsLatent()
+    {
+        if (Connections.Primary?.IsT0 == true)
+        {
+            return Connections.Primary.AsT0;
+        }
+
+        return GetPrimaryAsLatent(
+            Connections.Primary ?? throw new NullReferenceException("No primary connection"),
+            Connections.GetDefaultVAE()
+        );
+    }
+
+    /// <summary>
+    /// Get or convert latest primary connection to latent
+    /// </summary>
+    public LatentNodeConnection GetPrimaryAsLatent(
+        PrimaryNodeConnection primary,
+        VAENodeConnection vae
+    )
+    {
+        return primary.Match(latent => latent, image => Lambda_ImageToLatent(image, vae));
+    }
+
+    /// <summary>
+    /// Get or convert latest primary connection to latent
+    /// </summary>
+    public LatentNodeConnection GetPrimaryAsLatent(VAENodeConnection vae)
+    {
+        if (Connections.Primary?.IsT0 == true)
+        {
+            return Connections.Primary.AsT0;
+        }
+
+        return GetPrimaryAsLatent(
+            Connections.Primary ?? throw new NullReferenceException("No primary connection"),
+            vae
+        );
+    }
+
+    /// <summary>
+    /// Get or convert latest primary connection to image
+    /// </summary>
+    public ImageNodeConnection GetPrimaryAsImage()
+    {
+        if (Connections.Primary?.IsT1 == true)
+        {
+            return Connections.Primary.AsT1;
+        }
+
+        return GetPrimaryAsImage(
+            Connections.Primary ?? throw new NullReferenceException("No primary connection"),
+            Connections.GetDefaultVAE()
+        );
+    }
+
+    /// <summary>
+    /// Get or convert latest primary connection to image
+    /// </summary>
+    public ImageNodeConnection GetPrimaryAsImage(
+        PrimaryNodeConnection primary,
+        VAENodeConnection vae
+    )
+    {
+        return primary.Match(latent => Lambda_LatentToImage(latent, vae), image => image);
+    }
+
+    /// <summary>
+    /// Get or convert latest primary connection to image
+    /// </summary>
+    public ImageNodeConnection GetPrimaryAsImage(VAENodeConnection vae)
+    {
+        if (Connections.Primary?.IsT1 == true)
+        {
+            return Connections.Primary.AsT1;
+        }
+
+        return GetPrimaryAsImage(
+            Connections.Primary ?? throw new NullReferenceException("No primary connection"),
+            vae
+        );
+    }
+
+    /// <summary>
     /// Convert to a NodeDictionary
     /// </summary>
     public NodeDictionary ToNodeDictionary()
@@ -652,6 +843,9 @@ public class ComfyNodeBuilder
     public class NodeBuilderConnections
     {
         public ulong Seed { get; set; }
+
+        public int BatchSize { get; set; } = 1;
+        public int? BatchIndex { get; set; }
 
         public ModelNodeConnection? BaseModel { get; set; }
         public VAENodeConnection? BaseVAE { get; set; }
@@ -666,42 +860,16 @@ public class ComfyNodeBuilder
         public ConditioningNodeConnection? RefinerConditioning { get; set; }
         public ConditioningNodeConnection? RefinerNegativeConditioning { get; set; }
 
-        public LatentNodeConnection? Latent { get; set; }
-        public Size LatentSize { get; set; }
+        public PrimaryNodeConnection? Primary { get; set; }
+        public VAENodeConnection? PrimaryVAE { get; set; }
+        public Size PrimarySize { get; set; }
 
-        public ImageNodeConnection? Image { get; set; }
-        public Size ImageSize { get; set; }
+        public ComfySampler? PrimarySampler { get; set; }
+        public ComfyScheduler? PrimaryScheduler { get; set; }
 
         public List<NamedComfyNode> OutputNodes { get; } = new();
 
         public IEnumerable<string> OutputNodeNames => OutputNodes.Select(n => n.Name);
-
-        /// <summary>
-        /// Gets the latent size scaled by a given factor
-        /// </summary>
-        public Size GetScaledLatentSize(double scale)
-        {
-            return new Size(
-                (int)Math.Floor(LatentSize.Width * scale),
-                (int)Math.Floor(LatentSize.Height * scale)
-            );
-        }
-
-        /// <summary>
-        /// Gets the image size scaled by a given factor
-        /// </summary>
-        public Size GetScaledImageSize(double scale)
-        {
-            return new Size(
-                (int)Math.Floor(ImageSize.Width * scale),
-                (int)Math.Floor(ImageSize.Height * scale)
-            );
-        }
-
-        public VAENodeConnection GetRefinerOrBaseVAE()
-        {
-            return RefinerVAE ?? BaseVAE ?? throw new NullReferenceException("No VAE");
-        }
 
         public ModelNodeConnection GetRefinerOrBaseModel()
         {
@@ -720,6 +888,14 @@ public class ComfyNodeBuilder
             return RefinerNegativeConditioning
                 ?? BaseNegativeConditioning
                 ?? throw new NullReferenceException("No Negative Conditioning");
+        }
+
+        public VAENodeConnection GetDefaultVAE()
+        {
+            return PrimaryVAE
+                ?? RefinerVAE
+                ?? BaseVAE
+                ?? throw new NullReferenceException("No VAE");
         }
     }
 

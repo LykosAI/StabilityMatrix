@@ -32,7 +32,7 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly ILogger<OneClickInstallViewModel> logger;
     private readonly IPyRunner pyRunner;
-    private readonly INavigationService navigationService;
+    private readonly INavigationService<MainWindowViewModel> navigationService;
     private const string DefaultPackageName = "stable-diffusion-webui";
 
     [ObservableProperty]
@@ -73,7 +73,7 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
         IPrerequisiteHelper prerequisiteHelper,
         ILogger<OneClickInstallViewModel> logger,
         IPyRunner pyRunner,
-        INavigationService navigationService
+        INavigationService<MainWindowViewModel> navigationService
     )
     {
         this.settingsManager = settingsManager;

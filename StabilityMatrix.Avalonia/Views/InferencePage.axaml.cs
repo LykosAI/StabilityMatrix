@@ -60,4 +60,11 @@ public partial class InferencePage : UserControlBase
     {
         (DataContext as InferenceViewModel)!.AddTabCommand.Execute(InferenceProjectType.Upscale);
     }
+
+    private void AddTabMenu_ImageToImage_OnClick(object? sender, RoutedEventArgs e)
+    {
+        (DataContext as InferenceViewModel)!.AddTabCommand.Execute(
+            InferenceProjectType.ImageToImage
+        );
+    }
 }

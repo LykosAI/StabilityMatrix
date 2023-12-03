@@ -18,6 +18,7 @@ using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -89,8 +90,8 @@ public partial class CheckpointFolder : ViewModelBase
 
     public string TitleWithFilesCount =>
         CheckpointFiles.Any() || SubFolders.Any(f => f.CheckpointFiles.Any())
-            ? $"{Title} ({CheckpointFiles.Count + SubFolders.Sum(folder => folder.CheckpointFiles.Count)})"
-            : Title;
+            ? $"{FolderType.GetDescription() ?? FolderType.GetStringValue()} ({CheckpointFiles.Count + SubFolders.Sum(folder => folder.CheckpointFiles.Count)})"
+            : FolderType.GetDescription() ?? FolderType.GetStringValue();
 
     public ProgressViewModel Progress { get; } = new();
 
@@ -212,6 +213,10 @@ public partial class CheckpointFolder : ViewModelBase
                 var paths = files.Select(f => f.Path.LocalPath).ToArray();
                 await ImportFilesAsync(paths, settingsManager.Settings.IsImportAsConnected);
             }
+            else if (e.Data.Get("Context") is CheckpointFile file)
+            {
+                await MoveBetweenFolders(file);
+            }
         }
         catch (Exception)
         {
@@ -317,6 +322,71 @@ public partial class CheckpointFolder : ViewModelBase
                     IsExpanded = false,
                 }
             );
+        }
+    }
+
+    public async Task MoveBetweenFolders(CheckpointFile sourceFile)
+    {
+        var delay = 1.5f;
+        try
+        {
+            Progress.Value = 0;
+            var sourcePath = new FilePath(sourceFile.FilePath);
+            var fileNameWithoutExt = Path.GetFileNameWithoutExtension(sourcePath);
+            var sourceCmInfoPath = Path.Combine(
+                sourcePath.Directory,
+                $"{fileNameWithoutExt}.cm-info.json"
+            );
+            var sourcePreviewPath = Path.Combine(
+                sourcePath.Directory,
+                $"{fileNameWithoutExt}.preview.jpeg"
+            );
+            var destinationFilePath = Path.Combine(DirectoryPath, sourcePath.Name);
+            var destinationCmInfoPath = Path.Combine(
+                DirectoryPath,
+                $"{fileNameWithoutExt}.cm-info.json"
+            );
+            var destinationPreviewPath = Path.Combine(
+                DirectoryPath,
+                $"{fileNameWithoutExt}.preview.jpeg"
+            );
+
+            // Move files
+            if (File.Exists(sourcePath))
+            {
+                Progress.Text = $"Moving {sourcePath.Name}...";
+                await FileTransfers.MoveFileAsync(sourcePath, destinationFilePath);
+            }
+
+            Progress.Value = 33;
+            Progress.Text = $"Moving {sourcePath.Name} metadata...";
+
+            if (File.Exists(sourceCmInfoPath))
+            {
+                await FileTransfers.MoveFileAsync(sourceCmInfoPath, destinationCmInfoPath);
+            }
+
+            Progress.Value = 66;
+
+            if (File.Exists(sourcePreviewPath))
+            {
+                await FileTransfers.MoveFileAsync(sourcePreviewPath, destinationPreviewPath);
+            }
+
+            Progress.Value = 100;
+            Progress.Text = $"Moved {sourcePath.Name} to {Title}";
+            sourceFile.OnMoved();
+            BackgroundIndex();
+            delay = 0.5f;
+        }
+        catch (FileTransferExistsException)
+        {
+            Progress.Value = 0;
+            Progress.Text = "Failed to move file: destination file exists";
+        }
+        finally
+        {
+            DelayedClearProgress(TimeSpan.FromSeconds(delay));
         }
     }
 
@@ -505,7 +575,7 @@ public partial class CheckpointFolder : ViewModelBase
             return Enumerable.Empty<CheckpointFile>();
         }
 
-        return CheckpointFile.FromDirectoryIndex(DirectoryPath);
+        return CheckpointFile.FromDirectoryIndex(this, DirectoryPath);
     }
 
     /// <summary>

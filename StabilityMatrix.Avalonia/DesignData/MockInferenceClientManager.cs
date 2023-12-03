@@ -24,6 +24,9 @@ public partial class MockInferenceClientManager : ObservableObject, IInferenceCl
     public IObservableCollection<HybridModelFile> VaeModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
+    public IObservableCollection<HybridModelFile> ControlNetModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
     public IObservableCollection<ComfySampler> Samplers { get; } =
         new ObservableCollectionExtended<ComfySampler>(ComfySampler.Defaults);
 
@@ -63,6 +66,15 @@ public partial class MockInferenceClientManager : ObservableObject, IInferenceCl
     /// <inheritdoc />
     public Task CopyImageToInputAsync(
         FilePath imageFile,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task UploadInputImageAsync(
+        ImageSource image,
         CancellationToken cancellationToken = default
     )
     {

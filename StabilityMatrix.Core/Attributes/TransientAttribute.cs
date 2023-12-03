@@ -1,13 +1,14 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 
 namespace StabilityMatrix.Core.Attributes;
 
-[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors), MeansImplicitUse]
 [AttributeUsage(AttributeTargets.Class)]
 public class TransientAttribute : Attribute
 {
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
-    public Type? InterfaceType { get; init; }
+    public Type? InterfaceType { get; }
 
     public TransientAttribute() { }
 

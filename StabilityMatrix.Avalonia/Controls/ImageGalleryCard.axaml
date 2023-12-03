@@ -108,6 +108,11 @@
                             ItemsSource="{Binding ImageSources}"
                             SelectedItem="{Binding SelectedImage}"
                             SelectionMode="AlwaysSelected">
+                            <ListBox.Styles>
+                                <Style Selector="ListBox /template/ VirtualizingStackPanel">
+                                    <Setter Property="Orientation" Value="Horizontal" />
+                                </Style>
+                            </ListBox.Styles>
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:ImageSource}">
                                     <controls:BetterAdvancedImage

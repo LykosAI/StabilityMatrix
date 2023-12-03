@@ -24,13 +24,30 @@ public record HybridModelFile
 
     public LocalModelFile? Local { get; init; }
 
+    /// <summary>
+    /// Downloadable model information.
+    /// </summary>
+    public RemoteResource? DownloadableResource { get; init; }
+
+    public HybridModelType Type { get; init; }
+
     [MemberNotNullWhen(true, nameof(RemoteName))]
-    [MemberNotNullWhen(false, nameof(Local))]
     [JsonIgnore]
     public bool IsRemote => RemoteName != null;
 
+    [MemberNotNullWhen(true, nameof(DownloadableResource))]
+    public bool IsDownloadable => DownloadableResource != null;
+
     [JsonIgnore]
-    public string RelativePath => IsRemote ? RemoteName : Local.RelativePathFromSharedFolder;
+    public string RelativePath =>
+        Type switch
+        {
+            HybridModelType.Local => Local!.RelativePathFromSharedFolder,
+            HybridModelType.Remote => RemoteName!,
+            HybridModelType.Downloadable => DownloadableResource!.Value.FileName,
+            HybridModelType.None => throw new InvalidOperationException(),
+            _ => throw new ArgumentOutOfRangeException()
+        };
 
     [JsonIgnore]
     public string FileName => Path.GetFileName(RelativePath);
@@ -56,12 +73,21 @@ public record HybridModelFile
 
     public static HybridModelFile FromLocal(LocalModelFile local)
     {
-        return new HybridModelFile { Local = local };
+        return new HybridModelFile { Local = local, Type = HybridModelType.Local };
     }
 
     public static HybridModelFile FromRemote(string remoteName)
     {
-        return new HybridModelFile { RemoteName = remoteName };
+        return new HybridModelFile { RemoteName = remoteName, Type = HybridModelType.Remote };
+    }
+
+    public static HybridModelFile FromDownloadable(RemoteResource resource)
+    {
+        return new HybridModelFile
+        {
+            DownloadableResource = resource,
+            Type = HybridModelType.Downloadable
+        };
     }
 
     public string GetId()

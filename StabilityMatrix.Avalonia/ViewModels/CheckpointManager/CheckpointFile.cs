@@ -55,7 +55,13 @@ public partial class CheckpointFile : ViewModelBase
     [ObservableProperty]
     private CivitModelType modelType;
 
+    [ObservableProperty]
+    private CheckpointFolder parentFolder;
+
     public string FileName => Path.GetFileName(FilePath);
+
+    public bool CanShowTriggerWords =>
+        ConnectedModel != null && !string.IsNullOrWhiteSpace(ConnectedModel.TrainedWordsString);
 
     public ObservableCollection<string> Badges { get; set; } = new();
 
@@ -136,6 +142,8 @@ public partial class CheckpointFile : ViewModelBase
         RemoveFromParentList();
     }
 
+    public void OnMoved() => RemoveFromParentList();
+
     [RelayCommand]
     private async Task RenameAsync()
     {
@@ -210,6 +218,19 @@ public partial class CheckpointFile : ViewModelBase
         ProcessRunner.OpenUrl($"https://civitai.com/models/{ConnectedModel.ModelId}");
     }
 
+    [RelayCommand]
+    private Task CopyTriggerWords()
+    {
+        if (ConnectedModel == null)
+            return Task.CompletedTask;
+
+        var words = ConnectedModel.TrainedWordsString;
+        if (string.IsNullOrWhiteSpace(words))
+            return Task.CompletedTask;
+
+        return App.Clipboard.SetTextAsync(words);
+    }
+
     /// <summary>
     /// Indexes directory and yields all checkpoint files.
     /// First we match all files with supported extensions.
@@ -218,6 +239,7 @@ public partial class CheckpointFile : ViewModelBase
     /// - {filename}.cm-info.json (connected model info)
     /// </summary>
     public static IEnumerable<CheckpointFile> FromDirectoryIndex(
+        CheckpointFolder parentFolder,
         string directory,
         SearchOption searchOption = SearchOption.TopDirectoryOnly
     )
@@ -265,6 +287,8 @@ public partial class CheckpointFile : ViewModelBase
             {
                 checkpointFile.PreviewImagePath = Assets.NoImage.ToString();
             }
+
+            checkpointFile.ParentFolder = parentFolder;
 
             yield return checkpointFile;
         }
@@ -327,13 +351,14 @@ public partial class CheckpointFile : ViewModelBase
     /// Index with progress reporting.
     /// </summary>
     public static IEnumerable<CheckpointFile> FromDirectoryIndex(
+        CheckpointFolder parentFolder,
         string directory,
         IProgress<ProgressReport> progress,
         SearchOption searchOption = SearchOption.TopDirectoryOnly
     )
     {
         var current = 0ul;
-        foreach (var checkpointFile in FromDirectoryIndex(directory, searchOption))
+        foreach (var checkpointFile in FromDirectoryIndex(parentFolder, directory, searchOption))
         {
             current++;
             progress.Report(new ProgressReport(current, "Indexing", checkpointFile.FileName));

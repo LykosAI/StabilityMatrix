@@ -23,10 +23,12 @@
     
     <Style Selector="controls|SelectImageCard">
         <!-- Set Defaults -->
+        <Setter Property="Padding" Value="12"/>
         <Setter Property="Template">
             <ControlTemplate>
-                <controls:Card 
-                    Padding="12" 
+                <controls:Card
+                    IsCardVisualsEnabled="True"
+                    Padding="{TemplateBinding Padding}" 
                     VerticalContentAlignment="{TemplateBinding VerticalAlignment}"
                     VerticalAlignment="{TemplateBinding VerticalAlignment}"
                     HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
@@ -65,7 +67,9 @@
                                         Symbol="ImageCopyFilled"/>
                                     <TextBlock
                                         Grid.Row="1"
+                                        FontSize="{TemplateBinding FontSize}"
                                         Text="Drag an image here"
+                                        TextWrapping="WrapWithOverflow"
                                         Foreground="DarkGray">
                                     </TextBlock>
 
@@ -76,11 +80,14 @@
                                         Orientation="Horizontal">
                                         
                                         <TextBlock
+                                            FontSize="{TemplateBinding FontSize}"
                                             VerticalAlignment="Center"
                                             Foreground="DarkGray"
                                             Text="or"/>
                                         
                                         <Button
+                                            FontSize="{TemplateBinding FontSize}"
+                                            Command="{Binding SelectImageFromFilePickerCommand}"
                                             Content="Browse"
                                             Margin="4,0"
                                             Padding="4"/>

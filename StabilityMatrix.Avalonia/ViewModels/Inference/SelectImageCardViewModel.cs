@@ -1,30 +1,41 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using NLog;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.FileInterfaces;
+using Size = System.Drawing.Size;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(SelectImageCard))]
 [ManagedService]
 [Transient]
-public partial class SelectImageCardViewModel : ViewModelBase, IDropTarget
+public partial class SelectImageCardViewModel(INotificationService notificationService)
+    : ViewModelBase,
+        IDropTarget,
+        IComfyStep
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-    private readonly INotificationService notificationService;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSelectionAvailable))]
@@ -46,9 +57,49 @@ public partial class SelectImageCardViewModel : ViewModelBase, IDropTarget
             Convert.ToInt32(CurrentBitmap?.Size.Height ?? 0)
         );
 
-    public SelectImageCardViewModel(INotificationService notificationService)
+    /// <inheritdoc />
+    public void ApplyStep(ModuleApplyStepEventArgs e)
     {
-        this.notificationService = notificationService;
+        e.Builder.SetupImagePrimarySource(
+            ImageSource ?? throw new ValidationException("Input Image is required"),
+            CurrentBitmapSize ?? throw new ValidationException("Input Image is required"),
+            e.Builder.Connections.BatchIndex
+        );
+    }
+
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    private void LoadUserImage(ImageSource image)
+    {
+        var current = ImageSource;
+
+        ImageSource = image;
+
+        current?.Dispose();
+
+        // Cache the hash for later upload use
+        image.GetBlake3HashAsync().SafeFireAndForget();
+    }
+
+    [RelayCommand]
+    private async Task SelectImageFromFilePickerAsync()
+    {
+        var files = await App.StorageProvider.OpenFilePickerAsync(
+            new FilePickerOpenOptions
+            {
+                FileTypeFilter = new List<FilePickerFileType>
+                {
+                    new("Png") { Patterns = new[] { "*.png" } },
+                    new("Jpg") { Patterns = new[] { "*.jpg", "*.jpeg" } }
+                }
+            }
+        );
+
+        if (files.Count == 0)
+            return;
+
+        var image = new ImageSource(files[0].TryGetLocalPath()!);
+
+        LoadUserImage(image);
     }
 
     /// <inheritdoc />
@@ -85,14 +136,9 @@ public partial class SelectImageCardViewModel : ViewModelBase, IDropTarget
             {
                 e.Handled = true;
 
-                Dispatcher.UIThread.Post(() =>
-                {
-                    var current = ImageSource;
-
-                    ImageSource = new ImageSource(imageFile.AbsolutePath);
-
-                    current?.Dispose();
-                });
+                Dispatcher.UIThread.Post(
+                    () => LoadUserImage(new ImageSource(imageFile.AbsolutePath))
+                );
 
                 return;
             }
@@ -113,14 +159,7 @@ public partial class SelectImageCardViewModel : ViewModelBase, IDropTarget
                         return;
                     }
 
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        var current = ImageSource;
-
-                        ImageSource = new ImageSource(path);
-
-                        current?.Dispose();
-                    });
+                    Dispatcher.UIThread.Post(() => LoadUserImage(new ImageSource(path)));
                 }
             }
             catch (Exception ex)

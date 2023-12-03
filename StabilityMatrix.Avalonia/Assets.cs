@@ -109,49 +109,60 @@ internal static class Assets
         Compat.Switch(
             (
                 PlatformKind.Windows | PlatformKind.X64,
-                new RemoteResource(
-                    new Uri(
+                new RemoteResource
+                {
+                    Url = new Uri(
                         "https://www.python.org/ftp/python/3.10.11/python-3.10.11-embed-amd64.zip"
                     ),
-                    "608619f8619075629c9c69f361352a0da6ed7e62f83a0e19c63e0ea32eb7629d"
-                )
+                    HashSha256 = "608619f8619075629c9c69f361352a0da6ed7e62f83a0e19c63e0ea32eb7629d"
+                }
             ),
             (
                 PlatformKind.Linux | PlatformKind.X64,
-                new RemoteResource(
-                    new Uri(
+                new RemoteResource
+                {
+                    Url = new Uri(
                         "https://github.com/indygreg/python-build-standalone/releases/download/20230507/cpython-3.10.11+20230507-x86_64-unknown-linux-gnu-install_only.tar.gz"
                     ),
-                    "c5bcaac91bc80bfc29cf510669ecad12d506035ecb3ad85ef213416d54aecd79"
-                )
+                    HashSha256 = "c5bcaac91bc80bfc29cf510669ecad12d506035ecb3ad85ef213416d54aecd79"
+                }
             ),
             (
                 PlatformKind.MacOS | PlatformKind.Arm,
-                new RemoteResource(
-                    new Uri(
+                new RemoteResource
+                {
+                    Url = new Uri(
                         "https://github.com/indygreg/python-build-standalone/releases/download/20230507/cpython-3.10.11+20230507-aarch64-apple-darwin-install_only.tar.gz"
                     ),
-                    "8348bc3c2311f94ec63751fb71bd0108174be1c4def002773cf519ee1506f96f"
-                )
+                    HashSha256 = "8348bc3c2311f94ec63751fb71bd0108174be1c4def002773cf519ee1506f96f"
+                }
             )
         );
 
     public static IReadOnlyList<RemoteResource> DefaultCompletionTags { get; } =
         new[]
         {
-            new RemoteResource(
-                new Uri("https://cdn.lykos.ai/tags/danbooru.csv"),
-                "b84a879f1d9c47bf4758d66542598faa565b1571122ae12e7b145da8e7a4c1c6"
-            ),
-            new RemoteResource(
-                new Uri("https://cdn.lykos.ai/tags/e621.csv"),
-                "ef7ea148ad865ad936d0c1ee57f0f83de723b43056c70b07fd67dbdbb89cae35"
-            )
+            new RemoteResource
+            {
+                Url = new Uri("https://cdn.lykos.ai/tags/danbooru.csv"),
+                HashSha256 = "b84a879f1d9c47bf4758d66542598faa565b1571122ae12e7b145da8e7a4c1c6"
+            },
+            new RemoteResource
+            {
+                Url = new Uri("https://cdn.lykos.ai/tags/e621.csv"),
+                HashSha256 = "ef7ea148ad865ad936d0c1ee57f0f83de723b43056c70b07fd67dbdbb89cae35"
+            }
         };
 
     public static Uri DiscordServerUrl { get; } = new("https://discord.com/invite/TUrgfECxHz");
 
+    public static Uri LykosUrl { get; } = new("https://lykos.ai");
+
     public static Uri PatreonUrl { get; } = new("https://patreon.com/StabilityMatrix");
+
+    public static Uri CivitAIUrl { get; } = new("https://civitai.com");
+
+    public static Uri LykosForgotPasswordUrl { get; } = new("https://lykos.ai/forgot-password");
 
     /// <summary>
     /// Yield AvaloniaResources given a relative directory path within the 'Assets' folder.

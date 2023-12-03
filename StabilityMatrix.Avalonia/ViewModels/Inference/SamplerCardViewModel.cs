@@ -1,10 +1,11 @@
 ﻿using System;
-using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -21,10 +22,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(SamplerCard))]
 [ManagedService]
 [Transient]
-public partial class SamplerCardViewModel
-    : LoadableViewModelBase,
-        IParametersLoadableState,
-        IComfyStep
+public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLoadableState, IComfyStep
 {
     public const string ModuleKey = "Sampler";
 
@@ -80,15 +78,12 @@ public partial class SamplerCardViewModel
 
     private int TotalSteps => Steps + RefinerSteps;
 
-    public SamplerCardViewModel(
-        IInferenceClientManager clientManager,
-        ServiceManager<ViewModelBase> vmFactory
-    )
+    public SamplerCardViewModel(IInferenceClientManager clientManager, ServiceManager<ViewModelBase> vmFactory)
     {
         ClientManager = clientManager;
         ModulesCardViewModel = vmFactory.Get<StackEditableCardViewModel>(modulesCard =>
         {
-            modulesCard.Title = "Addons";
+            modulesCard.Title = Resources.Label_Addons;
             modulesCard.AvailableModules = new[] { typeof(FreeUModule), typeof(ControlNetModule) };
             modulesCard.InitializeDefaults();
         });
@@ -146,8 +141,7 @@ public partial class SamplerCardViewModel
         var primaryLatent = e.Builder.GetPrimaryAsLatent(vae);
 
         // Set primary sampler and scheduler
-        e.Builder.Connections.PrimarySampler =
-            SelectedSampler ?? throw new ValidationException("Sampler not selected");
+        e.Builder.Connections.PrimarySampler = SelectedSampler ?? throw new ValidationException("Sampler not selected");
         e.Builder.Connections.PrimaryScheduler =
             SelectedScheduler ?? throw new ValidationException("Scheduler not selected");
 
@@ -159,9 +153,7 @@ public partial class SamplerCardViewModel
                 new ComfyNodeBuilder.KSampler
                 {
                     Name = "Sampler",
-                    Model =
-                        e.Builder.Connections.BaseModel
-                        ?? throw new ArgumentException("No BaseModel"),
+                    Model = e.Builder.Connections.BaseModel ?? throw new ArgumentException("No BaseModel"),
                     Seed = e.Builder.Connections.Seed,
                     SamplerName = e.Builder.Connections.PrimarySampler?.Name!,
                     Scheduler = e.Builder.Connections.PrimaryScheduler?.Name!,
@@ -183,9 +175,7 @@ public partial class SamplerCardViewModel
                 new ComfyNodeBuilder.KSamplerAdvanced
                 {
                     Name = "Sampler",
-                    Model =
-                        e.Builder.Connections.BaseModel
-                        ?? throw new ArgumentException("No BaseModel"),
+                    Model = e.Builder.Connections.BaseModel ?? throw new ArgumentException("No BaseModel"),
                     AddNoise = true,
                     NoiseSeed = e.Builder.Connections.Seed,
                     Steps = TotalSteps,
@@ -206,9 +196,7 @@ public partial class SamplerCardViewModel
                 new ComfyNodeBuilder.KSamplerAdvanced
                 {
                     Name = "Refiner_Sampler",
-                    Model =
-                        e.Builder.Connections.RefinerModel
-                        ?? throw new ArgumentException("No RefinerModel"),
+                    Model = e.Builder.Connections.RefinerModel ?? throw new ArgumentException("No RefinerModel"),
                     AddNoise = false,
                     NoiseSeed = e.Builder.Connections.Seed,
                     Steps = TotalSteps,
@@ -254,18 +242,11 @@ public partial class SamplerCardViewModel
 
         if (
             !string.IsNullOrEmpty(parameters.Sampler)
-            && GenerationParametersConverter.TryGetSamplerScheduler(
-                parameters.Sampler,
-                out var samplerScheduler
-            )
+            && GenerationParametersConverter.TryGetSamplerScheduler(parameters.Sampler, out var samplerScheduler)
         )
         {
-            SelectedSampler = ClientManager.Samplers.FirstOrDefault(
-                s => s == samplerScheduler.Sampler
-            );
-            SelectedScheduler = ClientManager.Schedulers.FirstOrDefault(
-                s => s == samplerScheduler.Scheduler
-            );
+            SelectedSampler = ClientManager.Samplers.FirstOrDefault(s => s == samplerScheduler.Sampler);
+            SelectedScheduler = ClientManager.Schedulers.FirstOrDefault(s => s == samplerScheduler.Scheduler);
         }
     }
 

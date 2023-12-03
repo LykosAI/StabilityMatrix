@@ -600,6 +600,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Addons.
+        /// </summary>
+        public static string Label_Addons {
+            get {
+                return ResourceManager.GetString("Label_Addons", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add Stability Matrix to the Start Menu.
         /// </summary>
         public static string Label_AddToStartMenu {
@@ -1757,6 +1766,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_ResetCheckpointsCache_Details {
             get {
                 return ResourceManager.GetString("Label_ResetCheckpointsCache_Details", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save Intermediate Image.
+        /// </summary>
+        public static string Label_SaveIntermediateImage {
+            get {
+                return ResourceManager.GetString("Label_SaveIntermediateImage", resourceCulture);
             }
         }
         

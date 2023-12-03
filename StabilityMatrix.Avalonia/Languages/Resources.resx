@@ -858,4 +858,10 @@
   <data name="Label_SystemInformation" xml:space="preserve">
     <value>System Information</value>
   </data>
+  <data name="Label_Addons" xml:space="preserve">
+    <value>Addons</value><comment>Inference Sampler Addons</comment>
+  </data>
+  <data name="Label_SaveIntermediateImage" xml:space="preserve">
+    <value>Save Intermediate Image</value><comment>Inference module step to save an intermediate image</comment>
+  </data>
 </root>

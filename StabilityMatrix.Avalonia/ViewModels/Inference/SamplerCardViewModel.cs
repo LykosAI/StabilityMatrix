@@ -85,7 +85,6 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         {
             modulesCard.Title = Resources.Label_Addons;
             modulesCard.AvailableModules = new[] { typeof(FreeUModule), typeof(ControlNetModule) };
-            modulesCard.InitializeDefaults();
         });
 
         ModulesCardViewModel.CardAdded += (

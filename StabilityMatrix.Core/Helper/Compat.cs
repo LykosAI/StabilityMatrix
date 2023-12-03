@@ -51,7 +51,7 @@ public static class Compat
     /// <summary>
     /// Set AppDataHome to a custom path. Used for testing.
     /// </summary>
-    internal static void SetAppDataHome(string path)
+    public static void SetAppDataHome(string path)
     {
         AppDataHome = path;
     }
@@ -136,17 +136,7 @@ public static class Compat
 
         AppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
-        if (
-            Environment.GetEnvironmentVariable("STABILITY_MATRIX_APPDATAHOME") is
-            { } appDataOverride
-        )
-        {
-            AppDataHome = appDataOverride;
-        }
-        else
-        {
-            AppDataHome = AppData + AppName;
-        }
+        AppDataHome = AppData + AppName;
     }
 
     /// <summary>

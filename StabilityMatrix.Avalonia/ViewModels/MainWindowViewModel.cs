@@ -78,7 +78,7 @@ public partial class MainWindowViewModel : ViewModelBase
         SelectedCategory ??= Pages.FirstOrDefault();
     }
 
-    public override async Task OnLoadedAsync()
+    protected override async Task OnInitialLoadedAsync()
     {
         await base.OnLoadedAsync();
 
@@ -102,16 +102,20 @@ public partial class MainWindowViewModel : ViewModelBase
         // Index checkpoints if we dont have
         Task.Run(() => settingsManager.IndexCheckpoints()).SafeFireAndForget();
 
-        if (!App.IsHeadlessMode)
+        // Disable preload for now, might be causing https://github.com/LykosAI/StabilityMatrix/issues/249
+        /*if (!App.IsHeadlessMode)
         {
             PreloadPages();
-        }
+        }*/
 
         Program.StartupTimer.Stop();
         var startupTime = CodeTimer.FormatTime(Program.StartupTimer.Elapsed);
         Logger.Info($"App started ({startupTime})");
 
-        if (Program.Args.DebugOneClickInstall || !settingsManager.Settings.InstalledPackages.Any())
+        if (
+            Program.Args.DebugOneClickInstall
+            || settingsManager.Settings.InstalledPackages.Count == 0
+        )
         {
             var viewModel = dialogFactory.Get<OneClickInstallViewModel>();
             var dialog = new BetterContentDialog

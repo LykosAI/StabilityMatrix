@@ -48,8 +48,13 @@ public class InstalledPackage : IJsonOnDeserialized
     public List<LaunchOption>? LaunchArgs { get; set; }
     public DateTimeOffset? LastUpdateCheck { get; set; }
     public bool UpdateAvailable { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter<TorchVersion>))]
     public TorchVersion? PreferredTorchVersion { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter<SharedFolderMethod>))]
     public SharedFolderMethod? PreferredSharedFolderMethod { get; set; }
+
     public bool UseSharedOutputFolder { get; set; }
 
     /// <summary>

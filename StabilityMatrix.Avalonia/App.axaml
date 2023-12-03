@@ -22,6 +22,8 @@
                  <ResourceInclude Source="Controls/EditorFlyouts.axaml"/>
                  <ResourceInclude Source="Controls/Scroll/BetterScrollViewer.axaml"/>
                  <ResourceInclude Source="Controls/ImageFolderCard.axaml"/>
+                 <ResourceInclude Source="Styles/ControlThemes/HyperlinkIconButtonStyles.axaml"/>
+                 <ResourceInclude Source="Styles/ControlThemes/ListBoxStyles.axaml"/>
              </ResourceDictionary.MergedDictionaries>
              
              <idcr:ControlRecycling x:Key="ControlRecyclingKey" />
@@ -39,6 +41,7 @@
         <StyleInclude Source="avares://Dock.Avalonia/Themes/DockFluentTheme.axaml" />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
+        <StyleInclude Source="avares://FluentAvalonia.BreadcrumbBar/Styling/Styles.axaml" />
         <StyleInclude Source="Styles/ProgressRing.axaml"/>
         <StyleInclude Source="Styles/ButtonStyles.axaml"/>
         <StyleInclude Source="Styles/SplitButtonStyles.axaml"/>
@@ -62,6 +65,8 @@
         <StyleInclude Source="Controls/FreeUCard.axaml"/>
         <StyleInclude Source="Controls/Paginator.axaml"/>
         <StyleInclude Source="Controls/SelectableImageCard/SelectableImageButton.axaml"/>
+        <StyleInclude Source="Controls/SettingsAccountLinkExpander.axaml"/>
+        <StyleInclude Source="Controls/StarsRating.axaml"/>
         
         <Style Selector="DockControl">
             <Setter Property="(DockProperties.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />

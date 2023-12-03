@@ -34,6 +34,8 @@ public partial class PackageModificationDialog : UserControlBase
 
             textMate.SetGrammar(scope);
             textMate.SetTheme(options.LoadTheme(ThemeName.DarkPlus));
+
+            editor.Options.ShowBoxForControlCharacters = false;
         }
 
         EventManager.Instance.ScrollToBottomRequested += (_, _) =>

@@ -7,6 +7,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 

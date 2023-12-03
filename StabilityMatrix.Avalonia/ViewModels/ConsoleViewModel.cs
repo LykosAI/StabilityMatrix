@@ -297,6 +297,12 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
         {
             // Get the current line, we'll insert spaces from start to end
             var currentLine = Document.GetLineByOffset(writeCursor);
+            // Must be smaller than total lines
+            currentLine =
+                currentLine.LineNumber < Document.LineCount
+                    ? currentLine
+                    : Document.GetLineByNumber(Document.LineCount - 1);
+
             // Make some spaces to insert
             var spaces = new string(' ', currentLine.Length);
 

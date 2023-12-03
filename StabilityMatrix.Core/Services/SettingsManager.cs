@@ -6,7 +6,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using AsyncAwaitBestPractices;
 using NLog;
-using Refit;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -22,10 +21,9 @@ public class SettingsManager : ISettingsManager
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly ReaderWriterLockSlim FileLock = new();
 
-    private static readonly string GlobalSettingsPath = Path.Combine(
-        Compat.AppDataHome,
-        "global.json"
-    );
+    private static string GlobalSettingsPath => Path.Combine(Compat.AppDataHome, "global.json");
+
+    public string? LibraryDirOverride { private get; set; }
 
     private readonly string? originalEnvPath = Environment.GetEnvironmentVariable(
         "PATH",
@@ -130,7 +128,6 @@ public class SettingsManager : ISettingsManager
         }
         using var transaction = BeginTransaction();
         func(transaction.Settings);
-        transaction.Dispose();
     }
 
     /// <inheritdoc />
@@ -275,6 +272,17 @@ public class SettingsManager : ISettingsManager
         if (IsLibraryDirSet && !forceReload)
             return true;
 
+        // 0. Check Override
+        if (!string.IsNullOrEmpty(LibraryDirOverride))
+        {
+            var fullOverridePath = Path.GetFullPath(LibraryDirOverride);
+            Logger.Info("Using library override path: {Path}", fullOverridePath);
+            LibraryDir = fullOverridePath;
+            SetStaticLibraryPaths();
+            LoadSettings();
+            return true;
+        }
+
         // 1. Check portable mode
         var appDir = Compat.AppCurrentDir;
         IsPortableMode = File.Exists(Path.Combine(appDir, "Data", ".sm-portable"));
@@ -298,7 +306,7 @@ public class SettingsManager : ISettingsManager
 
             if (
                 !string.IsNullOrWhiteSpace(librarySettings?.LibraryPath)
-                && Directory.Exists(librarySettings?.LibraryPath)
+                && Directory.Exists(librarySettings.LibraryPath)
             )
             {
                 LibraryDir = librarySettings.LibraryPath;
@@ -608,23 +616,38 @@ public class SettingsManager : ISettingsManager
         FileLock.EnterReadLock();
         try
         {
-            if (!File.Exists(SettingsPath))
+            var settingsFile = new FilePath(SettingsPath);
+
+            if (!settingsFile.Exists)
             {
-                File.Create(SettingsPath).Close();
-                Settings.Theme = "Dark";
-                var defaultSettingsJson = JsonSerializer.Serialize(Settings);
-                File.WriteAllText(SettingsPath, defaultSettingsJson);
+                settingsFile.Directory?.Create();
+                settingsFile.Create();
+
+                var settingsJson = JsonSerializer.Serialize(Settings);
+                settingsFile.WriteAllText(settingsJson);
+
+                Loaded?.Invoke(this, EventArgs.Empty);
                 return;
             }
 
-            var settingsContent = File.ReadAllText(SettingsPath);
-            var modifiedDefaultSerializerOptions =
-                SystemTextJsonContentSerializer.GetDefaultJsonSerializerOptions();
-            modifiedDefaultSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-            Settings = JsonSerializer.Deserialize<Settings>(
-                settingsContent,
-                modifiedDefaultSerializerOptions
-            )!;
+            using var fileStream = settingsFile.Info.OpenRead();
+
+            if (fileStream.Length == 0)
+            {
+                Logger.Warn("Settings file is empty, using default settings");
+                return;
+            }
+
+            if (
+                JsonSerializer.Deserialize(
+                    fileStream,
+                    SettingsSerializerContext.Default.Settings
+                ) is
+                { } loadedSettings
+            )
+            {
+                Settings = loadedSettings;
+            }
 
             Loaded?.Invoke(this, EventArgs.Empty);
         }
@@ -636,24 +659,23 @@ public class SettingsManager : ISettingsManager
 
     protected virtual void SaveSettings()
     {
-        FileLock.TryEnterWriteLock(100000);
+        FileLock.TryEnterWriteLock(TimeSpan.FromSeconds(30));
         try
         {
-            if (!File.Exists(SettingsPath))
+            var settingsFile = new FilePath(SettingsPath);
+
+            if (!settingsFile.Exists)
             {
-                File.Create(SettingsPath).Close();
+                settingsFile.Directory?.Create();
+                settingsFile.Create();
             }
 
-            var json = JsonSerializer.Serialize(
+            var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(
                 Settings,
-                new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                    Converters = { new JsonStringEnumConverter() }
-                }
+                SettingsSerializerContext.Default.Settings
             );
-            File.WriteAllText(SettingsPath, json);
+
+            File.WriteAllBytes(SettingsPath, jsonBytes);
         }
         finally
         {
@@ -685,9 +707,9 @@ public class SettingsManager : ISettingsManager
             {
                 try
                 {
-                    await Task.Delay(delay, cts.Token);
+                    await Task.Delay(delay, cts.Token).ConfigureAwait(false);
 
-                    await SaveSettingsAsync();
+                    await SaveSettingsAsync().ConfigureAwait(false);
                 }
                 catch (TaskCanceledException) { }
                 finally

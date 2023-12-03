@@ -558,6 +558,11 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
         CurrentPageNumber = TotalPages;
     }
 
+    public void ClearSearchQuery()
+    {
+        SearchQuery = string.Empty;
+    }
+
     partial void OnShowNsfwChanged(bool value)
     {
         settingsManager.Transaction(s => s.ModelBrowserNsfwEnabled, value);

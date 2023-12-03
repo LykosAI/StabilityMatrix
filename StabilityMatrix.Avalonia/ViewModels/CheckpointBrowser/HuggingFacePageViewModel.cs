@@ -3,16 +3,23 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls.Notifications;
+using Avalonia.Data;
+using Avalonia.Input;
+using Avalonia.Markup.Xaml.MarkupExtensions;
+using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
-using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models.HuggingFace;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -24,19 +31,16 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
 
-namespace StabilityMatrix.Avalonia.ViewModels;
+namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 [View(typeof(Views.HuggingFacePage))]
 [Singleton]
-public partial class HuggingFacePageViewModel : PageViewModelBase
+public partial class HuggingFacePageViewModel : TabViewModelBase
 {
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly ISettingsManager settingsManager;
     private readonly INotificationService notificationService;
-    public override string Title => "Hugging Face";
-    public override IconSource IconSource =>
-        new FASymbolIconSource { Symbol = "fa-solid fa-file-code" };
-
+    
     public SourceCache<HuggingfaceItem, string> ItemsCache { get; } =
         new(i => i.RepositoryPath + i.ModelName);
 
@@ -98,10 +102,7 @@ public partial class HuggingFacePageViewModel : PageViewModelBase
 
             TotalProgress = new ProgressReport(current: currentSum, total: totalSum);
         };
-    }
-
-    public override void OnLoaded()
-    {
+        
         using var reader = new StreamReader(Assets.HfPackagesJson.Open());
         var packages =
             JsonSerializer.Deserialize<IReadOnlyList<HuggingfaceItem>>(
@@ -110,6 +111,15 @@ public partial class HuggingFacePageViewModel : PageViewModelBase
             ) ?? throw new InvalidOperationException("Failed to read hf-packages.json");
 
         ItemsCache.EditDiff(packages, (a, b) => a.RepositoryPath == b.RepositoryPath);
+
+        var btn = new CommandBarButton();
+        var obs = btn.GetObservable(InputElement.IsEnabledProperty)
+            .Select(_ => NumSelected > 0);
+        btn.Bind(InputElement.IsEnabledProperty, obs);
+        btn.Command = ImportSelectedCommand;
+        btn.Foreground = new SolidColorBrush(Colors.Lime);
+        btn.IconSource = new SymbolIconSource { Symbol = Symbol.Download };
+        PrimaryCommands.Add(btn);
     }
 
     public void ClearSelection()
@@ -129,7 +139,8 @@ public partial class HuggingFacePageViewModel : PageViewModelBase
         }
     }
 
-    public async Task ImportSelected()
+    [RelayCommand]
+    private async Task ImportSelected()
     {
         var selected = Categories.SelectMany(c => c.Items).Where(i => i.IsSelected).ToArray();
 
@@ -189,4 +200,6 @@ public partial class HuggingFacePageViewModel : PageViewModelBase
                 TotalProgress = new ProgressReport(0, 0);
             });
     }
+
+    public override string Header => "Hugging Face";
 }

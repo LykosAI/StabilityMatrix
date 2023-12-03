@@ -8,45 +8,35 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
-    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:huggingFacePage="clr-namespace:StabilityMatrix.Avalonia.ViewModels.HuggingFacePage"
-    xmlns:huggingFace="clr-namespace:StabilityMatrix.Avalonia.Models.HuggingFace"
     xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
+    xmlns:checkpointBrowser="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser"
     d:DataContext="{x:Static mocks:DesignData.HuggingFacePageViewModel}"
     d:DesignHeight="650"
     d:DesignWidth="800"
     x:CompileBindings="True"
-    x:DataType="vm:HuggingFacePageViewModel"
+    x:DataType="checkpointBrowser:HuggingFacePageViewModel"
     Focusable="True"
     mc:Ignorable="d">
     <ScrollViewer>
         <Grid RowDefinitions="Auto,Auto,Auto,Auto" 
-              ColumnDefinitions="*, Auto" 
+              ColumnDefinitions="Auto, *" 
               Margin="8"
               HorizontalAlignment="Stretch">
-            <Grid ColumnDefinitions="Auto, *" 
-                  HorizontalAlignment="Stretch">
-                <TextBlock
-                           Text="Hugging Face Model Import"
-                           FontSize="22"
-                           VerticalAlignment="Center"/>
-                
-                <TextBlock Grid.Column="1"
-                           VerticalAlignment="Center"
-                           HorizontalAlignment="Right"
-                           IsVisible="{Binding !!NumSelected}"
-                           Margin="8,0,0,0">
-                    <Run Text="{Binding NumSelected}" />
-                    <Run Text="models selected" />
-                </TextBlock>
-            </Grid>
+            <TextBlock Grid.Column="1"
+                       VerticalAlignment="Center"
+                       IsVisible="{Binding !!NumSelected}"
+                       Margin="8,0,8,0">
+                <Run Text="{Binding NumSelected}" />
+                <Run Text="models selected" />
+            </TextBlock>
             
             <ui:CommandBar
                 Grid.Row="0"
-                Grid.Column="1"
-                Margin="8,-1,0,0"
+                Grid.Column="0"
+                Margin="0,-1,0,0"
                 VerticalAlignment="Center"
-                HorizontalAlignment="Right"
+                HorizontalAlignment="Left"
                 VerticalContentAlignment="Center"
                 DefaultLabelPosition="Right">
                 <ui:CommandBar.PrimaryCommands>
@@ -66,6 +56,7 @@
                         Command="{Binding ClearSelection}"
                         IsEnabled="{Binding !!NumSelected}"
                         Label="{x:Static lang:Resources.Action_ClearSelection}" />
+                    <ui:CommandBarSeparator IsVisible="{Binding !!NumSelected}" />
                 </ui:CommandBar.PrimaryCommands>
             </ui:CommandBar>
             

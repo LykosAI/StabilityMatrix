@@ -5,6 +5,7 @@ using NLog;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -24,8 +25,7 @@ public class A3WebUI : BaseGitPackage
     public override string LicenseType => "AGPL-3.0";
     public override string LicenseUrl =>
         "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/master/LICENSE.txt";
-    public override string Blurb =>
-        "A browser interface based on Gradio library for Stable Diffusion";
+    public override string Blurb => "A browser interface based on Gradio library for Stable Diffusion";
     public override string LaunchCommand => "launch.py";
     public override Uri PreviewImageUri =>
         new("https://github.com/AUTOMATIC1111/stable-diffusion-webui/raw/master/screenshot.png");
@@ -98,13 +98,10 @@ public class A3WebUI : BaseGitPackage
             {
                 Name = "VRAM",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper
-                    .IterGpuInfo()
-                    .Select(gpu => gpu.MemoryLevel)
-                    .Max() switch
+                InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
                 {
-                    Level.Low => "--lowvram",
-                    Level.Medium => "--medvram",
+                    MemoryLevel.Low => "--lowvram",
+                    MemoryLevel.Medium => "--medvram",
                     _ => null
                 },
                 Options = new() { "--lowvram", "--medvram", "--medvram-sdxl" }
@@ -214,9 +211,7 @@ public class A3WebUI : BaseGitPackage
         }
 
         // Install requirements file
-        progress?.Report(
-            new ProgressReport(-1f, "Installing Package Requirements", isIndeterminate: true)
-        );
+        progress?.Report(new ProgressReport(-1f, "Installing Package Requirements", isIndeterminate: true));
         Logger.Info("Installing requirements_versions.txt");
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
@@ -274,18 +269,13 @@ public class A3WebUI : BaseGitPackage
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        progress?.Report(
-            new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true)
-        );
+        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true));
 
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         await venvRunner
             .PipInstall(
-                new PipInstallArgs()
-                    .WithTorch("==2.0.1")
-                    .WithTorchVision()
-                    .WithTorchExtraIndex("rocm5.1.1"),
+                new PipInstallArgs().WithTorch("==2.0.1").WithTorchVision().WithTorchExtraIndex("rocm5.1.1"),
                 onConsoleOutput
             )
             .ConfigureAwait(false);

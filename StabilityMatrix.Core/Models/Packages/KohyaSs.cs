@@ -4,6 +4,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -32,11 +33,9 @@ public class KohyaSs : BaseGitPackage
     public override string Name => "kohya_ss";
     public override string DisplayName { get; set; } = "kohya_ss";
     public override string Author => "bmaltais";
-    public override string Blurb =>
-        "A Windows-focused Gradio GUI for Kohya's Stable Diffusion trainers";
+    public override string Blurb => "A Windows-focused Gradio GUI for Kohya's Stable Diffusion trainers";
     public override string LicenseType => "Apache-2.0";
-    public override string LicenseUrl =>
-        "https://github.com/bmaltais/kohya_ss/blob/master/LICENSE.md";
+    public override string LicenseUrl => "https://github.com/bmaltais/kohya_ss/blob/master/LICENSE.md";
     public override string LaunchCommand => "kohya_gui.py";
 
     public override Uri PreviewImageUri =>
@@ -49,16 +48,14 @@ public class KohyaSs : BaseGitPackage
 
     public override TorchVersion GetRecommendedTorchVersion() => TorchVersion.Cuda;
 
-    public override string Disclaimer =>
-        "Nvidia GPU with at least 8GB VRAM is recommended. May be unstable on Linux.";
+    public override string Disclaimer => "Nvidia GPU with at least 8GB VRAM is recommended. May be unstable on Linux.";
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.UltraNightmare;
 
     public override bool OfferInOneClickInstaller => false;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
     public override IEnumerable<TorchVersion> AvailableTorchVersions => new[] { TorchVersion.Cuda };
-    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
-        new[] { SharedFolderMethod.None };
+    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods => new[] { SharedFolderMethod.None };
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new()
@@ -126,9 +123,7 @@ public class KohyaSs : BaseGitPackage
     {
         if (Compat.IsWindows)
         {
-            progress?.Report(
-                new ProgressReport(-1f, "Installing prerequisites...", isIndeterminate: true)
-            );
+            progress?.Report(new ProgressReport(-1f, "Installing prerequisites...", isIndeterminate: true));
             await PrerequisiteHelper.InstallTkinterIfNecessary(progress).ConfigureAwait(false);
         }
 
@@ -203,9 +198,7 @@ public class KohyaSs : BaseGitPackage
                 """
             );
 
-            var replacementAcceleratePath = Compat.IsWindows
-                ? @".\venv\scripts\accelerate"
-                : "./venv/bin/accelerate";
+            var replacementAcceleratePath = Compat.IsWindows ? @".\venv\scripts\accelerate" : "./venv/bin/accelerate";
 
             var replacer = scope.InvokeMethod(
                 "StringReplacer",
@@ -259,10 +252,7 @@ public class KohyaSs : BaseGitPackage
     }
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
-    public override Dictionary<
-        SharedOutputType,
-        IReadOnlyList<string>
-    >? SharedOutputFolders { get; }
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders { get; }
 
     public override string MainBranch => "master";
 
@@ -278,13 +268,7 @@ public class KohyaSs : BaseGitPackage
         if (!Compat.IsWindows)
             return env;
 
-        var tkPath = Path.Combine(
-            SettingsManager.LibraryDir,
-            "Assets",
-            "Python310",
-            "tcl",
-            "tcl8.6"
-        );
+        var tkPath = Path.Combine(SettingsManager.LibraryDir, "Assets", "Python310", "tcl", "tcl8.6");
         env["TCL_LIBRARY"] = tkPath;
         env["TK_LIBRARY"] = tkPath;
 

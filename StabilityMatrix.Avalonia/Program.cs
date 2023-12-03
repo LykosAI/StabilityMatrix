@@ -24,6 +24,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Updater;
 
 namespace StabilityMatrix.Avalonia;
@@ -53,7 +54,8 @@ public static class Program
 
         SetDebugBuild();
 
-        var parseResult = Parser.Default
+        var parseResult = Parser
+            .Default
             .ParseArguments<AppArgs>(args)
             .WithNotParsed(errors =>
             {
@@ -68,6 +70,7 @@ public static class Program
         if (Args.HomeDirectoryOverride is { } homeDir)
         {
             Compat.SetAppDataHome(homeDir);
+            GlobalConfig.HomeDir = homeDir;
         }
 
         // Launched for custom URI scheme, handle and exit
@@ -77,11 +80,7 @@ public static class Program
             {
                 if (
                     Uri.TryCreate(uriArg, UriKind.Absolute, out var uri)
-                    && string.Equals(
-                        uri.Scheme,
-                        UriHandler.Scheme,
-                        StringComparison.OrdinalIgnoreCase
-                    )
+                    && string.Equals(uri.Scheme, UriHandler.Scheme, StringComparison.OrdinalIgnoreCase)
                 )
                 {
                     UriHandler.SendAndExit(uri);
@@ -147,20 +146,10 @@ public static class Program
 
         if (Args.DisableGpuRendering)
         {
-            app = app.With(
-                    new Win32PlatformOptions
-                    {
-                        RenderingMode = new[] { Win32RenderingMode.Software }
-                    }
-                )
+            app = app.With(new Win32PlatformOptions { RenderingMode = new[] { Win32RenderingMode.Software } })
+                .With(new X11PlatformOptions { RenderingMode = new[] { X11RenderingMode.Software } })
                 .With(
-                    new X11PlatformOptions { RenderingMode = new[] { X11RenderingMode.Software } }
-                )
-                .With(
-                    new AvaloniaNativePlatformOptions
-                    {
-                        RenderingMode = new[] { AvaloniaNativeRenderingMode.Software }
-                    }
+                    new AvaloniaNativePlatformOptions { RenderingMode = new[] { AvaloniaNativeRenderingMode.Software } }
                 );
         }
 
@@ -257,10 +246,7 @@ public static class Program
         try
         {
             var process = Process.GetProcessById(pid);
-            process
-                .WaitForExitAsync(new CancellationTokenSource(timeout).Token)
-                .GetAwaiter()
-                .GetResult();
+            process.WaitForExitAsync(new CancellationTokenSource(timeout).Token).GetAwaiter().GetResult();
         }
         catch (OperationCanceledException)
         {
@@ -281,8 +267,7 @@ public static class Program
     {
         SentrySdk.Init(o =>
         {
-            o.Dsn =
-                "https://eac7a5ea065d44cf9a8565e0f1817da2@o4505314753380352.ingest.sentry.io/4505314756067328";
+            o.Dsn = "https://eac7a5ea065d44cf9a8565e0f1817da2@o4505314753380352.ingest.sentry.io/4505314756067328";
             o.StackTraceMode = StackTraceMode.Enhanced;
             o.TracesSampleRate = 1.0;
             o.IsGlobalModeEnabled = true;
@@ -309,10 +294,7 @@ public static class Program
         });
     }
 
-    private static void TaskScheduler_UnobservedTaskException(
-        object? sender,
-        UnobservedTaskExceptionEventArgs e
-    )
+    private static void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
         if (e.Exception is Exception ex)
         {
@@ -320,10 +302,7 @@ public static class Program
         }
     }
 
-    private static void CurrentDomain_UnhandledException(
-        object sender,
-        UnhandledExceptionEventArgs e
-    )
+    private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
         if (e.ExceptionObject is not Exception ex)
             return;
@@ -340,15 +319,9 @@ public static class Program
             Logger.Fatal(ex, "Unhandled {Type}: {Message}", ex.GetType().Name, ex.Message);
         }
 
-        if (
-            Application.Current?.ApplicationLifetime
-            is IClassicDesktopStyleApplicationLifetime lifetime
-        )
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
         {
-            var dialog = new ExceptionDialog
-            {
-                DataContext = new ExceptionViewModel { Exception = ex }
-            };
+            var dialog = new ExceptionDialog { DataContext = new ExceptionViewModel { Exception = ex } };
 
             var mainWindow = lifetime.MainWindow;
             // We can only show dialog if main window exists, and is visible

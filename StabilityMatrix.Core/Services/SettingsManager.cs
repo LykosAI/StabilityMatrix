@@ -6,7 +6,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using AsyncAwaitBestPractices;
 using NLog;
-using Refit;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -108,9 +107,7 @@ public class SettingsManager : ISettingsManager
     {
         if (!IsLibraryDirSet)
         {
-            throw new InvalidOperationException(
-                "LibraryDir not set when BeginTransaction was called"
-            );
+            throw new InvalidOperationException("LibraryDir not set when BeginTransaction was called");
         }
         return new SettingsTransaction(this, SaveSettingsAsync);
     }
@@ -136,9 +133,7 @@ public class SettingsManager : ISettingsManager
     {
         if (expression.Body is not MemberExpression memberExpression)
         {
-            throw new ArgumentException(
-                $"Expression must be a member expression, not {expression.Body.NodeType}"
-            );
+            throw new ArgumentException($"Expression must be a member expression, not {expression.Body.NodeType}");
         }
 
         var propertyInfo = memberExpression.Member as PropertyInfo;
@@ -189,8 +184,7 @@ public class SettingsManager : ISettingsManager
             if (args.IsRelay && ReferenceEquals(sender, source))
                 return;
             Logger.Trace(
-                "[RelayPropertyFor] "
-                    + "Settings.{TargetProperty:l} -> {SourceType:l}.{SourceProperty:l}",
+                "[RelayPropertyFor] " + "Settings.{TargetProperty:l} -> {SourceType:l}.{SourceProperty:l}",
                 targetPropertyName,
                 sourceTypeName,
                 propertyName
@@ -206,8 +200,7 @@ public class SettingsManager : ISettingsManager
                 return;
 
             Logger.Trace(
-                "[RelayPropertyFor] "
-                    + "{SourceType:l}.{SourceProperty:l} -> Settings.{TargetProperty:l}",
+                "[RelayPropertyFor] " + "{SourceType:l}.{SourceProperty:l} -> Settings.{TargetProperty:l}",
                 sourceTypeName,
                 propertyName,
                 targetPropertyName
@@ -232,10 +225,7 @@ public class SettingsManager : ISettingsManager
             }
 
             // Invoke property changed event, passing along sender
-            SettingsPropertyChanged?.Invoke(
-                sender,
-                new RelayPropertyChangedEventArgs(targetPropertyName, true)
-            );
+            SettingsPropertyChanged?.Invoke(sender, new RelayPropertyChangedEventArgs(targetPropertyName, true));
         };
 
         // Set initial value if requested
@@ -276,8 +266,9 @@ public class SettingsManager : ISettingsManager
         // 0. Check Override
         if (!string.IsNullOrEmpty(LibraryDirOverride))
         {
-            Logger.Info("Using library override path: {Path}", LibraryDirOverride);
-            LibraryDir = LibraryDirOverride;
+            var fullOverridePath = Path.GetFullPath(LibraryDirOverride);
+            Logger.Info("Using library override path: {Path}", fullOverridePath);
+            LibraryDir = fullOverridePath;
             SetStaticLibraryPaths();
             LoadSettings();
             return true;
@@ -339,10 +330,7 @@ public class SettingsManager : ISettingsManager
         var libraryJsonFile = Compat.AppDataHome.JoinFile("library.json");
 
         var library = new LibrarySettings { LibraryPath = path };
-        var libraryJson = JsonSerializer.Serialize(
-            library,
-            new JsonSerializerOptions { WriteIndented = true }
-        );
+        var libraryJson = JsonSerializer.Serialize(library, new JsonSerializerOptions { WriteIndented = true });
         libraryJsonFile.WriteAllText(libraryJson);
 
         // actually create the LibraryPath directory
@@ -464,9 +452,7 @@ public class SettingsManager : ISettingsManager
 
     public void SetLastUpdateCheck(InstalledPackage package)
     {
-        var installedPackage = Settings.InstalledPackages.First(
-            p => p.DisplayName == package.DisplayName
-        );
+        var installedPackage = Settings.InstalledPackages.First(p => p.DisplayName == package.DisplayName);
         installedPackage.LastUpdateCheck = package.LastUpdateCheck;
         installedPackage.UpdateAvailable = package.UpdateAvailable;
         SaveSettings();
@@ -494,14 +480,10 @@ public class SettingsManager : ISettingsManager
 
     public string? GetActivePackageHost()
     {
-        var package = Settings.InstalledPackages.FirstOrDefault(
-            x => x.Id == Settings.ActiveInstalledPackageId
-        );
+        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == Settings.ActiveInstalledPackageId);
         if (package == null)
             return null;
-        var hostOption = package.LaunchArgs?.FirstOrDefault(
-            x => x.Name.ToLowerInvariant() == "host"
-        );
+        var hostOption = package.LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "host");
         if (hostOption?.OptionValue != null)
         {
             return hostOption.OptionValue as string;
@@ -511,14 +493,10 @@ public class SettingsManager : ISettingsManager
 
     public string? GetActivePackagePort()
     {
-        var package = Settings.InstalledPackages.FirstOrDefault(
-            x => x.Id == Settings.ActiveInstalledPackageId
-        );
+        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == Settings.ActiveInstalledPackageId);
         if (package == null)
             return null;
-        var portOption = package.LaunchArgs?.FirstOrDefault(
-            x => x.Name.ToLowerInvariant() == "port"
-        );
+        var portOption = package.LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "port");
         if (portOption?.OptionValue != null)
         {
             return portOption.OptionValue as string;
@@ -616,23 +594,34 @@ public class SettingsManager : ISettingsManager
         FileLock.EnterReadLock();
         try
         {
-            if (!File.Exists(SettingsPath))
+            var settingsFile = new FilePath(SettingsPath);
+
+            if (!settingsFile.Exists)
             {
-                File.Create(SettingsPath).Close();
-                Settings.Theme = "Dark";
-                var defaultSettingsJson = JsonSerializer.Serialize(Settings);
-                File.WriteAllText(SettingsPath, defaultSettingsJson);
+                settingsFile.Directory?.Create();
+                settingsFile.Create();
+
+                var settingsJson = JsonSerializer.Serialize(Settings);
+                settingsFile.WriteAllText(settingsJson);
+
+                Loaded?.Invoke(this, EventArgs.Empty);
                 return;
             }
 
-            var settingsContent = File.ReadAllText(SettingsPath);
-            var modifiedDefaultSerializerOptions =
-                SystemTextJsonContentSerializer.GetDefaultJsonSerializerOptions();
-            modifiedDefaultSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-            Settings = JsonSerializer.Deserialize<Settings>(
-                settingsContent,
-                modifiedDefaultSerializerOptions
-            )!;
+            using var fileStream = settingsFile.Info.OpenRead();
+
+            if (fileStream.Length == 0)
+            {
+                Logger.Warn("Settings file is empty, using default settings");
+                return;
+            }
+
+            if (
+                JsonSerializer.Deserialize(fileStream, SettingsSerializerContext.Default.Settings) is { } loadedSettings
+            )
+            {
+                Settings = loadedSettings;
+            }
 
             Loaded?.Invoke(this, EventArgs.Empty);
         }
@@ -644,24 +633,20 @@ public class SettingsManager : ISettingsManager
 
     protected virtual void SaveSettings()
     {
-        FileLock.TryEnterWriteLock(100000);
+        FileLock.TryEnterWriteLock(TimeSpan.FromSeconds(30));
         try
         {
-            if (!File.Exists(SettingsPath))
+            var settingsFile = new FilePath(SettingsPath);
+
+            if (!settingsFile.Exists)
             {
-                File.Create(SettingsPath).Close();
+                settingsFile.Directory?.Create();
+                settingsFile.Create();
             }
 
-            var json = JsonSerializer.Serialize(
-                Settings,
-                new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                    Converters = { new JsonStringEnumConverter() }
-                }
-            );
-            File.WriteAllText(SettingsPath, json);
+            var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(Settings, SettingsSerializerContext.Default.Settings);
+
+            File.WriteAllBytes(SettingsPath, jsonBytes);
         }
         finally
         {
@@ -693,9 +678,9 @@ public class SettingsManager : ISettingsManager
             {
                 try
                 {
-                    await Task.Delay(delay, cts.Token);
+                    await Task.Delay(delay, cts.Token).ConfigureAwait(false);
 
-                    await SaveSettingsAsync();
+                    await SaveSettingsAsync().ConfigureAwait(false);
                 }
                 catch (TaskCanceledException) { }
                 finally

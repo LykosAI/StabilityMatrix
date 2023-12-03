@@ -12,8 +12,10 @@ public class LineDashFrame : Frame
 {
     protected override Type StyleKeyOverride { get; } = typeof(Frame);
 
-    public static readonly StyledProperty<ISolidColorBrush> StrokeProperty =
-        AvaloniaProperty.Register<LineDashFrame, ISolidColorBrush>("Stroke");
+    public static readonly StyledProperty<ISolidColorBrush> StrokeProperty = AvaloniaProperty.Register<
+        LineDashFrame,
+        ISolidColorBrush
+    >("Stroke");
 
     public ISolidColorBrush Stroke
     {
@@ -21,8 +23,10 @@ public class LineDashFrame : Frame
         set => SetValue(StrokeProperty, value);
     }
 
-    public static readonly StyledProperty<double> StrokeThicknessProperty =
-        AvaloniaProperty.Register<LineDashFrame, double>("StrokeThickness");
+    public static readonly StyledProperty<double> StrokeThicknessProperty = AvaloniaProperty.Register<
+        LineDashFrame,
+        double
+    >("StrokeThickness");
 
     public double StrokeThickness
     {
@@ -30,8 +34,10 @@ public class LineDashFrame : Frame
         set => SetValue(StrokeThicknessProperty, value);
     }
 
-    public static readonly StyledProperty<double> StrokeDashLineProperty =
-        AvaloniaProperty.Register<LineDashFrame, double>("StrokeDashLine");
+    public static readonly StyledProperty<double> StrokeDashLineProperty = AvaloniaProperty.Register<
+        LineDashFrame,
+        double
+    >("StrokeDashLine");
 
     public double StrokeDashLine
     {
@@ -39,8 +45,10 @@ public class LineDashFrame : Frame
         set => SetValue(StrokeDashLineProperty, value);
     }
 
-    public static readonly StyledProperty<double> StrokeDashSpaceProperty =
-        AvaloniaProperty.Register<LineDashFrame, double>("StrokeDashSpace");
+    public static readonly StyledProperty<double> StrokeDashSpaceProperty = AvaloniaProperty.Register<
+        LineDashFrame,
+        double
+    >("StrokeDashSpace");
 
     public double StrokeDashSpace
     {
@@ -48,8 +56,10 @@ public class LineDashFrame : Frame
         set => SetValue(StrokeDashSpaceProperty, value);
     }
 
-    public static readonly StyledProperty<ISolidColorBrush> FillProperty =
-        AvaloniaProperty.Register<LineDashFrame, ISolidColorBrush>("Fill");
+    public static readonly StyledProperty<ISolidColorBrush> FillProperty = AvaloniaProperty.Register<
+        LineDashFrame,
+        ISolidColorBrush
+    >("Fill");
 
     public ISolidColorBrush Fill
     {
@@ -82,17 +92,12 @@ public class LineDashFrame : Frame
     /// <inheritdoc />
     public override void Render(DrawingContext context)
     {
-        base.Render(context);
-
         var width = Bounds.Width;
         var height = Bounds.Height;
 
         context.DrawRectangle(Fill, null, new Rect(0, 0, width, height));
 
-        var dashPen = new Pen(Stroke, StrokeThickness)
-        {
-            DashStyle = new DashStyle(GetDashArray(width), 0)
-        };
+        var dashPen = new Pen(Stroke, StrokeThickness) { DashStyle = new DashStyle(GetDashArray(width), 0) };
 
         context.DrawLine(dashPen, new Point(0, 0), new Point(width, 0));
         context.DrawLine(dashPen, new Point(0, height), new Point(width, height));

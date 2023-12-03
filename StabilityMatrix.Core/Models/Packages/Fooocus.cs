@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -26,17 +27,14 @@ public class Fooocus : BaseGitPackage
     public override string DisplayName { get; set; } = "Fooocus";
     public override string Author => "lllyasviel";
 
-    public override string Blurb =>
-        "Fooocus is a rethinking of Stable Diffusion and Midjourney’s designs";
+    public override string Blurb => "Fooocus is a rethinking of Stable Diffusion and Midjourney’s designs";
 
     public override string LicenseType => "GPL-3.0";
     public override string LicenseUrl => "https://github.com/lllyasviel/Fooocus/blob/main/LICENSE";
     public override string LaunchCommand => "launch.py";
 
     public override Uri PreviewImageUri =>
-        new(
-            "https://user-images.githubusercontent.com/19834515/261830306-f79c5981-cf80-4ee3-b06b-3fef3f8bfbc7.png"
-        );
+        new("https://user-images.githubusercontent.com/19834515/261830306-f79c5981-cf80-4ee3-b06b-3fef3f8bfbc7.png");
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new()
@@ -79,13 +77,10 @@ public class Fooocus : BaseGitPackage
             {
                 Name = "VRAM",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper
-                    .IterGpuInfo()
-                    .Select(gpu => gpu.MemoryLevel)
-                    .Max() switch
+                InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
                 {
-                    Level.Low => "--lowvram",
-                    Level.Medium => "--normalvram",
+                    MemoryLevel.Low => "--lowvram",
+                    MemoryLevel.Medium => "--normalvram",
                     _ => null
                 },
                 Options = { "--highvram", "--normalvram", "--lowvram", "--novram" }
@@ -158,8 +153,7 @@ public class Fooocus : BaseGitPackage
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        var venvRunner = await SetupVenv(installLocation, forceRecreate: true)
-            .ConfigureAwait(false);
+        var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
 

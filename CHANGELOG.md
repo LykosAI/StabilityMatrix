@@ -76,6 +76,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## Changed
 - Model Browser page has been redesigned, featuring more information like rating and download counts
 
+## v2.6.7
+### Fixed
+- Fixed prerequisite install not unpacking due to improperly formatted 7z argument (Caused the "python310._pth FileNotFoundException")
+- Fixed [#301](https://github.com/LykosAI/StabilityMatrix/issues/301) - Package updates failing silently because of a PortableGit error
+
 ## v2.6.6
 ### Fixed
 - Fixed [#297](https://github.com/LykosAI/StabilityMatrix/issues/297) - Model browser LiteAsyncException occuring when fetching entries with unrecognized values from enum name changes

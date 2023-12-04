@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -16,6 +17,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+#pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -42,6 +44,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     private double denoiseStrength = 1;
 
     [ObservableProperty]
+    [property: Category("Settings")]
     private bool isCfgScaleEnabled;
 
     [ObservableProperty]
@@ -57,6 +60,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     private int height = 512;
 
     [ObservableProperty]
+    [property: Category("Settings")]
     private bool isSamplerSelectionEnabled;
 
     [ObservableProperty]
@@ -64,6 +68,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     private ComfySampler? selectedSampler = ComfySampler.EulerAncestral;
 
     [ObservableProperty]
+    [property: Category("Settings")]
     private bool isSchedulerSelectionEnabled;
 
     [ObservableProperty]

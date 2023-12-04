@@ -727,7 +727,7 @@ The gallery images are often inpainted, but you will get something very similar 
     public static StackEditableCardViewModel StackEditableCardViewModel =>
         DialogFactory.Get<StackEditableCardViewModel>(vm =>
         {
-            vm.AddCards(StackExpanderViewModel, StackExpanderViewModel);
+            vm.AddCards(StackExpanderViewModel, StackExpanderViewModel2);
         });
 
     public static StackExpanderViewModel StackExpanderViewModel =>

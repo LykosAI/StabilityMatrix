@@ -377,8 +377,8 @@
 
         <Style Selector="^:disabled">
             <Style Selector="^ /template/ ui|FABorder#Root">
-                <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
+                <Setter Property="Background" Value="{DynamicResource SystemControlTransparentBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource SystemControlTransparentBrush}" />
             </Style>
             <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundDisabled}" />

@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using Avalonia.PropertyGrid.ViewModels;
 using CommunityToolkit.Mvvm.ComponentModel;
 using OneOf;
-using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;

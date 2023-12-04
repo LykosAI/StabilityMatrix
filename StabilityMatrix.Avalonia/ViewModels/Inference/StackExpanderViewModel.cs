@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Text.Json.Nodes;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models.Inference;
@@ -27,6 +28,9 @@ public partial class StackExpanderViewModel : StackViewModelBase
     [property: JsonIgnore]
     private string? titleExtra;
 
+    [ObservableProperty]
+    private bool isEnabled;
+
     /// <summary>
     /// True if parent StackEditableCard is in edit mode (can drag to reorder)
     /// </summary>
@@ -34,8 +38,12 @@ public partial class StackExpanderViewModel : StackViewModelBase
     [property: JsonIgnore]
     private bool isEditEnabled;
 
-    [ObservableProperty]
-    private bool isEnabled;
+    /// <summary>
+    /// True to show the settings button, invokes <see cref="SettingsCommand"/> when clicked
+    /// </summary>
+    public virtual bool IsSettingsEnabled { get; set; }
+
+    public virtual IRelayCommand? SettingsCommand { get; set; }
 
     /// <inheritdoc />
     public StackExpanderViewModel(ServiceManager<ViewModelBase> vmFactory)

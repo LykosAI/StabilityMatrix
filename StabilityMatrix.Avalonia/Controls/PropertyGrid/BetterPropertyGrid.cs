@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Avalonia;
 using Avalonia.PropertyGrid.Services;
 using JetBrains.Annotations;
 using PropertyModels.ComponentModel;
@@ -14,10 +15,56 @@ public class BetterPropertyGrid : global::Avalonia.PropertyGrid.Controls.Propert
 {
     protected override Type StyleKeyOverride => typeof(global::Avalonia.PropertyGrid.Controls.PropertyGrid);
 
+    public static readonly StyledProperty<IEnumerable<string>> ExcludedCategoriesProperty = AvaloniaProperty.Register<
+        BetterPropertyGrid,
+        IEnumerable<string>
+    >("ExcludedCategories");
+
+    public IEnumerable<string> ExcludedCategories
+    {
+        get => GetValue(ExcludedCategoriesProperty);
+        set => SetValue(ExcludedCategoriesProperty, value);
+    }
+
+    public static readonly StyledProperty<IEnumerable<string>> IncludedCategoriesProperty = AvaloniaProperty.Register<
+        BetterPropertyGrid,
+        IEnumerable<string>
+    >("IncludedCategories");
+
+    public IEnumerable<string> IncludedCategories
+    {
+        get => GetValue(IncludedCategoriesProperty);
+        set => SetValue(IncludedCategoriesProperty, value);
+    }
+
     static BetterPropertyGrid()
     {
         // Initialize localization and name resolver
         LocalizationService.Default.AddExtraService(new PropertyGridLocalizationService());
+
+        ExcludedCategoriesProperty
+            .Changed
+            .AddClassHandler<BetterPropertyGrid>(
+                (grid, args) =>
+                {
+                    if (args.NewValue is IEnumerable<string> excludedCategories)
+                    {
+                        grid.FilterExcludeCategories(excludedCategories);
+                    }
+                }
+            );
+
+        IncludedCategoriesProperty
+            .Changed
+            .AddClassHandler<BetterPropertyGrid>(
+                (grid, args) =>
+                {
+                    if (args.NewValue is IEnumerable<string> includedCategories)
+                    {
+                        grid.FilterIncludeCategories(includedCategories);
+                    }
+                }
+            );
     }
 
     public void FilterExcludeCategories(IEnumerable<string> excludedCategories)
@@ -55,9 +102,13 @@ public class BetterPropertyGrid : global::Avalonia.PropertyGrid.Controls.Propert
 
         categoryFilter.BeginUpdate();
 
-        // Uncheck All and check Misc by default
+        // Uncheck non-included categories
+        foreach (var mask in categoryFilter.Masks.Where(m => !includeCategories.Contains(m)))
+        {
+            categoryFilter.UnCheck(mask);
+        }
+
         categoryFilter.UnCheck(categoryFilter.All);
-        categoryFilter.Check("Misc");
 
         // Check included categories
         foreach (var mask in includeCategories)

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Http;
 using System.Text;
 using AvaloniaEdit.Utils;
+using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
@@ -631,7 +633,11 @@ The gallery images are often inpainted, but you will get something very similar 
     public static PropertyGridViewModel PropertyGridViewModel =>
         DialogFactory.Get<PropertyGridViewModel>(vm =>
         {
-            vm.SelectedObject = new MockPropertyGridObject();
+            vm.SelectedObject = new INotifyPropertyChanged[]
+            {
+                new MockPropertyGridObject(),
+                new MockPropertyGridObjectAlt()
+            };
             vm.ExcludeCategories = ["Excluded Category"];
         });
 
@@ -730,6 +736,15 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.Title = "Hires Fix";
             vm.AddCards(UpscalerCardViewModel, SamplerCardViewModel);
             vm.OnContainerIndexChanged(0);
+        });
+
+    public static StackExpanderViewModel StackExpanderViewModel2 =>
+        DialogFactory.Get<StackExpanderViewModel>(vm =>
+        {
+            vm.Title = "Hires Fix";
+            vm.IsSettingsEnabled = true;
+            vm.AddCards(UpscalerCardViewModel, SamplerCardViewModel);
+            vm.OnContainerIndexChanged(1);
         });
 
     public static UpscalerCardViewModel UpscalerCardViewModel => DialogFactory.Get<UpscalerCardViewModel>();

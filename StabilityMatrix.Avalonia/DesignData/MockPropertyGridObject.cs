@@ -42,3 +42,13 @@ public partial class MockPropertyGridObject : ObservableObject
     [property: Category("Excluded Category")]
     private string? stringExcludedCategoryProperty;
 }
+
+public partial class MockPropertyGridObjectAlt : ObservableObject
+{
+    [ObservableProperty]
+    private int altIntProperty = 10;
+
+    [ObservableProperty]
+    [property: Category("Settings")]
+    private string? altStringProperty;
+}

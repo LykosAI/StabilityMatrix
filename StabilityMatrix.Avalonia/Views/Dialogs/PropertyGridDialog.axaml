@@ -1,0 +1,22 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+                          xmlns:pg="clr-namespace:Avalonia.PropertyGrid.Controls;assembly=Avalonia.PropertyGrid"
+                          d:DataContext="{x:Static mocks:DesignData.PropertyGridViewModel}"
+                          x:DataType="vmDialogs:PropertyGridViewModel"
+                          mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="450"
+                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.PropertyGridDialog">
+    <Grid>
+        <controls:BetterPropertyGrid
+            x:Name="MainPropertyGrid"
+            SelectedObject="{Binding SelectedObjectSource, Mode=OneTime}"
+            ShowStyle="{Binding ShowStyle}"
+            AllowQuickFilter="False"
+            AllowFilter="False" 
+            ShowTitle="False" />
+    </Grid>
+</controls:UserControlBase>

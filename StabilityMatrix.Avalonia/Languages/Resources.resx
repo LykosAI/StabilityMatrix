@@ -175,7 +175,7 @@
     <value>Deemphasis</value>
   </data>
   <data name="Label_EmbeddingsOrTextualInversion" xml:space="preserve">
-    <value>Emebeddings / Textual Inversion</value>
+    <value>Embeddings / Textual Inversion</value>
   </data>
   <data name="Label_NetworksLoraOrLycoris" xml:space="preserve">
     <value>Networks (Lora / LyCORIS)</value>
@@ -825,6 +825,12 @@
   <data name="TeachingTip_MoreCheckpointCategories" xml:space="preserve">
     <value>Additional folders such as IPAdapters and TextualInversions (embeddings) can be enabled here</value>
   </data>
+  <data name="Action_OpenOnHuggingFace" xml:space="preserve">
+    <value>Open on Hugging Face</value>
+  </data>
+  <data name="Action_UpdateExistingMetadata" xml:space="preserve">
+    <value>Update Existing Metadata</value>
+  </data>
   <data name="Label_General" xml:space="preserve">
     <value>General</value><comment>A general settings category</comment>
   </data>
@@ -857,6 +863,12 @@
   </data>
   <data name="Label_SystemInformation" xml:space="preserve">
     <value>System Information</value>
+  </data>
+  <data name="Label_CivitAi" xml:space="preserve">
+    <value>CivitAI</value>
+  </data>
+  <data name="Label_HuggingFace" xml:space="preserve">
+    <value>Hugging Face</value>
   </data>
   <data name="Label_Addons" xml:space="preserve">
     <value>Addons</value><comment>Inference Sampler Addons</comment>

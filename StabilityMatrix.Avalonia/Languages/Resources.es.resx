@@ -680,4 +680,7 @@
   <data name="Action_RestoreDefaultLayout" xml:space="preserve">
     <value>Restablecer Diseño Predeterminado</value>
   </data>
+  <data name="Label_CivitAi" xml:space="preserve">
+    <value>CivitAI</value>
+  </data>
 </root>

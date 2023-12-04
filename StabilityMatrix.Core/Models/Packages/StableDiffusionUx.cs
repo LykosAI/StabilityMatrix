@@ -15,7 +15,12 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [Singleton(typeof(BasePackage))]
-public class StableDiffusionUx : BaseGitPackage
+public class StableDiffusionUx(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -34,14 +39,6 @@ public class StableDiffusionUx : BaseGitPackage
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
-
-    public StableDiffusionUx(
-        IGithubApiCache githubApi,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
-    )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
@@ -77,21 +74,20 @@ public class StableDiffusionUx : BaseGitPackage
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
     public override List<LaunchOptionDefinition> LaunchOptions =>
-        new()
-        {
+        [
             new()
             {
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "localhost",
-                Options = new() { "--server-name" }
+                Options = ["--server-name"]
             },
             new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "7860",
-                Options = new() { "--port" }
+                Options = ["--port"]
             },
             new()
             {
@@ -103,66 +99,66 @@ public class StableDiffusionUx : BaseGitPackage
                     MemoryLevel.Medium => "--medvram",
                     _ => null
                 },
-                Options = new() { "--lowvram", "--medvram", "--medvram-sdxl" }
+                Options = ["--lowvram", "--medvram", "--medvram-sdxl"]
             },
             new()
             {
                 Name = "Xformers",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.HasNvidiaGpu(),
-                Options = new() { "--xformers" }
+                Options = ["--xformers"]
             },
             new()
             {
                 Name = "API",
                 Type = LaunchOptionType.Bool,
                 InitialValue = true,
-                Options = new() { "--api" }
+                Options = ["--api"]
             },
             new()
             {
                 Name = "Auto Launch Web UI",
                 Type = LaunchOptionType.Bool,
                 InitialValue = false,
-                Options = new() { "--autolaunch" }
+                Options = ["--autolaunch"]
             },
             new()
             {
                 Name = "Skip Torch CUDA Check",
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),
-                Options = new() { "--skip-torch-cuda-test" }
+                Options = ["--skip-torch-cuda-test"]
             },
             new()
             {
                 Name = "Skip Python Version Check",
                 Type = LaunchOptionType.Bool,
                 InitialValue = true,
-                Options = new() { "--skip-python-version-check" }
+                Options = ["--skip-python-version-check"]
             },
             new()
             {
                 Name = "No Half",
                 Type = LaunchOptionType.Bool,
                 Description = "Do not switch the model to 16-bit floats",
-                InitialValue = HardwareHelper.HasAmdGpu(),
-                Options = new() { "--no-half" }
+                InitialValue = HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML(),
+                Options = ["--no-half"]
             },
             new()
             {
                 Name = "Skip SD Model Download",
                 Type = LaunchOptionType.Bool,
                 InitialValue = false,
-                Options = new() { "--no-download-sd-model" }
+                Options = ["--no-download-sd-model"]
             },
             new()
             {
                 Name = "Skip Install",
                 Type = LaunchOptionType.Bool,
-                Options = new() { "--skip-install" }
+                Options = ["--skip-install"]
             },
             LaunchOptionDefinition.Extras
-        };
+        ];
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };

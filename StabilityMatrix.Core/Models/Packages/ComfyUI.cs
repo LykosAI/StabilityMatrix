@@ -17,7 +17,12 @@ using YamlDotNet.Serialization.NamingConventions;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [Singleton(typeof(BasePackage))]
-public class ComfyUI : BaseGitPackage
+public class ComfyUI(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     public override string Name => "ComfyUI";
@@ -37,14 +42,6 @@ public class ComfyUI : BaseGitPackage
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
 
-    public ComfyUI(
-        IGithubApiCache githubApi,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
-    )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
-
     // https://github.com/comfyanonymous/ComfyUI/blob/master/folder_paths.py#L11
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
@@ -60,29 +57,30 @@ public class ComfyUI : BaseGitPackage
             [SharedFolderType.GLIGEN] = new[] { "models/gligen" },
             [SharedFolderType.ESRGAN] = new[] { "models/upscale_models" },
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
+            [SharedFolderType.IpAdapter] = new[] { "models/ipadapter" },
+            [SharedFolderType.T2IAdapter] = new[] { "models/controlnet" },
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
         new() { [SharedOutputType.Text2Img] = new[] { "output" } };
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
-        new List<LaunchOptionDefinition>
-        {
-            new()
+        [
+            new LaunchOptionDefinition
             {
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "127.0.0.1",
-                Options = { "--listen" }
+                Options = ["--listen"]
             },
-            new()
+            new LaunchOptionDefinition
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "8188",
-                Options = { "--port" }
+                Options = ["--port"]
             },
-            new()
+            new LaunchOptionDefinition
             {
                 Name = "VRAM",
                 Type = LaunchOptionType.Bool,
@@ -92,50 +90,50 @@ public class ComfyUI : BaseGitPackage
                     MemoryLevel.Medium => "--normalvram",
                     _ => null
                 },
-                Options = { "--highvram", "--normalvram", "--lowvram", "--novram" }
+                Options = ["--highvram", "--normalvram", "--lowvram", "--novram"]
             },
-            new()
+            new LaunchOptionDefinition
             {
                 Name = "Preview Method",
                 Type = LaunchOptionType.Bool,
                 InitialValue = "--preview-method auto",
-                Options = { "--preview-method auto", "--preview-method latent2rgb", "--preview-method taesd" }
+                Options = ["--preview-method auto", "--preview-method latent2rgb", "--preview-method taesd"]
             },
-            new()
+            new LaunchOptionDefinition
             {
                 Name = "Enable DirectML",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.PreferDirectML(),
-                Options = { "--directml" }
+                Options = ["--directml"]
             },
-            new()
+            new LaunchOptionDefinition
             {
                 Name = "Use CPU only",
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu() && !HardwareHelper.HasAmdGpu(),
-                Options = { "--cpu" }
+                Options = ["--cpu"]
             },
-            new()
+            new LaunchOptionDefinition
             {
                 Name = "Disable Xformers",
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),
-                Options = { "--disable-xformers" }
+                Options = ["--disable-xformers"]
             },
-            new()
+            new LaunchOptionDefinition
             {
                 Name = "Disable upcasting of attention",
                 Type = LaunchOptionType.Bool,
-                Options = { "--dont-upcast-attention" }
+                Options = ["--dont-upcast-attention"]
             },
-            new()
+            new LaunchOptionDefinition
             {
                 Name = "Auto-Launch",
                 Type = LaunchOptionType.Bool,
-                Options = { "--auto-launch" }
+                Options = ["--auto-launch"]
             },
             LaunchOptionDefinition.Extras
-        };
+        ];
 
     public override string MainBranch => "master";
 
@@ -241,22 +239,10 @@ public class ComfyUI : BaseGitPackage
     )
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
+        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
-        void HandleConsoleOutput(ProcessOutput s)
-        {
-            onConsoleOutput?.Invoke(s);
-
-            if (s.Text.Contains("To see the GUI go to", StringComparison.OrdinalIgnoreCase))
-            {
-                var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
-                var match = regex.Match(s.Text);
-                if (match.Success)
-                {
-                    WebUrl = match.Value;
-                }
-                OnStartupComplete(WebUrl);
-            }
-        }
+        VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
+        return;
 
         void HandleExit(int i)
         {
@@ -264,9 +250,21 @@ public class ComfyUI : BaseGitPackage
             OnExit(i);
         }
 
-        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
+        void HandleConsoleOutput(ProcessOutput s)
+        {
+            onConsoleOutput?.Invoke(s);
 
-        VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
+            if (!s.Text.Contains("To see the GUI go to", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
+            var match = regex.Match(s.Text);
+            if (match.Success)
+            {
+                WebUrl = match.Value;
+            }
+            OnStartupComplete(WebUrl);
+        }
     }
 
     public override Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)

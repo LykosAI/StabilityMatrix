@@ -17,7 +17,12 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [Singleton(typeof(BasePackage))]
-public class VladAutomatic : BaseGitPackage
+public class VladAutomatic(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -38,14 +43,6 @@ public class VladAutomatic : BaseGitPackage
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm };
-
-    public VladAutomatic(
-        IGithubApiCache githubApi,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
-    )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
 
     // https://github.com/vladmandic/automatic/blob/master/modules/shared.py#L324
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
@@ -85,21 +82,20 @@ public class VladAutomatic : BaseGitPackage
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
     public override List<LaunchOptionDefinition> LaunchOptions =>
-        new()
-        {
+        [
             new()
             {
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "localhost",
-                Options = new() { "--server-name" }
+                Options = ["--server-name"]
             },
             new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "7860",
-                Options = new() { "--port" }
+                Options = ["--port"]
             },
             new()
             {
@@ -111,61 +107,61 @@ public class VladAutomatic : BaseGitPackage
                     MemoryLevel.Medium => "--medvram",
                     _ => null
                 },
-                Options = new() { "--lowvram", "--medvram" }
+                Options = ["--lowvram", "--medvram"]
             },
             new()
             {
                 Name = "Auto-Launch Web UI",
                 Type = LaunchOptionType.Bool,
-                Options = new() { "--autolaunch" }
+                Options = ["--autolaunch"]
             },
             new()
             {
                 Name = "Force use of Intel OneAPI XPU backend",
                 Type = LaunchOptionType.Bool,
-                Options = new() { "--use-ipex" }
+                Options = ["--use-ipex"]
             },
             new()
             {
                 Name = "Use DirectML if no compatible GPU is detected",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.PreferDirectML(),
-                Options = new() { "--use-directml" }
+                Options = ["--use-directml"]
             },
             new()
             {
                 Name = "Force use of Nvidia CUDA backend",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.HasNvidiaGpu(),
-                Options = new() { "--use-cuda" }
+                Options = ["--use-cuda"]
             },
             new()
             {
                 Name = "Force use of AMD ROCm backend",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.PreferRocm(),
-                Options = new() { "--use-rocm" }
+                Options = ["--use-rocm"]
             },
             new()
             {
                 Name = "CUDA Device ID",
                 Type = LaunchOptionType.String,
-                Options = new() { "--device-id" }
+                Options = ["--device-id"]
             },
             new()
             {
                 Name = "API",
                 Type = LaunchOptionType.Bool,
-                Options = new() { "--api" }
+                Options = ["--api"]
             },
             new()
             {
                 Name = "Debug Logging",
                 Type = LaunchOptionType.Bool,
-                Options = new() { "--debug" }
+                Options = ["--debug"]
             },
             LaunchOptionDefinition.Extras
-        };
+        ];
 
     public override string ExtraLaunchArguments => "";
 

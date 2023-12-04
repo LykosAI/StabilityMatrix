@@ -12,16 +12,13 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [Singleton(typeof(BasePackage))]
-public class FooocusMre : BaseGitPackage
+public class FooocusMre(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
 {
-    public FooocusMre(
-        IGithubApiCache githubApi,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
-    )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
-
     public override string Name => "Fooocus-MRE";
     public override string DisplayName { get; set; } = "Fooocus-MRE";
     public override string Author => "MoonRide303";
@@ -31,14 +28,11 @@ public class FooocusMre : BaseGitPackage
 
     public override string LicenseType => "GPL-3.0";
 
-    public override string LicenseUrl =>
-        "https://github.com/MoonRide303/Fooocus-MRE/blob/moonride-main/LICENSE";
+    public override string LicenseUrl => "https://github.com/MoonRide303/Fooocus-MRE/blob/moonride-main/LICENSE";
     public override string LaunchCommand => "launch.py";
 
     public override Uri PreviewImageUri =>
-        new(
-            "https://user-images.githubusercontent.com/130458190/265366059-ce430ea0-0995-4067-98dd-cef1d7dc1ab6.png"
-        );
+        new("https://user-images.githubusercontent.com/130458190/265366059-ce430ea0-0995-4067-98dd-cef1d7dc1ab6.png");
 
     public override string Disclaimer =>
         "This package may no longer receive updates from its author. It may be removed from Stability Matrix in the future.";
@@ -112,8 +106,7 @@ public class FooocusMre : BaseGitPackage
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        var venvRunner = await SetupVenv(installLocation, forceRecreate: true)
-            .ConfigureAwait(false);
+        var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
 

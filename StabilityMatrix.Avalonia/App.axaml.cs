@@ -65,7 +65,6 @@ using StabilityMatrix.Avalonia.Diagnostics.LogViewer;
 using StabilityMatrix.Avalonia.Diagnostics.LogViewer.Extensions;
 #endif
 
-
 namespace StabilityMatrix.Avalonia;
 
 public sealed class App : Application

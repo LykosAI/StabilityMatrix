@@ -15,7 +15,12 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [Singleton(typeof(BasePackage))]
-public class A3WebUI : BaseGitPackage
+public class A3WebUI(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -34,14 +39,6 @@ public class A3WebUI : BaseGitPackage
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
-
-    public A3WebUI(
-        IGithubApiCache githubApi,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
-    )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
 
     // From https://github.com/AUTOMATIC1111/stable-diffusion-webui/tree/master/models
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
@@ -62,7 +59,9 @@ public class A3WebUI : BaseGitPackage
             [SharedFolderType.ControlNet] = new[] { "models/ControlNet" },
             [SharedFolderType.Codeformer] = new[] { "models/Codeformer" },
             [SharedFolderType.LDSR] = new[] { "models/LDSR" },
-            [SharedFolderType.AfterDetailer] = new[] { "models/adetailer" }
+            [SharedFolderType.AfterDetailer] = new[] { "models/adetailer" },
+            [SharedFolderType.T2IAdapter] = new[] { "models/controlnet" },
+            [SharedFolderType.IpAdapter] = new[] { "models/ipadapter" }
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -78,21 +77,20 @@ public class A3WebUI : BaseGitPackage
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
     public override List<LaunchOptionDefinition> LaunchOptions =>
-        new()
-        {
+        [
             new()
             {
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "localhost",
-                Options = new() { "--server-name" }
+                Options = ["--server-name"]
             },
             new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "7860",
-                Options = new() { "--port" }
+                Options = ["--port"]
             },
             new()
             {
@@ -104,42 +102,42 @@ public class A3WebUI : BaseGitPackage
                     MemoryLevel.Medium => "--medvram",
                     _ => null
                 },
-                Options = new() { "--lowvram", "--medvram", "--medvram-sdxl" }
+                Options = ["--lowvram", "--medvram", "--medvram-sdxl"]
             },
             new()
             {
                 Name = "Xformers",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.HasNvidiaGpu(),
-                Options = new() { "--xformers" }
+                Options = ["--xformers"]
             },
             new()
             {
                 Name = "API",
                 Type = LaunchOptionType.Bool,
                 InitialValue = true,
-                Options = new() { "--api" }
+                Options = ["--api"]
             },
             new()
             {
                 Name = "Auto Launch Web UI",
                 Type = LaunchOptionType.Bool,
                 InitialValue = false,
-                Options = new() { "--autolaunch" }
+                Options = ["--autolaunch"]
             },
             new()
             {
                 Name = "Skip Torch CUDA Check",
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),
-                Options = new() { "--skip-torch-cuda-test" }
+                Options = ["--skip-torch-cuda-test"]
             },
             new()
             {
                 Name = "Skip Python Version Check",
                 Type = LaunchOptionType.Bool,
                 InitialValue = true,
-                Options = new() { "--skip-python-version-check" }
+                Options = ["--skip-python-version-check"]
             },
             new()
             {
@@ -147,23 +145,23 @@ public class A3WebUI : BaseGitPackage
                 Type = LaunchOptionType.Bool,
                 Description = "Do not switch the model to 16-bit floats",
                 InitialValue = HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML(),
-                Options = new() { "--no-half" }
+                Options = ["--no-half"]
             },
             new()
             {
                 Name = "Skip SD Model Download",
                 Type = LaunchOptionType.Bool,
                 InitialValue = false,
-                Options = new() { "--no-download-sd-model" }
+                Options = ["--no-download-sd-model"]
             },
             new()
             {
                 Name = "Skip Install",
                 Type = LaunchOptionType.Bool,
-                Options = new() { "--skip-install" }
+                Options = ["--skip-install"]
             },
             LaunchOptionDefinition.Extras
-        };
+        ];
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };

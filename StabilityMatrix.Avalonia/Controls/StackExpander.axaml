@@ -25,6 +25,8 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <Expander
+                    ExpandDirection="{TemplateBinding ExpandDirection}"
+                    IsExpanded="{TemplateBinding IsExpanded}"
                     HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
                     VerticalAlignment="{TemplateBinding VerticalAlignment}"
                     HorizontalContentAlignment="Stretch"

@@ -44,6 +44,8 @@ using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
+using CivitAiBrowserViewModel = StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser.CivitAiBrowserViewModel;
+using HuggingFacePageViewModel = StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser.HuggingFacePageViewModel;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
@@ -123,7 +125,8 @@ public static class DesignData
             .AddSingleton<IInferenceClientManager, MockInferenceClientManager>()
             .AddSingleton<ICompletionProvider, MockCompletionProvider>()
             .AddSingleton<IModelIndexService, MockModelIndexService>()
-            .AddSingleton<IImageIndexService, MockImageIndexService>();
+            .AddSingleton<IImageIndexService, MockImageIndexService>()
+            .AddSingleton<IMetadataImportService, MetadataImportService>();
 
         // Placeholder services that nobody should need during design time
         services
@@ -146,6 +149,7 @@ public static class DesignData
         var modelFinder = Services.GetRequiredService<ModelFinder>();
         var packageFactory = Services.GetRequiredService<IPackageFactory>();
         var notificationService = Services.GetRequiredService<INotificationService>();
+        var modelImportService = Services.GetRequiredService<IMetadataImportService>();
 
         LaunchOptionsViewModel = Services.GetRequiredService<LaunchOptionsViewModel>();
         LaunchOptionsViewModel.Cards = new[]
@@ -182,7 +186,7 @@ public static class DesignData
             CheckpointsPageViewModel.CheckpointFoldersCache,
             new CheckpointFolder[]
             {
-                new(settingsManager, downloadService, modelFinder, notificationService)
+                new(settingsManager, downloadService, modelFinder, notificationService, modelImportService)
                 {
                     DirectoryPath = "Models/StableDiffusion",
                     DisplayedCheckpointFiles = new ObservableCollectionExtended<CheckpointFile>()
@@ -212,7 +216,7 @@ public static class DesignData
                         new() { FilePath = "~/Models/Lora/model.safetensors", Title = "Some model" },
                     },
                 },
-                new(settingsManager, downloadService, modelFinder, notificationService)
+                new(settingsManager, downloadService, modelFinder, notificationService, modelImportService)
                 {
                     Title = "Lora",
                     DirectoryPath = "Packages/Lora",
@@ -293,7 +297,7 @@ public static class DesignData
             );
         }*/
 
-        CheckpointBrowserViewModel.ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>
+        CivitAiBrowserViewModel.ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>
         {
             dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
             {
@@ -416,6 +420,9 @@ public static class DesignData
 
     public static LaunchPageViewModel LaunchPageViewModel => Services.GetRequiredService<LaunchPageViewModel>();
 
+    public static HuggingFacePageViewModel HuggingFacePageViewModel =>
+        Services.GetRequiredService<HuggingFacePageViewModel>();
+
     public static OutputsPageViewModel OutputsPageViewModel
     {
         get
@@ -500,6 +507,9 @@ public static class DesignData
             return vm;
         }
     }
+
+    public static CivitAiBrowserViewModel CivitAiBrowserViewModel =>
+        Services.GetRequiredService<CivitAiBrowserViewModel>();
 
     public static CheckpointBrowserViewModel CheckpointBrowserViewModel =>
         Services.GetRequiredService<CheckpointBrowserViewModel>();

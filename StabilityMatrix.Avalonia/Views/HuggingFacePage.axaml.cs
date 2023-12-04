@@ -4,9 +4,9 @@ using StabilityMatrix.Core.Attributes;
 namespace StabilityMatrix.Avalonia.Views;
 
 [Singleton]
-public partial class CheckpointBrowserPage : UserControlBase
+public partial class HuggingFacePage : UserControlBase
 {
-    public CheckpointBrowserPage()
+    public HuggingFacePage()
     {
         InitializeComponent();
     }

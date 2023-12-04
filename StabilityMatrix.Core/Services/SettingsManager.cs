@@ -20,6 +20,7 @@ public class SettingsManager : ISettingsManager
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly ReaderWriterLockSlim FileLock = new();
+    private bool isLoaded;
 
     private static string GlobalSettingsPath => Path.Combine(Compat.AppDataHome, "global.json");
 
@@ -605,6 +606,7 @@ public class SettingsManager : ISettingsManager
                 settingsFile.WriteAllText(settingsJson);
 
                 Loaded?.Invoke(this, EventArgs.Empty);
+                isLoaded = true;
                 return;
             }
 
@@ -621,6 +623,7 @@ public class SettingsManager : ISettingsManager
             )
             {
                 Settings = loadedSettings;
+                isLoaded = true;
             }
 
             Loaded?.Invoke(this, EventArgs.Empty);
@@ -643,6 +646,9 @@ public class SettingsManager : ISettingsManager
                 settingsFile.Directory?.Create();
                 settingsFile.Create();
             }
+
+            if (!isLoaded)
+                return;
 
             var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(Settings, SettingsSerializerContext.Default.Settings);
 

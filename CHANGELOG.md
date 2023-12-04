@@ -5,6 +5,19 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.7.0-pre.3
+### Added
+- Added "Find Connected Metadata" options for root-level and file-level scans to the Checkpoints page
+- Added "Update Existing Metadata" button to the Checkpoints page
+- Added Hugging Face tab to the Model Browser
+- Added the ability to type in a specific page number in the CivitAI Model Browser
+### Changed
+- Folder-level "Find Connected Metadata" now scans the selected folder and its subfolders
+- Model Browser now split into "CivitAI" and "Hugging Face" tabs
+### Fixed
+- InvokeAI model links for T2I/IpAdapters now point to the correct folders
+- Added extra checks to help prevent settings resetting in certain scenarios
+
 ## v2.7.0-pre.2
 ### Added
 - Added System Information section to Settings

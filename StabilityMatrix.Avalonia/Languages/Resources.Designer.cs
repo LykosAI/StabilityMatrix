@@ -1806,6 +1806,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Settings.
+        /// </summary>
+        public static string Label_Settings {
+            get {
+                return ResourceManager.GetString("Label_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Shared Model Folder Strategy.
         /// </summary>
         public static string Label_SharedModelFolderStrategy {

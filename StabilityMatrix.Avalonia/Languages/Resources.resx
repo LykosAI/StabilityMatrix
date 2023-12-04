@@ -864,4 +864,7 @@
   <data name="Label_SaveIntermediateImage" xml:space="preserve">
     <value>Save Intermediate Image</value><comment>Inference module step to save an intermediate image</comment>
   </data>
+  <data name="Label_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
 </root>

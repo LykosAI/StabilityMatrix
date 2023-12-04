@@ -39,6 +39,9 @@ public class BetterPropertyGrid : global::Avalonia.PropertyGrid.Controls.Propert
 
     static BetterPropertyGrid()
     {
+        // Register factories
+        CellEditFactoryService.Default.AddFactory(new ToggleSwitchCellEditFactory());
+
         // Initialize localization and name resolver
         LocalizationService.Default.AddExtraService(new PropertyGridLocalizationService());
 

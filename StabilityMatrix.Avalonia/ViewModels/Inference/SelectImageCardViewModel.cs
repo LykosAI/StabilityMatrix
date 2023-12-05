@@ -19,10 +19,7 @@ using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Extensions;
-using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Database;
-using StabilityMatrix.Core.Models.FileInterfaces;
 using Size = System.Drawing.Size;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -52,10 +49,9 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
     public bool IsSelectionAvailable => IsSelectionEnabled && ImageSource == null;
 
     public Size? CurrentBitmapSize =>
-        new Size(
-            Convert.ToInt32(CurrentBitmap?.Size.Width ?? 0),
-            Convert.ToInt32(CurrentBitmap?.Size.Height ?? 0)
-        );
+        CurrentBitmap is null
+            ? null
+            : new Size(Convert.ToInt32(CurrentBitmap.Size.Width), Convert.ToInt32(CurrentBitmap.Size.Height));
 
     /// <inheritdoc />
     public void ApplyStep(ModuleApplyStepEventArgs e)
@@ -67,57 +63,25 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
         );
     }
 
-    [MethodImpl(MethodImplOptions.Synchronized)]
-    private void LoadUserImage(ImageSource image)
-    {
-        var current = ImageSource;
-
-        ImageSource = image;
-
-        current?.Dispose();
-
-        // Cache the hash for later upload use
-        image.GetBlake3HashAsync().SafeFireAndForget();
-    }
-
     [RelayCommand]
     private async Task SelectImageFromFilePickerAsync()
     {
         var files = await App.StorageProvider.OpenFilePickerAsync(
-            new FilePickerOpenOptions
-            {
-                FileTypeFilter = new List<FilePickerFileType>
-                {
-                    new("Png") { Patterns = new[] { "*.png" } },
-                    new("Jpg") { Patterns = new[] { "*.jpg", "*.jpeg" } }
-                }
-            }
+            new FilePickerOpenOptions { FileTypeFilter = [FilePickerFileTypes.ImagePng, FilePickerFileTypes.ImageJpg] }
         );
 
-        if (files.Count == 0)
-            return;
-
-        var image = new ImageSource(files[0].TryGetLocalPath()!);
-
-        LoadUserImage(image);
+        if (files.FirstOrDefault()?.TryGetLocalPath() is { } path)
+        {
+            LoadUserImageSafe(new ImageSource(path));
+        }
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Supports LocalImageFile Context or OS Files
+    /// </summary>
     public void DragOver(object? sender, DragEventArgs e)
     {
-        // 1. Context drop for LocalImageFile
-        if (e.Data.GetDataFormats().Contains("Context"))
-        {
-            if (e.Data.Get("Context") is LocalImageFile imageFile)
-            {
-                e.Handled = true;
-                return;
-            }
-
-            e.DragEffects = DragDropEffects.None;
-        }
-        // 2. OS Files
-        if (e.Data.GetDataFormats().Contains(DataFormats.Files))
+        if (e.Data.GetDataFormats().Contains(DataFormats.Files) || e.Data.GetContext<LocalImageFile>() is not null)
         {
             e.Handled = true;
             return;
@@ -130,43 +94,53 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
     public void Drop(object? sender, DragEventArgs e)
     {
         // 1. Context drop for LocalImageFile
-        if (e.Data.GetDataFormats().Contains("Context"))
-        {
-            if (e.Data.Get("Context") is LocalImageFile imageFile)
-            {
-                e.Handled = true;
-
-                Dispatcher.UIThread.Post(
-                    () => LoadUserImage(new ImageSource(imageFile.AbsolutePath))
-                );
-
-                return;
-            }
-        }
-        // 2. OS Files
-        if (e.Data.GetDataFormats().Contains(DataFormats.Files))
+        if (e.Data.GetContext<LocalImageFile>() is { } imageFile)
         {
             e.Handled = true;
 
-            try
-            {
-                if (e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> files)
-                {
-                    var path = files.Select(f => f.Path.LocalPath).FirstOrDefault();
+            Dispatcher.UIThread.Post(() => LoadUserImageSafe(new ImageSource(imageFile.AbsolutePath)));
 
-                    if (string.IsNullOrWhiteSpace(path))
-                    {
-                        return;
-                    }
-
-                    Dispatcher.UIThread.Post(() => LoadUserImage(new ImageSource(path)));
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Warn(ex, "Failed to load image from drop");
-                notificationService.ShowPersistent("Failed to load source image", ex.Message);
-            }
+            return;
         }
+        // 2. OS Files
+        if (e.Data.GetFiles() is { } files && files.Select(f => f.TryGetLocalPath()).FirstOrDefault() is { } path)
+        {
+            e.Handled = true;
+
+            Dispatcher.UIThread.Post(() => LoadUserImageSafe(new ImageSource(path)));
+        }
+    }
+
+    /// <summary>
+    /// Calls <see cref="LoadUserImage"/> with notification error handling.
+    /// </summary>
+    private void LoadUserImageSafe(ImageSource image)
+    {
+        try
+        {
+            LoadUserImage(image);
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Error loading image");
+            notificationService.ShowPersistent("Error loading image", e.Message);
+        }
+    }
+
+    /// <summary>
+    /// Loads the user image from the given ImageSource.
+    /// </summary>
+    /// <param name="image">The ImageSource object representing the user image.</param>
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    private void LoadUserImage(ImageSource image)
+    {
+        var current = ImageSource;
+
+        ImageSource = image;
+
+        current?.Dispose();
+
+        // Cache the hash for later upload use
+        image.GetBlake3HashAsync().SafeFireAndForget();
     }
 }

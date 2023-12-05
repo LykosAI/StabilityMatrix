@@ -879,4 +879,10 @@
   <data name="Label_Settings" xml:space="preserve">
     <value>Settings</value>
   </data>
+  <data name="Action_SelectFile" xml:space="preserve">
+    <value>Select File</value>
+  </data>
+  <data name="Action_ReplaceContents" xml:space="preserve">
+    <value>Replace Contents</value>
+  </data>
 </root>

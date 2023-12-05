@@ -429,6 +429,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Replace Contents.
+        /// </summary>
+        public static string Action_ReplaceContents {
+            get {
+                return ResourceManager.GetString("Action_ReplaceContents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Restart.
         /// </summary>
         public static string Action_Restart {
@@ -497,6 +506,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Action_SelectDirectory {
             get {
                 return ResourceManager.GetString("Action_SelectDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select File.
+        /// </summary>
+        public static string Action_SelectFile {
+            get {
+                return ResourceManager.GetString("Action_SelectFile", resourceCulture);
             }
         }
         

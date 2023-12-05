@@ -7,3 +7,7 @@ dotnet_sort_system_directives_first = true
 
 # ReSharper properties
 resharper_csharp_max_line_length = 120
+
+# dotnet code quality
+# noinspection EditorConfigKeyCorrectness
+dotnet_code_quality.CA1826.exclude_ordefault_methods = true

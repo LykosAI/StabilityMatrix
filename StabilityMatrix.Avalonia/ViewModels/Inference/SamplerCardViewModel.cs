@@ -1,10 +1,12 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -15,16 +17,14 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+#pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(SamplerCard))]
 [ManagedService]
 [Transient]
-public partial class SamplerCardViewModel
-    : LoadableViewModelBase,
-        IParametersLoadableState,
-        IComfyStep
+public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLoadableState, IComfyStep
 {
     public const string ModuleKey = "Sampler";
 
@@ -44,6 +44,7 @@ public partial class SamplerCardViewModel
     private double denoiseStrength = 1;
 
     [ObservableProperty]
+    [property: Category("Settings")]
     private bool isCfgScaleEnabled;
 
     [ObservableProperty]
@@ -59,6 +60,7 @@ public partial class SamplerCardViewModel
     private int height = 512;
 
     [ObservableProperty]
+    [property: Category("Settings")]
     private bool isSamplerSelectionEnabled;
 
     [ObservableProperty]
@@ -66,6 +68,7 @@ public partial class SamplerCardViewModel
     private ComfySampler? selectedSampler = ComfySampler.EulerAncestral;
 
     [ObservableProperty]
+    [property: Category("Settings")]
     private bool isSchedulerSelectionEnabled;
 
     [ObservableProperty]
@@ -80,17 +83,13 @@ public partial class SamplerCardViewModel
 
     private int TotalSteps => Steps + RefinerSteps;
 
-    public SamplerCardViewModel(
-        IInferenceClientManager clientManager,
-        ServiceManager<ViewModelBase> vmFactory
-    )
+    public SamplerCardViewModel(IInferenceClientManager clientManager, ServiceManager<ViewModelBase> vmFactory)
     {
         ClientManager = clientManager;
         ModulesCardViewModel = vmFactory.Get<StackEditableCardViewModel>(modulesCard =>
         {
-            modulesCard.Title = "Addons";
+            modulesCard.Title = Resources.Label_Addons;
             modulesCard.AvailableModules = new[] { typeof(FreeUModule), typeof(ControlNetModule) };
-            modulesCard.InitializeDefaults();
         });
 
         ModulesCardViewModel.CardAdded += (
@@ -146,8 +145,7 @@ public partial class SamplerCardViewModel
         var primaryLatent = e.Builder.GetPrimaryAsLatent(vae);
 
         // Set primary sampler and scheduler
-        e.Builder.Connections.PrimarySampler =
-            SelectedSampler ?? throw new ValidationException("Sampler not selected");
+        e.Builder.Connections.PrimarySampler = SelectedSampler ?? throw new ValidationException("Sampler not selected");
         e.Builder.Connections.PrimaryScheduler =
             SelectedScheduler ?? throw new ValidationException("Scheduler not selected");
 
@@ -159,16 +157,14 @@ public partial class SamplerCardViewModel
                 new ComfyNodeBuilder.KSampler
                 {
                     Name = "Sampler",
-                    Model =
-                        e.Builder.Connections.BaseModel
-                        ?? throw new ArgumentException("No BaseModel"),
+                    Model = e.Builder.Connections.BaseModel ?? throw new ArgumentException("No BaseModel"),
                     Seed = e.Builder.Connections.Seed,
                     SamplerName = e.Builder.Connections.PrimarySampler?.Name!,
                     Scheduler = e.Builder.Connections.PrimaryScheduler?.Name!,
                     Steps = Steps,
                     Cfg = CfgScale,
-                    Positive = e.Temp.Conditioning.Positive,
-                    Negative = e.Temp.Conditioning.Negative,
+                    Positive = e.Temp.Conditioning?.Positive!,
+                    Negative = e.Temp.Conditioning?.Negative!,
                     LatentImage = primaryLatent,
                     Denoise = DenoiseStrength,
                 }
@@ -183,17 +179,15 @@ public partial class SamplerCardViewModel
                 new ComfyNodeBuilder.KSamplerAdvanced
                 {
                     Name = "Sampler",
-                    Model =
-                        e.Builder.Connections.BaseModel
-                        ?? throw new ArgumentException("No BaseModel"),
+                    Model = e.Builder.Connections.BaseModel ?? throw new ArgumentException("No BaseModel"),
                     AddNoise = true,
                     NoiseSeed = e.Builder.Connections.Seed,
                     Steps = TotalSteps,
                     Cfg = CfgScale,
                     SamplerName = e.Builder.Connections.PrimarySampler?.Name!,
                     Scheduler = e.Builder.Connections.PrimaryScheduler?.Name!,
-                    Positive = e.Temp.Conditioning.Positive,
-                    Negative = e.Temp.Conditioning.Negative,
+                    Positive = e.Temp.Conditioning?.Positive!,
+                    Negative = e.Temp.Conditioning?.Negative!,
                     LatentImage = primaryLatent,
                     StartAtStep = 0,
                     EndAtStep = Steps,
@@ -206,17 +200,15 @@ public partial class SamplerCardViewModel
                 new ComfyNodeBuilder.KSamplerAdvanced
                 {
                     Name = "Refiner_Sampler",
-                    Model =
-                        e.Builder.Connections.RefinerModel
-                        ?? throw new ArgumentException("No RefinerModel"),
+                    Model = e.Builder.Connections.RefinerModel ?? throw new ArgumentException("No RefinerModel"),
                     AddNoise = false,
                     NoiseSeed = e.Builder.Connections.Seed,
                     Steps = TotalSteps,
                     Cfg = CfgScale,
                     SamplerName = e.Builder.Connections.PrimarySampler?.Name!,
                     Scheduler = e.Builder.Connections.PrimaryScheduler?.Name!,
-                    Positive = e.Temp.RefinerConditioning.Positive,
-                    Negative = e.Temp.RefinerConditioning.Negative,
+                    Positive = e.Temp.RefinerConditioning?.Positive!,
+                    Negative = e.Temp.RefinerConditioning?.Negative!,
                     // Connect to previous sampler
                     LatentImage = sampler.Output,
                     StartAtStep = Steps,
@@ -254,18 +246,11 @@ public partial class SamplerCardViewModel
 
         if (
             !string.IsNullOrEmpty(parameters.Sampler)
-            && GenerationParametersConverter.TryGetSamplerScheduler(
-                parameters.Sampler,
-                out var samplerScheduler
-            )
+            && GenerationParametersConverter.TryGetSamplerScheduler(parameters.Sampler, out var samplerScheduler)
         )
         {
-            SelectedSampler = ClientManager.Samplers.FirstOrDefault(
-                s => s == samplerScheduler.Sampler
-            );
-            SelectedScheduler = ClientManager.Schedulers.FirstOrDefault(
-                s => s == samplerScheduler.Scheduler
-            );
+            SelectedSampler = ClientManager.Samplers.FirstOrDefault(s => s == samplerScheduler.Sampler);
+            SelectedScheduler = ClientManager.Schedulers.FirstOrDefault(s => s == samplerScheduler.Scheduler);
         }
     }
 

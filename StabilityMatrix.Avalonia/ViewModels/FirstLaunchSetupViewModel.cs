@@ -7,6 +7,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -25,8 +26,7 @@ public partial class FirstLaunchSetupViewModel : ViewModelBase
     private RefreshBadgeViewModel checkHardwareBadge =
         new()
         {
-            WorkingToolTipText =
-                "We're checking some hardware specifications to determine compatibility.",
+            WorkingToolTipText = "We're checking some hardware specifications to determine compatibility.",
             SuccessToolTipText = "Everything looks good!",
             FailToolTipText =
                 "We recommend a GPU with CUDA support for the best experience. "
@@ -48,9 +48,7 @@ public partial class FirstLaunchSetupViewModel : ViewModelBase
             gpuInfo = await Task.Run(() => HardwareHelper.IterGpuInfo().ToArray());
         }
         // First Nvidia GPU
-        var activeGpu = gpuInfo.FirstOrDefault(
-            gpu => gpu.Name?.ToLowerInvariant().Contains("nvidia") ?? false
-        );
+        var activeGpu = gpuInfo.FirstOrDefault(gpu => gpu.Name?.ToLowerInvariant().Contains("nvidia") ?? false);
         var isNvidia = activeGpu is not null;
         // Otherwise first GPU
         activeGpu ??= gpuInfo.FirstOrDefault();

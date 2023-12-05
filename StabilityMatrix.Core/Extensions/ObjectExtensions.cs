@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using JetBrains.Annotations;
 using RockLib.Reflection.Optimized;
 
@@ -10,18 +11,17 @@ public static class ObjectExtensions
     /// <summary>
     /// Cache of Types to named field getters
     /// </summary>
-    private static readonly Dictionary<
-        Type,
-        Dictionary<string, Func<object, object>>
-    > FieldGetterTypeCache = new();
+    private static readonly Dictionary<Type, Dictionary<string, Func<object, object>>> FieldGetterTypeCache = new();
 
     /// <summary>
     /// Cache of Types to named field setters
     /// </summary>
-    private static readonly Dictionary<
-        Type,
-        Dictionary<string, Action<object, object>>
-    > FieldSetterTypeCache = new();
+    private static readonly Dictionary<Type, Dictionary<string, Action<object, object>>> FieldSetterTypeCache = new();
+
+    /// <summary>
+    /// Cache of Types to named property getters
+    /// </summary>
+    private static readonly Dictionary<Type, Dictionary<string, Func<object, object>>> PropertyGetterTypeCache = new();
 
     /// <summary>
     /// Get the value of a named private field from an object
@@ -38,17 +38,13 @@ public static class ObjectExtensions
         if (!fieldGetterCache.TryGetValue(fieldName, out var fieldGetter))
         {
             // Get the field
-            var field = obj.GetType()
-                .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            var field = obj.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
             // Try get from parent
-            field ??= obj.GetType()
-                .BaseType?.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            field ??= obj.GetType().BaseType?.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
 
             if (field is null)
             {
-                throw new ArgumentException(
-                    $"Field {fieldName} not found on type {obj.GetType().Name}"
-                );
+                throw new ArgumentException($"Field {fieldName} not found on type {obj.GetType().Name}");
             }
 
             // Create a getter for the field
@@ -59,6 +55,54 @@ public static class ObjectExtensions
         }
 
         return (T?)fieldGetter(obj);
+    }
+
+    /// <summary>
+    /// Get the value of a protected property from an object
+    /// </summary>
+    /// <remarks>
+    /// The property must be defined by the runtime type of <see cref="obj"/> or its first base type.
+    /// </remarks>
+    public static object? GetProtectedProperty(this object obj, [LocalizationRequired(false)] string propertyName)
+    {
+        // Check cache
+        var fieldGetterCache = PropertyGetterTypeCache.GetOrAdd(obj.GetType());
+
+        if (!fieldGetterCache.TryGetValue(propertyName, out var propertyGetter))
+        {
+            // Get the field
+            var propertyInfo = obj.GetType()
+                .GetProperty(propertyName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            // Try get from parent
+            propertyInfo ??= obj.GetType()
+                .BaseType
+                ?.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+
+            if (propertyInfo is null)
+            {
+                throw new ArgumentException($"Property {propertyName} not found on type {obj.GetType().Name}");
+            }
+
+            // Create a getter for the field
+            propertyGetter = o => propertyInfo.GetValue(o)!;
+
+            // Add to cache
+            fieldGetterCache.Add(propertyName, propertyGetter);
+        }
+
+        return (object?)propertyGetter(obj);
+    }
+
+    /// <summary>
+    /// Get the value of a protected property from an object
+    /// </summary>
+    /// <remarks>
+    /// The property must be defined by the runtime type of <see cref="obj"/> or its first base type.
+    /// </remarks>
+    public static T? GetProtectedProperty<T>(this object obj, [LocalizationRequired(false)] string propertyName)
+        where T : class
+    {
+        return (T?)GetProtectedProperty(obj, propertyName);
     }
 
     /// <summary>
@@ -75,10 +119,7 @@ public static class ObjectExtensions
         if (!fieldGetterCache.TryGetValue(fieldName, out var fieldGetter))
         {
             // Get the field
-            var field = typeof(TObject).GetField(
-                fieldName,
-                BindingFlags.Instance | BindingFlags.NonPublic
-            );
+            var field = typeof(TObject).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
 
             if (field is null)
             {
@@ -108,17 +149,13 @@ public static class ObjectExtensions
         if (!fieldSetterCache.TryGetValue(fieldName, out var fieldSetter))
         {
             // Get the field
-            var field = obj.GetType()
-                .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            var field = obj.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
             // Try get from parent
-            field ??= obj.GetType()
-                .BaseType?.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            field ??= obj.GetType().BaseType?.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
 
             if (field is null)
             {
-                throw new ArgumentException(
-                    $"Field {fieldName} not found on type {obj.GetType().Name}"
-                );
+                throw new ArgumentException($"Field {fieldName} not found on type {obj.GetType().Name}");
             }
 
             // Create a setter for the field
@@ -142,17 +179,13 @@ public static class ObjectExtensions
         if (!fieldSetterCache.TryGetValue(fieldName, out var fieldSetter))
         {
             // Get the field
-            var field = obj.GetType()
-                .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            var field = obj.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
             // Try get from parent
-            field ??= obj.GetType()
-                .BaseType?.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            field ??= obj.GetType().BaseType?.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
 
             if (field is null)
             {
-                throw new ArgumentException(
-                    $"Field {fieldName} not found on type {obj.GetType().Name}"
-                );
+                throw new ArgumentException($"Field {fieldName} not found on type {obj.GetType().Name}");
             }
 
             // Create a setter for the field

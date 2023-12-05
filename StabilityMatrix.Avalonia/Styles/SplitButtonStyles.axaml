@@ -11,6 +11,7 @@
                 <SplitButton Classes="info" Content="Info Button" Margin="8" HorizontalAlignment="Center" />
                 <SplitButton Classes="transparent-info" Content="Semi-Transparent Info Button" Margin="8" HorizontalAlignment="Center" />
                 <SplitButton Classes="transparent" Content="Transparent Button" Margin="8" HorizontalAlignment="Center" />
+                <SplitButton Classes="transparent-full" Content="Full Transparent Button" Margin="8" HorizontalAlignment="Center" />
                 <SplitButton Content="Disabled Button" Margin="8" IsEnabled="False" HorizontalAlignment="Center" />
             </StackPanel>
         </Border>
@@ -360,6 +361,68 @@
         <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
             <Setter Property="Background" Value="{DynamicResource SystemControlTransparentBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
+        </Style>
+        <Style Selector="^ /template/ Button /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
+        </Style>
+
+        <!-- Pseudo-classes -->
+        <Style Selector="^ /template/ Button#PART_PrimaryButton:pointerover">
+            <Style Selector="^ /template/ ui|FABorder#Root">
+                <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundDisabled}" />
+            </Style>
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPointerOver}" />
+            </Style>
+        </Style>
+        
+        <Style Selector="^ /template/ Button#PART_SecondaryButton:pointerover">
+            <Style Selector="^ /template/ ui|FABorder#Root">
+                <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundDisabled}" />
+            </Style>
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPointerOver}" />
+            </Style>
+        </Style>
+
+        <Style Selector="^ /template/ Button#PART_PrimaryButton:pressed">
+            <Style Selector="^ /template/ ui|FABorder#Root">
+                <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPressed}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundPressed}" />
+            </Style>
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPressed}" />
+            </Style>
+        </Style>
+        
+        <Style Selector="^ /template/ Button#PART_SecondaryButton:pressed">
+            <Style Selector="^ /template/ ui|FABorder#Root">
+                <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPressed}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundPressed}" />
+            </Style>
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPressed}" />
+            </Style>
+        </Style>
+
+        <Style Selector="^:disabled">
+            <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
+                <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
+            </Style>
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundDisabled}" />
+            </Style>
+        </Style>
+    </Style>
+    
+    <!-- Transparent-Full -->
+    <Style Selector="SplitButton.transparent-full">
+        <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
+            <Setter Property="Background" Value="{DynamicResource SystemControlTransparentBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlTransparentBrush}" />
         </Style>
         <Style Selector="^ /template/ Button /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />

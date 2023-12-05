@@ -18,6 +18,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 
@@ -46,6 +47,7 @@ public partial class CheckpointFile : ViewModelBase
     private string? previewImagePath;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsConnectedModel))]
     private ConnectedModelInfo? connectedModel;
     public bool IsConnectedModel => ConnectedModel != null;
 
@@ -58,6 +60,9 @@ public partial class CheckpointFile : ViewModelBase
     [ObservableProperty]
     private CheckpointFolder parentFolder;
 
+    [ObservableProperty]
+    private ProgressReport? progress;
+
     public string FileName => Path.GetFileName(FilePath);
 
     public bool CanShowTriggerWords =>
@@ -65,15 +70,8 @@ public partial class CheckpointFile : ViewModelBase
 
     public ObservableCollection<string> Badges { get; set; } = new();
 
-    public static readonly string[] SupportedCheckpointExtensions =
-    {
-        ".safetensors",
-        ".pt",
-        ".ckpt",
-        ".pth",
-        ".bin"
-    };
-    private static readonly string[] SupportedImageExtensions = { ".png", ".jpg", ".jpeg" };
+    public static readonly string[] SupportedCheckpointExtensions = { ".safetensors", ".pt", ".ckpt", ".pth", ".bin" };
+    private static readonly string[] SupportedImageExtensions = { ".png", ".jpg", ".jpeg", ".gif" };
     private static readonly string[] SupportedMetadataExtensions = { ".json" };
 
     partial void OnConnectedModelChanged(ConnectedModelInfo? value)
@@ -97,9 +95,7 @@ public partial class CheckpointFile : ViewModelBase
     {
         if (string.IsNullOrEmpty(FilePath))
         {
-            throw new InvalidOperationException(
-                "Cannot get connected model info file path when FilePath is empty"
-            );
+            throw new InvalidOperationException("Cannot get connected model info file path when FilePath is empty");
         }
         var modelNameNoExt = Path.GetFileNameWithoutExtension((string?)FilePath);
         var modelDir = Path.GetDirectoryName((string?)FilePath) ?? "";
@@ -196,10 +192,7 @@ public partial class CheckpointFile : ViewModelBase
                     var cmInfoPath = Path.Combine(parentPath, $"{originalNameNoExt}.cm-info.json");
                     if (File.Exists(cmInfoPath))
                     {
-                        File.Move(
-                            cmInfoPath,
-                            Path.Combine(parentPath, $"{nameNoExt}.cm-info.json")
-                        );
+                        File.Move(cmInfoPath, Path.Combine(parentPath, $"{nameNoExt}.cm-info.json"));
                     }
                 }
             }
@@ -231,6 +224,43 @@ public partial class CheckpointFile : ViewModelBase
         return App.Clipboard.SetTextAsync(words);
     }
 
+    [RelayCommand]
+    private async Task FindConnectedMetadata(bool forceReimport = false)
+    {
+        if (App.Services.GetService(typeof(IMetadataImportService)) is not IMetadataImportService importService)
+            return;
+
+        IsLoading = true;
+
+        try
+        {
+            var progressReport = new Progress<ProgressReport>(report =>
+            {
+                Progress = report;
+            });
+
+            var cmInfo = await importService.GetMetadataForFile(FilePath, progressReport, forceReimport);
+            if (cmInfo != null)
+            {
+                ConnectedModel = cmInfo;
+                PreviewImagePath = SupportedImageExtensions
+                    .Select(
+                        ext =>
+                            Path.Combine(
+                                ParentFolder.DirectoryPath,
+                                $"{Path.GetFileNameWithoutExtension(FileName)}.preview{ext}"
+                            )
+                    )
+                    .Where(File.Exists)
+                    .FirstOrDefault();
+            }
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
     /// <summary>
     /// Indexes directory and yields all checkpoint files.
     /// First we match all files with supported extensions.
@@ -248,9 +278,7 @@ public partial class CheckpointFile : ViewModelBase
         {
             if (
                 !SupportedCheckpointExtensions.Any(
-                    ext =>
-                        Path.GetExtension(file)
-                            .Equals(ext, StringComparison.InvariantCultureIgnoreCase)
+                    ext => Path.GetExtension(file).Equals(ext, StringComparison.InvariantCultureIgnoreCase)
                 )
             )
                 continue;
@@ -261,10 +289,7 @@ public partial class CheckpointFile : ViewModelBase
                 FilePath = Path.Combine(directory, file),
             };
 
-            var jsonPath = Path.Combine(
-                directory,
-                $"{Path.GetFileNameWithoutExtension(file)}.cm-info.json"
-            );
+            var jsonPath = Path.Combine(directory, $"{Path.GetFileNameWithoutExtension(file)}.cm-info.json");
             if (File.Exists(jsonPath))
             {
                 var json = File.ReadAllText(jsonPath);
@@ -273,13 +298,7 @@ public partial class CheckpointFile : ViewModelBase
             }
 
             checkpointFile.PreviewImagePath = SupportedImageExtensions
-                .Select(
-                    ext =>
-                        Path.Combine(
-                            directory,
-                            $"{Path.GetFileNameWithoutExtension(file)}.preview{ext}"
-                        )
-                )
+                .Select(ext => Path.Combine(directory, $"{Path.GetFileNameWithoutExtension(file)}.preview{ext}"))
                 .Where(File.Exists)
                 .FirstOrDefault();
 
@@ -296,28 +315,16 @@ public partial class CheckpointFile : ViewModelBase
 
     public static IEnumerable<CheckpointFile> GetAllCheckpointFiles(string modelsDirectory)
     {
-        foreach (
-            var file in Directory.EnumerateFiles(
-                modelsDirectory,
-                "*.*",
-                SearchOption.AllDirectories
-            )
-        )
+        foreach (var file in Directory.EnumerateFiles(modelsDirectory, "*.*", SearchOption.AllDirectories))
         {
             if (
                 !SupportedCheckpointExtensions.Any(
-                    ext =>
-                        Path.GetExtension(file)
-                            .Equals(ext, StringComparison.InvariantCultureIgnoreCase)
+                    ext => Path.GetExtension(file).Equals(ext, StringComparison.InvariantCultureIgnoreCase)
                 )
             )
                 continue;
 
-            var checkpointFile = new CheckpointFile
-            {
-                Title = Path.GetFileNameWithoutExtension(file),
-                FilePath = file,
-            };
+            var checkpointFile = new CheckpointFile { Title = Path.GetFileNameWithoutExtension(file), FilePath = file };
 
             var jsonPath = Path.Combine(
                 Path.GetDirectoryName(file) ?? "",
@@ -425,6 +432,5 @@ public partial class CheckpointFile : ViewModelBase
         }
     }
 
-    public static IEqualityComparer<CheckpointFile> FilePathComparer { get; } =
-        new FilePathEqualityComparer();
+    public static IEqualityComparer<CheckpointFile> FilePathComparer { get; } = new FilePathEqualityComparer();
 }

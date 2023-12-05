@@ -1,0 +1,544 @@
+[
+  {
+    "ModelCategory": "BaseModel",
+    "ModelName": "Stable Diffusion 1.5",
+    "RepositoryPath": "runwayml/stable-diffusion-v1-5",
+    "Files": [
+      "v1-5-pruned-emaonly.safetensors"
+    ],
+    "LicenseType": "CreativeML Open RAIL-M"
+  },
+  {
+    "ModelCategory": "BaseModel",
+    "ModelName": "Stable Diffusion 2.1",
+    "RepositoryPath": "stabilityai/stable-diffusion-2-1",
+    "Files": [
+      "v2-1_768-ema-pruned.safetensors"
+    ],
+    "LicenseType": "Open RAIL++"
+  },
+  {
+    "ModelCategory": "BaseModel",
+    "ModelName": "Stable Diffusion XL (Base)",
+    "RepositoryPath": "stabilityai/stable-diffusion-xl-base-1.0",
+    "Files": [
+      "sd_xl_base_1.0_0.9vae.safetensors",
+      "sd_xl_offset_example-lora_1.0.safetensors"
+    ],
+    "LicenseType": "Open RAIL++",
+    "LicensePath": "LICENSE.md"
+  },
+  {
+    "ModelCategory": "BaseModel",
+    "ModelName": "Stable Diffusion XL (Refiner)",
+    "RepositoryPath": "stabilityai/stable-diffusion-xl-refiner-1.0",
+    "Files": [
+      "sd_xl_refiner_1.0_0.9vae.safetensors"
+    ],
+    "LicenseType": "Open RAIL++",
+    "LicensePath": "LICENSE.md"
+  },
+  {
+    "ModelCategory": "ControlNet",
+    "ModelName": "Canny",
+    "RepositoryPath": "lllyasviel/ControlNet-v1-1",
+    "Files": [
+      "control_v11p_sd15_canny.pth",
+      "control_v11p_sd15_canny.yaml"
+    ],
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "ControlNet",
+    "ModelName": "Depth",
+    "RepositoryPath": "lllyasviel/ControlNet-v1-1",
+    "Files": [
+      "control_v11f1p_sd15_depth.pth",
+      "control_v11f1p_sd15_depth.yaml"
+    ],
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "ControlNet",
+    "ModelName": "MLSD",
+    "RepositoryPath": "lllyasviel/ControlNet-v1-1",
+    "Files": [
+      "control_v11p_sd15_mlsd.pth",
+      "control_v11p_sd15_mlsd.yaml"
+    ],
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "ControlNet",
+    "ModelName": "Inpaint",
+    "RepositoryPath": "lllyasviel/ControlNet-v1-1",
+    "Files": [
+      "control_v11p_sd15_inpaint.pth",
+      "control_v11p_sd15_inpaint.yaml"
+    ],
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "ControlNet",
+    "ModelName": "IP2P",
+    "RepositoryPath": "lllyasviel/ControlNet-v1-1",
+    "Files": [
+      "control_v11e_sd15_ip2p.pth",
+      "control_v11e_sd15_ip2p.yaml"
+    ],
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "ControlNet",
+    "ModelName": "Tile",
+    "RepositoryPath": "lllyasviel/ControlNet-v1-1",
+    "Files": [
+      "control_v11f1e_sd15_tile.pth",
+      "control_v11f1e_sd15_tile.yaml"
+    ],
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "ControlNet",
+    "ModelName": "OpenPose",
+    "RepositoryPath": "lllyasviel/ControlNet-v1-1",
+    "Files": [
+      "control_v11p_sd15_openpose.pth",
+      "control_v11p_sd15_openpose.yaml"
+    ],
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "ControlNet",
+    "ModelName": "LineArt",
+    "RepositoryPath": "lllyasviel/ControlNet-v1-1",
+    "Files": [
+      "control_v11p_sd15_lineart.pth",
+      "control_v11p_sd15_lineart.yaml"
+    ],
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "ControlNet",
+    "ModelName": "LineArt Anime",
+    "RepositoryPath": "lllyasviel/ControlNet-v1-1",
+    "Files": [
+      "control_v11p_sd15s2_lineart_anime.pth",
+      "control_v11p_sd15s2_lineart_anime.yaml"
+    ],
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "ControlNet",
+    "ModelName": "NormalBae",
+    "RepositoryPath": "lllyasviel/ControlNet-v1-1",
+    "Files": [
+      "control_v11p_sd15_normalbae.pth",
+      "control_v11p_sd15_normalbae.yaml"
+    ],
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "ControlNet",
+    "ModelName": "Seg",
+    "RepositoryPath": "lllyasviel/ControlNet-v1-1",
+    "Files": [
+      "control_v11p_sd15_seg.pth",
+      "control_v11p_sd15_seg.yaml"
+    ],
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "ControlNet",
+    "ModelName": "Soft Edge",
+    "RepositoryPath": "lllyasviel/ControlNet-v1-1",
+    "Files": [
+      "control_v11p_sd15_softedge.pth",
+      "control_v11p_sd15_softedge.yaml"
+    ],
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "ControlNet",
+    "ModelName": "Scribble",
+    "RepositoryPath": "lllyasviel/ControlNet-v1-1",
+    "Files": [
+      "control_v11p_sd15_scribble.pth",
+      "control_v11p_sd15_scribble.yaml"
+    ],
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "ControlNet",
+    "ModelName": "Shuffle",
+    "RepositoryPath": "lllyasviel/ControlNet-v1-1",
+    "Files": [
+      "control_v11e_sd15_shuffle.pth",
+      "control_v11e_sd15_shuffle.yaml"
+    ],
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "DiffusersControlNet",
+    "ModelName": "Canny",
+    "RepositoryPath": "lllyasviel/control_v11p_sd15_canny",
+    "Files": [
+      "diffusion_pytorch_model.safetensors",
+      "config.json"
+    ],
+    "Subfolder": "canny",
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "DiffusersControlNet",
+    "ModelName": "Depth",
+    "RepositoryPath": "lllyasviel/control_v11f1p_sd15_depth",
+    "Files": [
+      "diffusion_pytorch_model.safetensors",
+      "config.json"
+    ],
+    "Subfolder": "depth",
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "DiffusersControlNet",
+    "ModelName": "MLSD",
+    "RepositoryPath": "lllyasviel/control_v11p_sd15_mlsd",
+    "Files": [
+      "diffusion_pytorch_model.safetensors",
+      "config.json"
+    ],
+    "Subfolder": "MLSD",
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "DiffusersControlNet",
+    "ModelName": "Inpaint",
+    "RepositoryPath": "lllyasviel/control_v11p_sd15_inpaint",
+    "Files": [
+      "diffusion_pytorch_model.safetensors",
+      "config.json"
+    ],
+    "Subfolder": "inpaint",
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "DiffusersControlNet",
+    "ModelName": "IP2P",
+    "RepositoryPath": "lllyasviel/control_v11e_sd15_ip2p",
+    "Files": [
+      "diffusion_pytorch_model.safetensors",
+      "config.json"
+    ],
+    "Subfolder": "ip2p",
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "DiffusersControlNet",
+    "ModelName": "Tile",
+    "RepositoryPath": "lllyasviel/control_v11f1e_sd15_tile",
+    "Files": [
+      "diffusion_pytorch_model.bin",
+      "config.json"
+    ],
+    "Subfolder": "tile",
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "DiffusersControlNet",
+    "ModelName": "OpenPose",
+    "RepositoryPath": "lllyasviel/control_v11p_sd15_openpose",
+    "Files": [
+      "diffusion_pytorch_model.safetensors",
+      "config.json"
+    ],
+    "Subfolder": "openpose",
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "DiffusersControlNet",
+    "ModelName": "LineArt",
+    "RepositoryPath": "lllyasviel/control_v11p_sd15_lineart",
+    "Files": [
+      "diffusion_pytorch_model.safetensors",
+      "config.json"
+    ],
+    "Subfolder": "lineart",
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "DiffusersControlNet",
+    "ModelName": "LineArt Anime",
+    "RepositoryPath": "lllyasviel/control_v11p_sd15s2_lineart_anime",
+    "Files": [
+      "diffusion_pytorch_model.safetensors",
+      "config.json"
+    ],
+    "Subfolder": "lineart_anime",
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "DiffusersControlNet",
+    "ModelName": "NormalBae",
+    "RepositoryPath": "lllyasviel/control_v11p_sd15_normalbae",
+    "Files": [
+      "diffusion_pytorch_model.safetensors",
+      "config.json"
+    ],
+    "Subfolder": "normalbae",
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "DiffusersControlNet",
+    "ModelName": "Seg",
+    "RepositoryPath": "lllyasviel/control_v11p_sd15_seg",
+    "Files": [
+      "diffusion_pytorch_model.safetensors",
+      "config.json"
+    ],
+    "Subfolder": "seg",
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "DiffusersControlNet",
+    "ModelName": "Soft Edge",
+    "RepositoryPath": "lllyasviel/control_v11p_sd15_softedge",
+    "Files": [
+      "diffusion_pytorch_model.safetensors",
+      "config.json"
+    ],
+    "Subfolder": "softedge",
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "DiffusersControlNet",
+    "ModelName": "Scribble",
+    "RepositoryPath": "lllyasviel/control_v11p_sd15_scribble",
+    "Files": [
+      "diffusion_pytorch_model.safetensors",
+      "config.json"
+    ],
+    "Subfolder": "scribble",
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "DiffusersControlNet",
+    "ModelName": "Shuffle",
+    "RepositoryPath": "lllyasviel/control_v11e_sd15_shuffle",
+    "Files": [
+      "diffusion_pytorch_model.safetensors",
+      "config.json"
+    ],
+    "Subfolder": "shuffle",
+    "LicenseType": "Open RAIL"
+  },
+  {
+    "ModelCategory": "DiffusersClipVision",
+    "ModelName": "IP Adapter Encoder",
+    "RepositoryPath": "InvokeAI/ip_adapter_sd_image_encoder",
+    "Files": [
+      "config.json",
+      "model.safetensors"
+    ],
+    "Subfolder": "ip_adapter_sd_image_encoder",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersClipVision",
+    "ModelName": "IP Adapter Encoder (SDXL)",
+    "RepositoryPath": "InvokeAI/ip_adapter_sdxl_image_encoder",
+    "Files": [
+      "config.json",
+      "model.safetensors"
+    ],
+    "Subfolder": "ip_adapter_sd_image_encoder",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersIpAdapter",
+    "ModelName": "SD 1.5 Adapter",
+    "RepositoryPath": "InvokeAI/ip_adapter_sd15",
+    "Files": [
+      "image_encoder.txt",
+      "ip_adapter.bin"
+    ],
+    "Subfolder": "ip_adapter_sd15",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersIpAdapter",
+    "ModelName": "SD 1.5 Light Adapter",
+    "RepositoryPath": "InvokeAI/ip_adapter_sd15_light",
+    "Files": [
+      "image_encoder.txt",
+      "ip_adapter.bin"
+    ],
+    "Subfolder": "ip_adapter_sd15_light",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersIpAdapter",
+    "ModelName": "SD 1.5 Plus Adapter",
+    "RepositoryPath": "InvokeAI/ip_adapter_plus_sd15",
+    "Files": [
+      "image_encoder.txt",
+      "ip_adapter.bin"
+    ],
+    "Subfolder": "ip_adapter_plus_sd15",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersIpAdapter",
+    "ModelName": "SD 1.5 Face Plus Adapter",
+    "RepositoryPath": "InvokeAI/ip_adapter_plus_face_sd15",
+    "Files": [
+      "image_encoder.txt",
+      "ip_adapter.bin"
+    ],
+    "Subfolder": "ip_adapter_plus_face_sd15",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersIpAdapterXl",
+    "ModelName": "SDXL Adapter",
+    "RepositoryPath": "InvokeAI/ip_adapter_sdxl",
+    "Files": [
+      "image_encoder.txt",
+      "ip_adapter.bin"
+    ],
+    "Subfolder": "ip_adapter_sdxl",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersIpAdapterXl",
+    "ModelName": "SDXL Plus Adapter",
+    "RepositoryPath": "InvokeAI/ip-adapter-plus_sdxl_vit-h",
+    "Files": [
+      "image_encoder.txt",
+      "ip_adapter.bin"
+    ],
+    "Subfolder": "ip_adapter_plus_sdxl_vit-h",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersIpAdapterXl",
+    "ModelName": "SDXL Face Plus Adapter",
+    "RepositoryPath": "InvokeAI/ip-adapter-plus-face_sdxl_vit-h",
+    "Files": [
+      "image_encoder.txt",
+      "ip_adapter.bin"
+    ],
+    "Subfolder": "ip_adapter_plus_face_sdxl_vit-h",
+    "LicenseType": "CreativeML Open RAIL-M"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "Sketch",
+    "RepositoryPath": "TencentARC/t2iadapter_sketch_sd15v2",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.bin"
+    ],
+    "Subfolder": "t2iadapter_sketch_sd15v2",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "Depth",
+    "RepositoryPath": "TencentARC/t2iadapter_depth_sd15v2",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.bin"
+    ],
+    "Subfolder": "t2iadapter_depth_sd15v2",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "Canny",
+    "RepositoryPath": "TencentARC/t2iadapter_canny_sd15v2",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.bin"
+    ],
+    "Subfolder": "t2iadapter_canny_sd15v2",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "Depth-Zoe",
+    "RepositoryPath": "TencentARC/t2iadapter_zoedepth_sd15v1",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.bin"
+    ],
+    "Subfolder": "t2iadapter_zoedepth_sd15v1",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "Sketch (SDXL)",
+    "RepositoryPath": "TencentARC/t2i-adapter-sketch-sdxl-1.0",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.safetensors"
+    ],
+    "Subfolder": "t2i-adapter-sketch-sdxl-1.0",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "Depth-Zoe (SDXL)",
+    "RepositoryPath": "TencentARC/t2i-adapter-depth-zoe-sdxl-1.0",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.safetensors"
+    ],
+    "Subfolder": "t2i-adapter-depth-zoe-sdxl-1.0",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "OpenPose (SDXL)",
+    "RepositoryPath": "TencentARC/t2i-adapter-openpose-sdxl-1.0",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.safetensors"
+    ],
+    "Subfolder": "t2i-adapter-openpose-sdxl-1.0",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "Depth-MiDaS (SDXL)",
+    "RepositoryPath": "TencentARC/t2i-adapter-depth-midas-sdxl-1.0",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.safetensors"
+    ],
+    "Subfolder": "t2i-adapter-depth-midas-sdxl-1.0",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "LineArt (SDXL)",
+    "RepositoryPath": "TencentARC/t2i-adapter-lineart-sdxl-1.0",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.safetensors"
+    ],
+    "Subfolder": "t2i-adapter-lineart-sdxl-1.0",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersT2IAdapter",
+    "ModelName": "Canny (SDXL)",
+    "RepositoryPath": "TencentARC/t2i-adapter-canny-sdxl-1.0",
+    "Files": [
+      "config.json",
+      "diffusion_pytorch_model.safetensors"
+    ],
+    "Subfolder": "t2i-adapter-canny-sdxl-1.0",
+    "LicenseType": "Apache 2.0"
+  }
+]

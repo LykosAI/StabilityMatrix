@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Http;
 using System.Text;
 using AvaloniaEdit.Utils;
+using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,10 +23,10 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
-using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Avalonia.ViewModels.OutputsPage;
+using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Database;
@@ -42,6 +44,8 @@ using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
+using CivitAiBrowserViewModel = StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser.CivitAiBrowserViewModel;
+using HuggingFacePageViewModel = StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser.HuggingFacePageViewModel;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
@@ -76,10 +80,7 @@ public static class DesignData
                                 Id = activePackageId,
                                 DisplayName = "My Installed Package",
                                 PackageName = "stable-diffusion-webui",
-                                Version = new InstalledPackageVersion
-                                {
-                                    InstalledReleaseVersion = "v1.0.0"
-                                },
+                                Version = new InstalledPackageVersion { InstalledReleaseVersion = "v1.0.0" },
                                 LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
                                 LastUpdateCheck = DateTimeOffset.Now
                             },
@@ -91,8 +92,7 @@ public static class DesignData
                                 Version = new InstalledPackageVersion
                                 {
                                     InstalledBranch = "master",
-                                    InstalledCommitSha =
-                                        "abc12uwu345568972abaedf7g7e679a98879e879f87ga8"
+                                    InstalledCommitSha = "abc12uwu345568972abaedf7g7e679a98879e879f87ga8"
                                 },
                                 LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
                                 LastUpdateCheck = DateTimeOffset.Now
@@ -125,7 +125,8 @@ public static class DesignData
             .AddSingleton<IInferenceClientManager, MockInferenceClientManager>()
             .AddSingleton<ICompletionProvider, MockCompletionProvider>()
             .AddSingleton<IModelIndexService, MockModelIndexService>()
-            .AddSingleton<IImageIndexService, MockImageIndexService>();
+            .AddSingleton<IImageIndexService, MockImageIndexService>()
+            .AddSingleton<IMetadataImportService, MetadataImportService>();
 
         // Placeholder services that nobody should need during design time
         services
@@ -148,6 +149,7 @@ public static class DesignData
         var modelFinder = Services.GetRequiredService<ModelFinder>();
         var packageFactory = Services.GetRequiredService<IPackageFactory>();
         var notificationService = Services.GetRequiredService<INotificationService>();
+        var modelImportService = Services.GetRequiredService<IMetadataImportService>();
 
         LaunchOptionsViewModel = Services.GetRequiredService<LaunchOptionsViewModel>();
         LaunchOptionsViewModel.Cards = new[]
@@ -184,7 +186,7 @@ public static class DesignData
             CheckpointsPageViewModel.CheckpointFoldersCache,
             new CheckpointFolder[]
             {
-                new(settingsManager, downloadService, modelFinder, notificationService)
+                new(settingsManager, downloadService, modelFinder, notificationService, modelImportService)
                 {
                     DirectoryPath = "Models/StableDiffusion",
                     DisplayedCheckpointFiles = new ObservableCollectionExtended<CheckpointFile>()
@@ -211,14 +213,10 @@ public static class DesignData
                                 TrainedWords = ["aurora", "lightning"]
                             }
                         },
-                        new()
-                        {
-                            FilePath = "~/Models/Lora/model.safetensors",
-                            Title = "Some model"
-                        },
+                        new() { FilePath = "~/Models/Lora/model.safetensors", Title = "Some model" },
                     },
                 },
-                new(settingsManager, downloadService, modelFinder, notificationService)
+                new(settingsManager, downloadService, modelFinder, notificationService, modelImportService)
                 {
                     Title = "Lora",
                     DirectoryPath = "Packages/Lora",
@@ -299,56 +297,55 @@ public static class DesignData
             );
         }*/
 
-        CheckpointBrowserViewModel.ModelCards =
-            new ObservableCollection<CheckpointBrowserCardViewModel>
+        CivitAiBrowserViewModel.ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>
+        {
+            dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
             {
-                dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
+                vm.CivitModel = new CivitModel
                 {
-                    vm.CivitModel = new CivitModel
+                    Name = "BB95 Furry Mix",
+                    Description = "A furry mix of BB95",
+                    Stats = new CivitModelStats { Rating = 3.5, RatingCount = 24 },
+                    ModelVersions = [new() { Name = "v1.2.2-Inpainting" }],
+                    Creator = new CivitCreator
                     {
-                        Name = "BB95 Furry Mix",
-                        Description = "A furry mix of BB95",
-                        Stats = new CivitModelStats { Rating = 3.5, RatingCount = 24 },
-                        ModelVersions = [
-                            new() { Name = "v1.2.2-Inpainting" } 
-                        ],
-                        Creator = new CivitCreator
+                        Image = "https://gravatar.com/avatar/fe74084ae8a081dc2283f5bde4736756ad?f=y&d=retro",
+                        Username = "creator-1"
+                    }
+                };
+            }),
+            dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
+            {
+                vm.CivitModel = new CivitModel
+                {
+                    Name = "Another Model",
+                    Description = "A mix of example",
+                    Stats = new CivitModelStats { Rating = 5, RatingCount = 3500 },
+                    ModelVersions =
+                    [
+                        new()
                         {
-                            Image = "https://gravatar.com/avatar/fe74084ae8a081dc2283f5bde4736756ad?f=y&d=retro",
-                            Username = "creator-1"
-                        }
-                    };
-                }),
-                dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
-                {
-                    vm.CivitModel = new CivitModel
-                    {
-                        Name = "Another Model",
-                        Description = "A mix of example",
-                        Stats = new CivitModelStats { Rating = 5, RatingCount = 3500 },
-                        ModelVersions = [
-                            new()
+                            Name = "v1.2.2-Inpainting",
+                            Images = new List<CivitImage>
                             {
-                                Name = "v1.2.2-Inpainting",
-                                Images = new List<CivitImage>
+                                new()
                                 {
-                                    new()
-                                    {
-                                        Nsfw = "None",
-                                        Url = "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
-                                              + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg"
-                                    }
+                                    Nsfw = "None",
+                                    Url =
+                                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
+                                        + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg"
                                 }
-                            } 
-                        ],
-                        Creator = new CivitCreator
-                        {
-                            Image = "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?f=y&d=retro",
-                            Username = "creator-2"
+                            }
                         }
-                    };
-                })
-            };
+                    ],
+                    Creator = new CivitCreator
+                    {
+                        Image = "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?f=y&d=retro",
+                        Username = "creator-2"
+                    }
+                };
+            })
+        };
 
         NewCheckpointsPageViewModel.AllCheckpoints = new ObservableCollection<CheckpointFile>
         {
@@ -376,33 +373,30 @@ public static class DesignData
             new() { FilePath = "~/Models/Lora/model.safetensors", Title = "Some model" }
         };
 
-        ProgressManagerViewModel.ProgressItems.AddRange(
-            new ProgressItemViewModelBase[]
-            {
-                new ProgressItemViewModel(
-                    new ProgressItem(
-                        Guid.NewGuid(),
-                        "Test File.exe",
-                        new ProgressReport(0.5f, "Downloading...")
+        ProgressManagerViewModel
+            .ProgressItems
+            .AddRange(
+                new ProgressItemViewModelBase[]
+                {
+                    new ProgressItemViewModel(
+                        new ProgressItem(Guid.NewGuid(), "Test File.exe", new ProgressReport(0.5f, "Downloading..."))
+                    ),
+                    new MockDownloadProgressItemViewModel(
+                        "Very Long Test File Name Need Even More Longness Thanks That's pRobably good 2.exe"
+                    ),
+                    new PackageInstallProgressItemViewModel(
+                        new PackageModificationRunner
+                        {
+                            CurrentProgress = new ProgressReport(0.5f, "Installing package...")
+                        }
                     )
-                ),
-                new MockDownloadProgressItemViewModel(
-                    "Very Long Test File Name Need Even More Longness Thanks That's pRobably good 2.exe"
-                ),
-                new PackageInstallProgressItemViewModel(
-                    new PackageModificationRunner
-                    {
-                        CurrentProgress = new ProgressReport(0.5f, "Installing package...")
-                    }
-                )
-            }
-        );
+                }
+            );
 
         UpdateViewModel = Services.GetRequiredService<UpdateViewModel>();
         UpdateViewModel.CurrentVersionText = "v2.0.0";
         UpdateViewModel.NewVersionText = "v2.0.1";
-        UpdateViewModel.ReleaseNotes =
-            "## v2.0.1\n- Fixed a bug\n- Added a feature\n- Removed a feature";
+        UpdateViewModel.ReleaseNotes = "## v2.0.1\n- Fixed a bug\n- Added a feature\n- Removed a feature";
 
         isInitialized = true;
     }
@@ -419,14 +413,15 @@ public static class DesignData
     public static ServiceManager<ViewModelBase> DialogFactory =>
         Services.GetRequiredService<ServiceManager<ViewModelBase>>();
 
-    public static MainWindowViewModel MainWindowViewModel =>
-        Services.GetRequiredService<MainWindowViewModel>();
+    public static MainWindowViewModel MainWindowViewModel => Services.GetRequiredService<MainWindowViewModel>();
 
     public static FirstLaunchSetupViewModel FirstLaunchSetupViewModel =>
         Services.GetRequiredService<FirstLaunchSetupViewModel>();
 
-    public static LaunchPageViewModel LaunchPageViewModel =>
-        Services.GetRequiredService<LaunchPageViewModel>();
+    public static LaunchPageViewModel LaunchPageViewModel => Services.GetRequiredService<LaunchPageViewModel>();
+
+    public static HuggingFacePageViewModel HuggingFacePageViewModel =>
+        Services.GetRequiredService<HuggingFacePageViewModel>();
 
     public static OutputsPageViewModel OutputsPageViewModel
     {
@@ -457,10 +452,7 @@ public static class DesignData
 
             vm.SetPackages(settings.Settings.InstalledPackages);
             vm.SetUnknownPackages(
-                new InstalledPackage[]
-                {
-                    UnknownInstalledPackage.FromDirectoryName("sd-unknown-with-long-name"),
-                }
+                new InstalledPackage[] { UnknownInstalledPackage.FromDirectoryName("sd-unknown-with-long-name"), }
             );
 
             vm.PackageCards[0].IsUpdateAvailable = true;
@@ -475,14 +467,12 @@ public static class DesignData
     public static NewCheckpointsPageViewModel NewCheckpointsPageViewModel =>
         Services.GetRequiredService<NewCheckpointsPageViewModel>();
 
-    public static SettingsViewModel SettingsViewModel =>
-        Services.GetRequiredService<SettingsViewModel>();
+    public static SettingsViewModel SettingsViewModel => Services.GetRequiredService<SettingsViewModel>();
 
     public static InferenceSettingsViewModel InferenceSettingsViewModel =>
         Services.GetRequiredService<InferenceSettingsViewModel>();
 
-    public static MainSettingsViewModel MainSettingsViewModel =>
-        Services.GetRequiredService<MainSettingsViewModel>();
+    public static MainSettingsViewModel MainSettingsViewModel => Services.GetRequiredService<MainSettingsViewModel>();
 
     public static AccountSettingsViewModel AccountSettingsViewModel =>
         Services.GetRequiredService<AccountSettingsViewModel>();
@@ -502,7 +492,7 @@ public static class DesignData
                 HashBlake3 = "",
                 Signature = "",
             };
-            
+
             vm.UpdateStatus = new UpdateStatusChangedEventArgs
             {
                 LatestUpdate = update,
@@ -517,6 +507,9 @@ public static class DesignData
             return vm;
         }
     }
+
+    public static CivitAiBrowserViewModel CivitAiBrowserViewModel =>
+        Services.GetRequiredService<CivitAiBrowserViewModel>();
 
     public static CheckpointBrowserViewModel CheckpointBrowserViewModel =>
         Services.GetRequiredService<CheckpointBrowserViewModel>();
@@ -563,10 +556,7 @@ The gallery images are often inpainted, but you will get something very similar 
                     }
                 }
             };
-            var sampleViewModel = new ModelVersionViewModel(
-                new HashSet<string> { "ABCD" },
-                sampleCivitVersions[0]
-            );
+            var sampleViewModel = new ModelVersionViewModel(new HashSet<string> { "ABCD" }, sampleCivitVersions[0]);
 
             // Sample data for dialogs
             vm.Versions = new List<ModelVersionViewModel> { sampleViewModel };
@@ -578,8 +568,7 @@ The gallery images are often inpainted, but you will get something very similar 
     public static OneClickInstallViewModel OneClickInstallViewModel =>
         Services.GetRequiredService<OneClickInstallViewModel>();
 
-    public static InferenceViewModel InferenceViewModel =>
-        Services.GetRequiredService<InferenceViewModel>();
+    public static InferenceViewModel InferenceViewModel => Services.GetRequiredService<InferenceViewModel>();
 
     public static SelectDataDirectoryViewModel SelectDataDirectoryViewModel =>
         Services.GetRequiredService<SelectDataDirectoryViewModel>();
@@ -617,14 +606,10 @@ The gallery images are often inpainted, but you will get something very similar 
     public static PythonPackagesViewModel PythonPackagesViewModel =>
         DialogFactory.Get<PythonPackagesViewModel>(vm =>
         {
-            vm.AddPackages(
-                new PipPackageInfo("pip", "1.0.0"),
-                new PipPackageInfo("torch", "2.1.0+cu121")
-            );
+            vm.AddPackages(new PipPackageInfo("pip", "1.0.0"), new PipPackageInfo("torch", "2.1.0+cu121"));
         });
 
-    public static LykosLoginViewModel LykosLoginViewModel =>
-        DialogFactory.Get<LykosLoginViewModel>();
+    public static LykosLoginViewModel LykosLoginViewModel => DialogFactory.Get<LykosLoginViewModel>();
 
     public static OAuthConnectViewModel OAuthConnectViewModel =>
         DialogFactory.Get<OAuthConnectViewModel>(vm =>
@@ -647,15 +632,24 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static InferenceImageToImageViewModel InferenceImageToImageViewModel =>
         DialogFactory.Get<InferenceImageToImageViewModel>();
-    
+
     public static InferenceImageUpscaleViewModel InferenceImageUpscaleViewModel =>
         DialogFactory.Get<InferenceImageUpscaleViewModel>();
 
-    public static PackageImportViewModel PackageImportViewModel =>
-        DialogFactory.Get<PackageImportViewModel>();
+    public static PackageImportViewModel PackageImportViewModel => DialogFactory.Get<PackageImportViewModel>();
 
-    public static RefreshBadgeViewModel RefreshBadgeViewModel =>
-        new() { State = ProgressState.Success };
+    public static RefreshBadgeViewModel RefreshBadgeViewModel => new() { State = ProgressState.Success };
+
+    public static PropertyGridViewModel PropertyGridViewModel =>
+        DialogFactory.Get<PropertyGridViewModel>(vm =>
+        {
+            vm.SelectedObject = new INotifyPropertyChanged[]
+            {
+                new MockPropertyGridObject(),
+                new MockPropertyGridObjectAlt()
+            };
+            vm.ExcludeCategories = ["Excluded Category"];
+        });
 
     public static SeedCardViewModel SeedCardViewModel => new();
 
@@ -712,8 +706,7 @@ The gallery images are often inpainted, but you will get something very similar 
             );
         });
 
-    public static ImageFolderCardViewModel ImageFolderCardViewModel =>
-        DialogFactory.Get<ImageFolderCardViewModel>();
+    public static ImageFolderCardViewModel ImageFolderCardViewModel => DialogFactory.Get<ImageFolderCardViewModel>();
 
     public static FreeUCardViewModel FreeUCardViewModel => DialogFactory.Get<FreeUCardViewModel>();
 
@@ -744,7 +737,7 @@ The gallery images are often inpainted, but you will get something very similar 
     public static StackEditableCardViewModel StackEditableCardViewModel =>
         DialogFactory.Get<StackEditableCardViewModel>(vm =>
         {
-            vm.AddCards(StackExpanderViewModel, StackExpanderViewModel);
+            vm.AddCards(StackExpanderViewModel, StackExpanderViewModel2);
         });
 
     public static StackExpanderViewModel StackExpanderViewModel =>
@@ -755,11 +748,18 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.OnContainerIndexChanged(0);
         });
 
-    public static UpscalerCardViewModel UpscalerCardViewModel =>
-        DialogFactory.Get<UpscalerCardViewModel>();
+    public static StackExpanderViewModel StackExpanderViewModel2 =>
+        DialogFactory.Get<StackExpanderViewModel>(vm =>
+        {
+            vm.Title = "Hires Fix";
+            vm.IsSettingsEnabled = true;
+            vm.AddCards(UpscalerCardViewModel, SamplerCardViewModel);
+            vm.OnContainerIndexChanged(1);
+        });
 
-    public static BatchSizeCardViewModel BatchSizeCardViewModel =>
-        DialogFactory.Get<BatchSizeCardViewModel>();
+    public static UpscalerCardViewModel UpscalerCardViewModel => DialogFactory.Get<UpscalerCardViewModel>();
+
+    public static BatchSizeCardViewModel BatchSizeCardViewModel => DialogFactory.Get<BatchSizeCardViewModel>();
 
     public static BatchSizeCardViewModel BatchSizeCardViewModelWithIndexOption =>
         DialogFactory.Get<BatchSizeCardViewModel>(vm =>
@@ -811,14 +811,12 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.Resource = ComfyUpscaler.DefaultDownloadableModels[0].DownloadableResource!.Value;
         });
 
-    public static SharpenCardViewModel SharpenCardViewModel =>
-        DialogFactory.Get<SharpenCardViewModel>();
+    public static SharpenCardViewModel SharpenCardViewModel => DialogFactory.Get<SharpenCardViewModel>();
 
     public static InferenceConnectionHelpViewModel InferenceConnectionHelpViewModel =>
         DialogFactory.Get<InferenceConnectionHelpViewModel>();
 
-    public static SelectImageCardViewModel SelectImageCardViewModel =>
-        DialogFactory.Get<SelectImageCardViewModel>();
+    public static SelectImageCardViewModel SelectImageCardViewModel => DialogFactory.Get<SelectImageCardViewModel>();
 
     public static SelectImageCardViewModel SelectImageCardViewModel_WithImage =>
         DialogFactory.Get<SelectImageCardViewModel>(vm =>
@@ -831,18 +829,13 @@ The gallery images are often inpainted, but you will get something very similar 
         });
 
     public static ImageSource SampleImageSource =>
-        new(
-            new Uri(
-                "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"
-            )
-        )
+        new(new Uri("https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"))
         {
             Label = "Test Image"
         };
 
-    public static ControlNetCardViewModel ControlNetCardViewModel =>
-        DialogFactory.Get<ControlNetCardViewModel>();
-    
+    public static ControlNetCardViewModel ControlNetCardViewModel => DialogFactory.Get<ControlNetCardViewModel>();
+
     public static Indexer Types { get; } = new();
 
     public class Indexer
@@ -851,9 +844,7 @@ The gallery images are often inpainted, but you will get something very similar 
         {
             get
             {
-                var type =
-                    Type.GetType(typeName)
-                    ?? throw new ArgumentException($"Type {typeName} not found");
+                var type = Type.GetType(typeName) ?? throw new ArgumentException($"Type {typeName} not found");
                 try
                 {
                     return Services.GetService(type);

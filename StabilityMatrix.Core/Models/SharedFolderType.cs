@@ -8,6 +8,7 @@ namespace StabilityMatrix.Core.Models;
 [Flags]
 public enum SharedFolderType
 {
+    [Description("Base Models")]
     StableDiffusion = 1 << 0,
     Lora = 1 << 1,
     LyCORIS = 1 << 2,
@@ -32,5 +33,10 @@ public enum SharedFolderType
     ScuNET = 1 << 19,
     GLIGEN = 1 << 20,
     AfterDetailer = 1 << 21,
-    IpAdapter = 1 << 22
+    IpAdapter = 1 << 22,
+    T2IAdapter = 1 << 23,
+
+    InvokeIpAdapters15 = 1 << 24,
+    InvokeIpAdaptersXl = 1 << 25,
+    InvokeClipVision = 1 << 26,
 }

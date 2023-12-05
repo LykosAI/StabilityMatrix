@@ -5,6 +5,48 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.7.0-pre.4
+### Added
+#### Inference
+- Added Image to Image project type
+- Added Modular custom steps
+  - Use the plus button to add new steps (Hires Fix, Upscaler, and Save Image are currently available), and the edit button to enable removing or dragging steps to reorder them. This enables multi-pass Hires Fix, mixing different upscalers, and saving intermediate images at any point in the pipeline.
+- Added Sampler addons
+  - Addons usually affect guidance like ControlNet, T2I, FreeU, and other addons to come. They apply to the individual sampler, so you can mix and match different ControlNets for Base and Hires Fix, or use the current output from a previous sampler as ControlNet guidance image for HighRes passes.
+### Fixed
+- Fixed Refiner model enabled state not saving to Inference project files
+ 
+## v2.7.0-pre.3
+### Added
+- Added "Find Connected Metadata" options for root-level and file-level scans to the Checkpoints page
+- Added "Update Existing Metadata" button to the Checkpoints page
+- Added Hugging Face tab to the Model Browser
+- Added the ability to type in a specific page number in the CivitAI Model Browser
+### Changed
+- Folder-level "Find Connected Metadata" now scans the selected folder and its subfolders
+- Model Browser now split into "CivitAI" and "Hugging Face" tabs
+### Fixed
+- InvokeAI model links for T2I/IpAdapters now point to the correct folders
+- Added extra checks to help prevent settings resetting in certain scenarios
+
+## v2.7.0-pre.2
+### Added
+- Added System Information section to Settings
+### Changed
+- Moved Inference Settings to subpage
+### Fixed
+- Fixed crash when loading an empty settings file
+- Improve Settings save and load performance with .NET 8 Source Generating Serialization
+- Fixed ApplicationException during database shutdown
+
+## v2.7.0-pre.1
+### Fixed
+- Fixed control character decoding that caused some progress bars to show as `\u2588`
+- Fixed Python `rich` package's progress bars not showing in console
+- Optimized ProgressRing animation bindings to reduce CPU usage
+- Improved safety checks in custom control rendering to reduce potential graphical artifacts
+- Improved console rendering safety with cursor line increment clamping, as potential fix for [#111](https://github.com/LykosAI/StabilityMatrix/issues/111)
+
 ## v2.7.0-dev.4
 ### Fixed
 - Fixed [#290](https://github.com/LykosAI/StabilityMatrix/issues/290) - Model browser crash due to text trimming certain unicode characters 
@@ -57,6 +99,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - Choose between Stable, Preview, and Dev update channels
 ## Changed
 - Model Browser page has been redesigned, featuring more information like rating and download counts
+
+## v2.6.7
+### Fixed
+- Fixed prerequisite install not unpacking due to improperly formatted 7z argument (Caused the "python310._pth FileNotFoundException")
+- Fixed [#301](https://github.com/LykosAI/StabilityMatrix/issues/301) - Package updates failing silently because of a PortableGit error
 
 ## v2.6.6
 ### Fixed

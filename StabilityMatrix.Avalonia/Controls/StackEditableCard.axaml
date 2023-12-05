@@ -62,19 +62,7 @@
                             <ListBox.DataTemplates>
                                 <local:ViewLocator/>
                             </ListBox.DataTemplates>
-                        
-                            <!--<ListBox.Styles>
-                                <Style Selector="ListBoxItem:not(:dragging)">
-                                    <Setter Property="Transitions">
-                                        <Setter.Value>
-                                            <Transitions>
-                                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
-                                            </Transitions>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </ListBox.Styles>-->
-                        
+                            
                         </ListBox>
                     </Grid>
 

@@ -20,9 +20,17 @@ public abstract class ModuleBase : StackExpanderViewModel, IComfyStep, IInputIma
     /// <inheritdoc />
     public void ApplyStep(ModuleApplyStepEventArgs e)
     {
-        if (
-            (e.IsEnabledOverrides.TryGetValue(GetType(), out var isEnabledOverride) && !isEnabledOverride) || !IsEnabled
-        )
+        if (e.IsEnabledOverrides.TryGetValue(GetType(), out var isEnabledOverride))
+        {
+            if (isEnabledOverride)
+            {
+                OnApplyStep(e);
+            }
+
+            return;
+        }
+
+        if (!IsEnabled)
         {
             return;
         }

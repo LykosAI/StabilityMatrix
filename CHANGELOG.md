@@ -5,6 +5,17 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.7.0-pre.4
+### Added
+#### Inference
+- Added Image to Image project type
+- Added Modular custom steps
+  - Use the plus button to add new steps (Hires Fix, Upscaler, and Save Image are currently available), and the edit button to enable removing or dragging steps to reorder them. This enables multi-pass Hires Fix, mixing different upscalers, and saving intermediate images at any point in the pipeline.
+- Added Sampler addons
+  - Addons usually affect guidance like ControlNet, T2I, FreeU, and other addons to come. They apply to the individual sampler, so you can mix and match different ControlNets for Base and Hires Fix, or use the current output from a previous sampler as ControlNet guidance image for HighRes passes.
+### Fixed
+- Fixed Refiner model enabled state not saving to Inference project files
+ 
 ## v2.7.0-pre.3
 ### Added
 - Added "Find Connected Metadata" options for root-level and file-level scans to the Checkpoints page

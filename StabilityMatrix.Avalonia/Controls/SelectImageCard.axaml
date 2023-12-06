@@ -48,7 +48,7 @@
                                 IsVisible="{Binding !IsSelectionAvailable}"
                                 RenderOptions.BitmapInterpolationMode="HighQuality"
                                 Source="{Binding ImageSource}"
-                                Stretch="UniformToFill"
+                                Stretch="Uniform"
                                 StretchDirection="Both" />
 
                             <!--  Missing image  -->

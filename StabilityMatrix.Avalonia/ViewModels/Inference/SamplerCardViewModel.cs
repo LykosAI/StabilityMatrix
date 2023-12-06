@@ -110,8 +110,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
         // Provide temp values
         e.Temp.Conditioning = (
-            e.Builder.Connections.GetRefinerOrBaseConditioning(),
-            e.Builder.Connections.GetRefinerOrBaseNegativeConditioning()
+            e.Builder.Connections.BaseConditioning!,
+            e.Builder.Connections.BaseNegativeConditioning!
         );
         e.Temp.RefinerConditioning = (
             e.Builder.Connections.RefinerConditioning!,

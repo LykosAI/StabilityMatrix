@@ -1419,6 +1419,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Missing Image File.
+        /// </summary>
+        public static string Label_MissingImageFile {
+            get {
+                return ResourceManager.GetString("Label_MissingImageFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Model.
         /// </summary>
         public static string Label_Model {
@@ -2153,6 +2162,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Width {
             get {
                 return ResourceManager.GetString("Label_Width", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not yet available.
+        /// </summary>
+        public static string Label_WipFeature {
+            get {
+                return ResourceManager.GetString("Label_WipFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature will be available in a future update.
+        /// </summary>
+        public static string Label_WipFeatureDescription {
+            get {
+                return ResourceManager.GetString("Label_WipFeatureDescription", resourceCulture);
             }
         }
         

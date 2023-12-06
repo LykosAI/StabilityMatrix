@@ -885,4 +885,13 @@
   <data name="Action_ReplaceContents" xml:space="preserve">
     <value>Replace Contents</value>
   </data>
+  <data name="Label_WipFeature" xml:space="preserve">
+    <value>Not yet available</value>
+  </data>
+  <data name="Label_WipFeatureDescription" xml:space="preserve">
+    <value>Feature will be available in a future update</value>
+  </data>
+  <data name="Label_MissingImageFile" xml:space="preserve">
+    <value>Missing Image File</value>
+  </data>
 </root>

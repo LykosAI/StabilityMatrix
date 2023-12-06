@@ -9,10 +9,10 @@ namespace StabilityMatrix.Avalonia.Controls;
 [Transient]
 public class StackCard : TemplatedControl
 {
-    public static readonly StyledProperty<int> SpacingProperty = AvaloniaProperty.Register<
-        StackCard,
-        int
-    >("Spacing", 8);
+    public static readonly StyledProperty<int> SpacingProperty = AvaloniaProperty.Register<StackCard, int>(
+        "Spacing",
+        4
+    );
 
     public int Spacing
     {

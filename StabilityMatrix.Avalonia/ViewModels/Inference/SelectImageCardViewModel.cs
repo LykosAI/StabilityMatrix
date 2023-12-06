@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Input;
@@ -21,6 +22,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Database;
 using Size = System.Drawing.Size;
+#pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -28,7 +30,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [ManagedService]
 [Transient]
 public partial class SelectImageCardViewModel(INotificationService notificationService)
-    : ViewModelBase,
+    : LoadableViewModelBase,
         IDropTarget,
         IComfyStep
 {
@@ -36,17 +38,31 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSelectionAvailable))]
+    [NotifyPropertyChangedFor(nameof(IsImageFileNotFound))]
     private ImageSource? imageSource;
 
     [ObservableProperty]
+    [property: JsonIgnore]
     [NotifyPropertyChangedFor(nameof(CurrentBitmapSize))]
     private IImage? currentBitmap;
 
     [ObservableProperty]
+    [property: JsonIgnore]
     [NotifyPropertyChangedFor(nameof(IsSelectionAvailable))]
     private bool isSelectionEnabled = true;
 
-    public bool IsSelectionAvailable => IsSelectionEnabled && ImageSource == null;
+    /// <summary>
+    /// True if the image file is set but the local file does not exist.
+    /// </summary>
+    [MemberNotNullWhen(true, nameof(NotFoundImagePath))]
+    public bool IsImageFileNotFound => ImageSource?.LocalFile?.Exists == false;
+
+    public bool IsSelectionAvailable => IsSelectionEnabled && ImageSource == null && !IsImageFileNotFound;
+
+    /// <summary>
+    /// Path of the not found image
+    /// </summary>
+    public string? NotFoundImagePath => ImageSource?.LocalFile?.FullPath;
 
     public Size? CurrentBitmapSize =>
         CurrentBitmap is null
@@ -61,6 +77,15 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
             CurrentBitmapSize ?? throw new ValidationException("Input Image is required"),
             e.Builder.Connections.BatchIndex
         );
+    }
+
+    partial void OnImageSourceChanged(ImageSource? value)
+    {
+        // Cache the hash for later upload use
+        if (value?.LocalFile is { Exists: true })
+        {
+            value.GetBlake3HashAsync().SafeFireAndForget();
+        }
     }
 
     [RelayCommand]
@@ -139,8 +164,5 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
         ImageSource = image;
 
         current?.Dispose();
-
-        // Cache the hash for later upload use
-        image.GetBlake3HashAsync().SafeFireAndForget();
     }
 }

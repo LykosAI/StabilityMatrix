@@ -3,11 +3,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mocks="using:StabilityMatrix.Avalonia.DesignData"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
-    xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
-    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     x:DataType="vmInference:SelectImageCardViewModel">
 
     <Design.PreviewWith>
@@ -31,8 +31,7 @@
                     Padding="{TemplateBinding Padding}"
                     HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
                     VerticalAlignment="{TemplateBinding VerticalAlignment}"
-                    VerticalContentAlignment="{TemplateBinding VerticalAlignment}"
-                    IsCardVisualsEnabled="True">
+                    VerticalContentAlignment="{TemplateBinding VerticalAlignment}">
 
                     <!--  Background frame  -->
                     <ExperimentalAcrylicBorder
@@ -47,16 +46,52 @@
                                 CornerRadius="4"
                                 CurrentImage="{Binding CurrentBitmap, Mode=OneWayToSource}"
                                 IsVisible="{Binding !IsSelectionAvailable}"
-                                Source="{Binding ImageSource}" />
+                                RenderOptions.BitmapInterpolationMode="HighQuality"
+                                Source="{Binding ImageSource}"
+                                Stretch="UniformToFill"
+                                StretchDirection="Both" />
+
+                            <!--  Missing image  -->
+                            <Border
+                                BorderThickness="3"
+                                BorderBrush="{StaticResource ThemeCoralRedColor}"
+                                BoxShadow="inset 1.2 0 20 1.8 #66000000"
+                                CornerRadius="4"
+                                IsVisible="{Binding IsImageFileNotFound}">
+                                <Grid
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    RowDefinitions="Auto,Auto,Auto">
+
+                                    <fluentIcons:SymbolIcon
+                                        FontSize="28"
+                                        IsFilled="True"
+                                        Symbol="DocumentQuestionMark" />
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        FontSize="{TemplateBinding FontSize}"
+                                        Text="{x:Static lang:Resources.Label_MissingImageFile}"
+                                        TextAlignment="Center"
+                                        TextWrapping="WrapWithOverflow" />
+                                    <SelectableTextBlock
+                                        Grid.Row="2"
+                                        FontSize="10"
+                                        Margin="0,4,0,0"
+                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                        Text="{Binding NotFoundImagePath}"
+                                        TextAlignment="Center"
+                                        TextWrapping="WrapWithOverflow" />
+                                </Grid>
+                            </Border>
 
                             <!--  Active Selection Prompt  -->
                             <Border
-                                IsVisible="{Binding !IsSelectionAvailable}"
                                 Margin="4"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Top"
                                 BoxShadow="inset 1.2 0 80 1.8 #66000000"
-                                CornerRadius="10">
+                                CornerRadius="10"
+                                IsVisible="{Binding !IsSelectionAvailable}">
                                 <Border.Resources>
                                     <DropShadowEffect
                                         x:Key="TextDropShadowEffect"
@@ -70,22 +105,24 @@
                                         Color="#FF000000" />
                                 </Border.Resources>
                                 <Button
-                                    ToolTip.Tip="{x:Static lang:Resources.Action_ReplaceContents}"
                                     Padding="2"
                                     Classes="transparent"
                                     Command="{Binding SelectImageFromFilePickerCommand}"
                                     CornerRadius="10"
-                                    FontSize="{TemplateBinding FontSize}">
+                                    FontSize="{TemplateBinding FontSize}"
+                                    ToolTip.Tip="{x:Static lang:Resources.Action_ReplaceContents}">
                                     <fluentIcons:SymbolIcon
                                         Effect="{StaticResource ImageDropShadowEffect}"
-                                        FontSize="28" 
+                                        FontSize="28"
                                         IsFilled="True"
-                                        Symbol="ImageArrowCounterclockwise"/>
+                                        Symbol="ImageArrowCounterclockwise" />
                                 </Button>
                             </Border>
 
                             <!--  No Image Selection Prompt  -->
                             <controls:LineDashFrame
+                                Padding="8,4"
+                                CornerRadius="8"
                                 IsVisible="{Binding IsSelectionAvailable}"
                                 Stroke="DimGray"
                                 StrokeDashLine="6"
@@ -95,18 +132,18 @@
                                 <Grid
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    Cursor="Hand"
                                     RowDefinitions="*,Auto,Auto">
 
                                     <fluentIcons:SymbolIcon
-                                        FontSize="28" 
+                                        FontSize="28"
                                         IsFilled="True"
-                                        Symbol="ImageCopy"/>
+                                        Symbol="ImageCopy" />
                                     <TextBlock
                                         Grid.Row="1"
                                         FontSize="{TemplateBinding FontSize}"
                                         Foreground="DarkGray"
                                         Text="Drag an image here"
+                                        TextAlignment="Center"
                                         TextWrapping="WrapWithOverflow" />
 
                                     <StackPanel

@@ -44,6 +44,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
     [ObservableProperty]
     [property: Category("Settings")]
+    [property: DisplayName("CFG Scale Selection")]
     private bool isCfgScaleEnabled;
 
     [ObservableProperty]
@@ -60,6 +61,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
     [ObservableProperty]
     [property: Category("Settings")]
+    [property: DisplayName("Sampler Selection")]
     private bool isSamplerSelectionEnabled;
 
     [ObservableProperty]
@@ -68,6 +70,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
     [ObservableProperty]
     [property: Category("Settings")]
+    [property: DisplayName("Scheduler Selection")]
     private bool isSchedulerSelectionEnabled;
 
     [ObservableProperty]

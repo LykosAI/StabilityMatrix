@@ -91,17 +91,6 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
             modulesCard.Title = Resources.Label_Addons;
             modulesCard.AvailableModules = new[] { typeof(FreeUModule), typeof(ControlNetModule) };
         });
-
-        ModulesCardViewModel.CardAdded += (
-            (sender, item) =>
-            {
-                if (item is ControlNetModule module)
-                {
-                    // Inherit our edit state
-                    // module.IsEditEnabled = IsEditEnabled;
-                }
-            }
-        );
     }
 
     /// <inheritdoc />

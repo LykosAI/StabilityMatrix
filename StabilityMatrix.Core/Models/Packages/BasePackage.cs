@@ -81,29 +81,15 @@ public abstract class BasePackage
     );
 
     public virtual IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
-        new[]
-        {
-            SharedFolderMethod.Symlink,
-            SharedFolderMethod.Configuration,
-            SharedFolderMethod.None
-        };
+        new[] { SharedFolderMethod.Symlink, SharedFolderMethod.Configuration, SharedFolderMethod.None };
 
     public abstract SharedFolderMethod RecommendedSharedFolderMethod { get; }
 
-    public abstract Task SetupModelFolders(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    );
+    public abstract Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod);
 
-    public abstract Task UpdateModelFolders(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    );
+    public abstract Task UpdateModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod);
 
-    public abstract Task RemoveModelFolderLinks(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    );
+    public abstract Task RemoveModelFolderLinks(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod);
 
     public abstract Task SetupOutputFolderLinks(DirectoryPath installDirectory);
     public abstract Task RemoveOutputFolderLinks(DirectoryPath installDirectory);
@@ -126,10 +112,7 @@ public abstract class BasePackage
             return TorchVersion.Rocm;
         }
 
-        if (
-            HardwareHelper.PreferDirectML()
-            && AvailableTorchVersions.Contains(TorchVersion.DirectMl)
-        )
+        if (HardwareHelper.PreferDirectML() && AvailableTorchVersions.Contains(TorchVersion.DirectMl))
         {
             return TorchVersion.DirectMl;
         }
@@ -156,20 +139,11 @@ public abstract class BasePackage
     /// Mapping of <see cref="SharedFolderType"/> to the relative paths from the package root.
     /// </summary>
     public abstract Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
-    public abstract Dictionary<
-        SharedOutputType,
-        IReadOnlyList<string>
-    >? SharedOutputFolders { get; }
+    public abstract Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders { get; }
 
     public abstract Task<PackageVersionOptions> GetAllVersionOptions();
-    public abstract Task<IEnumerable<GitCommit>?> GetAllCommits(
-        string branch,
-        int page = 1,
-        int perPage = 10
-    );
-    public abstract Task<DownloadPackageVersionOptions> GetLatestVersion(
-        bool includePrerelease = false
-    );
+    public abstract Task<IEnumerable<GitCommit>?> GetAllCommits(string branch, int page = 1, int perPage = 10);
+    public abstract Task<DownloadPackageVersionOptions> GetLatestVersion(bool includePrerelease = false);
     public abstract string MainBranch { get; }
     public event EventHandler<int>? Exited;
     public event EventHandler<string>? StartupComplete;
@@ -179,9 +153,7 @@ public abstract class BasePackage
     public void OnStartupComplete(string url) => StartupComplete?.Invoke(this, url);
 
     public virtual PackageVersionType AvailableVersionTypes =>
-        ShouldIgnoreReleases
-            ? PackageVersionType.Commit
-            : PackageVersionType.GithubRelease | PackageVersionType.Commit;
+        ShouldIgnoreReleases ? PackageVersionType.Commit : PackageVersionType.GithubRelease | PackageVersionType.Commit;
 
     protected async Task InstallCudaTorch(
         PyVenvRunner venvRunner,
@@ -189,9 +161,7 @@ public abstract class BasePackage
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        progress?.Report(
-            new ProgressReport(-1f, "Installing PyTorch for CUDA", isIndeterminate: true)
-        );
+        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CUDA", isIndeterminate: true));
 
         await venvRunner
             .PipInstall(
@@ -211,9 +181,7 @@ public abstract class BasePackage
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        progress?.Report(
-            new ProgressReport(-1f, "Installing PyTorch for DirectML", isIndeterminate: true)
-        );
+        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for DirectML", isIndeterminate: true));
 
         return venvRunner.PipInstall(new PipInstallArgs().WithTorchDirectML(), onConsoleOutput);
     }
@@ -224,13 +192,8 @@ public abstract class BasePackage
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        progress?.Report(
-            new ProgressReport(-1f, "Installing PyTorch for CPU", isIndeterminate: true)
-        );
+        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CPU", isIndeterminate: true));
 
-        return venvRunner.PipInstall(
-            new PipInstallArgs().WithTorch("==2.0.1").WithTorchVision(),
-            onConsoleOutput
-        );
+        return venvRunner.PipInstall(new PipInstallArgs().WithTorch("==2.0.1").WithTorchVision(), onConsoleOutput);
     }
 }

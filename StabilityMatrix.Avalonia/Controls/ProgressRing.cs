@@ -17,8 +17,9 @@ public class ProgressRing : RangeBase
 {
     private Arc? fillArc;
 
-    public static readonly StyledProperty<bool> IsIndeterminateProperty =
-        ProgressBar.IsIndeterminateProperty.AddOwner<ProgressRing>();
+    public static readonly StyledProperty<bool> IsIndeterminateProperty = ProgressBar
+        .IsIndeterminateProperty
+        .AddOwner<ProgressRing>();
 
     public bool IsIndeterminate
     {
@@ -26,10 +27,10 @@ public class ProgressRing : RangeBase
         set => SetValue(IsIndeterminateProperty, value);
     }
 
-    public static readonly StyledProperty<bool> PreserveAspectProperty = AvaloniaProperty.Register<
-        ProgressRing,
-        bool
-    >(nameof(PreserveAspect), true);
+    public static readonly StyledProperty<bool> PreserveAspectProperty = AvaloniaProperty.Register<ProgressRing, bool>(
+        nameof(PreserveAspect),
+        true
+    );
 
     public bool PreserveAspect
     {
@@ -37,8 +38,9 @@ public class ProgressRing : RangeBase
         set => SetValue(PreserveAspectProperty, value);
     }
 
-    public static readonly StyledProperty<double> StrokeThicknessProperty =
-        Shape.StrokeThicknessProperty.AddOwner<ProgressRing>();
+    public static readonly StyledProperty<double> StrokeThicknessProperty = Shape
+        .StrokeThicknessProperty
+        .AddOwner<ProgressRing>();
 
     public double StrokeThickness
     {
@@ -46,10 +48,9 @@ public class ProgressRing : RangeBase
         set => SetValue(StrokeThicknessProperty, value);
     }
 
-    public static readonly StyledProperty<double> StartAngleProperty = AvaloniaProperty.Register<
-        ProgressRing,
-        double
-    >(nameof(StartAngle));
+    public static readonly StyledProperty<double> StartAngleProperty = AvaloniaProperty.Register<ProgressRing, double>(
+        nameof(StartAngle)
+    );
 
     public double StartAngle
     {
@@ -57,10 +58,9 @@ public class ProgressRing : RangeBase
         set => SetValue(StartAngleProperty, value);
     }
 
-    public static readonly StyledProperty<double> SweepAngleProperty = AvaloniaProperty.Register<
-        ProgressRing,
-        double
-    >(nameof(SweepAngle));
+    public static readonly StyledProperty<double> SweepAngleProperty = AvaloniaProperty.Register<ProgressRing, double>(
+        nameof(SweepAngle)
+    );
 
     public double SweepAngle
     {
@@ -68,10 +68,10 @@ public class ProgressRing : RangeBase
         set => SetValue(SweepAngleProperty, value);
     }
 
-    public static readonly StyledProperty<double> EndAngleProperty = AvaloniaProperty.Register<
-        ProgressRing,
-        double
-    >(nameof(EndAngle), 360);
+    public static readonly StyledProperty<double> EndAngleProperty = AvaloniaProperty.Register<ProgressRing, double>(
+        nameof(EndAngle),
+        360
+    );
 
     public double EndAngle
     {
@@ -135,10 +135,7 @@ public class ProgressRing : RangeBase
         }
     }
 
-    private static void OnValuePropertyChanged(
-        ProgressRing sender,
-        AvaloniaPropertyChangedEventArgs e
-    )
+    private static void OnValuePropertyChanged(ProgressRing sender, AvaloniaPropertyChangedEventArgs e)
     {
         sender.SweepAngle =
             ((double)e.NewValue! - sender.Minimum)
@@ -146,10 +143,7 @@ public class ProgressRing : RangeBase
             / (sender.Maximum - sender.Minimum);
     }
 
-    private static void OnSweepAnglePropertyChanged(
-        ProgressRing sender,
-        AvaloniaPropertyChangedEventArgs e
-    )
+    private static void OnSweepAnglePropertyChanged(ProgressRing sender, AvaloniaPropertyChangedEventArgs e)
     {
         if (sender.fillArc is { } arc)
         {

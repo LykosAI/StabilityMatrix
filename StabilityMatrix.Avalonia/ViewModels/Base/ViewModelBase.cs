@@ -4,11 +4,12 @@ using AsyncAwaitBestPractices;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using JetBrains.Annotations;
+using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Avalonia.Models;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
-public class ViewModelBase : ObservableValidator, IRemovableListItem
+public partial class ViewModelBase : ObservableValidator, IRemovableListItem
 {
     [PublicAPI]
     protected ViewModelState ViewModelState { get; private set; }
@@ -25,6 +26,7 @@ public class ViewModelBase : ObservableValidator, IRemovableListItem
         remove => parentListRemoveRequestedEventManager?.RemoveEventHandler(value);
     }
 
+    [RelayCommand]
     protected void RemoveFromParentList() =>
         parentListRemoveRequestedEventManager?.RaiseEvent(
             this,

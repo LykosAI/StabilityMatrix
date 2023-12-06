@@ -21,8 +21,7 @@ public class RuinedFooocus(
     public override string Author => "runew0lf";
     public override string Blurb =>
         "RuinedFooocus combines the best aspects of Stable Diffusion and Midjourney into one seamless, cutting-edge experience";
-    public override string LicenseUrl =>
-        "https://github.com/runew0lf/RuinedFooocus/blob/main/LICENSE";
+    public override string LicenseUrl => "https://github.com/runew0lf/RuinedFooocus/blob/main/LICENSE";
     public override Uri PreviewImageUri =>
         new("https://raw.githubusercontent.com/runew0lf/pmmconfigs/main/RuinedFooocus_ss.png");
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
@@ -38,8 +37,7 @@ public class RuinedFooocus(
     {
         if (torchVersion == TorchVersion.Cuda)
         {
-            var venvRunner = await SetupVenv(installLocation, forceRecreate: true)
-                .ConfigureAwait(false);
+            var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
 
             progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
 

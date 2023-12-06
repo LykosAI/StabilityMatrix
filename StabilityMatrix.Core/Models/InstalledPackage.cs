@@ -193,10 +193,7 @@ public class InstalledPackage : IJsonOnDeserialized
         var suffix = 2;
         while (Directory.Exists(newPackagePath))
         {
-            newPackagePath = System.IO.Path.Combine(
-                newPackagesDir,
-                $"{packageFolderName}-{suffix}"
-            );
+            newPackagePath = System.IO.Path.Combine(newPackagesDir, $"{packageFolderName}-{suffix}");
             suffix++;
         }
 
@@ -239,16 +236,10 @@ public class InstalledPackage : IJsonOnDeserialized
         if (Version != null)
             return;
 
-        if (
-            string.IsNullOrWhiteSpace(InstalledBranch) && !string.IsNullOrWhiteSpace(PackageVersion)
-        )
+        if (string.IsNullOrWhiteSpace(InstalledBranch) && !string.IsNullOrWhiteSpace(PackageVersion))
         {
             // release mode
-            Version = new InstalledPackageVersion
-            {
-                InstalledReleaseVersion = PackageVersion,
-                IsPrerelease = false
-            };
+            Version = new InstalledPackageVersion { InstalledReleaseVersion = PackageVersion, IsPrerelease = false };
         }
         else if (!string.IsNullOrWhiteSpace(PackageVersion))
         {

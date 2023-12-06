@@ -19,8 +19,8 @@ public class A3WebUI(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper)
-    : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -30,8 +30,7 @@ public class A3WebUI(
     public override string LicenseType => "AGPL-3.0";
     public override string LicenseUrl =>
         "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/master/LICENSE.txt";
-    public override string Blurb =>
-        "A browser interface based on Gradio library for Stable Diffusion";
+    public override string Blurb => "A browser interface based on Gradio library for Stable Diffusion";
     public override string LaunchCommand => "launch.py";
     public override Uri PreviewImageUri =>
         new("https://github.com/AUTOMATIC1111/stable-diffusion-webui/raw/master/screenshot.png");
@@ -78,105 +77,91 @@ public class A3WebUI(
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
     public override List<LaunchOptionDefinition> LaunchOptions =>
-    [
-        new()
-        {
-            Name = "Host",
-            Type = LaunchOptionType.String,
-            DefaultValue = "localhost",
-            Options = ["--server-name"]
-        },
-
-        new()
-        {
-            Name = "Port",
-            Type = LaunchOptionType.String,
-            DefaultValue = "7860",
-            Options = ["--port"]
-        },
-
-        new()
-        {
-            Name = "VRAM",
-            Type = LaunchOptionType.Bool,
-            InitialValue = HardwareHelper
-                    .IterGpuInfo()
-                    .Select(gpu => gpu.MemoryLevel)
-                    .Max() switch
+        [
+            new()
+            {
+                Name = "Host",
+                Type = LaunchOptionType.String,
+                DefaultValue = "localhost",
+                Options = ["--server-name"]
+            },
+            new()
+            {
+                Name = "Port",
+                Type = LaunchOptionType.String,
+                DefaultValue = "7860",
+                Options = ["--port"]
+            },
+            new()
+            {
+                Name = "VRAM",
+                Type = LaunchOptionType.Bool,
+                InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
                 {
                     MemoryLevel.Low => "--lowvram",
                     MemoryLevel.Medium => "--medvram",
                     _ => null
                 },
-            Options = ["--lowvram", "--medvram", "--medvram-sdxl"]
-        },
-
-        new()
-        {
-            Name = "Xformers",
-            Type = LaunchOptionType.Bool,
-            InitialValue = HardwareHelper.HasNvidiaGpu(),
-            Options = ["--xformers"]
-        },
-
-        new()
-        {
-            Name = "API",
-            Type = LaunchOptionType.Bool,
-            InitialValue = true,
-            Options = ["--api"]
-        },
-
-        new()
-        {
-            Name = "Auto Launch Web UI",
-            Type = LaunchOptionType.Bool,
-            InitialValue = false,
-            Options = ["--autolaunch"]
-        },
-
-        new()
-        {
-            Name = "Skip Torch CUDA Check",
-            Type = LaunchOptionType.Bool,
-            InitialValue = !HardwareHelper.HasNvidiaGpu(),
-            Options = ["--skip-torch-cuda-test"]
-        },
-
-        new()
-        {
-            Name = "Skip Python Version Check",
-            Type = LaunchOptionType.Bool,
-            InitialValue = true,
-            Options = ["--skip-python-version-check"]
-        },
-
-        new()
-        {
-            Name = "No Half",
-            Type = LaunchOptionType.Bool,
-            Description = "Do not switch the model to 16-bit floats",
-            InitialValue = HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML(),
-            Options = ["--no-half"]
-        },
-
-        new()
-        {
-            Name = "Skip SD Model Download",
-            Type = LaunchOptionType.Bool,
-            InitialValue = false,
-            Options = ["--no-download-sd-model"]
-        },
-
-        new()
-        {
-            Name = "Skip Install",
-            Type = LaunchOptionType.Bool,
-            Options = ["--skip-install"]
-        },
-
-        LaunchOptionDefinition.Extras
-    ];
+                Options = ["--lowvram", "--medvram", "--medvram-sdxl"]
+            },
+            new()
+            {
+                Name = "Xformers",
+                Type = LaunchOptionType.Bool,
+                InitialValue = HardwareHelper.HasNvidiaGpu(),
+                Options = ["--xformers"]
+            },
+            new()
+            {
+                Name = "API",
+                Type = LaunchOptionType.Bool,
+                InitialValue = true,
+                Options = ["--api"]
+            },
+            new()
+            {
+                Name = "Auto Launch Web UI",
+                Type = LaunchOptionType.Bool,
+                InitialValue = false,
+                Options = ["--autolaunch"]
+            },
+            new()
+            {
+                Name = "Skip Torch CUDA Check",
+                Type = LaunchOptionType.Bool,
+                InitialValue = !HardwareHelper.HasNvidiaGpu(),
+                Options = ["--skip-torch-cuda-test"]
+            },
+            new()
+            {
+                Name = "Skip Python Version Check",
+                Type = LaunchOptionType.Bool,
+                InitialValue = true,
+                Options = ["--skip-python-version-check"]
+            },
+            new()
+            {
+                Name = "No Half",
+                Type = LaunchOptionType.Bool,
+                Description = "Do not switch the model to 16-bit floats",
+                InitialValue = HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML(),
+                Options = ["--no-half"]
+            },
+            new()
+            {
+                Name = "Skip SD Model Download",
+                Type = LaunchOptionType.Bool,
+                InitialValue = false,
+                Options = ["--no-download-sd-model"]
+            },
+            new()
+            {
+                Name = "Skip Install",
+                Type = LaunchOptionType.Bool,
+                Options = ["--skip-install"]
+            },
+            LaunchOptionDefinition.Extras
+        ];
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
@@ -224,9 +209,7 @@ public class A3WebUI(
         }
 
         // Install requirements file
-        progress?.Report(
-            new ProgressReport(-1f, "Installing Package Requirements", isIndeterminate: true)
-        );
+        progress?.Report(new ProgressReport(-1f, "Installing Package Requirements", isIndeterminate: true));
         Logger.Info("Installing requirements_versions.txt");
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
@@ -284,18 +267,13 @@ public class A3WebUI(
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        progress?.Report(
-            new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true)
-        );
+        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true));
 
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         await venvRunner
             .PipInstall(
-                new PipInstallArgs()
-                    .WithTorch("==2.0.1")
-                    .WithTorchVision()
-                    .WithTorchExtraIndex("rocm5.1.1"),
+                new PipInstallArgs().WithTorch("==2.0.1").WithTorchVision().WithTorchExtraIndex("rocm5.1.1"),
                 onConsoleOutput
             )
             .ConfigureAwait(false);

@@ -15,8 +15,7 @@ public partial class CategoryViewModel : ViewModelBase
     private IObservableCollection<HuggingfaceItemViewModel> items =
         new ObservableCollectionExtended<HuggingfaceItemViewModel>();
 
-    public SourceCache<HuggingfaceItem, string> ItemsCache { get; } =
-        new(i => i.RepositoryPath + i.ModelName);
+    public SourceCache<HuggingfaceItem, string> ItemsCache { get; } = new(i => i.RepositoryPath + i.ModelName);
 
     [ObservableProperty]
     private string? title;

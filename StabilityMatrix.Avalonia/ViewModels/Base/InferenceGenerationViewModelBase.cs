@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -22,6 +23,8 @@ using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Inference;
@@ -39,9 +42,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 /// This includes a progress reporter, image output view model, and generation virtual methods.
 /// </summary>
 [SuppressMessage("ReSharper", "VirtualMemberNeverOverridden.Global")]
-public abstract partial class InferenceGenerationViewModelBase
-    : InferenceTabViewModelBase,
-        IImageGalleryComponent
+public abstract partial class InferenceGenerationViewModelBase : InferenceTabViewModelBase, IImageGalleryComponent
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -96,14 +97,7 @@ public abstract partial class InferenceGenerationViewModelBase
         var defaultOutputDir = settingsManager.ImagesInferenceDirectory;
         defaultOutputDir.Create();
 
-        return WriteOutputImageAsync(
-            imageStream,
-            defaultOutputDir,
-            args,
-            batchNum,
-            batchTotal,
-            isGrid
-        );
+        return WriteOutputImageAsync(imageStream, defaultOutputDir, args, batchNum, batchTotal, isGrid);
     }
 
     /// <summary>
@@ -134,10 +128,7 @@ public abstract partial class InferenceGenerationViewModelBase
         )
         {
             // Fallback to default
-            Logger.Warn(
-                "Failed to parse format template: {FormatTemplate}, using default",
-                formatTemplateStr
-            );
+            Logger.Warn("Failed to parse format template: {FormatTemplate}, using default", formatTemplateStr);
 
             format = FileNameFormat.Parse(FileNameFormat.DefaultTemplate, formatProvider);
         }
@@ -183,13 +174,46 @@ public abstract partial class InferenceGenerationViewModelBase
     protected virtual void BuildPrompt(BuildPromptEventArgs args) { }
 
     /// <summary>
+    /// Gets ImageSources that need to be uploaded as inputs
+    /// </summary>
+    protected virtual IEnumerable<ImageSource> GetInputImages()
+    {
+        return Enumerable.Empty<ImageSource>();
+    }
+
+    protected async Task UploadInputImages(ComfyClient client)
+    {
+        foreach (var image in GetInputImages())
+        {
+            if (image.LocalFile is { } localFile)
+            {
+                var uploadName = await image.GetHashGuidFileNameAsync();
+
+                Logger.Debug("Uploading image {FileName} as {UploadName}", localFile.Name, uploadName);
+
+                // For pngs, strip metadata since Pillow can't handle some valid files?
+                if (localFile.Info.Extension.Equals(".png", StringComparison.OrdinalIgnoreCase))
+                {
+                    var bytes = PngDataHelper.RemoveMetadata(await localFile.ReadAllBytesAsync());
+                    using var stream = new MemoryStream(bytes);
+
+                    await client.UploadImageAsync(stream, uploadName);
+                }
+                else
+                {
+                    await using var stream = localFile.Info.OpenRead();
+
+                    await client.UploadImageAsync(stream, uploadName);
+                }
+            }
+        }
+    }
+
+    /// <summary>
     /// Runs a generation task
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown if args.Parameters or args.Project are null</exception>
-    protected async Task RunGeneration(
-        ImageGenerationEventArgs args,
-        CancellationToken cancellationToken
-    )
+    protected async Task RunGeneration(ImageGenerationEventArgs args, CancellationToken cancellationToken)
     {
         var client = args.Client;
         var nodes = args.Nodes;
@@ -203,6 +227,9 @@ public abstract partial class InferenceGenerationViewModelBase
             throw new InvalidOperationException("OutputNodeNames is empty");
         if (client.OutputImagesDir is null)
             throw new InvalidOperationException("OutputImagesDir is null");
+
+        // Upload input images
+        await UploadInputImages(client);
 
         // Connect preview image handler
         client.PreviewImageReceived += OnPreviewImageReceived;
@@ -257,26 +284,27 @@ public abstract partial class InferenceGenerationViewModelBase
                 .SafeFireAndForget();
 
             // Wait for prompt to finish
-            await promptTask.Task.WaitAsync(cancellationToken);
-            Logger.Debug($"Prompt task {promptTask.Id} finished");
+            try
+            {
+                await promptTask.Task.WaitAsync(cancellationToken);
+                Logger.Debug($"Prompt task {promptTask.Id} finished");
+            }
+            catch (ComfyNodeException e)
+            {
+                Logger.Warn(e, "Comfy node exception while queuing prompt");
+                await DialogHelper
+                    .CreateJsonDialog(e.JsonData, "Comfy Error", "Node execution encountered an error")
+                    .ShowAsync();
+                return;
+            }
 
             // Get output images
-            var imageOutputs = await client.GetImagesForExecutedPromptAsync(
-                promptTask.Id,
-                cancellationToken
-            );
+            var imageOutputs = await client.GetImagesForExecutedPromptAsync(promptTask.Id, cancellationToken);
 
-            if (
-                !imageOutputs.TryGetValue(args.OutputNodeNames[0], out var images)
-                || images is not { Count: > 0 }
-            )
+            if (imageOutputs.Values.All(images => images is null or { Count: 0 }))
             {
                 // No images match
-                notificationService.Show(
-                    "No output",
-                    "Did not receive any output images",
-                    NotificationType.Warning
-                );
+                notificationService.Show("No output", "Did not receive any output images", NotificationType.Warning);
                 return;
             }
 
@@ -288,7 +316,7 @@ public abstract partial class InferenceGenerationViewModelBase
                 ImageGalleryCardViewModel.ImageSources.Clear();
             }
 
-            await ProcessOutputImages(images, args);
+            await ProcessAllOutputImages(imageOutputs, args);
         }
         finally
         {
@@ -306,12 +334,30 @@ public abstract partial class InferenceGenerationViewModelBase
         }
     }
 
+    private async Task ProcessAllOutputImages(
+        IReadOnlyDictionary<string, List<ComfyImage>?> images,
+        ImageGenerationEventArgs args
+    )
+    {
+        foreach (var (nodeName, imageList) in images)
+        {
+            if (imageList is null)
+            {
+                Logger.Warn("No images for node {NodeName}", nodeName);
+                continue;
+            }
+
+            await ProcessOutputImages(imageList, args, nodeName.Replace('_', ' '));
+        }
+    }
+
     /// <summary>
     /// Handles image output metadata for generation runs
     /// </summary>
     private async Task ProcessOutputImages(
         IReadOnlyCollection<ComfyImage> images,
-        ImageGenerationEventArgs args
+        ImageGenerationEventArgs args,
+        string? imageLabel = null
     )
     {
         var client = args.Client;
@@ -335,10 +381,7 @@ public abstract partial class InferenceGenerationViewModelBase
             var project = args.Project!;
 
             // Lock seed
-            project.TryUpdateModel<SeedCardModel>(
-                "Seed",
-                model => model with { IsRandomizeEnabled = false }
-            );
+            project.TryUpdateModel<SeedCardModel>("Seed", model => model with { IsRandomizeEnabled = false });
 
             // Seed and batch override for batches
             if (images.Count > 1 && project.ProjectType is InferenceProjectType.TextToImage)
@@ -361,14 +404,9 @@ public abstract partial class InferenceGenerationViewModelBase
             var bytesWithMetadata = PngDataHelper.AddMetadata(imageArray, parameters, project);
 
             // Write using generated name
-            var filePath = await WriteOutputImageAsync(
-                new MemoryStream(bytesWithMetadata),
-                args,
-                i + 1,
-                images.Count
-            );
+            var filePath = await WriteOutputImageAsync(new MemoryStream(bytesWithMetadata), args, i + 1, images.Count);
 
-            outputImages.Add(new ImageSource(filePath));
+            outputImages.Add(new ImageSource(filePath) { Label = imageLabel });
 
             EventManager.Instance.OnImageFileAdded(filePath);
         }
@@ -381,28 +419,18 @@ public abstract partial class InferenceGenerationViewModelBase
             var project = args.Project!;
 
             // Lock seed
-            project.TryUpdateModel<SeedCardModel>(
-                "Seed",
-                model => model with { IsRandomizeEnabled = false }
-            );
+            project.TryUpdateModel<SeedCardModel>("Seed", model => model with { IsRandomizeEnabled = false });
 
             var grid = ImageProcessor.CreateImageGrid(loadedImages);
             var gridBytes = grid.Encode().ToArray();
-            var gridBytesWithMetadata = PngDataHelper.AddMetadata(
-                gridBytes,
-                args.Parameters!,
-                args.Project!
-            );
+            var gridBytesWithMetadata = PngDataHelper.AddMetadata(gridBytes, args.Parameters!, args.Project!);
 
             // Save to disk
-            var gridPath = await WriteOutputImageAsync(
-                new MemoryStream(gridBytesWithMetadata),
-                args,
-                isGrid: true
-            );
+            var gridPath = await WriteOutputImageAsync(new MemoryStream(gridBytesWithMetadata), args, isGrid: true);
 
             // Insert to start of images
-            var gridImage = new ImageSource(gridPath);
+            var gridImage = new ImageSource(gridPath) { Label = imageLabel };
+
             // Preload
             await gridImage.GetBitmapAsync();
             ImageGalleryCardViewModel.ImageSources.Add(gridImage);
@@ -422,10 +450,7 @@ public abstract partial class InferenceGenerationViewModelBase
     /// <summary>
     /// Implementation for Generate Image
     /// </summary>
-    protected virtual Task GenerateImageImpl(
-        GenerateOverrides overrides,
-        CancellationToken cancellationToken
-    )
+    protected virtual Task GenerateImageImpl(GenerateOverrides overrides, CancellationToken cancellationToken)
     {
         return Task.CompletedTask;
     }
@@ -436,10 +461,7 @@ public abstract partial class InferenceGenerationViewModelBase
     /// <param name="options">Optional overrides (side buttons)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     [RelayCommand(IncludeCancelCommand = true, FlowExceptionsToTaskScheduler = true)]
-    private async Task GenerateImage(
-        GenerateFlags options = default,
-        CancellationToken cancellationToken = default
-    )
+    private async Task GenerateImage(GenerateFlags options = default, CancellationToken cancellationToken = default)
     {
         var overrides = GenerateOverrides.FromFlags(options);
 
@@ -449,7 +471,12 @@ public abstract partial class InferenceGenerationViewModelBase
         }
         catch (OperationCanceledException)
         {
-            Logger.Debug($"Image Generation Canceled");
+            Logger.Debug("Image Generation Canceled");
+        }
+        catch (ValidationException e)
+        {
+            Logger.Debug("Image Generation Validation Error: {Message}", e.Message);
+            notificationService.Show("Validation Error", e.Message, NotificationType.Error);
         }
     }
 
@@ -480,21 +507,19 @@ public abstract partial class InferenceGenerationViewModelBase
     /// Handles the progress update received event from the websocket.
     /// Updates the progress view model.
     /// </summary>
-    protected virtual void OnProgressUpdateReceived(
-        object? sender,
-        ComfyProgressUpdateEventArgs args
-    )
+    protected virtual void OnProgressUpdateReceived(object? sender, ComfyProgressUpdateEventArgs args)
     {
-        Dispatcher.UIThread.Post(() =>
-        {
-            OutputProgress.Value = args.Value;
-            OutputProgress.Maximum = args.Maximum;
-            OutputProgress.IsIndeterminate = false;
+        Dispatcher
+            .UIThread
+            .Post(() =>
+            {
+                OutputProgress.Value = args.Value;
+                OutputProgress.Maximum = args.Maximum;
+                OutputProgress.IsIndeterminate = false;
 
-            OutputProgress.Text =
-                $"({args.Value} / {args.Maximum})"
-                + (args.RunningNode != null ? $" {args.RunningNode}" : "");
-        });
+                OutputProgress.Text =
+                    $"({args.Value} / {args.Maximum})" + (args.RunningNode != null ? $" {args.RunningNode}" : "");
+            });
     }
 
     private void AttachRunningNodeChangedHandler(ComfyTask comfyTask)
@@ -519,13 +544,15 @@ public abstract partial class InferenceGenerationViewModelBase
             return;
         }
 
-        Dispatcher.UIThread.Post(() =>
-        {
-            OutputProgress.IsIndeterminate = true;
-            OutputProgress.Value = 100;
-            OutputProgress.Maximum = 100;
-            OutputProgress.Text = nodeName;
-        });
+        Dispatcher
+            .UIThread
+            .Post(() =>
+            {
+                OutputProgress.IsIndeterminate = true;
+                OutputProgress.Value = 100;
+                OutputProgress.Maximum = 100;
+                OutputProgress.Text = nodeName;
+            });
     }
 
     public class ImageGenerationEventArgs : EventArgs
@@ -543,5 +570,17 @@ public abstract partial class InferenceGenerationViewModelBase
         public ComfyNodeBuilder Builder { get; } = new();
         public GenerateOverrides Overrides { get; init; } = new();
         public long? SeedOverride { get; init; }
+
+        public static implicit operator ModuleApplyStepEventArgs(BuildPromptEventArgs args)
+        {
+            var overrides = new Dictionary<Type, bool>();
+
+            if (args.Overrides.IsHiresFixEnabled.HasValue)
+            {
+                overrides[typeof(HiresFixModule)] = args.Overrides.IsHiresFixEnabled.Value;
+            }
+
+            return new ModuleApplyStepEventArgs { Builder = args.Builder, IsEnabledOverrides = overrides };
+        }
     }
 }

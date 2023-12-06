@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Http;
 using System.Text;
 using AvaloniaEdit.Utils;
+using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +24,7 @@ using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Avalonia.ViewModels.OutputsPage;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
@@ -207,7 +210,7 @@ public static class DesignData
                                     Fp = CivitModelFpType.fp16,
                                     Size = CivitModelSize.pruned,
                                 },
-                                TrainedWords =  ["aurora", "lightning"]
+                                TrainedWords = ["aurora", "lightning"]
                             }
                         },
                         new() { FilePath = "~/Models/Lora/model.safetensors", Title = "Some model" },
@@ -303,7 +306,7 @@ public static class DesignData
                     Name = "BB95 Furry Mix",
                     Description = "A furry mix of BB95",
                     Stats = new CivitModelStats { Rating = 3.5, RatingCount = 24 },
-                    ModelVersions =  [new() { Name = "v1.2.2-Inpainting" }],
+                    ModelVersions = [new() { Name = "v1.2.2-Inpainting" }],
                     Creator = new CivitCreator
                     {
                         Image = "https://gravatar.com/avatar/fe74084ae8a081dc2283f5bde4736756ad?f=y&d=retro",
@@ -321,18 +324,19 @@ public static class DesignData
                     ModelVersions =
                     [
                         new()
+                        {
+                            Name = "v1.2.2-Inpainting",
+                            Images = new List<CivitImage>
                             {
-                                Name = "v1.2.2-Inpainting",
-                                Images = new List<CivitImage>
+                                new()
                                 {
-                                    new()
-                                    {
-                                        Nsfw = "None",
-                                        Url = "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
-                                              + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg"
-                                    }
+                                    Nsfw = "None",
+                                    Url =
+                                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
+                                        + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg"
                                 }
                             }
+                        }
                     ],
                     Creator = new CivitCreator
                     {
@@ -626,12 +630,26 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.OutputProgress.Text = "Sampler 10/30";
         });
 
+    public static InferenceImageToImageViewModel InferenceImageToImageViewModel =>
+        DialogFactory.Get<InferenceImageToImageViewModel>();
+
     public static InferenceImageUpscaleViewModel InferenceImageUpscaleViewModel =>
         DialogFactory.Get<InferenceImageUpscaleViewModel>();
 
     public static PackageImportViewModel PackageImportViewModel => DialogFactory.Get<PackageImportViewModel>();
 
     public static RefreshBadgeViewModel RefreshBadgeViewModel => new() { State = ProgressState.Success };
+
+    public static PropertyGridViewModel PropertyGridViewModel =>
+        DialogFactory.Get<PropertyGridViewModel>(vm =>
+        {
+            vm.SelectedObject = new INotifyPropertyChanged[]
+            {
+                new MockPropertyGridObject(),
+                new MockPropertyGridObjectAlt()
+            };
+            vm.ExcludeCategories = ["Excluded Category"];
+        });
 
     public static SeedCardViewModel SeedCardViewModel => new();
 
@@ -713,14 +731,30 @@ The gallery images are often inpainted, but you will get something very similar 
     public static StackCardViewModel StackCardViewModel =>
         DialogFactory.Get<StackCardViewModel>(vm =>
         {
-            vm.AddCards(new LoadableViewModelBase[] { SamplerCardViewModel, SeedCardViewModel, });
+            vm.AddCards(SamplerCardViewModel, SeedCardViewModel);
+        });
+
+    public static StackEditableCardViewModel StackEditableCardViewModel =>
+        DialogFactory.Get<StackEditableCardViewModel>(vm =>
+        {
+            vm.AddCards(StackExpanderViewModel, StackExpanderViewModel2);
         });
 
     public static StackExpanderViewModel StackExpanderViewModel =>
         DialogFactory.Get<StackExpanderViewModel>(vm =>
         {
             vm.Title = "Hires Fix";
-            vm.AddCards(new LoadableViewModelBase[] { UpscalerCardViewModel, SamplerCardViewModel });
+            vm.AddCards(UpscalerCardViewModel, SamplerCardViewModel);
+            vm.OnContainerIndexChanged(0);
+        });
+
+    public static StackExpanderViewModel StackExpanderViewModel2 =>
+        DialogFactory.Get<StackExpanderViewModel>(vm =>
+        {
+            vm.Title = "Hires Fix";
+            vm.IsSettingsEnabled = true;
+            vm.AddCards(UpscalerCardViewModel, SamplerCardViewModel);
+            vm.OnContainerIndexChanged(1);
         });
 
     public static UpscalerCardViewModel UpscalerCardViewModel => DialogFactory.Get<UpscalerCardViewModel>();
@@ -795,9 +829,12 @@ The gallery images are often inpainted, but you will get something very similar 
         });
 
     public static ImageSource SampleImageSource =>
-        new(
-            new Uri("https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500")
-        );
+        new(new Uri("https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"))
+        {
+            Label = "Test Image"
+        };
+
+    public static ControlNetCardViewModel ControlNetCardViewModel => DialogFactory.Get<ControlNetCardViewModel>();
 
     public static Indexer Types { get; } = new();
 

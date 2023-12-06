@@ -47,11 +47,10 @@
                     Label="Text to Image"
                     ToolTip.Tip="Text to Image" />
                 <ui:CommandBarButton
+                    Click="AddTabMenu_ImageToImage_OnClick"
                     IconSource="ImageCopy"
-                    IsEnabled="False"
-                    IsVisible="False"
                     Label="Image to Image"
-                    ToolTip.Tip="Not yet implemented, coming soon!" />
+                    ToolTip.Tip="Image to Image" />
                 <ui:CommandBarButton
                     IconSource="ImageEdit"
                     IsEnabled="False"

@@ -42,8 +42,7 @@ public class LocalModelFile
     /// <summary>
     /// Relative file path from the shared folder type model directory.
     /// </summary>
-    public string RelativePathFromSharedFolder =>
-        Path.GetRelativePath(SharedFolderType.GetStringValue(), RelativePath);
+    public string RelativePathFromSharedFolder => Path.GetRelativePath(SharedFolderType.GetStringValue(), RelativePath);
 
     public string GetFullPath(string rootModelDirectory)
     {
@@ -52,15 +51,12 @@ public class LocalModelFile
 
     public string? GetPreviewImageFullPath(string rootModelDirectory)
     {
-        return PreviewImageRelativePath == null
-            ? null
-            : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
+        return PreviewImageRelativePath == null ? null : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
     }
 
     public string FullPathGlobal => GetFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
 
-    public string? PreviewImageFullPathGlobal =>
-        GetPreviewImageFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
+    public string? PreviewImageFullPathGlobal => GetPreviewImageFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
 
     protected bool Equals(LocalModelFile other)
     {
@@ -86,8 +82,13 @@ public class LocalModelFile
     }
 
     public static readonly HashSet<string> SupportedCheckpointExtensions =
-        [".safetensors", ".pt", ".ckpt", ".pth", ".bin"];
-    public static readonly HashSet<string> SupportedImageExtensions =
-        [".png", ".jpg", ".jpeg", ".gif"];
+    [
+        ".safetensors",
+        ".pt",
+        ".ckpt",
+        ".pth",
+        ".bin"
+    ];
+    public static readonly HashSet<string> SupportedImageExtensions = [".png", ".jpg", ".jpeg", ".gif"];
     public static readonly HashSet<string> SupportedMetadataExtensions = [".json"];
 }

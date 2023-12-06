@@ -29,13 +29,10 @@ public class StableDiffusionDirectMl(
     public override string LicenseType => "AGPL-3.0";
     public override string LicenseUrl =>
         "https://github.com/lshqqytiger/stable-diffusion-webui-directml/blob/master/LICENSE.txt";
-    public override string Blurb =>
-        "A fork of Automatic1111's Stable Diffusion WebUI with DirectML support";
+    public override string Blurb => "A fork of Automatic1111's Stable Diffusion WebUI with DirectML support";
     public override string LaunchCommand => "launch.py";
     public override Uri PreviewImageUri =>
-        new(
-            "https://github.com/lshqqytiger/stable-diffusion-webui-directml/raw/master/screenshot.png"
-        );
+        new("https://github.com/lshqqytiger/stable-diffusion-webui-directml/raw/master/screenshot.png");
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
@@ -64,8 +61,7 @@ public class StableDiffusionDirectMl(
         switch (torchVersion)
         {
             case TorchVersion.DirectMl:
-                await InstallDirectMlTorch(venvRunner, progress, onConsoleOutput)
-                    .ConfigureAwait(false);
+                await InstallDirectMlTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
                 break;
             case TorchVersion.Cpu:
                 await InstallCpuTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
@@ -75,9 +71,7 @@ public class StableDiffusionDirectMl(
         await venvRunner.PipInstall("httpx==0.24.1").ConfigureAwait(false);
 
         // Install requirements file
-        progress?.Report(
-            new ProgressReport(-1f, "Installing Package Requirements", isIndeterminate: true)
-        );
+        progress?.Report(new ProgressReport(-1f, "Installing Package Requirements", isIndeterminate: true));
         Logger.Info("Installing requirements_versions.txt");
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");

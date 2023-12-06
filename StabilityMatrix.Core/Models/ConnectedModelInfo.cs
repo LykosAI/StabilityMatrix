@@ -59,10 +59,7 @@ public class ConnectedModelInfo
     {
         return JsonSerializer.Deserialize<ConnectedModelInfo>(
             json,
-            new JsonSerializerOptions
-            {
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-            }
+            new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }
         );
     }
 
@@ -80,6 +77,5 @@ public class ConnectedModelInfo
     }
 
     [JsonIgnore]
-    public string TrainedWordsString =>
-        TrainedWords != null ? string.Join(", ", TrainedWords) : string.Empty;
+    public string TrainedWordsString => TrainedWords != null ? string.Join(", ", TrainedWords) : string.Empty;
 }

@@ -92,11 +92,7 @@ public class BetterAdvancedImage : AdvancedImage
                 _ => throw new ArgumentException(nameof(VerticalContentAlignment))
             };
 
-            var destRect = viewPort
-                .CenterRect(new Rect(scaledSize))
-                .WithX(destX)
-                .WithY(destY)
-                .Intersect(viewPort);
+            var destRect = viewPort.CenterRect(new Rect(scaledSize)).WithX(destX).WithY(destY).Intersect(viewPort);
             var destRectUnscaledSize = destRect.Size / scale;
 
             // Calculate starting points for source

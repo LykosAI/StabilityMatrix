@@ -21,15 +21,12 @@ public class VoltaML(
     public override string DisplayName { get; set; } = "VoltaML";
     public override string Author => "VoltaML";
     public override string LicenseType => "GPL-3.0";
-    public override string LicenseUrl =>
-        "https://github.com/VoltaML/voltaML-fast-stable-diffusion/blob/main/License";
+    public override string LicenseUrl => "https://github.com/VoltaML/voltaML-fast-stable-diffusion/blob/main/License";
     public override string Blurb => "Fast Stable Diffusion with support for AITemplate";
     public override string LaunchCommand => "main.py";
 
     public override Uri PreviewImageUri =>
-        new(
-            "https://github.com/LykosAI/StabilityMatrix/assets/13956642/d9a908ed-5665-41a5-a380-98458f4679a8"
-        );
+        new("https://github.com/LykosAI/StabilityMatrix/assets/13956642/d9a908ed-5665-41a5-a380-98458f4679a8");
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
 
@@ -162,16 +159,10 @@ public class VoltaML(
         await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
         // Install requirements
-        progress?.Report(
-            new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true)
-        );
-        await venvRunner
-            .PipInstall("rich packaging python-dotenv", onConsoleOutput)
-            .ConfigureAwait(false);
+        progress?.Report(new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true));
+        await venvRunner.PipInstall("rich packaging python-dotenv", onConsoleOutput).ConfigureAwait(false);
 
-        progress?.Report(
-            new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false)
-        );
+        progress?.Report(new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false));
     }
 
     public override async Task RunPackage(

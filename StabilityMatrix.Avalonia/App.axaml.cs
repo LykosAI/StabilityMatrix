@@ -65,7 +65,6 @@ using StabilityMatrix.Avalonia.Diagnostics.LogViewer;
 using StabilityMatrix.Avalonia.Diagnostics.LogViewer.Extensions;
 #endif
 
-
 namespace StabilityMatrix.Avalonia;
 
 public sealed class App : Application
@@ -343,7 +342,7 @@ public sealed class App : Application
             .ToArray();
 
         var transientTypes = exportedTypes
-            .Select(t => new { t, attributes = t.GetCustomAttributes(typeof(TransientAttribute), true) })
+            .Select(t => new { t, attributes = t.GetCustomAttributes(typeof(TransientAttribute), false) })
             .Where(
                 t1 =>
                     t1.attributes is { Length: > 0 } && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
@@ -363,7 +362,7 @@ public sealed class App : Application
         }
 
         var singletonTypes = exportedTypes
-            .Select(t => new { t, attributes = t.GetCustomAttributes(typeof(SingletonAttribute), true) })
+            .Select(t => new { t, attributes = t.GetCustomAttributes(typeof(SingletonAttribute), false) })
             .Where(
                 t1 =>
                     t1.attributes is { Length: > 0 } && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
@@ -663,6 +662,11 @@ public sealed class App : Application
 
             // Disable console trace logging by default
             builder.ForLogger("StabilityMatrix.Avalonia.ViewModels.ConsoleViewModel").WriteToNil(NLog.LogLevel.Debug);
+
+            // Disable LoadableViewModelBase trace logging by default
+            builder
+                .ForLogger("StabilityMatrix.Avalonia.ViewModels.Base.LoadableViewModelBase")
+                .WriteToNil(NLog.LogLevel.Debug);
 
             builder.ForLogger().FilterMinLevel(NLog.LogLevel.Trace).WriteTo(debugTarget);
             builder.ForLogger().FilterMinLevel(NLog.LogLevel.Debug).WriteTo(fileTarget);

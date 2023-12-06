@@ -159,16 +159,11 @@ public class Settings
             return new CultureInfo("zh-Hant");
         }
 
-        return supportedCultures.Contains(systemCulture.Name)
-            ? systemCulture
-            : new CultureInfo("en-US");
+        return supportedCultures.Contains(systemCulture.Name) ? systemCulture : new CultureInfo("en-US");
     }
 }
 
-[JsonSourceGenerationOptions(
-    WriteIndented = true,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-)]
+[JsonSourceGenerationOptions(WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(Settings))]
 [JsonSerializable(typeof(bool))]
 [JsonSerializable(typeof(int))]

@@ -35,14 +35,13 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
     private readonly INotificationService notificationService;
     private readonly ISettingsManager settingsManager;
     private readonly ICompletionProvider completionProvider;
-    
+
     /// <inheritdoc />
     public override string Title => "Inference";
 
     /// <inheritdoc />
-    public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
-    
+    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
+
     [ObservableProperty]
     private bool isPromptCompletionEnabled = true;
 
@@ -65,24 +64,29 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
     public IEnumerable<FileNameFormatVar> OutputImageFileNameFormatVars =>
         FileNameFormatProvider
             .GetSample()
-            .Substitutions.Select(
-                kv =>
-                    new FileNameFormatVar
-                    {
-                        Variable = $"{{{kv.Key}}}",
-                        Example = kv.Value.Invoke()
-                    }
-            );
+            .Substitutions
+            .Select(kv => new FileNameFormatVar { Variable = $"{{{kv.Key}}}", Example = kv.Value.Invoke() });
 
     [ObservableProperty]
     private bool isImageViewerPixelGridEnabled = true;
 
-    public InferenceSettingsViewModel(INotificationService notificationService, IPrerequisiteHelper prerequisiteHelper, IPyRunner pyRunner, ServiceManager<ViewModelBase> dialogFactory, ICompletionProvider completionProvider, ITrackedDownloadService trackedDownloadService, IModelIndexService modelIndexService, INavigationService<SettingsViewModel> settingsNavigationService, IAccountsService accountsService, ISettingsManager settingsManager)
+    public InferenceSettingsViewModel(
+        INotificationService notificationService,
+        IPrerequisiteHelper prerequisiteHelper,
+        IPyRunner pyRunner,
+        ServiceManager<ViewModelBase> dialogFactory,
+        ICompletionProvider completionProvider,
+        ITrackedDownloadService trackedDownloadService,
+        IModelIndexService modelIndexService,
+        INavigationService<SettingsViewModel> settingsNavigationService,
+        IAccountsService accountsService,
+        ISettingsManager settingsManager
+    )
     {
         this.settingsManager = settingsManager;
         this.notificationService = notificationService;
         this.completionProvider = completionProvider;
-        
+
         settingsManager.RelayPropertyFor(
             this,
             vm => vm.SelectedTagCompletionCsv,
@@ -110,10 +114,7 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
                 var provider = FileNameFormatProvider.GetSample();
                 var template = formatProperty.Value ?? string.Empty;
 
-                if (
-                    !string.IsNullOrEmpty(template)
-                    && provider.Validate(template) == ValidationResult.Success
-                )
+                if (!string.IsNullOrEmpty(template) && provider.Validate(template) == ValidationResult.Success)
                 {
                     var format = FileNameFormat.Parse(template, provider);
                     OutputImageFileNameFormatSample = format.GetFileName() + ".png";
@@ -121,10 +122,7 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
                 else
                 {
                     // Use default format if empty
-                    var defaultFormat = FileNameFormat.Parse(
-                        FileNameFormat.DefaultTemplate,
-                        provider
-                    );
+                    var defaultFormat = FileNameFormat.Parse(FileNameFormat.DefaultTemplate, provider);
                     OutputImageFileNameFormatSample = defaultFormat.GetFileName() + ".png";
                 }
             });
@@ -145,14 +143,11 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
 
         ImportTagCsvCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
     }
-    
+
     /// <summary>
     /// Validator for <see cref="OutputImageFileNameFormat"/>
     /// </summary>
-    public static ValidationResult ValidateOutputImageFileNameFormat(
-        string? format,
-        ValidationContext context
-    )
+    public static ValidationResult ValidateOutputImageFileNameFormat(string? format, ValidationContext context)
     {
         return FileNameFormatProvider.GetSample().Validate(format ?? string.Empty);
     }
@@ -161,12 +156,12 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
     public override void OnLoaded()
     {
         base.OnLoaded();
-        
+
         UpdateAvailableTagCompletionCsvs();
     }
 
     #region Commands
-    
+
     [RelayCommand(FlowExceptionsToTaskScheduler = true)]
     private async Task ImportTagCsv()
     {
@@ -174,13 +169,7 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
         var files = await storage.OpenFilePickerAsync(
             new FilePickerOpenOptions
             {
-                FileTypeFilter = new List<FilePickerFileType>
-                {
-                    new("CSV")
-                    {
-                        Patterns = ["*.csv"]
-                    }
-                }
+                FileTypeFilter = new List<FilePickerFileType> { new("CSV") { Patterns =  ["*.csv"] } }
             }
         );
 
@@ -209,12 +198,12 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
         );
     }
     #endregion
-    
+
     private void UpdateAvailableTagCompletionCsvs()
     {
         if (!settingsManager.IsLibraryDirSet)
             return;
-        
+
         if (settingsManager.TagsDirectory is not { Exists: true } tagsDir)
             return;
 

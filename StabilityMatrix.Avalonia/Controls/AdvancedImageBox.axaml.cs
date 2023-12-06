@@ -54,11 +54,7 @@ public class AdvancedImageBox : TemplatedControl
         remove => _propertyChanged -= value;
     }
 
-    protected bool RaiseAndSetIfChanged<T>(
-        ref T field,
-        T value,
-        [CallerMemberName] string? propertyName = null
-    )
+    protected bool RaiseAndSetIfChanged<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
     {
         if (EqualityComparer<T>.Default.Equals(field, value))
             return false;
@@ -335,9 +331,7 @@ public class AdvancedImageBox : TemplatedControl
             if (index < Count - 1)
                 index++;
 
-            return constrainZoomLevel > 0 && this[index] >= constrainZoomLevel
-                ? constrainZoomLevel
-                : this[index];
+            return constrainZoomLevel > 0 && this[index] >= constrainZoomLevel ? constrainZoomLevel : this[index];
         }
 
         /// <summary>
@@ -352,9 +346,7 @@ public class AdvancedImageBox : TemplatedControl
             if (index > 0)
                 index--;
 
-            return constrainZoomLevel > 0 && this[index] <= constrainZoomLevel
-                ? constrainZoomLevel
-                : this[index];
+            return constrainZoomLevel > 0 && this[index] <= constrainZoomLevel ? constrainZoomLevel : this[index];
         }
 
         /// <summary>
@@ -525,11 +517,10 @@ public class AdvancedImageBox : TemplatedControl
     #endregion
 
     #region Properties
-    public static readonly DirectProperty<AdvancedImageBox, bool> CanRenderProperty =
-        AvaloniaProperty.RegisterDirect<AdvancedImageBox, bool>(
-            nameof(CanRender),
-            o => o.CanRender
-        );
+    public static readonly DirectProperty<AdvancedImageBox, bool> CanRenderProperty = AvaloniaProperty.RegisterDirect<
+        AdvancedImageBox,
+        bool
+    >(nameof(CanRender), o => o.CanRender);
 
     /// <summary>
     /// Gets or sets if control can render the image
@@ -560,11 +551,10 @@ public class AdvancedImageBox : TemplatedControl
         set => SetValue(GridCellSizeProperty, value);
     }
 
-    public static readonly StyledProperty<ISolidColorBrush> GridColorProperty =
-        AvaloniaProperty.Register<AdvancedImageBox, ISolidColorBrush>(
-            nameof(GridColor),
-            SolidColorBrush.Parse("#181818")
-        );
+    public static readonly StyledProperty<ISolidColorBrush> GridColorProperty = AvaloniaProperty.Register<
+        AdvancedImageBox,
+        ISolidColorBrush
+    >(nameof(GridColor), SolidColorBrush.Parse("#181818"));
 
     /// <summary>
     /// Gets or sets the color used to create the checkerboard style background
@@ -575,11 +565,10 @@ public class AdvancedImageBox : TemplatedControl
         set => SetValue(GridColorProperty, value);
     }
 
-    public static readonly StyledProperty<ISolidColorBrush> GridColorAlternateProperty =
-        AvaloniaProperty.Register<AdvancedImageBox, ISolidColorBrush>(
-            nameof(GridColorAlternate),
-            SolidColorBrush.Parse("#252525")
-        );
+    public static readonly StyledProperty<ISolidColorBrush> GridColorAlternateProperty = AvaloniaProperty.Register<
+        AdvancedImageBox,
+        ISolidColorBrush
+    >(nameof(GridColorAlternate), SolidColorBrush.Parse("#252525"));
 
     /// <summary>
     /// Gets or sets the color used to create the checkerboard style background
@@ -606,7 +595,8 @@ public class AdvancedImageBox : TemplatedControl
             {
                 var loader = ImageLoader.AsyncImageLoader;
 
-                Dispatcher.UIThread
+                Dispatcher
+                    .UIThread
                     .InvokeAsync(async () =>
                     {
                         Image = await loader.ProvideImageAsync(value);
@@ -616,10 +606,9 @@ public class AdvancedImageBox : TemplatedControl
         }
     }
 
-    public static readonly StyledProperty<Bitmap?> ImageProperty = AvaloniaProperty.Register<
-        AdvancedImageBox,
-        Bitmap?
-    >(nameof(Image));
+    public static readonly StyledProperty<Bitmap?> ImageProperty = AvaloniaProperty.Register<AdvancedImageBox, Bitmap?>(
+        nameof(Image)
+    );
 
     /// <summary>
     /// Gets or sets the image to be displayed
@@ -656,8 +645,7 @@ public class AdvancedImageBox : TemplatedControl
                 {
                     offsetBackup = Offset;
 
-                    var zoomFactorScale =
-                        (float)GetZoomLevelToFit(newImage) / GetZoomLevelToFit(oldImage);
+                    var zoomFactorScale = (float)GetZoomLevelToFit(newImage) / GetZoomLevelToFit(oldImage);
                     var imageScale = newImage.Size / oldImage.Size;
 
                     Debug.WriteLine($"Image scale: {imageScale}");
@@ -731,8 +719,10 @@ public class AdvancedImageBox : TemplatedControl
 
     public bool HaveTrackerImage => _trackerImage is not null;
 
-    public static readonly StyledProperty<bool> TrackerImageAutoZoomProperty =
-        AvaloniaProperty.Register<AdvancedImageBox, bool>(nameof(TrackerImageAutoZoom), true);
+    public static readonly StyledProperty<bool> TrackerImageAutoZoomProperty = AvaloniaProperty.Register<
+        AdvancedImageBox,
+        bool
+    >(nameof(TrackerImageAutoZoom), true);
 
     /// <summary>
     /// Gets or sets if the tracker image will be scaled to the current zoom
@@ -743,8 +733,10 @@ public class AdvancedImageBox : TemplatedControl
         set => SetValue(TrackerImageAutoZoomProperty, value);
     }
 
-    public static readonly StyledProperty<bool> IsTrackerImageEnabledProperty =
-        AvaloniaProperty.Register<AdvancedImageBox, bool>("IsTrackerImageEnabled");
+    public static readonly StyledProperty<bool> IsTrackerImageEnabledProperty = AvaloniaProperty.Register<
+        AdvancedImageBox,
+        bool
+    >("IsTrackerImageEnabled");
 
     public bool IsTrackerImageEnabled
     {
@@ -776,10 +768,10 @@ public class AdvancedImageBox : TemplatedControl
         }
     }
 
-    public static readonly StyledProperty<bool> ShowGridProperty = AvaloniaProperty.Register<
-        AdvancedImageBox,
-        bool
-    >(nameof(ShowGrid), true);
+    public static readonly StyledProperty<bool> ShowGridProperty = AvaloniaProperty.Register<AdvancedImageBox, bool>(
+        nameof(ShowGrid),
+        true
+    );
 
     /// <summary>
     /// Gets or sets the grid visibility when reach high zoom levels
@@ -791,10 +783,7 @@ public class AdvancedImageBox : TemplatedControl
     }
 
     public static readonly DirectProperty<AdvancedImageBox, Point> PointerPositionProperty =
-        AvaloniaProperty.RegisterDirect<AdvancedImageBox, Point>(
-            nameof(PointerPosition),
-            o => o.PointerPosition
-        );
+        AvaloniaProperty.RegisterDirect<AdvancedImageBox, Point>(nameof(PointerPosition), o => o.PointerPosition);
 
     /// <summary>
     /// Gets the current pointer position
@@ -805,11 +794,10 @@ public class AdvancedImageBox : TemplatedControl
         private set => SetAndRaise(PointerPositionProperty, ref _pointerPosition, value);
     }
 
-    public static readonly DirectProperty<AdvancedImageBox, bool> IsPanningProperty =
-        AvaloniaProperty.RegisterDirect<AdvancedImageBox, bool>(
-            nameof(IsPanning),
-            o => o.IsPanning
-        );
+    public static readonly DirectProperty<AdvancedImageBox, bool> IsPanningProperty = AvaloniaProperty.RegisterDirect<
+        AdvancedImageBox,
+        bool
+    >(nameof(IsPanning), o => o.IsPanning);
 
     /// <summary>
     /// Gets if control is currently panning
@@ -836,11 +824,10 @@ public class AdvancedImageBox : TemplatedControl
         }
     }
 
-    public static readonly DirectProperty<AdvancedImageBox, bool> IsSelectingProperty =
-        AvaloniaProperty.RegisterDirect<AdvancedImageBox, bool>(
-            nameof(IsSelecting),
-            o => o.IsSelecting
-        );
+    public static readonly DirectProperty<AdvancedImageBox, bool> IsSelectingProperty = AvaloniaProperty.RegisterDirect<
+        AdvancedImageBox,
+        bool
+    >(nameof(IsSelecting), o => o.IsSelecting);
 
     /// <summary>
     /// Gets if control is currently selecting a ROI
@@ -863,10 +850,10 @@ public class AdvancedImageBox : TemplatedControl
         }
     }
 
-    public static readonly StyledProperty<bool> AutoPanProperty = AvaloniaProperty.Register<
-        AdvancedImageBox,
-        bool
-    >(nameof(AutoPan), true);
+    public static readonly StyledProperty<bool> AutoPanProperty = AvaloniaProperty.Register<AdvancedImageBox, bool>(
+        nameof(AutoPan),
+        true
+    );
 
     /// <summary>
     /// Gets or sets if the control can pan with the mouse
@@ -877,11 +864,10 @@ public class AdvancedImageBox : TemplatedControl
         set => SetValue(AutoPanProperty, value);
     }
 
-    public static readonly StyledProperty<MouseButtons> PanWithMouseButtonsProperty =
-        AvaloniaProperty.Register<AdvancedImageBox, MouseButtons>(
-            nameof(PanWithMouseButtons),
-            MouseButtons.LeftButton | MouseButtons.MiddleButton
-        );
+    public static readonly StyledProperty<MouseButtons> PanWithMouseButtonsProperty = AvaloniaProperty.Register<
+        AdvancedImageBox,
+        MouseButtons
+    >(nameof(PanWithMouseButtons), MouseButtons.LeftButton | MouseButtons.MiddleButton);
 
     /// <summary>
     /// Gets or sets the mouse buttons to pan the image
@@ -906,11 +892,10 @@ public class AdvancedImageBox : TemplatedControl
         set => SetValue(PanWithArrowsProperty, value);
     }
 
-    public static readonly StyledProperty<MouseButtons> SelectWithMouseButtonsProperty =
-        AvaloniaProperty.Register<AdvancedImageBox, MouseButtons>(
-            nameof(SelectWithMouseButtons),
-            MouseButtons.LeftButton
-        );
+    public static readonly StyledProperty<MouseButtons> SelectWithMouseButtonsProperty = AvaloniaProperty.Register<
+        AdvancedImageBox,
+        MouseButtons
+    >(nameof(SelectWithMouseButtons), MouseButtons.LeftButton);
 
     /// <summary>
     /// Gets or sets the mouse buttons to select a region on image
@@ -935,10 +920,10 @@ public class AdvancedImageBox : TemplatedControl
         set => SetValue(InvertMousePanProperty, value);
     }
 
-    public static readonly StyledProperty<bool> AutoCenterProperty = AvaloniaProperty.Register<
-        AdvancedImageBox,
-        bool
-    >(nameof(AutoCenter), true);
+    public static readonly StyledProperty<bool> AutoCenterProperty = AvaloniaProperty.Register<AdvancedImageBox, bool>(
+        nameof(AutoCenter),
+        true
+    );
 
     /// <summary>
     /// Gets or sets if image is auto centered
@@ -993,10 +978,10 @@ public class AdvancedImageBox : TemplatedControl
         }
     }
 
-    public static readonly StyledProperty<bool> AllowZoomProperty = AvaloniaProperty.Register<
-        AdvancedImageBox,
-        bool
-    >(nameof(AllowZoom), true);
+    public static readonly StyledProperty<bool> AllowZoomProperty = AvaloniaProperty.Register<AdvancedImageBox, bool>(
+        nameof(AllowZoom),
+        true
+    );
 
     /// <summary>
     /// Gets or sets if zoom is allowed
@@ -1007,14 +992,12 @@ public class AdvancedImageBox : TemplatedControl
         set => SetValue(AllowZoomProperty, value);
     }
 
-    public static readonly DirectProperty<
-        AdvancedImageBox,
-        ZoomLevelCollection
-    > ZoomLevelsProperty = AvaloniaProperty.RegisterDirect<AdvancedImageBox, ZoomLevelCollection>(
-        nameof(ZoomLevels),
-        o => o.ZoomLevels,
-        (o, v) => o.ZoomLevels = v
-    );
+    public static readonly DirectProperty<AdvancedImageBox, ZoomLevelCollection> ZoomLevelsProperty =
+        AvaloniaProperty.RegisterDirect<AdvancedImageBox, ZoomLevelCollection>(
+            nameof(ZoomLevels),
+            o => o.ZoomLevels,
+            (o, v) => o.ZoomLevels = v
+        );
 
     ZoomLevelCollection _zoomLevels = ZoomLevelCollection.Default;
 
@@ -1028,10 +1011,10 @@ public class AdvancedImageBox : TemplatedControl
         set => SetAndRaise(ZoomLevelsProperty, ref _zoomLevels, value);
     }
 
-    public static readonly StyledProperty<int> MinZoomProperty = AvaloniaProperty.Register<
-        AdvancedImageBox,
-        int
-    >(nameof(MinZoom), 10);
+    public static readonly StyledProperty<int> MinZoomProperty = AvaloniaProperty.Register<AdvancedImageBox, int>(
+        nameof(MinZoom),
+        10
+    );
 
     /// <summary>
     /// Gets or sets the minimum possible zoom.
@@ -1043,10 +1026,10 @@ public class AdvancedImageBox : TemplatedControl
         set => SetValue(MinZoomProperty, value);
     }
 
-    public static readonly StyledProperty<int> MaxZoomProperty = AvaloniaProperty.Register<
-        AdvancedImageBox,
-        int
-    >(nameof(MaxZoom), 6400);
+    public static readonly StyledProperty<int> MaxZoomProperty = AvaloniaProperty.Register<AdvancedImageBox, int>(
+        nameof(MaxZoom),
+        6400
+    );
 
     /// <summary>
     /// Gets or sets the maximum possible zoom.
@@ -1058,8 +1041,10 @@ public class AdvancedImageBox : TemplatedControl
         set => SetValue(MaxZoomProperty, value);
     }
 
-    public static readonly StyledProperty<bool> ConstrainZoomOutToFitLevelProperty =
-        AvaloniaProperty.Register<AdvancedImageBox, bool>(nameof(ConstrainZoomOutToFitLevel), true);
+    public static readonly StyledProperty<bool> ConstrainZoomOutToFitLevelProperty = AvaloniaProperty.Register<
+        AdvancedImageBox,
+        bool
+    >(nameof(ConstrainZoomOutToFitLevel), true);
 
     /// <summary>
     /// Gets or sets if the zoom out should constrain to fit image as the lowest zoom level.
@@ -1070,8 +1055,10 @@ public class AdvancedImageBox : TemplatedControl
         set => SetValue(ConstrainZoomOutToFitLevelProperty, value);
     }
 
-    public static readonly DirectProperty<AdvancedImageBox, int> OldZoomProperty =
-        AvaloniaProperty.RegisterDirect<AdvancedImageBox, int>(nameof(OldZoom), o => o.OldZoom);
+    public static readonly DirectProperty<AdvancedImageBox, int> OldZoomProperty = AvaloniaProperty.RegisterDirect<
+        AdvancedImageBox,
+        int
+    >(nameof(OldZoom), o => o.OldZoom);
 
     private int _oldZoom = 100;
 
@@ -1085,10 +1072,10 @@ public class AdvancedImageBox : TemplatedControl
         private set => SetAndRaise(OldZoomProperty, ref _oldZoom, value);
     }
 
-    public static readonly StyledProperty<int> ZoomProperty = AvaloniaProperty.Register<
-        AdvancedImageBox,
-        int
-    >(nameof(Zoom), 100);
+    public static readonly StyledProperty<int> ZoomProperty = AvaloniaProperty.Register<AdvancedImageBox, int>(
+        nameof(Zoom),
+        100
+    );
 
     /// <summary>
     ///  Gets or sets the zoom.
@@ -1178,11 +1165,10 @@ public class AdvancedImageBox : TemplatedControl
     /// <value>The height of the scaled image.</value>
     public double ScaledImageHeight => Image?.Size.Height * ZoomFactor ?? 0;
 
-    public static readonly StyledProperty<ISolidColorBrush> PixelGridColorProperty =
-        AvaloniaProperty.Register<AdvancedImageBox, ISolidColorBrush>(
-            nameof(PixelGridColor),
-            Brushes.DimGray
-        );
+    public static readonly StyledProperty<ISolidColorBrush> PixelGridColorProperty = AvaloniaProperty.Register<
+        AdvancedImageBox,
+        ISolidColorBrush
+    >(nameof(PixelGridColor), Brushes.DimGray);
 
     /// <summary>
     /// Gets or sets the color of the pixel grid.
@@ -1194,8 +1180,10 @@ public class AdvancedImageBox : TemplatedControl
         set => SetValue(PixelGridColorProperty, value);
     }
 
-    public static readonly StyledProperty<int> PixelGridZoomThresholdProperty =
-        AvaloniaProperty.Register<AdvancedImageBox, int>(nameof(PixelGridZoomThreshold), 13);
+    public static readonly StyledProperty<int> PixelGridZoomThresholdProperty = AvaloniaProperty.Register<
+        AdvancedImageBox,
+        int
+    >(nameof(PixelGridZoomThreshold), 13);
 
     /// <summary>
     /// Minimum size of zoomed pixel's before the pixel grid will be drawn
@@ -1206,11 +1194,15 @@ public class AdvancedImageBox : TemplatedControl
         set => SetValue(PixelGridZoomThresholdProperty, value);
     }
 
-    public static readonly StyledProperty<SelectionModes> SelectionModeProperty =
-        AvaloniaProperty.Register<AdvancedImageBox, SelectionModes>(nameof(SelectionMode));
+    public static readonly StyledProperty<SelectionModes> SelectionModeProperty = AvaloniaProperty.Register<
+        AdvancedImageBox,
+        SelectionModes
+    >(nameof(SelectionMode));
 
-    public static readonly StyledProperty<bool> IsPixelGridEnabledProperty =
-        AvaloniaProperty.Register<AdvancedImageBox, bool>("IsPixelGridEnabled", true);
+    public static readonly StyledProperty<bool> IsPixelGridEnabledProperty = AvaloniaProperty.Register<
+        AdvancedImageBox,
+        bool
+    >("IsPixelGridEnabled", true);
 
     /// <summary>
     /// Whether or not to draw the pixel grid at the <see cref="PixelGridZoomThreshold"/>
@@ -1227,11 +1219,10 @@ public class AdvancedImageBox : TemplatedControl
         set => SetValue(SelectionModeProperty, value);
     }
 
-    public static readonly StyledProperty<ISolidColorBrush> SelectionColorProperty =
-        AvaloniaProperty.Register<AdvancedImageBox, ISolidColorBrush>(
-            nameof(SelectionColor),
-            new SolidColorBrush(new Color(127, 0, 128, 255))
-        );
+    public static readonly StyledProperty<ISolidColorBrush> SelectionColorProperty = AvaloniaProperty.Register<
+        AdvancedImageBox,
+        ISolidColorBrush
+    >(nameof(SelectionColor), new SolidColorBrush(new Color(127, 0, 128, 255)));
 
     public ISolidColorBrush SelectionColor
     {
@@ -1313,14 +1304,9 @@ public class AdvancedImageBox : TemplatedControl
         AffectsRender<AdvancedImageBox>(ShowGridProperty);
 
         HorizontalScrollBar =
-            e.NameScope.Find<ScrollBar>("PART_HorizontalScrollBar")
-            ?? throw new NullReferenceException();
-        VerticalScrollBar =
-            e.NameScope.Find<ScrollBar>("PART_VerticalScrollBar")
-            ?? throw new NullReferenceException();
-        ViewPort =
-            e.NameScope.Find<ContentPresenter>("PART_ViewPort")
-            ?? throw new NullReferenceException();
+            e.NameScope.Find<ScrollBar>("PART_HorizontalScrollBar") ?? throw new NullReferenceException();
+        VerticalScrollBar = e.NameScope.Find<ScrollBar>("PART_VerticalScrollBar") ?? throw new NullReferenceException();
+        ViewPort = e.NameScope.Find<ContentPresenter>("PART_ViewPort") ?? throw new NullReferenceException();
 
         SizeModeChanged();
 
@@ -1347,9 +1333,7 @@ public class AdvancedImageBox : TemplatedControl
 
         // If we're in high zoom, switch off bitmap interpolation mode
         // Otherwise use high quality
-        BitmapInterpolationMode = isHighZoom
-            ? BitmapInterpolationMode.None
-            : BitmapInterpolationMode.HighQuality;
+        BitmapInterpolationMode = isHighZoom ? BitmapInterpolationMode.None : BitmapInterpolationMode.HighQuality;
 
         InvalidateVisual();
     }
@@ -1398,9 +1382,7 @@ public class AdvancedImageBox : TemplatedControl
         var zoomFactor = ZoomFactor;
 
         var shouldDrawPixelGrid =
-            IsPixelGridEnabled
-            && SizeMode == SizeModes.Normal
-            && zoomFactor > PixelGridZoomThreshold;
+            IsPixelGridEnabled && SizeMode == SizeModes.Normal && zoomFactor > PixelGridZoomThreshold;
 
         // Draw Grid
         /*var viewPortSize = ViewPortSize;
@@ -1440,16 +1422,10 @@ public class AdvancedImageBox : TemplatedControl
         if (HaveTrackerImage && _pointerPosition is { X: >= 0, Y: >= 0 })
         {
             var destSize = TrackerImageAutoZoom
-                ? new Size(
-                    _trackerImage!.Size.Width * zoomFactor,
-                    _trackerImage.Size.Height * zoomFactor
-                )
+                ? new Size(_trackerImage!.Size.Width * zoomFactor, _trackerImage.Size.Height * zoomFactor)
                 : image.Size;
 
-            var destPos = new Point(
-                _pointerPosition.X - destSize.Width / 2,
-                _pointerPosition.Y - destSize.Height / 2
-            );
+            var destPos = new Point(_pointerPosition.X - destSize.Width / 2, _pointerPosition.Y - destSize.Height / 2);
             context.DrawImage(_trackerImage!, new Rect(destPos, destSize));
         }
 
@@ -1461,30 +1437,14 @@ public class AdvancedImageBox : TemplatedControl
             var offsetY = Offset.Y % zoomFactor;
 
             Pen pen = new(PixelGridColor);
-            for (
-                var x = imageViewPort.X + zoomFactor - offsetX;
-                x < imageViewPort.Right;
-                x += zoomFactor
-            )
+            for (var x = imageViewPort.X + zoomFactor - offsetX; x < imageViewPort.Right; x += zoomFactor)
             {
-                context.DrawLine(
-                    pen,
-                    new Point(x, imageViewPort.X),
-                    new Point(x, imageViewPort.Bottom)
-                );
+                context.DrawLine(pen, new Point(x, imageViewPort.X), new Point(x, imageViewPort.Bottom));
             }
 
-            for (
-                var y = imageViewPort.Y + zoomFactor - offsetY;
-                y < imageViewPort.Bottom;
-                y += zoomFactor
-            )
+            for (var y = imageViewPort.Y + zoomFactor - offsetY; y < imageViewPort.Bottom; y += zoomFactor)
             {
-                context.DrawLine(
-                    pen,
-                    new Point(imageViewPort.Y, y),
-                    new Point(imageViewPort.Right, y)
-                );
+                context.DrawLine(pen, new Point(imageViewPort.Y, y), new Point(imageViewPort.Right, y));
             }
 
             context.DrawRectangle(pen, imageViewPort);
@@ -1495,12 +1455,7 @@ public class AdvancedImageBox : TemplatedControl
             var rect = GetOffsetRectangle(SelectionRegion);
             var selectionColor = SelectionColor;
             context.FillRectangle(selectionColor, rect);
-            var color = Color.FromArgb(
-                255,
-                selectionColor.Color.R,
-                selectionColor.Color.G,
-                selectionColor.Color.B
-            );
+            var color = Color.FromArgb(255, selectionColor.Color.R, selectionColor.Color.G, selectionColor.Color.B);
             context.DrawRectangle(new Pen(color.ToUInt32()), rect);
         }
     }
@@ -1608,8 +1563,7 @@ public class AdvancedImageBox : TemplatedControl
         {
             if (
                 !(
-                    pointer.Properties.IsLeftButtonPressed
-                        && (SelectWithMouseButtons & MouseButtons.LeftButton) != 0
+                    pointer.Properties.IsLeftButtonPressed && (SelectWithMouseButtons & MouseButtons.LeftButton) != 0
                     || pointer.Properties.IsMiddleButtonPressed
                         && (SelectWithMouseButtons & MouseButtons.MiddleButton) != 0
                     || pointer.Properties.IsRightButtonPressed
@@ -1623,12 +1577,10 @@ public class AdvancedImageBox : TemplatedControl
         {
             if (
                 !(
-                    pointer.Properties.IsLeftButtonPressed
-                        && (PanWithMouseButtons & MouseButtons.LeftButton) != 0
+                    pointer.Properties.IsLeftButtonPressed && (PanWithMouseButtons & MouseButtons.LeftButton) != 0
                     || pointer.Properties.IsMiddleButtonPressed
                         && (PanWithMouseButtons & MouseButtons.MiddleButton) != 0
-                    || pointer.Properties.IsRightButtonPressed
-                        && (PanWithMouseButtons & MouseButtons.RightButton) != 0
+                    || pointer.Properties.IsRightButtonPressed && (PanWithMouseButtons & MouseButtons.RightButton) != 0
                 )
                 || !AutoPan
                 || SizeMode != SizeModes.Normal
@@ -2668,12 +2620,8 @@ public class AdvancedImageBox : TemplatedControl
             case SizeModes.Normal:
                 if (AutoCenter)
                 {
-                    xOffset = (
-                        !IsHorizontalBarVisible ? (viewPortSize.Width - ScaledImageWidth) / 2 : 0
-                    );
-                    yOffset = (
-                        !IsVerticalBarVisible ? (viewPortSize.Height - ScaledImageHeight) / 2 : 0
-                    );
+                    xOffset = (!IsHorizontalBarVisible ? (viewPortSize.Width - ScaledImageWidth) / 2 : 0);
+                    yOffset = (!IsVerticalBarVisible ? (viewPortSize.Height - ScaledImageHeight) / 2 : 0);
                 }
 
                 width = Math.Min(ScaledImageWidth - Math.Abs(Offset.X), viewPortSize.Width);
@@ -2728,12 +2676,7 @@ public class AdvancedImageBox : TemplatedControl
         var pixelSize = SelectionPixelSize;
         using var frameBuffer = image.Lock();
 
-        var newBitmap = new WriteableBitmap(
-            pixelSize,
-            image.Dpi,
-            frameBuffer.Format,
-            AlphaFormat.Unpremul
-        );
+        var newBitmap = new WriteableBitmap(pixelSize, image.Dpi, frameBuffer.Format, AlphaFormat.Unpremul);
         using var newFrameBuffer = newBitmap.Lock();
 
         var i = 0;

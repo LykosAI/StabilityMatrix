@@ -74,8 +74,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
     public SharedState SharedState { get; }
 
     public override string Title => "Settings";
-    public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
+    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
 
     // ReSharper disable once MemberCanBeMadeStatic.Global
     public string AppVersion =>
@@ -127,8 +126,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private MemoryInfo memoryInfo;
 
-    private readonly DispatcherTimer hardwareInfoUpdateTimer =
-        new() { Interval = TimeSpan.FromSeconds(2.627) };
+    private readonly DispatcherTimer hardwareInfoUpdateTimer = new() { Interval = TimeSpan.FromSeconds(2.627) };
 
     public Task<CpuInfo> CpuInfoAsync => HardwareHelper.GetCpuInfoAsync();
 
@@ -145,8 +143,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
     public string VersionFlyoutText =>
         $"You are {VersionTapCountThreshold - VersionTapCount} clicks away from enabling Debug options.";
 
-    public string DataDirectory =>
-        settingsManager.IsLibraryDirSet ? settingsManager.LibraryDir : "Not set";
+    public string DataDirectory => settingsManager.IsLibraryDirSet ? settingsManager.LibraryDir : "Not set";
 
     public MainSettingsViewModel(
         INotificationService notificationService,
@@ -194,16 +191,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
             true
         );
 
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.SelectedAnimationScale,
-            settings => settings.AnimationScale
-        );
+        settingsManager.RelayPropertyFor(this, vm => vm.SelectedAnimationScale, settings => settings.AnimationScale);
 
-        DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(
-            notificationService,
-            LogLevel.Warn
-        );
+        DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
 
         hardwareInfoUpdateTimer.Tick += OnHardwareInfoUpdateTimerTick;
     }
@@ -277,22 +267,20 @@ public partial class MainSettingsViewModel : PageViewModelBase
                 CloseButtonText = Resources.Action_RelaunchLater
             };
 
-            Dispatcher.UIThread.InvokeAsync(async () =>
-            {
-                if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+            Dispatcher
+                .UIThread
+                .InvokeAsync(async () =>
                 {
-                    Process.Start(Compat.AppCurrentPath);
-                    App.Shutdown();
-                }
-            });
+                    if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+                    {
+                        Process.Start(Compat.AppCurrentPath);
+                        App.Shutdown();
+                    }
+                });
         }
         else
         {
-            Logger.Info(
-                "Requested invalid language change from {Old} to {New}",
-                oldValue,
-                newValue
-            );
+            Logger.Info("Requested invalid language change from {Old} to {New}", oldValue, newValue);
         }
     }
 
@@ -315,14 +303,16 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [RelayCommand]
     private void NavigateToSubPage(Type viewModelType)
     {
-        Dispatcher.UIThread.Post(
-            () =>
-                settingsNavigationService.NavigateTo(
-                    viewModelType,
-                    BetterSlideNavigationTransition.PageSlideFromRight
-                ),
-            DispatcherPriority.Send
-        );
+        Dispatcher
+            .UIThread
+            .Post(
+                () =>
+                    settingsNavigationService.NavigateTo(
+                        viewModelType,
+                        BetterSlideNavigationTransition.PageSlideFromRight
+                    ),
+                DispatcherPriority.Send
+            );
     }
 
     #region Package Environment
@@ -333,8 +323,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         var viewModel = dialogFactory.Get<EnvVarsViewModel>();
 
         // Load current settings
-        var current =
-            settingsManager.Settings.EnvironmentVariables ?? new Dictionary<string, string>();
+        var current = settingsManager.Settings.EnvironmentVariables ?? new Dictionary<string, string>();
         viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>(
             current.Select(kvp => new EnvVarKeyPair(kvp.Key, kvp.Value))
         );
@@ -350,7 +339,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)
         {
             // Save settings
-            var newEnvVars = viewModel.EnvVars
+            var newEnvVars = viewModel
+                .EnvVars
                 .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Key))
                 .GroupBy(kvp => kvp.Key, StringComparer.Ordinal)
                 .ToDictionary(g => g.Key, g => g.First().Value, StringComparer.Ordinal);
@@ -405,10 +395,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
         await using var _ = new MinimumDelay(200, 300);
 
-        var shortcutDir = new DirectoryPath(
-            Environment.GetFolderPath(Environment.SpecialFolder.StartMenu),
-            "Programs"
-        );
+        var shortcutDir = new DirectoryPath(Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "Programs");
         var shortcutLink = shortcutDir.JoinFile("Stability Matrix.lnk");
 
         var appPath = Compat.AppCurrentPath;
@@ -440,8 +427,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         // Confirmation dialog
         var dialog = new BetterContentDialog
         {
-            Title =
-                "This will create a shortcut for Stability Matrix in the Start Menu for all users",
+            Title = "This will create a shortcut for Stability Matrix in the Start Menu for all users",
             Content = "You will be prompted for administrator privileges. Continue?",
             PrimaryButtonText = Resources.Action_Yes,
             CloseButtonText = Resources.Action_Cancel,
@@ -638,16 +624,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
     private async Task DebugMakeImageGrid()
     {
         var provider = App.StorageProvider;
-        var files = await provider.OpenFilePickerAsync(
-            new FilePickerOpenOptions() { AllowMultiple = true }
-        );
+        var files = await provider.OpenFilePickerAsync(new FilePickerOpenOptions() { AllowMultiple = true });
 
         if (files.Count == 0)
             return;
 
-        var images = await files.SelectAsync(
-            async f => SKImage.FromEncodedData(await f.OpenReadAsync())
-        );
+        var images = await files.SelectAsync(async f => SKImage.FromEncodedData(await f.OpenReadAsync()));
 
         var grid = ImageProcessor.CreateImageGrid(images.ToImmutableArray());
 
@@ -797,11 +779,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         }
         catch (Exception e)
         {
-            notificationService.Show(
-                "Failed to read licenses information",
-                $"{e}",
-                NotificationType.Error
-            );
+            notificationService.Show("Failed to read licenses information", $"{e}", NotificationType.Error);
         }
     }
 

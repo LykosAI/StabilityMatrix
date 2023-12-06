@@ -40,14 +40,16 @@ public partial class PackageModificationDialog : UserControlBase
 
         EventManager.Instance.ScrollToBottomRequested += (_, _) =>
         {
-            Dispatcher.UIThread.Invoke(() =>
-            {
-                var editor = this.FindControl<TextEditor>("Console");
-                if (editor?.Document == null)
-                    return;
-                var line = Math.Max(editor.Document.LineCount - 1, 1);
-                editor.ScrollToLine(line);
-            });
+            Dispatcher
+                .UIThread
+                .Invoke(() =>
+                {
+                    var editor = this.FindControl<TextEditor>("Console");
+                    if (editor?.Document == null)
+                        return;
+                    var line = Math.Max(editor.Document.LineCount - 1, 1);
+                    editor.ScrollToLine(line);
+                });
         };
     }
 }

@@ -19,9 +19,7 @@ public static class GlobalConfig
         {
             if (libraryDir is null)
             {
-                throw new NullReferenceException(
-                    "GlobalConfig.LibraryDir was not set before being accessed."
-                );
+                throw new NullReferenceException("GlobalConfig.LibraryDir was not set before being accessed.");
             }
             return libraryDir;
         }

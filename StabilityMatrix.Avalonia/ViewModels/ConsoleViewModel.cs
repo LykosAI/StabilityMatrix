@@ -54,8 +54,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
     /// <summary>
     /// Gets a cancellation token using the cursor lock timeout
     /// </summary>
-    private CancellationToken WriteCursorLockTimeoutToken =>
-        new CancellationTokenSource(WriteCursorLockTimeout).Token;
+    private CancellationToken WriteCursorLockTimeoutToken => new CancellationTokenSource(WriteCursorLockTimeout).Token;
 
     /// <summary>
     /// Event invoked when an ApcMessage of type Input is received.
@@ -132,9 +131,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
     {
         using (await writeCursorLock.LockAsync(WriteCursorLockTimeoutToken))
         {
-            Logger.ConditionalTrace(
-                $"Reset cursor to end: ({writeCursor} -> {Document.TextLength})"
-            );
+            Logger.ConditionalTrace($"Reset cursor to end: ({writeCursor} -> {Document.TextLength})");
             writeCursor = Document.TextLength;
         }
         DebugPrintDocument();
@@ -146,9 +143,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
         Dispatcher.UIThread.VerifyAccess();
 
         // Get cancellation token
-        var ct =
-            updateCts?.Token
-            ?? throw new InvalidOperationException("Update cancellation token must be set");
+        var ct = updateCts?.Token ?? throw new InvalidOperationException("Update cancellation token must be set");
 
         try
         {
@@ -176,9 +171,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
                 );
 
                 // Link the cancellation token to the write cursor lock timeout
-                var linkedCt = CancellationTokenSource
-                    .CreateLinkedTokenSource(ct, WriteCursorLockTimeoutToken)
-                    .Token;
+                var linkedCt = CancellationTokenSource.CreateLinkedTokenSource(ct, WriteCursorLockTimeoutToken).Token;
 
                 using (await writeCursorLock.LockAsync(linkedCt))
                 {
@@ -193,10 +186,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
         catch (Exception e)
         {
             // Log other errors and continue here to not crash the UI thread
-            Logger.Error(
-                e,
-                $"Unexpected error in console update loop: {e.GetType().Name} {e.Message}"
-            );
+            Logger.Error(e, $"Unexpected error in console update loop: {e.GetType().Name} {e.Message}");
         }
     }
 
@@ -248,8 +238,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
                 Document.Remove(lineStartOffset, lineLength);
 
                 Logger.ConditionalTrace(
-                    $"Moving cursor to start for carriage return "
-                        + $"({writeCursor} -> {lineStartOffset})"
+                    $"Moving cursor to start for carriage return " + $"({writeCursor} -> {lineStartOffset})"
                 );
                 writeCursor = lineStartOffset;
             }
@@ -275,10 +264,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
             else
             {
                 // We want to move up one line
-                var targetLocation = new TextLocation(
-                    currentLocation.Line - 1,
-                    currentLocation.Column
-                );
+                var targetLocation = new TextLocation(currentLocation.Line - 1, currentLocation.Column);
                 var targetOffset = Document.GetOffset(targetLocation);
 
                 // Update cursor to target offset
@@ -307,9 +293,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
             var spaces = new string(' ', currentLine.Length);
 
             // Insert the text
-            Logger.ConditionalTrace(
-                $"Erasing line {currentLine.LineNumber}: (length = {currentLine.Length})"
-            );
+            Logger.ConditionalTrace($"Erasing line {currentLine.LineNumber}: (length = {currentLine.Length})");
             using (Document.RunUpdate())
             {
                 Document.Replace(currentLine.Offset, currentLine.Length, spaces);
@@ -352,8 +336,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
             {
                 var nextLine = Document.GetLineByNumber(currentLine.LineNumber + 1);
                 Logger.ConditionalTrace(
-                    $"Moving cursor to start of next line "
-                        + $"({writeCursor} -> {nextLine.Offset})"
+                    $"Moving cursor to start of next line " + $"({writeCursor} -> {nextLine.Offset})"
                 );
                 writeCursor = nextLine.Offset;
             }
@@ -399,9 +382,7 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
             if (remainingLength > 0)
             {
                 var textToInsert = text[replaceLength..];
-                Logger.ConditionalTrace(
-                    $"Inserting: (cursor = {writeCursor}, " + $"text = {textToInsert.ToRepr()})"
-                );
+                Logger.ConditionalTrace($"Inserting: (cursor = {writeCursor}, " + $"text = {textToInsert.ToRepr()})");
 
                 Document.Insert(writeCursor, textToInsert);
                 writeCursor += textToInsert.Length;

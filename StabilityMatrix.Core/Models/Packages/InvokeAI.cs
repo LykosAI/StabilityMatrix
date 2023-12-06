@@ -87,55 +87,49 @@ public class InvokeAI : BaseGitPackage
 
     // https://github.com/invoke-ai/InvokeAI/blob/main/docs/features/CONFIGURATION.md
     public override List<LaunchOptionDefinition> LaunchOptions =>
-
         [
             new LaunchOptionDefinition
-        {
-            Name = "Host",
-            Type = LaunchOptionType.String,
-            DefaultValue = "localhost",
-            Options = ["--host"]
-        },
+            {
+                Name = "Host",
+                Type = LaunchOptionType.String,
+                DefaultValue = "localhost",
+                Options = ["--host"]
+            },
             new LaunchOptionDefinition
-        {
-            Name = "Port",
-            Type = LaunchOptionType.String,
-            DefaultValue = "9090",
-            Options = ["--port"]
-        },
+            {
+                Name = "Port",
+                Type = LaunchOptionType.String,
+                DefaultValue = "9090",
+                Options = ["--port"]
+            },
             new LaunchOptionDefinition
-        {
-            Name = "Allow Origins",
-            Description =
-                "List of host names or IP addresses that are allowed to connect to the "
-                + "InvokeAI API in the format ['host1','host2',...]",
-            Type = LaunchOptionType.String,
-            DefaultValue = "[]",
-            Options = ["--allow-origins"]
-        },
+            {
+                Name = "Allow Origins",
+                Description =
+                    "List of host names or IP addresses that are allowed to connect to the "
+                    + "InvokeAI API in the format ['host1','host2',...]",
+                Type = LaunchOptionType.String,
+                DefaultValue = "[]",
+                Options = ["--allow-origins"]
+            },
             new LaunchOptionDefinition
-        {
-            Name = "Always use CPU",
-            Type = LaunchOptionType.Bool,
-            Options = ["--always_use_cpu"]
-        },
+            {
+                Name = "Always use CPU",
+                Type = LaunchOptionType.Bool,
+                Options = ["--always_use_cpu"]
+            },
             new LaunchOptionDefinition
-        {
-            Name = "Precision",
-            Type = LaunchOptionType.Bool,
-            Options =
-            [
-                "--precision auto",
-                "--precision float16",
-                "--precision float32"
-            ]
-        },
+            {
+                Name = "Precision",
+                Type = LaunchOptionType.Bool,
+                Options = ["--precision auto", "--precision float16", "--precision float32"]
+            },
             new LaunchOptionDefinition
-        {
-            Name = "Aggressively free up GPU memory after each operation",
-            Type = LaunchOptionType.Bool,
-            Options = ["--free_gpu_mem"]
-        },
+            {
+                Name = "Aggressively free up GPU memory after each operation",
+                Type = LaunchOptionType.Bool,
+                Options = ["--free_gpu_mem"]
+            },
             LaunchOptionDefinition.Extras
         ];
 

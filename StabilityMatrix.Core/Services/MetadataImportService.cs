@@ -18,10 +18,7 @@ public class MetadataImportService(
     ModelFinder modelFinder
 ) : IMetadataImportService
 {
-    public async Task ScanDirectoryForMissingInfo(
-        DirectoryPath directory,
-        IProgress<ProgressReport>? progress = null
-    )
+    public async Task ScanDirectoryForMissingInfo(DirectoryPath directory, IProgress<ProgressReport>? progress = null)
     {
         progress?.Report(new ProgressReport(-1f, "Scanning directory...", isIndeterminate: true));
 
@@ -57,9 +54,7 @@ public class MetadataImportService(
             }
 
             var fileNameWithoutExtension = checkpointFilePath.NameWithoutExtension;
-            var cmInfoPath = checkpointFilePath.Directory?.JoinFile(
-                $"{fileNameWithoutExtension}.cm-info.json"
-            );
+            var cmInfoPath = checkpointFilePath.Directory?.JoinFile($"{fileNameWithoutExtension}.cm-info.json");
             var cmInfoExists = File.Exists(cmInfoPath);
             if (cmInfoExists)
                 continue;
@@ -75,8 +70,7 @@ public class MetadataImportService(
                 );
             });
 
-            var blake3 = await GetBlake3Hash(cmInfoPath, checkpointFilePath, hashProgress)
-                .ConfigureAwait(false);
+            var blake3 = await GetBlake3Hash(cmInfoPath, checkpointFilePath, hashProgress).ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(blake3))
             {
                 logger.LogWarning($"Blake3 hash was null for {checkpointFilePath}");
@@ -94,19 +88,14 @@ public class MetadataImportService(
 
             var (model, modelVersion, modelFile) = modelInfo.Value;
 
-            var updatedCmInfo = new ConnectedModelInfo(
-                model,
-                modelVersion,
-                modelFile,
-                DateTimeOffset.UtcNow
-            );
+            var updatedCmInfo = new ConnectedModelInfo(model, modelVersion, modelFile, DateTimeOffset.UtcNow);
             await updatedCmInfo
                 .SaveJsonToDirectory(checkpointFilePath.Directory, fileNameWithoutExtension)
                 .ConfigureAwait(false);
 
-            var image = modelVersion.Images?.FirstOrDefault(
-                img => LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url))
-            );
+            var image = modelVersion
+                .Images
+                ?.FirstOrDefault(img => LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url)));
             if (image == null)
             {
                 scanned++;
@@ -135,20 +124,12 @@ public class MetadataImportService(
             && !File.Exists(file.Directory?.JoinFile($"{file.NameWithoutExtension}.cm-info.json"));
     }
 
-    public async Task UpdateExistingMetadata(
-        DirectoryPath directory,
-        IProgress<ProgressReport>? progress = null
-    )
+    public async Task UpdateExistingMetadata(DirectoryPath directory, IProgress<ProgressReport>? progress = null)
     {
         progress?.Report(new ProgressReport(-1f, "Scanning directory...", isIndeterminate: true));
 
         var cmInfoList = new Dictionary<FilePath, ConnectedModelInfo>();
-        foreach (
-            var cmInfoPath in directory.EnumerateFiles(
-                "*.cm-info.json",
-                SearchOption.AllDirectories
-            )
-        )
+        foreach (var cmInfoPath in directory.EnumerateFiles("*.cm-info.json", SearchOption.AllDirectories))
         {
             var cmInfo = JsonSerializer.Deserialize<ConnectedModelInfo>(
                 await cmInfoPath.ReadAllTextAsync().ConfigureAwait(false)
@@ -183,21 +164,14 @@ public class MetadataImportService(
 
             var (model, modelVersion, modelFile) = modelInfo.Value;
 
-            var updatedCmInfo = new ConnectedModelInfo(
-                model,
-                modelVersion,
-                modelFile,
-                DateTimeOffset.UtcNow
-            );
+            var updatedCmInfo = new ConnectedModelInfo(model, modelVersion, modelFile, DateTimeOffset.UtcNow);
 
             var nameWithoutCmInfo = filePath.NameWithoutExtension.Replace(".cm-info", string.Empty);
-            await updatedCmInfo
-                .SaveJsonToDirectory(filePath.Directory, nameWithoutCmInfo)
-                .ConfigureAwait(false);
+            await updatedCmInfo.SaveJsonToDirectory(filePath.Directory, nameWithoutCmInfo).ConfigureAwait(false);
 
-            var image = modelVersion.Images?.FirstOrDefault(
-                img => LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url))
-            );
+            var image = modelVersion
+                .Images
+                ?.FirstOrDefault(img => LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url)));
             if (image == null)
                 continue;
 
@@ -248,19 +222,12 @@ public class MetadataImportService(
 
         var (model, modelVersion, modelFile) = modelInfo.Value;
 
-        var updatedCmInfo = new ConnectedModelInfo(
-            model,
-            modelVersion,
-            modelFile,
-            DateTimeOffset.UtcNow
-        );
-        await updatedCmInfo
-            .SaveJsonToDirectory(filePath.Directory, fileNameWithoutExtension)
-            .ConfigureAwait(false);
+        var updatedCmInfo = new ConnectedModelInfo(model, modelVersion, modelFile, DateTimeOffset.UtcNow);
+        await updatedCmInfo.SaveJsonToDirectory(filePath.Directory, fileNameWithoutExtension).ConfigureAwait(false);
 
-        var image = modelVersion.Images?.FirstOrDefault(
-            img => LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url))
-        );
+        var image = modelVersion
+            .Images
+            ?.FirstOrDefault(img => LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url)));
 
         if (image == null)
             return updatedCmInfo;
@@ -278,9 +245,7 @@ public class MetadataImportService(
     {
         if (string.IsNullOrWhiteSpace(cmInfoPath?.ToString()) || !File.Exists(cmInfoPath))
         {
-            return await FileHash
-                .GetBlake3Async(checkpointFilePath, hashProgress)
-                .ConfigureAwait(false);
+            return await FileHash.GetBlake3Async(checkpointFilePath, hashProgress).ConfigureAwait(false);
         }
 
         var cmInfo = JsonSerializer.Deserialize<ConnectedModelInfo>(
@@ -289,17 +254,10 @@ public class MetadataImportService(
         return cmInfo?.Hashes.BLAKE3;
     }
 
-    private Task DownloadImage(
-        CivitImage image,
-        FilePath modelFilePath,
-        IProgress<ProgressReport>? progress
-    )
+    private Task DownloadImage(CivitImage image, FilePath modelFilePath, IProgress<ProgressReport>? progress)
     {
         var imageExt = Path.GetExtension(image.Url).TrimStart('.');
-        var nameWithoutCmInfo = modelFilePath.NameWithoutExtension.Replace(
-            ".cm-info",
-            string.Empty
-        );
+        var nameWithoutCmInfo = modelFilePath.NameWithoutExtension.Replace(".cm-info", string.Empty);
         var imageDownloadPath = Path.GetFullPath(
             Path.Combine(modelFilePath.Directory, $"{nameWithoutCmInfo}.preview.{imageExt}")
         );

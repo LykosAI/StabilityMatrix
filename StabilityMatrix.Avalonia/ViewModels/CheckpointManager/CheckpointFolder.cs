@@ -39,11 +39,9 @@ public partial class CheckpointFolder : ViewModelBase
     private readonly INotificationService notificationService;
     private readonly IMetadataImportService metadataImportService;
 
-    public SourceCache<CheckpointFolder, string> SubFoldersCache { get; } =
-        new(x => x.DirectoryPath);
+    public SourceCache<CheckpointFolder, string> SubFoldersCache { get; } = new(x => x.DirectoryPath);
 
-    private readonly SourceCache<CheckpointFile, string> checkpointFilesCache =
-        new(x => x.FilePath);
+    private readonly SourceCache<CheckpointFile, string> checkpointFilesCache = new(x => x.FilePath);
 
     // ReSharper disable once FieldCanBeMadeReadOnly.Local
     private bool useCategoryVisibility;
@@ -136,9 +134,7 @@ public partial class CheckpointFolder : ViewModelBase
             .Sort(
                 SortExpressionComparer<CheckpointFile>
                     .Descending(f => f.IsConnectedModel)
-                    .ThenByAscending(
-                        f => f.IsConnectedModel ? f.ConnectedModel!.ModelName : f.FileName
-                    )
+                    .ThenByAscending(f => f.IsConnectedModel ? f.ConnectedModel!.ModelName : f.FileName)
             )
             .Filter(
                 f =>
@@ -251,17 +247,10 @@ public partial class CheckpointFolder : ViewModelBase
             return;
         }
 
-        var dialog = DialogHelper.CreateTaskDialog(
-            "Are you sure you want to delete this folder?",
-            directory
-        );
+        var dialog = DialogHelper.CreateTaskDialog("Are you sure you want to delete this folder?", directory);
 
         dialog.ShowProgressBar = false;
-        dialog.Buttons = new List<TaskDialogButton>
-        {
-            TaskDialogButton.YesButton,
-            TaskDialogButton.NoButton
-        };
+        dialog.Buttons = new List<TaskDialogButton> { TaskDialogButton.YesButton, TaskDialogButton.NoButton };
 
         dialog.Closing += async (sender, e) =>
         {
@@ -343,23 +332,11 @@ public partial class CheckpointFolder : ViewModelBase
             Progress.Value = 0;
             var sourcePath = new FilePath(sourceFile.FilePath);
             var fileNameWithoutExt = Path.GetFileNameWithoutExtension(sourcePath);
-            var sourceCmInfoPath = Path.Combine(
-                sourcePath.Directory,
-                $"{fileNameWithoutExt}.cm-info.json"
-            );
-            var sourcePreviewPath = Path.Combine(
-                sourcePath.Directory,
-                $"{fileNameWithoutExt}.preview.jpeg"
-            );
+            var sourceCmInfoPath = Path.Combine(sourcePath.Directory, $"{fileNameWithoutExt}.cm-info.json");
+            var sourcePreviewPath = Path.Combine(sourcePath.Directory, $"{fileNameWithoutExt}.preview.jpeg");
             var destinationFilePath = Path.Combine(DirectoryPath, sourcePath.Name);
-            var destinationCmInfoPath = Path.Combine(
-                DirectoryPath,
-                $"{fileNameWithoutExt}.cm-info.json"
-            );
-            var destinationPreviewPath = Path.Combine(
-                DirectoryPath,
-                $"{fileNameWithoutExt}.preview.jpeg"
-            );
+            var destinationCmInfoPath = Path.Combine(DirectoryPath, $"{fileNameWithoutExt}.cm-info.json");
+            var destinationPreviewPath = Path.Combine(DirectoryPath, $"{fileNameWithoutExt}.preview.jpeg");
 
             // Move files
             if (File.Exists(sourcePath))
@@ -408,10 +385,7 @@ public partial class CheckpointFolder : ViewModelBase
         try
         {
             Progress.Value = 0;
-            var copyPaths = files.ToDictionary(
-                k => k,
-                v => Path.Combine(DirectoryPath, Path.GetFileName(v))
-            );
+            var copyPaths = files.ToDictionary(k => k, v => Path.Combine(DirectoryPath, Path.GetFileName(v)));
 
             var progress = new Progress<ProgressReport>(report =>
             {
@@ -419,9 +393,7 @@ public partial class CheckpointFolder : ViewModelBase
                 Progress.Value = report.Percentage;
                 // For multiple files, add count
                 Progress.Text =
-                    copyPaths.Count > 1
-                        ? $"Importing {report.Title} ({report.Message})"
-                        : $"Importing {report.Title}";
+                    copyPaths.Count > 1 ? $"Importing {report.Title} ({report.Message})" : $"Importing {report.Title}";
             });
 
             await FileTransfers.CopyFiles(copyPaths, progress);
@@ -462,12 +434,7 @@ public partial class CheckpointFolder : ViewModelBase
 
                         // Save connected model info json
                         var modelFileName = Path.GetFileNameWithoutExtension(modelFile.Info.Name);
-                        var modelInfo = new ConnectedModelInfo(
-                            model,
-                            version,
-                            file,
-                            DateTimeOffset.UtcNow
-                        );
+                        var modelInfo = new ConnectedModelInfo(model, version, file, DateTimeOffset.UtcNow);
                         await modelInfo.SaveJsonToDirectory(DirectoryPath, modelFileName);
 
                         // If available, save thumbnail
@@ -478,15 +445,9 @@ public partial class CheckpointFolder : ViewModelBase
                             if (imageExt is "jpg" or "jpeg" or "png")
                             {
                                 var imageDownloadPath = Path.GetFullPath(
-                                    Path.Combine(
-                                        DirectoryPath,
-                                        $"{modelFileName}.preview.{imageExt}"
-                                    )
+                                    Path.Combine(DirectoryPath, $"{modelFileName}.preview.{imageExt}")
                                 );
-                                await downloadService.DownloadToFileAsync(
-                                    image.Url,
-                                    imageDownloadPath
-                                );
+                                await downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
                             }
                         }
 
@@ -534,10 +495,7 @@ public partial class CheckpointFolder : ViewModelBase
     public async Task FindConnectedMetadata()
     {
         IsImportInProgress = true;
-        var files = CheckpointFiles
-            .Where(f => !f.IsConnectedModel)
-            .Select(f => f.FilePath)
-            .ToList();
+        var files = CheckpointFiles.Where(f => !f.IsConnectedModel).Select(f => f.FilePath).ToList();
 
         try
         {
@@ -645,13 +603,15 @@ public partial class CheckpointFolder : ViewModelBase
         SubFoldersCache.EditDiff(updatedFolders, (a, b) => a.Title == b.Title);
 
         // Index files
-        Dispatcher.UIThread.Post(
-            () =>
-            {
-                var files = GetCheckpointFiles();
-                checkpointFilesCache.EditDiff(files, CheckpointFile.FilePathComparer);
-            },
-            DispatcherPriority.Background
-        );
+        Dispatcher
+            .UIThread
+            .Post(
+                () =>
+                {
+                    var files = GetCheckpointFiles();
+                    checkpointFilesCache.EditDiff(files, CheckpointFile.FilePathComparer);
+                },
+                DispatcherPriority.Background
+            );
     }
 }

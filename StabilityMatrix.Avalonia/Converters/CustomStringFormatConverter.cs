@@ -5,8 +5,7 @@ using Avalonia.Data.Converters;
 
 namespace StabilityMatrix.Avalonia.Converters;
 
-public class CustomStringFormatConverter<T>([StringSyntax("CompositeFormat")] string format)
-    : IValueConverter
+public class CustomStringFormatConverter<T>([StringSyntax("CompositeFormat")] string format) : IValueConverter
     where T : IFormatProvider, new()
 {
     /// <inheritdoc />
@@ -16,12 +15,7 @@ public class CustomStringFormatConverter<T>([StringSyntax("CompositeFormat")] st
     }
 
     /// <inheritdoc />
-    public object? ConvertBack(
-        object? value,
-        Type targetType,
-        object? parameter,
-        CultureInfo culture
-    )
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         return value is null ? null : throw new NotImplementedException();
     }

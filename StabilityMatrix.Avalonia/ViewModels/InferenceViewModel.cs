@@ -581,23 +581,18 @@ public partial class InferenceViewModel : PageViewModelBase
 
         document.VerifyVersion();
 
-        InferenceTabViewModelBase vm;
-        if (document.ProjectType is InferenceProjectType.TextToImage)
-        {
-            // Get view model
-            var textToImage = vmFactory.Get<InferenceTextToImageViewModel>();
-            // Load state
-            textToImage.LoadStateFromJsonObject(document.State);
-            // Set the file backing the view model
-            textToImage.ProjectFile = file;
-            vm = textToImage;
-        }
-        else
+        if (
+            document.ProjectType.ToViewModelType() is not { } vmType
+            || vmFactory.Get(vmType) is not InferenceTabViewModelBase vm
+        )
         {
             throw new InvalidOperationException(
                 $"Unsupported project type: {document.ProjectType}"
             );
         }
+
+        vm.LoadStateFromJsonObject(document.State);
+        vm.ProjectFile = file;
 
         Tabs.Add(vm);
 

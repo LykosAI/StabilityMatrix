@@ -30,13 +30,13 @@ public static class ShowDisabledTooltipExtension
         obj.SetValue(ShowOnDisabledProperty, value);
     }
 
-    public static readonly AttachedProperty<bool> ShowOnDisabledProperty =
-        AvaloniaProperty.RegisterAttached<object, Control, bool>("ShowOnDisabled");
+    public static readonly AttachedProperty<bool> ShowOnDisabledProperty = AvaloniaProperty.RegisterAttached<
+        object,
+        Control,
+        bool
+    >("ShowOnDisabled");
 
-    private static void HandleShowOnDisabledChanged(
-        Control control,
-        AvaloniaPropertyChangedEventArgs e
-    )
+    private static void HandleShowOnDisabledChanged(Control control, AvaloniaPropertyChangedEventArgs e)
     {
         if (e.GetNewValue<bool>())
         {
@@ -54,27 +54,17 @@ public static class ShowDisabledTooltipExtension
         }
     }
 
-    private static void AttachedControl_AttachedToVisualTree(
-        object? sender,
-        VisualTreeAttachmentEventArgs e
-    )
+    private static void AttachedControl_AttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
     {
         if (sender is not Control control || TopLevel.GetTopLevel(control) is not { } tl)
         {
             return;
         }
         // NOTE pointermove needed to be tunneled for me but you may not need to...
-        tl.AddHandler(
-            InputElement.PointerMovedEvent,
-            TopLevel_PointerMoved,
-            RoutingStrategies.Tunnel
-        );
+        tl.AddHandler(InputElement.PointerMovedEvent, TopLevel_PointerMoved, RoutingStrategies.Tunnel);
     }
 
-    private static void AttachedControl_DetachedFromVisualOrExtension(
-        object? s,
-        VisualTreeAttachmentEventArgs e
-    )
+    private static void AttachedControl_DetachedFromVisualOrExtension(object? s, VisualTreeAttachmentEventArgs e)
     {
         if (s is not Control control)
         {
@@ -96,10 +86,7 @@ public static class ShowDisabledTooltipExtension
             return;
         }
 
-        var attachedControls = tl.GetVisualDescendants()
-            .Where(GetShowOnDisabled)
-            .Cast<Control>()
-            .ToList();
+        var attachedControls = tl.GetVisualDescendants().Where(GetShowOnDisabled).Cast<Control>().ToList();
 
         // find disabled children under pointer w/ this extension enabled
         var disabledChildUnderPointer = attachedControls.FirstOrDefault(

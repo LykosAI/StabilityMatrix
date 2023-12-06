@@ -18,8 +18,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 public partial class SettingsViewModel : PageViewModelBase
 {
     public override string Title => "Settings";
-    public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
+    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
 
     public IReadOnlyList<PageViewModelBase> SubPages { get; }
 

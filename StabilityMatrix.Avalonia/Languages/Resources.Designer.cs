@@ -429,6 +429,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Replace Contents.
+        /// </summary>
+        public static string Action_ReplaceContents {
+            get {
+                return ResourceManager.GetString("Action_ReplaceContents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Restart.
         /// </summary>
         public static string Action_Restart {
@@ -497,6 +506,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Action_SelectDirectory {
             get {
                 return ResourceManager.GetString("Action_SelectDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select File.
+        /// </summary>
+        public static string Action_SelectFile {
+            get {
+                return ResourceManager.GetString("Action_SelectFile", resourceCulture);
             }
         }
         
@@ -614,6 +632,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Accounts {
             get {
                 return ResourceManager.GetString("Label_Accounts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Addons.
+        /// </summary>
+        public static string Label_Addons {
+            get {
+                return ResourceManager.GetString("Label_Addons", resourceCulture);
             }
         }
         
@@ -902,6 +929,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_ConsolidateExplanation {
             get {
                 return ResourceManager.GetString("Label_ConsolidateExplanation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Control Steps.
+        /// </summary>
+        public static string Label_ControlSteps {
+            get {
+                return ResourceManager.GetString("Label_ControlSteps", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Control Weight.
+        /// </summary>
+        public static string Label_ControlWeight {
+            get {
+                return ResourceManager.GetString("Label_ControlWeight", resourceCulture);
             }
         }
         
@@ -1374,6 +1419,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Missing Image File.
+        /// </summary>
+        public static string Label_MissingImageFile {
+            get {
+                return ResourceManager.GetString("Label_MissingImageFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Model.
         /// </summary>
         public static string Label_Model {
@@ -1608,6 +1662,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Preprocessor.
+        /// </summary>
+        public static string Label_Preprocessor {
+            get {
+                return ResourceManager.GetString("Label_Preprocessor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Previous Image.
         /// </summary>
         public static string Label_PreviousImage {
@@ -1770,6 +1833,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Save Intermediate Image.
+        /// </summary>
+        public static string Label_SaveIntermediateImage {
+            get {
+                return ResourceManager.GetString("Label_SaveIntermediateImage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Search....
         /// </summary>
         public static string Label_SearchEllipsis {
@@ -1793,6 +1865,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_SelectNewDataDirectory_Details {
             get {
                 return ResourceManager.GetString("Label_SelectNewDataDirectory_Details", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Settings.
+        /// </summary>
+        public static string Label_Settings {
+            get {
+                return ResourceManager.GetString("Label_Settings", resourceCulture);
             }
         }
         
@@ -1892,6 +1973,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_StepsRefiner {
             get {
                 return ResourceManager.GetString("Label_StepsRefiner", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Strength.
+        /// </summary>
+        public static string Label_Strength {
+            get {
+                return ResourceManager.GetString("Label_Strength", resourceCulture);
             }
         }
         
@@ -2072,6 +2162,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Width {
             get {
                 return ResourceManager.GetString("Label_Width", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not yet available.
+        /// </summary>
+        public static string Label_WipFeature {
+            get {
+                return ResourceManager.GetString("Label_WipFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature will be available in a future update.
+        /// </summary>
+        public static string Label_WipFeatureDescription {
+            get {
+                return ResourceManager.GetString("Label_WipFeatureDescription", resourceCulture);
             }
         }
         

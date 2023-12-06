@@ -41,8 +41,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
     public override string Title => "Checkpoints";
 
-    public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Notebook, IsFilled = true };
+    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Notebook, IsFilled = true };
 
     // Toggle button for auto hashing new drag-and-dropped files for connected upgrade
     [ObservableProperty]
@@ -68,16 +67,13 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
     partial void OnIsImportAsConnectedChanged(bool value)
     {
-        if (
-            settingsManager.IsLibraryDirSet && value != settingsManager.Settings.IsImportAsConnected
-        )
+        if (settingsManager.IsLibraryDirSet && value != settingsManager.Settings.IsImportAsConnected)
         {
             settingsManager.Transaction(s => s.IsImportAsConnected = value);
         }
     }
 
-    public SourceCache<CheckpointFolder, string> CheckpointFoldersCache { get; } =
-        new(x => x.DirectoryPath);
+    public SourceCache<CheckpointFolder, string> CheckpointFoldersCache { get; } = new(x => x.DirectoryPath);
 
     public IObservableCollection<CheckpointFolder> CheckpointFolders { get; } =
         new ObservableCollectionExtended<CheckpointFolder>();
@@ -127,14 +123,10 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         if (Design.IsDesignMode)
             return;
 
-        if (
-            !settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.CheckpointCategoriesTip)
-        )
+        if (!settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.CheckpointCategoriesTip))
         {
             IsCategoryTipOpen = true;
-            settingsManager.Transaction(
-                s => s.SeenTeachingTips.Add(TeachingTip.CheckpointCategoriesTip)
-            );
+            settingsManager.Transaction(s => s.SeenTeachingTips.Add(TeachingTip.CheckpointCategoriesTip));
         }
 
         IsLoading = CheckpointFolders.Count == 0;
@@ -165,10 +157,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
     partial void OnShowConnectedModelImagesChanged(bool value)
     {
-        if (
-            settingsManager.IsLibraryDirSet
-            && value != settingsManager.Settings.ShowConnectedModelImages
-        )
+        if (settingsManager.IsLibraryDirSet && value != settingsManager.Settings.ShowConnectedModelImages)
         {
             settingsManager.Transaction(s => s.ShowConnectedModelImages = value);
         }
@@ -185,9 +174,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         }
 
         // Check files in the current folder
-        return folder.CheckpointFiles.Any(
-                x => x.FileName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
-            )
+        return folder.CheckpointFiles.Any(x => x.FileName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase))
             ||
             // If no matching files were found in the current folder, check in all subfolders
             folder.SubFolders.Any(ContainsSearchFilter);
@@ -254,16 +241,9 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             Progress = report;
         });
 
-        await metadataImportService.ScanDirectoryForMissingInfo(
-            settingsManager.ModelsDirectory,
-            progressHandler
-        );
+        await metadataImportService.ScanDirectoryForMissingInfo(settingsManager.ModelsDirectory, progressHandler);
 
-        notificationService.Show(
-            "Scan Complete",
-            "Finished scanning for missing metadata.",
-            NotificationType.Success
-        );
+        notificationService.Show("Scan Complete", "Finished scanning for missing metadata.", NotificationType.Success);
 
         DelayedClearProgress(TimeSpan.FromSeconds(1.5));
     }
@@ -276,15 +256,8 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             Progress = report;
         });
 
-        await metadataImportService.UpdateExistingMetadata(
-            settingsManager.ModelsDirectory,
-            progressHandler
-        );
-        notificationService.Show(
-            "Scan Complete",
-            "Finished updating metadata.",
-            NotificationType.Success
-        );
+        await metadataImportService.UpdateExistingMetadata(settingsManager.ModelsDirectory, progressHandler);
+        notificationService.Show("Scan Complete", "Finished updating metadata.", NotificationType.Success);
 
         DelayedClearProgress(TimeSpan.FromSeconds(1.5));
     }

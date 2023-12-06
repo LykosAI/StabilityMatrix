@@ -9,10 +9,7 @@ namespace StabilityMatrix.Avalonia.DesignData;
 
 public class MockMetadataImportService : IMetadataImportService
 {
-    public Task ScanDirectoryForMissingInfo(
-        DirectoryPath directory,
-        IProgress<ProgressReport>? progress = null
-    )
+    public Task ScanDirectoryForMissingInfo(DirectoryPath directory, IProgress<ProgressReport>? progress = null)
     {
         return Task.CompletedTask;
     }
@@ -26,10 +23,7 @@ public class MockMetadataImportService : IMetadataImportService
         return null;
     }
 
-    public Task UpdateExistingMetadata(
-        DirectoryPath directory,
-        IProgress<ProgressReport>? progress = null
-    )
+    public Task UpdateExistingMetadata(DirectoryPath directory, IProgress<ProgressReport>? progress = null)
     {
         return Task.CompletedTask;
     }

@@ -726,6 +726,18 @@
   <data name="Label_OneImageSelected" xml:space="preserve">
     <value>1 image selected</value>
   </data>
+  <data name="Label_Preprocessor" xml:space="preserve">
+    <value>Preprocessor</value>
+  </data>
+  <data name="Label_Strength" xml:space="preserve">
+    <value>Strength</value>
+  </data>
+  <data name="Label_ControlWeight" xml:space="preserve">
+    <value>Control Weight</value>
+  </data>
+  <data name="Label_ControlSteps" xml:space="preserve">
+    <value>Control Steps</value>
+  </data>
   <data name="Label_PythonPackages" xml:space="preserve">
     <value>Python Packages</value>
   </data>
@@ -857,5 +869,29 @@
   </data>
   <data name="Label_HuggingFace" xml:space="preserve">
     <value>Hugging Face</value>
+  </data>
+  <data name="Label_Addons" xml:space="preserve">
+    <value>Addons</value><comment>Inference Sampler Addons</comment>
+  </data>
+  <data name="Label_SaveIntermediateImage" xml:space="preserve">
+    <value>Save Intermediate Image</value><comment>Inference module step to save an intermediate image</comment>
+  </data>
+  <data name="Label_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Action_SelectFile" xml:space="preserve">
+    <value>Select File</value>
+  </data>
+  <data name="Action_ReplaceContents" xml:space="preserve">
+    <value>Replace Contents</value>
+  </data>
+  <data name="Label_WipFeature" xml:space="preserve">
+    <value>Not yet available</value>
+  </data>
+  <data name="Label_WipFeatureDescription" xml:space="preserve">
+    <value>Feature will be available in a future update</value>
+  </data>
+  <data name="Label_MissingImageFile" xml:space="preserve">
+    <value>Missing Image File</value>
   </data>
 </root>

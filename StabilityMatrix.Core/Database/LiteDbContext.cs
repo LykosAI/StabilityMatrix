@@ -23,8 +23,7 @@ public class LiteDbContext : ILiteDbContext
     public event EventHandler? CivitModelsChanged;
 
     // Collections (Tables)
-    public ILiteCollectionAsync<CivitModel> CivitModels =>
-        Database.GetCollection<CivitModel>("CivitModels");
+    public ILiteCollectionAsync<CivitModel> CivitModels => Database.GetCollection<CivitModel>("CivitModels");
     public ILiteCollectionAsync<CivitModelVersion> CivitModelVersions =>
         Database.GetCollection<CivitModelVersion>("CivitModelVersions");
     public ILiteCollectionAsync<CivitModelQueryCacheEntry> CivitModelQueryCache =>
@@ -64,19 +63,12 @@ public class LiteDbContext : ILiteDbContext
             {
                 var dbPath = Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db");
                 db = new LiteDatabaseAsync(
-                    new ConnectionString()
-                    {
-                        Filename = dbPath,
-                        Connection = ConnectionType.Shared,
-                    }
+                    new ConnectionString() { Filename = dbPath, Connection = ConnectionType.Shared, }
                 );
             }
             catch (IOException e)
             {
-                logger.LogWarning(
-                    "Database in use or not accessible ({Message}), using temporary database",
-                    e.Message
-                );
+                logger.LogWarning("Database in use or not accessible ({Message}), using temporary database", e.Message);
             }
         }
 
@@ -84,30 +76,18 @@ public class LiteDbContext : ILiteDbContext
         db ??= new LiteDatabaseAsync(":temp:");
 
         // Register reference fields
-        LiteDBExtensions.Register<CivitModel, CivitModelVersion>(
-            m => m.ModelVersions,
-            "CivitModelVersions"
-        );
-        LiteDBExtensions.Register<CivitModelQueryCacheEntry, CivitModel>(
-            e => e.Items,
-            "CivitModels"
-        );
+        LiteDBExtensions.Register<CivitModel, CivitModelVersion>(m => m.ModelVersions, "CivitModelVersions");
+        LiteDBExtensions.Register<CivitModelQueryCacheEntry, CivitModel>(e => e.Items, "CivitModels");
 
         return db;
     }
 
-    public async Task<(CivitModel?, CivitModelVersion?)> FindCivitModelFromFileHashAsync(
-        string hashBlake3
-    )
+    public async Task<(CivitModel?, CivitModelVersion?)> FindCivitModelFromFileHashAsync(string hashBlake3)
     {
         var version = await CivitModelVersions
             .Query()
             .Where(
-                mv =>
-                    mv.Files!
-                        .Select(f => f.Hashes)
-                        .Select(hashes => hashes.BLAKE3)
-                        .Any(hash => hash == hashBlake3)
+                mv => mv.Files!.Select(f => f.Hashes).Select(hashes => hashes.BLAKE3).Any(hash => hash == hashBlake3)
             )
             .FirstOrDefaultAsync()
             .ConfigureAwait(false);
@@ -128,9 +108,7 @@ public class LiteDbContext : ILiteDbContext
     public async Task<bool> UpsertCivitModelAsync(CivitModel civitModel)
     {
         // Insert model versions first then model
-        var versionsUpdated = await CivitModelVersions
-            .UpsertAsync(civitModel.ModelVersions)
-            .ConfigureAwait(false);
+        var versionsUpdated = await CivitModelVersions.UpsertAsync(civitModel.ModelVersions).ConfigureAwait(false);
         var updated = await CivitModels.UpsertAsync(civitModel).ConfigureAwait(false);
         // Notify listeners on any change
         var anyUpdated = versionsUpdated > 0 || updated;
@@ -182,8 +160,7 @@ public class LiteDbContext : ILiteDbContext
         return null;
     }
 
-    public Task<bool> UpsertGithubCacheEntry(GithubCacheEntry cacheEntry) =>
-        GithubCache.UpsertAsync(cacheEntry);
+    public Task<bool> UpsertGithubCacheEntry(GithubCacheEntry cacheEntry) => GithubCache.UpsertAsync(cacheEntry);
 
     public void Dispose()
     {

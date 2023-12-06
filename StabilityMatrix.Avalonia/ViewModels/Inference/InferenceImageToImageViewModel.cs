@@ -21,9 +21,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceImageToImageView), IsPersistent = true)]
 [Transient, ManagedService]
-public partial class InferenceImageToImageViewModel
-    : InferenceGenerationViewModelBase,
-        IParametersLoadableState
+public partial class InferenceImageToImageViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
 {
     [JsonIgnore]
     public StackCardViewModel StackCardViewModel { get; }
@@ -148,17 +146,21 @@ public partial class InferenceImageToImageViewModel
     /// <inheritdoc />
     protected override IEnumerable<ImageSource> GetInputImages()
     {
-        if (SelectImageCardViewModel.ImageSource is { } imageSource)
-        {
-            yield return imageSource;
-        }
+        var mainImages = SelectImageCardViewModel.GetInputImages();
+
+        var samplerImages = SamplerCardViewModel
+            .ModulesCardViewModel
+            .Cards
+            .OfType<IInputImageProvider>()
+            .SelectMany(m => m.GetInputImages());
+
+        var moduleImages = ModulesCardViewModel.Cards.OfType<IInputImageProvider>().SelectMany(m => m.GetInputImages());
+
+        return mainImages.Concat(samplerImages).Concat(moduleImages);
     }
 
     /// <inheritdoc />
-    protected override async Task GenerateImageImpl(
-        GenerateOverrides overrides,
-        CancellationToken cancellationToken
-    )
+    protected override async Task GenerateImageImpl(GenerateOverrides overrides, CancellationToken cancellationToken)
     {
         // Validate the prompts
         if (!await PromptCardViewModel.ValidatePrompts())
@@ -186,11 +188,7 @@ public partial class InferenceImageToImageViewModel
         {
             var seed = seedCard.Seed + i;
 
-            var buildPromptArgs = new BuildPromptEventArgs
-            {
-                Overrides = overrides,
-                SeedOverride = seed
-            };
+            var buildPromptArgs = new BuildPromptEventArgs { Overrides = overrides, SeedOverride = seed };
             BuildPrompt(buildPromptArgs);
 
             var generationArgs = new ImageGenerationEventArgs

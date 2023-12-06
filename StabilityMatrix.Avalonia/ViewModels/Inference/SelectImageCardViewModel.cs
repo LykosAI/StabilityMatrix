@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -32,7 +33,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public partial class SelectImageCardViewModel(INotificationService notificationService)
     : LoadableViewModelBase,
         IDropTarget,
-        IComfyStep
+        IComfyStep,
+        IInputImageProvider
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -77,6 +79,15 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
             CurrentBitmapSize ?? throw new ValidationException("Input Image is required"),
             e.Builder.Connections.BatchIndex
         );
+    }
+
+    /// <inheritdoc />
+    public IEnumerable<ImageSource> GetInputImages()
+    {
+        if (ImageSource is { } image && !IsImageFileNotFound)
+        {
+            yield return image;
+        }
     }
 
     partial void OnImageSourceChanged(ImageSource? value)

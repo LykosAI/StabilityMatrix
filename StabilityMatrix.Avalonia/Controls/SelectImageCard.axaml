@@ -44,7 +44,7 @@
                                 VerticalAlignment="Stretch"
                                 VerticalContentAlignment="Stretch"
                                 CornerRadius="4"
-                                CurrentImage="{Binding CurrentBitmap, Mode=OneWayToSource}"
+                                CurrentImage="{Binding CurrentBitmap, Mode=TwoWay}"
                                 IsVisible="{Binding !IsSelectionAvailable}"
                                 RenderOptions.BitmapInterpolationMode="HighQuality"
                                 Source="{Binding ImageSource}"

@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Controls;
@@ -45,6 +44,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
     [ObservableProperty]
     [property: Category("Settings")]
+    [property: DisplayName("CFG Scale Selection")]
     private bool isCfgScaleEnabled;
 
     [ObservableProperty]
@@ -61,6 +61,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
     [ObservableProperty]
     [property: Category("Settings")]
+    [property: DisplayName("Sampler Selection")]
     private bool isSamplerSelectionEnabled;
 
     [ObservableProperty]
@@ -69,6 +70,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
     [ObservableProperty]
     [property: Category("Settings")]
+    [property: DisplayName("Scheduler Selection")]
     private bool isSchedulerSelectionEnabled;
 
     [ObservableProperty]
@@ -89,19 +91,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         ModulesCardViewModel = vmFactory.Get<StackEditableCardViewModel>(modulesCard =>
         {
             modulesCard.Title = Resources.Label_Addons;
-            modulesCard.AvailableModules = new[] { typeof(FreeUModule), typeof(ControlNetModule) };
+            modulesCard.AvailableModules = [typeof(FreeUModule), typeof(ControlNetModule)];
         });
-
-        ModulesCardViewModel.CardAdded += (
-            (sender, item) =>
-            {
-                if (item is ControlNetModule module)
-                {
-                    // Inherit our edit state
-                    // module.IsEditEnabled = IsEditEnabled;
-                }
-            }
-        );
     }
 
     /// <inheritdoc />
@@ -122,8 +113,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
         // Provide temp values
         e.Temp.Conditioning = (
-            e.Builder.Connections.GetRefinerOrBaseConditioning(),
-            e.Builder.Connections.GetRefinerOrBaseNegativeConditioning()
+            e.Builder.Connections.BaseConditioning!,
+            e.Builder.Connections.BaseNegativeConditioning!
         );
         e.Temp.RefinerConditioning = (
             e.Builder.Connections.RefinerConditioning!,
@@ -148,14 +139,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
     private void ApplyStepsInitialSampler(ModuleApplyStepEventArgs e)
     {
-        // Get primary or base VAE
-        var vae =
-            e.Builder.Connections.PrimaryVAE
-            ?? e.Builder.Connections.BaseVAE
-            ?? throw new ArgumentException("No Primary or Base VAE");
-
         // Get primary as latent using vae
-        var primaryLatent = e.Builder.GetPrimaryAsLatent(vae);
+        var primaryLatent = e.Builder.GetPrimaryAsLatent();
 
         // Set primary sampler and scheduler
         e.Builder.Connections.PrimarySampler = SelectedSampler ?? throw new ValidationException("Sampler not selected");

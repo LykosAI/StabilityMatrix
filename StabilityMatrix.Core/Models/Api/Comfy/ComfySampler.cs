@@ -52,11 +52,9 @@ public readonly record struct ComfySampler(string Name)
             [UniPCBh2] = "UniPC BH2"
         };
 
-    public static IReadOnlyList<ComfySampler> Defaults { get; } =
-        ConvertDict.Keys.ToImmutableArray();
+    public static IReadOnlyList<ComfySampler> Defaults { get; } = ConvertDict.Keys.ToImmutableArray();
 
-    public string DisplayName =>
-        ConvertDict.TryGetValue(this, out var displayName) ? displayName : Name;
+    public string DisplayName => ConvertDict.GetValueOrDefault(this, Name);
 
     /// <inheritdoc />
     public bool Equals(ComfySampler other)

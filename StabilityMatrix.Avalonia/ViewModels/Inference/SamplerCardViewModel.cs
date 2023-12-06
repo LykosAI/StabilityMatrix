@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Controls;
@@ -89,7 +88,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         ModulesCardViewModel = vmFactory.Get<StackEditableCardViewModel>(modulesCard =>
         {
             modulesCard.Title = Resources.Label_Addons;
-            modulesCard.AvailableModules = new[] { typeof(FreeUModule), typeof(ControlNetModule) };
+            modulesCard.AvailableModules = [typeof(FreeUModule), typeof(ControlNetModule)];
         });
     }
 
@@ -137,14 +136,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
     private void ApplyStepsInitialSampler(ModuleApplyStepEventArgs e)
     {
-        // Get primary or base VAE
-        var vae =
-            e.Builder.Connections.PrimaryVAE
-            ?? e.Builder.Connections.BaseVAE
-            ?? throw new ArgumentException("No Primary or Base VAE");
-
         // Get primary as latent using vae
-        var primaryLatent = e.Builder.GetPrimaryAsLatent(vae);
+        var primaryLatent = e.Builder.GetPrimaryAsLatent();
 
         // Set primary sampler and scheduler
         e.Builder.Connections.PrimarySampler = SelectedSampler ?? throw new ValidationException("Sampler not selected");

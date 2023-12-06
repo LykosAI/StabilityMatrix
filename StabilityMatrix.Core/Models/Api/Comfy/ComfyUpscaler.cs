@@ -8,6 +8,8 @@ namespace StabilityMatrix.Core.Models.Api.Comfy;
 
 public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
 {
+    public static ComfyUpscaler NearestExact { get; } = new("nearest-exact", ComfyUpscalerType.Latent);
+
     private static Dictionary<string, string> ConvertDict { get; } =
         new()
         {
@@ -19,9 +21,7 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
         };
 
     public static IReadOnlyList<ComfyUpscaler> Defaults { get; } =
-        ConvertDict.Keys
-            .Select(k => new ComfyUpscaler(k, ComfyUpscalerType.Latent))
-            .ToImmutableArray();
+        ConvertDict.Keys.Select(k => new ComfyUpscaler(k, ComfyUpscalerType.Latent)).ToImmutableArray();
 
     public static ComfyUpscaler FromDownloadable(RemoteResource resource)
     {
@@ -110,6 +110,5 @@ public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
         }
     }
 
-    public static IEqualityComparer<ComfyUpscaler> Comparer { get; } =
-        new NameTypeEqualityComparer();
+    public static IEqualityComparer<ComfyUpscaler> Comparer { get; } = new NameTypeEqualityComparer();
 }

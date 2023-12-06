@@ -107,6 +107,19 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     /// <inheritdoc />
     public void ApplyStep(ModuleApplyStepEventArgs e)
     {
+        // Resample the current primary if size does not match the selected size
+        if (e.Builder.Connections.PrimarySize.Width != Width || e.Builder.Connections.PrimarySize.Height != Height)
+        {
+            e.Builder.Connections.Primary = e.Builder.Group_Upscale(
+                e.Nodes.GetUniqueName("Sampler_ScalePrimary"),
+                e.Builder.Connections.Primary ?? throw new ArgumentException("No Primary"),
+                e.Builder.Connections.GetDefaultVAE(),
+                ComfyUpscaler.NearestExact,
+                Width,
+                Height
+            );
+        }
+
         // Provide temp values
         e.Temp.Conditioning = (
             e.Builder.Connections.GetRefinerOrBaseConditioning(),

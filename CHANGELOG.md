@@ -13,11 +13,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - Use the plus button to add new steps (Hires Fix, Upscaler, and Save Image are currently available), and the edit button to enable removing or dragging steps to reorder them. This enables multi-pass Hires Fix, mixing different upscalers, and saving intermediate images at any point in the pipeline.
 - Added Sampler addons
   - Addons usually affect guidance like ControlNet, T2I, FreeU, and other addons to come. They apply to the individual sampler, so you can mix and match different ControlNets for Base and Hires Fix, or use the current output from a previous sampler as ControlNet guidance image for HighRes passes.
+#### Model Browser
+- Added additional base model filter options ("SD 1.5 LCM", "SDXL 1.0 LCM", "SDXL Turbo", "Other")
 ### Changed
 #### Inference
 - Selected images (i.e. Image2Image, Upscale, ControlNet) will now save their source paths saved and restored on load. If the image is moved or deleted, the selection will show as missing and can be reselected
 - Project files (.smproj) have been updated to v3, existing projects will be upgraded on load and will no longer be compatible with older versions of Stability Matrix
-
 ### Fixed
 - Fixed Refiner model enabled state not saving to Inference project files
  

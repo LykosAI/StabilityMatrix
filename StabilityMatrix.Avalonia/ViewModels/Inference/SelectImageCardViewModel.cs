@@ -8,7 +8,6 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Input;
-using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -45,13 +44,14 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
 
     [ObservableProperty]
     [property: JsonIgnore]
-    [NotifyPropertyChangedFor(nameof(CurrentBitmapSize))]
-    private IImage? currentBitmap;
-
-    [ObservableProperty]
-    [property: JsonIgnore]
     [NotifyPropertyChangedFor(nameof(IsSelectionAvailable))]
     private bool isSelectionEnabled = true;
+
+    /// <summary>
+    /// Set by <see cref="SelectImageCard"/> when the image is loaded.
+    /// </summary>
+    [ObservableProperty]
+    private Size currentBitmapSize = Size.Empty;
 
     /// <summary>
     /// True if the image file is set but the local file does not exist.
@@ -59,24 +59,19 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
     [MemberNotNullWhen(true, nameof(NotFoundImagePath))]
     public bool IsImageFileNotFound => ImageSource?.LocalFile?.Exists == false;
 
-    public bool IsSelectionAvailable => IsSelectionEnabled && ImageSource == null && !IsImageFileNotFound;
+    public bool IsSelectionAvailable => IsSelectionEnabled && ImageSource == null;
 
     /// <summary>
     /// Path of the not found image
     /// </summary>
     public string? NotFoundImagePath => ImageSource?.LocalFile?.FullPath;
 
-    public Size? CurrentBitmapSize =>
-        CurrentBitmap is null
-            ? null
-            : new Size(Convert.ToInt32(CurrentBitmap.Size.Width), Convert.ToInt32(CurrentBitmap.Size.Height));
-
     /// <inheritdoc />
     public void ApplyStep(ModuleApplyStepEventArgs e)
     {
         e.Builder.SetupImagePrimarySource(
             ImageSource ?? throw new ValidationException("Input Image is required"),
-            CurrentBitmapSize ?? throw new ValidationException("Input Image is required"),
+            !CurrentBitmapSize.IsEmpty ? CurrentBitmapSize : throw new ValidationException("CurrentBitmapSize is null"),
             e.Builder.Connections.BatchIndex
         );
     }
@@ -108,7 +103,7 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
 
         if (files.FirstOrDefault()?.TryGetLocalPath() is { } path)
         {
-            LoadUserImageSafe(new ImageSource(path));
+            Dispatcher.UIThread.Post(() => LoadUserImageSafe(new ImageSource(path)));
         }
     }
 

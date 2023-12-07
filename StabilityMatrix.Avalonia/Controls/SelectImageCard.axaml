@@ -41,10 +41,10 @@
                         <Panel>
                             <!--  Image  -->
                             <controls:BetterAdvancedImage
+                                x:Name="PART_BetterAdvancedImage"
                                 VerticalAlignment="Stretch"
                                 VerticalContentAlignment="Stretch"
                                 CornerRadius="4"
-                                CurrentImage="{Binding CurrentBitmap, Mode=TwoWay}"
                                 IsVisible="{Binding !IsSelectionAvailable}"
                                 RenderOptions.BitmapInterpolationMode="HighQuality"
                                 Source="{Binding ImageSource}"
@@ -53,8 +53,8 @@
 
                             <!--  Missing image  -->
                             <Border
-                                BorderThickness="3"
                                 BorderBrush="{StaticResource ThemeCoralRedColor}"
+                                BorderThickness="3"
                                 BoxShadow="inset 1.2 0 20 1.8 #66000000"
                                 CornerRadius="4"
                                 IsVisible="{Binding IsImageFileNotFound}">
@@ -75,8 +75,8 @@
                                         TextWrapping="WrapWithOverflow" />
                                     <SelectableTextBlock
                                         Grid.Row="2"
-                                        FontSize="10"
                                         Margin="0,4,0,0"
+                                        FontSize="10"
                                         Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                         Text="{Binding NotFoundImagePath}"
                                         TextAlignment="Center"

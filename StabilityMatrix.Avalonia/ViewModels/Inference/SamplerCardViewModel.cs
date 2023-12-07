@@ -16,6 +16,8 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using Size = System.Drawing.Size;
+
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -109,6 +111,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 Width,
                 Height
             );
+
+            e.Builder.Connections.PrimarySize = new Size(Width, Height);
         }
 
         // Provide temp values

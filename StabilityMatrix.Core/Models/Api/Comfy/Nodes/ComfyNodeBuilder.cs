@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
@@ -80,6 +81,35 @@ public class ComfyNodeBuilder
 
         [BoolStringMember("enable", "disable")]
         public bool ReturnWithLeftoverNoise { get; init; }
+    }
+
+    public record SamplerCustom : ComfyTypedNodeBase<LatentNodeConnection, LatentNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+        public required bool AddNoise { get; init; }
+        public required ulong NoiseSeed { get; init; }
+
+        [Range(0d, 100d)]
+        public required double Cfg { get; init; }
+
+        public required ConditioningNodeConnection Positive { get; init; }
+        public required ConditioningNodeConnection Negative { get; init; }
+        public required SamplerNodeConnection Sampler { get; init; }
+        public required SigmasNodeConnection Sigmas { get; init; }
+        public required LatentNodeConnection LatentImage { get; init; }
+    }
+
+    public record KSamplerSelect : ComfyTypedNodeBase<SamplerNodeConnection>
+    {
+        public required string SamplerName { get; init; }
+    }
+
+    public record SDTurboScheduler : ComfyTypedNodeBase<SigmasNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+
+        [Range(1, 10)]
+        public required int Steps { get; init; }
     }
 
     public record EmptyLatentImage : ComfyTypedNodeBase<LatentNodeConnection>

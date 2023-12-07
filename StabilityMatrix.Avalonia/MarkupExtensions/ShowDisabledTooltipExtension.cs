@@ -6,7 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using JetBrains.Annotations;
 
-namespace StabilityMatrix.Avalonia.Controls.Extensions;
+namespace StabilityMatrix.Avalonia.MarkupExtensions;
 
 /// <summary>
 /// Show tooltip on Controls with IsEffectivelyEnabled = false

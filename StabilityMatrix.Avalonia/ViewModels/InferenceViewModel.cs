@@ -41,8 +41,8 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 
 [Preload]
 [View(typeof(InferencePage))]
-[Singleton]
-public partial class InferenceViewModel : PageViewModelBase
+[Singleton, Singleton(typeof(IAsyncDisposable))]
+public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly INotificationService notificationService;
@@ -230,16 +230,13 @@ public partial class InferenceViewModel : PageViewModelBase
     }
 
     /// <summary>
-    /// On Unloaded, sync tab states to database
+    /// On exit, sync tab states to database
     /// </summary>
-    public override async Task OnUnloadedAsync()
+    public async ValueTask DisposeAsync()
     {
-        await base.OnUnloadedAsync();
-
-        if (Design.IsDesignMode)
-            return;
-
         await SyncTabStatesWithDatabase();
+
+        GC.SuppressFinalize(this);
     }
 
     private void OnInferenceTextToImageRequested(object? sender, LocalImageFile e)

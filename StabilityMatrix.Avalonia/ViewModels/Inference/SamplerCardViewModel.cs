@@ -151,6 +151,53 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         e.Builder.Connections.PrimaryScheduler =
             SelectedScheduler ?? throw new ValidationException("Scheduler not selected");
 
+        // Use custom sampler if SDTurbo scheduler is selected
+        if (e.Builder.Connections.PrimaryScheduler == ComfyScheduler.SDTurbo)
+        {
+            // Error if using refiner
+            if (e.Builder.Connections.RefinerModel is not null)
+            {
+                throw new ValidationException("SDTurbo Scheduler cannot be used with Refiner Model");
+            }
+
+            var kSamplerSelect = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.KSamplerSelect
+                {
+                    Name = "KSamplerSelect",
+                    SamplerName = e.Builder.Connections.PrimarySampler?.Name!
+                }
+            );
+
+            var turboScheduler = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.SDTurboScheduler
+                {
+                    Name = "SDTurboScheduler",
+                    Model = e.Builder.Connections.BaseModel ?? throw new ArgumentException("No BaseModel"),
+                    Steps = Steps
+                }
+            );
+
+            var sampler = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.SamplerCustom
+                {
+                    Name = "Sampler",
+                    Model = e.Builder.Connections.BaseModel ?? throw new ArgumentException("No BaseModel"),
+                    AddNoise = true,
+                    NoiseSeed = e.Builder.Connections.Seed,
+                    Cfg = CfgScale,
+                    Positive = e.Temp.Conditioning?.Positive!,
+                    Negative = e.Temp.Conditioning?.Negative!,
+                    Sampler = kSamplerSelect.Output,
+                    Sigmas = turboScheduler.Output,
+                    LatentImage = primaryLatent
+                }
+            );
+
+            e.Builder.Connections.Primary = sampler.Output1;
+
+            return;
+        }
+
         // Use KSampler if no refiner, otherwise need KSamplerAdvanced
         if (e.Builder.Connections.RefinerModel is null)
         {

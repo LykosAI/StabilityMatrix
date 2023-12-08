@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - Use the plus button to add new steps (Hires Fix, Upscaler, and Save Image are currently available), and the edit button to enable removing or dragging steps to reorder them. This enables multi-pass Hires Fix, mixing different upscalers, and saving intermediate images at any point in the pipeline.
 - Added Sampler addons
   - Addons usually affect guidance like ControlNet, T2I, FreeU, and other addons to come. They apply to the individual sampler, so you can mix and match different ControlNets for Base and Hires Fix, or use the current output from a previous sampler as ControlNet guidance image for HighRes passes.
+- Added SD Turbo Scheduler
+- Added display names for new samplers ("Heun++ 2", "DDPM", "LCM")
 #### Model Browser
 - Added additional base model filter options ("SD 1.5 LCM", "SDXL 1.0 LCM", "SDXL Turbo", "Other")
 ### Changed

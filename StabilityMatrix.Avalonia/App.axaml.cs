@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -69,6 +70,8 @@ namespace StabilityMatrix.Avalonia;
 
 public sealed class App : Application
 {
+    private static bool isAsyncDisposeComplete;
+
     [NotNull]
     public static IServiceProvider? Services { get; private set; }
 
@@ -220,23 +223,7 @@ public sealed class App : Application
             mainWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
         }
 
-        mainWindow.Closing += (_, _) =>
-        {
-            var validWindowPosition = mainWindow.Screens.All.Any(screen => screen.Bounds.Contains(mainWindow.Position));
-
-            settingsManager.Transaction(
-                s =>
-                {
-                    s.WindowSettings = new WindowSettings(
-                        mainWindow.Width,
-                        mainWindow.Height,
-                        validWindowPosition ? mainWindow.Position.X : 0,
-                        validWindowPosition ? mainWindow.Position.Y : 0
-                    );
-                },
-                ignoreMissingLibraryDir: true
-            );
-        };
+        mainWindow.Closing += OnMainWindowClosing;
         mainWindow.Closed += (_, _) => Shutdown();
 
         mainWindow.SetDefaultFonts();
@@ -596,6 +583,87 @@ public sealed class App : Application
         }
     }
 
+    /// <summary>
+    /// Handle shutdown requests (happens before <see cref="OnExit"/>)
+    /// </summary>
+    private static void OnMainWindowClosing(object? sender, WindowClosingEventArgs e)
+    {
+        if (e.Cancel)
+            return;
+
+        var mainWindow = (MainWindow)sender!;
+
+        // Show confirmation if package running
+        var launchPageViewModel = Services.GetRequiredService<LaunchPageViewModel>();
+        launchPageViewModel.OnMainWindowClosing(e);
+
+        if (e.Cancel)
+            return;
+
+        // Check if we need to dispose IAsyncDisposables
+        if (
+            !isAsyncDisposeComplete
+            && Services.GetServices<IAsyncDisposable>().ToList() is { Count: > 0 } asyncDisposables
+        )
+        {
+            // Cancel shutdown for now
+            e.Cancel = true;
+            isAsyncDisposeComplete = true;
+
+            Debug.WriteLine("OnShutdownRequested Canceled: Disposing IAsyncDisposables");
+
+            Task.Run(async () =>
+                {
+                    foreach (var disposable in asyncDisposables)
+                    {
+                        Debug.WriteLine($"Disposing IAsyncDisposable ({disposable.GetType().Name})");
+                        try
+                        {
+                            await disposable.DisposeAsync().ConfigureAwait(false);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.Fail(ex.ToString());
+                        }
+                    }
+                })
+                .ContinueWith(_ =>
+                {
+                    // Shutdown again
+                    Dispatcher.UIThread.Invoke(() => Shutdown());
+                })
+                .SafeFireAndForget();
+
+            return;
+        }
+
+        OnMainWindowClosingTerminal(mainWindow);
+    }
+
+    /// <summary>
+    /// Called at the end of <see cref="OnMainWindowClosing"/> before the main window is closed.
+    /// </summary>
+    private static void OnMainWindowClosingTerminal(Window sender)
+    {
+        var settingsManager = Services.GetRequiredService<ISettingsManager>();
+
+        // Save window position
+        var validWindowPosition = sender.Screens.All.Any(screen => screen.Bounds.Contains(sender.Position));
+
+        settingsManager.Transaction(
+            s =>
+            {
+                s.WindowSettings = new WindowSettings(
+                    sender.Width,
+                    sender.Height,
+                    validWindowPosition ? sender.Position.X : 0,
+                    validWindowPosition ? sender.Position.Y : 0
+                );
+            },
+            ignoreMissingLibraryDir: true
+        );
+    }
+
     private static void OnExit(object? sender, ControlledApplicationLifetimeExitEventArgs args)
     {
         Debug.WriteLine("Start OnExit");
@@ -610,7 +678,8 @@ public sealed class App : Application
         }
 
         Debug.WriteLine("Start OnExit: Disposing services");
-        // Dispose all services
+
+        // Dispose IDisposable services
         foreach (var disposable in Services.GetServices<IDisposable>())
         {
             Debug.WriteLine($"Disposing {disposable.GetType().Name}");

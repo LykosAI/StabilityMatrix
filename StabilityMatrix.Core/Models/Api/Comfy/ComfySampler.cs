@@ -4,11 +4,15 @@ using System.Diagnostics.CodeAnalysis;
 namespace StabilityMatrix.Core.Models.Api.Comfy;
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+[SuppressMessage("ReSharper", "StringLiteralTypo")]
+[SuppressMessage("ReSharper", "InconsistentNaming")]
+[SuppressMessage("ReSharper", "IdentifierTypo")]
 public readonly record struct ComfySampler(string Name)
 {
     public static ComfySampler Euler { get; } = new("euler");
     public static ComfySampler EulerAncestral { get; } = new("euler_ancestral");
     public static ComfySampler Heun { get; } = new("heun");
+    public static ComfySampler HeunPp2 { get; } = new("heunpp2");
     public static ComfySampler Dpm2 { get; } = new("dpm_2");
     public static ComfySampler Dpm2Ancestral { get; } = new("dpm_2_ancestral");
     public static ComfySampler LMS { get; } = new("lms");
@@ -24,8 +28,10 @@ public readonly record struct ComfySampler(string Name)
     public static ComfySampler Dpmpp3MSde { get; } = new("dpmpp_3m_sde");
     public static ComfySampler Dpmpp3MSdeGpu { get; } = new("dpmpp_3m_sde_gpu");
     public static ComfySampler DDIM { get; } = new("ddim");
+    public static ComfySampler DDPM { get; } = new("ddpm");
     public static ComfySampler UniPC { get; } = new("uni_pc");
     public static ComfySampler UniPCBh2 { get; } = new("uni_pc_bh2");
+    public static ComfySampler LCM { get; } = new("lcm");
 
     private static Dictionary<ComfySampler, string> ConvertDict { get; } =
         new()
@@ -33,6 +39,7 @@ public readonly record struct ComfySampler(string Name)
             [Euler] = "Euler",
             [EulerAncestral] = "Euler Ancestral",
             [Heun] = "Heun",
+            [HeunPp2] = "Heun++ 2",
             [Dpm2] = "DPM 2",
             [Dpm2Ancestral] = "DPM 2 Ancestral",
             [LMS] = "LMS",
@@ -48,8 +55,10 @@ public readonly record struct ComfySampler(string Name)
             [Dpmpp3MSde] = "DPM++ 3M SDE",
             [Dpmpp3MSdeGpu] = "DPM++ 3M SDE GPU",
             [DDIM] = "DDIM",
+            [DDPM] = "DDPM",
             [UniPC] = "UniPC",
-            [UniPCBh2] = "UniPC BH2"
+            [UniPCBh2] = "UniPC BH2",
+            [LCM] = "LCM"
         };
 
     public static IReadOnlyList<ComfySampler> Defaults { get; } = ConvertDict.Keys.ToImmutableArray();

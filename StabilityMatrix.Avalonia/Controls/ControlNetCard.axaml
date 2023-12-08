@@ -2,7 +2,6 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
-    xmlns:extensions="clr-namespace:StabilityMatrix.Avalonia.Controls.Extensions"
     xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
     xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
@@ -11,6 +10,7 @@
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
     x:DataType="vmInference:ControlNetCardViewModel">
     <Design.PreviewWith>
         <StackPanel Width="400" Height="500">
@@ -53,7 +53,7 @@
                                 Grid.Column="1"
                                 Margin="0,0,0,4"
                                 HorizontalAlignment="Stretch"
-                                extensions:ShowDisabledTooltipExtension.ShowOnDisabled="True"
+                                markupExtensions:ShowDisabledTooltipExtension.ShowOnDisabled="True"
                                 Header="{x:Static lang:Resources.Label_Preprocessor}"
                                 IsEnabled="False"
                                 Theme="{StaticResource FAComboBoxHybridModelTheme}"

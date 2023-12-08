@@ -271,13 +271,17 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
             Task.Run(
                     async () =>
                     {
-                        var delayTime = 250 - (int)timer.ElapsedMilliseconds;
-                        if (delayTime > 0)
+                        try
                         {
-                            await Task.Delay(delayTime, cancellationToken);
+                            var delayTime = 250 - (int)timer.ElapsedMilliseconds;
+                            if (delayTime > 0)
+                            {
+                                await Task.Delay(delayTime, cancellationToken);
+                            }
+                            // ReSharper disable once AccessToDisposedClosure
+                            AttachRunningNodeChangedHandler(promptTask);
                         }
-                        // ReSharper disable once AccessToDisposedClosure
-                        AttachRunningNodeChangedHandler(promptTask);
+                        catch (TaskCanceledException) { }
                     },
                     cancellationToken
                 )

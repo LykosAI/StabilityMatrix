@@ -42,12 +42,14 @@
             <ui:CommandBarButton Label="Delete" ToolTip.Tip="Delete" />-->
             <ui:CommandBarFlyout.SecondaryCommands>
                 <ui:CommandBarButton
-                    Click="AddTabMenu_TextToImage_OnClick"
+                    Click="AddTabMenu_OnClick"
+                    Tag="{x:Static models:InferenceProjectType.TextToImage}"
                     IconSource="FullScreenMaximize"
                     Label="Text to Image"
                     ToolTip.Tip="Text to Image" />
                 <ui:CommandBarButton
-                    Click="AddTabMenu_ImageToImage_OnClick"
+                    Click="AddTabMenu_OnClick"
+                    Tag="{x:Static models:InferenceProjectType.ImageToImage}"
                     IconSource="ImageCopy"
                     Label="Image to Image"
                     ToolTip.Tip="Image to Image" />
@@ -58,7 +60,8 @@
                     Label="Inpaint"
                     ToolTip.Tip="Not yet implemented, coming soon!" />
                 <ui:CommandBarButton
-                    Click="AddTabMenu_Upscale_OnClick"
+                    Click="AddTabMenu_OnClick"
+                    Tag="{x:Static models:InferenceProjectType.Upscale}"
                     Label="Upscale"
                     ToolTip.Tip="Upscale">
                     <ui:CommandBarButton.IconSource>

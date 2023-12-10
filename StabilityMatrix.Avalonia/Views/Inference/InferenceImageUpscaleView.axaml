@@ -51,7 +51,7 @@
                             Proportion="0.5">
                             <Tool
                                 x:Name="SourceImageTool"
-                                Title="Source Image"
+                                Title="Image Input"
                                 x:DataType="Tool"
                                 CanClose="False"
                                 Id="SourceImageTool">

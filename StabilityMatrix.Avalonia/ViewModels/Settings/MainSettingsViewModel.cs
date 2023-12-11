@@ -116,6 +116,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private string? debugGpuInfo;
 
+    [ObservableProperty]
+    private bool enableHolidayMode;
+
     #region System Info
 
     private static Lazy<IReadOnlyList<GpuInfo>> GpuInfosLazy { get; } =
@@ -181,6 +184,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         SelectedLanguage = Cultures.GetSupportedCultureOrDefault(settingsManager.Settings.Language);
         RemoveSymlinksOnShutdown = settingsManager.Settings.RemoveFolderLinksOnShutdown;
         SelectedAnimationScale = settingsManager.Settings.AnimationScale;
+        EnableHolidayMode = settingsManager.Settings.EnableHolidayMode;
 
         settingsManager.RelayPropertyFor(this, vm => vm.SelectedTheme, settings => settings.Theme);
 
@@ -192,6 +196,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         );
 
         settingsManager.RelayPropertyFor(this, vm => vm.SelectedAnimationScale, settings => settings.AnimationScale);
+        settingsManager.RelayPropertyFor(this, vm => vm.EnableHolidayMode, settings => settings.EnableHolidayMode);
 
         DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
 

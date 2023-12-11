@@ -100,7 +100,21 @@
                     CommandParameter="{Binding CivitModel}"
                     IsEnabled="{Binding !IsImporting}">
                     <Grid RowDefinitions="*, Auto">
+                        <controls:BetterAdvancedImage Grid.Row="0"
+                                                      CornerRadius="8"
+                                                      VerticalAlignment="Top"
+                                                      HorizontalAlignment="Left"
+                                                      Height="50"
+                                                      ZIndex="10"
+                                                      IsVisible="{Binding ShowSantaHats}"
+                                                      Margin="0,36,0,0"
+                                                      Source="avares://StabilityMatrix.Avalonia/Assets/santahat.png">
+                            <controls:BetterAdvancedImage.RenderTransform>
+                                <RotateTransform Angle="315"></RotateTransform>
+                            </controls:BetterAdvancedImage.RenderTransform>
+                        </controls:BetterAdvancedImage>
                         <controls:BetterAdvancedImage
+                            Grid.Row="0"
                             Grid.RowSpan="2"
                             CornerRadius="8"
                             Width="330"

@@ -71,6 +71,9 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
     [ObservableProperty]
     private bool isFavorite;
 
+    [ObservableProperty]
+    private bool showSantaHats = true;
+
     public CheckpointBrowserCardViewModel(
         IDownloadService downloadService,
         ITrackedDownloadService trackedDownloadService,
@@ -90,6 +93,8 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
             s => s.ModelBrowserNsfwEnabled,
             _ => Dispatcher.UIThread.Post(UpdateImage)
         );
+
+        ShowSantaHats = settingsManager.Settings.EnableHolidayMode;
     }
 
     private void CheckIfInstalled()
@@ -115,24 +120,30 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
 
         var latestVersionInstalled =
             latestVersion.Files != null
-            && latestVersion.Files.Any(
-                file =>
-                    file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
-                    && installedModels.Contains(file.Hashes.BLAKE3)
-            );
+            && latestVersion
+                .Files
+                .Any(
+                    file =>
+                        file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                        && installedModels.Contains(file.Hashes.BLAKE3)
+                );
 
         // check if any of the ModelVersion.Files.Hashes.BLAKE3 hashes are in the installedModels list
         var anyVersionInstalled =
             latestVersionInstalled
-            || CivitModel.ModelVersions.Any(
-                version =>
-                    version.Files != null
-                    && version.Files.Any(
-                        file =>
-                            file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
-                            && installedModels.Contains(file.Hashes.BLAKE3)
-                    )
-            );
+            || CivitModel
+                .ModelVersions
+                .Any(
+                    version =>
+                        version.Files != null
+                        && version
+                            .Files
+                            .Any(
+                                file =>
+                                    file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                                    && installedModels.Contains(file.Hashes.BLAKE3)
+                            )
+                );
 
         UpdateCardText = latestVersionInstalled
             ? "Installed"
@@ -258,7 +269,8 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
     private static string PruneDescription(CivitModel model)
     {
         var prunedDescription =
-            model.Description
+            model
+                .Description
                 ?.Replace("<br/>", $"{Environment.NewLine}{Environment.NewLine}")
                 .Replace("<br />", $"{Environment.NewLine}{Environment.NewLine}")
                 .Replace("</p>", $"{Environment.NewLine}{Environment.NewLine}")
@@ -294,10 +306,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
     /// <param name="modelVersion"></param>
     /// <param name="modelFilePath"></param>
     /// <returns>The file path of the saved preview image</returns>
-    private async Task<FilePath?> SavePreviewImage(
-        CivitModelVersion modelVersion,
-        FilePath modelFilePath
-    )
+    private async Task<FilePath?> SavePreviewImage(CivitModelVersion modelVersion, FilePath modelFilePath)
     {
         // Skip if model has no images
         if (modelVersion.Images == null || modelVersion.Images.Count == 0)
@@ -309,9 +318,9 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         var imageExtension = Path.GetExtension(image.Url).TrimStart('.');
         if (imageExtension is "jpg" or "jpeg" or "png")
         {
-            var imageDownloadPath = modelFilePath.Directory!.JoinFile(
-                $"{modelFilePath.NameWithoutExtension}.preview.{imageExtension}"
-            );
+            var imageDownloadPath = modelFilePath
+                .Directory!
+                .JoinFile($"{modelFilePath.NameWithoutExtension}.preview.{imageExtension}");
 
             var imageTask = downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
             await notificationService.TryAsync(imageTask, "Could not download preview image");
@@ -349,8 +358,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         }
 
         // Get latest version file
-        var modelFile =
-            selectedFile ?? modelVersion.Files?.FirstOrDefault(x => x.Type == CivitFileType.Model);
+        var modelFile = selectedFile ?? modelVersion.Files?.FirstOrDefault(x => x.Type == CivitFileType.Model);
         if (modelFile is null)
         {
             notificationService.Show(
@@ -366,9 +374,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
 
         var rootModelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
 
-        var downloadDirectory = rootModelsDirectory.JoinDir(
-            model.Type.ConvertTo<SharedFolderType>().GetStringValue()
-        );
+        var downloadDirectory = rootModelsDirectory.JoinDir(model.Type.ConvertTo<SharedFolderType>().GetStringValue());
         // Folders might be missing if user didn't install any packages yet
         downloadDirectory.Create();
 

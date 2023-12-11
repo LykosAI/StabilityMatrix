@@ -109,7 +109,7 @@ public class Settings
 
     public Size InferenceImageSize { get; set; } = new(150, 190);
     public Size OutputsImageSize { get; set; } = new(300, 300);
-    public bool EnableHolidayMode { get; set; } = true;
+    public bool EnableHolidayMode { get; set; } = DateTimeOffset.UtcNow.Month == 12;
 
     public void RemoveInstalledPackageAndUpdateActive(InstalledPackage package)
     {

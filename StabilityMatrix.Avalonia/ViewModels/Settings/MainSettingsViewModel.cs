@@ -47,6 +47,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
@@ -95,6 +96,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
     public IReadOnlyList<float> AnimationScaleOptions { get; } =
         new[] { 0f, 0.25f, 0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f, };
 
+    public IReadOnlyList<HolidayMode> HolidayModes { get; } = Enum.GetValues<HolidayMode>().ToList();
+
     [ObservableProperty]
     private float selectedAnimationScale;
 
@@ -115,6 +118,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     [ObservableProperty]
     private string? debugGpuInfo;
+
+    [ObservableProperty]
+    private HolidayMode holidayModeSetting;
 
     #region System Info
 
@@ -181,6 +187,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         SelectedLanguage = Cultures.GetSupportedCultureOrDefault(settingsManager.Settings.Language);
         RemoveSymlinksOnShutdown = settingsManager.Settings.RemoveFolderLinksOnShutdown;
         SelectedAnimationScale = settingsManager.Settings.AnimationScale;
+        HolidayModeSetting = settingsManager.Settings.HolidayModeSetting;
 
         settingsManager.RelayPropertyFor(this, vm => vm.SelectedTheme, settings => settings.Theme);
 
@@ -192,6 +199,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         );
 
         settingsManager.RelayPropertyFor(this, vm => vm.SelectedAnimationScale, settings => settings.AnimationScale);
+        settingsManager.RelayPropertyFor(this, vm => vm.HolidayModeSetting, settings => settings.HolidayModeSetting);
 
         DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
 

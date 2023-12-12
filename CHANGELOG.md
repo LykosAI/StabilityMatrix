@@ -86,7 +86,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added Refresh button to update gallery from file system changes
 #### Checkpoints Page
 - Added the ability to drag & drop checkpoints between different folders
-## Changed
+### Changed
 #### Outputs Page
 - Updated button and menu layout
 #### Packages Page
@@ -105,7 +105,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Updates Settings Subpage
   - Toggle auto-update notifications and manually check for updates
   - Choose between Stable, Preview, and Dev update channels
-## Changed
+### Changed
 - Model Browser page has been redesigned, featuring more information like rating and download counts
 
 ## v2.6.7

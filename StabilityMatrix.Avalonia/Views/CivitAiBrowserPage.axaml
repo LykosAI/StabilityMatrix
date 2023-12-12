@@ -103,15 +103,15 @@
                         <controls:BetterAdvancedImage Grid.Row="0"
                                                       CornerRadius="8"
                                                       VerticalAlignment="Top"
-                                                      HorizontalAlignment="Left"
-                                                      Height="50"
+                                                      HorizontalAlignment="Center"
+                                                      Height="75"
                                                       ZIndex="10"
                                                       IsVisible="{Binding ShowSantaHats}"
-                                                      Margin="0,36,0,0"
+                                                      Margin="0,8,0,0"
                                                       Source="avares://StabilityMatrix.Avalonia/Assets/santahat.png">
-                            <controls:BetterAdvancedImage.RenderTransform>
-                                <RotateTransform Angle="315"></RotateTransform>
-                            </controls:BetterAdvancedImage.RenderTransform>
+                            <!-- <controls:BetterAdvancedImage.RenderTransform> -->
+                            <!--     <RotateTransform Angle="315"></RotateTransform> -->
+                            <!-- </controls:BetterAdvancedImage.RenderTransform> -->
                         </controls:BetterAdvancedImage>
                         <controls:BetterAdvancedImage
                             Grid.Row="0"

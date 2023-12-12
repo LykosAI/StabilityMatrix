@@ -94,7 +94,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
             _ => Dispatcher.UIThread.Post(UpdateImage)
         );
 
-        ShowSantaHats = settingsManager.Settings.EnableHolidayMode;
+        ShowSantaHats = settingsManager.Settings.IsHolidayModeActive;
     }
 
     private void CheckIfInstalled()

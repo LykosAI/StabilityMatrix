@@ -137,7 +137,7 @@
                     </ui:SettingsExpander.IconSource>
                 </ui:SettingsExpander>
                 <ui:SettingsExpander Grid.Row="2"
-                                     Header="Enable Holiday Mode">
+                                     Header="{x:Static lang:Resources.Label_HolidayMode}">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
@@ -145,7 +145,8 @@
                             Symbol="WeatherSnowflake" />
                     </ui:SettingsExpander.IconSource>
                     <ui:SettingsExpander.Footer>
-                        <CheckBox IsChecked="{Binding EnableHolidayMode}" />
+                        <ui:FAComboBox SelectedItem="{Binding HolidayModeSetting}"
+                                       ItemsSource="{Binding HolidayModes}"/>
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
             </sg:SpacedGrid>

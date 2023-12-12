@@ -82,10 +82,10 @@ jobs:
           sudo apt-get -y install libfuse2
           dotnet tool install --framework net6.0 -g KuiperZone.PupNet
 
-      - name: Set up .NET 7
+      - name: Set up .NET 8
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '7.0.x'
+          dotnet-version: '8.0.x'
       
       - name: PupNet Build
         env:
@@ -143,10 +143,10 @@ jobs:
           echo "Using version ${{ github.event.inputs.version }}"
           echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $env:GITHUB_ENV
 
-      - name: Set up .NET 7
+      - name: Set up .NET 8
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '7.0.x'
+          dotnet-version: '8.0.x'
 
       - name: Install dependencies
         run: dotnet restore
@@ -197,8 +197,8 @@ jobs:
       # Zip each build
       - name: Zip Artifacts
         run: |
-          zip -r StabilityMatrix-win-x64.zip StabilityMatrix-win-x64/*
-          zip -r StabilityMatrix-linux-x64.zip StabilityMatrix-linux-x64/*
+          cd StabilityMatrix-win-x64 && zip -r ../StabilityMatrix-win-x64.zip ./. && cd $OLDPWD
+          cd StabilityMatrix-linux-x64 && zip -r ../StabilityMatrix-linux-x64.zip ./. && cd $OLDPWD
 
       - name: Create Github Release
         id: create_release

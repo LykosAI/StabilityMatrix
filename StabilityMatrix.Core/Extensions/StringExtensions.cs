@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics.Contracts;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace StabilityMatrix.Core.Extensions;
@@ -80,6 +81,7 @@ public static class StringExtensions
     /// <summary>
     /// Strips the substring from the start of the string
     /// </summary>
+    [Pure]
     public static string StripStart(this string str, string subString)
     {
         var index = str.IndexOf(subString, StringComparison.Ordinal);
@@ -87,8 +89,19 @@ public static class StringExtensions
     }
 
     /// <summary>
+    /// Strips the substring from the end of the string
+    /// </summary>
+    [Pure]
+    public static string StripEnd(this string str, string subString)
+    {
+        var index = str.LastIndexOf(subString, StringComparison.Ordinal);
+        return index < 0 ? str : str.Remove(index, subString.Length);
+    }
+
+    /// <summary>
     /// Splits lines by \n and \r\n
     /// </summary>
+    [Pure]
     // ReSharper disable once ReturnTypeCanBeEnumerable.Global
     public static string[] SplitLines(
         this string str,

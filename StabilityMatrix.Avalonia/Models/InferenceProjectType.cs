@@ -19,7 +19,7 @@ public static class InferenceProjectTypeExtensions
         return type switch
         {
             InferenceProjectType.TextToImage => typeof(InferenceTextToImageViewModel),
-            InferenceProjectType.ImageToImage => null,
+            InferenceProjectType.ImageToImage => typeof(InferenceImageToImageViewModel),
             InferenceProjectType.Inpainting => null,
             InferenceProjectType.Upscale => typeof(InferenceImageUpscaleViewModel),
             InferenceProjectType.Unknown => null,

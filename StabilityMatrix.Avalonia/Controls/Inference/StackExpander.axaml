@@ -1,0 +1,113 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+    xmlns:local="clr-namespace:StabilityMatrix.Avalonia"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    x:DataType="vmInference:StackExpanderViewModel">
+
+    <Design.PreviewWith>
+        <Grid Width="500" Height="800">
+            <StackPanel>
+                <controls:StackExpander DataContext="{x:Static mocks:DesignData.StackExpanderViewModel}" />
+
+                <controls:StackExpander DataContext="{x:Static mocks:DesignData.StackExpanderViewModel2}" />
+            </StackPanel>
+        </Grid>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|StackExpander">
+        <!--  Set Defaults  -->
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Expander
+                    MinHeight="0"
+                    CornerRadius="{TemplateBinding CornerRadius}"
+                    ExpandDirection="{TemplateBinding ExpandDirection}"
+                    IsExpanded="{TemplateBinding IsExpanded}"
+                    HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                    VerticalAlignment="{TemplateBinding VerticalAlignment}"
+                    HorizontalContentAlignment="Stretch"
+                    VerticalContentAlignment="Top">
+
+                    <Expander.Styles>
+                        <Style Selector="Expander /template/ ToggleButton#PART_toggle">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </Style>
+                    </Expander.Styles>
+
+                    <Expander.Header>
+                        <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" Margin="0,-4">
+                            <ToggleSwitch
+                                Margin="2,0,0,4"
+                                VerticalContentAlignment="Center"
+                                IsChecked="{Binding IsEnabled}"
+                                OffContent=""
+                                OnContent="" />
+                            <TextBlock
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding TitleExtra, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                Text="{Binding TitleExtra}" />
+                            <TextBlock
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Text="{Binding Title}" />
+                            <!--  Settings button  -->
+                            <Button
+                                Grid.Column="3"
+                                Padding="12,6"
+                                HorizontalAlignment="Right"
+                                Classes="transparent-full"
+                                Command="{Binding SettingsCommand}"
+                                IsVisible="{Binding IsSettingsEnabled}">
+                                <fluentIcons:SymbolIcon FontSize="17" Symbol="Settings" />
+                            </Button>
+                            <!--  Delete button for StackEditableCard  -->
+                            <Button
+                                Grid.Column="4"
+                                Padding="12,6"
+                                HorizontalAlignment="Right"
+                                Classes="transparent-red"
+                                Command="{Binding RemoveFromParentListCommand}"
+                                IsVisible="{Binding IsEditEnabled}">
+                                <fluentIcons:SymbolIcon FontSize="16" Symbol="Delete" />
+                            </Button>
+                        </Grid>
+                    </Expander.Header>
+
+                    <Panel>
+                        <ItemsControl VerticalAlignment="Top" ItemsSource="{Binding Cards}">
+
+                            <ItemsControl.Styles>
+                                <Style Selector="controls|Card">
+                                    <Setter Property="IsCardVisualsEnabled" Value="False" />
+                                </Style>
+                            </ItemsControl.Styles>
+
+                            <ItemsControl.DataTemplates>
+                                <local:ViewLocator />
+                            </ItemsControl.DataTemplates>
+
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel
+                                        x:Name="PART_ItemsPanel"
+                                        VerticalAlignment="Top"
+                                        Spacing="{TemplateBinding Spacing}" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </Panel>
+
+
+                </Expander>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

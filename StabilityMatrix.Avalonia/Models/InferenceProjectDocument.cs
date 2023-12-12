@@ -30,12 +30,10 @@ public class InferenceProjectDocument : ICloneable
         {
             ProjectType = loadableModel switch
             {
+                InferenceImageToImageViewModel => InferenceProjectType.ImageToImage,
                 InferenceTextToImageViewModel => InferenceProjectType.TextToImage,
                 InferenceImageUpscaleViewModel => InferenceProjectType.Upscale,
-                _
-                    => throw new InvalidOperationException(
-                        $"Unknown loadable model type: {loadableModel.GetType()}"
-                    )
+                _ => throw new InvalidOperationException($"Unknown loadable model type: {loadableModel.GetType()}")
             },
             State = loadableModel.SaveStateToJsonObject()
         };
@@ -118,8 +116,7 @@ public class InferenceProjectDocument : ICloneable
         var document = (InferenceProjectDocument)Clone();
 
         var batchSizeCard =
-            document.State!["BatchSize"]
-            ?? throw new InvalidOperationException("BatchSize card is null");
+            document.State!["BatchSize"] ?? throw new InvalidOperationException("BatchSize card is null");
 
         batchSizeCard["BatchSize"] = batchSize;
         batchSizeCard["BatchCount"] = batchCount;
@@ -132,8 +129,7 @@ public class InferenceProjectDocument : ICloneable
     {
         var newObj = (InferenceProjectDocument)MemberwiseClone();
         // Clone State also since its mutable
-        newObj.State =
-            State == null ? null : JsonSerializer.SerializeToNode(State).Deserialize<JsonObject>();
+        newObj.State = State == null ? null : JsonSerializer.SerializeToNode(State).Deserialize<JsonObject>();
         return newObj;
     }
 }

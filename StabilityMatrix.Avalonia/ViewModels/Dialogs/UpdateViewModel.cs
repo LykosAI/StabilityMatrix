@@ -8,11 +8,13 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using Semver;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Update;
@@ -26,6 +28,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [Singleton]
 public partial class UpdateViewModel : ContentDialogViewModelBase
 {
+    private readonly ILogger<UpdateViewModel> logger;
     private readonly ISettingsManager settingsManager;
     private readonly IHttpClientFactory httpClientFactory;
     private readonly IUpdateHelper updateHelper;
@@ -65,11 +68,13 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
     private static partial Regex RegexChangelog();
 
     public UpdateViewModel(
+        ILogger<UpdateViewModel> logger,
         ISettingsManager settingsManager,
         IHttpClientFactory httpClientFactory,
         IUpdateHelper updateHelper
     )
     {
+        this.logger = logger;
         this.settingsManager = settingsManager;
         this.httpClientFactory = httpClientFactory;
         this.updateHelper = updateHelper;
@@ -80,6 +85,145 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
             UpdateInfo = info;
         };
         updateHelper.StartCheckingForUpdates().SafeFireAndForget();
+    }
+
+    public async Task Preload()
+    {
+        if (UpdateInfo is null)
+            return;
+
+        ReleaseNotes = await GetReleaseNotes(UpdateInfo.Changelog.ToString());
+    }
+
+    partial void OnUpdateInfoChanged(UpdateInfo? value)
+    {
+        CurrentVersionText = $"v{Compat.AppVersion.ToDisplayString()}";
+        NewVersionText = $"v{value?.Version.ToDisplayString()}";
+    }
+
+    public override async Task OnLoadedAsync()
+    {
+        if (!isLoaded)
+        {
+            await Preload();
+        }
+    }
+
+    /// <inheritdoc />
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
+        isLoaded = false;
+    }
+
+    [RelayCommand]
+    private async Task InstallUpdate()
+    {
+        if (UpdateInfo == null)
+        {
+            return;
+        }
+
+        ShowProgressBar = true;
+        IsProgressIndeterminate = true;
+        UpdateText = string.Format(
+            Resources.TextTemplate_UpdatingPackage,
+            Resources.Label_StabilityMatrix
+        );
+
+        try
+        {
+            await updateHelper.DownloadUpdate(
+                UpdateInfo,
+                new Progress<ProgressReport>(report =>
+                {
+                    ProgressValue = Convert.ToInt32(report.Percentage);
+                    IsProgressIndeterminate = report.IsIndeterminate;
+                })
+            );
+        }
+        catch (Exception e)
+        {
+            logger.LogWarning(e, "Failed to download update");
+
+            var dialog = DialogHelper.CreateMarkdownDialog(
+                $"{e.GetType().Name}: {e.Message}",
+                Resources.Label_UnexpectedErrorOccurred
+            );
+
+            await dialog.ShowAsync();
+            return;
+        }
+
+        // On unix, we need to set the executable bit
+        if (Compat.IsUnix)
+        {
+            File.SetUnixFileMode(
+                UpdateHelper.ExecutablePath, // 0755
+                UnixFileMode.UserRead
+                    | UnixFileMode.UserWrite
+                    | UnixFileMode.UserExecute
+                    | UnixFileMode.GroupRead
+                    | UnixFileMode.GroupExecute
+                    | UnixFileMode.OtherRead
+                    | UnixFileMode.OtherExecute
+            );
+        }
+
+        UpdateText = "Getting a few things ready...";
+        await using (new MinimumDelay(500, 1000))
+        {
+            Process.Start(
+                UpdateHelper.ExecutablePath,
+                $"--wait-for-exit-pid {Environment.ProcessId}"
+            );
+        }
+
+        UpdateText = "Update complete. Restarting Stability Matrix in 3 seconds...";
+        await Task.Delay(1000);
+        UpdateText = "Update complete. Restarting Stability Matrix in 2 seconds...";
+        await Task.Delay(1000);
+        UpdateText = "Update complete. Restarting Stability Matrix in 1 second...";
+        await Task.Delay(1000);
+        UpdateText = "Update complete. Restarting Stability Matrix...";
+
+        App.Shutdown();
+    }
+    
+    internal async Task<string> GetReleaseNotes(string changelogUrl)
+    {
+        using var client = httpClientFactory.CreateClient();
+
+        try
+        {
+            var response = await client.GetAsync(changelogUrl);
+            if (response.IsSuccessStatusCode)
+            {
+                var changelog = await response.Content.ReadAsStringAsync();
+
+                // Formatting for new changelog format
+                // https://keepachangelog.com/en/1.1.0/
+                if (changelogUrl.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+                {
+                    return FormatChangelog(
+                            changelog,
+                            Compat.AppVersion,
+                            settingsManager.Settings.PreferredUpdateChannel
+                        ) ?? "## Unable to format release notes";
+                }
+
+                return changelog;
+            }
+
+            return "## Unable to load release notes";
+        }
+        catch (HttpRequestException e)
+        {
+            return $"## Unable to fetch release notes ({e.StatusCode})\n\n[{changelogUrl}]({changelogUrl})";
+        }
+        catch (TaskCanceledException) { }
+
+        return $"## Unable to fetch release notes\n\n[{changelogUrl}]({changelogUrl})";
     }
 
     /// <summary>
@@ -122,6 +266,15 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
             x => x.Version == currentVersion.WithoutMetadata()
         );
 
+        // For mismatching build metadata, add one
+        if (
+            currentVersionBlock != -1
+            && results[currentVersionBlock].Version?.Metadata != currentVersion.Metadata
+        )
+        {
+            currentVersionBlock++;
+        }
+
         // Support for previous pre-release without changelogs
         if (currentVersionBlock == -1)
         {
@@ -158,116 +311,5 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
             .Select(x => x.Block);
 
         return string.Join(Environment.NewLine + Environment.NewLine, blocks);
-    }
-
-    public async Task Preload()
-    {
-        if (UpdateInfo is null)
-            return;
-
-        ReleaseNotes = await GetReleaseNotes(UpdateInfo.Changelog.ToString());
-    }
-
-    internal async Task<string> GetReleaseNotes(string changelogUrl)
-    {
-        using var client = httpClientFactory.CreateClient();
-
-        try
-        {
-            var response = await client.GetAsync(changelogUrl);
-            if (response.IsSuccessStatusCode)
-            {
-                var changelog = await response.Content.ReadAsStringAsync();
-
-                // Formatting for new changelog format
-                // https://keepachangelog.com/en/1.1.0/
-                if (changelogUrl.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
-                {
-                    return FormatChangelog(changelog, Compat.AppVersion)
-                        ?? "## Unable to format release notes";
-                }
-
-                return changelog;
-            }
-
-            return "## Unable to load release notes";
-        }
-        catch (HttpRequestException e)
-        {
-            return $"## Unable to fetch release notes ({e.StatusCode})\n\n[{changelogUrl}]({changelogUrl})";
-        }
-        catch (TaskCanceledException) { }
-
-        return $"## Unable to fetch release notes\n\n[{changelogUrl}]({changelogUrl})";
-    }
-
-    partial void OnUpdateInfoChanged(UpdateInfo? value)
-    {
-        CurrentVersionText = $"v{Compat.AppVersion}";
-        NewVersionText = $"v{value?.Version}";
-    }
-
-    public override async Task OnLoadedAsync()
-    {
-        if (!isLoaded)
-        {
-            await Preload();
-        }
-    }
-
-    /// <inheritdoc />
-    public override void OnUnloaded()
-    {
-        base.OnUnloaded();
-        isLoaded = false;
-    }
-
-    [RelayCommand]
-    private async Task InstallUpdate()
-    {
-        if (UpdateInfo == null)
-        {
-            return;
-        }
-
-        ShowProgressBar = true;
-        UpdateText = string.Format(
-            Resources.TextTemplate_UpdatingPackage,
-            Resources.Label_StabilityMatrix
-        );
-
-        await updateHelper.DownloadUpdate(
-            UpdateInfo,
-            new Progress<ProgressReport>(report =>
-            {
-                ProgressValue = Convert.ToInt32(report.Percentage);
-                IsProgressIndeterminate = report.IsIndeterminate;
-            })
-        );
-
-        // On unix, we need to set the executable bit
-        if (Compat.IsUnix)
-        {
-            File.SetUnixFileMode(
-                UpdateHelper.ExecutablePath, // 0755
-                UnixFileMode.UserRead
-                    | UnixFileMode.UserWrite
-                    | UnixFileMode.UserExecute
-                    | UnixFileMode.GroupRead
-                    | UnixFileMode.GroupExecute
-                    | UnixFileMode.OtherRead
-                    | UnixFileMode.OtherExecute
-            );
-        }
-
-        UpdateText = "Update complete. Restarting Stability Matrix in 3 seconds...";
-        await Task.Delay(1000);
-        UpdateText = "Update complete. Restarting Stability Matrix in 2 seconds...";
-        await Task.Delay(1000);
-        UpdateText = "Update complete. Restarting Stability Matrix in 1 second...";
-        await Task.Delay(1000);
-
-        Process.Start(UpdateHelper.ExecutablePath);
-        App.Shutdown();
     }
 }

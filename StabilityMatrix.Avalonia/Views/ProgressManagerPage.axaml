@@ -51,13 +51,17 @@
                             BorderBrush="#33000000"
                             BorderThickness="2"
                             CornerRadius="8">
-                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="*,Auto">
+                            <Grid ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto">
 
-                                <StackPanel Grid.Row="0" Grid.Column="0">
-                                    <TextBlock Margin="0,0" Text="{Binding Name, Mode=OneWay}" />
+                                <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="Auto, Auto">
+                                    <TextBlock 
+                                               MaxWidth="200"
+                                               Text="{Binding Name, Mode=OneWay}" 
+                                               TextWrapping="NoWrap"
+                                               TextTrimming="CharacterEllipsis"/>
                                     
                                     <!--  non-indeterminate progress  -->
-                                    <TextBlock
+                                    <TextBlock Grid.Row="1"
                                         Margin="0,0"
                                         IsVisible="{Binding !Progress.IsIndeterminate}">
                                         <Run Text="{Binding Progress.Text, Mode=OneWay}" />
@@ -65,11 +69,11 @@
                                     </TextBlock>
 
                                     <!--  indeterminate progress  -->
-                                    <TextBlock
+                                    <TextBlock Grid.Row="1"
                                         Margin="0,4"
                                         IsVisible="{Binding Progress.IsIndeterminate}"
                                         Text="{Binding Progress.Text, Mode=OneWay}" />
-                                </StackPanel>
+                                </Grid>
 
 
                                 <!--  Buttons  -->

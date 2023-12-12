@@ -39,4 +39,12 @@ public partial class OutputsPage : UserControlBase
 
         e.Handled = true;
     }
+
+    private void InputElement_OnKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape && DataContext is OutputsPageViewModel viewModel)
+        {
+            viewModel.ClearSearchQuery();
+        }
+    }
 }

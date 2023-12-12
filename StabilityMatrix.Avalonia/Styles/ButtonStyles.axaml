@@ -304,6 +304,47 @@
         </Style>
     </Style>
     
+    <!-- Transparent red -->
+    <Style Selector="Button.transparent-red">
+        <Style Selector="^ /template/ ui|FABorder#Root">
+            <Setter Property="Background" Value="{DynamicResource SystemControlTransparentBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
+        </Style>
+        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
+        </Style>
+
+        <Style Selector="^:pointerover">
+            <Style Selector="^ /template/ ui|FABorder#Root">
+                <Setter Property="Background" Value="{DynamicResource ThemeCoralRedColor}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ThemeCoralRedColor}" />
+            </Style>
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPointerOver}" />
+            </Style>
+        </Style>
+
+        <Style Selector="^:pressed">
+            <Style Selector="^ /template/ ui|FABorder#Root">
+                <Setter Property="Background" Value="{DynamicResource ThemeDarkCoralRedColor}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkCoralRedColor}" />
+            </Style>
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPressed}" />
+            </Style>
+        </Style>
+
+        <Style Selector="^:disabled">
+            <Style Selector="^ /template/ ui|FABorder#Root">
+                <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
+            </Style>
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundDisabled}" />
+            </Style>
+        </Style>
+    </Style>
+    
     <!-- Full Transparent -->
     <Style Selector="Button.transparent-full">
         <Style Selector="^ /template/ ui|FABorder#Root">
@@ -336,8 +377,8 @@
 
         <Style Selector="^:disabled">
             <Style Selector="^ /template/ ui|FABorder#Root">
-                <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
+                <Setter Property="Background" Value="{DynamicResource SystemControlTransparentBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource SystemControlTransparentBrush}" />
             </Style>
             <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundDisabled}" />

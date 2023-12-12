@@ -1,0 +1,130 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.LykosLoginDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:sm="clr-namespace:StabilityMatrix.Avalonia"
+    xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
+    xmlns:ctxt="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia"
+    Focusable="True"
+    d:DataContext="{x:Static mocks:DesignData.LykosLoginViewModel}"
+    d:DesignHeight="350"
+    d:DesignWidth="400"
+    x:DataType="vmDialogs:LykosLoginViewModel"
+    mc:Ignorable="d">
+
+    <sg:SpacedGrid MinWidth="400" MinHeight="300">
+        <!--<TextBlock Text="Log in or sign up" Theme="{DynamicResource SubtitleTextBlockStyle}" />-->
+        <TabControl SelectedIndex="{Binding IsSignupMode}">
+            <TabItem
+                FontSize="20"
+                Header="Login">
+                
+                <sg:SpacedGrid
+                    Margin="-4,32,-4,8"
+                    RowDefinitions="Auto,Auto,Auto,*"
+                    RowSpacing="8">
+                    <!--  Username  -->
+                    <TextBox
+                        Watermark="{x:Static lang:Resources.Label_Email}"
+                        Text="{Binding Email}"
+                        UseFloatingWatermark="True"
+                        Grid.Row="0" />
+                    <!--  Password  -->
+                    <MaskedTextBox 
+                        PasswordChar="*"
+                        Text="{Binding Password}"
+                        Watermark="{x:Static lang:Resources.Label_Password}"
+                        Grid.Row="1" />
+                    
+                    <ui:InfoBar 
+                        Severity="Error"
+                        IsOpen="{Binding LoginError, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        Title="{Binding LoginError.Message}"
+                        Message="{Binding LoginError.Details}"
+                        Grid.Row="2"/>
+                    
+                    <controls:HyperlinkIconButton
+                        VerticalAlignment="Bottom"
+                        Content="Forgot Password?"
+                        NavigateUri="{x:Static sm:Assets.LykosForgotPasswordUrl}"
+                        Grid.Row="3"/>
+                </sg:SpacedGrid>
+                
+            </TabItem>
+            <TabItem
+                FontSize="20"
+                Header="Sign up">
+                
+                <sg:SpacedGrid
+                    Margin="-4,32,-4,8"
+                    RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+                    RowSpacing="8">
+                    <!--  Email  -->
+                    <TextBox
+                        Watermark="{x:Static lang:Resources.Label_Email}"
+                        Text="{Binding Email}"
+                        UseFloatingWatermark="True"
+                        Grid.Row="0" />
+                    <!--  Username  -->
+                    <TextBox
+                        Watermark="{x:Static lang:Resources.Label_Username}"
+                        Text="{Binding Username}"
+                        UseFloatingWatermark="True"
+                        Grid.Row="1" />
+                    <!--  Password  -->
+                    <TextBox 
+                        PasswordChar="*"
+                        Text="{Binding Password}"
+                        Watermark="{x:Static lang:Resources.Label_Password}"
+                        UseFloatingWatermark="True"
+                        Grid.Row="2" />
+                    <!--  Confirm Password  -->
+                    <TextBox 
+                        PasswordChar="*"
+                        Text="{Binding ConfirmPassword}"
+                        Watermark="{x:Static lang:Resources.Label_ConfirmPassword}"
+                        UseFloatingWatermark="True"
+                        Grid.Row="3" />
+                    
+                    <ui:InfoBar 
+                        Severity="Error"
+                        IsOpen="{Binding SignupError, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        Title="{Binding SignupError.Message}"
+                        Message="{Binding SignupError.Details}"
+                        Grid.Row="4"/>
+                    
+                    <mdxaml:MarkdownScrollViewer
+                        Grid.Row="5"
+                        Margin="4,0"
+                        VerticalAlignment="Bottom"
+                        MaxWidth="380"
+                        TextElement.Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                        Markdown="{Binding SignupFooterMarkdown}">
+                        <mdxaml:MarkdownScrollViewer.Styles>
+                            <Style Selector="ctxt|CHyperlink">
+                                <Style.Setters>
+                                    <Setter Property="IsUnderline" Value="False"/>
+                                </Style.Setters>
+                            </Style>
+                            <Style Selector="ctxt|CHyperlink:pointerover">
+                                <Setter Property="IsUnderline" Value="True"/>
+                                <Setter Property="Foreground" Value="{StaticResource ThemeEldenRingOrangeColor}"/>
+                            </Style>
+                        </mdxaml:MarkdownScrollViewer.Styles>
+                    </mdxaml:MarkdownScrollViewer>
+                </sg:SpacedGrid>
+                
+            </TabItem>
+        </TabControl>
+    </sg:SpacedGrid>
+
+
+</controls:UserControlBase>

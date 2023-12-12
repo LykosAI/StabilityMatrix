@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,12 +12,10 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.Api.Comfy;
-using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
-using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Services;
 using InferenceTextToImageView = StabilityMatrix.Avalonia.Views.Inference.InferenceTextToImageView;
 
@@ -25,7 +23,7 @@ using InferenceTextToImageView = StabilityMatrix.Avalonia.Views.Inference.Infere
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
-[View(typeof(InferenceTextToImageView), persistent: true)]
+[View(typeof(InferenceTextToImageView), IsPersistent = true)]
 [ManagedService]
 [Transient]
 public class InferenceTextToImageViewModel
@@ -40,6 +38,9 @@ public class InferenceTextToImageViewModel
     [JsonIgnore]
     public StackCardViewModel StackCardViewModel { get; }
 
+    [JsonPropertyName("Modules")]
+    public StackEditableCardViewModel ModulesCardViewModel { get; }
+
     [JsonPropertyName("Model")]
     public ModelCardViewModel ModelCardViewModel { get; }
 
@@ -49,41 +50,11 @@ public class InferenceTextToImageViewModel
     [JsonPropertyName("Prompt")]
     public PromptCardViewModel PromptCardViewModel { get; }
 
-    [JsonPropertyName("Upscaler")]
-    public UpscalerCardViewModel UpscalerCardViewModel { get; }
-
-    [JsonPropertyName("HiresSampler")]
-    public SamplerCardViewModel HiresSamplerCardViewModel { get; }
-
-    [JsonPropertyName("HiresUpscaler")]
-    public UpscalerCardViewModel HiresUpscalerCardViewModel { get; }
-
-    [JsonPropertyName("FreeU")]
-    public FreeUCardViewModel FreeUCardViewModel { get; }
-
     [JsonPropertyName("BatchSize")]
     public BatchSizeCardViewModel BatchSizeCardViewModel { get; }
 
     [JsonPropertyName("Seed")]
     public SeedCardViewModel SeedCardViewModel { get; }
-
-    public bool IsFreeUEnabled
-    {
-        get => StackCardViewModel.GetCard<StackExpanderViewModel>().IsEnabled;
-        set => StackCardViewModel.GetCard<StackExpanderViewModel>().IsEnabled = value;
-    }
-
-    public bool IsHiresFixEnabled
-    {
-        get => StackCardViewModel.GetCard<StackExpanderViewModel>(1).IsEnabled;
-        set => StackCardViewModel.GetCard<StackExpanderViewModel>(1).IsEnabled = value;
-    }
-
-    public bool IsUpscaleEnabled
-    {
-        get => StackCardViewModel.GetCard<StackExpanderViewModel>(2).IsEnabled;
-        set => StackCardViewModel.GetCard<StackExpanderViewModel>(2).IsEnabled = value;
-    }
 
     public InferenceTextToImageViewModel(
         INotificationService notificationService,
@@ -113,48 +84,27 @@ public class InferenceTextToImageViewModel
         });
 
         PromptCardViewModel = vmFactory.Get<PromptCardViewModel>();
-        HiresSamplerCardViewModel = vmFactory.Get<SamplerCardViewModel>(samplerCard =>
-        {
-            samplerCard.IsDenoiseStrengthEnabled = true;
-        });
-        HiresUpscalerCardViewModel = vmFactory.Get<UpscalerCardViewModel>();
-        UpscalerCardViewModel = vmFactory.Get<UpscalerCardViewModel>();
-        FreeUCardViewModel = vmFactory.Get<FreeUCardViewModel>();
         BatchSizeCardViewModel = vmFactory.Get<BatchSizeCardViewModel>();
 
-        StackCardViewModel = vmFactory.Get<StackCardViewModel>();
-
-        StackCardViewModel.AddCards(
-            new LoadableViewModelBase[]
+        ModulesCardViewModel = vmFactory.Get<StackEditableCardViewModel>(modulesCard =>
+        {
+            modulesCard.AvailableModules = new[]
             {
-                ModelCardViewModel,
-                SamplerCardViewModel,
-                // Free U
-                vmFactory.Get<StackExpanderViewModel>(stackExpander =>
-                {
-                    stackExpander.Title = "FreeU";
-                    stackExpander.AddCards(new LoadableViewModelBase[] { FreeUCardViewModel });
-                }),
-                // Hires Fix
-                vmFactory.Get<StackExpanderViewModel>(stackExpander =>
-                {
-                    stackExpander.Title = "Hires Fix";
-                    stackExpander.AddCards(
-                        new LoadableViewModelBase[]
-                        {
-                            HiresUpscalerCardViewModel,
-                            HiresSamplerCardViewModel
-                        }
-                    );
-                }),
-                vmFactory.Get<StackExpanderViewModel>(stackExpander =>
-                {
-                    stackExpander.Title = "Upscale";
-                    stackExpander.AddCards(new LoadableViewModelBase[] { UpscalerCardViewModel });
-                }),
-                SeedCardViewModel,
-                BatchSizeCardViewModel,
-            }
+                typeof(HiresFixModule),
+                typeof(UpscalerModule),
+                typeof(SaveImageModule)
+            };
+            modulesCard.DefaultModules = new[] { typeof(HiresFixModule), typeof(UpscalerModule) };
+            modulesCard.InitializeDefaults();
+        });
+
+        StackCardViewModel = vmFactory.Get<StackCardViewModel>();
+        StackCardViewModel.AddCards(
+            ModelCardViewModel,
+            SamplerCardViewModel,
+            ModulesCardViewModel,
+            SeedCardViewModel,
+            BatchSizeCardViewModel
         );
 
         // When refiner is provided in model card, enable for sampler
@@ -172,172 +122,55 @@ public class InferenceTextToImageViewModel
     {
         base.BuildPrompt(args);
 
-        using var _ = CodeTimer.StartDebug();
-
         var builder = args.Builder;
-        var nodes = builder.Nodes;
 
-        if (args.SeedOverride is { } seed)
+        // Load constants
+        builder.Connections.Seed = args.SeedOverride switch
         {
-            builder.Connections.Seed = Convert.ToUInt64(seed);
-        }
-        else
-        {
-            builder.Connections.Seed = Convert.ToUInt64(SeedCardViewModel.Seed);
-        }
+            { } seed => Convert.ToUInt64(seed),
+            _ => Convert.ToUInt64(SeedCardViewModel.Seed)
+        };
+
+        BatchSizeCardViewModel.ApplyStep(args);
+
+        // Load models
+        ModelCardViewModel.ApplyStep(args);
 
         // Setup empty latent
-        builder.SetupLatentSource(BatchSizeCardViewModel, SamplerCardViewModel);
-
-        // Setup base stage
-        builder.SetupBaseSampler(
-            SamplerCardViewModel,
-            PromptCardViewModel,
-            ModelCardViewModel,
-            modelIndexService,
-            postModelLoad: x =>
-            {
-                if (IsFreeUEnabled)
-                {
-                    builder.Connections.BaseModel = nodes
-                        .AddNamedNode(
-                            ComfyNodeBuilder.FreeU(
-                                "FreeU",
-                                x.Connections.BaseModel!,
-                                FreeUCardViewModel.B1,
-                                FreeUCardViewModel.B2,
-                                FreeUCardViewModel.S1,
-                                FreeUCardViewModel.S2
-                            )
-                        )
-                        .Output;
-                }
-            }
+        builder.SetupEmptyLatentSource(
+            SamplerCardViewModel.Width,
+            SamplerCardViewModel.Height,
+            BatchSizeCardViewModel.BatchSize,
+            BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null
         );
 
-        // Setup refiner stage if enabled
-        if (
-            ModelCardViewModel is
-            { IsRefinerSelectionEnabled: true, SelectedRefiner.IsDefault: false }
-        )
+        // Prompts and loras
+        PromptCardViewModel.ApplyStep(args);
+
+        // Setup Sampler and Refiner if enabled
+        SamplerCardViewModel.ApplyStep(args);
+
+        // Hires fix if enabled
+        foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())
         {
-            builder.SetupRefinerSampler(
-                SamplerCardViewModel,
-                PromptCardViewModel,
-                ModelCardViewModel,
-                modelIndexService,
-                postModelLoad: x =>
-                {
-                    if (IsFreeUEnabled)
-                    {
-                        builder.Connections.RefinerModel = nodes
-                            .AddNamedNode(
-                                ComfyNodeBuilder.FreeU(
-                                    "Refiner_FreeU",
-                                    x.Connections.RefinerModel!,
-                                    FreeUCardViewModel.B1,
-                                    FreeUCardViewModel.B2,
-                                    FreeUCardViewModel.S1,
-                                    FreeUCardViewModel.S2
-                                )
-                            )
-                            .Output;
-                    }
-                }
-            );
-        }
-
-        // Override with custom VAE if enabled
-        if (ModelCardViewModel is { IsVaeSelectionEnabled: true, SelectedVae.IsDefault: false })
-        {
-            var customVaeLoader = nodes.AddNamedNode(
-                ComfyNodeBuilder.VAELoader("VAELoader", ModelCardViewModel.SelectedVae.RelativePath)
-            );
-
-            builder.Connections.BaseVAE = customVaeLoader.Output;
-            builder.Connections.RefinerVAE = customVaeLoader.Output;
-        }
-
-        // If hi-res fix is enabled, add the LatentUpscale node and another KSampler node
-        if (args.Overrides.IsHiresFixEnabled ?? IsHiresFixEnabled)
-        {
-            // Requested upscale to this size
-            var hiresSize = builder.Connections.GetScaledLatentSize(
-                HiresUpscalerCardViewModel.Scale
-            );
-
-            LatentNodeConnection hiresLatent;
-
-            // Select between latent upscale and normal upscale based on the upscale method
-            var selectedUpscaler = HiresUpscalerCardViewModel.SelectedUpscaler!.Value;
-
-            if (selectedUpscaler.Type == ComfyUpscalerType.None)
-            {
-                // If no upscaler selected or none, just use the latent image
-                hiresLatent = builder.Connections.Latent!;
-            }
-            else
-            {
-                // Otherwise upscale the latent image
-                hiresLatent = builder
-                    .Group_UpscaleToLatent(
-                        "HiresFix",
-                        builder.Connections.Latent!,
-                        builder.Connections.GetRefinerOrBaseVAE(),
-                        selectedUpscaler,
-                        hiresSize.Width,
-                        hiresSize.Height
-                    )
-                    .Output;
-            }
-
-            // Use refiner model if set, or base if not
-            var hiresSampler = nodes.AddNamedNode(
-                ComfyNodeBuilder.KSampler(
-                    "HiresSampler",
-                    builder.Connections.GetRefinerOrBaseModel(),
-                    builder.Connections.Seed,
-                    HiresSamplerCardViewModel.Steps,
-                    HiresSamplerCardViewModel.CfgScale,
-                    // Use hires sampler name if not null, otherwise use the normal sampler
-                    HiresSamplerCardViewModel.SelectedSampler
-                        ?? SamplerCardViewModel.SelectedSampler
-                        ?? throw new ValidationException("Sampler not selected"),
-                    HiresSamplerCardViewModel.SelectedScheduler
-                        ?? SamplerCardViewModel.SelectedScheduler
-                        ?? throw new ValidationException("Scheduler not selected"),
-                    builder.Connections.GetRefinerOrBaseConditioning(),
-                    builder.Connections.GetRefinerOrBaseNegativeConditioning(),
-                    hiresLatent,
-                    HiresSamplerCardViewModel.DenoiseStrength
-                )
-            );
-
-            // Set as latest latent
-            builder.Connections.Latent = hiresSampler.Output;
-            builder.Connections.LatentSize = hiresSize;
-        }
-
-        // If upscale is enabled, add another upscale group
-        if (IsUpscaleEnabled)
-        {
-            var upscaleSize = builder.Connections.GetScaledLatentSize(UpscalerCardViewModel.Scale);
-
-            // Build group
-            var postUpscaleGroup = builder.Group_LatentUpscaleToImage(
-                "PostUpscale",
-                builder.Connections.Latent!,
-                builder.Connections.GetRefinerOrBaseVAE(),
-                UpscalerCardViewModel.SelectedUpscaler!.Value,
-                upscaleSize.Width,
-                upscaleSize.Height
-            );
-
-            // Set as the image output
-            builder.Connections.Image = postUpscaleGroup.Output;
+            module.ApplyStep(args);
         }
 
         builder.SetupOutputImage();
+    }
+
+    /// <inheritdoc />
+    protected override IEnumerable<ImageSource> GetInputImages()
+    {
+        var samplerImages = SamplerCardViewModel.ModulesCardViewModel.Cards
+            .OfType<IInputImageProvider>()
+            .SelectMany(m => m.GetInputImages());
+
+        var moduleImages = ModulesCardViewModel.Cards
+            .OfType<IInputImageProvider>()
+            .SelectMany(m => m.GetInputImages());
+
+        return samplerImages.Concat(moduleImages);
     }
 
     /// <inheritdoc />
@@ -420,5 +253,55 @@ public class InferenceTextToImageViewModel
         parameters.Seed = (ulong)SeedCardViewModel.Seed;
 
         return parameters;
+    }
+
+    // Deserialization overrides
+    public override void LoadStateFromJsonObject(JsonObject state, int version)
+    {
+        // For v2 and below, do migration
+        if (version <= 2)
+        {
+            ModulesCardViewModel.Clear();
+
+            // Add by default the original cards as steps - HiresFix, Upscaler
+            ModulesCardViewModel.AddModule<HiresFixModule>(module =>
+            {
+                module.IsEnabled = state.GetPropertyValueOrDefault<bool>("IsHiresFixEnabled");
+
+                if (state.TryGetPropertyValue("HiresSampler", out var hiresSamplerState))
+                {
+                    module
+                        .GetCard<SamplerCardViewModel>()
+                        .LoadStateFromJsonObject(hiresSamplerState!.AsObject());
+                }
+
+                if (state.TryGetPropertyValue("HiresUpscaler", out var hiresUpscalerState))
+                {
+                    module
+                        .GetCard<UpscalerCardViewModel>()
+                        .LoadStateFromJsonObject(hiresUpscalerState!.AsObject());
+                }
+            });
+
+            ModulesCardViewModel.AddModule<UpscalerModule>(module =>
+            {
+                module.IsEnabled = state.GetPropertyValueOrDefault<bool>("IsUpscaleEnabled");
+
+                if (state.TryGetPropertyValue("Upscaler", out var upscalerState))
+                {
+                    module
+                        .GetCard<UpscalerCardViewModel>()
+                        .LoadStateFromJsonObject(upscalerState!.AsObject());
+                }
+            });
+
+            // Add FreeU to sampler
+            SamplerCardViewModel.ModulesCardViewModel.AddModule<FreeUModule>(module =>
+            {
+                module.IsEnabled = state.GetPropertyValueOrDefault<bool>("IsFreeUEnabled");
+            });
+        }
+
+        base.LoadStateFromJsonObject(state);
     }
 }

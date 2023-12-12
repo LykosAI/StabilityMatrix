@@ -56,8 +56,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
     private readonly SourceCache<HybridModelFile, string> modelsSource = new(p => p.GetId());
 
-    public IObservableCollection<HybridModelFile> Models { get; } =
-        new ObservableCollectionExtended<HybridModelFile>();
+    public IObservableCollection<HybridModelFile> Models { get; } = new ObservableCollectionExtended<HybridModelFile>();
 
     private readonly SourceCache<HybridModelFile, string> vaeModelsSource = new(p => p.GetId());
 
@@ -66,20 +65,24 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     public IObservableCollection<HybridModelFile> VaeModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
+    private readonly SourceCache<HybridModelFile, string> controlNetModelsSource = new(p => p.GetId());
+
+    private readonly SourceCache<HybridModelFile, string> downloadableControlNetModelsSource = new(p => p.GetId());
+
+    public IObservableCollection<HybridModelFile> ControlNetModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
     private readonly SourceCache<ComfySampler, string> samplersSource = new(p => p.Name);
 
-    public IObservableCollection<ComfySampler> Samplers { get; } =
-        new ObservableCollectionExtended<ComfySampler>();
+    public IObservableCollection<ComfySampler> Samplers { get; } = new ObservableCollectionExtended<ComfySampler>();
 
     private readonly SourceCache<ComfyUpscaler, string> modelUpscalersSource = new(p => p.Name);
 
     private readonly SourceCache<ComfyUpscaler, string> latentUpscalersSource = new(p => p.Name);
 
-    private readonly SourceCache<ComfyUpscaler, string> downloadableUpscalersSource =
-        new(p => p.Name);
+    private readonly SourceCache<ComfyUpscaler, string> downloadableUpscalersSource = new(p => p.Name);
 
-    public IObservableCollection<ComfyUpscaler> Upscalers { get; } =
-        new ObservableCollectionExtended<ComfyUpscaler>();
+    public IObservableCollection<ComfyUpscaler> Upscalers { get; } = new ObservableCollectionExtended<ComfyUpscaler>();
 
     private readonly SourceCache<ComfyScheduler, string> schedulersSource = new(p => p.Name);
 
@@ -102,13 +105,19 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         modelsSource
             .Connect()
-            .SortBy(
-                f => f.ShortDisplayName,
-                SortDirection.Ascending,
-                SortOptimisations.ComparesImmutableValuesOnly
-            )
+            .SortBy(f => f.ShortDisplayName, SortDirection.Ascending, SortOptimisations.ComparesImmutableValuesOnly)
             .DeferUntilLoaded()
             .Bind(Models)
+            .Subscribe();
+
+        controlNetModelsSource
+            .Connect()
+            .Or(downloadableControlNetModelsSource.Connect())
+            .Sort(
+                SortExpressionComparer<HybridModelFile>.Ascending(f => f.Type).ThenByAscending(f => f.ShortDisplayName)
+            )
+            .DeferUntilLoaded()
+            .Bind(ControlNetModels)
             .Subscribe();
 
         vaeModelsDefaults.AddOrUpdate(HybridModelFile.Default);
@@ -121,11 +130,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             .Connect()
             .Or(modelUpscalersSource.Connect())
             .Or(downloadableUpscalersSource.Connect())
-            .Sort(
-                SortExpressionComparer<ComfyUpscaler>
-                    .Ascending(f => f.Type)
-                    .ThenByAscending(f => f.Name)
-            )
+            .Sort(SortExpressionComparer<ComfyUpscaler>.Ascending(f => f.Type).ThenByAscending(f => f.Name))
             .Bind(Upscalers)
             .Subscribe();
 
@@ -148,22 +153,33 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             if (IsConnected)
             {
                 LoadSharedPropertiesAsync()
-                    .SafeFireAndForget(
-                        onException: ex => logger.LogError(ex, "Error loading shared properties")
-                    );
+                    .SafeFireAndForget(onException: ex => logger.LogError(ex, "Error loading shared properties"));
             }
         };
     }
 
-    private async Task LoadSharedPropertiesAsync()
+    [MemberNotNull(nameof(Client))]
+    private void EnsureConnected()
     {
         if (!IsConnected)
             throw new InvalidOperationException("Client is not connected");
+    }
 
+    private async Task LoadSharedPropertiesAsync()
+    {
+        EnsureConnected();
+
+        // Get model names
         if (await Client.GetModelNamesAsync() is { } modelNames)
         {
-            modelsSource.EditDiff(
-                modelNames.Select(HybridModelFile.FromRemote),
+            modelsSource.EditDiff(modelNames.Select(HybridModelFile.FromRemote), HybridModelFile.Comparer);
+        }
+
+        // Get control net model names
+        if (await Client.GetNodeOptionNamesAsync("ControlNetLoader", "control_net_name") is { } controlNetModelNames)
+        {
+            controlNetModelsSource.EditDiff(
+                controlNetModelNames.Select(HybridModelFile.FromRemote),
                 HybridModelFile.Comparer
             );
         }
@@ -171,19 +187,13 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Fetch sampler names from KSampler node
         if (await Client.GetSamplerNamesAsync() is { } samplerNames)
         {
-            samplersSource.EditDiff(
-                samplerNames.Select(name => new ComfySampler(name)),
-                ComfySampler.Comparer
-            );
+            samplersSource.EditDiff(samplerNames.Select(name => new ComfySampler(name)), ComfySampler.Comparer);
         }
 
         // Upscalers is latent and esrgan combined
 
         // Add latent upscale methods from LatentUpscale node
-        if (
-            await Client.GetNodeOptionNamesAsync("LatentUpscale", "upscale_method") is
-            { } latentUpscalerNames
-        )
+        if (await Client.GetNodeOptionNamesAsync("LatentUpscale", "upscale_method") is { } latentUpscalerNames)
         {
             latentUpscalersSource.EditDiff(
                 latentUpscalerNames.Select(s => new ComfyUpscaler(s, ComfyUpscalerType.Latent)),
@@ -194,10 +204,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         }
 
         // Add Model upscale methods
-        if (
-            await Client.GetNodeOptionNamesAsync("UpscaleModelLoader", "model_name") is
-            { } modelUpscalerNames
-        )
+        if (await Client.GetNodeOptionNamesAsync("UpscaleModelLoader", "model_name") is { } modelUpscalerNames)
         {
             modelUpscalersSource.EditDiff(
                 modelUpscalerNames.Select(s => new ComfyUpscaler(s, ComfyUpscalerType.ESRGAN)),
@@ -209,10 +216,12 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Add scheduler names from Scheduler node
         if (await Client.GetNodeOptionNamesAsync("KSampler", "scheduler") is { } schedulerNames)
         {
-            schedulersSource.EditDiff(
-                schedulerNames.Select(s => new ComfyScheduler(s)),
-                ComfyScheduler.Comparer
-            );
+            schedulersSource.Edit(updater =>
+            {
+                updater.AddOrUpdate(
+                    schedulerNames.Where(n => !schedulersSource.Keys.Contains(n)).Select(s => new ComfyScheduler(s))
+                );
+            });
             logger.LogTrace("Loaded scheduler methods: {@Schedulers}", schedulerNames);
         }
     }
@@ -224,17 +233,25 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     {
         // Load local models
         modelsSource.EditDiff(
-            modelIndexService
-                .GetFromModelIndex(SharedFolderType.StableDiffusion)
-                .Select(HybridModelFile.FromLocal),
+            modelIndexService.GetFromModelIndex(SharedFolderType.StableDiffusion).Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
 
+        // Load local control net models
+        controlNetModelsSource.EditDiff(
+            modelIndexService.GetFromModelIndex(SharedFolderType.ControlNet).Select(HybridModelFile.FromLocal),
+            HybridModelFile.Comparer
+        );
+
+        // Downloadable ControlNet models
+        var downloadableControlNets = RemoteModels
+            .ControlNetModels
+            .Where(u => !modelUpscalersSource.Lookup(u.GetId()).HasValue);
+        downloadableControlNetModelsSource.EditDiff(downloadableControlNets, HybridModelFile.Comparer);
+
         // Load local VAE models
         vaeModelsSource.EditDiff(
-            modelIndexService
-                .GetFromModelIndex(SharedFolderType.VAE)
-                .Select(HybridModelFile.FromLocal),
+            modelIndexService.GetFromModelIndex(SharedFolderType.VAE).Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
 
@@ -247,25 +264,36 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Load Upscalers
         modelUpscalersSource.EditDiff(
             modelIndexService
-                .GetFromModelIndex(
-                    SharedFolderType.ESRGAN | SharedFolderType.RealESRGAN | SharedFolderType.SwinIR
-                )
+                .GetFromModelIndex(SharedFolderType.ESRGAN | SharedFolderType.RealESRGAN | SharedFolderType.SwinIR)
                 .Select(m => new ComfyUpscaler(m.FileName, ComfyUpscalerType.ESRGAN)),
             ComfyUpscaler.Comparer
         );
 
         // Remote upscalers
-        var remoteUpscalers = ComfyUpscaler.DefaultDownloadableModels.Where(
-            u => !modelUpscalersSource.Lookup(u.Name).HasValue
-        );
+        var remoteUpscalers = ComfyUpscaler
+            .DefaultDownloadableModels
+            .Where(u => !modelUpscalersSource.Lookup(u.Name).HasValue);
         downloadableUpscalersSource.EditDiff(remoteUpscalers, ComfyUpscaler.Comparer);
     }
 
     /// <inheritdoc />
-    public async Task CopyImageToInputAsync(
-        FilePath imageFile,
-        CancellationToken cancellationToken = default
-    )
+    public async Task UploadInputImageAsync(ImageSource image, CancellationToken cancellationToken = default)
+    {
+        EnsureConnected();
+
+        if (image.LocalFile is not { } localFile)
+        {
+            throw new ArgumentException("Image is not a local file", nameof(image));
+        }
+
+        var uploadName = await image.GetHashGuidFileNameAsync();
+
+        await using var stream = localFile.Info.OpenRead();
+        await Client.UploadImageAsync(stream, uploadName, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task CopyImageToInputAsync(FilePath imageFile, CancellationToken cancellationToken = default)
     {
         if (!IsConnected)
             return;
@@ -294,10 +322,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     }
 
     /// <inheritdoc />
-    public async Task WriteImageToInputAsync(
-        ImageSource imageSource,
-        CancellationToken cancellationToken = default
-    )
+    public async Task WriteImageToInputAsync(ImageSource imageSource, CancellationToken cancellationToken = default)
     {
         if (!IsConnected)
             return;
@@ -360,16 +385,14 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // For locally installed packages only
         // Delete ./output/Inference
 
-        var legacyInferenceLinkDir = new DirectoryPath(
-            packagePair.InstalledPackage.FullPath
-        ).JoinDir("output", "Inference");
+        var legacyInferenceLinkDir = new DirectoryPath(packagePair.InstalledPackage.FullPath).JoinDir(
+            "output",
+            "Inference"
+        );
 
         if (legacyInferenceLinkDir.Exists)
         {
-            logger.LogInformation(
-                "Deleting legacy inference link at {LegacyDir}",
-                legacyInferenceLinkDir
-            );
+            logger.LogInformation("Deleting legacy inference link at {LegacyDir}", legacyInferenceLinkDir);
 
             if (legacyInferenceLinkDir.IsSymbolicLink)
             {
@@ -386,10 +409,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     }
 
     /// <inheritdoc />
-    public async Task ConnectAsync(
-        PackagePair packagePair,
-        CancellationToken cancellationToken = default
-    )
+    public async Task ConnectAsync(PackagePair packagePair, CancellationToken cancellationToken = default)
     {
         if (IsConnected)
             return;

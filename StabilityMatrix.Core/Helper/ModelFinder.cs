@@ -1,4 +1,5 @@
-﻿using NLog;
+﻿using System.Net;
+using NLog;
 using Refit;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
@@ -8,11 +9,7 @@ using StabilityMatrix.Core.Models.Api;
 namespace StabilityMatrix.Core.Helper;
 
 // return Model, ModelVersion, ModelFile
-public record struct ModelSearchResult(
-    CivitModel Model,
-    CivitModelVersion ModelVersion,
-    CivitFile ModelFile
-);
+public record struct ModelSearchResult(CivitModel Model, CivitModelVersion ModelVersion, CivitFile ModelFile);
 
 [Singleton]
 public class ModelFinder
@@ -36,9 +33,7 @@ public class ModelFinder
             return null;
         }
 
-        var file = version.Files!.First(
-            file => file.Hashes.BLAKE3?.ToLowerInvariant() == hashBlake3
-        );
+        var file = version.Files!.First(file => file.Hashes.BLAKE3?.ToLowerInvariant() == hashBlake3);
 
         return new ModelSearchResult(model, version, file);
     }
@@ -61,16 +56,39 @@ public class ModelFinder
             // VersionResponse is not actually the full data of ModelVersion, so find it again
             var version = model.ModelVersions!.First(version => version.Id == versionResponse.Id);
 
-            var file = versionResponse.Files.First(
-                file => file.Hashes.BLAKE3?.ToLowerInvariant() == hashBlake3
-            );
+            var file = versionResponse
+                .Files
+                .First(file => hashBlake3.Equals(file.Hashes.BLAKE3, StringComparison.OrdinalIgnoreCase));
 
             return new ModelSearchResult(model, version, file);
         }
+        catch (TaskCanceledException e)
+        {
+            Logger.Warn(
+                "Timed out while finding remote model version using hash {Hash}: {Error}",
+                hashBlake3,
+                e.Message
+            );
+            return null;
+        }
         catch (ApiException e)
         {
-            Logger.Info(
-                "Could not find remote model version using hash {Hash}: {Error}",
+            if (e.StatusCode == HttpStatusCode.NotFound)
+            {
+                Logger.Info("Could not find remote model version using hash {Hash}", hashBlake3);
+            }
+            else
+            {
+                Logger.Warn(e, "Could not find remote model version using hash {Hash}: {Error}", hashBlake3, e.Message);
+            }
+
+            return null;
+        }
+        catch (HttpRequestException e)
+        {
+            Logger.Warn(
+                e,
+                "Could not connect to api while finding remote model version using hash {Hash}: {Error}",
                 hashBlake3,
                 e.Message
             );

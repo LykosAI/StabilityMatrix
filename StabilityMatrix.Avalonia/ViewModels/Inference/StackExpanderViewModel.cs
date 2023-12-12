@@ -1,9 +1,12 @@
 ﻿using System.Linq;
 using System.Text.Json.Nodes;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models.Inference;
+using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
@@ -15,41 +18,62 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [Transient]
 public partial class StackExpanderViewModel : StackViewModelBase
 {
+    public const string ModuleKey = "StackExpander";
+
     [ObservableProperty]
     [property: JsonIgnore]
     private string? title;
 
     [ObservableProperty]
+    [property: JsonIgnore]
+    private string? titleExtra;
+
+    [ObservableProperty]
     private bool isEnabled;
+
+    /// <summary>
+    /// True if parent StackEditableCard is in edit mode (can drag to reorder)
+    /// </summary>
+    [ObservableProperty]
+    [property: JsonIgnore]
+    private bool isEditEnabled;
+
+    /// <summary>
+    /// True to show the settings button, invokes <see cref="SettingsCommand"/> when clicked
+    /// </summary>
+    public virtual bool IsSettingsEnabled { get; set; }
+
+    public virtual IRelayCommand? SettingsCommand { get; set; }
+
+    /// <inheritdoc />
+    public StackExpanderViewModel(ServiceManager<ViewModelBase> vmFactory)
+        : base(vmFactory) { }
+
+    public override void OnContainerIndexChanged(int value)
+    {
+        TitleExtra = $"{value + 1}.";
+    }
 
     /// <inheritdoc />
     public override void LoadStateFromJsonObject(JsonObject state)
     {
-        var model = DeserializeModel<StackExpanderModel>(state);
-        IsEnabled = model.IsEnabled;
+        base.LoadStateFromJsonObject(state);
 
-        if (model.Cards is null)
-            return;
-
-        foreach (var (i, card) in model.Cards.Enumerate())
+        if (
+            state.TryGetPropertyValue(nameof(IsEnabled), out var isEnabledNode)
+            && isEnabledNode is JsonValue jsonValue
+            && jsonValue.TryGetValue(out bool isEnabledBool)
+        )
         {
-            // Ignore if more than cards than we have
-            if (i > Cards.Count - 1)
-                break;
-
-            Cards[i].LoadStateFromJsonObject(card);
+            IsEnabled = isEnabledBool;
         }
     }
 
     /// <inheritdoc />
     public override JsonObject SaveStateToJsonObject()
     {
-        return SerializeModel(
-            new StackExpanderModel
-            {
-                IsEnabled = IsEnabled,
-                Cards = Cards.Select(x => x.SaveStateToJsonObject()).ToList()
-            }
-        );
+        var state = base.SaveStateToJsonObject();
+        state.Add(nameof(IsEnabled), IsEnabled);
+        return state;
     }
 }

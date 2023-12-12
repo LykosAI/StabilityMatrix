@@ -46,7 +46,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Model author username and avatar display, with clickable link to their profile
 ### Changed
 #### General
-- Moved Inference settings to subpage
 - Model Browser page has been redesigned, featuring more information like rating and download counts
 - Model Browser navigation has improved animations on hover and compact number formatting
 - Updated Outputs Page button and menu layout

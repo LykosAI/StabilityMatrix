@@ -72,7 +72,7 @@ public partial class HiresFixModule : ModuleBase
         if (selectedUpscaler.Type != ComfyUpscalerType.None)
         {
             builder.Connections.Primary = builder.Group_Upscale(
-                "HiresFix",
+                builder.Nodes.GetUniqueName("HiresFix"),
                 builder.Connections.Primary ?? throw new ArgumentException("No Primary"),
                 builder.Connections.GetDefaultVAE(),
                 selectedUpscaler,

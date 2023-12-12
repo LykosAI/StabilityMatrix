@@ -82,6 +82,7 @@
         <AvaloniaResource Include="Assets\Icon.ico" />
         <AvaloniaResource Include="Assets\Icon.png" />
         <AvaloniaResource Include="Assets\hf-packages.json" />
+        <AvaloniaResource Include="Assets\santahat.png" />
     </ItemGroup>
 
     <ItemGroup>

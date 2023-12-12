@@ -109,6 +109,13 @@ public class Settings
 
     public Size InferenceImageSize { get; set; } = new(150, 190);
     public Size OutputsImageSize { get; set; } = new(300, 300);
+    public HolidayMode HolidayModeSetting { get; set; } = HolidayMode.Automatic;
+
+    [JsonIgnore]
+    public bool IsHolidayModeActive =>
+        HolidayModeSetting == HolidayMode.Automatic
+            ? DateTimeOffset.Now.Month == 12
+            : HolidayModeSetting == HolidayMode.Enabled;
 
     public void RemoveInstalledPackageAndUpdateActive(InstalledPackage package)
     {

@@ -113,6 +113,9 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
     [ObservableProperty]
     private string selectedBaseModelType = "All";
 
+    [ObservableProperty]
+    private bool showSantaHats = true;
+
     private List<CheckpointBrowserCardViewModel> allModelCards = new();
 
     public IEnumerable<CivitPeriod> AllCivitPeriods => Enum.GetValues(typeof(CivitPeriod)).Cast<CivitPeriod>();

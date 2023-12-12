@@ -8,8 +8,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.7.0
 ### Added
 #### General
-- Added an X button to all search fields to instantly clear them (Esc key also works)
 - New package: [RuinedFooocus](https://github.com/runew0lf/RuinedFooocus)
+- Added an X button to all search fields to instantly clear them (Esc key also works)
 - Added System Information section to Settings
 #### Inference
 - Added Image to Image project type

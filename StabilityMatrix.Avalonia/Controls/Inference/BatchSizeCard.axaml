@@ -18,10 +18,6 @@
                 DataContext="{x:Static mocks:DesignData.BatchSizeCardViewModelWithIndexOption}"/>
         </StackPanel>
     </Design.PreviewWith>
-    
-    <Styles.Resources>
-        <converters:NullableDefaultConverter x:Key="NullableDefaultConverter"/>
-    </Styles.Resources>
 
     <Style Selector="controls|BatchSizeCard">
         <Setter Property="Focusable" Value="True"/>

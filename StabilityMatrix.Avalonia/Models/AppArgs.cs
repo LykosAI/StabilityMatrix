@@ -58,6 +58,12 @@ public class AppArgs
     public bool DisableGpuRendering { get; set; }
 
     /// <summary>
+    /// Flag to use OpenGL rendering
+    /// </summary>
+    [Option("opengl", HelpText = "Prefer OpenGL rendering")]
+    public bool UseOpenGlRendering { get; set; }
+
+    /// <summary>
     /// Override global app home directory
     /// Defaults to (%APPDATA%|~/.config)/StabilityMatrix
     /// </summary>

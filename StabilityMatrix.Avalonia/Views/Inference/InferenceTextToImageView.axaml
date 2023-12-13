@@ -112,6 +112,8 @@
                                                 HorizontalAlignment="Stretch"
                                                 Classes="accent"
                                                 Command="{Binding GenerateImageCommand}"
+                                                ToolTip.Tip="{Binding $self.HotKey}"
+                                                HotKey="Ctrl+Enter"
                                                 CommandParameter="{x:Static modelsInference:GenerateFlags.None}"
                                                 IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}">
                                                 <Panel>

@@ -71,6 +71,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - InvokeAI model links for T2I/IpAdapters now point to the correct folders
 - Added extra checks to help prevent settings resetting in certain scenarios
 - Fixed Refiner model enabled state not saving to Inference project files
+- Fixed NullReference error labels when clearing the Inference batch size settings, now shows improved message with minimum and maximum value constraints
 
 ## v2.7.0-pre.4
 ### Added

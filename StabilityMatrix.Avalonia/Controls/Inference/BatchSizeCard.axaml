@@ -6,6 +6,7 @@
         xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
         xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
         xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+        xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
         x:DataType="vmInference:BatchSizeCardViewModel">
     
     <Design.PreviewWith>
@@ -17,9 +18,13 @@
                 DataContext="{x:Static mocks:DesignData.BatchSizeCardViewModelWithIndexOption}"/>
         </StackPanel>
     </Design.PreviewWith>
+    
+    <Styles.Resources>
+        <converters:NullableDefaultConverter x:Key="NullableDefaultConverter"/>
+    </Styles.Resources>
 
     <Style Selector="controls|BatchSizeCard">
-        <!-- Set Defaults -->
+        <Setter Property="Focusable" Value="True"/>
         <Setter Property="ContextFlyout">
             <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
                 <ui:ToggleMenuFlyoutItem
@@ -48,7 +53,7 @@
                                 Minimum="1"
                                 Increment="1"
                                 ParsingNumberStyle="Integer"
-                                Value="{Binding BatchSize}"
+                                Value="{Binding BatchSize, Converter={x:Static converters:NullableDefaultNumericConverters.IntToDecimal}}"
                                 ClipValueToMinMax="True"/>
                         </StackPanel>
 
@@ -71,7 +76,7 @@
                                 Minimum="1"
                                 Increment="1"
                                 ParsingNumberStyle="Integer"
-                                Value="{Binding BatchCount}"
+                                Value="{Binding BatchCount, Converter={x:Static converters:NullableDefaultNumericConverters.IntToDecimal}}"
                                 ClipValueToMinMax="True"/>
                         </StackPanel>
                         
@@ -99,7 +104,7 @@
                                 Maximum="{Binding BatchSize}"
                                 Increment="1"
                                 ParsingNumberStyle="Integer"
-                                Value="{Binding BatchIndex}"
+                                Value="{Binding BatchIndex, Converter={x:Static converters:NullableDefaultNumericConverters.IntToDecimal}}"
                                 ClipValueToMinMax="True"/>
                         </StackPanel>
 

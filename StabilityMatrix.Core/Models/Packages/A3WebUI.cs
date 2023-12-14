@@ -287,7 +287,7 @@ public class A3WebUI(
         if (installDirectory.JoinDir("models/controlnet") is { IsSymbolicLink: true } controlnetOldLink)
         {
             Logger.Info("Migration: Removing old controlnet link {Path}", controlnetOldLink);
-            await controlnetOldLink.DeleteAsync(true).ConfigureAwait(false);
+            await controlnetOldLink.DeleteAsync(false).ConfigureAwait(false);
         }
 
         // Resume base setup

@@ -242,7 +242,7 @@ jobs:
           SM_CF_CACHE_PURGE_TOKEN: ${{ secrets.SM_CF_CACHE_PURGE_TOKEN }}
           SM_CF_ZONE_ID: ${{ secrets.SM_CF_ZONE_ID }}
           SM_SIGNING_PRIVATE_KEY: ${{ secrets.SM_SIGNING_PRIVATE_KEY }}
-        run: sm-tools updates publish-matrix-v3 -v $RELEASE_VERSION -y
+        run: sm-tools updates publish-matrix-v3 -v ${{ github.event.inputs.version }} -y
 
   publish-auto-update-b2:
     name: Publish Auto-Update Release (B2)

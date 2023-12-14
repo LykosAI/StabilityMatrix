@@ -56,11 +56,11 @@ public class A3WebUI(
             [SharedFolderType.Karlo] = new[] { "models/karlo" },
             [SharedFolderType.TextualInversion] = new[] { "embeddings" },
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
-            [SharedFolderType.ControlNet] = new[] { "models/ControlNet" },
+            [SharedFolderType.ControlNet] = new[] { "models/controlnet/ControlNet" },
             [SharedFolderType.Codeformer] = new[] { "models/Codeformer" },
             [SharedFolderType.LDSR] = new[] { "models/LDSR" },
             [SharedFolderType.AfterDetailer] = new[] { "models/adetailer" },
-            [SharedFolderType.T2IAdapter] = new[] { "models/controlnet" },
+            [SharedFolderType.T2IAdapter] = new[] { "models/controlnet/T2IAdapter" },
             [SharedFolderType.IpAdapter] = new[] { "models/ipadapter" }
         };
 
@@ -278,4 +278,23 @@ public class A3WebUI(
             )
             .ConfigureAwait(false);
     }
+
+    /// <inheritdoc />
+    public override async Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
+    {
+        // Migration for `controlnet` -> `controlnet/ControlNet` and `controlnet/T2IAdapter`
+        // If the original link exists, delete it first
+        if (installDirectory.JoinDir("models/controlnet") is { IsSymbolicLink: true } controlnetOldLink)
+        {
+            Logger.Info("Migration: Removing old controlnet link {Path}", controlnetOldLink);
+            await controlnetOldLink.DeleteAsync(true).ConfigureAwait(false);
+        }
+
+        // Resume base setup
+        await base.SetupModelFolders(installDirectory, sharedFolderMethod).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public override Task UpdateModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) =>
+        SetupModelFolders(installDirectory, sharedFolderMethod);
 }

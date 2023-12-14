@@ -21,7 +21,11 @@
                  <ResourceInclude Source="Styles/ContextMenuStyles.axaml"/>
                  <ResourceInclude Source="Controls/EditorFlyouts.axaml"/>
                  <ResourceInclude Source="Controls/Scroll/BetterScrollViewer.axaml"/>
-                 <ResourceInclude Source="Controls/ImageFolderCard.axaml"/>
+                 <ResourceInclude Source="Styles/ControlThemes/HyperlinkIconButtonStyles.axaml"/>
+                 <ResourceInclude Source="Styles/ControlThemes/ListBoxStyles.axaml"/>
+                 <ResourceInclude Source="Styles/ListBoxStyles.axaml"/>
+                 <ResourceInclude Source="Styles/FAComboBoxStyles.axaml"/>
+                 <ResourceInclude Source="Controls/Inference/ImageFolderCard.axaml"/>
              </ResourceDictionary.MergedDictionaries>
              
              <idcr:ControlRecycling x:Key="ControlRecyclingKey" />
@@ -39,29 +43,35 @@
         <StyleInclude Source="avares://Dock.Avalonia/Themes/DockFluentTheme.axaml" />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
+        <StyleInclude Source="avares://Avalonia.Xaml.Interactions.Draggable/Styles.axaml" />
+        <StyleInclude Source="avares://FluentAvalonia.BreadcrumbBar/Styling/Styles.axaml" />
         <StyleInclude Source="Styles/ProgressRing.axaml"/>
         <StyleInclude Source="Styles/ButtonStyles.axaml"/>
         <StyleInclude Source="Styles/SplitButtonStyles.axaml"/>
         <StyleInclude Source="Styles/ToggleButtonStyles.axaml"/>
         <StyleInclude Source="Styles/DockStyles.axaml"/>
         <StyleInclude Source="Styles/BorderStyles.axaml"/>
-        <StyleInclude Source="Controls/SeedCard.axaml"/>
-        <StyleInclude Source="Controls/SamplerCard.axaml"/>
-        <StyleInclude Source="Controls/ImageGalleryCard.axaml"/>
-        <StyleInclude Source="Controls/PromptCard.axaml"/>
-        <StyleInclude Source="Controls/StackCard.axaml"/>
-        <StyleInclude Source="Controls/UpscalerCard.axaml"/>
-        <StyleInclude Source="Controls/StackExpander.axaml"/>
-        <StyleInclude Source="Controls/ModelCard.axaml"/>
-        <StyleInclude Source="Controls/BatchSizeCard.axaml"/>
         <StyleInclude Source="Controls/AdvancedImageBox.axaml"/>
         <StyleInclude Source="Controls/FrameCarousel.axaml"/>
         <StyleInclude Source="Controls/CodeCompletion/CompletionWindow.axaml"/>
-        <StyleInclude Source="Controls/SelectImageCard.axaml"/>
-        <StyleInclude Source="Controls/SharpenCard.axaml"/>
-        <StyleInclude Source="Controls/FreeUCard.axaml"/>
         <StyleInclude Source="Controls/Paginator.axaml"/>
         <StyleInclude Source="Controls/SelectableImageCard/SelectableImageButton.axaml"/>
+        <StyleInclude Source="Controls/SettingsAccountLinkExpander.axaml"/>
+        <StyleInclude Source="Controls/StarsRating.axaml"/>
+        <StyleInclude Source="Controls/Inference/StackCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/StackEditableCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/StackExpander.axaml"/>
+        <StyleInclude Source="Controls/Inference/SeedCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/SamplerCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/ImageGalleryCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/PromptCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/UpscalerCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/ModelCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/BatchSizeCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/SelectImageCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/SharpenCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/FreeUCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/ControlNetCard.axaml"/>
         
         <Style Selector="DockControl">
             <Setter Property="(DockProperties.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />

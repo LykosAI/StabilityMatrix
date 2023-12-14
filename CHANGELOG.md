@@ -5,6 +5,178 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.7.0
+### Added
+#### General
+- New package: [RuinedFooocus](https://github.com/runew0lf/RuinedFooocus)
+- Added an X button to all search fields to instantly clear them (Esc key also works)
+- Added System Information section to Settings
+#### Inference
+- Added Image to Image project type
+- Added Modular custom steps
+  - Use the plus button to add new steps (Hires Fix, Upscaler, and Save Image are currently available), and the edit button to enable removing or dragging steps to reorder them. This enables multi-pass Hires Fix, mixing different upscalers, and saving intermediate images at any point in the pipeline.
+- Added Sampler addons
+  - Addons usually affect guidance like ControlNet, T2I, FreeU, and other addons to come. They apply to the individual sampler, so you can mix and match different ControlNets for Base and Hires Fix, or use the current output from a previous sampler as ControlNet guidance image for HighRes passes.
+- Added SD Turbo Scheduler
+- Added display names for new samplers ("Heun++ 2", "DDPM", "LCM")
+- Added Ctrl+Enter as a shortcut for the Generate Image button
+#### Accounts Settings Subpage
+- Lykos Account sign-up and login - currently for Patreon OAuth connections but GitHub requests caching and settings sync are planned
+- Supporters can now connect your Patreon accounts, then head to the Updates page to choose to receive auto-updates from the Dev or Preview channels
+- CivitAI Account login with API key - enables downloading models from the Browser page that require CivitAI logins, more integrations like liking and commenting are also planned
+#### Updates Settings Subpage
+- Toggle auto-update notifications and manually check for updates
+- Choose between Stable, Preview, and Dev update channels
+#### Inference Settings Subpage
+- Moved Inference settings to subpage
+- Updated with more localized labels
+#### Outputs Page
+- Added Refresh button to update gallery from file system changes
+#### Checkpoints Page
+- Added the ability to drag & drop checkpoints between different folders 
+- Added "Copy Trigger Words" option to the three-dots menu on the Checkpoints page (when data is available)
+- Added trigger words on checkpoint card and tooltip
+- Added "Find Connected Metadata" options for root-level and file-level scans
+- Added "Update Existing Metadata" button
+#### Model Browser
+- Added Hugging Face tab to the Model Browser
+- Added additional base model filter options for CivitAI ("SD 1.5 LCM", "SDXL 1.0 LCM", "SDXL Turbo", "Other")
+- Added the ability to type in a specific page number in the CivitAI Model Browser
+- Right clicking anywhere on the model card will open the same menu as the three-dots button
+- New model downloads will save trigger words in metadata, if available
+- Model author username and avatar display, with clickable link to their profile
+### Changed
+#### General
+- Model Browser page has been redesigned, featuring more information like rating and download counts
+- Model Browser navigation has improved animations on hover and compact number formatting
+- Updated Outputs Page button and menu layout
+- Rearranged Add Package dialog slightly to accommodate longer package list
+- Folder-level "Find Connected Metadata" now scans the selected folder and its subfolders
+- Model Browser now split into "CivitAI" and "Hugging Face" tabs
+#### Inference
+- Selected images (i.e. Image2Image, Upscale, ControlNet) will now save their source paths saved and restored on load. If the image is moved or deleted, the selection will show as missing and can be reselected
+- Project files (.smproj) have been updated to v3, existing projects will be upgraded on load and will no longer be compatible with older versions of Stability Matrix
+### Fixed
+- Fixed Outputs page reverting back to Shared Output Folder every time the page is reloaded
+- Potentially fixed updates sometimes clearing settings or launching in the wrong directory
+- Improved startup time and window load time after exiting dialogs
+- Fixed control character decoding that caused some progress bars to show as `\u2588`
+- Fixed Python `rich` package's progress bars not showing in console
+- Optimized ProgressRing animation bindings to reduce CPU usage
+- Improved safety checks in custom control rendering to reduce potential graphical artifacts
+- Improved console rendering safety with cursor line increment clamping, as potential fix for [#111](https://github.com/LykosAI/StabilityMatrix/issues/111)
+- Fixed [#290](https://github.com/LykosAI/StabilityMatrix/issues/290) - Model browser crash due to text trimming certain unicode characters
+- Fixed crash when loading an empty settings file
+- Improve Settings save and load performance with .NET 8 Source Generating Serialization
+- Fixed ApplicationException during database shutdown
+- InvokeAI model links for T2I/IpAdapters now point to the correct folders
+- Added extra checks to help prevent settings resetting in certain scenarios
+- Fixed Refiner model enabled state not saving to Inference project files
+- Fixed NullReference error labels when clearing the Inference batch size settings, now shows improved message with minimum and maximum value constraints
+
+## v2.7.0-pre.4
+### Added
+#### Inference
+- Added Image to Image project type
+- Added Modular custom steps
+  - Use the plus button to add new steps (Hires Fix, Upscaler, and Save Image are currently available), and the edit button to enable removing or dragging steps to reorder them. This enables multi-pass Hires Fix, mixing different upscalers, and saving intermediate images at any point in the pipeline.
+- Added Sampler addons
+  - Addons usually affect guidance like ControlNet, T2I, FreeU, and other addons to come. They apply to the individual sampler, so you can mix and match different ControlNets for Base and Hires Fix, or use the current output from a previous sampler as ControlNet guidance image for HighRes passes.
+- Added SD Turbo Scheduler
+- Added display names for new samplers ("Heun++ 2", "DDPM", "LCM")
+#### Model Browser
+- Added additional base model filter options ("SD 1.5 LCM", "SDXL 1.0 LCM", "SDXL Turbo", "Other")
+### Changed
+#### Inference
+- Selected images (i.e. Image2Image, Upscale, ControlNet) will now save their source paths saved and restored on load. If the image is moved or deleted, the selection will show as missing and can be reselected
+- Project files (.smproj) have been updated to v3, existing projects will be upgraded on load and will no longer be compatible with older versions of Stability Matrix
+### Fixed
+- Fixed Refiner model enabled state not saving to Inference project files
+ 
+## v2.7.0-pre.3
+### Added
+- Added "Find Connected Metadata" options for root-level and file-level scans to the Checkpoints page
+- Added "Update Existing Metadata" button to the Checkpoints page
+- Added Hugging Face tab to the Model Browser
+- Added the ability to type in a specific page number in the CivitAI Model Browser
+### Changed
+- Folder-level "Find Connected Metadata" now scans the selected folder and its subfolders
+- Model Browser now split into "CivitAI" and "Hugging Face" tabs
+### Fixed
+- InvokeAI model links for T2I/IpAdapters now point to the correct folders
+- Added extra checks to help prevent settings resetting in certain scenarios
+
+## v2.7.0-pre.2
+### Added
+- Added System Information section to Settings
+### Changed
+- Moved Inference Settings to subpage
+### Fixed
+- Fixed crash when loading an empty settings file
+- Improve Settings save and load performance with .NET 8 Source Generating Serialization
+- Fixed ApplicationException during database shutdown
+
+## v2.7.0-pre.1
+### Fixed
+- Fixed control character decoding that caused some progress bars to show as `\u2588`
+- Fixed Python `rich` package's progress bars not showing in console
+- Optimized ProgressRing animation bindings to reduce CPU usage
+- Improved safety checks in custom control rendering to reduce potential graphical artifacts
+- Improved console rendering safety with cursor line increment clamping, as potential fix for [#111](https://github.com/LykosAI/StabilityMatrix/issues/111)
+
+## v2.7.0-dev.4
+### Fixed
+- Fixed [#290](https://github.com/LykosAI/StabilityMatrix/issues/290) - Model browser crash due to text trimming certain unicode characters 
+
+## v2.7.0-dev.3
+### Added
+- New package: [RuinedFooocus](https://github.com/runew0lf/RuinedFooocus)
+#### Model Browser
+- Right clicking anywhere on the model card will open the same menu as the three-dots button
+- New model downloads will save trigger words in metadata, if available
+- Model author username and avatar display, with clickable link to their profile
+#### Checkpoints Page
+- Added "Copy Trigger Words" option to the three-dots menu on the Checkpoints page (when data is available)
+- Added trigger words on checkpoint card and tooltip
+### Changed
+#### Model Browser
+- Improved number formatting with K/M suffixes for download and favorite counts
+- Animated zoom effect on hovering over model images
+#### Checkpoints Page
+- Rearranged top row layout to use CommandBar
+### Fixed
+- Improved startup time and window load time after exiting dialogs
+
+## v2.7.0-dev.2
+### Added
+#### General
+- Added an X button to all search fields to instantly clear them (Esc key also works) 
+#### Outputs Page 
+- Added Refresh button to update gallery from file system changes
+#### Checkpoints Page
+- Added the ability to drag & drop checkpoints between different folders
+### Changed
+#### Outputs Page
+- Updated button and menu layout
+#### Packages Page
+- Rearranged Add Package dialog slightly to accommodate longer package list
+### Fixed
+- Fixed InvalidOperation errors when signing into accounts shortly after signing out, while the previous account update is still running
+- Fixed Outputs page reverting back to Shared Output Folder every time the page is reloaded
+- Potentially fixed updates sometimes clearing settings or launching in the wrong directory
+
+## v2.7.0-dev.1
+### Added
+- Accounts Settings Subpage
+  - Lykos Account sign-up and login - currently for Patreon OAuth connections but GitHub requests caching and settings sync are planned
+  - Supporters can now connect your Patreon accounts, then head to the Updates page to choose to receive auto-updates from the Dev or Preview channels
+  - CivitAI Account login with API key - enables downloading models from the Browser page that require CivitAI logins, more integrations like liking and commenting are also planned
+- Updates Settings Subpage
+  - Toggle auto-update notifications and manually check for updates
+  - Choose between Stable, Preview, and Dev update channels
+### Changed
+- Model Browser page has been redesigned, featuring more information like rating and download counts
+
 ## v2.6.7
 ### Fixed
 - Fixed prerequisite install not unpacking due to improperly formatted 7z argument (Caused the "python310._pth FileNotFoundException")

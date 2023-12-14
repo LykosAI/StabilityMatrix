@@ -1,0 +1,22 @@
+﻿using System.Diagnostics.CodeAnalysis;
+using Avalonia;
+using Avalonia.Controls.Primitives;
+using StabilityMatrix.Core.Attributes;
+
+namespace StabilityMatrix.Avalonia.Controls;
+
+[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+[Transient]
+public class StackCard : TemplatedControl
+{
+    public static readonly StyledProperty<int> SpacingProperty = AvaloniaProperty.Register<StackCard, int>(
+        "Spacing",
+        4
+    );
+
+    public int Spacing
+    {
+        get => GetValue(SpacingProperty);
+        set => SetValue(SpacingProperty, value);
+    }
+}

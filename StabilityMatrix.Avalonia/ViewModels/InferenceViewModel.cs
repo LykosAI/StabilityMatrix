@@ -41,8 +41,8 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 
 [Preload]
 [View(typeof(InferencePage))]
-[Singleton]
-public partial class InferenceViewModel : PageViewModelBase
+[Singleton, Singleton(typeof(IAsyncDisposable))]
+public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly INotificationService notificationService;
@@ -52,11 +52,8 @@ public partial class InferenceViewModel : PageViewModelBase
     private readonly IModelIndexService modelIndexService;
     private readonly ILiteDbContext liteDbContext;
 
-    private bool isFirstLoadComplete;
-
     public override string Title => "Inference";
-    public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.AppGeneric, IsFilled = true };
+    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.AppGeneric, IsFilled = true };
 
     public RefreshBadgeViewModel ConnectionBadge { get; } =
         new()
@@ -123,67 +120,69 @@ public partial class InferenceViewModel : PageViewModelBase
     /// Also starts a connection to the backend if a new ComfyUI package is running.
     /// And disconnects if the package is closed.
     /// </summary>
-    private void OnRunningPackageStatusChanged(
-        object? sender,
-        RunningPackageStatusChangedEventArgs e
-    )
+    private void OnRunningPackageStatusChanged(object? sender, RunningPackageStatusChangedEventArgs e)
     {
         RunningPackage = e.CurrentPackagePair;
 
         IDisposable? onStartupComplete = null;
 
-        Dispatcher.UIThread.Post(() =>
-        {
-            if (e.CurrentPackagePair?.BasePackage is ComfyUI package)
+        Dispatcher
+            .UIThread
+            .Post(() =>
             {
-                IsWaitingForConnection = true;
-                onStartupComplete = Observable
-                    .FromEventPattern<string>(package, nameof(package.StartupComplete))
-                    .Take(1)
-                    .Subscribe(_ =>
-                    {
-                        Dispatcher.UIThread.Post(() =>
-                        {
-                            if (ConnectCommand.CanExecute(null))
-                            {
-                                Logger.Trace("On package launch - starting connection");
-                                ConnectCommand.Execute(null);
-                            }
-                            IsWaitingForConnection = false;
-                        });
-                    });
-            }
-            else
-            {
-                // Cancel any pending connection
-                if (ConnectCancelCommand.CanExecute(null))
+                if (e.CurrentPackagePair?.BasePackage is ComfyUI package)
                 {
-                    ConnectCancelCommand.Execute(null);
+                    IsWaitingForConnection = true;
+                    onStartupComplete = Observable
+                        .FromEventPattern<string>(package, nameof(package.StartupComplete))
+                        .Take(1)
+                        .Subscribe(_ =>
+                        {
+                            Dispatcher
+                                .UIThread
+                                .Post(() =>
+                                {
+                                    if (ConnectCommand.CanExecute(null))
+                                    {
+                                        Logger.Trace("On package launch - starting connection");
+                                        ConnectCommand.Execute(null);
+                                    }
+                                    IsWaitingForConnection = false;
+                                });
+                        });
                 }
-                onStartupComplete?.Dispose();
-                onStartupComplete = null;
-                IsWaitingForConnection = false;
+                else
+                {
+                    // Cancel any pending connection
+                    if (ConnectCancelCommand.CanExecute(null))
+                    {
+                        ConnectCancelCommand.Execute(null);
+                    }
+                    onStartupComplete?.Dispose();
+                    onStartupComplete = null;
+                    IsWaitingForConnection = false;
 
-                // Disconnect
-                Logger.Trace("On package close - disconnecting");
-                DisconnectCommand.Execute(null);
-            }
-        });
+                    // Disconnect
+                    Logger.Trace("On package close - disconnecting");
+                    DisconnectCommand.Execute(null);
+                }
+            });
     }
 
     public override void OnLoaded()
     {
-        if (!Design.IsDesignMode && !isFirstLoadComplete)
-        {
-            isFirstLoadComplete = true;
-            OnInitialLoad().SafeFireAndForget();
-        }
+        base.OnLoaded();
 
         modelIndexService.BackgroundRefreshIndex();
     }
 
-    private async Task OnInitialLoad()
+    protected override async Task OnInitialLoadedAsync()
     {
+        await base.OnInitialLoadedAsync();
+
+        if (Design.IsDesignMode)
+            return;
+
         // Load any open projects
         var openProjects = await liteDbContext.InferenceProjects.FindAsync(p => p.IsOpen);
 
@@ -217,14 +216,9 @@ public partial class InferenceViewModel : PageViewModelBase
                     );
 
                     // Set not open
-                    await liteDbContext.InferenceProjects.UpdateAsync(
-                        project with
-                        {
-                            IsOpen = false,
-                            IsSelected = false,
-                            CurrentTabIndex = -1
-                        }
-                    );
+                    await liteDbContext
+                        .InferenceProjects
+                        .UpdateAsync(project with { IsOpen = false, IsSelected = false, CurrentTabIndex = -1 });
                 }
             }
         }
@@ -233,6 +227,16 @@ public partial class InferenceViewModel : PageViewModelBase
         {
             AddTab(InferenceProjectType.TextToImage);
         }
+    }
+
+    /// <summary>
+    /// On exit, sync tab states to database
+    /// </summary>
+    public async ValueTask DisposeAsync()
+    {
+        await SyncTabStatesWithDatabase();
+
+        GC.SuppressFinalize(this);
     }
 
     private void OnInferenceTextToImageRequested(object? sender, LocalImageFile e)
@@ -260,25 +264,15 @@ public partial class InferenceViewModel : PageViewModelBase
 
             var projectPath = projectFile.ToString();
 
-            var entry = await liteDbContext.InferenceProjects.FindOneAsync(
-                p => p.FilePath == projectPath
-            );
+            var entry = await liteDbContext.InferenceProjects.FindOneAsync(p => p.FilePath == projectPath);
 
             // Create if not found
-            entry ??= new InferenceProjectEntry
-            {
-                Id = Guid.NewGuid(),
-                FilePath = projectFile.ToString()
-            };
+            entry ??= new InferenceProjectEntry { Id = Guid.NewGuid(), FilePath = projectFile.ToString() };
 
             entry.IsOpen = tab == SelectedTab;
             entry.CurrentTabIndex = i;
 
-            Logger.Trace(
-                "SyncTabStatesWithDatabase updated entry for tab '{Title}': {@Entry}",
-                tab.TabTitle,
-                entry
-            );
+            Logger.Trace("SyncTabStatesWithDatabase updated entry for tab '{Title}': {@Entry}", tab.TabTitle, entry);
             await liteDbContext.InferenceProjects.UpsertAsync(entry);
         }
     }
@@ -293,25 +287,15 @@ public partial class InferenceViewModel : PageViewModelBase
             return;
         }
 
-        var entry = await liteDbContext.InferenceProjects.FindOneAsync(
-            p => p.FilePath == projectFile.ToString()
-        );
+        var entry = await liteDbContext.InferenceProjects.FindOneAsync(p => p.FilePath == projectFile.ToString());
 
         // Create if not found
-        entry ??= new InferenceProjectEntry
-        {
-            Id = Guid.NewGuid(),
-            FilePath = projectFile.ToString()
-        };
+        entry ??= new InferenceProjectEntry { Id = Guid.NewGuid(), FilePath = projectFile.ToString() };
 
         entry.IsOpen = tab == SelectedTab;
         entry.CurrentTabIndex = Tabs.IndexOf(tab);
 
-        Logger.Trace(
-            "SyncTabStatesWithDatabase updated entry for tab '{Title}': {@Entry}",
-            tab.TabTitle,
-            entry
-        );
+        Logger.Trace("SyncTabStatesWithDatabase updated entry for tab '{Title}': {@Entry}", tab.TabTitle, entry);
         await liteDbContext.InferenceProjects.UpsertAsync(entry);
     }
 
@@ -424,10 +408,7 @@ public partial class InferenceViewModel : PageViewModelBase
             return;
         }
 
-        await notificationService.TryAsync(
-            ClientManager.CloseAsync(),
-            "Could not disconnect from ComfyUI backend"
-        );
+        await notificationService.TryAsync(ClientManager.CloseAsync(), "Could not disconnect from ComfyUI backend");
     }
 
     /// <summary>
@@ -483,11 +464,7 @@ public partial class InferenceViewModel : PageViewModelBase
             await using var stream = await result.OpenWriteAsync();
             stream.SetLength(0); // Overwrite fully
 
-            await JsonSerializer.SerializeAsync(
-                stream,
-                document,
-                new JsonSerializerOptions { WriteIndented = true }
-            );
+            await JsonSerializer.SerializeAsync(stream, document, new JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception e)
         {
@@ -504,11 +481,7 @@ public partial class InferenceViewModel : PageViewModelBase
 
         await SyncTabStatesWithDatabase();
 
-        notificationService.Show(
-            "Saved",
-            $"Saved project to {result.Name}",
-            NotificationType.Success
-        );
+        notificationService.Show("Saved", $"Saved project to {result.Name}", NotificationType.Success);
     }
 
     /// <summary>
@@ -539,11 +512,7 @@ public partial class InferenceViewModel : PageViewModelBase
             await using var stream = projectFile.Info.OpenWrite();
             stream.SetLength(0); // Overwrite fully
 
-            await JsonSerializer.SerializeAsync(
-                stream,
-                document,
-                new JsonSerializerOptions { WriteIndented = true }
-            );
+            await JsonSerializer.SerializeAsync(stream, document, new JsonSerializerOptions { WriteIndented = true });
         }
         catch (Exception e)
         {
@@ -555,11 +524,7 @@ public partial class InferenceViewModel : PageViewModelBase
             return;
         }
 
-        notificationService.Show(
-            "Saved",
-            $"Saved project to {projectFile.Name}",
-            NotificationType.Success
-        );
+        notificationService.Show("Saved", $"Saved project to {projectFile.Name}", NotificationType.Success);
     }
 
     private async Task AddTabFromFile(FilePath file)
@@ -569,9 +534,7 @@ public partial class InferenceViewModel : PageViewModelBase
         var document = await JsonSerializer.DeserializeAsync<InferenceProjectDocument>(stream);
         if (document is null)
         {
-            throw new ApplicationException(
-                "MenuOpenProject: Deserialize project file returned null"
-            );
+            throw new ApplicationException("MenuOpenProject: Deserialize project file returned null");
         }
 
         if (document.State is null)
@@ -581,23 +544,16 @@ public partial class InferenceViewModel : PageViewModelBase
 
         document.VerifyVersion();
 
-        InferenceTabViewModelBase vm;
-        if (document.ProjectType is InferenceProjectType.TextToImage)
+        if (
+            document.ProjectType.ToViewModelType() is not { } vmType
+            || vmFactory.Get(vmType) is not InferenceTabViewModelBase vm
+        )
         {
-            // Get view model
-            var textToImage = vmFactory.Get<InferenceTextToImageViewModel>();
-            // Load state
-            textToImage.LoadStateFromJsonObject(document.State);
-            // Set the file backing the view model
-            textToImage.ProjectFile = file;
-            vm = textToImage;
+            throw new InvalidOperationException($"Unsupported project type: {document.ProjectType}");
         }
-        else
-        {
-            throw new InvalidOperationException(
-                $"Unsupported project type: {document.ProjectType}"
-            );
-        }
+
+        vm.LoadStateFromJsonObject(document.State);
+        vm.ProjectFile = file;
 
         Tabs.Add(vm);
 
@@ -616,9 +572,7 @@ public partial class InferenceViewModel : PageViewModelBase
             var document = JsonSerializer.Deserialize<InferenceProjectDocument>(metadata.SMProject);
             if (document is null)
             {
-                throw new ApplicationException(
-                    "MenuOpenProject: Deserialize project file returned null"
-                );
+                throw new ApplicationException("MenuOpenProject: Deserialize project file returned null");
             }
 
             if (document.State is null)

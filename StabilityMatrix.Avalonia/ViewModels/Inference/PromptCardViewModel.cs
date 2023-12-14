@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
@@ -16,6 +18,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -23,7 +26,10 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(PromptCard))]
 [ManagedService]
 [Transient]
-public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoadableState
+public partial class PromptCardViewModel
+    : LoadableViewModelBase,
+        IParametersLoadableState,
+        IComfyStep
 {
     private readonly IModelIndexService modelIndexService;
 
@@ -62,6 +68,114 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
             settings => settings.IsPromptCompletionEnabled,
             true
         );
+    }
+
+    /// <summary>
+    /// Applies the prompt step.
+    /// Requires:
+    /// <list type="number">
+    /// <item><see cref="ComfyNodeBuilder.NodeBuilderConnections.BaseModel"/></item>
+    /// <item><see cref="ComfyNodeBuilder.NodeBuilderConnections.BaseClip"/></item>
+    /// </list>
+    /// Provides:
+    /// <list type="number">
+    /// <item><see cref="ComfyNodeBuilder.NodeBuilderConnections.BaseConditioning"/></item>
+    /// <item><see cref="ComfyNodeBuilder.NodeBuilderConnections.BaseNegativeConditioning"/></item>
+    /// </list>
+    /// </summary>
+    public void ApplyStep(ModuleApplyStepEventArgs e)
+    {
+        // Load prompts
+        var positivePrompt = GetPrompt();
+        positivePrompt.Process();
+        var negativePrompt = GetNegativePrompt();
+        negativePrompt.Process();
+
+        // If need to load loras, add a group
+        if (positivePrompt.ExtraNetworks.Count > 0)
+        {
+            var loras = positivePrompt.GetExtraNetworksAsLocalModels(modelIndexService).ToList();
+            // Add group to load loras onto model and clip in series
+            var lorasGroup = e.Builder.Group_LoraLoadMany(
+                "Loras",
+                e.Builder.Connections.BaseModel ?? throw new ArgumentException("BaseModel is null"),
+                e.Builder.Connections.BaseClip ?? throw new ArgumentException("BaseClip is null"),
+                loras
+            );
+
+            // Set last outputs as base model and clip
+            e.Builder.Connections.BaseModel = lorasGroup.Output1;
+            e.Builder.Connections.BaseClip = lorasGroup.Output2;
+
+            // Refiner loras
+            if (e.Builder.Connections.RefinerModel is not null)
+            {
+                // Add group to load loras onto refiner model and clip in series
+                var lorasGroupRefiner = e.Builder.Group_LoraLoadMany(
+                    "Refiner_Loras",
+                    e.Builder.Connections.RefinerModel
+                        ?? throw new ArgumentException("RefinerModel is null"),
+                    e.Builder.Connections.RefinerClip
+                        ?? throw new ArgumentException("RefinerClip is null"),
+                    loras
+                );
+
+                // Set last outputs as refiner model and clip
+                e.Builder.Connections.RefinerModel = lorasGroupRefiner.Output1;
+                e.Builder.Connections.RefinerClip = lorasGroupRefiner.Output2;
+            }
+        }
+
+        // Clips
+        var positiveClip = e.Builder.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.CLIPTextEncode
+            {
+                Name = "PositiveCLIP",
+                Clip = e.Builder.Connections.BaseClip!,
+                Text = positivePrompt.ProcessedText
+            }
+        );
+        var negativeClip = e.Builder.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.CLIPTextEncode
+            {
+                Name = "NegativeCLIP",
+                Clip = e.Builder.Connections.BaseClip!,
+                Text = negativePrompt.ProcessedText
+            }
+        );
+
+        // Set base conditioning from Clips
+        e.Builder.Connections.BaseConditioning = positiveClip.Output;
+        e.Builder.Connections.BaseNegativeConditioning = negativeClip.Output;
+
+        // Refiner Clips
+        if (e.Builder.Connections.RefinerModel is not null)
+        {
+            var positiveClipRefiner = e.Builder.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.CLIPTextEncode
+                {
+                    Name = "Refiner_PositiveCLIP",
+                    Clip =
+                        e.Builder.Connections.RefinerClip
+                        ?? throw new ArgumentException("RefinerClip is null"),
+                    Text = positivePrompt.ProcessedText
+                }
+            );
+            var negativeClipRefiner = e.Builder.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.CLIPTextEncode
+                {
+                    Name = "Refiner_NegativeCLIP",
+                    Clip =
+                        e.Builder.Connections.RefinerClip
+                        ?? throw new ArgumentException("RefinerClip is null"),
+                    Text = negativePrompt.ProcessedText
+                }
+            );
+
+            // Set refiner conditioning from Clips
+            e.Builder.Connections.RefinerConditioning = positiveClipRefiner.Output;
+            e.Builder.Connections.RefinerNegativeConditioning = negativeClipRefiner.Output;
+        }
     }
 
     /// <summary>

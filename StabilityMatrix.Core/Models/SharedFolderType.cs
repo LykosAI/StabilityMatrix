@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Core.Models;
 
@@ -7,6 +8,7 @@ namespace StabilityMatrix.Core.Models;
 [Flags]
 public enum SharedFolderType
 {
+    [Description("Base Models")]
     StableDiffusion = 1 << 0,
     Lora = 1 << 1,
     LyCORIS = 1 << 2,
@@ -21,6 +23,8 @@ public enum SharedFolderType
     ApproxVAE = 1 << 11,
     Karlo = 1 << 12,
     DeepDanbooru = 1 << 13,
+
+    [Description("TextualInversion (Embeddings)")]
     TextualInversion = 1 << 14,
     Hypernetwork = 1 << 15,
     ControlNet = 1 << 16,
@@ -29,5 +33,10 @@ public enum SharedFolderType
     ScuNET = 1 << 19,
     GLIGEN = 1 << 20,
     AfterDetailer = 1 << 21,
-    IpAdapter = 1 << 22
+    IpAdapter = 1 << 22,
+    T2IAdapter = 1 << 23,
+
+    InvokeIpAdapters15 = 1 << 24,
+    InvokeIpAdaptersXl = 1 << 25,
+    InvokeClipVision = 1 << 26,
 }

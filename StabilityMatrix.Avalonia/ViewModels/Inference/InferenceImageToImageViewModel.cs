@@ -32,6 +32,8 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
         : base(notificationService, inferenceClientManager, settingsManager, vmFactory, modelIndexService)
     {
         SelectImageCardViewModel = vmFactory.Get<SelectImageCardViewModel>();
+
+        SamplerCardViewModel.IsDenoiseStrengthEnabled = true;
     }
 
     /// <inheritdoc />

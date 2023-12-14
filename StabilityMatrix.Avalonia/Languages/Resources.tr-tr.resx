@@ -1,0 +1,783 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Action_Launch" xml:space="preserve">
+    <value>Başlat</value>
+  </data>
+  <data name="Action_Quit" xml:space="preserve">
+    <value>Çıkış</value>
+  </data>
+  <data name="Action_Save" xml:space="preserve">
+    <value>Kaydet</value>
+  </data>
+  <data name="Action_Cancel" xml:space="preserve">
+    <value>İptal</value>
+  </data>
+  <data name="Label_Language" xml:space="preserve">
+    <value>Dil</value>
+  </data>
+  <data name="Text_RelaunchRequiredToApplyLanguage" xml:space="preserve">
+    <value>Yeni dil seçeneğinin etkili olması için yeniden başlatma gerekiyor</value>
+  </data>
+  <data name="Action_Relaunch" xml:space="preserve">
+    <value>Yeniden başlat</value>
+  </data>
+  <data name="Action_RelaunchLater" xml:space="preserve">
+    <value>Daha Sonra Yeniden Başlat</value>
+  </data>
+  <data name="Label_RelaunchRequired" xml:space="preserve">
+    <value>Yeniden Başlatma Gerekli</value>
+  </data>
+  <data name="Label_UnknownPackage" xml:space="preserve">
+    <value>Bilinmeyen Paket</value>
+  </data>
+  <data name="Action_Import" xml:space="preserve">
+    <value>İçe Aktar</value>
+  </data>
+  <data name="Label_PackageType" xml:space="preserve">
+    <value>Paket Türü</value>
+  </data>
+  <data name="Label_Version" xml:space="preserve">
+    <value>Sürüm</value>
+  </data>
+  <data name="Label_VersionType" xml:space="preserve">
+    <value>Sürüm Türü</value>
+  </data>
+  <data name="Label_Releases" xml:space="preserve">
+    <value>Sürümler</value>
+  </data>
+  <data name="Label_Branches" xml:space="preserve">
+    <value>Dallar</value>
+  </data>
+  <data name="Label_DragAndDropCheckpointsHereToImport" xml:space="preserve">
+    <value>İçe aktarmak için chekpoints&apos;leri buraya sürükleyip bırakın</value>
+  </data>
+  <data name="Label_Emphasis" xml:space="preserve">
+    <value>Vurgu</value>
+  </data>
+  <data name="Label_Deemphasis" xml:space="preserve">
+    <value>Vurguyu Kaldırma</value>
+  </data>
+  <data name="Label_EmbeddingsOrTextualInversion" xml:space="preserve">
+    <value>Emebeddings / Textual Inversion</value>
+  </data>
+  <data name="Label_NetworksLoraOrLycoris" xml:space="preserve">
+    <value>Networks (Lora / LyCORIS)</value>
+  </data>
+  <data name="Label_Comments" xml:space="preserve">
+    <value>Yorumlar</value>
+  </data>
+  <data name="Label_ShowPixelGridAtHighZoomLevels" xml:space="preserve">
+    <value>Yüksek yakınlaştırma seviyesinde piksel ızgarasını göster</value>
+  </data>
+  <data name="Label_Steps" xml:space="preserve">
+    <value>Adımlar</value>
+  </data>
+  <data name="Label_StepsBase" xml:space="preserve">
+    <value>Adımlar - Temel</value>
+  </data>
+  <data name="Label_StepsRefiner" xml:space="preserve">
+    <value>Adımlar - İyileştirici</value>
+  </data>
+  <data name="Label_CFGScale" xml:space="preserve">
+    <value>CFG Ölçeği</value>
+  </data>
+  <data name="Label_DenoisingStrength" xml:space="preserve">
+    <value>Gürültü Azaltma Gücü</value>
+  </data>
+  <data name="Label_Width" xml:space="preserve">
+    <value>Genişlik</value>
+  </data>
+  <data name="Label_Height" xml:space="preserve">
+    <value>Yükseklik</value>
+  </data>
+  <data name="Label_Refiner" xml:space="preserve">
+    <value>İyileştirici</value>
+  </data>
+  <data name="Label_VAE" xml:space="preserve">
+    <value>VAE</value>
+  </data>
+  <data name="Label_Model" xml:space="preserve">
+    <value>Model</value>
+  </data>
+  <data name="Action_Connect" xml:space="preserve">
+    <value>Bağlan</value>
+  </data>
+  <data name="Label_ConnectingEllipsis" xml:space="preserve">
+    <value>Bağlanıyor...</value>
+  </data>
+  <data name="Action_Close" xml:space="preserve">
+    <value>Kapat</value>
+  </data>
+  <data name="Label_WaitingToConnectEllipsis" xml:space="preserve">
+    <value>Bağlanmayı bekliyor...</value>
+  </data>
+  <data name="Label_UpdateAvailable" xml:space="preserve">
+    <value>Güncelleme Mevcut</value>
+  </data>
+  <data name="Label_BecomeAPatron" xml:space="preserve">
+    <value>Sponsor Ol</value>
+  </data>
+  <data name="Label_JoinDiscord" xml:space="preserve">
+    <value>Discord Sunucusuna Katıl</value>
+  </data>
+  <data name="Label_Downloads" xml:space="preserve">
+    <value>İndirmeler</value>
+  </data>
+  <data name="Action_Install" xml:space="preserve">
+    <value>Yükle</value>
+  </data>
+  <data name="Label_SkipSetup" xml:space="preserve">
+    <value>İlk kurulum işlemini atla</value>
+  </data>
+  <data name="Label_UnexpectedErrorOccurred" xml:space="preserve">
+    <value>Beklenmeyen bir hata oluştu</value>
+  </data>
+  <data name="Action_ExitApplication" xml:space="preserve">
+    <value>Uygulamadan Çık</value>
+  </data>
+  <data name="Label_DisplayName" xml:space="preserve">
+    <value>Görünen Ad</value>
+  </data>
+  <data name="Label_InstallationWithThisNameExists" xml:space="preserve">
+    <value>Bu ada sahip bir yükleme zaten mevcut.</value>
+  </data>
+  <data name="Label_PleaseChooseDifferentName" xml:space="preserve">
+    <value>Lütfen farklı bir ad seçin veya başka bir yükleme konumu seçin.</value>
+  </data>
+  <data name="Label_AdvancedOptions" xml:space="preserve">
+    <value>Gelişmiş Seçenekler</value>
+  </data>
+  <data name="Label_Commit" xml:space="preserve">
+    <value>İşlemek</value>
+  </data>
+  <data name="Label_SharedModelFolderStrategy" xml:space="preserve">
+    <value>Paylaşılan Model Klasör Stratejisi</value>
+  </data>
+  <data name="Label_PyTorchVersion" xml:space="preserve">
+    <value>PyTorch Sürümü</value>
+  </data>
+  <data name="Label_CloseDialogWhenFinished" xml:space="preserve">
+    <value>Bittiğinde iletişim kutusunu kapat</value>
+  </data>
+  <data name="Label_DataDirectory" xml:space="preserve">
+    <value>Veri Klasörü</value>
+  </data>
+  <data name="Label_DataDirectoryExplanation" xml:space="preserve">
+    <value>Model chekpoints, Lora&apos;ların, web UI&apos;lerin, ayarların vb. kurulacağı yer burasıdır.</value>
+  </data>
+  <data name="Label_FatWarning" xml:space="preserve">
+    <value>FAT32 veya exFAT sürücü kullanırken hatalarla karşılaşabilirsiniz. Daha sorunsuz bir deneyim için farklı bir sürücü seçin.</value>
+  </data>
+  <data name="Label_PortableMode" xml:space="preserve">
+    <value>Taşınabilir Mod</value>
+  </data>
+  <data name="Label_PortableModeExplanation" xml:space="preserve">
+    <value>Taşınabilir Modda tüm veriler ve ayarlar uygulamayla aynı dizinde saklanacaktır. Uygulamayı &apos;Veri&apos; klasörüyle birlikte farklı bir konuma veya bilgisayara taşıyabileceksiniz.</value>
+  </data>
+  <data name="Action_Continue" xml:space="preserve">
+    <value>Devam</value>
+  </data>
+  <data name="Label_PreviousImage" xml:space="preserve">
+    <value>Önceki Resim</value>
+  </data>
+  <data name="Label_NextImage" xml:space="preserve">
+    <value>Sonraki Resim</value>
+  </data>
+  <data name="Label_ModelDescription" xml:space="preserve">
+    <value>Model Açıklaması</value>
+  </data>
+  <data name="Label_NewVersionAvailable" xml:space="preserve">
+    <value>Stabilite Matrisi için yeni bir sürüm mevcut!</value>
+  </data>
+  <data name="Label_ImportLatest" xml:space="preserve">
+    <value>En Yeniyi İçe Aktar -</value>
+  </data>
+  <data name="Label_AllVersions" xml:space="preserve">
+    <value>Tüm Sürümler</value>
+  </data>
+  <data name="Label_ModelSearchWatermark" xml:space="preserve">
+    <value>Modelleri, #etiketleri veya @kullanıcıları ara</value>
+  </data>
+  <data name="Action_Search" xml:space="preserve">
+    <value>Ara</value>
+  </data>
+  <data name="Label_Sort" xml:space="preserve">
+    <value>Sırala</value>
+  </data>
+  <data name="Label_TimePeriod" xml:space="preserve">
+    <value>Süre</value>
+  </data>
+  <data name="Label_ModelType" xml:space="preserve">
+    <value>Model Türü</value>
+  </data>
+  <data name="Label_BaseModel" xml:space="preserve">
+    <value>Temel Model</value>
+  </data>
+  <data name="Label_ShowNsfwContent" xml:space="preserve">
+    <value>NSFW İçerik Göster</value>
+  </data>
+  <data name="Label_DataProvidedByCivitAi" xml:space="preserve">
+    <value>CivitAI tarafından sağlanan veriler</value>
+  </data>
+  <data name="Label_Page" xml:space="preserve">
+    <value>Sayfa</value>
+  </data>
+  <data name="Label_FirstPage" xml:space="preserve">
+    <value>İlk Sayfa</value>
+  </data>
+  <data name="Label_PreviousPage" xml:space="preserve">
+    <value>Önceki Sayfa</value>
+  </data>
+  <data name="Label_NextPage" xml:space="preserve">
+    <value>Sonraki Sayfa</value>
+  </data>
+  <data name="Label_LastPage" xml:space="preserve">
+    <value>Son Sayfa</value>
+  </data>
+  <data name="Action_Rename" xml:space="preserve">
+    <value>Yeniden Adlandır</value>
+  </data>
+  <data name="Action_Delete" xml:space="preserve">
+    <value>Sil</value>
+  </data>
+  <data name="Action_OpenOnCivitAi" xml:space="preserve">
+    <value>CivitAI&apos;de Aç</value>
+  </data>
+  <data name="Label_ConnectedModel" xml:space="preserve">
+    <value>Bağlı Model</value>
+  </data>
+  <data name="Label_LocalModel" xml:space="preserve">
+    <value>Yerel Model</value>
+  </data>
+  <data name="Action_ShowInExplorer" xml:space="preserve">
+    <value>Explorer&apos;da göster</value>
+  </data>
+  <data name="Action_New" xml:space="preserve">
+    <value>Yeni</value>
+  </data>
+  <data name="Label_Folder" xml:space="preserve">
+    <value>Klasör</value>
+  </data>
+  <data name="Label_DropFileToImport" xml:space="preserve">
+    <value>İçe aktarma için dosyayı buraya bırakın</value>
+  </data>
+  <data name="Label_ImportAsConnected" xml:space="preserve">
+    <value>Metadata ile içeri aktar</value>
+  </data>
+  <data name="Label_ImportAsConnectedExplanation" xml:space="preserve">
+    <value>Yeni yerel içe aktarmalar için bağlı meta veri arayın</value>
+  </data>
+  <data name="Label_Indexing" xml:space="preserve">
+    <value>İndeksleniyor...</value>
+  </data>
+  <data name="Label_ModelsFolder" xml:space="preserve">
+    <value>Model Klasörü</value>
+  </data>
+  <data name="Label_Categories" xml:space="preserve">
+    <value>Kategoriler</value>
+  </data>
+  <data name="Label_LetsGetStarted" xml:space="preserve">
+    <value>Başlayalım</value>
+  </data>
+  <data name="Label_ReadAndAgree" xml:space="preserve">
+    <value>Lisans Sözleşmesini Okudum ve Kabul Ediyorum.</value>
+  </data>
+  <data name="Label_LicenseAgreement" xml:space="preserve">
+    <value>Lisans Sözleşmesi.</value>
+  </data>
+  <data name="Label_FindConnectedMetadata" xml:space="preserve">
+    <value>Metadata&apos;larını bul</value>
+  </data>
+  <data name="Label_ShowModelImages" xml:space="preserve">
+    <value>Model Resimlerini Göster</value>
+  </data>
+  <data name="Label_Appearance" xml:space="preserve">
+    <value>Görünüm</value>
+  </data>
+  <data name="Label_Theme" xml:space="preserve">
+    <value>Tema</value>
+  </data>
+  <data name="Label_CheckpointManager" xml:space="preserve">
+    <value>Checkpoint Yöneticisi</value>
+  </data>
+  <data name="Label_RemoveSymlinksOnShutdown" xml:space="preserve">
+    <value>Kapatma sırasında paylaşılan Checkpoint dizini sembolik bağlantılarını kaldırın</value>
+  </data>
+  <data name="Label_RemoveSymlinksOnShutdown_Details" xml:space="preserve">
+    <value>Stabilite Matrisini başka bir sürücüye taşımada sorun yaşıyorsanız bu seçeneği seçin</value>
+  </data>
+  <data name="Label_ResetCheckpointsCache" xml:space="preserve">
+    <value>Checkpoints Önbelleğini Sıfırla</value>
+  </data>
+  <data name="Label_ResetCheckpointsCache_Details" xml:space="preserve">
+    <value>Kurulu checkpoints önbelleğini yeniden oluştur. Model tarayıcısında checkpointler yanlış etiketlenmişse kullanın</value>
+  </data>
+  <data name="Label_PackageEnvironment" xml:space="preserve">
+    <value>Paket Ortamı</value>
+  </data>
+  <data name="Action_Edit" xml:space="preserve">
+    <value>Düzenle</value>
+  </data>
+  <data name="Label_EnvironmentVariables" xml:space="preserve">
+    <value>Ortam Değişkenleri</value>
+  </data>
+  <data name="Label_EmbeddedPython" xml:space="preserve">
+    <value>Gömülü Python</value>
+  </data>
+  <data name="Action_CheckVersion" xml:space="preserve">
+    <value>Sürümü Kontrol Et</value>
+  </data>
+  <data name="Label_Integrations" xml:space="preserve">
+    <value>Entegrasyonlar</value>
+  </data>
+  <data name="Label_DiscordRichPresence" xml:space="preserve">
+    <value>Discord Zengin Varlık</value>
+  </data>
+  <data name="Label_System" xml:space="preserve">
+    <value>Sistem</value>
+  </data>
+  <data name="Label_AddToStartMenu" xml:space="preserve">
+    <value>Stability Matrix&apos;i başlat menüsüne ekle</value>
+  </data>
+  <data name="Label_AddToStartMenu_Details" xml:space="preserve">
+    <value>Mevcut uygulama konumu kullanılır, uygulamayı taşırsanız tekrar çalıştırabilirsiniz</value>
+  </data>
+  <data name="Label_OnlyAvailableOnWindows" xml:space="preserve">
+    <value>Yalnızca Windows&apos;ta kullanılabilir</value>
+  </data>
+  <data name="Action_AddForCurrentUser" xml:space="preserve">
+    <value>Geçerli Kullanıcı için Ekle</value>
+  </data>
+  <data name="Action_AddForAllUsers" xml:space="preserve">
+    <value>Tüm Kullanıcılar İçin Ekle</value>
+  </data>
+  <data name="Label_SelectNewDataDirectory" xml:space="preserve">
+    <value>Yeni Veri Dizini Seç</value>
+  </data>
+  <data name="Label_SelectNewDataDirectory_Details" xml:space="preserve">
+    <value>Mevcut veriyi taşımaz</value>
+  </data>
+  <data name="Action_SelectDirectory" xml:space="preserve">
+    <value>Dizin Seçin</value>
+  </data>
+  <data name="Label_About" xml:space="preserve">
+    <value>Hakkında</value>
+  </data>
+  <data name="Label_StabilityMatrix" xml:space="preserve">
+    <value>Stability Matrix</value>
+  </data>
+  <data name="Label_LicenseAndOpenSourceNotices" xml:space="preserve">
+    <value>Lisans ve Açık Kaynak Bildirimleri</value>
+  </data>
+  <data name="TeachingTip_ClickLaunchToGetStarted" xml:space="preserve">
+    <value>Başlamak için Başlat&apos;a tıklayın!</value>
+  </data>
+  <data name="Action_Stop" xml:space="preserve">
+    <value>Dur</value>
+  </data>
+  <data name="Action_SendInput" xml:space="preserve">
+    <value>Giriş Gönder</value>
+  </data>
+  <data name="Label_Input" xml:space="preserve">
+    <value>Giriş</value>
+  </data>
+  <data name="Action_Send" xml:space="preserve">
+    <value>Gönder</value>
+  </data>
+  <data name="Label_InputRequired" xml:space="preserve">
+    <value>Giriş gerekiyor</value>
+  </data>
+  <data name="Label_ConfirmQuestion" xml:space="preserve">
+    <value>Onaylamak?</value>
+  </data>
+  <data name="Action_Yes" xml:space="preserve">
+    <value>Evet</value>
+  </data>
+  <data name="Label_No" xml:space="preserve">
+    <value>Hayır</value>
+  </data>
+  <data name="Action_OpenWebUI" xml:space="preserve">
+    <value>Web Arayüzünü Aç</value>
+  </data>
+  <data name="Text_WelcomeToStabilityMatrix" xml:space="preserve">
+    <value>Stability Matrix&apos;e Hoş Geldiniz!</value>
+  </data>
+  <data name="Text_OneClickInstaller_SubHeader" xml:space="preserve">
+    <value>Tercih ettiğiniz arayüzü seçin ve başlamak için Yükle&apos;ye tıklayın</value>
+  </data>
+  <data name="Label_Installing" xml:space="preserve">
+    <value>Yükleniyor</value>
+  </data>
+  <data name="Text_ProceedingToLaunchPage" xml:space="preserve">
+    <value>Başlatma sayfasına geçiliyor</value>
+  </data>
+  <data name="Progress_DownloadingPackage" xml:space="preserve">
+    <value>Paket indiriliyor...</value>
+  </data>
+  <data name="Progress_DownloadComplete" xml:space="preserve">
+    <value>İndirme tamamlandı</value>
+  </data>
+  <data name="Progress_InstallationComplete" xml:space="preserve">
+    <value>Kurulum tamamlandı</value>
+  </data>
+  <data name="Progress_InstallingPrerequisites" xml:space="preserve">
+    <value>Önkoşullar kuruluyor...</value>
+  </data>
+  <data name="Progress_InstallingPackageRequirements" xml:space="preserve">
+    <value>Paket gereksinimleri kuruluyor...</value>
+  </data>
+  <data name="Action_OpenInExplorer" xml:space="preserve">
+    <value>Explorer&apos;da Aç</value>
+  </data>
+  <data name="Action_OpenInFinder" xml:space="preserve">
+    <value>Finder&apos;da Aç</value>
+  </data>
+  <data name="Action_Uninstall" xml:space="preserve">
+    <value>Kaldır</value>
+  </data>
+  <data name="Action_CheckForUpdates" xml:space="preserve">
+    <value>Güncellemeleri Kontrol Et</value>
+  </data>
+  <data name="Action_Update" xml:space="preserve">
+    <value>Güncelle</value>
+  </data>
+  <data name="Action_AddPackage" xml:space="preserve">
+    <value>Paket Ekle</value>
+  </data>
+  <data name="TeachingTip_AddPackageToGetStarted" xml:space="preserve">
+    <value>Başlamak için bir paket ekle!</value>
+  </data>
+  <data name="Label_EnvVarsTable_Name" xml:space="preserve">
+    <value>Ad</value>
+  </data>
+  <data name="Label_EnvVarsTable_Value" xml:space="preserve">
+    <value>Değer</value>
+  </data>
+  <data name="Action_Remove" xml:space="preserve">
+    <value>Kaldır</value>
+  </data>
+  <data name="Label_Details" xml:space="preserve">
+    <value>Ayrıntılar</value>
+  </data>
+  <data name="Label_Callstack" xml:space="preserve">
+    <value>Çağrı Yığını</value>
+  </data>
+  <data name="Label_InnerException" xml:space="preserve">
+    <value>İç istisna</value>
+  </data>
+  <data name="Label_SearchEllipsis" xml:space="preserve">
+    <value>Ara...</value>
+  </data>
+  <data name="Action_OK" xml:space="preserve">
+    <value>Tamam</value>
+  </data>
+  <data name="Action_Retry" xml:space="preserve">
+    <value>Tekrar Dene</value>
+  </data>
+  <data name="Label_PythonVersionInfo" xml:space="preserve">
+    <value>Python Sürüm Bilgisi</value>
+  </data>
+  <data name="Action_Restart" xml:space="preserve">
+    <value>Yeniden Başlat</value>
+  </data>
+  <data name="Label_ConfirmDelete" xml:space="preserve">
+    <value>Silmeyi Onayla</value>
+  </data>
+  <data name="Text_PackageUninstall_Details" xml:space="preserve">
+    <value>Bu, paket klasörünü ve içindeki tüm içeriği, eklediğiniz tüm oluşturulmuş resimleri ve dosyaları silecek.</value>
+  </data>
+  <data name="Progress_UninstallingPackage" xml:space="preserve">
+    <value>Paket Kaldırılıyor...</value>
+  </data>
+  <data name="Label_PackageUninstalled" xml:space="preserve">
+    <value>Paket Kaldırıldı</value>
+  </data>
+  <data name="Text_SomeFilesCouldNotBeDeleted" xml:space="preserve">
+    <value>Bazı dosyalar silinemedi. Lütfen paket klasöründeki açık dosyaları kapatın ve tekrar deneyin.</value>
+  </data>
+  <data name="Label_InvalidPackageType" xml:space="preserve">
+    <value>Geçersiz Paket Türü</value>
+  </data>
+  <data name="TextTemplate_UpdatingPackage" xml:space="preserve">
+    <value>{0} Güncelleniyor</value>
+  </data>
+  <data name="Progress_UpdateComplete" xml:space="preserve">
+    <value>Güncelleme tamamlandı</value>
+  </data>
+  <data name="TextTemplate_PackageUpdatedToLatest" xml:space="preserve">
+    <value>{0}, en son sürüme güncellendi</value>
+  </data>
+  <data name="TextTemplate_ErrorUpdatingPackage" xml:space="preserve">
+    <value>{0} güncelleme hatası</value>
+  </data>
+  <data name="Progress_UpdateFailed" xml:space="preserve">
+    <value>Güncelleme başarısız oldu</value>
+  </data>
+  <data name="Action_OpenInBrowser" xml:space="preserve">
+    <value>Tarayıcıda Aç</value>
+  </data>
+  <data name="Label_ErrorInstallingPackage" xml:space="preserve">
+    <value>Paket kurulum hatası</value>
+  </data>
+  <data name="Label_Branch" xml:space="preserve">
+    <value>Dal</value>
+  </data>
+  <data name="Label_AutoScrollToEnd" xml:space="preserve">
+    <value>Konsol çıktısının sonuna otomatik olarak kaydır</value>
+  </data>
+  <data name="Label_License" xml:space="preserve">
+    <value>Lisans</value>
+  </data>
+  <data name="Label_SharedModelStrategyShort" xml:space="preserve">
+    <value>Model Paylaşımı</value>
+  </data>
+  <data name="Label_PleaseSelectDataDirectory" xml:space="preserve">
+    <value>Lütfen Bir Veri Klasörü Seçin</value>
+  </data>
+  <data name="Label_DataFolderName" xml:space="preserve">
+    <value>Veri Klasörü Adı</value>
+  </data>
+  <data name="Label_CurrentDirectory" xml:space="preserve">
+    <value>Geçerli klasör:</value>
+  </data>
+  <data name="Text_AppWillRelaunchAfterUpdate" xml:space="preserve">
+    <value>Uygulama güncelleme sonrası yeniden başlatılacaktır</value>
+  </data>
+  <data name="Action_RemindMeLater" xml:space="preserve">
+    <value>Daha Sonra Hatırlat</value>
+  </data>
+  <data name="Action_InstallNow" xml:space="preserve">
+    <value>Şimdi Yükle</value>
+  </data>
+  <data name="Label_ReleaseNotes" xml:space="preserve">
+    <value>Sürüm Notları</value>
+  </data>
+  <data name="Action_OpenProjectEllipsis" xml:space="preserve">
+    <value>Projeyi Aç...</value>
+  </data>
+  <data name="Action_SaveAsEllipsis" xml:space="preserve">
+    <value>Farklı Kaydet...</value>
+  </data>
+  <data name="Action_RestoreDefaultLayout" xml:space="preserve">
+    <value>Varsayılan Düzeni Geri Yükle</value>
+  </data>
+  <data name="Label_UseSharedOutputFolder" xml:space="preserve">
+    <value>Çıktı Paylaşımı</value>
+  </data>
+  <data name="Label_BatchIndex" xml:space="preserve">
+    <value>Toplu İndeks</value>
+  </data>
+  <data name="Action_Copy" xml:space="preserve">
+    <value>Kopyala</value>
+  </data>
+  <data name="Action_OpenInViewer" xml:space="preserve">
+    <value>Resim Görüntüleyici&apos;de aç</value>
+  </data>
+  <data name="Label_NumImagesSelected" xml:space="preserve">
+    <value>{0} resim seçildi</value>
+  </data>
+  <data name="Label_OutputFolder" xml:space="preserve">
+    <value>Çıkış Klasörü</value>
+  </data>
+  <data name="Label_OutputType" xml:space="preserve">
+    <value>Çıkış Türü</value>
+  </data>
+  <data name="Action_ClearSelection" xml:space="preserve">
+    <value>Seçimi Temizle</value>
+  </data>
+  <data name="Action_SelectAll" xml:space="preserve">
+    <value>Tümünü Seç</value>
+  </data>
+  <data name="Action_SendToInference" xml:space="preserve">
+    <value>Çıkarıma Gönder</value>
+  </data>
+  <data name="Label_TextToImage" xml:space="preserve">
+    <value>Metinden Resime</value>
+  </data>
+  <data name="Label_ImageToImage" xml:space="preserve">
+    <value>Resimden Resime</value>
+  </data>
+  <data name="Label_Inpainting" xml:space="preserve">
+    <value>Inpainting</value>
+  </data>
+  <data name="Label_Upscale" xml:space="preserve">
+    <value>Upscale</value>
+  </data>
+  <data name="Label_OutputsPageTitle" xml:space="preserve">
+    <value>Çıkış Tarayıcısı</value>
+  </data>
+  <data name="Label_OneImageSelected" xml:space="preserve">
+    <value>1 resim seçildi</value>
+  </data>
+  <data name="Label_PythonPackages" xml:space="preserve">
+    <value>Python Paketleri</value>
+  </data>
+  <data name="Action_Consolidate" xml:space="preserve">
+    <value>Birleştir</value>
+  </data>
+  <data name="Label_AreYouSure" xml:space="preserve">
+    <value>Emin misiniz?</value>
+  </data>
+  <data name="Label_ConsolidateExplanation" xml:space="preserve">
+    <value>Bu, seçilen paketlerden tüm oluşturulmuş resimleri, paylaşılan çıktılar klasörünün Konsolide dizinine taşıyacak. Bu işlem geri alınamaz.</value>
+  </data>
+  <data name="Action_Refresh" xml:space="preserve">
+    <value>Yenile</value>
+  </data>
+  <data name="Action_Upgrade" xml:space="preserve">
+    <value>Yükselt</value>
+  </data>
+  <data name="Action_Downgrade" xml:space="preserve">
+    <value>Düşür</value>
+  </data>
+  <data name="Action_OpenGithub" xml:space="preserve">
+    <value>GitHub&apos;da Aç</value>
+  </data>
+  <data name="Label_Connected" xml:space="preserve">
+    <value>Bağlandı</value>
+  </data>
+  <data name="Action_Disconnect" xml:space="preserve">
+    <value>Bağlantıyı Kes</value>
+  </data>
+  <data name="Label_Email" xml:space="preserve">
+    <value>E-posta</value>
+  </data>
+  <data name="Label_Username" xml:space="preserve">
+    <value>Kullanıcı Adı</value>
+  </data>
+  <data name="Label_Password" xml:space="preserve">
+    <value>Parola</value>
+  </data>
+  <data name="Action_Login" xml:space="preserve">
+    <value>Giriş</value>
+  </data>
+  <data name="Action_Signup" xml:space="preserve">
+    <value>Kaydol</value>
+  </data>
+  <data name="Label_ConfirmPassword" xml:space="preserve">
+    <value>Parolayı Onayla</value>
+  </data>
+  <data name="Label_ApiKey" xml:space="preserve">
+    <value>API Key</value>
+  </data>
+  <data name="Label_Accounts" xml:space="preserve">
+    <value>Hesaplar</value>
+  </data>
+</root>

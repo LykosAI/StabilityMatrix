@@ -10,6 +10,7 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -319,7 +320,11 @@ public class ComfyUI(
                 + $"{Path.Combine(modelsDir, "SwinIR")}";
             nodeValue.Children["embeddings"] = Path.Combine(modelsDir, "TextualInversion");
             nodeValue.Children["hypernetworks"] = Path.Combine(modelsDir, "Hypernetwork");
-            nodeValue.Children["controlnet"] = Path.Combine(modelsDir, "ControlNet");
+            nodeValue.Children["controlnet"] = string.Join(
+                '\n',
+                Path.Combine(modelsDir, "ControlNet"),
+                Path.Combine(modelsDir, "T2IAdapter")
+            );
             nodeValue.Children["clip"] = Path.Combine(modelsDir, "CLIP");
             nodeValue.Children["diffusers"] = Path.Combine(modelsDir, "Diffusers");
             nodeValue.Children["gligen"] = Path.Combine(modelsDir, "GLIGEN");
@@ -340,7 +345,10 @@ public class ComfyUI(
                     },
                     { "embeddings", Path.Combine(modelsDir, "TextualInversion") },
                     { "hypernetworks", Path.Combine(modelsDir, "Hypernetwork") },
-                    { "controlnet", Path.Combine(modelsDir, "ControlNet") },
+                    {
+                        "controlnet",
+                        string.Join('\n', Path.Combine(modelsDir, "ControlNet"), Path.Combine(modelsDir, "T2IAdapter"))
+                    },
                     { "clip", Path.Combine(modelsDir, "CLIP") },
                     { "diffusers", Path.Combine(modelsDir, "Diffusers") },
                     { "gligen", Path.Combine(modelsDir, "GLIGEN") },
@@ -357,7 +365,11 @@ public class ComfyUI(
 
         newRootNode.Children.Add(stabilityMatrixNode);
 
-        var serializer = new SerializerBuilder().WithNamingConvention(UnderscoredNamingConvention.Instance).Build();
+        var serializer = new SerializerBuilder()
+            .WithNamingConvention(UnderscoredNamingConvention.Instance)
+            .WithDefaultScalarStyle(ScalarStyle.Literal)
+            .Build();
+
         var yamlData = serializer.Serialize(newRootNode);
         File.WriteAllText(extraPathsYamlPath, yamlData);
 

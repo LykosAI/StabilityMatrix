@@ -55,6 +55,13 @@ public static class ProcessArgBuilderExtensions
     }
 
     [Pure]
+    public static T AddArgs<T>(this T builder, params Argument[] argument)
+        where T : ProcessArgsBuilder
+    {
+        return builder with { Arguments = builder.Arguments.AddRange(argument) };
+    }
+
+    [Pure]
     public static T UpdateArg<T>(this T builder, string key, Argument argument)
         where T : ProcessArgsBuilder
     {

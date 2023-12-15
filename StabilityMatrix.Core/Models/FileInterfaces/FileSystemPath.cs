@@ -1,6 +1,6 @@
 ﻿namespace StabilityMatrix.Core.Models.FileInterfaces;
 
-public class FileSystemPath : IEquatable<FileSystemPath>, IEquatable<string>
+public class FileSystemPath : IEquatable<FileSystemPath>, IEquatable<string>, IFormattable
 {
     public string FullPath { get; }
 
@@ -8,27 +8,42 @@ public class FileSystemPath : IEquatable<FileSystemPath>, IEquatable<string>
     {
         FullPath = path;
     }
-    
-    protected FileSystemPath(FileSystemPath path) : this(path.FullPath)
+
+    protected FileSystemPath(FileSystemPath path)
+        : this(path.FullPath) { }
+
+    protected FileSystemPath(params string[] paths)
+        : this(Path.Combine(paths)) { }
+
+    public override string ToString()
     {
+        return FullPath;
     }
 
-    protected FileSystemPath(params string[] paths) : this(Path.Combine(paths))
+    /// <inheritdoc />
+    string IFormattable.ToString(string? format, IFormatProvider? formatProvider)
     {
+        return ToString(format, formatProvider);
     }
-    
-    public override string ToString()
+
+    /// <summary>
+    /// Overridable IFormattable.ToString method.
+    /// By default, returns <see cref="FullPath"/>.
+    /// </summary>
+    protected virtual string ToString(string? format, IFormatProvider? formatProvider)
     {
         return FullPath;
     }
 
     public bool Equals(FileSystemPath? other)
     {
-        if (ReferenceEquals(null, other)) return false;
-        if (ReferenceEquals(this, other)) return true;
+        if (ReferenceEquals(null, other))
+            return false;
+        if (ReferenceEquals(this, other))
+            return true;
         return FullPath == other.FullPath;
     }
-    
+
     public bool Equals(string? other)
     {
         return string.Equals(FullPath, other);
@@ -48,8 +63,9 @@ public class FileSystemPath : IEquatable<FileSystemPath>, IEquatable<string>
     {
         return FullPath.GetHashCode();
     }
-    
+
     // Implicit conversions to and from string
     public static implicit operator string(FileSystemPath path) => path.FullPath;
+
     public static implicit operator FileSystemPath(string path) => new(path);
 }

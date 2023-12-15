@@ -4,6 +4,7 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
@@ -39,13 +40,23 @@ public class RuinedFooocus(
         {
             var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
 
-            progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
-
-            await InstallCudaTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
+            progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
             var requirements = new FilePath(installLocation, "requirements_versions.txt");
+
             await venvRunner
-                .PipInstallFromRequirements(requirements, onConsoleOutput, excludes: "torch")
+                .PipInstall(
+                    new PipInstallArgs()
+                        .WithTorch("==2.0.1")
+                        .WithTorchVision("==0.15.2")
+                        .WithXFormers("==0.0.20")
+                        .WithTorchExtraIndex("cu118")
+                        .WithParsedFromRequirementsTxt(
+                            await requirements.ReadAllTextAsync().ConfigureAwait(false),
+                            excludePattern: "torch"
+                        ),
+                    onConsoleOutput
+                )
                 .ConfigureAwait(false);
         }
         else
@@ -60,5 +71,9 @@ public class RuinedFooocus(
             )
                 .ConfigureAwait(false);
         }
+
+        // Create output folder since it's not created by default
+        var outputFolder = new DirectoryPath(installLocation, OutputFolderName);
+        outputFolder.Create();
     }
 }

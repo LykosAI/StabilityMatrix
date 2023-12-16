@@ -183,39 +183,44 @@ public class A3WebUI(
     )
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
-        // Setup venv
-        await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
-        venvRunner.WorkingDirectory = installLocation;
-        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
-        switch (torchVersion)
-        {
-            case TorchVersion.Cpu:
-                await InstallCpuTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
-                break;
-            case TorchVersion.Cuda:
-                await InstallCudaTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
-                break;
-            case TorchVersion.Rocm:
-                await InstallRocmTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);
-        }
+        var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
 
-        if (versionOptions.VersionTag?.Contains("1.6.0") ?? false)
-        {
-            await venvRunner.PipInstall("httpx==0.24.1", onConsoleOutput);
-        }
+        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
-        // Install requirements file
-        progress?.Report(new ProgressReport(-1f, "Installing Package Requirements", isIndeterminate: true));
-        Logger.Info("Installing requirements_versions.txt");
+        progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
-        await venvRunner
-            .PipInstallFromRequirements(requirements, onConsoleOutput, excludes: "torch")
-            .ConfigureAwait(false);
+
+        var pipArgs = new PipInstallArgs()
+            .WithTorch("==2.0.1")
+            .WithTorchVision("==0.15.2")
+            .WithTorchExtraIndex(
+                torchVersion switch
+                {
+                    TorchVersion.Cpu => "cpu",
+                    TorchVersion.Cuda => "cu118",
+                    TorchVersion.Rocm => "rocm5.1.1",
+                    _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+                }
+            )
+            .WithParsedFromRequirementsTxt(
+                await requirements.ReadAllTextAsync().ConfigureAwait(false),
+                excludePattern: "torch"
+            );
+
+        if (torchVersion == TorchVersion.Cuda)
+        {
+            pipArgs = pipArgs.WithXFormers("==0.0.20");
+        }
+
+        // v1.6.0 needs a httpx qualifier to fix a gradio issue
+        if (versionOptions.VersionTag?.Contains("1.6.0") ?? false)
+        {
+            pipArgs = pipArgs.AddArg("httpx==0.24.1");
+        }
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Updating configuration", isIndeterminate: true));
 
@@ -259,24 +264,6 @@ public class A3WebUI(
         var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
         VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
-    }
-
-    private async Task InstallRocmTorch(
-        PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
-    )
-    {
-        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true));
-
-        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
-
-        await venvRunner
-            .PipInstall(
-                new PipInstallArgs().WithTorch("==2.0.1").WithTorchVision().WithTorchExtraIndex("rocm5.1.1"),
-                onConsoleOutput
-            )
-            .ConfigureAwait(false);
     }
 
     /// <inheritdoc />

@@ -119,6 +119,14 @@ public class ComfyNodeBuilder
         public required int Width { get; init; }
     }
 
+    public record CLIPSetLastLayer : ComfyTypedNodeBase<ClipNodeConnection>
+    {
+        public required ClipNodeConnection Clip { get; init; }
+
+        [Range(-24, -1)]
+        public int StopAtClipLayer { get; init; } = -1;
+    }
+
     public static NamedComfyNode<LatentNodeConnection> LatentFromBatch(
         string name,
         LatentNodeConnection samples,

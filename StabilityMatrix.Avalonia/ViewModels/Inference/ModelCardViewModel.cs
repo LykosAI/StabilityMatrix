@@ -9,9 +9,7 @@ using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -208,7 +206,7 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
         public string? SelectedModelName { get; init; }
         public string? SelectedRefinerName { get; init; }
         public string? SelectedVaeName { get; init; }
-        public int ClipSkip { get; init; }
+        public int ClipSkip { get; init; } = 1;
 
         public bool IsVaeSelectionEnabled { get; init; }
         public bool IsRefinerSelectionEnabled { get; init; }

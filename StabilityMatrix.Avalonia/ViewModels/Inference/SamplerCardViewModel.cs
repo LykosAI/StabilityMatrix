@@ -42,7 +42,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     private bool isDenoiseStrengthEnabled;
 
     [ObservableProperty]
-    private double denoiseStrength = 1;
+    private double denoiseStrength = 0.7f;
 
     [ObservableProperty]
     [property: Category("Settings")]

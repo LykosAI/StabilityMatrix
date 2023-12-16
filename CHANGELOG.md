@@ -5,6 +5,23 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.7.2
+### Changed
+- Changed Symlink shared folder link targets for Automatic1111 and ComfyUI. From `ControlNet -> models/controlnet` to `ControlNet -> models/controlnet/ControlNet` and `T2IAdapter -> models/controlnet/T2IAdapter`.
+- Changed FreeU defaults to match recommended SD1.5 defaults
+- Changed default denoise strength from 1.0 to 0.7
+### Fixed
+- Fixed ControlNet / T2IAdapter shared folder links for Automatic1111 conflicting with each other
+- Fixed URIScheme registration errors on Linux
+- Fixed RuinedFooocus missing output folder on startup
+- Fixed incorrect Fooocus VRAM launch arguments
+
+## v2.7.1
+### Added
+- Added Turkish UI language option, thanks to Progresor for the translation
+### Fixed
+- Fixed Inference Image to Image projects missing denoise strength setting
+
 ## v2.7.0
 ### Added
 #### General

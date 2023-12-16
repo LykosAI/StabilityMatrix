@@ -1,6 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Immutable;
 using System.Diagnostics.Contracts;
-using OneOf;
 
 namespace StabilityMatrix.Core.Processes;
 
@@ -9,14 +8,7 @@ namespace StabilityMatrix.Core.Processes;
 /// </summary>
 public record ProcessArgsBuilder
 {
-    protected ProcessArgsBuilder() { }
-
-    public ProcessArgsBuilder(params Argument[] arguments)
-    {
-        Arguments = arguments.ToList();
-    }
-
-    public List<Argument> Arguments { get; init; } = new();
+    public IImmutableList<Argument> Arguments { get; init; } = ImmutableArray<Argument>.Empty;
 
     private IEnumerable<string> ToStringArgs()
     {
@@ -34,6 +26,11 @@ public record ProcessArgsBuilder
         }
     }
 
+    public ProcessArgsBuilder(params Argument[] arguments)
+    {
+        Arguments = arguments.ToImmutableArray();
+    }
+
     /// <inheritdoc />
     public override string ToString()
     {
@@ -45,8 +42,7 @@ public record ProcessArgsBuilder
         return ToStringArgs().ToArray();
     }
 
-    public static implicit operator ProcessArgs(ProcessArgsBuilder builder) =>
-        builder.ToProcessArgs();
+    public static implicit operator ProcessArgs(ProcessArgsBuilder builder) => builder.ToProcessArgs();
 }
 
 public static class ProcessArgBuilderExtensions
@@ -55,7 +51,33 @@ public static class ProcessArgBuilderExtensions
     public static T AddArg<T>(this T builder, Argument argument)
         where T : ProcessArgsBuilder
     {
-        return builder with { Arguments = builder.Arguments.Append(argument).ToList() };
+        return builder with { Arguments = builder.Arguments.Add(argument) };
+    }
+
+    [Pure]
+    public static T AddArgs<T>(this T builder, params Argument[] argument)
+        where T : ProcessArgsBuilder
+    {
+        return builder with { Arguments = builder.Arguments.AddRange(argument) };
+    }
+
+    [Pure]
+    public static T UpdateArg<T>(this T builder, string key, Argument argument)
+        where T : ProcessArgsBuilder
+    {
+        var oldArg = builder
+            .Arguments
+            .FirstOrDefault(x => x.Match(stringArg => stringArg == key, tupleArg => tupleArg.Item1 == key));
+
+        if (oldArg is null)
+        {
+            return builder.AddArg(argument);
+        }
+
+        return builder with
+        {
+            Arguments = builder.Arguments.Replace(oldArg, argument)
+        };
     }
 
     [Pure]
@@ -64,15 +86,10 @@ public static class ProcessArgBuilderExtensions
     {
         return builder with
         {
-            Arguments = builder.Arguments
-                .Where(
-                    x =>
-                        x.Match(
-                            stringArg => stringArg != argumentKey,
-                            tupleArg => tupleArg.Item1 != argumentKey
-                        )
-                )
-                .ToList()
+            Arguments = builder
+                .Arguments
+                .Where(x => x.Match(stringArg => stringArg != argumentKey, tupleArg => tupleArg.Item1 != argumentKey))
+                .ToImmutableArray()
         };
     }
 }

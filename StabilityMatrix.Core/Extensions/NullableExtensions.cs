@@ -25,4 +25,23 @@ public static class NullableExtensions
         }
         return obj;
     }
+
+    /// <summary>
+    /// Unwraps a nullable struct object, throwing an exception if it is null.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if (<typeparamref name="T"/>) <paramref name="obj"/> is null.
+    /// </exception>
+    [DebuggerStepThrough]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T Unwrap<T>([NotNull] this T? obj, [CallerArgumentExpression("obj")] string? paramName = null)
+        where T : struct
+    {
+        if (obj is null)
+        {
+            throw new ArgumentNullException(paramName, $"Unwrap of a null value ({typeof(T)}) {paramName}.");
+        }
+        return obj.Value;
+    }
 }

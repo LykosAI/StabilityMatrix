@@ -77,11 +77,11 @@ public class Fooocus(
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
                 {
-                    MemoryLevel.Low => "--lowvram",
-                    MemoryLevel.Medium => "--normalvram",
+                    MemoryLevel.Low => "--always-low-vram",
+                    MemoryLevel.Medium => "--always-normal-vram",
                     _ => null
                 },
-                Options = { "--highvram", "--normalvram", "--lowvram", "--novram" }
+                Options = { "--always-high-vram", "--always-normal-vram", "--always-low-vram", "--always-no-vram" }
             },
             new LaunchOptionDefinition
             {

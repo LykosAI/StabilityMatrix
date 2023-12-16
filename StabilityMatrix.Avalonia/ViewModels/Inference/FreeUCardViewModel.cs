@@ -16,12 +16,12 @@ public partial class FreeUCardViewModel : LoadableViewModelBase
     [ObservableProperty]
     [Required]
     [Range(0D, 10D)]
-    private double b1 = 1.1;
+    private double b1 = 1.5;
 
     [ObservableProperty]
     [Required]
     [Range(0D, 10D)]
-    private double b2 = 1.2;
+    private double b2 = 1.6;
 
     [ObservableProperty]
     [Required]

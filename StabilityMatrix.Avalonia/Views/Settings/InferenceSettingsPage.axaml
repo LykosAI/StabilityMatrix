@@ -4,66 +4,144 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+    xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
     d:DataContext="{x:Static mocks:DesignData.InferenceSettingsViewModel}"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
+    d:DesignHeight="650"
+    d:DesignWidth="900"
     x:DataType="vmSettings:InferenceSettingsViewModel"
     mc:Ignorable="d">
+
+    <controls:UserControlBase.Styles>
+        <Style Selector="sg|SpacedGrid &gt; ui|SettingsExpander">
+            <Setter Property="Margin" Value="8,0" />
+        </Style>
+    </controls:UserControlBase.Styles>
+
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="8,16" Spacing="8">
-            <!--  Theme  -->
-            <Grid RowDefinitions="Auto,*,*,*">
-                <TextBlock
-                    Margin="0,0,0,8"
-                    FontWeight="Medium"
-                    Text="Stuff" />
-                <ui:SettingsExpander
-                    Grid.Row="1"
-                    Margin="8,0,8,4"
-                    Header="{x:Static lang:Resources.Label_Theme}"
-                    IconSource="WeatherMoon">
-                    <ui:SettingsExpander.Footer>
-                        <ComboBox MinWidth="100" />
-                    </ui:SettingsExpander.Footer>
-                </ui:SettingsExpander>
-                <ui:SettingsExpander
-                    Grid.Row="2"
-                    Margin="8,0,8,4"
-                    Header="{x:Static lang:Resources.Label_Language}"
-                    IconSource="Character">
-                    <ui:SettingsExpander.Footer>
-                        <ComboBox MinWidth="100" />
-                    </ui:SettingsExpander.Footer>
-                </ui:SettingsExpander>
-                <ui:SettingsExpander
-                    Grid.Row="3"
-                    Margin="8,0,8,4"
-                    Header="Inference"
-                    IconSource="Code" />
-            </Grid>
 
-            <!--  Checkpoints Manager Options  -->
-            <Grid RowDefinitions="auto,*,Auto">
+            <!--  Prompt  -->
+            <sg:SpacedGrid RowDefinitions="Auto,*" RowSpacing="4">
                 <TextBlock
-                    Margin="0,0,0,8"
+                    Margin="0,0,0,4"
                     FontWeight="Medium"
-                    Text="Other stuff" />
+                    Text="{x:Static lang:Resources.Label_Prompt}" />
+                <!--  Auto Completion  -->
                 <ui:SettingsExpander
                     Grid.Row="1"
                     Margin="8,0"
-                    IconSource="Folder">
+                    Header="{x:Static lang:Resources.Label_AutoCompletion}">
+
+                    <ui:SettingsExpander.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-wand-magic-sparkles" />
+                    </ui:SettingsExpander.IconSource>
+
                     <ui:SettingsExpander.Footer>
-                        <CheckBox Margin="8" />
+                        <ToggleSwitch IsChecked="{Binding IsPromptCompletionEnabled}" />
                     </ui:SettingsExpander.Footer>
+
+                    <!--  Tag csv selection  -->
+                    <ui:SettingsExpanderItem
+                        Content="{x:Static lang:Resources.Label_PromptTags}"
+                        Description="{x:Static lang:Resources.Label_PromptTagsDescription}"
+                        IconSource="Tag"
+                        IsEnabled="{Binding IsPromptCompletionEnabled}">
+                        <ui:SettingsExpanderItem.Footer>
+                            <ui:FAComboBox ItemsSource="{Binding AvailableTagCompletionCsvs}" SelectedItem="{Binding SelectedTagCompletionCsv}" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+
+                    <!--  Tag csv import  -->
+                    <ui:SettingsExpanderItem
+                        Content="{x:Static lang:Resources.Label_PromptTagsImport}"
+                        IconSource="Add"
+                        IsEnabled="{Binding IsPromptCompletionEnabled}">
+                        <ui:SettingsExpanderItem.Footer>
+                            <Button Command="{Binding ImportTagCsvCommand}" Content="Import" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+
+                    <!--  Remove underscores  -->
+                    <ui:SettingsExpanderItem
+                        Content="{x:Static lang:Resources.Label_CompletionReplaceUnderscoresWithSpaces}"
+                        IconSource="Underline"
+                        IsEnabled="{Binding IsPromptCompletionEnabled}">
+                        <ui:SettingsExpanderItem.Footer>
+                            <CheckBox Margin="8" IsChecked="{Binding IsCompletionRemoveUnderscoresEnabled}" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
                 </ui:SettingsExpander>
-            </Grid>
+            </sg:SpacedGrid>
+
+            <!--  General  -->
+            <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4">
+                <TextBlock
+                    Margin="0,0,0,4"
+                    FontWeight="Medium"
+                    Text="{x:Static lang:Resources.Label_General}" />
+
+                <!--  Image Viewer  -->
+                <ui:SettingsExpander
+                    Grid.Row="1"
+                    Header="{x:Static lang:Resources.Label_ImageViewer}"
+                    IconSource="Image"
+                    IsExpanded="True">
+
+                    <!--  Pixel grid  -->
+                    <ui:SettingsExpanderItem Content="Show pixel grid at high zoom levels" IconSource="ViewAll">
+                        <ui:SettingsExpanderItem.Footer>
+                            <CheckBox Margin="8" IsChecked="{Binding IsImageViewerPixelGridEnabled}" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                </ui:SettingsExpander>
+
+                <!--  Output Image Files  -->
+                <ui:SettingsExpander
+                    Grid.Row="2"
+                    Header="{x:Static lang:Resources.Label_OutputImageFiles}"
+                    IsExpanded="True">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource Symbol="TabDesktopImage" />
+                    </ui:SettingsExpander.IconSource>
+                    <!--  File name pattern  -->
+                    <ui:SettingsExpanderItem
+                        Content="File name pattern"
+                        Description="{Binding OutputImageFileNameFormatSample}"
+                        IconSource="Rename">
+                        <ui:SettingsExpanderItem.Footer>
+                            <TextBox
+                                Name="OutputImageFileNameFormatTextBox"
+                                MinWidth="150"
+                                FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                FontSize="13"
+                                Text="{Binding OutputImageFileNameFormat}"
+                                Watermark="{x:Static inference:FileNameFormat.DefaultTemplate}" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                </ui:SettingsExpander>
+
+                <ui:TeachingTip
+                    Title="Format Variables"
+                    Grid.Row="2"
+                    IsOpen="{Binding #OutputImageFileNameFormatTextBox.IsFocused}"
+                    PreferredPlacement="Top"
+                    Target="{Binding #OutputImageFileNameFormatTextBox, Mode=OneWay}">
+                    <DataGrid AutoGenerateColumns="True" ItemsSource="{Binding OutputImageFileNameFormatVars}" />
+                    <!--<mdxaml:MarkdownScrollViewer
+                        Markdown="{Binding OutputImageFileNameFormatGuideMarkdown}"/>-->
+                </ui:TeachingTip>
+
+            </sg:SpacedGrid>
+
         </StackPanel>
     </ScrollViewer>
 </controls:UserControlBase>

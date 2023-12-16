@@ -82,13 +82,21 @@
                         IsFilled="True"
                         FontSize="64"
                         Symbol="Person" />
-                    <controls:BetterAdvancedImage
-                        HorizontalAlignment="Left"
+                    <ui:HyperlinkButton
+                        ToolTip.Tip="Edit on Gravatar"
+                        NavigateUri="http://gravatar.com/emails/"
                         IsVisible="{Binding LykosProfileImageUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                        Source="{Binding LykosProfileImageUrl}"
-                        Width="64"
-                        Height="64"
-                        CornerRadius="8" />
+                        Padding="2"
+                        CornerRadius="8" 
+                        HorizontalAlignment="Left"
+                        Classes="transparent-full">
+                        <controls:BetterAdvancedImage
+                            Source="{Binding LykosProfileImageUrl}"
+                            Width="64"
+                            Height="64"
+                            CornerRadius="8" /> 
+                    </ui:HyperlinkButton>
+
 
                     <StackPanel>
                         <TextBlock

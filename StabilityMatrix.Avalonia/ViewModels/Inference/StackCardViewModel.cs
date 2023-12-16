@@ -2,6 +2,8 @@
 using System.Text.Json.Nodes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models.Inference;
+using StabilityMatrix.Avalonia.Services;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 
@@ -12,6 +14,10 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [Transient]
 public class StackCardViewModel : StackViewModelBase
 {
+    /// <inheritdoc />
+    public StackCardViewModel(ServiceManager<ViewModelBase> vmFactory)
+        : base(vmFactory) { }
+
     /// <inheritdoc />
     public override void LoadStateFromJsonObject(JsonObject state)
     {

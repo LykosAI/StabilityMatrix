@@ -4,6 +4,7 @@ using NLog;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -16,15 +17,19 @@ using YamlDotNet.Serialization.NamingConventions;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [Singleton(typeof(BasePackage))]
-public class ComfyUI : BaseGitPackage
+public class ComfyUI(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     public override string Name => "ComfyUI";
     public override string DisplayName { get; set; } = "ComfyUI";
     public override string Author => "comfyanonymous";
     public override string LicenseType => "GPL-3.0";
-    public override string LicenseUrl =>
-        "https://github.com/comfyanonymous/ComfyUI/blob/master/LICENSE";
+    public override string LicenseUrl => "https://github.com/comfyanonymous/ComfyUI/blob/master/LICENSE";
     public override string Blurb => "A powerful and modular stable diffusion GUI and backend";
     public override string LaunchCommand => "main.py";
 
@@ -35,16 +40,7 @@ public class ComfyUI : BaseGitPackage
     public override string OutputFolderName => "output";
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
 
-    public override SharedFolderMethod RecommendedSharedFolderMethod =>
-        SharedFolderMethod.Configuration;
-
-    public ComfyUI(
-        IGithubApiCache githubApi,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
-    )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
+    public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
 
     // https://github.com/comfyanonymous/ComfyUI/blob/master/folder_paths.py#L11
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
@@ -61,102 +57,88 @@ public class ComfyUI : BaseGitPackage
             [SharedFolderType.GLIGEN] = new[] { "models/gligen" },
             [SharedFolderType.ESRGAN] = new[] { "models/upscale_models" },
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
+            [SharedFolderType.IpAdapter] = new[] { "models/ipadapter" },
+            [SharedFolderType.T2IAdapter] = new[] { "models/controlnet" },
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
         new() { [SharedOutputType.Text2Img] = new[] { "output" } };
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
-        new List<LaunchOptionDefinition>
-        {
-            new()
+        [
+            new LaunchOptionDefinition
             {
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "127.0.0.1",
-                Options = { "--listen" }
+                Options = ["--listen"]
             },
-            new()
+            new LaunchOptionDefinition
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "8188",
-                Options = { "--port" }
+                Options = ["--port"]
             },
-            new()
+            new LaunchOptionDefinition
             {
                 Name = "VRAM",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper
-                    .IterGpuInfo()
-                    .Select(gpu => gpu.MemoryLevel)
-                    .Max() switch
+                InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
                 {
-                    Level.Low => "--lowvram",
-                    Level.Medium => "--normalvram",
+                    MemoryLevel.Low => "--lowvram",
+                    MemoryLevel.Medium => "--normalvram",
                     _ => null
                 },
-                Options = { "--highvram", "--normalvram", "--lowvram", "--novram" }
+                Options = ["--highvram", "--normalvram", "--lowvram", "--novram"]
             },
-            new()
+            new LaunchOptionDefinition
             {
                 Name = "Preview Method",
                 Type = LaunchOptionType.Bool,
                 InitialValue = "--preview-method auto",
-                Options =
-                {
-                    "--preview-method auto",
-                    "--preview-method latent2rgb",
-                    "--preview-method taesd"
-                }
+                Options = ["--preview-method auto", "--preview-method latent2rgb", "--preview-method taesd"]
             },
-            new()
+            new LaunchOptionDefinition
             {
                 Name = "Enable DirectML",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.PreferDirectML(),
-                Options = { "--directml" }
+                Options = ["--directml"]
             },
-            new()
+            new LaunchOptionDefinition
             {
                 Name = "Use CPU only",
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu() && !HardwareHelper.HasAmdGpu(),
-                Options = { "--cpu" }
+                Options = ["--cpu"]
             },
-            new()
+            new LaunchOptionDefinition
             {
                 Name = "Disable Xformers",
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),
-                Options = { "--disable-xformers" }
+                Options = ["--disable-xformers"]
             },
-            new()
+            new LaunchOptionDefinition
             {
                 Name = "Disable upcasting of attention",
                 Type = LaunchOptionType.Bool,
-                Options = { "--dont-upcast-attention" }
+                Options = ["--dont-upcast-attention"]
             },
-            new()
+            new LaunchOptionDefinition
             {
                 Name = "Auto-Launch",
                 Type = LaunchOptionType.Bool,
-                Options = { "--auto-launch" }
+                Options = ["--auto-launch"]
             },
             LaunchOptionDefinition.Extras
-        };
+        ];
 
     public override string MainBranch => "master";
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[]
-        {
-            TorchVersion.Cpu,
-            TorchVersion.Cuda,
-            TorchVersion.DirectMl,
-            TorchVersion.Rocm,
-            TorchVersion.Mps
-        };
+        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm, TorchVersion.Mps };
 
     public override async Task InstallPackage(
         string installLocation,
@@ -217,9 +199,7 @@ public class ComfyUI : BaseGitPackage
         }
 
         // Install requirements file (skip torch)
-        progress?.Report(
-            new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true)
-        );
+        progress?.Report(new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true));
 
         var requirementsFile = new FilePath(installLocation, "requirements.txt");
 
@@ -227,15 +207,10 @@ public class ComfyUI : BaseGitPackage
             .PipInstallFromRequirements(requirementsFile, onConsoleOutput, excludes: "torch")
             .ConfigureAwait(false);
 
-        progress?.Report(
-            new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false)
-        );
+        progress?.Report(new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false));
     }
 
-    private async Task AutoDetectAndInstallTorch(
-        PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null
-    )
+    private async Task AutoDetectAndInstallTorch(PyVenvRunner venvRunner, IProgress<ProgressReport>? progress = null)
     {
         var gpus = HardwareHelper.IterGpuInfo().ToList();
         if (gpus.Any(g => g.IsNvidia))
@@ -264,22 +239,10 @@ public class ComfyUI : BaseGitPackage
     )
     {
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
+        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
-        void HandleConsoleOutput(ProcessOutput s)
-        {
-            onConsoleOutput?.Invoke(s);
-
-            if (s.Text.Contains("To see the GUI go to", StringComparison.OrdinalIgnoreCase))
-            {
-                var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
-                var match = regex.Match(s.Text);
-                if (match.Success)
-                {
-                    WebUrl = match.Value;
-                }
-                OnStartupComplete(WebUrl);
-            }
-        }
+        VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
+        return;
 
         void HandleExit(int i)
         {
@@ -287,15 +250,24 @@ public class ComfyUI : BaseGitPackage
             OnExit(i);
         }
 
-        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
+        void HandleConsoleOutput(ProcessOutput s)
+        {
+            onConsoleOutput?.Invoke(s);
 
-        VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
+            if (!s.Text.Contains("To see the GUI go to", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
+            var match = regex.Match(s.Text);
+            if (match.Success)
+            {
+                WebUrl = match.Value;
+            }
+            OnStartupComplete(WebUrl);
+        }
     }
 
-    public override Task SetupModelFolders(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    )
+    public override Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
     {
         switch (sharedFolderMethod)
         {
@@ -330,9 +302,7 @@ public class ComfyUI : BaseGitPackage
             throw new Exception("Invalid extra_model_paths.yaml");
         }
         // check if we have a child called "stability_matrix"
-        var stabilityMatrixNode = mappingNode.Children.FirstOrDefault(
-            c => c.Key.ToString() == "stability_matrix"
-        );
+        var stabilityMatrixNode = mappingNode.Children.FirstOrDefault(c => c.Key.ToString() == "stability_matrix");
 
         if (stabilityMatrixNode.Key != null)
         {
@@ -363,10 +333,7 @@ public class ComfyUI : BaseGitPackage
                 {
                     { "checkpoints", Path.Combine(modelsDir, "StableDiffusion") },
                     { "vae", Path.Combine(modelsDir, "VAE") },
-                    {
-                        "loras",
-                        $"{Path.Combine(modelsDir, "Lora")}\n{Path.Combine(modelsDir, "LyCORIS")}"
-                    },
+                    { "loras", $"{Path.Combine(modelsDir, "Lora")}\n{Path.Combine(modelsDir, "LyCORIS")}" },
                     {
                         "upscale_models",
                         $"{Path.Combine(modelsDir, "ESRGAN")}\n{Path.Combine(modelsDir, "RealESRGAN")}\n{Path.Combine(modelsDir, "SwinIR")}"
@@ -383,49 +350,36 @@ public class ComfyUI : BaseGitPackage
         }
 
         var newRootNode = new YamlMappingNode();
-        foreach (
-            var child in mappingNode.Children.Where(c => c.Key.ToString() != "stability_matrix")
-        )
+        foreach (var child in mappingNode.Children.Where(c => c.Key.ToString() != "stability_matrix"))
         {
             newRootNode.Children.Add(child);
         }
 
         newRootNode.Children.Add(stabilityMatrixNode);
 
-        var serializer = new SerializerBuilder()
-            .WithNamingConvention(UnderscoredNamingConvention.Instance)
-            .Build();
+        var serializer = new SerializerBuilder().WithNamingConvention(UnderscoredNamingConvention.Instance).Build();
         var yamlData = serializer.Serialize(newRootNode);
         File.WriteAllText(extraPathsYamlPath, yamlData);
 
         return Task.CompletedTask;
     }
 
-    public override Task UpdateModelFolders(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    ) =>
+    public override Task UpdateModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) =>
         sharedFolderMethod switch
         {
-            SharedFolderMethod.Symlink
-                => base.UpdateModelFolders(installDirectory, sharedFolderMethod),
-            SharedFolderMethod.Configuration
-                => SetupModelFolders(installDirectory, sharedFolderMethod),
+            SharedFolderMethod.Symlink => base.UpdateModelFolders(installDirectory, sharedFolderMethod),
+            SharedFolderMethod.Configuration => SetupModelFolders(installDirectory, sharedFolderMethod),
             SharedFolderMethod.None => Task.CompletedTask,
             _ => Task.CompletedTask
         };
 
-    public override Task RemoveModelFolderLinks(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    )
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
     {
         return sharedFolderMethod switch
         {
             SharedFolderMethod.Configuration => RemoveConfigSection(installDirectory),
             SharedFolderMethod.None => Task.CompletedTask,
-            SharedFolderMethod.Symlink
-                => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
+            SharedFolderMethod.Symlink => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
             _ => Task.CompletedTask
         };
     }
@@ -457,9 +411,7 @@ public class ComfyUI : BaseGitPackage
 
         mappingNode.Children.Remove("stability_matrix");
 
-        var serializer = new SerializerBuilder()
-            .WithNamingConvention(UnderscoredNamingConvention.Instance)
-            .Build();
+        var serializer = new SerializerBuilder().WithNamingConvention(UnderscoredNamingConvention.Instance).Build();
         var yamlData = serializer.Serialize(mappingNode);
         File.WriteAllText(extraPathsYamlPath, yamlData);
 
@@ -472,43 +424,15 @@ public class ComfyUI : BaseGitPackage
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        progress?.Report(
-            new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true)
-        );
+        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true));
 
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         await venvRunner
             .PipInstall(
-                new PipInstallArgs()
-                    .WithTorch("==2.0.1")
-                    .WithTorchVision()
-                    .WithTorchExtraIndex("rocm5.6"),
+                new PipInstallArgs().WithTorch("==2.0.1").WithTorchVision().WithTorchExtraIndex("rocm5.6"),
                 onConsoleOutput
             )
-            .ConfigureAwait(false);
-    }
-
-    public async Task SetupInferenceOutputFolderLinks(DirectoryPath installDirectory)
-    {
-        var inferenceDir = installDirectory.JoinDir("output", "Inference");
-
-        var sharedInferenceDir = SettingsManager.ImagesInferenceDirectory;
-
-        if (inferenceDir.IsSymbolicLink)
-        {
-            if (inferenceDir.Info.ResolveLinkTarget(true)?.FullName == sharedInferenceDir.FullPath)
-            {
-                // Already valid link, skip
-                return;
-            }
-
-            // Otherwise delete so we don't have to move files
-            await sharedInferenceDir.DeleteAsync(false).ConfigureAwait(false);
-        }
-
-        await Helper.SharedFolders
-            .CreateOrUpdateLink(sharedInferenceDir, inferenceDir)
             .ConfigureAwait(false);
     }
 }

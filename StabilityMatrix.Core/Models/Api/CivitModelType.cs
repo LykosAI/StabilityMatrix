@@ -9,29 +9,37 @@ namespace StabilityMatrix.Core.Models.Api;
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 public enum CivitModelType
 {
+    Unknown,
+
     [ConvertTo<SharedFolderType>(SharedFolderType.StableDiffusion)]
     Checkpoint,
+
     [ConvertTo<SharedFolderType>(SharedFolderType.TextualInversion)]
     TextualInversion,
+
     [ConvertTo<SharedFolderType>(SharedFolderType.Hypernetwork)]
     Hypernetwork,
+
     [ConvertTo<SharedFolderType>(SharedFolderType.Lora)]
     LORA,
+
     [ConvertTo<SharedFolderType>(SharedFolderType.ControlNet)]
     Controlnet,
+
     [ConvertTo<SharedFolderType>(SharedFolderType.LyCORIS)]
     LoCon,
+
     [ConvertTo<SharedFolderType>(SharedFolderType.VAE)]
     VAE,
-    
+
     // Unused/obsolete/unknown/meta options
     AestheticGradient,
     Model,
+    MotionModule,
     Poses,
     Upscaler,
     Wildcards,
     Workflows,
     Other,
-    All,
-    Unknown
+    All
 }

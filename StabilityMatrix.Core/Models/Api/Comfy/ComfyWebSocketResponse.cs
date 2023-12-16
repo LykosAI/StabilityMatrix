@@ -9,7 +9,7 @@ public class ComfyWebSocketResponse
 {
     [JsonPropertyName("type")]
     public required ComfyWebSocketResponseType Type { get; set; }
-    
+
     /// <summary>
     /// Depending on the value of <see cref="Type"/>,
     /// this property will be one of these types
@@ -21,9 +21,10 @@ public class ComfyWebSocketResponse
     /// </summary>
     [JsonPropertyName("data")]
     public required JsonObject Data { get; set; }
-    
-    public T? GetDataAsType<T>() where T : class
+
+    public T? GetDataAsType<T>(JsonSerializerOptions? options = null)
+        where T : class
     {
-        return Data.Deserialize<T>();
+        return Data.Deserialize<T>(options);
     }
 }

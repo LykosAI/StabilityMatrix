@@ -28,8 +28,7 @@ public partial class InferencePage : UserControlBase
         InitializeComponent();
 
         addTabFlyout =
-            Resources["AddTabFlyout"] as CommandBarFlyout
-            ?? throw new NullReferenceException("AddTabFlyout not found");
+            Resources["AddTabFlyout"] as CommandBarFlyout ?? throw new NullReferenceException("AddTabFlyout not found");
     }
 
     private void TabView_OnTabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)
@@ -49,15 +48,11 @@ public partial class InferencePage : UserControlBase
         addTabFlyout.ShowAt(AddButton);
     }
 
-    private void AddTabMenu_TextToImage_OnClick(object? sender, RoutedEventArgs e)
+    private void AddTabMenu_OnClick(object? sender, RoutedEventArgs e)
     {
-        (DataContext as InferenceViewModel)!.AddTabCommand.Execute(
-            InferenceProjectType.TextToImage
-        );
-    }
-
-    private void AddTabMenu_Upscale_OnClick(object? sender, RoutedEventArgs e)
-    {
-        (DataContext as InferenceViewModel)!.AddTabCommand.Execute(InferenceProjectType.Upscale);
+        if (sender is Control { Tag: InferenceProjectType type })
+        {
+            (DataContext as InferenceViewModel)!.AddTabCommand.Execute(type);
+        }
     }
 }

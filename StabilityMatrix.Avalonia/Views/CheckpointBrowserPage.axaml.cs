@@ -1,5 +1,4 @@
-﻿using Avalonia.Markup.Xaml;
-using StabilityMatrix.Avalonia.Controls;
+﻿using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Views;
@@ -10,10 +9,5 @@ public partial class CheckpointBrowserPage : UserControlBase
     public CheckpointBrowserPage()
     {
         InitializeComponent();
-    }
-
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
     }
 }

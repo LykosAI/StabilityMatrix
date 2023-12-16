@@ -18,13 +18,12 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 public partial class SettingsViewModel : PageViewModelBase
 {
     public override string Title => "Settings";
-    public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
+    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
 
     public IReadOnlyList<PageViewModelBase> SubPages { get; }
 
     [ObservableProperty]
-    private ObservableCollection<PageViewModelBase> currentPagePath = new();
+    private ObservableCollection<PageViewModelBase> currentPagePath = [];
 
     [ObservableProperty]
     private PageViewModelBase? currentPage;
@@ -35,7 +34,8 @@ public partial class SettingsViewModel : PageViewModelBase
         {
             vmFactory.Get<MainSettingsViewModel>(),
             vmFactory.Get<InferenceSettingsViewModel>(),
-            vmFactory.Get<AccountSettingsViewModel>()
+            vmFactory.Get<AccountSettingsViewModel>(),
+            vmFactory.Get<UpdateSettingsViewModel>()
         };
 
         CurrentPagePath.AddRange(SubPages);

@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
+using AvaloniaEdit.Rendering;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Languages;
 
@@ -12,6 +13,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 public abstract class TaskDialogViewModelBase : ViewModelBase
 {
     private TaskDialog? dialog;
+
+    public virtual string? Title { get; set; }
 
     protected static TaskDialogCommand GetCommandButton(string text, ICommand command)
     {
@@ -27,11 +30,7 @@ public abstract class TaskDialogViewModelBase : ViewModelBase
 
     protected static TaskDialogButton GetCloseButton()
     {
-        return new TaskDialogButton
-        {
-            Text = Resources.Action_Close,
-            DialogResult = TaskDialogStandardResult.Close
-        };
+        return new TaskDialogButton { Text = Resources.Action_Close, DialogResult = TaskDialogStandardResult.Close };
     }
 
     /// <summary>
@@ -43,6 +42,7 @@ public abstract class TaskDialogViewModelBase : ViewModelBase
 
         dialog = new TaskDialog
         {
+            Header = Title,
             Content = this,
             XamlRoot = App.VisualRoot,
             Buttons = { GetCloseButton() }

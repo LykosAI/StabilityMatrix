@@ -175,7 +175,7 @@
     <value>Deemphasis</value>
   </data>
   <data name="Label_EmbeddingsOrTextualInversion" xml:space="preserve">
-    <value>Emebeddings / Textual Inversion</value>
+    <value>Embeddings / Textual Inversion</value>
   </data>
   <data name="Label_NetworksLoraOrLycoris" xml:space="preserve">
     <value>Networks (Lora / LyCORIS)</value>
@@ -726,6 +726,18 @@
   <data name="Label_OneImageSelected" xml:space="preserve">
     <value>1 image selected</value>
   </data>
+  <data name="Label_Preprocessor" xml:space="preserve">
+    <value>Preprocessor</value>
+  </data>
+  <data name="Label_Strength" xml:space="preserve">
+    <value>Strength</value>
+  </data>
+  <data name="Label_ControlWeight" xml:space="preserve">
+    <value>Control Weight</value>
+  </data>
+  <data name="Label_ControlSteps" xml:space="preserve">
+    <value>Control Steps</value>
+  </data>
   <data name="Label_PythonPackages" xml:space="preserve">
     <value>Python Packages</value>
   </data>
@@ -785,5 +797,104 @@
   </data>
   <data name="Label_DownloadFailed" xml:space="preserve">
     <value>Download Failed</value>
+  </data>
+  <data name="Label_AutoUpdates" xml:space="preserve">
+    <value>Auto Updates</value>
+  </data>
+  <data name="Label_UpdatesPreviewChannelDescription" xml:space="preserve">
+    <value>For early adopters. Preview builds will be more reliable than those from the Dev channel, and will be available closer to stable releases. Your feedback will help us greatly in discovering issues and polishing design elements.</value>
+  </data>
+  <data name="Label_UpdatesDevChannelDescription" xml:space="preserve">
+    <value>For technical users. Be the first to access our Development builds from feature branches as soon as they are available. There may be some rough edges and bugs as we experiment with new features.</value>
+  </data>
+  <data name="Label_Updates" xml:space="preserve">
+    <value>Updates</value>
+  </data>
+  <data name="Label_YouAreUpToDate" xml:space="preserve">
+    <value>You're up to date</value>
+  </data>
+  <data name="TextTemplate_LastChecked" xml:space="preserve">
+    <value>Last checked: {0}</value>
+  </data>
+  <data name="Action_CopyTriggerWords" xml:space="preserve">
+    <value>Copy Trigger Words</value>
+  </data>
+  <data name="Label_TriggerWords" xml:space="preserve">
+    <value>Trigger words:</value>
+  </data>
+  <data name="TeachingTip_MoreCheckpointCategories" xml:space="preserve">
+    <value>Additional folders such as IPAdapters and TextualInversions (embeddings) can be enabled here</value>
+  </data>
+  <data name="Action_OpenOnHuggingFace" xml:space="preserve">
+    <value>Open on Hugging Face</value>
+  </data>
+  <data name="Action_UpdateExistingMetadata" xml:space="preserve">
+    <value>Update Existing Metadata</value>
+  </data>
+  <data name="Label_General" xml:space="preserve">
+    <value>General</value><comment>A general settings category</comment>
+  </data>
+  <data name="Label_Inference" xml:space="preserve">
+    <value>Inference</value><comment>The Inference feature page</comment>
+  </data>
+  <data name="Label_Prompt" xml:space="preserve">
+    <value>Prompt</value><comment>A settings category for Inference generation prompts</comment>
+  </data>
+  <data name="Label_OutputImageFiles" xml:space="preserve">
+    <value>Output Image Files</value>
+  </data>
+  <data name="Label_ImageViewer" xml:space="preserve">
+    <value>Image Viewer</value>
+  </data>
+  <data name="Label_AutoCompletion" xml:space="preserve">
+    <value>Auto Completion</value>
+  </data>
+  <data name="Label_CompletionReplaceUnderscoresWithSpaces" xml:space="preserve">
+    <value>Replace underscores with spaces when inserting completions</value>
+  </data>
+  <data name="Label_PromptTags" xml:space="preserve">
+    <value>Prompt Tags</value><comment>Tags for image generation prompts</comment>
+  </data>
+  <data name="Label_PromptTagsImport" xml:space="preserve">
+    <value>Import Prompt tags</value>
+  </data>
+  <data name="Label_PromptTagsDescription" xml:space="preserve">
+    <value>Tags file to use for suggesting completions (Supports the a1111-sd-webui-tagcomplete .csv format)</value>
+  </data>
+  <data name="Label_SystemInformation" xml:space="preserve">
+    <value>System Information</value>
+  </data>
+  <data name="Label_CivitAi" xml:space="preserve">
+    <value>CivitAI</value>
+  </data>
+  <data name="Label_HuggingFace" xml:space="preserve">
+    <value>Hugging Face</value>
+  </data>
+  <data name="Label_Addons" xml:space="preserve">
+    <value>Addons</value><comment>Inference Sampler Addons</comment>
+  </data>
+  <data name="Label_SaveIntermediateImage" xml:space="preserve">
+    <value>Save Intermediate Image</value><comment>Inference module step to save an intermediate image</comment>
+  </data>
+  <data name="Label_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Action_SelectFile" xml:space="preserve">
+    <value>Select File</value>
+  </data>
+  <data name="Action_ReplaceContents" xml:space="preserve">
+    <value>Replace Contents</value>
+  </data>
+  <data name="Label_WipFeature" xml:space="preserve">
+    <value>Not yet available</value>
+  </data>
+  <data name="Label_WipFeatureDescription" xml:space="preserve">
+    <value>Feature will be available in a future update</value>
+  </data>
+  <data name="Label_MissingImageFile" xml:space="preserve">
+    <value>Missing Image File</value>
+  </data>
+  <data name="Label_HolidayMode" xml:space="preserve">
+    <value>Holiday Mode</value>
   </data>
 </root>

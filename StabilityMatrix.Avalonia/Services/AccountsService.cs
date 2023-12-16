@@ -141,7 +141,11 @@ public class AccountsService : IAccountsService
 
     private async Task RefreshLykosAsync(Secrets secrets)
     {
-        if (secrets.LykosAccount is not null)
+        if (
+            secrets.LykosAccount is not null
+            && !string.IsNullOrWhiteSpace(secrets.LykosAccount?.RefreshToken)
+            && !string.IsNullOrWhiteSpace(secrets.LykosAccount?.AccessToken)
+        )
         {
             try
             {
@@ -157,6 +161,10 @@ public class AccountsService : IAccountsService
             {
                 logger.LogWarning("Timed out while fetching Lykos Auth user info");
             }
+            catch (InvalidOperationException e)
+            {
+                logger.LogWarning(e, "Failed to get authentication token");
+            }
             catch (ApiException e)
             {
                 if (e.StatusCode is HttpStatusCode.Unauthorized) { }
@@ -164,6 +172,10 @@ public class AccountsService : IAccountsService
                 {
                     logger.LogWarning(e, "Failed to get user info from Lykos");
                 }
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Unknown error while refreshing Lykos account status");
             }
         }
 

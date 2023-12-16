@@ -1,0 +1,88 @@
+﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData">
+    
+    <Design.PreviewWith>
+        <Panel Width="400" Height="600">
+            <Panel Width="350" Height="200">
+            </Panel>
+        </Panel>
+    </Design.PreviewWith>
+    
+    <ControlTheme
+        x:Key="DraggableListBoxItemTheme"
+        TargetType="ListBoxItem">
+                <!--
+                    Modified from https://github.com/amwx/FluentAvalonia/blob/main/src/
+                    FluentAvalonia/Styling/ControlThemes/BasicControls/ListBoxStyles.axaml
+                -->
+
+                <Setter Property="Padding" Value="0,0,0,0" />
+
+                <Setter Property="FontFamily" Value="{DynamicResource ContentControlThemeFontFamily}" />
+                <Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
+                <Setter Property="Background" Value="{DynamicResource ListViewItemBackground}" />
+                <!--<Setter Property="CornerRadius" Value="7" />-->
+                <Setter Property="Foreground" Value="{DynamicResource ListViewItemForeground}" />
+
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="MinWidth" Value="{DynamicResource ListViewItemMinWidth}" />
+
+                <Setter Property="Template">
+                    <ControlTemplate>
+                        <Panel>
+                            <ContentPresenter
+                                Name="PART_ContentPresenter"
+                                Padding="{TemplateBinding Padding}"
+                                HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Content="{TemplateBinding Content}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                CornerRadius="{TemplateBinding CornerRadius}" />
+                        </Panel>
+                    </ControlTemplate>
+                </Setter>
+        
+                <Style Selector="^:not(:dragging)">
+                    <Setter Property="Transitions">
+                        <Setter.Value>
+                            <Transitions>
+                                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+                            </Transitions>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+
+                <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="{DynamicResource ListViewItemBackgroundPressed}" />
+                </Style>
+                <Style Selector="^ /template/ ContentPresenter">
+                    <Setter Property="Foreground" Value="{DynamicResource ListViewItemForegroundPressed}" />
+                </Style>
+        
+    </ControlTheme>
+    
+    <!-- ReSharper disable once Xaml.StaticResourceNotResolved -->
+    <ControlTheme
+        x:Key="DraggableListBoxTheme"
+        TargetType="ListBox"
+        BasedOn="{StaticResource {x:Type ListBox}}">
+        
+        <Setter Property="ItemContainerTheme" Value="{StaticResource DraggableListBoxItemTheme}"/>
+        
+        <!--<Style Selector="^ /template/ ListBoxItem:not(:dragging)">
+            <Setter Property="Transitions">
+                <Setter.Value>
+                    <Transitions>
+                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1" />
+                    </Transitions>
+                </Setter.Value>
+            </Setter>
+        </Style>-->
+        
+    </ControlTheme>
+</ResourceDictionary>

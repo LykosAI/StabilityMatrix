@@ -1,11 +1,9 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
-using DynamicData.Binding;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
@@ -14,10 +12,10 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Services;
-using Path = System.IO.Path;
 
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
@@ -73,33 +71,26 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
 
         StackCardViewModel = vmFactory.Get<StackCardViewModel>();
         StackCardViewModel.AddCards(
-            new LoadableViewModelBase[]
+            vmFactory.Get<StackExpanderViewModel>(stackExpander =>
             {
-                // Upscaler
-                vmFactory.Get<StackExpanderViewModel>(stackExpander =>
-                {
-                    stackExpander.Title = "Upscale";
-                    stackExpander.AddCards(new LoadableViewModelBase[] { UpscalerCardViewModel });
-                }),
-                // Sharpen
-                vmFactory.Get<StackExpanderViewModel>(stackExpander =>
-                {
-                    stackExpander.Title = "Sharpen";
-                    stackExpander.AddCards(new LoadableViewModelBase[] { SharpenCardViewModel });
-                })
-            }
+                stackExpander.Title = "Upscale";
+                stackExpander.AddCards(UpscalerCardViewModel);
+            }),
+            vmFactory.Get<StackExpanderViewModel>(stackExpander =>
+            {
+                stackExpander.Title = "Sharpen";
+                stackExpander.AddCards(SharpenCardViewModel);
+            })
         );
+    }
 
-        // On any new images, copy to input dir
-        SelectImageCardViewModel
-            .WhenPropertyChanged(x => x.ImageSource)
-            .Subscribe(e =>
-            {
-                if (e.Value?.LocalFile?.FullPath is { } path)
-                {
-                    ClientManager.CopyImageToInputAsync(path).SafeFireAndForget();
-                }
-            });
+    /// <inheritdoc />
+    protected override IEnumerable<ImageSource> GetInputImages()
+    {
+        if (SelectImageCardViewModel.ImageSource is { } imageSource)
+        {
+            yield return imageSource;
+        }
     }
 
     /// <inheritdoc />
@@ -110,55 +101,43 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
         var builder = args.Builder;
         var nodes = builder.Nodes;
 
-        // Get source image
-        var sourceImage = SelectImageCardViewModel.ImageSource;
-        var sourceImageRelativePath = Path.Combine("Inference", sourceImage!.LocalFile!.Name);
-        var sourceImageSize =
-            SelectImageCardViewModel.CurrentBitmapSize
-            ?? throw new InvalidOperationException("Source image size is null");
-
-        // Set source size
-        builder.Connections.ImageSize = sourceImageSize;
-
-        // Load source
-        var loadImage = nodes.AddNamedNode(
-            ComfyNodeBuilder.LoadImage("LoadImage", sourceImageRelativePath)
-        );
-        builder.Connections.Image = loadImage.Output1;
+        // Setup image source
+        SelectImageCardViewModel.ApplyStep(args);
 
         // If upscale is enabled, add another upscale group
         if (IsUpscaleEnabled)
         {
-            var upscaleSize = builder.Connections.GetScaledImageSize(UpscalerCardViewModel.Scale);
-
-            // Build group
-            var upscaleGroup = builder.Group_UpscaleToImage(
-                "Upscale",
-                builder.Connections.Image!,
-                UpscalerCardViewModel.SelectedUpscaler!.Value,
-                upscaleSize.Width,
-                upscaleSize.Height
+            var upscaleSize = builder.Connections.PrimarySize.WithScale(
+                UpscalerCardViewModel.Scale
             );
 
-            // Set as the image output
-            builder.Connections.Image = upscaleGroup.Output;
+            // Build group
+            builder.Connections.Primary = builder
+                .Group_UpscaleToImage(
+                    "Upscale",
+                    builder.GetPrimaryAsImage(),
+                    UpscalerCardViewModel.SelectedUpscaler!.Value,
+                    upscaleSize.Width,
+                    upscaleSize.Height
+                )
+                .Output;
         }
 
         // If sharpen is enabled, add another sharpen group
         if (IsSharpenEnabled)
         {
-            var sharpenGroup = nodes.AddNamedNode(
-                ComfyNodeBuilder.ImageSharpen(
-                    "Sharpen",
-                    builder.Connections.Image,
-                    SharpenCardViewModel.SharpenRadius,
-                    SharpenCardViewModel.Sigma,
-                    SharpenCardViewModel.Alpha
+            builder.Connections.Primary = nodes
+                .AddTypedNode(
+                    new ComfyNodeBuilder.ImageSharpen
+                    {
+                        Name = "Sharpen",
+                        Image = builder.GetPrimaryAsImage(),
+                        SharpenRadius = SharpenCardViewModel.SharpenRadius,
+                        Sigma = SharpenCardViewModel.Sigma,
+                        Alpha = SharpenCardViewModel.Alpha
+                    }
                 )
-            );
-
-            // Set as the image output
-            builder.Connections.Image = sharpenGroup.Output;
+                .Output;
         }
 
         builder.SetupOutputImage();
@@ -182,7 +161,10 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
             return;
         }
 
-        await ClientManager.CopyImageToInputAsync(path, cancellationToken);
+        foreach (var image in GetInputImages())
+        {
+            await ClientManager.UploadInputImageAsync(image, cancellationToken);
+        }
 
         var buildPromptArgs = new BuildPromptEventArgs { Overrides = overrides };
         BuildPrompt(buildPromptArgs);

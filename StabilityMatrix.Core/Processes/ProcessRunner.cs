@@ -204,11 +204,29 @@ public static class ProcessRunner
 
         await process.WaitForExitAsync().ConfigureAwait(false);
 
+        string? processName = null;
+        TimeSpan elapsed = default;
+
+        // Accessing these properties may throw an exception if the process has already exited
+        try
+        {
+            processName = process.ProcessName;
+        }
+        catch (SystemException) { }
+
+        try
+        {
+            elapsed = process.ExitTime - process.StartTime;
+        }
+        catch (SystemException) { }
+
         return new ProcessResult
         {
             ExitCode = process.ExitCode,
             StandardOutput = stdout,
-            StandardError = stderr
+            StandardError = stderr,
+            ProcessName = processName,
+            Elapsed = elapsed
         };
     }
 
@@ -384,35 +402,6 @@ public static class ProcessRunner
     }
 
     /// <summary>
-    /// Check if the process exited with the expected exit code.
-    /// </summary>
-    /// <param name="process">Process to check.</param>
-    /// <param name="expectedExitCode">Expected exit code.</param>
-    /// <param name="stdout">Process stdout.</param>
-    /// <param name="stderr">Process stderr.</param>
-    /// <exception cref="ProcessException">Thrown if exit code does not match expected value.</exception>
-    // ReSharper disable once MemberCanBePrivate.Global
-    public static Task ValidateExitConditionAsync(
-        Process process,
-        int expectedExitCode = 0,
-        string? stdout = null,
-        string? stderr = null
-    )
-    {
-        var exitCode = process.ExitCode;
-        if (exitCode == expectedExitCode)
-        {
-            return Task.CompletedTask;
-        }
-
-        var pName = process.StartInfo.FileName;
-        var msg =
-            $"Process {pName} failed with exit-code {exitCode}. stdout: '{stdout}', stderr: '{stderr}'";
-        Logger.Error(msg);
-        throw new ProcessException(msg);
-    }
-
-    /// <summary>
     /// Waits for process to exit, then validates exit code.
     /// </summary>
     /// <param name="process">Process to check.</param>
@@ -425,17 +414,28 @@ public static class ProcessRunner
         CancellationToken cancelToken = default
     )
     {
-        var stdout = new StringBuilder();
-        var stderr = new StringBuilder();
-        process.OutputDataReceived += (_, args) => stdout.Append(args.Data);
-        process.ErrorDataReceived += (_, args) => stderr.Append(args.Data);
-        await process.WaitForExitAsync(cancelToken).ConfigureAwait(false);
-        await ValidateExitConditionAsync(
-                process,
-                expectedExitCode,
-                stdout.ToString(),
-                stderr.ToString()
-            )
-            .ConfigureAwait(false);
+        if (!process.HasExited)
+        {
+            await process.WaitForExitAsync(cancelToken).ConfigureAwait(false);
+        }
+
+        if (process.ExitCode == expectedExitCode)
+        {
+            return;
+        }
+
+        // Accessing ProcessName may error on some platforms
+        string? processName = null;
+        try
+        {
+            processName = process.ProcessName;
+        }
+        catch (SystemException) { }
+
+        throw new ProcessException(
+            "Process "
+                + (processName == null ? "" : processName + " ")
+                + $"failed with exit-code {process.ExitCode}."
+        );
     }
 }

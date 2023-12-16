@@ -28,6 +28,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.OutputsPage;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
@@ -69,10 +70,10 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanShowOutputTypes))]
-    private PackageOutputCategory selectedCategory;
+    private PackageOutputCategory? selectedCategory;
 
     [ObservableProperty]
-    private SharedOutputType selectedOutputType;
+    private SharedOutputType? selectedOutputType;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(NumImagesSelected))]
@@ -136,6 +137,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
             settings => settings.OutputsImageSize,
             delay: TimeSpan.FromMilliseconds(250)
         );
+
+        RefreshCategories();
     }
 
     public override void OnLoaded()
@@ -148,49 +151,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         Directory.CreateDirectory(settingsManager.ImagesDirectory);
 
-        var packageCategories = settingsManager.Settings.InstalledPackages
-            .Where(x => !x.UseSharedOutputFolder)
-            .Select(packageFactory.GetPackagePair)
-            .WhereNotNull()
-            .Where(
-                p =>
-                    p.BasePackage.SharedOutputFolders != null
-                    && p.BasePackage.SharedOutputFolders.Any()
-            )
-            .Select(
-                pair =>
-                    new PackageOutputCategory
-                    {
-                        Path = Path.Combine(
-                            pair.InstalledPackage.FullPath!,
-                            pair.BasePackage.OutputFolderName
-                        ),
-                        Name = pair.InstalledPackage.DisplayName ?? ""
-                    }
-            )
-            .ToList();
-
-        packageCategories.Insert(
-            0,
-            new PackageOutputCategory
-            {
-                Path = settingsManager.ImagesDirectory,
-                Name = "Shared Output Folder"
-            }
-        );
-
-        packageCategories.Insert(
-            1,
-            new PackageOutputCategory
-            {
-                Path = settingsManager.ImagesInferenceDirectory,
-                Name = "Inference"
-            }
-        );
-
-        Categories = new ObservableCollection<PackageOutputCategory>(packageCategories);
-        SelectedCategory = Categories.First();
-        SelectedOutputType = SharedOutputType.All;
+        SelectedCategory ??= Categories.First();
+        SelectedOutputType ??= SharedOutputType.All;
         SearchQuery = string.Empty;
         ImageSize = settingsManager.Settings.OutputsImageSize;
 
@@ -216,14 +178,14 @@ public partial class OutputsPageViewModel : PageViewModelBase
         GetOutputs(path);
     }
 
-    partial void OnSelectedOutputTypeChanged(SharedOutputType oldValue, SharedOutputType newValue)
+    partial void OnSelectedOutputTypeChanged(SharedOutputType? oldValue, SharedOutputType? newValue)
     {
-        if (oldValue == newValue)
+        if (oldValue == newValue || newValue == null)
             return;
 
         var path =
             newValue == SharedOutputType.All
-                ? SelectedCategory.Path
+                ? SelectedCategory?.Path
                 : Path.Combine(SelectedCategory.Path, newValue.ToString());
         GetOutputs(path);
     }
@@ -297,6 +259,12 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     public Task OpenImage(string imagePath) => ProcessRunner.OpenFileBrowser(imagePath);
 
+    public void Refresh()
+    {
+        Dispatcher.UIThread.Post(RefreshCategories);
+        Dispatcher.UIThread.Post(OnLoaded);
+    }
+
     public async Task DeleteImage(OutputImageViewModel? item)
     {
         if (item is null)
@@ -322,6 +290,12 @@ public partial class OutputsPageViewModel : PageViewModelBase
         if (!result.IsSuccessful)
         {
             return;
+        }
+        //Attempt to remove .txt sidecar if it exists
+        var sideCar = new FilePath(Path.ChangeExtension(imageFile, ".txt"));
+        if (File.Exists(sideCar))
+        {
+            await notificationService.TryAsync(sideCar.DeleteAsync());
         }
 
         OutputsCache.Remove(item.ImageFile);
@@ -388,6 +362,14 @@ public partial class OutputsPageViewModel : PageViewModelBase
             {
                 continue;
             }
+
+            //Attempt to remove .txt sidecar if it exists
+            var sideCar = new FilePath(Path.ChangeExtension(imageFile, ".txt"));
+            if (File.Exists(sideCar))
+            {
+                await notificationService.TryAsync(sideCar.DeleteAsync());
+            }
+
             OutputsCache.Remove(output.ImageFile);
 
             // Invalidate cache
@@ -485,6 +467,14 @@ public partial class OutputsPageViewModel : PageViewModelBase
                     }
 
                     await file.MoveToWithIncrementAsync(newPath);
+
+                    var sideCar = new FilePath(Path.ChangeExtension(file, ".txt"));
+                    //If a .txt sidecar file exists, and the image was moved successfully, try to move the sidecar along with the image
+                    if (File.Exists(newPath) && File.Exists(sideCar))
+                    {
+                        var newSidecar = new FilePath(Path.ChangeExtension(newPath, ".txt"));
+                        await sideCar.MoveToWithIncrementAsync(newSidecar);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -495,6 +485,11 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         OnLoaded();
         IsConsolidating = false;
+    }
+
+    public void ClearSearchQuery()
+    {
+        SearchQuery = string.Empty;
     }
 
     private void GetOutputs(string directory)
@@ -527,5 +522,61 @@ public partial class OutputsPageViewModel : PageViewModelBase
         {
             OutputsCache.EditDiff(files);
         }
+    }
+
+    private void RefreshCategories()
+    {
+        if (Design.IsDesignMode)
+            return;
+
+        if (!settingsManager.IsLibraryDirSet)
+            return;
+
+        var previouslySelectedCategory = SelectedCategory;
+
+        var packageCategories = settingsManager.Settings.InstalledPackages
+            .Where(x => !x.UseSharedOutputFolder)
+            .Select(packageFactory.GetPackagePair)
+            .WhereNotNull()
+            .Where(
+                p =>
+                    p.BasePackage.SharedOutputFolders != null
+                    && p.BasePackage.SharedOutputFolders.Any()
+            )
+            .Select(
+                pair =>
+                    new PackageOutputCategory
+                    {
+                        Path = Path.Combine(
+                            pair.InstalledPackage.FullPath!,
+                            pair.BasePackage.OutputFolderName
+                        ),
+                        Name = pair.InstalledPackage.DisplayName ?? ""
+                    }
+            )
+            .ToList();
+
+        packageCategories.Insert(
+            0,
+            new PackageOutputCategory
+            {
+                Path = settingsManager.ImagesDirectory,
+                Name = "Shared Output Folder"
+            }
+        );
+
+        packageCategories.Insert(
+            1,
+            new PackageOutputCategory
+            {
+                Path = settingsManager.ImagesInferenceDirectory,
+                Name = "Inference"
+            }
+        );
+
+        Categories = new ObservableCollection<PackageOutputCategory>(packageCategories);
+        SelectedCategory =
+            Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name)
+            ?? Categories.First();
     }
 }

@@ -7,6 +7,7 @@
         <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
@@ -18,6 +19,7 @@
       <PackageReference Include="AsyncAwaitBestPractices" Version="7.0.0" />
       <PackageReference Include="Blake3" Version="1.0.0" />
       <PackageReference Include="Crc32.NET" Version="1.2.0" />
+      <PackageReference Include="CSharpDiscriminatedUnion" Version="2.0.1" />
       <PackageReference Include="DeviceId" Version="6.5.0" />
       <PackageReference Include="DeviceId.Linux" Version="6.3.1" />
       <PackageReference Include="DeviceId.Mac" Version="6.2.1" />
@@ -25,6 +27,8 @@
       <PackageReference Include="DeviceId.Windows.Wmi" Version="6.5.1" />
       <PackageReference Include="DotNet.Bundle" Version="0.9.13" />
       <PackageReference Include="DynamicData" Version="8.1.1" />
+      <PackageReference Include="Hardware.Info" Version="100.0.0.1" />
+      <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
       <PackageReference Include="LiteDB" Version="5.0.17" />
       <PackageReference Include="LiteDB.Async" Version="0.1.7" />
       <PackageReference Include="MetadataExtractor" Version="2.8.1" />

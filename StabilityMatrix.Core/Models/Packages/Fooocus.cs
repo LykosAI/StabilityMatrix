@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
@@ -152,39 +153,38 @@ public class Fooocus(
     {
         var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
 
-        progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
+        progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
+
+        var pipArgs = new PipInstallArgs();
 
         if (torchVersion == TorchVersion.DirectMl)
         {
-            await venvRunner
-                .PipInstall(new PipInstallArgs().WithTorchDirectML(), onConsoleOutput)
-                .ConfigureAwait(false);
+            pipArgs = pipArgs.WithTorchDirectML();
         }
         else
         {
-            var extraIndex = torchVersion switch
-            {
-                TorchVersion.Cpu => "cpu",
-                TorchVersion.Cuda => "cu121",
-                TorchVersion.Rocm => "rocm5.6",
-                _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
-            };
-
-            await venvRunner
-                .PipInstall(
-                    new PipInstallArgs()
-                        .WithTorch("==2.1.0")
-                        .WithTorchVision("==0.16.0")
-                        .WithTorchExtraIndex(extraIndex),
-                    onConsoleOutput
-                )
-                .ConfigureAwait(false);
+            pipArgs = pipArgs
+                .WithTorch("==2.1.0")
+                .WithTorchVision("==0.16.0")
+                .WithTorchExtraIndex(
+                    torchVersion switch
+                    {
+                        TorchVersion.Cpu => "cpu",
+                        TorchVersion.Cuda => "cu121",
+                        TorchVersion.Rocm => "rocm5.6",
+                        _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+                    }
+                );
         }
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
-        await venvRunner
-            .PipInstallFromRequirements(requirements, onConsoleOutput, excludes: "torch")
-            .ConfigureAwait(false);
+
+        pipArgs = pipArgs.WithParsedFromRequirementsTxt(
+            await requirements.ReadAllTextAsync().ConfigureAwait(false),
+            excludePattern: "torch"
+        );
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
     }
 
     public override async Task RunPackage(

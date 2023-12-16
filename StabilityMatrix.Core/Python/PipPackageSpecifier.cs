@@ -17,8 +17,11 @@ public partial record PipPackageSpecifier
 
     public static PipPackageSpecifier Parse(string value)
     {
-        Debug.Assert(TryParse(value, true, out var packageSpecifier));
-        return packageSpecifier;
+        var result = TryParse(value, true, out var packageSpecifier);
+
+        Debug.Assert(result);
+
+        return packageSpecifier!;
     }
 
     public static bool TryParse(string value, [NotNullWhen(true)] out PipPackageSpecifier? packageSpecifier)

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed ControlNet / T2IAdapter shared folder links for Automatic1111 conflicting with each other
 - Fixed URIScheme registration errors on Linux
 - Fixed RuinedFooocus missing output folder on startup
+- Fixed incorrect Fooocus VRAM launch arguments
 
 ## v2.7.1
 ### Added

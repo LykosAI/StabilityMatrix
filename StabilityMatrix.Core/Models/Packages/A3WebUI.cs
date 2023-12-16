@@ -61,7 +61,9 @@ public class A3WebUI(
             [SharedFolderType.LDSR] = new[] { "models/LDSR" },
             [SharedFolderType.AfterDetailer] = new[] { "models/adetailer" },
             [SharedFolderType.T2IAdapter] = new[] { "models/controlnet/T2IAdapter" },
-            [SharedFolderType.IpAdapter] = new[] { "models/controlnet/IpAdapter" }
+            [SharedFolderType.IpAdapter] = new[] { "models/controlnet/IpAdapter" },
+            [SharedFolderType.InvokeIpAdapters15] = new[] { "models/controlnet/DiffusersIpAdapters" },
+            [SharedFolderType.InvokeIpAdaptersXl] = new[] { "models/controlnet/DiffusersIpAdaptersXL" }
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>

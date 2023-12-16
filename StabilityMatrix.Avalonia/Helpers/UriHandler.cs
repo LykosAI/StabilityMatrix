@@ -64,7 +64,7 @@ public class UriHandler
         {
             RegisterUriSchemeWin();
         }
-        else
+        else if (Compat.IsLinux)
         {
             RegisterUriSchemeUnix();
         }

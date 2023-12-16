@@ -99,7 +99,7 @@
                     Header="{x:Static lang:Resources.Label_RemoveSymlinksOnShutdown}"
                     IconSource="Folder">
                     <ui:SettingsExpander.Footer>
-                        <CheckBox Margin="8" IsChecked="{Binding RemoveSymlinksOnShutdown}" />
+                        <CheckBox IsChecked="{Binding RemoveSymlinksOnShutdown}" />
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
                 <ui:SettingsExpander
@@ -115,7 +115,7 @@
             </Grid>
 
             <!--  General  -->
-            <sg:SpacedGrid RowDefinitions="Auto,*" RowSpacing="4">
+            <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4">
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
@@ -135,6 +135,19 @@
                             IsFilled="True"
                             Symbol="AppGeneric" />
                     </ui:SettingsExpander.IconSource>
+                </ui:SettingsExpander>
+                <ui:SettingsExpander Grid.Row="2"
+                                     Header="{x:Static lang:Resources.Label_HolidayMode}">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource
+                            FontSize="10"
+                            IsFilled="True"
+                            Symbol="WeatherSnowflake" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <ui:FAComboBox SelectedItem="{Binding HolidayModeSetting}"
+                                       ItemsSource="{Binding HolidayModes}"/>
+                    </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
             </sg:SpacedGrid>
 

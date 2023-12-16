@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Controls;
@@ -17,6 +16,8 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using Size = System.Drawing.Size;
+
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -45,6 +46,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
     [ObservableProperty]
     [property: Category("Settings")]
+    [property: DisplayName("CFG Scale Selection")]
     private bool isCfgScaleEnabled;
 
     [ObservableProperty]
@@ -61,6 +63,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
     [ObservableProperty]
     [property: Category("Settings")]
+    [property: DisplayName("Sampler Selection")]
     private bool isSamplerSelectionEnabled;
 
     [ObservableProperty]
@@ -69,6 +72,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
     [ObservableProperty]
     [property: Category("Settings")]
+    [property: DisplayName("Scheduler Selection")]
     private bool isSchedulerSelectionEnabled;
 
     [ObservableProperty]
@@ -89,28 +93,32 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         ModulesCardViewModel = vmFactory.Get<StackEditableCardViewModel>(modulesCard =>
         {
             modulesCard.Title = Resources.Label_Addons;
-            modulesCard.AvailableModules = new[] { typeof(FreeUModule), typeof(ControlNetModule) };
+            modulesCard.AvailableModules = [typeof(FreeUModule), typeof(ControlNetModule)];
         });
-
-        ModulesCardViewModel.CardAdded += (
-            (sender, item) =>
-            {
-                if (item is ControlNetModule module)
-                {
-                    // Inherit our edit state
-                    // module.IsEditEnabled = IsEditEnabled;
-                }
-            }
-        );
     }
 
     /// <inheritdoc />
     public void ApplyStep(ModuleApplyStepEventArgs e)
     {
+        // Resample the current primary if size does not match the selected size
+        if (e.Builder.Connections.PrimarySize.Width != Width || e.Builder.Connections.PrimarySize.Height != Height)
+        {
+            e.Builder.Connections.Primary = e.Builder.Group_Upscale(
+                e.Nodes.GetUniqueName("Sampler_ScalePrimary"),
+                e.Builder.Connections.Primary ?? throw new ArgumentException("No Primary"),
+                e.Builder.Connections.GetDefaultVAE(),
+                ComfyUpscaler.NearestExact,
+                Width,
+                Height
+            );
+
+            e.Builder.Connections.PrimarySize = new Size(Width, Height);
+        }
+
         // Provide temp values
         e.Temp.Conditioning = (
-            e.Builder.Connections.GetRefinerOrBaseConditioning(),
-            e.Builder.Connections.GetRefinerOrBaseNegativeConditioning()
+            e.Builder.Connections.BaseConditioning!,
+            e.Builder.Connections.BaseNegativeConditioning!
         );
         e.Temp.RefinerConditioning = (
             e.Builder.Connections.RefinerConditioning!,
@@ -135,19 +143,60 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
     private void ApplyStepsInitialSampler(ModuleApplyStepEventArgs e)
     {
-        // Get primary or base VAE
-        var vae =
-            e.Builder.Connections.PrimaryVAE
-            ?? e.Builder.Connections.BaseVAE
-            ?? throw new ArgumentException("No Primary or Base VAE");
-
         // Get primary as latent using vae
-        var primaryLatent = e.Builder.GetPrimaryAsLatent(vae);
+        var primaryLatent = e.Builder.GetPrimaryAsLatent();
 
         // Set primary sampler and scheduler
         e.Builder.Connections.PrimarySampler = SelectedSampler ?? throw new ValidationException("Sampler not selected");
         e.Builder.Connections.PrimaryScheduler =
             SelectedScheduler ?? throw new ValidationException("Scheduler not selected");
+
+        // Use custom sampler if SDTurbo scheduler is selected
+        if (e.Builder.Connections.PrimaryScheduler == ComfyScheduler.SDTurbo)
+        {
+            // Error if using refiner
+            if (e.Builder.Connections.RefinerModel is not null)
+            {
+                throw new ValidationException("SDTurbo Scheduler cannot be used with Refiner Model");
+            }
+
+            var kSamplerSelect = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.KSamplerSelect
+                {
+                    Name = "KSamplerSelect",
+                    SamplerName = e.Builder.Connections.PrimarySampler?.Name!
+                }
+            );
+
+            var turboScheduler = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.SDTurboScheduler
+                {
+                    Name = "SDTurboScheduler",
+                    Model = e.Builder.Connections.BaseModel ?? throw new ArgumentException("No BaseModel"),
+                    Steps = Steps
+                }
+            );
+
+            var sampler = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.SamplerCustom
+                {
+                    Name = "Sampler",
+                    Model = e.Builder.Connections.BaseModel ?? throw new ArgumentException("No BaseModel"),
+                    AddNoise = true,
+                    NoiseSeed = e.Builder.Connections.Seed,
+                    Cfg = CfgScale,
+                    Positive = e.Temp.Conditioning?.Positive!,
+                    Negative = e.Temp.Conditioning?.Negative!,
+                    Sampler = kSamplerSelect.Output,
+                    Sigmas = turboScheduler.Output,
+                    LatentImage = primaryLatent
+                }
+            );
+
+            e.Builder.Connections.Primary = sampler.Output1;
+
+            return;
+        }
 
         // Use KSampler if no refiner, otherwise need KSamplerAdvanced
         if (e.Builder.Connections.RefinerModel is null)

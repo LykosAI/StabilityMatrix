@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.ComponentModel.DataAnnotations;
+using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -12,16 +13,24 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [Transient]
 public partial class BatchSizeCardViewModel : LoadableViewModelBase, IComfyStep
 {
+    [NotifyDataErrorInfo]
     [ObservableProperty]
+    [Range(1, 1024)]
     private int batchSize = 1;
 
+    [NotifyDataErrorInfo]
     [ObservableProperty]
+    [Range(1, int.MaxValue)]
     private int batchCount = 1;
 
+    [NotifyDataErrorInfo]
     [ObservableProperty]
+    [Required]
     private bool isBatchIndexEnabled;
 
+    [NotifyDataErrorInfo]
     [ObservableProperty]
+    [Range(1, 1024)]
     private int batchIndex = 1;
 
     /// <summary>

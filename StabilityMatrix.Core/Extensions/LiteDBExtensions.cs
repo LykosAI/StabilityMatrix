@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.Collections.Concurrent;
+using System.Linq.Expressions;
 using System.Reflection;
 using LiteDB;
 using LiteDB.Async;
@@ -8,7 +9,8 @@ namespace StabilityMatrix.Core.Extensions;
 // ReSharper disable once InconsistentNaming
 public static class LiteDBExtensions
 {
-    private static readonly Dictionary<Type, (Type PropertyType, string MemberName, bool IsList)> Mapper = new();
+    private static readonly ConcurrentDictionary<Type, (Type PropertyType, string MemberName, bool IsList)> Mapper =
+        new();
 
     public static void Register<T, TU>(Expression<Func<T, List<TU>?>> exp, string? collection = null)
     {
@@ -16,7 +18,7 @@ public static class LiteDBExtensions
         if (member == null)
             throw new ArgumentException("Expecting Member Expression");
         BsonMapper.Global.Entity<T>().DbRef(exp, collection);
-        Mapper.Add(typeof(T), (typeof(TU), member.Name, true));
+        Mapper.TryAdd(typeof(T), (typeof(TU), member.Name, true));
     }
 
     public static void Register<T, TU>(Expression<Func<T, TU?>> exp, string? collection = null)
@@ -25,12 +27,13 @@ public static class LiteDBExtensions
         if (member == null)
             throw new ArgumentException("Expecting Member Expression");
         BsonMapper.Global.Entity<T>().DbRef(exp, collection);
-        Mapper.Add(typeof(T), (typeof(TU), member.Name, false));
+        Mapper.TryAdd(typeof(T), (typeof(TU), member.Name, false));
     }
 
     public static ILiteCollection<T>? IncludeAll<T>(this ILiteCollection<T> col)
     {
-        if (!Mapper.ContainsKey(typeof(T))) return null;
+        if (!Mapper.ContainsKey(typeof(T)))
+            return null;
 
         var stringList = new List<string>();
         var key = typeof(T);
@@ -45,12 +48,13 @@ public static class LiteDBExtensions
             flag = false;
         }
 
-        return stringList.Aggregate(col, (current, keySelector) => current.Include((BsonExpression) keySelector));
+        return stringList.Aggregate(col, (current, keySelector) => current.Include((BsonExpression)keySelector));
     }
-    
+
     public static ILiteCollectionAsync<T> IncludeAll<T>(this ILiteCollectionAsync<T> col)
     {
-        if (!Mapper.ContainsKey(typeof(T))) return col;
+        if (!Mapper.ContainsKey(typeof(T)))
+            return col;
 
         var stringList = new List<string>();
         var key = typeof(T);
@@ -65,6 +69,6 @@ public static class LiteDBExtensions
             flag = false;
         }
 
-        return stringList.Aggregate(col, (current, keySelector) => current.Include((BsonExpression) keySelector));
+        return stringList.Aggregate(col, (current, keySelector) => current.Include((BsonExpression)keySelector));
     }
 }

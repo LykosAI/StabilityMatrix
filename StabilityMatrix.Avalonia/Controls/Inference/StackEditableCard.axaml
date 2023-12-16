@@ -11,7 +11,7 @@
         x:DataType="vmInference:StackEditableCardViewModel">
     
     <Design.PreviewWith>
-        <Grid Width="600" Height="800">
+        <Grid Width="500" Height="600">
             <controls:StackEditableCard
                 DataContext="{x:Static mocks:DesignData.StackEditableCardViewModel}"/>
         </Grid>
@@ -58,11 +58,15 @@
                             Grid.Row="1"
                             Theme="{StaticResource DraggableListBoxTheme}"
                             ItemsSource="{Binding Cards}">
-                        
                             <ListBox.DataTemplates>
                                 <local:ViewLocator/>
                             </ListBox.DataTemplates>
                             
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Spacing="0" />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
                         </ListBox>
                     </Grid>
 

@@ -16,8 +16,8 @@ public class LiteDbContext : ILiteDbContext
     private readonly ISettingsManager settingsManager;
     private readonly DebugOptions debugOptions;
 
-    private LiteDatabaseAsync? database;
-    public LiteDatabaseAsync Database => database ??= CreateDatabase();
+    private readonly Lazy<LiteDatabaseAsync> lazyDatabase;
+    public LiteDatabaseAsync Database => lazyDatabase.Value;
 
     // Notification events
     public event EventHandler? CivitModelsChanged;
@@ -46,6 +46,8 @@ public class LiteDbContext : ILiteDbContext
         this.logger = logger;
         this.settingsManager = settingsManager;
         this.debugOptions = debugOptions.Value;
+
+        lazyDatabase = new Lazy<LiteDatabaseAsync>(CreateDatabase);
     }
 
     private LiteDatabaseAsync CreateDatabase()
@@ -164,11 +166,11 @@ public class LiteDbContext : ILiteDbContext
 
     public void Dispose()
     {
-        if (database is not null)
+        if (lazyDatabase.IsValueCreated)
         {
             try
             {
-                database.Dispose();
+                Database.Dispose();
             }
             catch (ObjectDisposedException) { }
             catch (ApplicationException)
@@ -176,8 +178,6 @@ public class LiteDbContext : ILiteDbContext
                 // Ignores a mutex error from library
                 // https://stability-matrix.sentry.io/share/issue/5c62f37462444e7eab18cea314af231f/
             }
-
-            database = null;
         }
 
         GC.SuppressFinalize(this);

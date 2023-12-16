@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AsyncImageLoader;
 using Avalonia.Media.Imaging;
@@ -27,12 +29,16 @@ public record ImageSource : IDisposable
     /// <summary>
     /// Bitmap
     /// </summary>
+    [JsonIgnore]
     public Bitmap? Bitmap { get; set; }
 
     /// <summary>
     /// Optional label for the image
     /// </summary>
     public string? Label { get; set; }
+
+    [JsonConstructor]
+    public ImageSource() { }
 
     public ImageSource(FilePath localFile)
     {
@@ -49,6 +55,7 @@ public record ImageSource : IDisposable
         Bitmap = bitmap;
     }
 
+    [JsonIgnore]
     public Task<Bitmap?> BitmapAsync => GetBitmapAsync();
 
     /// <summary>
@@ -121,9 +128,20 @@ public record ImageSource : IDisposable
             throw new InvalidOperationException("ImageSource is not a local file");
         }
 
+        // Calculate hash if not available
         if (contentHashBlake3 is null)
         {
-            throw new InvalidOperationException("Blake3 hash has not been calculated yet");
+            // File must exist
+            if (!LocalFile.Exists)
+            {
+                throw new FileNotFoundException("Image file does not exist", LocalFile);
+            }
+
+            // Fail in debug since hash should have been pre-calculated
+            Debug.Fail("Hash has not been calculated when GetHashGuidFileNameCached() was called");
+
+            var data = LocalFile.ReadAllBytes();
+            contentHashBlake3 = FileHash.GetBlake3Parallel(data);
         }
 
         var extension = LocalFile.Info.Extension;

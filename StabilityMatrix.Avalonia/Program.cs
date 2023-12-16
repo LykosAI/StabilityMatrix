@@ -144,6 +144,13 @@ public static class Program
 
         var app = AppBuilder.Configure<App>().UsePlatformDetect().WithInterFont().LogToTrace();
 
+        if (Args.UseOpenGlRendering)
+        {
+            app = app.With(
+                new Win32PlatformOptions { RenderingMode = [Win32RenderingMode.Wgl, Win32RenderingMode.Software] }
+            );
+        }
+
         if (Args.DisableGpuRendering)
         {
             app = app.With(new Win32PlatformOptions { RenderingMode = new[] { Win32RenderingMode.Software } })

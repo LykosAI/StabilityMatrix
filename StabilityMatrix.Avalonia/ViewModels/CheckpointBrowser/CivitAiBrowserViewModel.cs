@@ -113,6 +113,9 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
     [ObservableProperty]
     private string selectedBaseModelType = "All";
 
+    [ObservableProperty]
+    private bool showSantaHats = true;
+
     private List<CheckpointBrowserCardViewModel> allModelCards = new();
 
     public IEnumerable<CivitPeriod> AllCivitPeriods => Enum.GetValues(typeof(CivitPeriod)).Cast<CivitPeriod>();
@@ -124,7 +127,8 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
             .Where(t => t == CivitModelType.All || t.ConvertTo<SharedFolderType>() > 0)
             .OrderBy(t => t.ToString());
 
-    public List<string> BaseModelOptions => new() { "All", "SD 1.5", "SD 2.1", "SDXL 0.9", "SDXL 1.0" };
+    public List<string> BaseModelOptions =>
+        ["All", "SD 1.5", "SD 1.5 LCM", "SD 2.1", "SDXL 0.9", "SDXL 1.0", "SDXL 1.0 LCM", "SDXL Turbo", "Other"];
 
     public CivitAiBrowserViewModel(
         ICivitApi civitApi,

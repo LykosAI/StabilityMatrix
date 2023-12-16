@@ -28,6 +28,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.OutputsPage;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
@@ -290,6 +291,12 @@ public partial class OutputsPageViewModel : PageViewModelBase
         {
             return;
         }
+        //Attempt to remove .txt sidecar if it exists
+        var sideCar = new FilePath(Path.ChangeExtension(imageFile, ".txt"));
+        if (File.Exists(sideCar))
+        {
+            await notificationService.TryAsync(sideCar.DeleteAsync());
+        }
 
         OutputsCache.Remove(item.ImageFile);
 
@@ -355,6 +362,14 @@ public partial class OutputsPageViewModel : PageViewModelBase
             {
                 continue;
             }
+
+            //Attempt to remove .txt sidecar if it exists
+            var sideCar = new FilePath(Path.ChangeExtension(imageFile, ".txt"));
+            if (File.Exists(sideCar))
+            {
+                await notificationService.TryAsync(sideCar.DeleteAsync());
+            }
+
             OutputsCache.Remove(output.ImageFile);
 
             // Invalidate cache
@@ -452,6 +467,14 @@ public partial class OutputsPageViewModel : PageViewModelBase
                     }
 
                     await file.MoveToWithIncrementAsync(newPath);
+
+                    var sideCar = new FilePath(Path.ChangeExtension(file, ".txt"));
+                    //If a .txt sidecar file exists, and the image was moved successfully, try to move the sidecar along with the image
+                    if (File.Exists(newPath) && File.Exists(sideCar))
+                    {
+                        var newSidecar = new FilePath(Path.ChangeExtension(newPath, ".txt"));
+                        await sideCar.MoveToWithIncrementAsync(newSidecar);
+                    }
                 }
                 catch (Exception e)
                 {

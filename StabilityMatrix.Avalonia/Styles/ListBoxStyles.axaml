@@ -22,7 +22,7 @@
                 <Setter Property="FontFamily" Value="{DynamicResource ContentControlThemeFontFamily}" />
                 <Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
                 <Setter Property="Background" Value="{DynamicResource ListViewItemBackground}" />
-                <Setter Property="CornerRadius" Value="7" />
+                <!--<Setter Property="CornerRadius" Value="7" />-->
                 <Setter Property="Foreground" Value="{DynamicResource ListViewItemForeground}" />
 
                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -34,7 +34,6 @@
                         <Panel>
                             <ContentPresenter
                                 Name="PART_ContentPresenter"
-                                Margin="0,4"
                                 Padding="{TemplateBinding Padding}"
                                 HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
                                 VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"

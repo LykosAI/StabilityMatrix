@@ -429,6 +429,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Replace Contents.
+        /// </summary>
+        public static string Action_ReplaceContents {
+            get {
+                return ResourceManager.GetString("Action_ReplaceContents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Restart.
         /// </summary>
         public static string Action_Restart {
@@ -497,6 +506,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Action_SelectDirectory {
             get {
                 return ResourceManager.GetString("Action_SelectDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select File.
+        /// </summary>
+        public static string Action_SelectFile {
+            get {
+                return ResourceManager.GetString("Action_SelectFile", resourceCulture);
             }
         }
         
@@ -1185,6 +1203,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Holiday Mode.
+        /// </summary>
+        public static string Label_HolidayMode {
+            get {
+                return ResourceManager.GetString("Label_HolidayMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Hugging Face.
         /// </summary>
         public static string Label_HuggingFace {
@@ -1397,6 +1424,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_LocalModel {
             get {
                 return ResourceManager.GetString("Label_LocalModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing Image File.
+        /// </summary>
+        public static string Label_MissingImageFile {
+            get {
+                return ResourceManager.GetString("Label_MissingImageFile", resourceCulture);
             }
         }
         
@@ -2135,6 +2171,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Width {
             get {
                 return ResourceManager.GetString("Label_Width", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not yet available.
+        /// </summary>
+        public static string Label_WipFeature {
+            get {
+                return ResourceManager.GetString("Label_WipFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature will be available in a future update.
+        /// </summary>
+        public static string Label_WipFeatureDescription {
+            get {
+                return ResourceManager.GetString("Label_WipFeatureDescription", resourceCulture);
             }
         }
         

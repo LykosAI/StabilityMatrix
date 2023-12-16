@@ -10,6 +10,7 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -53,12 +54,12 @@ public class ComfyUI(
             [SharedFolderType.TextualInversion] = new[] { "models/embeddings" },
             [SharedFolderType.VAE] = new[] { "models/vae" },
             [SharedFolderType.ApproxVAE] = new[] { "models/vae_approx" },
-            [SharedFolderType.ControlNet] = new[] { "models/controlnet" },
+            [SharedFolderType.ControlNet] = new[] { "models/controlnet/ControlNet" },
             [SharedFolderType.GLIGEN] = new[] { "models/gligen" },
             [SharedFolderType.ESRGAN] = new[] { "models/upscale_models" },
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
             [SharedFolderType.IpAdapter] = new[] { "models/ipadapter" },
-            [SharedFolderType.T2IAdapter] = new[] { "models/controlnet" },
+            [SharedFolderType.T2IAdapter] = new[] { "models/controlnet/T2IAdapter" },
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -155,80 +156,48 @@ public class ComfyUI(
         venvRunner.WorkingDirectory = installLocation;
         await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
-        // Install torch / xformers based on gpu info
-        switch (torchVersion)
+        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
+
+        progress?.Report(new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true));
+
+        var pipArgs = new PipInstallArgs();
+
+        pipArgs = torchVersion switch
         {
-            case TorchVersion.Cpu:
-                await InstallCpuTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
-                break;
-            case TorchVersion.Cuda:
-                await venvRunner
-                    .PipInstall(
-                        new PipInstallArgs()
-                            .WithTorch("~=2.1.0")
-                            .WithTorchVision()
-                            .WithXFormers("==0.0.22.post4")
-                            .AddArg("--upgrade")
-                            .WithTorchExtraIndex("cu121"),
-                        onConsoleOutput
+            TorchVersion.DirectMl => pipArgs.WithTorchDirectML(),
+            TorchVersion.Mps
+                => pipArgs.AddArg("--pre").WithTorch().WithTorchVision().WithTorchExtraIndex("nightly/cpu"),
+            _
+                => pipArgs
+                    .AddArg("--upgrade")
+                    .WithTorch("~=2.1.0")
+                    .WithTorchVision()
+                    .WithTorchExtraIndex(
+                        torchVersion switch
+                        {
+                            TorchVersion.Cpu => "cpu",
+                            TorchVersion.Cuda => "cu121",
+                            TorchVersion.Rocm => "rocm5.6",
+                            _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+                        }
                     )
-                    .ConfigureAwait(false);
-                break;
-            case TorchVersion.DirectMl:
-                await venvRunner
-                    .PipInstall(new PipInstallArgs().WithTorchDirectML(), onConsoleOutput)
-                    .ConfigureAwait(false);
-                break;
-            case TorchVersion.Rocm:
-                await InstallRocmTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
-                break;
-            case TorchVersion.Mps:
-                await venvRunner
-                    .PipInstall(
-                        new PipInstallArgs()
-                            .AddArg("--pre")
-                            .WithTorch()
-                            .WithTorchVision()
-                            .WithTorchExtraIndex("nightly/cpu"),
-                        onConsoleOutput
-                    )
-                    .ConfigureAwait(false);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);
-        }
+        };
 
-        // Install requirements file (skip torch)
-        progress?.Report(new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true));
-
-        var requirementsFile = new FilePath(installLocation, "requirements.txt");
-
-        await venvRunner
-            .PipInstallFromRequirements(requirementsFile, onConsoleOutput, excludes: "torch")
-            .ConfigureAwait(false);
-
-        progress?.Report(new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false));
-    }
-
-    private async Task AutoDetectAndInstallTorch(PyVenvRunner venvRunner, IProgress<ProgressReport>? progress = null)
-    {
-        var gpus = HardwareHelper.IterGpuInfo().ToList();
-        if (gpus.Any(g => g.IsNvidia))
+        if (torchVersion == TorchVersion.Cuda)
         {
-            await InstallCudaTorch(venvRunner, progress).ConfigureAwait(false);
+            pipArgs = pipArgs.WithXFormers("==0.0.22.post4");
         }
-        else if (HardwareHelper.PreferRocm())
-        {
-            await InstallRocmTorch(venvRunner, progress).ConfigureAwait(false);
-        }
-        else if (HardwareHelper.PreferDirectML())
-        {
-            await InstallDirectMlTorch(venvRunner, progress).ConfigureAwait(false);
-        }
-        else
-        {
-            await InstallCpuTorch(venvRunner, progress).ConfigureAwait(false);
-        }
+
+        var requirements = new FilePath(installLocation, "requirements.txt");
+
+        pipArgs = pipArgs.WithParsedFromRequirementsTxt(
+            await requirements.ReadAllTextAsync().ConfigureAwait(false),
+            excludePattern: "torch"
+        );
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+
+        progress?.Report(new ProgressReport(1, "Installed Package Requirements", isIndeterminate: false));
     }
 
     public override async Task RunPackage(
@@ -267,26 +236,55 @@ public class ComfyUI(
         }
     }
 
-    public override Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
-    {
-        switch (sharedFolderMethod)
+    public override Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) =>
+        sharedFolderMethod switch
         {
-            case SharedFolderMethod.None:
-                return Task.CompletedTask;
-            case SharedFolderMethod.Symlink:
-                return base.SetupModelFolders(installDirectory, sharedFolderMethod);
+            SharedFolderMethod.Symlink => SetupModelFoldersSymlink(installDirectory),
+            SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory),
+            SharedFolderMethod.None => Task.CompletedTask,
+            _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
+        };
+
+    public override Task UpdateModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) =>
+        SetupModelFolders(installDirectory, sharedFolderMethod);
+
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
+    {
+        return sharedFolderMethod switch
+        {
+            SharedFolderMethod.Symlink => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
+            SharedFolderMethod.Configuration => RemoveConfigSection(installDirectory),
+            SharedFolderMethod.None => Task.CompletedTask,
+            _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
+        };
+    }
+
+    private async Task SetupModelFoldersSymlink(DirectoryPath installDirectory)
+    {
+        // Migration for `controlnet` -> `controlnet/ControlNet` and `controlnet/T2IAdapter`
+        // If the original link exists, delete it first
+        if (installDirectory.JoinDir("models/controlnet") is { IsSymbolicLink: true } controlnetOldLink)
+        {
+            Logger.Info("Migration: Removing old controlnet link {Path}", controlnetOldLink);
+            await controlnetOldLink.DeleteAsync(false).ConfigureAwait(false);
         }
 
-        var extraPathsYamlPath = installDirectory + "extra_model_paths.yaml";
+        // Resume base setup
+        await base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink).ConfigureAwait(false);
+    }
+
+    private async Task SetupModelFoldersConfig(DirectoryPath installDirectory)
+    {
+        var extraPathsYamlPath = installDirectory.JoinFile("extra_model_paths.yaml");
         var modelsDir = SettingsManager.ModelsDirectory;
 
-        var exists = File.Exists(extraPathsYamlPath);
-        if (!exists)
+        if (!extraPathsYamlPath.Exists)
         {
             Logger.Info("Creating extra_model_paths.yaml");
-            File.WriteAllText(extraPathsYamlPath, string.Empty);
+            extraPathsYamlPath.Create();
         }
-        var yaml = File.ReadAllText(extraPathsYamlPath);
+
+        var yaml = await extraPathsYamlPath.ReadAllTextAsync().ConfigureAwait(false);
         using var sr = new StringReader(yaml);
         var yamlStream = new YamlStream();
         yamlStream.Load(sr);
@@ -307,7 +305,7 @@ public class ComfyUI(
         if (stabilityMatrixNode.Key != null)
         {
             if (stabilityMatrixNode.Value is not YamlMappingNode nodeValue)
-                return Task.CompletedTask;
+                return;
 
             nodeValue.Children["checkpoints"] = Path.Combine(modelsDir, "StableDiffusion");
             nodeValue.Children["vae"] = Path.Combine(modelsDir, "VAE");
@@ -319,7 +317,11 @@ public class ComfyUI(
                 + $"{Path.Combine(modelsDir, "SwinIR")}";
             nodeValue.Children["embeddings"] = Path.Combine(modelsDir, "TextualInversion");
             nodeValue.Children["hypernetworks"] = Path.Combine(modelsDir, "Hypernetwork");
-            nodeValue.Children["controlnet"] = Path.Combine(modelsDir, "ControlNet");
+            nodeValue.Children["controlnet"] = string.Join(
+                '\n',
+                Path.Combine(modelsDir, "ControlNet"),
+                Path.Combine(modelsDir, "T2IAdapter")
+            );
             nodeValue.Children["clip"] = Path.Combine(modelsDir, "CLIP");
             nodeValue.Children["diffusers"] = Path.Combine(modelsDir, "Diffusers");
             nodeValue.Children["gligen"] = Path.Combine(modelsDir, "GLIGEN");
@@ -340,7 +342,10 @@ public class ComfyUI(
                     },
                     { "embeddings", Path.Combine(modelsDir, "TextualInversion") },
                     { "hypernetworks", Path.Combine(modelsDir, "Hypernetwork") },
-                    { "controlnet", Path.Combine(modelsDir, "ControlNet") },
+                    {
+                        "controlnet",
+                        string.Join('\n', Path.Combine(modelsDir, "ControlNet"), Path.Combine(modelsDir, "T2IAdapter"))
+                    },
                     { "clip", Path.Combine(modelsDir, "CLIP") },
                     { "diffusers", Path.Combine(modelsDir, "Diffusers") },
                     { "gligen", Path.Combine(modelsDir, "GLIGEN") },
@@ -357,82 +362,45 @@ public class ComfyUI(
 
         newRootNode.Children.Add(stabilityMatrixNode);
 
-        var serializer = new SerializerBuilder().WithNamingConvention(UnderscoredNamingConvention.Instance).Build();
+        var serializer = new SerializerBuilder()
+            .WithNamingConvention(UnderscoredNamingConvention.Instance)
+            .WithDefaultScalarStyle(ScalarStyle.Literal)
+            .Build();
+
         var yamlData = serializer.Serialize(newRootNode);
-        File.WriteAllText(extraPathsYamlPath, yamlData);
-
-        return Task.CompletedTask;
+        await extraPathsYamlPath.WriteAllTextAsync(yamlData).ConfigureAwait(false);
     }
 
-    public override Task UpdateModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) =>
-        sharedFolderMethod switch
-        {
-            SharedFolderMethod.Symlink => base.UpdateModelFolders(installDirectory, sharedFolderMethod),
-            SharedFolderMethod.Configuration => SetupModelFolders(installDirectory, sharedFolderMethod),
-            SharedFolderMethod.None => Task.CompletedTask,
-            _ => Task.CompletedTask
-        };
-
-    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
+    private static async Task RemoveConfigSection(DirectoryPath installDirectory)
     {
-        return sharedFolderMethod switch
-        {
-            SharedFolderMethod.Configuration => RemoveConfigSection(installDirectory),
-            SharedFolderMethod.None => Task.CompletedTask,
-            SharedFolderMethod.Symlink => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
-            _ => Task.CompletedTask
-        };
-    }
+        var extraPathsYamlPath = installDirectory.JoinFile("extra_model_paths.yaml");
 
-    private Task RemoveConfigSection(string installDirectory)
-    {
-        var extraPathsYamlPath = Path.Combine(installDirectory, "extra_model_paths.yaml");
-        var exists = File.Exists(extraPathsYamlPath);
-        if (!exists)
+        if (!extraPathsYamlPath.Exists)
         {
-            return Task.CompletedTask;
+            return;
         }
 
-        var yaml = File.ReadAllText(extraPathsYamlPath);
+        var yaml = await extraPathsYamlPath.ReadAllTextAsync().ConfigureAwait(false);
         using var sr = new StringReader(yaml);
         var yamlStream = new YamlStream();
         yamlStream.Load(sr);
 
         if (!yamlStream.Documents.Any())
         {
-            return Task.CompletedTask;
+            return;
         }
 
         var root = yamlStream.Documents[0].RootNode;
         if (root is not YamlMappingNode mappingNode)
         {
-            return Task.CompletedTask;
+            return;
         }
 
         mappingNode.Children.Remove("stability_matrix");
 
         var serializer = new SerializerBuilder().WithNamingConvention(UnderscoredNamingConvention.Instance).Build();
         var yamlData = serializer.Serialize(mappingNode);
-        File.WriteAllText(extraPathsYamlPath, yamlData);
 
-        return Task.CompletedTask;
-    }
-
-    private async Task InstallRocmTorch(
-        PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
-    )
-    {
-        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true));
-
-        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
-
-        await venvRunner
-            .PipInstall(
-                new PipInstallArgs().WithTorch("==2.0.1").WithTorchVision().WithTorchExtraIndex("rocm5.6"),
-                onConsoleOutput
-            )
-            .ConfigureAwait(false);
+        await extraPathsYamlPath.WriteAllTextAsync(yamlData).ConfigureAwait(false);
     }
 }

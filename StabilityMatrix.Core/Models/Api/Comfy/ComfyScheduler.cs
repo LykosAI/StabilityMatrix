@@ -7,23 +7,24 @@ public readonly record struct ComfyScheduler(string Name)
     public static ComfyScheduler Normal { get; } = new("normal");
     public static ComfyScheduler Karras { get; } = new("karras");
     public static ComfyScheduler Exponential { get; } = new("exponential");
+    public static ComfyScheduler SDTurbo { get; } = new("sd_turbo");
 
     private static Dictionary<string, string> ConvertDict { get; } =
         new()
         {
             [Normal.Name] = "Normal",
-            ["karras"] = "Karras",
-            ["exponential"] = "Exponential",
+            [Karras.Name] = "Karras",
+            [Exponential.Name] = "Exponential",
             ["sgm_uniform"] = "SGM Uniform",
             ["simple"] = "Simple",
-            ["ddim_uniform"] = "DDIM Uniform"
+            ["ddim_uniform"] = "DDIM Uniform",
+            [SDTurbo.Name] = "SD Turbo"
         };
 
     public static IReadOnlyList<ComfyScheduler> Defaults { get; } =
         ConvertDict.Keys.Select(k => new ComfyScheduler(k)).ToImmutableArray();
 
-    public string DisplayName =>
-        ConvertDict.TryGetValue(Name, out var displayName) ? displayName : Name;
+    public string DisplayName => ConvertDict.GetValueOrDefault(Name, Name);
 
     private sealed class NameEqualityComparer : IEqualityComparer<ComfyScheduler>
     {

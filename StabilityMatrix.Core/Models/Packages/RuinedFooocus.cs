@@ -1,9 +1,11 @@
 ﻿using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
@@ -26,6 +28,79 @@ public class RuinedFooocus(
         new("https://raw.githubusercontent.com/runew0lf/pmmconfigs/main/RuinedFooocus_ss.png");
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
 
+    public override List<LaunchOptionDefinition> LaunchOptions =>
+        new()
+        {
+            new LaunchOptionDefinition
+            {
+                Name = "Preset",
+                Type = LaunchOptionType.Bool,
+                Options = { "--preset anime", "--preset realistic" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Port",
+                Type = LaunchOptionType.String,
+                Description = "Sets the listen port",
+                Options = { "--port" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Share",
+                Type = LaunchOptionType.Bool,
+                Description = "Set whether to share on Gradio",
+                Options = { "--share" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Listen",
+                Type = LaunchOptionType.String,
+                Description = "Set the listen interface",
+                Options = { "--listen" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Output Directory",
+                Type = LaunchOptionType.String,
+                Description = "Override the output directory",
+                Options = { "--output-directory" }
+            },
+            new()
+            {
+                Name = "VRAM",
+                Type = LaunchOptionType.Bool,
+                InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
+                {
+                    MemoryLevel.Low => "--lowvram",
+                    MemoryLevel.Medium => "--normalvram",
+                    _ => null
+                },
+                Options = { "--highvram", "--normalvram", "--lowvram", "--novram" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Use DirectML",
+                Type = LaunchOptionType.Bool,
+                Description = "Use pytorch with DirectML support",
+                InitialValue = HardwareHelper.PreferDirectML(),
+                Options = { "--directml" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Disable Xformers",
+                Type = LaunchOptionType.Bool,
+                InitialValue = !HardwareHelper.HasNvidiaGpu(),
+                Options = { "--disable-xformers" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Auto-Launch",
+                Type = LaunchOptionType.Bool,
+                Options = { "--auto-launch" }
+            },
+            LaunchOptionDefinition.Extras
+        };
+
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
@@ -39,13 +114,23 @@ public class RuinedFooocus(
         {
             var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
 
-            progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
-
-            await InstallCudaTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
+            progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
             var requirements = new FilePath(installLocation, "requirements_versions.txt");
+
             await venvRunner
-                .PipInstallFromRequirements(requirements, onConsoleOutput, excludes: "torch")
+                .PipInstall(
+                    new PipInstallArgs()
+                        .WithTorch("==2.0.1")
+                        .WithTorchVision("==0.15.2")
+                        .WithXFormers("==0.0.20")
+                        .WithTorchExtraIndex("cu118")
+                        .WithParsedFromRequirementsTxt(
+                            await requirements.ReadAllTextAsync().ConfigureAwait(false),
+                            excludePattern: "torch"
+                        ),
+                    onConsoleOutput
+                )
                 .ConfigureAwait(false);
         }
         else
@@ -60,5 +145,9 @@ public class RuinedFooocus(
             )
                 .ConfigureAwait(false);
         }
+
+        // Create output folder since it's not created by default
+        var outputFolder = new DirectoryPath(installLocation, OutputFolderName);
+        outputFolder.Create();
     }
 }

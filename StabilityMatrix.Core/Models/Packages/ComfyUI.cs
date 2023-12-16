@@ -156,80 +156,48 @@ public class ComfyUI(
         venvRunner.WorkingDirectory = installLocation;
         await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
-        // Install torch / xformers based on gpu info
-        switch (torchVersion)
+        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
+
+        progress?.Report(new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true));
+
+        var pipArgs = new PipInstallArgs();
+
+        pipArgs = torchVersion switch
         {
-            case TorchVersion.Cpu:
-                await InstallCpuTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
-                break;
-            case TorchVersion.Cuda:
-                await venvRunner
-                    .PipInstall(
-                        new PipInstallArgs()
-                            .WithTorch("~=2.1.0")
-                            .WithTorchVision()
-                            .WithXFormers("==0.0.22.post4")
-                            .AddArg("--upgrade")
-                            .WithTorchExtraIndex("cu121"),
-                        onConsoleOutput
+            TorchVersion.DirectMl => pipArgs.WithTorchDirectML(),
+            TorchVersion.Mps
+                => pipArgs.AddArg("--pre").WithTorch().WithTorchVision().WithTorchExtraIndex("nightly/cpu"),
+            _
+                => pipArgs
+                    .AddArg("--upgrade")
+                    .WithTorch("~=2.1.0")
+                    .WithTorchVision()
+                    .WithTorchExtraIndex(
+                        torchVersion switch
+                        {
+                            TorchVersion.Cpu => "cpu",
+                            TorchVersion.Cuda => "cu121",
+                            TorchVersion.Rocm => "rocm5.6",
+                            _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+                        }
                     )
-                    .ConfigureAwait(false);
-                break;
-            case TorchVersion.DirectMl:
-                await venvRunner
-                    .PipInstall(new PipInstallArgs().WithTorchDirectML(), onConsoleOutput)
-                    .ConfigureAwait(false);
-                break;
-            case TorchVersion.Rocm:
-                await InstallRocmTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
-                break;
-            case TorchVersion.Mps:
-                await venvRunner
-                    .PipInstall(
-                        new PipInstallArgs()
-                            .AddArg("--pre")
-                            .WithTorch()
-                            .WithTorchVision()
-                            .WithTorchExtraIndex("nightly/cpu"),
-                        onConsoleOutput
-                    )
-                    .ConfigureAwait(false);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);
-        }
+        };
 
-        // Install requirements file (skip torch)
-        progress?.Report(new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true));
-
-        var requirementsFile = new FilePath(installLocation, "requirements.txt");
-
-        await venvRunner
-            .PipInstallFromRequirements(requirementsFile, onConsoleOutput, excludes: "torch")
-            .ConfigureAwait(false);
-
-        progress?.Report(new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false));
-    }
-
-    private async Task AutoDetectAndInstallTorch(PyVenvRunner venvRunner, IProgress<ProgressReport>? progress = null)
-    {
-        var gpus = HardwareHelper.IterGpuInfo().ToList();
-        if (gpus.Any(g => g.IsNvidia))
+        if (torchVersion == TorchVersion.Cuda)
         {
-            await InstallCudaTorch(venvRunner, progress).ConfigureAwait(false);
+            pipArgs = pipArgs.WithXFormers("==0.0.22.post4");
         }
-        else if (HardwareHelper.PreferRocm())
-        {
-            await InstallRocmTorch(venvRunner, progress).ConfigureAwait(false);
-        }
-        else if (HardwareHelper.PreferDirectML())
-        {
-            await InstallDirectMlTorch(venvRunner, progress).ConfigureAwait(false);
-        }
-        else
-        {
-            await InstallCpuTorch(venvRunner, progress).ConfigureAwait(false);
-        }
+
+        var requirements = new FilePath(installLocation, "requirements.txt");
+
+        pipArgs = pipArgs.WithParsedFromRequirementsTxt(
+            await requirements.ReadAllTextAsync().ConfigureAwait(false),
+            excludePattern: "torch"
+        );
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+
+        progress?.Report(new ProgressReport(1, "Installed Package Requirements", isIndeterminate: false));
     }
 
     public override async Task RunPackage(
@@ -434,23 +402,5 @@ public class ComfyUI(
         var yamlData = serializer.Serialize(mappingNode);
 
         await extraPathsYamlPath.WriteAllTextAsync(yamlData).ConfigureAwait(false);
-    }
-
-    private async Task InstallRocmTorch(
-        PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
-    )
-    {
-        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true));
-
-        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
-
-        await venvRunner
-            .PipInstall(
-                new PipInstallArgs().WithTorch("==2.0.1").WithTorchVision().WithTorchExtraIndex("rocm5.6"),
-                onConsoleOutput
-            )
-            .ConfigureAwait(false);
     }
 }

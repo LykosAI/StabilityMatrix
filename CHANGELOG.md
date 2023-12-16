@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Changed Symlink shared folder link targets for Automatic1111 and ComfyUI. From `ControlNet -> models/controlnet` to `ControlNet -> models/controlnet/ControlNet` and `T2IAdapter -> models/controlnet/T2IAdapter`.
 ### Fixed
 - Fixed ControlNet / T2IAdapter shared folder links for Automatic1111 conflicting with each other
-- Fixes URIScheme registration errors on Linux
+- Fixed URIScheme registration errors on Linux
+- Fixed RuinedFooocus missing output folder on startup
 
 ## v2.7.1
 ### Added

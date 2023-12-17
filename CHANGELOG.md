@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.7.3
+### Fixed
+- Fixed UnicodeDecodeError when using extra_model_paths.yaml in ComfyUI on certain locales
+
 ## v2.7.2
 ### Changed
 - Changed Symlink shared folder link targets for Automatic1111 and ComfyUI. From `ControlNet -> models/controlnet` to `ControlNet -> models/controlnet/ControlNet` and `T2IAdapter -> models/controlnet/T2IAdapter`.

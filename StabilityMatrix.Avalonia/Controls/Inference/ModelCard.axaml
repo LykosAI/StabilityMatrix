@@ -30,112 +30,21 @@
                             VerticalAlignment="Center"
                             Text="{x:Static lang:Resources.Label_Model}"
                             TextAlignment="Left" />
-                        <ui:FAComboBox
+                        
+                        <controls:BetterComboBox
                             Grid.Row="0"
                             Grid.Column="1"
-                            Theme="{StaticResource FAComboBoxHybridModelTheme}"
+                            Padding="10,6,4,6"
+                            Theme="{StaticResource  BetterComboBoxHybridModelTheme}"
                             HorizontalAlignment="Stretch"
                             ItemsSource="{Binding ClientManager.Models}"
-                            SelectedItem="{Binding SelectedModel}">
-                            <!--<ui:FAComboBox.Styles>
-                                <Style Selector="ui|FAComboBoxItem">
-                                    <Setter Property="ToolTip.Placement" Value="RightEdgeAlignedTop" />
-                                    <Setter Property="ToolTip.Tip">
-                                        <Template>
-                                            <StackPanel
-                                                x:DataType="models:HybridModelFile"
-                                                Orientation="Horizontal"
-                                                Spacing="6">
-                                                ~1~  Image  @1@
-                                                <controls:BetterAdvancedImage
-                                                    Width="64"
-                                                    Height="96"
-                                                    CornerRadius="6"
-                                                    IsVisible="{Binding Local.PreviewImageFullPathGlobal, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=''}"
-                                                    RenderOptions.BitmapInterpolationMode="HighQuality"
-                                                    Source="{Binding Local.PreviewImageFullPathGlobal, FallbackValue=''}"
-                                                    Stretch="UniformToFill"
-                                                    StretchDirection="Both" />
-                                                <Grid RowDefinitions="Auto,Auto,*" VerticalAlignment="Stretch" MaxWidth="300">
-                                                    ~1~  Title  @1@
-                                                    <TextBlock
-                                                        Margin="0,0,0,4"
-                                                        HorizontalAlignment="Left"
-                                                        FontSize="14"
-                                                        FontWeight="Medium"
-                                                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                                        IsVisible="{Binding Local.ConnectedModelInfo, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}"
-                                                        Text="{Binding Local.ConnectedModelInfo.ModelName, FallbackValue=''}"
-                                                        TextWrapping="WrapWithOverflow" />
-                                                    ~1~  Version  @1@
-                                                    <TextBlock
-                                                        Grid.Row="1"
-                                                        Margin="0,0,0,8"
-                                                        HorizontalAlignment="Left"
-                                                        FontSize="13"
-                                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                                        IsVisible="{Binding Local.ConnectedModelInfo, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}"
-                                                        Text="{Binding Local.ConnectedModelInfo.VersionName, FallbackValue=''}"
-                                                        TextWrapping="WrapWithOverflow" />
-                                                    ~1~  Path  @1@
-                                                    <TextBlock
-                                                        Grid.Row="2"
-                                                        HorizontalAlignment="Left"
-                                                        FontSize="13"
-                                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                                        Text="{Binding RelativePath}"
-                                                        TextWrapping="Wrap" />
-                                                </Grid>
-                                            </StackPanel>
-                                        </Template>
-                                    </Setter>
-                                </Style>
-                                <Style Selector="ui|FAComboBox /template/ ContentControl#ContentPresenter &gt; StackPanel &gt; TextBlock:nth-child(2)">
-                                    <Setter Property="IsVisible" Value="False" />
-                                </Style>
-                            </ui:FAComboBox.Styles>-->
-                            <!--<ui:FAComboBox.ItemTemplate>
-                                <DataTemplate DataType="models:HybridModelFile">
-                                    <StackPanel ToolTip.Placement="RightEdgeAlignedTop">
-                                        <TextBlock Text="{Binding ShortDisplayName}" TextTrimming="CharacterEllipsis" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ui:FAComboBox.ItemTemplate>-->
-                            <ui:FAComboBox.ItemTemplate>
-                                <DataTemplate DataType="models:HybridModelFile">
-                                    <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
-                                        <controls:BetterAdvancedImage
-                                            Grid.Row="0"
-                                            Grid.Column="0"
-                                            Grid.RowSpan="2"
-                                            Margin="0,0,8,0"
-                                            Height="32"
-                                            Width="32"
-                                            Stretch="UniformToFill"
-                                            StretchDirection="Both"
-                                            RenderOptions.BitmapInterpolationMode="HighQuality"
-                                            Source="{Binding Local.PreviewImageFullPathGlobal}">
-                                            <controls:BetterAdvancedImage.Clip>
-                                                <EllipseGeometry Rect="0,0,32,32" />
-                                            </controls:BetterAdvancedImage.Clip>
-                                        </controls:BetterAdvancedImage>
-                                        <TextBlock
-                                            Grid.Row="0"
-                                            Grid.Column="1"
-                                            Text="{Binding Local.ConnectedModelInfo.VersionName}"/>
-                                        <TextBlock
-                                            FontSize="11"
-                                            Grid.Row="1"
-                                            Grid.Column="1"
-                                            Text="{Binding Local.ConnectedModelInfo.ModelName}"/>
-                                    </Grid>
-                                </DataTemplate>
-                            </ui:FAComboBox.ItemTemplate>
-                        </ui:FAComboBox>
+                            SelectedItem="{Binding SelectedModel}"/>
 
                         <Button
                             Grid.Row="0"
                             Grid.Column="2"
+                            VerticalAlignment="Stretch"
+                            HorizontalAlignment="Stretch"
                             Margin="8,0,0,0">
                             <ui:SymbolIcon FontSize="16" Symbol="Setting" />
                             <Button.Flyout>
@@ -158,18 +67,18 @@
                             Text="{x:Static lang:Resources.Label_Refiner}"
                             TextAlignment="Left" />
 
-                        <ui:FAComboBox
+                        <controls:BetterComboBox
                             Grid.Row="1"
                             Grid.Column="1"
                             Grid.ColumnSpan="2"
                             Margin="0,8,0,0"
-                            HorizontalAlignment="Stretch"
-                            DisplayMemberBinding="{Binding ShortDisplayName}"
-                            IsTextSearchEnabled="True"
+                            Padding="10,6,4,6"
                             IsVisible="{Binding IsRefinerSelectionEnabled}"
+                            Theme="{StaticResource  BetterComboBoxHybridModelTheme}"
+                            HorizontalAlignment="Stretch"
                             ItemsSource="{Binding ClientManager.Models}"
-                            SelectedItem="{Binding SelectedRefiner}" />
-
+                            SelectedItem="{Binding SelectedRefiner}"/>
+                        
                         <!--  VAE  -->
                         <TextBlock
                             Grid.Row="2"

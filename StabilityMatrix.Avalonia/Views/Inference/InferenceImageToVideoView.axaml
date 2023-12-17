@@ -94,10 +94,17 @@
                                 <Grid
                                     x:CompileBindings="False"
                                     DataContext="{Binding ElementName=Dock, Path=DataContext}">
-                                    <gif:GifImage
+                                    <controls:ImageGalleryCard
                                         Grid.Row="0"
-                                        SourceUri="{Binding OutputUri}" />
-
+                                        IsVisible="{Binding ElementName=Dock, Path=DataContext.IsGenerating}"
+                                        DataContext="{Binding ImageGalleryCardViewModel}"/>
+                                    <controls:Card Grid.Row="0" VerticalAlignment="Stretch"
+                                                   IsVisible="{Binding ElementName=Dock, Path=!DataContext.IsGenerating}">
+                                        <gif:GifImage
+                                            SourceUri="{Binding OutputUri}" 
+                                            Stretch="Uniform" />
+                                    </controls:Card>
+                                    
                                     <StackPanel
                                         DataContext="{Binding OutputProgress}"
                                         Margin="2,1,2,4"

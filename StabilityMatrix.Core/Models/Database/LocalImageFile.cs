@@ -48,19 +48,9 @@ public record LocalImageFile
     /// </summary>
     public string FileNameWithoutExtension => Path.GetFileNameWithoutExtension(AbsolutePath);
 
-    public (
-        string? Parameters,
-        string? ParametersJson,
-        string? SMProject,
-        string? ComfyNodes
-    ) ReadMetadata()
+    public (string? Parameters, string? ParametersJson, string? SMProject, string? ComfyNodes) ReadMetadata()
     {
-        using var stream = new FileStream(
-            AbsolutePath,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read
-        );
+        using var stream = new FileStream(AbsolutePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         using var reader = new BinaryReader(stream);
 
         var parameters = ImageMetadata.ReadTextChunk(reader, "parameters");
@@ -79,8 +69,7 @@ public record LocalImageFile
     public static LocalImageFile FromPath(FilePath filePath)
     {
         // TODO: Support other types
-        const LocalImageFileType imageType =
-            LocalImageFileType.Inference | LocalImageFileType.TextToImage;
+        const LocalImageFileType imageType = LocalImageFileType.Inference | LocalImageFileType.TextToImage;
 
         // Get metadata
         using var stream = filePath.Info.OpenRead();
@@ -115,6 +104,5 @@ public record LocalImageFile
         };
     }
 
-    public static readonly HashSet<string> SupportedImageExtensions =
-        new() { ".png", ".jpg", ".jpeg", ".webp" };
+    public static readonly HashSet<string> SupportedImageExtensions = [".png", ".jpg", ".jpeg", ".gif"];
 }

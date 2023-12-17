@@ -65,6 +65,10 @@ public partial class InferenceImageToVideoViewModel : InferenceGenerationViewMod
     [JsonIgnore]
     private string outputUri;
 
+    [ObservableProperty]
+    [JsonIgnore]
+    private bool isGenerating;
+
     public InferenceImageToVideoViewModel(
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
@@ -94,6 +98,7 @@ public partial class InferenceImageToVideoViewModel : InferenceGenerationViewMod
             samplerCard.SelectedSampler = ComfySampler.Euler;
             samplerCard.SelectedScheduler = ComfyScheduler.Karras;
             samplerCard.IsDenoiseStrengthEnabled = true;
+            samplerCard.DenoiseStrength = 1.0f;
         });
 
         BatchSizeCardViewModel = vmFactory.Get<BatchSizeCardViewModel>();
@@ -116,6 +121,11 @@ public partial class InferenceImageToVideoViewModel : InferenceGenerationViewMod
     public override void OnLoaded()
     {
         EventManager.Instance.ImageFileAdded += OnImageFileAdded;
+    }
+
+    public override void OnUnloaded()
+    {
+        EventManager.Instance.ImageFileAdded -= OnImageFileAdded;
     }
 
     private void OnImageFileAdded(object? sender, FilePath e)
@@ -219,11 +229,15 @@ public partial class InferenceImageToVideoViewModel : InferenceGenerationViewMod
             batchArgs.Add(generationArgs);
         }
 
+        IsGenerating = true;
+
         // Run batches
         foreach (var args in batchArgs)
         {
             await RunGeneration(args, cancellationToken);
         }
+
+        IsGenerating = false;
     }
 
     /// <inheritdoc />

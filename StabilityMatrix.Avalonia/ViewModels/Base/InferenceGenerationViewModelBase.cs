@@ -409,13 +409,20 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
                 );
 
                 // convert to gif
-                await GifConverter.ConvertWebpToGif(webpFilePath);
+                var inputStream = File.OpenRead(webpFilePath);
                 var gifFilePath = webpFilePath.ToString().Replace(".webp", ".gif");
-                if (File.Exists(gifFilePath))
-                {
-                    // delete webp
-                    File.Delete(webpFilePath);
-                }
+                var outputStream = File.OpenWrite(gifFilePath);
+
+                await GifConverter.ConvertAnimatedWebpToGifAsync(inputStream, outputStream);
+                await inputStream.DisposeAsync();
+                await outputStream.FlushAsync();
+                await outputStream.DisposeAsync();
+
+                // if (File.Exists(gifFilePath))
+                // {
+                //     // delete webp
+                //     File.Delete(webpFilePath);
+                // }
 
                 outputImages.Add(new ImageSource(gifFilePath));
                 EventManager.Instance.OnImageFileAdded(gifFilePath);

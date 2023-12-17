@@ -7,18 +7,20 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 using NLog;
-using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Video;
 using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Services;
 
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
@@ -28,9 +30,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(InferenceImageToVideoView), persistent: true)]
 [ManagedService]
 [Transient]
-public class InferenceImageToVideoViewModel
-    : InferenceGenerationViewModelBase,
-        IParametersLoadableState
+public partial class InferenceImageToVideoViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -61,6 +61,10 @@ public class InferenceImageToVideoViewModel
     [JsonPropertyName("VideoOutput")]
     public VideoOutputSettingsCardViewModel VideoOutputSettingsCardViewModel { get; }
 
+    [ObservableProperty]
+    [JsonIgnore]
+    private string outputUri;
+
     public InferenceImageToVideoViewModel(
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
@@ -86,6 +90,10 @@ public class InferenceImageToVideoViewModel
             samplerCard.IsCfgScaleEnabled = true;
             samplerCard.IsSamplerSelectionEnabled = true;
             samplerCard.IsSchedulerSelectionEnabled = true;
+            samplerCard.CfgScale = 2.5d;
+            samplerCard.SelectedSampler = ComfySampler.Euler;
+            samplerCard.SelectedScheduler = ComfyScheduler.Karras;
+            samplerCard.IsDenoiseStrengthEnabled = true;
         });
 
         BatchSizeCardViewModel = vmFactory.Get<BatchSizeCardViewModel>();
@@ -105,6 +113,19 @@ public class InferenceImageToVideoViewModel
         );
     }
 
+    public override void OnLoaded()
+    {
+        EventManager.Instance.ImageFileAdded += OnImageFileAdded;
+    }
+
+    private void OnImageFileAdded(object? sender, FilePath e)
+    {
+        if (!e.Extension.Contains("gif"))
+            return;
+
+        OutputUri = e;
+    }
+
     /// <inheritdoc />
     protected override void BuildPrompt(BuildPromptEventArgs args)
     {
@@ -122,19 +143,19 @@ public class InferenceImageToVideoViewModel
         ModelCardViewModel.ApplyStep(args);
 
         // Setup latent from image
-        var imageLoad = builder.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.LoadImage
-            {
-                Name = builder.Nodes.GetUniqueName("ControlNet_LoadImage"),
-                Image =
-                    SelectImageCardViewModel.ImageSource?.GetHashGuidFileNameCached("Inference")
-                    ?? throw new ValidationException()
-            }
-        );
+        var imageLoad = builder
+            .Nodes
+            .AddTypedNode(
+                new ComfyNodeBuilder.LoadImage
+                {
+                    Name = builder.Nodes.GetUniqueName("ControlNet_LoadImage"),
+                    Image =
+                        SelectImageCardViewModel.ImageSource?.GetHashGuidFileNameCached("Inference")
+                        ?? throw new ValidationException()
+                }
+            );
         builder.Connections.Primary = imageLoad.Output1;
-        builder.Connections.PrimarySize =
-            SelectImageCardViewModel.CurrentBitmapSize
-            ?? new Size(SamplerCardViewModel.Width, SamplerCardViewModel.Height);
+        builder.Connections.PrimarySize = SelectImageCardViewModel.CurrentBitmapSize;
 
         // Setup img2vid stuff
         // Set width & height from SamplerCard
@@ -159,10 +180,7 @@ public class InferenceImageToVideoViewModel
     }
 
     /// <inheritdoc />
-    protected override async Task GenerateImageImpl(
-        GenerateOverrides overrides,
-        CancellationToken cancellationToken
-    )
+    protected override async Task GenerateImageImpl(GenerateOverrides overrides, CancellationToken cancellationToken)
     {
         if (!await CheckClientConnectedWithPrompt() || !ClientManager.IsConnected)
         {
@@ -184,11 +202,7 @@ public class InferenceImageToVideoViewModel
         {
             var seed = seedCard.Seed + i;
 
-            var buildPromptArgs = new BuildPromptEventArgs
-            {
-                Overrides = overrides,
-                SeedOverride = seed
-            };
+            var buildPromptArgs = new BuildPromptEventArgs { Overrides = overrides, SeedOverride = seed };
             BuildPrompt(buildPromptArgs);
 
             var generationArgs = new ImageGenerationEventArgs

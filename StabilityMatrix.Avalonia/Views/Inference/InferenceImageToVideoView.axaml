@@ -10,6 +10,7 @@
     xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
     xmlns:dock="clr-namespace:StabilityMatrix.Avalonia.Controls.Dock"
     xmlns:modelsInference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
+    xmlns:gif="clr-namespace:Avalonia.Gif;assembly=Avalonia.Gif"
     d:DataContext="{x:Static mocks:DesignData.InferenceImageToVideoViewModel}"
     d:DesignHeight="800"
     d:DesignWidth="1000"
@@ -93,9 +94,9 @@
                                 <Grid
                                     x:CompileBindings="False"
                                     DataContext="{Binding ElementName=Dock, Path=DataContext}">
-                                    <controls:ImageGalleryCard
+                                    <gif:GifImage
                                         Grid.Row="0"
-                                        DataContext="{Binding ImageGalleryCardViewModel}" />
+                                        SourceUri="{Binding OutputUri}" />
 
                                     <StackPanel
                                         DataContext="{Binding OutputProgress}"

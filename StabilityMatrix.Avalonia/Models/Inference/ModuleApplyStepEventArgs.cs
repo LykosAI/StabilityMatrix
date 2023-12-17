@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
+using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
 namespace StabilityMatrix.Avalonia.Models.Inference;
 
@@ -29,18 +29,14 @@ public class ModuleApplyStepEventArgs : EventArgs
     /// <summary>
     /// Generation overrides (like hires fix generate, current seed generate, etc.)
     /// </summary>
-    public IReadOnlyDictionary<Type, bool> IsEnabledOverrides { get; init; } =
-        new Dictionary<Type, bool>();
+    public IReadOnlyDictionary<Type, bool> IsEnabledOverrides { get; init; } = new Dictionary<Type, bool>();
 
     public class ModuleApplyStepTemporaryArgs
     {
         /// <summary>
         /// Temporary conditioning apply step, used by samplers to apply control net.
         /// </summary>
-        public (
-            ConditioningNodeConnection Positive,
-            ConditioningNodeConnection Negative
-        )? Conditioning { get; set; }
+        public (ConditioningNodeConnection Positive, ConditioningNodeConnection Negative)? Conditioning { get; set; }
 
         /// <summary>
         /// Temporary refiner conditioning apply step, used by samplers to apply control net.

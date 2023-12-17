@@ -54,11 +54,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
     private readonly ILogger<OutputsPageViewModel> logger;
     public override string Title => Resources.Label_OutputsPageTitle;
 
-    public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Grid, IsFilled = true };
+    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Grid, IsFilled = true };
 
-    public SourceCache<LocalImageFile, string> OutputsCache { get; } =
-        new(file => file.AbsolutePath);
+    public SourceCache<LocalImageFile, string> OutputsCache { get; } = new(file => file.AbsolutePath);
 
     public IObservableCollection<OutputImageViewModel> Outputs { get; set; } =
         new ObservableCollectionExtended<OutputImageViewModel>();
@@ -88,8 +86,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
     [ObservableProperty]
     private bool isConsolidating;
 
-    public bool CanShowOutputTypes =>
-        SelectedCategory?.Name?.Equals("Shared Output Folder") ?? false;
+    public bool CanShowOutputTypes => SelectedCategory?.Name?.Equals("Shared Output Folder") ?? false;
 
     public string NumImagesSelected =>
         NumItemsSelected == 1
@@ -163,10 +160,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         GetOutputs(path);
     }
 
-    partial void OnSelectedCategoryChanged(
-        PackageOutputCategory? oldValue,
-        PackageOutputCategory? newValue
-    )
+    partial void OnSelectedCategoryChanged(PackageOutputCategory? oldValue, PackageOutputCategory? newValue)
     {
         if (oldValue == newValue || newValue == null)
             return;
@@ -217,13 +211,11 @@ public partial class OutputsPageViewModel : PageViewModelBase
         var vm = new ImageViewerViewModel { ImageSource = image, LocalImageFile = item.ImageFile };
 
         using var onNext = Observable
-            .FromEventPattern<DirectionalNavigationEventArgs>(
-                vm,
-                nameof(ImageViewerViewModel.NavigationRequested)
-            )
+            .FromEventPattern<DirectionalNavigationEventArgs>(vm, nameof(ImageViewerViewModel.NavigationRequested))
             .Subscribe(ctx =>
             {
-                Dispatcher.UIThread
+                Dispatcher
+                    .UIThread
                     .InvokeAsync(async () =>
                     {
                         var sender = (ImageViewerViewModel)ctx.Sender!;
@@ -232,9 +224,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
                         if (newIndex >= 0 && newIndex < Outputs.Count)
                         {
                             var newImage = Outputs[newIndex];
-                            var newImageSource = new ImageSource(
-                                new FilePath(newImage.ImageFile.AbsolutePath)
-                            );
+                            var newImageSource = new ImageSource(new FilePath(newImage.ImageFile.AbsolutePath));
 
                             // Preload
                             await newImageSource.GetBitmapAsync();
@@ -386,14 +376,16 @@ public partial class OutputsPageViewModel : PageViewModelBase
     public async Task ConsolidateImages()
     {
         var stackPanel = new StackPanel();
-        stackPanel.Children.Add(
-            new TextBlock
-            {
-                Text = Resources.Label_ConsolidateExplanation,
-                TextWrapping = TextWrapping.Wrap,
-                Margin = new Thickness(0, 8, 0, 16)
-            }
-        );
+        stackPanel
+            .Children
+            .Add(
+                new TextBlock
+                {
+                    Text = Resources.Label_ConsolidateExplanation,
+                    TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(0, 8, 0, 16)
+                }
+            );
         foreach (var category in Categories)
         {
             if (category.Name == "Shared Output Folder")
@@ -401,15 +393,17 @@ public partial class OutputsPageViewModel : PageViewModelBase
                 continue;
             }
 
-            stackPanel.Children.Add(
-                new CheckBox
-                {
-                    Content = $"{category.Name} ({category.Path})",
-                    IsChecked = true,
-                    Margin = new Thickness(0, 8, 0, 0),
-                    Tag = category.Path
-                }
-            );
+            stackPanel
+                .Children
+                .Add(
+                    new CheckBox
+                    {
+                        Content = $"{category.Name} ({category.Path})",
+                        IsChecked = true,
+                        Margin = new Thickness(0, 8, 0, 0),
+                        Tag = category.Path
+                    }
+                );
         }
 
         var confirmationDialog = new BetterContentDialog
@@ -430,25 +424,14 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         Directory.CreateDirectory(settingsManager.ConsolidatedImagesDirectory);
 
-        foreach (
-            var category in stackPanel.Children.OfType<CheckBox>().Where(c => c.IsChecked == true)
-        )
+        foreach (var category in stackPanel.Children.OfType<CheckBox>().Where(c => c.IsChecked == true))
         {
-            if (
-                string.IsNullOrWhiteSpace(category.Tag?.ToString())
-                || !Directory.Exists(category.Tag?.ToString())
-            )
+            if (string.IsNullOrWhiteSpace(category.Tag?.ToString()) || !Directory.Exists(category.Tag?.ToString()))
                 continue;
 
             var directory = category.Tag.ToString();
 
-            foreach (
-                var path in Directory.EnumerateFiles(
-                    directory,
-                    "*.png",
-                    SearchOption.AllDirectories
-                )
-            )
+            foreach (var path in Directory.EnumerateFiles(directory, "*.png", SearchOption.AllDirectories))
             {
                 try
                 {
@@ -499,10 +482,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         if (
             !Directory.Exists(directory)
-            && (
-                SelectedCategory.Path != settingsManager.ImagesDirectory
-                || SelectedOutputType != SharedOutputType.All
-            )
+            && (SelectedCategory.Path != settingsManager.ImagesDirectory || SelectedOutputType != SharedOutputType.All)
         )
         {
             Directory.CreateDirectory(directory);
@@ -534,23 +514,18 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         var previouslySelectedCategory = SelectedCategory;
 
-        var packageCategories = settingsManager.Settings.InstalledPackages
+        var packageCategories = settingsManager
+            .Settings
+            .InstalledPackages
             .Where(x => !x.UseSharedOutputFolder)
             .Select(packageFactory.GetPackagePair)
             .WhereNotNull()
-            .Where(
-                p =>
-                    p.BasePackage.SharedOutputFolders != null
-                    && p.BasePackage.SharedOutputFolders.Any()
-            )
+            .Where(p => p.BasePackage.SharedOutputFolders != null && p.BasePackage.SharedOutputFolders.Any())
             .Select(
                 pair =>
                     new PackageOutputCategory
                     {
-                        Path = Path.Combine(
-                            pair.InstalledPackage.FullPath!,
-                            pair.BasePackage.OutputFolderName
-                        ),
+                        Path = Path.Combine(pair.InstalledPackage.FullPath!, pair.BasePackage.OutputFolderName),
                         Name = pair.InstalledPackage.DisplayName ?? ""
                     }
             )
@@ -558,25 +533,16 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         packageCategories.Insert(
             0,
-            new PackageOutputCategory
-            {
-                Path = settingsManager.ImagesDirectory,
-                Name = "Shared Output Folder"
-            }
+            new PackageOutputCategory { Path = settingsManager.ImagesDirectory, Name = "Shared Output Folder" }
         );
 
         packageCategories.Insert(
             1,
-            new PackageOutputCategory
-            {
-                Path = settingsManager.ImagesInferenceDirectory,
-                Name = "Inference"
-            }
+            new PackageOutputCategory { Path = settingsManager.ImagesInferenceDirectory, Name = "Inference" }
         );
 
         Categories = new ObservableCollection<PackageOutputCategory>(packageCategories);
         SelectedCategory =
-            Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name)
-            ?? Categories.First();
+            Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name) ?? Categories.First();
     }
 }

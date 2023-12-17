@@ -10,8 +10,8 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
+using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -42,6 +42,7 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
     private bool disableSettings;
 
     public IInferenceClientManager ClientManager { get; } = clientManager;
+
     /// <inheritdoc />
     public virtual void ApplyStep(ModuleApplyStepEventArgs e)
     {
@@ -50,9 +51,7 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
             new ComfyNodeBuilder.CheckpointLoaderSimple
             {
                 Name = "CheckpointLoader",
-                CkptName =
-                    SelectedModel?.RelativePath
-                    ?? throw new ValidationException("Model not selected")
+                CkptName = SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected")
             }
         );
 
@@ -85,9 +84,7 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
                 new ComfyNodeBuilder.VAELoader
                 {
                     Name = "VAELoader",
-                    VaeName =
-                        SelectedVae?.RelativePath
-                        ?? throw new ValidationException("VAE enabled but not selected")
+                    VaeName = SelectedVae?.RelativePath ?? throw new ValidationException("VAE enabled but not selected")
                 }
             );
 
@@ -147,19 +144,14 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
             model = currentModels.FirstOrDefault(
                 m =>
                     m.Local?.ConnectedModelInfo?.Hashes.SHA256 is { } sha256
-                    && sha256.StartsWith(
-                        parameters.ModelHash,
-                        StringComparison.InvariantCultureIgnoreCase
-                    )
+                    && sha256.StartsWith(parameters.ModelHash, StringComparison.InvariantCultureIgnoreCase)
             );
         }
         else
         {
             // Name matches
             model = currentModels.FirstOrDefault(m => m.RelativePath.EndsWith(paramsModelName));
-            model ??= currentModels.FirstOrDefault(
-                m => m.ShortDisplayName.StartsWith(paramsModelName)
-            );
+            model ??= currentModels.FirstOrDefault(m => m.ShortDisplayName.StartsWith(paramsModelName));
         }
 
         if (model is not null)

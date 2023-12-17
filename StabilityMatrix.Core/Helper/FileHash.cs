@@ -39,10 +39,7 @@ public static class FileHash
         }
     }
 
-    public static async Task<string> GetSha256Async(
-        string filePath,
-        IProgress<ProgressReport>? progress = default
-    )
+    public static async Task<string> GetSha256Async(string filePath, IProgress<ProgressReport>? progress = default)
     {
         if (!File.Exists(filePath))
         {
@@ -62,13 +59,7 @@ public static class FileHash
                     buffer,
                     totalBytesRead =>
                     {
-                        progress?.Report(
-                            new ProgressReport(
-                                totalBytesRead,
-                                totalBytes,
-                                type: ProgressType.Hashing
-                            )
-                        );
+                        progress?.Report(new ProgressReport(totalBytesRead, totalBytes, type: ProgressType.Hashing));
                     }
                 )
                 .ConfigureAwait(false);
@@ -80,10 +71,7 @@ public static class FileHash
         }
     }
 
-    public static async Task<string> GetBlake3Async(
-        string filePath,
-        IProgress<ProgressReport>? progress = default
-    )
+    public static async Task<string> GetBlake3Async(string filePath, IProgress<ProgressReport>? progress = default)
     {
         if (!File.Exists(filePath))
         {
@@ -93,7 +81,7 @@ public static class FileHash
         var totalBytes = Convert.ToUInt64(new FileInfo(filePath).Length);
         var readBytes = 0ul;
         var shared = ArrayPool<byte>.Shared;
-        var buffer = shared.Rent((int)FileTransfers.GetBufferSize(totalBytes));
+        var buffer = shared.Rent(GetBufferSize(totalBytes));
         try
         {
             await using var stream = File.OpenRead(filePath);
@@ -117,10 +105,7 @@ public static class FileHash
         }
     }
 
-    public static async Task<Hash> GetBlake3Async(
-        Stream stream,
-        IProgress<ProgressReport>? progress = default
-    )
+    public static async Task<Hash> GetBlake3Async(Stream stream, IProgress<ProgressReport>? progress = default)
     {
         var totalBytes = Convert.ToUInt64(stream.Length);
         var readBytes = 0ul;
@@ -191,11 +176,7 @@ public static class FileHash
             false
         );
 
-        using var accessor = memoryMappedFile.CreateViewAccessor(
-            0,
-            totalBytes,
-            MemoryMappedFileAccess.Read
-        );
+        using var accessor = memoryMappedFile.CreateViewAccessor(0, totalBytes, MemoryMappedFileAccess.Read);
 
         Debug.Assert(accessor.Capacity == fileStream.Length);
 
@@ -213,4 +194,16 @@ public static class FileHash
     {
         return Task.Run(() => GetBlake3MemoryMappedParallel(filePath));
     }
+
+    /// <summary>
+    /// Determines suitable buffer size for hashing based on stream length.
+    /// </summary>
+    private static int GetBufferSize(ulong totalBytes) =>
+        totalBytes switch
+        {
+            < Size.MiB => 8 * (int)Size.KiB,
+            < 500 * Size.MiB => 16 * (int)Size.KiB,
+            < Size.GiB => 32 * (int)Size.KiB,
+            _ => 64 * (int)Size.KiB
+        };
 }

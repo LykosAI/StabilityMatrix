@@ -4,6 +4,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -13,30 +14,20 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [Singleton(typeof(BasePackage))]
-public class KohyaSs : BaseGitPackage
+public class KohyaSs(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyRunner runner
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
 {
-    private readonly IPyRunner pyRunner;
-
-    public KohyaSs(
-        IGithubApiCache githubApi,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper,
-        IPyRunner pyRunner
-    )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper)
-    {
-        this.pyRunner = pyRunner;
-    }
-
     public override string Name => "kohya_ss";
     public override string DisplayName { get; set; } = "kohya_ss";
     public override string Author => "bmaltais";
-    public override string Blurb =>
-        "A Windows-focused Gradio GUI for Kohya's Stable Diffusion trainers";
+    public override string Blurb => "A Windows-focused Gradio GUI for Kohya's Stable Diffusion trainers";
     public override string LicenseType => "Apache-2.0";
-    public override string LicenseUrl =>
-        "https://github.com/bmaltais/kohya_ss/blob/master/LICENSE.md";
+    public override string LicenseUrl => "https://github.com/bmaltais/kohya_ss/blob/master/LICENSE.md";
     public override string LaunchCommand => "kohya_gui.py";
 
     public override Uri PreviewImageUri =>
@@ -49,71 +40,68 @@ public class KohyaSs : BaseGitPackage
 
     public override TorchVersion GetRecommendedTorchVersion() => TorchVersion.Cuda;
 
-    public override string Disclaimer =>
-        "Nvidia GPU with at least 8GB VRAM is recommended. May be unstable on Linux.";
+    public override string Disclaimer => "Nvidia GPU with at least 8GB VRAM is recommended. May be unstable on Linux.";
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.UltraNightmare;
 
     public override bool OfferInOneClickInstaller => false;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
     public override IEnumerable<TorchVersion> AvailableTorchVersions => new[] { TorchVersion.Cuda };
-    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
-        new[] { SharedFolderMethod.None };
+    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods => new[] { SharedFolderMethod.None };
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
-        new()
-        {
+        [
             new LaunchOptionDefinition
             {
                 Name = "Listen Address",
                 Type = LaunchOptionType.String,
                 DefaultValue = "127.0.0.1",
-                Options = new List<string> { "--listen" }
+                Options = ["--listen"]
             },
             new LaunchOptionDefinition
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
-                Options = new List<string> { "--port" }
+                Options = ["--port"]
             },
             new LaunchOptionDefinition
             {
                 Name = "Username",
                 Type = LaunchOptionType.String,
-                Options = new List<string> { "--username" }
+                Options = ["--username"]
             },
             new LaunchOptionDefinition
             {
                 Name = "Password",
                 Type = LaunchOptionType.String,
-                Options = new List<string> { "--password" }
+                Options = ["--password"]
             },
             new LaunchOptionDefinition
             {
                 Name = "Auto-Launch Browser",
                 Type = LaunchOptionType.Bool,
-                Options = new List<string> { "--inbrowser" }
+                Options = ["--inbrowser"]
             },
             new LaunchOptionDefinition
             {
                 Name = "Share",
                 Type = LaunchOptionType.Bool,
-                Options = new List<string> { "--share" }
+                Options = ["--share"]
             },
             new LaunchOptionDefinition
             {
                 Name = "Headless",
                 Type = LaunchOptionType.Bool,
-                Options = new List<string> { "--headless" }
+                Options = ["--headless"]
             },
             new LaunchOptionDefinition
             {
                 Name = "Language",
                 Type = LaunchOptionType.String,
-                Options = new List<string> { "--language" }
+                Options = ["--language"]
             },
             LaunchOptionDefinition.Extras
-        };
+        ];
 
     public override async Task InstallPackage(
         string installLocation,
@@ -126,9 +114,7 @@ public class KohyaSs : BaseGitPackage
     {
         if (Compat.IsWindows)
         {
-            progress?.Report(
-                new ProgressReport(-1f, "Installing prerequisites...", isIndeterminate: true)
-            );
+            progress?.Report(new ProgressReport(-1f, "Installing prerequisites...", isIndeterminate: true));
             await PrerequisiteHelper.InstallTkinterIfNecessary(progress).ConfigureAwait(false);
         }
 
@@ -177,7 +163,7 @@ public class KohyaSs : BaseGitPackage
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
         // update gui files to point to venv accelerate
-        await pyRunner.RunInThreadWithLock(() =>
+        await runner.RunInThreadWithLock(() =>
         {
             var scope = Py.CreateScope();
             scope.Exec(
@@ -203,9 +189,7 @@ public class KohyaSs : BaseGitPackage
                 """
             );
 
-            var replacementAcceleratePath = Compat.IsWindows
-                ? @".\venv\scripts\accelerate"
-                : "./venv/bin/accelerate";
+            var replacementAcceleratePath = Compat.IsWindows ? @".\venv\scripts\accelerate" : "./venv/bin/accelerate";
 
             var replacer = scope.InvokeMethod(
                 "StringReplacer",
@@ -259,10 +243,7 @@ public class KohyaSs : BaseGitPackage
     }
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
-    public override Dictionary<
-        SharedOutputType,
-        IReadOnlyList<string>
-    >? SharedOutputFolders { get; }
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders { get; }
 
     public override string MainBranch => "master";
 
@@ -278,13 +259,7 @@ public class KohyaSs : BaseGitPackage
         if (!Compat.IsWindows)
             return env;
 
-        var tkPath = Path.Combine(
-            SettingsManager.LibraryDir,
-            "Assets",
-            "Python310",
-            "tcl",
-            "tcl8.6"
-        );
+        var tkPath = Path.Combine(SettingsManager.LibraryDir, "Assets", "Python310", "tcl", "tcl8.6");
         env["TCL_LIBRARY"] = tkPath;
         env["TK_LIBRARY"] = tkPath;
 

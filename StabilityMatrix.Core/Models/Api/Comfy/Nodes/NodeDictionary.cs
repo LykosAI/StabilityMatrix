@@ -5,23 +5,32 @@ namespace StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
 public class NodeDictionary : Dictionary<string, ComfyNode>
 {
+    /// <summary>
+    /// Tracks base names and their highest index resulting from <see cref="GetUniqueName"/>
+    /// </summary>
+    private readonly Dictionary<string, int> _baseNameIndex = new();
+
+    /// <summary>
+    /// Finds a unique node name given a base name, by appending _2, _3, etc.
+    /// </summary>
     public string GetUniqueName(string nameBase)
     {
-        var name = nameBase;
-
-        for (var i = 0; ContainsKey(name); i++)
+        if (_baseNameIndex.TryGetValue(nameBase, out var index))
         {
-            if (i > 1_000_000)
-            {
-                throw new InvalidOperationException(
-                    $"Could not find unique name for base {nameBase}"
-                );
-            }
-
-            name = $"{nameBase}_{i + 2}";
+            var newIndex = checked(index + 1);
+            _baseNameIndex[nameBase] = newIndex;
+            return $"{nameBase}_{newIndex}";
         }
 
-        return name;
+        // Ensure new name does not exist
+        if (ContainsKey(nameBase))
+        {
+            throw new InvalidOperationException($"Initial unique name already exists for base {nameBase}");
+        }
+
+        _baseNameIndex.Add(nameBase, 1);
+
+        return nameBase;
     }
 
     public TNamedNode AddNamedNode<TNamedNode>(TNamedNode node)

@@ -56,17 +56,25 @@ public class UriHandler
         Environment.Exit(0);
     }
 
-    public void Callback() { }
-
     public void RegisterUriScheme()
     {
         if (Compat.IsWindows)
         {
             RegisterUriSchemeWin();
         }
-        else
+        else if (Compat.IsLinux)
         {
-            RegisterUriSchemeUnix();
+            // Try to register on unix but ignore errors
+            // Library does not support some distros
+            try
+            {
+                RegisterUriSchemeUnix();
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                Console.WriteLine(e);
+            }
         }
     }
 
@@ -92,11 +100,7 @@ public class UriHandler
 
     private void RegisterUriSchemeUnix()
     {
-        var service = URISchemeServiceFactory.GetURISchemeSerivce(
-            Scheme,
-            Description,
-            Compat.AppCurrentPath.FullPath
-        );
+        var service = URISchemeServiceFactory.GetURISchemeSerivce(Scheme, Description, Compat.AppCurrentPath.FullPath);
         service.Set();
     }
 }

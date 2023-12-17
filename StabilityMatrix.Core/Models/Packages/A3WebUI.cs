@@ -5,6 +5,7 @@ using NLog;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -14,7 +15,12 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [Singleton(typeof(BasePackage))]
-public class A3WebUI : BaseGitPackage
+public class A3WebUI(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -24,8 +30,7 @@ public class A3WebUI : BaseGitPackage
     public override string LicenseType => "AGPL-3.0";
     public override string LicenseUrl =>
         "https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/master/LICENSE.txt";
-    public override string Blurb =>
-        "A browser interface based on Gradio library for Stable Diffusion";
+    public override string Blurb => "A browser interface based on Gradio library for Stable Diffusion";
     public override string LaunchCommand => "launch.py";
     public override Uri PreviewImageUri =>
         new("https://github.com/AUTOMATIC1111/stable-diffusion-webui/raw/master/screenshot.png");
@@ -34,14 +39,6 @@ public class A3WebUI : BaseGitPackage
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
-
-    public A3WebUI(
-        IGithubApiCache githubApi,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
-    )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
 
     // From https://github.com/AUTOMATIC1111/stable-diffusion-webui/tree/master/models
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
@@ -59,10 +56,14 @@ public class A3WebUI : BaseGitPackage
             [SharedFolderType.Karlo] = new[] { "models/karlo" },
             [SharedFolderType.TextualInversion] = new[] { "embeddings" },
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
-            [SharedFolderType.ControlNet] = new[] { "models/ControlNet" },
+            [SharedFolderType.ControlNet] = new[] { "models/controlnet/ControlNet" },
             [SharedFolderType.Codeformer] = new[] { "models/Codeformer" },
             [SharedFolderType.LDSR] = new[] { "models/LDSR" },
-            [SharedFolderType.AfterDetailer] = new[] { "models/adetailer" }
+            [SharedFolderType.AfterDetailer] = new[] { "models/adetailer" },
+            [SharedFolderType.T2IAdapter] = new[] { "models/controlnet/T2IAdapter" },
+            [SharedFolderType.IpAdapter] = new[] { "models/controlnet/IpAdapter" },
+            [SharedFolderType.InvokeIpAdapters15] = new[] { "models/controlnet/DiffusersIpAdapters" },
+            [SharedFolderType.InvokeIpAdaptersXl] = new[] { "models/controlnet/DiffusersIpAdaptersXL" }
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -78,71 +79,67 @@ public class A3WebUI : BaseGitPackage
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
     public override List<LaunchOptionDefinition> LaunchOptions =>
-        new()
-        {
+        [
             new()
             {
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "localhost",
-                Options = new() { "--server-name" }
+                Options = ["--server-name"]
             },
             new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "7860",
-                Options = new() { "--port" }
+                Options = ["--port"]
             },
             new()
             {
                 Name = "VRAM",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper
-                    .IterGpuInfo()
-                    .Select(gpu => gpu.MemoryLevel)
-                    .Max() switch
+                InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
                 {
-                    Level.Low => "--lowvram",
-                    Level.Medium => "--medvram",
+                    MemoryLevel.Low => "--lowvram",
+                    MemoryLevel.Medium => "--medvram",
                     _ => null
                 },
-                Options = new() { "--lowvram", "--medvram", "--medvram-sdxl" }
+                Options = ["--lowvram", "--medvram", "--medvram-sdxl"]
             },
             new()
             {
                 Name = "Xformers",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.HasNvidiaGpu(),
-                Options = new() { "--xformers" }
+                Options = ["--xformers"]
             },
             new()
             {
                 Name = "API",
                 Type = LaunchOptionType.Bool,
                 InitialValue = true,
-                Options = new() { "--api" }
+                Options = ["--api"]
             },
             new()
             {
                 Name = "Auto Launch Web UI",
                 Type = LaunchOptionType.Bool,
                 InitialValue = false,
-                Options = new() { "--autolaunch" }
+                Options = ["--autolaunch"]
             },
             new()
             {
                 Name = "Skip Torch CUDA Check",
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),
-                Options = new() { "--skip-torch-cuda-test" }
+                Options = ["--skip-torch-cuda-test"]
             },
             new()
             {
                 Name = "Skip Python Version Check",
                 Type = LaunchOptionType.Bool,
                 InitialValue = true,
-                Options = new() { "--skip-python-version-check" }
+                Options = ["--skip-python-version-check"]
             },
             new()
             {
@@ -150,23 +147,23 @@ public class A3WebUI : BaseGitPackage
                 Type = LaunchOptionType.Bool,
                 Description = "Do not switch the model to 16-bit floats",
                 InitialValue = HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML(),
-                Options = new() { "--no-half" }
+                Options = ["--no-half"]
             },
             new()
             {
                 Name = "Skip SD Model Download",
                 Type = LaunchOptionType.Bool,
                 InitialValue = false,
-                Options = new() { "--no-download-sd-model" }
+                Options = ["--no-download-sd-model"]
             },
             new()
             {
                 Name = "Skip Install",
                 Type = LaunchOptionType.Bool,
-                Options = new() { "--skip-install" }
+                Options = ["--skip-install"]
             },
             LaunchOptionDefinition.Extras
-        };
+        ];
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
@@ -188,41 +185,44 @@ public class A3WebUI : BaseGitPackage
     )
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
-        // Setup venv
-        await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
-        venvRunner.WorkingDirectory = installLocation;
-        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
-        switch (torchVersion)
-        {
-            case TorchVersion.Cpu:
-                await InstallCpuTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
-                break;
-            case TorchVersion.Cuda:
-                await InstallCudaTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
-                break;
-            case TorchVersion.Rocm:
-                await InstallRocmTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null);
-        }
+        var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
 
-        if (versionOptions.VersionTag?.Contains("1.6.0") ?? false)
-        {
-            await venvRunner.PipInstall("httpx==0.24.1", onConsoleOutput);
-        }
+        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
-        // Install requirements file
-        progress?.Report(
-            new ProgressReport(-1f, "Installing Package Requirements", isIndeterminate: true)
-        );
-        Logger.Info("Installing requirements_versions.txt");
+        progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
-        await venvRunner
-            .PipInstallFromRequirements(requirements, onConsoleOutput, excludes: "torch")
-            .ConfigureAwait(false);
+
+        var pipArgs = new PipInstallArgs()
+            .WithTorch("==2.0.1")
+            .WithTorchVision("==0.15.2")
+            .WithTorchExtraIndex(
+                torchVersion switch
+                {
+                    TorchVersion.Cpu => "cpu",
+                    TorchVersion.Cuda => "cu118",
+                    TorchVersion.Rocm => "rocm5.1.1",
+                    _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+                }
+            )
+            .WithParsedFromRequirementsTxt(
+                await requirements.ReadAllTextAsync().ConfigureAwait(false),
+                excludePattern: "torch"
+            );
+
+        if (torchVersion == TorchVersion.Cuda)
+        {
+            pipArgs = pipArgs.WithXFormers("==0.0.20");
+        }
+
+        // v1.6.0 needs a httpx qualifier to fix a gradio issue
+        if (versionOptions.VersionTag?.Contains("1.6.0") ?? false)
+        {
+            pipArgs = pipArgs.AddArg("httpx==0.24.1");
+        }
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Updating configuration", isIndeterminate: true));
 
@@ -268,26 +268,22 @@ public class A3WebUI : BaseGitPackage
         VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
     }
 
-    private async Task InstallRocmTorch(
-        PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
-    )
+    /// <inheritdoc />
+    public override async Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
     {
-        progress?.Report(
-            new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true)
-        );
+        // Migration for `controlnet` -> `controlnet/ControlNet` and `controlnet/T2IAdapter`
+        // If the original link exists, delete it first
+        if (installDirectory.JoinDir("models/controlnet") is { IsSymbolicLink: true } controlnetOldLink)
+        {
+            Logger.Info("Migration: Removing old controlnet link {Path}", controlnetOldLink);
+            await controlnetOldLink.DeleteAsync(false).ConfigureAwait(false);
+        }
 
-        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
-
-        await venvRunner
-            .PipInstall(
-                new PipInstallArgs()
-                    .WithTorch("==2.0.1")
-                    .WithTorchVision()
-                    .WithTorchExtraIndex("rocm5.1.1"),
-                onConsoleOutput
-            )
-            .ConfigureAwait(false);
+        // Resume base setup
+        await base.SetupModelFolders(installDirectory, sharedFolderMethod).ConfigureAwait(false);
     }
+
+    /// <inheritdoc />
+    public override Task UpdateModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) =>
+        SetupModelFolders(installDirectory, sharedFolderMethod);
 }

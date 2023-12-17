@@ -1,8 +1,10 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -12,31 +14,25 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [Singleton(typeof(BasePackage))]
-public class Fooocus : BaseGitPackage
+public class Fooocus(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
 {
-    public Fooocus(
-        IGithubApiCache githubApi,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
-    )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
-
     public override string Name => "Fooocus";
     public override string DisplayName { get; set; } = "Fooocus";
     public override string Author => "lllyasviel";
 
-    public override string Blurb =>
-        "Fooocus is a rethinking of Stable Diffusion and Midjourney’s designs";
+    public override string Blurb => "Fooocus is a rethinking of Stable Diffusion and Midjourney’s designs";
 
     public override string LicenseType => "GPL-3.0";
     public override string LicenseUrl => "https://github.com/lllyasviel/Fooocus/blob/main/LICENSE";
     public override string LaunchCommand => "launch.py";
 
     public override Uri PreviewImageUri =>
-        new(
-            "https://user-images.githubusercontent.com/19834515/261830306-f79c5981-cf80-4ee3-b06b-3fef3f8bfbc7.png"
-        );
+        new("https://user-images.githubusercontent.com/19834515/261830306-f79c5981-cf80-4ee3-b06b-3fef3f8bfbc7.png");
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new()
@@ -79,16 +75,13 @@ public class Fooocus : BaseGitPackage
             {
                 Name = "VRAM",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper
-                    .IterGpuInfo()
-                    .Select(gpu => gpu.MemoryLevel)
-                    .Max() switch
+                InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
                 {
-                    Level.Low => "--lowvram",
-                    Level.Medium => "--normalvram",
+                    MemoryLevel.Low => "--always-low-vram",
+                    MemoryLevel.Medium => "--always-normal-vram",
                     _ => null
                 },
-                Options = { "--highvram", "--normalvram", "--lowvram", "--novram" }
+                Options = { "--always-high-vram", "--always-normal-vram", "--always-low-vram", "--always-no-vram" }
             },
             new LaunchOptionDefinition
             {
@@ -158,42 +151,40 @@ public class Fooocus : BaseGitPackage
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        var venvRunner = await SetupVenv(installLocation, forceRecreate: true)
-            .ConfigureAwait(false);
+        var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
 
-        progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
+        progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
+
+        var pipArgs = new PipInstallArgs();
 
         if (torchVersion == TorchVersion.DirectMl)
         {
-            await venvRunner
-                .PipInstall(new PipInstallArgs().WithTorchDirectML(), onConsoleOutput)
-                .ConfigureAwait(false);
+            pipArgs = pipArgs.WithTorchDirectML();
         }
         else
         {
-            var extraIndex = torchVersion switch
-            {
-                TorchVersion.Cpu => "cpu",
-                TorchVersion.Cuda => "cu121",
-                TorchVersion.Rocm => "rocm5.6",
-                _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
-            };
-
-            await venvRunner
-                .PipInstall(
-                    new PipInstallArgs()
-                        .WithTorch("==2.1.0")
-                        .WithTorchVision("==0.16.0")
-                        .WithTorchExtraIndex(extraIndex),
-                    onConsoleOutput
-                )
-                .ConfigureAwait(false);
+            pipArgs = pipArgs
+                .WithTorch("==2.1.0")
+                .WithTorchVision("==0.16.0")
+                .WithTorchExtraIndex(
+                    torchVersion switch
+                    {
+                        TorchVersion.Cpu => "cpu",
+                        TorchVersion.Cuda => "cu121",
+                        TorchVersion.Rocm => "rocm5.6",
+                        _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+                    }
+                );
         }
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
-        await venvRunner
-            .PipInstallFromRequirements(requirements, onConsoleOutput, excludes: "torch")
-            .ConfigureAwait(false);
+
+        pipArgs = pipArgs.WithParsedFromRequirementsTxt(
+            await requirements.ReadAllTextAsync().ConfigureAwait(false),
+            excludePattern: "torch"
+        );
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
     }
 
     public override async Task RunPackage(

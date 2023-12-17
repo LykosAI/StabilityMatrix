@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
+        <CFBundleName>Stability Matrix</CFBundleName>
         <OutputType>WinExe</OutputType>
         <TargetFramework>net8.0</TargetFramework>
         <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
@@ -8,12 +9,19 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
-        <Version>2.7.0-dev.4</Version>
+        <Version>2.7.0-pre.999</Version>
         <InformationalVersion>$(Version)</InformationalVersion>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
+    <ItemGroup>
+        <CFBundleURLTypes Include="dummy">
+            <CFBundleURLName>StabilityMatrix.URL</CFBundleURLName>
+            <CFBundleURLSchemes>stabilitymatrix;stabilitymatrix://</CFBundleURLSchemes>
+        </CFBundleURLTypes>
+    </ItemGroup>
+    
     <ItemGroup>
         <InternalsVisibleTo Include="StabilityMatrix.Tests" />
         <InternalsVisibleTo Include="StabilityMatrix.UITests" />
@@ -32,12 +40,15 @@
         <PackageReference Include="Avalonia.HtmlRenderer" Version="11.0.0" />
         <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.0.5" />
         <PackageReference Include="AvaloniaEdit.TextMate" Version="11.0.5" />
+        <PackageReference Include="bodong.Avalonia.PropertyGrid" Version="11.0.5.1" />
+        <PackageReference Include="bodong.PropertyModels" Version="11.0.5.1" />
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
         <PackageReference Include="DiscordRichPresence" Version="1.2.1.24" />
         <PackageReference Include="Dock.Avalonia" Version="11.0.0.3" />
         <PackageReference Include="Dock.Model.Avalonia" Version="11.0.0.3" />
         <PackageReference Include="Dock.Serializer" Version="11.0.0.3" />
+        <PackageReference Include="DotNet.Bundle" Version="0.9.13" />
         <PackageReference Include="DynamicData" Version="8.1.1" />
         <PackageReference Include="Exceptionless.DateTimeExtensions" Version="3.4.3" />
         <PackageReference Include="FluentAvalonia.BreadcrumbBar" Version="2.0.2" />
@@ -79,6 +90,8 @@
     <ItemGroup>
         <AvaloniaResource Include="Assets\Icon.ico" />
         <AvaloniaResource Include="Assets\Icon.png" />
+        <AvaloniaResource Include="Assets\hf-packages.json" />
+        <AvaloniaResource Include="Assets\santahat.png" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,8 +1,15 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Input;
+using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy;
@@ -12,8 +19,14 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
 [Transient]
-public class HiresFixModule : ModuleBase
+public partial class HiresFixModule : ModuleBase
 {
+    /// <inheritdoc />
+    public override bool IsSettingsEnabled => true;
+
+    /// <inheritdoc />
+    public override IRelayCommand SettingsCommand => OpenSettingsDialogCommand;
+
     /// <inheritdoc />
     public HiresFixModule(ServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
@@ -26,6 +39,19 @@ public class HiresFixModule : ModuleBase
                 vmSampler.IsDenoiseStrengthEnabled = true;
             })
         );
+    }
+
+    [RelayCommand]
+    private async Task OpenSettingsDialog()
+    {
+        var gridVm = VmFactory.Get<PropertyGridViewModel>(vm =>
+        {
+            vm.Title = $"{Title} {Resources.Label_Settings}";
+            vm.SelectedObject = Cards.ToArray();
+            vm.IncludeCategories = ["Settings"];
+        });
+
+        await gridVm.GetDialog().ShowAsync();
     }
 
     /// <inheritdoc />
@@ -46,7 +72,7 @@ public class HiresFixModule : ModuleBase
         if (selectedUpscaler.Type != ComfyUpscalerType.None)
         {
             builder.Connections.Primary = builder.Group_Upscale(
-                "HiresFix",
+                builder.Nodes.GetUniqueName("HiresFix"),
                 builder.Connections.Primary ?? throw new ArgumentException("No Primary"),
                 builder.Connections.GetDefaultVAE(),
                 selectedUpscaler,
@@ -55,28 +81,30 @@ public class HiresFixModule : ModuleBase
             );
         }
 
-        var hiresSampler = builder.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.KSampler
-            {
-                Name = builder.Nodes.GetUniqueName("HiresFix_Sampler"),
-                Model = builder.Connections.GetRefinerOrBaseModel(),
-                Seed = builder.Connections.Seed,
-                Steps = samplerCard.Steps,
-                Cfg = samplerCard.CfgScale,
-                SamplerName =
-                    samplerCard.SelectedSampler?.Name
-                    ?? e.Builder.Connections.PrimarySampler?.Name
-                    ?? throw new ArgumentException("No PrimarySampler"),
-                Scheduler =
-                    samplerCard.SelectedScheduler?.Name
-                    ?? e.Builder.Connections.PrimaryScheduler?.Name
-                    ?? throw new ArgumentException("No PrimaryScheduler"),
-                Positive = builder.Connections.GetRefinerOrBaseConditioning(),
-                Negative = builder.Connections.GetRefinerOrBaseNegativeConditioning(),
-                LatentImage = builder.GetPrimaryAsLatent(),
-                Denoise = samplerCard.DenoiseStrength
-            }
-        );
+        var hiresSampler = builder
+            .Nodes
+            .AddTypedNode(
+                new ComfyNodeBuilder.KSampler
+                {
+                    Name = builder.Nodes.GetUniqueName("HiresFix_Sampler"),
+                    Model = builder.Connections.GetRefinerOrBaseModel(),
+                    Seed = builder.Connections.Seed,
+                    Steps = samplerCard.Steps,
+                    Cfg = samplerCard.CfgScale,
+                    SamplerName =
+                        samplerCard.SelectedSampler?.Name
+                        ?? e.Builder.Connections.PrimarySampler?.Name
+                        ?? throw new ArgumentException("No PrimarySampler"),
+                    Scheduler =
+                        samplerCard.SelectedScheduler?.Name
+                        ?? e.Builder.Connections.PrimaryScheduler?.Name
+                        ?? throw new ArgumentException("No PrimaryScheduler"),
+                    Positive = builder.Connections.GetRefinerOrBaseConditioning(),
+                    Negative = builder.Connections.GetRefinerOrBaseNegativeConditioning(),
+                    LatentImage = builder.GetPrimaryAsLatent(),
+                    Denoise = samplerCard.DenoiseStrength
+                }
+            );
 
         // Set as primary
         builder.Connections.Primary = hiresSampler.Output;

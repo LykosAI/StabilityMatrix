@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
-using DynamicData.Binding;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
@@ -19,7 +16,6 @@ using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Services;
-using Path = System.IO.Path;
 
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
@@ -86,17 +82,6 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
                 stackExpander.AddCards(SharpenCardViewModel);
             })
         );
-
-        // On any new images, copy to input dir
-        /*SelectImageCardViewModel
-            .WhenPropertyChanged(x => x.ImageSource)
-            .Subscribe(e =>
-            {
-                if (e.Value?.LocalFile?.FullPath is { } path)
-                {
-                    ClientManager.CopyImageToInputAsync(path).SafeFireAndForget();
-                }
-            });*/
     }
 
     /// <inheritdoc />
@@ -116,24 +101,8 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
         var builder = args.Builder;
         var nodes = builder.Nodes;
 
-        // Get source image
-        var sourceImage = SelectImageCardViewModel.ImageSource;
-        var sourceImageRelativePath = Path.Combine(
-            "Inference",
-            sourceImage!.GetHashGuidFileNameCached()
-        );
-        var sourceImageSize =
-            SelectImageCardViewModel.CurrentBitmapSize
-            ?? throw new InvalidOperationException("Source image size is null");
-
-        // Set source size
-        builder.Connections.PrimarySize = sourceImageSize;
-
-        // Load source
-        var loadImage = nodes.AddTypedNode(
-            new ComfyNodeBuilder.LoadImage { Name = "LoadImage", Image = sourceImageRelativePath }
-        );
-        builder.Connections.Primary = loadImage.Output1;
+        // Setup image source
+        SelectImageCardViewModel.ApplyStep(args);
 
         // If upscale is enabled, add another upscale group
         if (IsUpscaleEnabled)

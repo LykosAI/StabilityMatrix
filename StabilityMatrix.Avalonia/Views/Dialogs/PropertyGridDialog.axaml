@@ -1,0 +1,33 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.PropertyGridDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:componentModel="clr-namespace:System.ComponentModel;assembly=System.ObjectModel"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    d:DataContext="{x:Static mocks:DesignData.PropertyGridViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="600"
+    x:DataType="vmDialogs:PropertyGridViewModel"
+    mc:Ignorable="d">
+    <Grid>
+        <ItemsControl x:Name="MainItemsControl" ItemsSource="{Binding SelectedObjectItemsSource, Mode=OneTime}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="componentModel:INotifyPropertyChanged">
+                    <controls:BetterPropertyGrid
+                        AllowFilter="False"
+                        AllowQuickFilter="False"
+                        SelectedObject="{Binding Mode=OneTime}"
+                        IncludedCategories="{Binding $parent[ItemsControl].((vmDialogs:PropertyGridViewModel)DataContext).IncludeCategories, Mode=OneTime, FallbackValue=''}"
+                        ExcludedCategories="{Binding $parent[ItemsControl].((vmDialogs:PropertyGridViewModel)DataContext).ExcludeCategories, Mode=OneTime, FallbackValue=''}"
+                        ShowStyle="{Binding $parent[ItemsControl].((vmDialogs:PropertyGridViewModel)DataContext).ShowStyle, Mode=OneTime, FallbackValue=Alphabetic}"
+                        ShowTitle="False" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+    </Grid>
+</controls:UserControlBase>

@@ -6,7 +6,6 @@ using StabilityMatrix.Core.Models.Update;
 
 namespace StabilityMatrix.Core.Models.Settings;
 
-[JsonSerializable(typeof(Settings))]
 public class Settings
 {
     public int? Version { get; set; } = 1;
@@ -59,6 +58,8 @@ public class Settings
     public bool IsNavExpanded { get; set; }
     public bool IsImportAsConnected { get; set; }
     public bool ShowConnectedModelImages { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter<SharedFolderType>))]
     public SharedFolderType? SharedFolderVisibleCategories { get; set; } =
         SharedFolderType.StableDiffusion | SharedFolderType.Lora | SharedFolderType.LyCORIS;
 
@@ -108,6 +109,13 @@ public class Settings
 
     public Size InferenceImageSize { get; set; } = new(150, 190);
     public Size OutputsImageSize { get; set; } = new(300, 300);
+    public HolidayMode HolidayModeSetting { get; set; } = HolidayMode.Automatic;
+
+    [JsonIgnore]
+    public bool IsHolidayModeActive =>
+        HolidayModeSetting == HolidayMode.Automatic
+            ? DateTimeOffset.Now.Month == 12
+            : HolidayModeSetting == HolidayMode.Enabled;
 
     public void RemoveInstalledPackageAndUpdateActive(InstalledPackage package)
     {
@@ -158,8 +166,13 @@ public class Settings
             return new CultureInfo("zh-Hant");
         }
 
-        return supportedCultures.Contains(systemCulture.Name)
-            ? systemCulture
-            : new CultureInfo("en-US");
+        return supportedCultures.Contains(systemCulture.Name) ? systemCulture : new CultureInfo("en-US");
     }
 }
+
+[JsonSourceGenerationOptions(WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSerializable(typeof(Settings))]
+[JsonSerializable(typeof(bool))]
+[JsonSerializable(typeof(int))]
+[JsonSerializable(typeof(string))]
+internal partial class SettingsSerializerContext : JsonSerializerContext;

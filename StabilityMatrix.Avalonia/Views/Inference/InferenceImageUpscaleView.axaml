@@ -51,7 +51,7 @@
                             Proportion="0.5">
                             <Tool
                                 x:Name="SourceImageTool"
-                                Title="Source Image"
+                                Title="Image Input"
                                 x:DataType="Tool"
                                 CanClose="False"
                                 Id="SourceImageTool">
@@ -98,6 +98,8 @@
                                                     Width="130"
                                                     HorizontalAlignment="Stretch"
                                                     Classes="accent"
+                                                    HotKey="Ctrl+Enter"
+                                                    ToolTip.Tip="{Binding $self.HotKey}"
                                                     Command="{Binding GenerateImageCommand}"
                                                     CommandParameter="{x:Static modelsInference:GenerateFlags.None}"
                                                     IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}">

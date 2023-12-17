@@ -4,6 +4,7 @@
              xmlns:local="using:StabilityMatrix.Avalonia"
              xmlns:idcr="using:Dock.Avalonia.Controls.Recycling"
              xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
+             Name="Stability Matrix"
              RequestedThemeVariant="Dark">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
@@ -21,17 +22,15 @@
                  <ResourceInclude Source="Styles/ContextMenuStyles.axaml"/>
                  <ResourceInclude Source="Controls/EditorFlyouts.axaml"/>
                  <ResourceInclude Source="Controls/Scroll/BetterScrollViewer.axaml"/>
-                 <ResourceInclude Source="Controls/ImageFolderCard.axaml"/>
                  <ResourceInclude Source="Styles/ControlThemes/HyperlinkIconButtonStyles.axaml"/>
                  <ResourceInclude Source="Styles/ControlThemes/ListBoxStyles.axaml"/>
                  <ResourceInclude Source="Styles/ListBoxStyles.axaml"/>
                  <ResourceInclude Source="Styles/FAComboBoxStyles.axaml"/>
+                 <ResourceInclude Source="Controls/Inference/ImageFolderCard.axaml"/>
              </ResourceDictionary.MergedDictionaries>
              
              <idcr:ControlRecycling x:Key="ControlRecyclingKey" />
              <x:Double x:Key="ContentDialogMaxWidth">700</x:Double>
-             
-             <x:Double x:Key="BreadcrumbBarItemThemeFontSize">32</x:Double>
              
              <SolidColorBrush x:Key="ToolTipBackground" Color="#1E1F22"/>
              <SolidColorBrush x:Key="ToolTipForeground" Color="#9FBDC3"/>
@@ -53,29 +52,30 @@
         <StyleInclude Source="Styles/ToggleButtonStyles.axaml"/>
         <StyleInclude Source="Styles/DockStyles.axaml"/>
         <StyleInclude Source="Styles/BorderStyles.axaml"/>
-        <StyleInclude Source="Controls/SeedCard.axaml"/>
-        <StyleInclude Source="Controls/SamplerCard.axaml"/>
-        <StyleInclude Source="Controls/ImageGalleryCard.axaml"/>
-        <StyleInclude Source="Controls/PromptCard.axaml"/>
-        <StyleInclude Source="Controls/StackCard.axaml"/>
-        <StyleInclude Source="Controls/StackEditableCard.axaml"/>
-        <StyleInclude Source="Controls/UpscalerCard.axaml"/>
-        <StyleInclude Source="Controls/StackExpander.axaml"/>
-        <StyleInclude Source="Controls/ModelCard.axaml"/>
-        <StyleInclude Source="Controls/BatchSizeCard.axaml"/>
         <StyleInclude Source="Controls/AdvancedImageBox.axaml"/>
         <StyleInclude Source="Controls/FrameCarousel.axaml"/>
         <StyleInclude Source="Controls/CodeCompletion/CompletionWindow.axaml"/>
-        <StyleInclude Source="Controls/SelectImageCard.axaml"/>
-        <StyleInclude Source="Controls/SharpenCard.axaml"/>
-        <StyleInclude Source="Controls/FreeUCard.axaml"/>
-        <StyleInclude Source="Controls/ControlNetCard.axaml"/>
         <StyleInclude Source="Controls/Paginator.axaml"/>
         <StyleInclude Source="Controls/SelectableImageCard/SelectableImageButton.axaml"/>
         <StyleInclude Source="Controls/SettingsAccountLinkExpander.axaml"/>
         <StyleInclude Source="Controls/StarsRating.axaml"/>
         <StyleInclude Source="Controls/VideoGenerationSettingsCard.axaml"/>
         <StyleInclude Source="Controls/VideoOutputSettingsCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/StackCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/StackEditableCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/StackExpander.axaml"/>
+        <StyleInclude Source="Controls/Inference/SeedCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/SamplerCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/ImageGalleryCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/PromptCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/UpscalerCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/ModelCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/BatchSizeCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/SelectImageCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/SharpenCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/FreeUCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/ControlNetCard.axaml"/>
+        
         <Style Selector="DockControl">
             <Setter Property="(DockProperties.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />
         </Style>

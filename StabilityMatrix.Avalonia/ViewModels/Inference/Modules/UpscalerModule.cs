@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -30,19 +31,18 @@ public class UpscalerModule : ModuleBase
             return;
         }
 
-        var builder = e.Builder;
-        var upscaleSize = builder.Connections.PrimarySize.WithScale(card.Scale);
+        var upscaleSize = e.Builder.Connections.PrimarySize.WithScale(card.Scale);
 
-        var upscaleResult = builder.Group_Upscale(
-            "PostUpscale",
-            builder.Connections.Primary!,
-            builder.Connections.PrimaryVAE!,
-            card.SelectedUpscaler!.Value,
+        var upscaleResult = e.Builder.Group_Upscale(
+            e.Builder.Nodes.GetUniqueName("PostUpscale"),
+            e.Builder.Connections.Primary ?? throw new ArgumentException("No Primary"),
+            e.Builder.Connections.GetDefaultVAE(),
+            card.SelectedUpscaler ?? throw new ValidationException("Upscaler is required"),
             upscaleSize.Width,
             upscaleSize.Height
         );
 
-        builder.Connections.Primary = upscaleResult;
-        builder.Connections.PrimarySize = upscaleSize;
+        e.Builder.Connections.Primary = upscaleResult;
+        e.Builder.Connections.PrimarySize = upscaleSize;
     }
 }

@@ -44,8 +44,10 @@ using StabilityMatrix.Avalonia.Views.Settings;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
@@ -73,8 +75,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
     public SharedState SharedState { get; }
 
     public override string Title => "Settings";
-    public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
+    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
 
     // ReSharper disable once MemberCanBeMadeStatic.Global
     public string AppVersion =>
@@ -95,47 +96,14 @@ public partial class MainSettingsViewModel : PageViewModelBase
     public IReadOnlyList<float> AnimationScaleOptions { get; } =
         new[] { 0f, 0.25f, 0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f, };
 
+    public IReadOnlyList<HolidayMode> HolidayModes { get; } = Enum.GetValues<HolidayMode>().ToList();
+
     [ObservableProperty]
     private float selectedAnimationScale;
 
     // Shared folder options
     [ObservableProperty]
     private bool removeSymlinksOnShutdown;
-
-    // Inference UI section
-    [ObservableProperty]
-    private bool isPromptCompletionEnabled = true;
-
-    [ObservableProperty]
-    private IReadOnlyList<string> availableTagCompletionCsvs = Array.Empty<string>();
-
-    [ObservableProperty]
-    private string? selectedTagCompletionCsv;
-
-    [ObservableProperty]
-    private bool isCompletionRemoveUnderscoresEnabled = true;
-
-    [ObservableProperty]
-    [CustomValidation(typeof(MainSettingsViewModel), nameof(ValidateOutputImageFileNameFormat))]
-    private string? outputImageFileNameFormat;
-
-    [ObservableProperty]
-    private string? outputImageFileNameFormatSample;
-
-    public IEnumerable<FileNameFormatVar> OutputImageFileNameFormatVars =>
-        FileNameFormatProvider
-            .GetSample()
-            .Substitutions.Select(
-                kv =>
-                    new FileNameFormatVar
-                    {
-                        Variable = $"{{{kv.Key}}}",
-                        Example = kv.Value.Invoke()
-                    }
-            );
-
-    [ObservableProperty]
-    private bool isImageViewerPixelGridEnabled = true;
 
     // Integrations section
     [ObservableProperty]
@@ -151,6 +119,25 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private string? debugGpuInfo;
 
+    [ObservableProperty]
+    private HolidayMode holidayModeSetting;
+
+    #region System Info
+
+    private static Lazy<IReadOnlyList<GpuInfo>> GpuInfosLazy { get; } =
+        new(() => HardwareHelper.IterGpuInfo().ToImmutableArray());
+
+    public static IReadOnlyList<GpuInfo> GpuInfos => GpuInfosLazy.Value;
+
+    [ObservableProperty]
+    private MemoryInfo memoryInfo;
+
+    private readonly DispatcherTimer hardwareInfoUpdateTimer = new() { Interval = TimeSpan.FromSeconds(2.627) };
+
+    public Task<CpuInfo> CpuInfoAsync => HardwareHelper.GetCpuInfoAsync();
+
+    #endregion
+
     // Info section
     private const int VersionTapCountThreshold = 7;
 
@@ -162,8 +149,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
     public string VersionFlyoutText =>
         $"You are {VersionTapCountThreshold - VersionTapCount} clicks away from enabling Debug options.";
 
-    public string DataDirectory =>
-        settingsManager.IsLibraryDirSet ? settingsManager.LibraryDir : "Not set";
+    public string DataDirectory => settingsManager.IsLibraryDirSet ? settingsManager.LibraryDir : "Not set";
 
     public MainSettingsViewModel(
         INotificationService notificationService,
@@ -201,6 +187,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         SelectedLanguage = Cultures.GetSupportedCultureOrDefault(settingsManager.Settings.Language);
         RemoveSymlinksOnShutdown = settingsManager.Settings.RemoveFolderLinksOnShutdown;
         SelectedAnimationScale = settingsManager.Settings.AnimationScale;
+        HolidayModeSetting = settingsManager.Settings.HolidayModeSetting;
 
         settingsManager.RelayPropertyFor(this, vm => vm.SelectedTheme, settings => settings.Theme);
 
@@ -211,77 +198,29 @@ public partial class MainSettingsViewModel : PageViewModelBase
             true
         );
 
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.SelectedAnimationScale,
-            settings => settings.AnimationScale
-        );
+        settingsManager.RelayPropertyFor(this, vm => vm.SelectedAnimationScale, settings => settings.AnimationScale);
+        settingsManager.RelayPropertyFor(this, vm => vm.HolidayModeSetting, settings => settings.HolidayModeSetting);
 
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.SelectedTagCompletionCsv,
-            settings => settings.TagCompletionCsv
-        );
+        DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
 
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.IsPromptCompletionEnabled,
-            settings => settings.IsPromptCompletionEnabled,
-            true
-        );
+        hardwareInfoUpdateTimer.Tick += OnHardwareInfoUpdateTimerTick;
+    }
 
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.IsCompletionRemoveUnderscoresEnabled,
-            settings => settings.IsCompletionRemoveUnderscoresEnabled,
-            true
-        );
+    /// <inheritdoc />
+    public override void OnLoaded()
+    {
+        base.OnLoaded();
 
-        this.WhenPropertyChanged(vm => vm.OutputImageFileNameFormat)
-            .Throttle(TimeSpan.FromMilliseconds(50))
-            .Subscribe(formatProperty =>
-            {
-                var provider = FileNameFormatProvider.GetSample();
-                var template = formatProperty.Value ?? string.Empty;
+        hardwareInfoUpdateTimer.Start();
+        OnHardwareInfoUpdateTimerTick(null, null!);
+    }
 
-                if (
-                    !string.IsNullOrEmpty(template)
-                    && provider.Validate(template) == ValidationResult.Success
-                )
-                {
-                    var format = FileNameFormat.Parse(template, provider);
-                    OutputImageFileNameFormatSample = format.GetFileName() + ".png";
-                }
-                else
-                {
-                    // Use default format if empty
-                    var defaultFormat = FileNameFormat.Parse(
-                        FileNameFormat.DefaultTemplate,
-                        provider
-                    );
-                    OutputImageFileNameFormatSample = defaultFormat.GetFileName() + ".png";
-                }
-            });
+    /// <inheritdoc />
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
 
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.OutputImageFileNameFormat,
-            settings => settings.InferenceOutputImageFileNameFormat,
-            true
-        );
-
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.IsImageViewerPixelGridEnabled,
-            settings => settings.IsImageViewerPixelGridEnabled,
-            true
-        );
-
-        DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(
-            notificationService,
-            LogLevel.Warn
-        );
-        ImportTagCsvCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
+        hardwareInfoUpdateTimer.Stop();
     }
 
     /// <inheritdoc />
@@ -291,18 +230,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
         await notificationService.TryAsync(completionProvider.Setup());
 
-        UpdateAvailableTagCompletionCsvs();
-
         // Start accounts update
         accountsService.RefreshAsync().SafeFireAndForget();
     }
 
-    public static ValidationResult ValidateOutputImageFileNameFormat(
-        string? format,
-        ValidationContext context
-    )
+    private void OnHardwareInfoUpdateTimerTick(object? sender, EventArgs e)
     {
-        return FileNameFormatProvider.GetSample().Validate(format ?? string.Empty);
+        MemoryInfo = HardwareHelper.GetMemoryInfo();
     }
 
     partial void OnSelectedThemeChanged(string? value)
@@ -341,22 +275,20 @@ public partial class MainSettingsViewModel : PageViewModelBase
                 CloseButtonText = Resources.Action_RelaunchLater
             };
 
-            Dispatcher.UIThread.InvokeAsync(async () =>
-            {
-                if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+            Dispatcher
+                .UIThread
+                .InvokeAsync(async () =>
                 {
-                    Process.Start(Compat.AppCurrentPath);
-                    App.Shutdown();
-                }
-            });
+                    if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+                    {
+                        Process.Start(Compat.AppCurrentPath);
+                        App.Shutdown();
+                    }
+                });
         }
         else
         {
-            Logger.Info(
-                "Requested invalid language change from {Old} to {New}",
-                oldValue,
-                newValue
-            );
+            Logger.Info("Requested invalid language change from {Old} to {New}", oldValue, newValue);
         }
     }
 
@@ -379,14 +311,16 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [RelayCommand]
     private void NavigateToSubPage(Type viewModelType)
     {
-        Dispatcher.UIThread.Post(
-            () =>
-                settingsNavigationService.NavigateTo(
-                    viewModelType,
-                    BetterSlideNavigationTransition.PageSlideFromRight
-                ),
-            DispatcherPriority.Send
-        );
+        Dispatcher
+            .UIThread
+            .Post(
+                () =>
+                    settingsNavigationService.NavigateTo(
+                        viewModelType,
+                        BetterSlideNavigationTransition.PageSlideFromRight
+                    ),
+                DispatcherPriority.Send
+            );
     }
 
     #region Package Environment
@@ -397,8 +331,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         var viewModel = dialogFactory.Get<EnvVarsViewModel>();
 
         // Load current settings
-        var current =
-            settingsManager.Settings.EnvironmentVariables ?? new Dictionary<string, string>();
+        var current = settingsManager.Settings.EnvironmentVariables ?? new Dictionary<string, string>();
         viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>(
             current.Select(kvp => new EnvVarKeyPair(kvp.Key, kvp.Value))
         );
@@ -414,7 +347,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)
         {
             // Save settings
-            var newEnvVars = viewModel.EnvVars
+            var newEnvVars = viewModel
+                .EnvVars
                 .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Key))
                 .GroupBy(kvp => kvp.Key, StringComparer.Ordinal)
                 .ToDictionary(g => g.Key, g => g.First().Value, StringComparer.Ordinal);
@@ -453,68 +387,6 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     #endregion
 
-    #region Inference UI
-
-    private void UpdateAvailableTagCompletionCsvs()
-    {
-        if (!settingsManager.IsLibraryDirSet)
-            return;
-
-        var tagsDir = settingsManager.TagsDirectory;
-        if (!tagsDir.Exists)
-            return;
-
-        var csvFiles = tagsDir.Info.EnumerateFiles("*.csv");
-        AvailableTagCompletionCsvs = csvFiles.Select(f => f.Name).ToImmutableArray();
-
-        // Set selected to current if exists
-        var settingsCsv = settingsManager.Settings.TagCompletionCsv;
-        if (settingsCsv is not null && AvailableTagCompletionCsvs.Contains(settingsCsv))
-        {
-            SelectedTagCompletionCsv = settingsCsv;
-        }
-    }
-
-    [RelayCommand(FlowExceptionsToTaskScheduler = true)]
-    private async Task ImportTagCsv()
-    {
-        var storage = App.StorageProvider;
-        var files = await storage.OpenFilePickerAsync(
-            new FilePickerOpenOptions
-            {
-                FileTypeFilter = new List<FilePickerFileType>
-                {
-                    new("CSV") { Patterns = new[] { "*.csv" }, }
-                }
-            }
-        );
-
-        if (files.Count == 0)
-            return;
-
-        var sourceFile = new FilePath(files[0].TryGetLocalPath()!);
-
-        var tagsDir = settingsManager.TagsDirectory;
-        tagsDir.Create();
-
-        // Copy to tags directory
-        var targetFile = tagsDir.JoinFile(sourceFile.Name);
-        await sourceFile.CopyToAsync(targetFile);
-
-        // Update index
-        UpdateAvailableTagCompletionCsvs();
-
-        // Trigger load
-        completionProvider.BackgroundLoadFromFile(targetFile, true);
-
-        notificationService.Show(
-            $"Imported {sourceFile.Name}",
-            $"The {sourceFile.Name} file has been imported.",
-            NotificationType.Success
-        );
-    }
-    #endregion
-
     #region System
 
     /// <summary>
@@ -531,10 +403,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
         await using var _ = new MinimumDelay(200, 300);
 
-        var shortcutDir = new DirectoryPath(
-            Environment.GetFolderPath(Environment.SpecialFolder.StartMenu),
-            "Programs"
-        );
+        var shortcutDir = new DirectoryPath(Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "Programs");
         var shortcutLink = shortcutDir.JoinFile("Stability Matrix.lnk");
 
         var appPath = Compat.AppCurrentPath;
@@ -566,8 +435,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         // Confirmation dialog
         var dialog = new BetterContentDialog
         {
-            Title =
-                "This will create a shortcut for Stability Matrix in the Start Menu for all users",
+            Title = "This will create a shortcut for Stability Matrix in the Start Menu for all users",
             Content = "You will be prompted for administrator privileges. Continue?",
             PrimaryButtonText = Resources.Action_Yes,
             CloseButtonText = Resources.Action_Cancel,
@@ -764,16 +632,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
     private async Task DebugMakeImageGrid()
     {
         var provider = App.StorageProvider;
-        var files = await provider.OpenFilePickerAsync(
-            new FilePickerOpenOptions() { AllowMultiple = true }
-        );
+        var files = await provider.OpenFilePickerAsync(new FilePickerOpenOptions() { AllowMultiple = true });
 
         if (files.Count == 0)
             return;
 
-        var images = await files.SelectAsync(
-            async f => SKImage.FromEncodedData(await f.OpenReadAsync())
-        );
+        var images = await files.SelectAsync(async f => SKImage.FromEncodedData(await f.OpenReadAsync()));
 
         var grid = ImageProcessor.CreateImageGrid(images.ToImmutableArray());
 
@@ -923,11 +787,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         }
         catch (Exception e)
         {
-            notificationService.Show(
-                "Failed to read licenses information",
-                $"{e}",
-                NotificationType.Error
-            );
+            notificationService.Show("Failed to read licenses information", $"{e}", NotificationType.Error);
         }
     }
 

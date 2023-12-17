@@ -62,7 +62,7 @@ public partial class StackEditableCardViewModel : StackViewModelBase
     partial void OnIsEditEnabledChanged(bool value)
     {
         // Propagate edit state to children
-        foreach (var module in Cards.OfType<ModuleBase>())
+        foreach (var module in Cards.OfType<StackExpanderViewModel>())
         {
             module.IsEditEnabled = value;
         }
@@ -73,7 +73,7 @@ public partial class StackEditableCardViewModel : StackViewModelBase
     {
         base.OnCardAdded(item);
 
-        if (item is ModuleBase module)
+        if (item is StackExpanderViewModel module)
         {
             // Inherit our edit state
             module.IsEditEnabled = IsEditEnabled;
@@ -84,6 +84,14 @@ public partial class StackEditableCardViewModel : StackViewModelBase
         where T : ModuleBase
     {
         var card = vmFactory.Get<T>();
+        AddCards(card);
+        return card;
+    }
+
+    public T AddModule<T>(Action<T> initializer)
+        where T : ModuleBase
+    {
+        var card = vmFactory.Get(initializer);
         AddCards(card);
         return card;
     }

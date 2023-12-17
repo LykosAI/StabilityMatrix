@@ -104,5 +104,5 @@ public record LocalImageFile
         };
     }
 
-    public static readonly HashSet<string> SupportedImageExtensions = [".png", ".jpg", ".jpeg", ".gif"];
+    public static readonly HashSet<string> SupportedImageExtensions = [".png", ".jpg", ".jpeg", ".gif", ".webp"];
 }

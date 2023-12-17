@@ -32,7 +32,7 @@ namespace Avalonia.Gif
             IterationCount
         >("IterationCount", IterationCount.Infinite);
 
-        private GifInstance? _gifInstance;
+        private IGifInstance? _gifInstance;
 
         public static readonly StyledProperty<StretchDirection> StretchDirectionProperty = AvaloniaProperty.Register<
             GifImage,
@@ -166,7 +166,7 @@ namespace Avalonia.Gif
         {
             private TimeSpan _animationElapsed;
             private TimeSpan? _lastServerTime;
-            private GifInstance? _currentInstance;
+            private IGifInstance? _currentInstance;
             private bool _running;
 
             public static readonly object StopMessage = new(),
@@ -184,7 +184,7 @@ namespace Avalonia.Gif
                 {
                     _running = false;
                 }
-                else if (message is GifInstance instance)
+                else if (message is IGifInstance instance)
                 {
                     _currentInstance?.Dispose();
                     _currentInstance = instance;
@@ -288,7 +288,8 @@ namespace Avalonia.Gif
         private void UpdateGifInstance(object source)
         {
             _gifInstance?.Dispose();
-            _gifInstance = new GifInstance(source);
+            _gifInstance = new WebpInstance(source);
+            // _gifInstance = new GifInstance(source);
             _gifInstance.IterationCount = IterationCount;
             _customVisual?.SendHandlerMessage(_gifInstance);
         }

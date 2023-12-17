@@ -130,7 +130,7 @@ public partial class InferenceImageToVideoViewModel : InferenceGenerationViewMod
 
     private void OnImageFileAdded(object? sender, FilePath e)
     {
-        if (!e.Extension.Contains("gif"))
+        if (!e.Extension.Equals(".webp", StringComparison.OrdinalIgnoreCase))
             return;
 
         OutputUri = e;

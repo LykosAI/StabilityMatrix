@@ -409,14 +409,14 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
                 );
 
                 // convert to gif
-                var inputStream = File.OpenRead(webpFilePath);
+                /*var inputStream = File.OpenRead(webpFilePath);
                 var gifFilePath = webpFilePath.ToString().Replace(".webp", ".gif");
                 var outputStream = File.OpenWrite(gifFilePath);
 
                 await GifConverter.ConvertAnimatedWebpToGifAsync(inputStream, outputStream);
                 await inputStream.DisposeAsync();
                 await outputStream.FlushAsync();
-                await outputStream.DisposeAsync();
+                await outputStream.DisposeAsync();*/
 
                 // if (File.Exists(gifFilePath))
                 // {
@@ -424,8 +424,8 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
                 //     File.Delete(webpFilePath);
                 // }
 
-                outputImages.Add(new ImageSource(gifFilePath));
-                EventManager.Instance.OnImageFileAdded(gifFilePath);
+                outputImages.Add(new ImageSource(webpFilePath));
+                EventManager.Instance.OnImageFileAdded(webpFilePath);
             }
             else
             {

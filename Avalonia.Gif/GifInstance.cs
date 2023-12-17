@@ -11,7 +11,7 @@ using Avalonia.Platform;
 
 namespace Avalonia.Gif
 {
-    public class GifInstance : IDisposable
+    public class GifInstance : IGifInstance
     {
         public IterationCount IterationCount { get; set; }
         public bool AutoStart { get; private set; } = true;

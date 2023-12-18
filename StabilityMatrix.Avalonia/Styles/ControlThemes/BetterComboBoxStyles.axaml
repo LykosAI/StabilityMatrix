@@ -9,8 +9,8 @@
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
 
     <Design.PreviewWith>
-        <Panel Width="250" Height="600">
-            <StackPanel Margin="8" Spacing="4">
+        <Panel Width="450" Height="600">
+            <StackPanel Margin="8" Spacing="4" Width="250">
                 <controls:BetterComboBox
                     HorizontalAlignment="Stretch"
                     ItemsSource="{x:Static mocks:DesignData.SampleHybridModels}"
@@ -25,6 +25,65 @@
         </Panel>
     </Design.PreviewWith>
 
+    <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
+    <ControlTheme
+        x:Key="BetterComboBoxItemHybridModelTheme"
+        BasedOn="{StaticResource {x:Type ComboBoxItem}}"
+        TargetType="ComboBoxItem">
+        <Setter Property="ToolTip.Placement" Value="RightEdgeAlignedTop" />
+        <Setter Property="ToolTip.Tip">
+            <Template>
+                <sg:SpacedGrid
+                    x:DataType="models:HybridModelFile"
+                    ColumnDefinitions="Auto,*"
+                    ColumnSpacing="6"
+                    RowSpacing="0">
+                    <!--  Image  -->
+                    <controls:BetterAdvancedImage
+                        Width="64"
+                        Height="96"
+                        CornerRadius="6"
+                        IsVisible="{Binding Local.PreviewImageFullPathGlobal, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=''}"
+                        RenderOptions.BitmapInterpolationMode="HighQuality"
+                        Source="{Binding Local.PreviewImageFullPathGlobal, FallbackValue=''}"
+                        Stretch="UniformToFill"
+                        StretchDirection="Both" />
+                    <StackPanel
+                        Grid.Column="1"
+                        MaxWidth="300"
+                        VerticalAlignment="Stretch">
+                        <!--  Title  -->
+                        <TextBlock
+                            Margin="0,0,0,4"
+                            HorizontalAlignment="Left"
+                            FontSize="14"
+                            FontWeight="Medium"
+                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                            IsVisible="{Binding Local.ConnectedModelInfo, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}"
+                            Text="{Binding Local.ConnectedModelInfo.ModelName, FallbackValue=''}"
+                            TextWrapping="WrapWithOverflow" />
+                        <!--  Version  -->
+                        <TextBlock
+                            Margin="0,0,0,8"
+                            HorizontalAlignment="Left"
+                            FontSize="13"
+                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                            IsVisible="{Binding Local.ConnectedModelInfo, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}"
+                            Text="{Binding Local.ConnectedModelInfo.VersionName, FallbackValue=''}"
+                            TextWrapping="WrapWithOverflow" />
+                        <!--  Path  -->
+                        <TextBlock
+                            HorizontalAlignment="Left"
+                            FontSize="13"
+                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                            Text="{Binding FileName}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </sg:SpacedGrid>
+            </Template>
+        </Setter>
+    </ControlTheme>
+    
     <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
     <ControlTheme
         x:Key="{x:Type controls:BetterComboBox}"
@@ -152,7 +211,7 @@
                             Grid.Column="1"
                             RowDefinitions="Auto,Auto"
                             RowSpacing="1">
-                            
+
                             <TextBlock Text="{Binding Local.DisplayModelName}" TextTrimming="CharacterEllipsis" />
                             <TextBlock
                                 Grid.Row="1"
@@ -174,11 +233,12 @@
         </ControlTheme.Resources>
 
         <Setter Property="TextBlock.TextWrapping" Value="NoWrap" />
-        <Setter Property="ItemContainerTheme" Value="{StaticResource ComboBoxItemHybridModelTheme}" />
-
+        <Setter Property="SelectionBoxItemTemplate" Value="{StaticResource HybridModelSelectionBoxTemplateSelector}" />
+        <Setter Property="ItemTemplate" Value="{StaticResource HybridModelTemplateSelector}" />
+        <Setter Property="ItemContainerTheme" Value="{StaticResource BetterComboBoxItemHybridModelTheme}" />
+        
         <Style Selector="^ /template/ Popup#PART_Popup">
-            <Setter Property="Width" Value="400"/>
-            <!--<Setter Property="WindowManagerAddShadowHint" Value="True" />-->
+            <Setter Property="Width" Value="400" />
             <Setter Property="Placement" Value="Bottom" />
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
             <Setter Property="Effect">
@@ -188,14 +248,6 @@
                     Color="#FF000000" />
             </Setter>
         </Style>
-
-        <Setter Property="SelectionBoxItemTemplate">
-            <StaticResource ResourceKey="HybridModelSelectionBoxTemplateSelector"/>
-        </Setter>
-
-        <Setter Property="ItemTemplate">
-            <StaticResource ResourceKey="HybridModelTemplateSelector" />
-        </Setter>
 
     </ControlTheme>
 

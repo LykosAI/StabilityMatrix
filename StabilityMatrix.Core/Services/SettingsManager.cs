@@ -650,6 +650,12 @@ public class SettingsManager : ISettingsManager
             if (!isLoaded)
                 return;
 
+            if (SystemInfo.GetDiskFreeSpaceBytes(SettingsPath) < 1024 * 1024)
+            {
+                Logger.Warn("Not enough disk space to save settings");
+                return;
+            }
+
             var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(Settings, SettingsSerializerContext.Default.Settings);
 
             File.WriteAllBytes(SettingsPath, jsonBytes);

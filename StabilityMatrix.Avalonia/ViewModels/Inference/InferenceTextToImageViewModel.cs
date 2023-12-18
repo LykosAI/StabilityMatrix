@@ -130,11 +130,6 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
             _ => Convert.ToUInt64(SeedCardViewModel.Seed)
         };
 
-        if (!SamplerCardViewModel.IsDenoiseStrengthEnabled)
-        {
-            SamplerCardViewModel.DenoiseStrength = 1.0d;
-        }
-
         BatchSizeCardViewModel.ApplyStep(args);
 
         // Load models

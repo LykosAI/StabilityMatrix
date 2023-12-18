@@ -272,6 +272,26 @@ public class ComfyUI(
             await controlnetOldLink.DeleteAsync(false).ConfigureAwait(false);
         }
 
+        // and also ipadapter links
+        if (installDirectory.JoinDir("models/ipadapter") is { IsSymbolicLink: true } oldIpAdapterLink)
+        {
+            Logger.Info("Migration: Removing old ipadapter link {Path}", oldIpAdapterLink);
+            await oldIpAdapterLink.DeleteAsync(false).ConfigureAwait(false);
+        }
+
+        // also fix broken links in models dir
+        var modelsDir = new DirectoryPath(settingsManager.ModelsDirectory);
+        string[] links = ["base", "sd15", "sdxl"];
+        foreach (var link in links)
+        {
+            var oldLink = modelsDir.JoinDir($"IpAdapter{Path.DirectorySeparatorChar}{link}");
+            if (!oldLink.IsSymbolicLink)
+                continue;
+
+            Logger.Info("Fixing broken IPadapter links {Path}", oldLink);
+            await oldLink.DeleteAsync(false).ConfigureAwait(false);
+        }
+
         // Resume base setup
         await base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink).ConfigureAwait(false);
     }

@@ -51,6 +51,7 @@ public class ComfyUI(
             [SharedFolderType.Diffusers] = new[] { "models/diffusers" },
             [SharedFolderType.Lora] = new[] { "models/loras" },
             [SharedFolderType.CLIP] = new[] { "models/clip" },
+            [SharedFolderType.InvokeClipVision] = new[] { "models/clip_vision" },
             [SharedFolderType.TextualInversion] = new[] { "models/embeddings" },
             [SharedFolderType.VAE] = new[] { "models/vae" },
             [SharedFolderType.ApproxVAE] = new[] { "models/vae_approx" },
@@ -58,7 +59,9 @@ public class ComfyUI(
             [SharedFolderType.GLIGEN] = new[] { "models/gligen" },
             [SharedFolderType.ESRGAN] = new[] { "models/upscale_models" },
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
-            [SharedFolderType.IpAdapter] = new[] { "models/ipadapter" },
+            [SharedFolderType.IpAdapter] = new[] { "models/ipadapter/base" },
+            [SharedFolderType.InvokeIpAdapters15] = new[] { "models/ipadapter/sd15" },
+            [SharedFolderType.InvokeIpAdaptersXl] = new[] { "models/ipadapter/sdxl" },
             [SharedFolderType.T2IAdapter] = new[] { "models/controlnet/T2IAdapter" },
         };
 
@@ -323,9 +326,16 @@ public class ComfyUI(
                 Path.Combine(modelsDir, "T2IAdapter")
             );
             nodeValue.Children["clip"] = Path.Combine(modelsDir, "CLIP");
+            nodeValue.Children["clip_vision"] = Path.Combine(modelsDir, "InvokeClipVision");
             nodeValue.Children["diffusers"] = Path.Combine(modelsDir, "Diffusers");
             nodeValue.Children["gligen"] = Path.Combine(modelsDir, "GLIGEN");
             nodeValue.Children["vae_approx"] = Path.Combine(modelsDir, "ApproxVAE");
+            nodeValue.Children["ipadapter"] = string.Join(
+                '\n',
+                Path.Combine(modelsDir, "IpAdapter"),
+                Path.Combine(modelsDir, "InvokeIpAdapters15"),
+                Path.Combine(modelsDir, "InvokeIpAdaptersXl")
+            );
         }
         else
         {
@@ -344,12 +354,29 @@ public class ComfyUI(
                     { "hypernetworks", Path.Combine(modelsDir, "Hypernetwork") },
                     {
                         "controlnet",
-                        string.Join('\n', Path.Combine(modelsDir, "ControlNet"), Path.Combine(modelsDir, "T2IAdapter"))
+                        string.Join(
+                            '\n',
+                            Path.Combine(modelsDir, "ControlNet"),
+                            Path.Combine(modelsDir, "T2IAdapter"),
+                            Path.Combine(modelsDir, "IpAdapter"),
+                            Path.Combine(modelsDir, "InvokeIpAdapters15"),
+                            Path.Combine(modelsDir, "InvokeIpAdaptersXl")
+                        )
                     },
                     { "clip", Path.Combine(modelsDir, "CLIP") },
+                    { "clip_vision", Path.Combine(modelsDir, "InvokeClipVision") },
                     { "diffusers", Path.Combine(modelsDir, "Diffusers") },
                     { "gligen", Path.Combine(modelsDir, "GLIGEN") },
-                    { "vae_approx", Path.Combine(modelsDir, "ApproxVAE") }
+                    { "vae_approx", Path.Combine(modelsDir, "ApproxVAE") },
+                    {
+                        "ipadapter",
+                        string.Join(
+                            '\n',
+                            Path.Combine(modelsDir, "IpAdapter"),
+                            Path.Combine(modelsDir, "InvokeIpAdapters15"),
+                            Path.Combine(modelsDir, "InvokeIpAdaptersXl")
+                        )
+                    }
                 }
             );
         }

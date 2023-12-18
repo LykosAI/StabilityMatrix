@@ -354,14 +354,7 @@ public class ComfyUI(
                     { "hypernetworks", Path.Combine(modelsDir, "Hypernetwork") },
                     {
                         "controlnet",
-                        string.Join(
-                            '\n',
-                            Path.Combine(modelsDir, "ControlNet"),
-                            Path.Combine(modelsDir, "T2IAdapter"),
-                            Path.Combine(modelsDir, "IpAdapter"),
-                            Path.Combine(modelsDir, "InvokeIpAdapters15"),
-                            Path.Combine(modelsDir, "InvokeIpAdaptersXl")
-                        )
+                        string.Join('\n', Path.Combine(modelsDir, "ControlNet"), Path.Combine(modelsDir, "T2IAdapter"))
                     },
                     { "clip", Path.Combine(modelsDir, "CLIP") },
                     { "clip_vision", Path.Combine(modelsDir, "InvokeClipVision") },

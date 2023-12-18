@@ -6,8 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.7.3
+### Added
+- Added missing IPAdapter and CLIP Vision folder links for ComfyUI
 ### Fixed
 - Fixed UnicodeDecodeError when using extra_model_paths.yaml in ComfyUI on certain locales
+- Fixed SDXL CLIP Vision model directory name conflict
 
 ## v2.7.2
 ### Changed

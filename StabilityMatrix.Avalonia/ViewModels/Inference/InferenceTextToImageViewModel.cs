@@ -26,9 +26,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(InferenceTextToImageView), IsPersistent = true)]
 [ManagedService]
 [Transient]
-public class InferenceTextToImageViewModel
-    : InferenceGenerationViewModelBase,
-        IParametersLoadableState
+public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -81,6 +79,7 @@ public class InferenceTextToImageViewModel
             samplerCard.IsCfgScaleEnabled = true;
             samplerCard.IsSamplerSelectionEnabled = true;
             samplerCard.IsSchedulerSelectionEnabled = true;
+            samplerCard.DenoiseStrength = 1.0d;
         });
 
         PromptCardViewModel = vmFactory.Get<PromptCardViewModel>();
@@ -162,22 +161,19 @@ public class InferenceTextToImageViewModel
     /// <inheritdoc />
     protected override IEnumerable<ImageSource> GetInputImages()
     {
-        var samplerImages = SamplerCardViewModel.ModulesCardViewModel.Cards
+        var samplerImages = SamplerCardViewModel
+            .ModulesCardViewModel
+            .Cards
             .OfType<IInputImageProvider>()
             .SelectMany(m => m.GetInputImages());
 
-        var moduleImages = ModulesCardViewModel.Cards
-            .OfType<IInputImageProvider>()
-            .SelectMany(m => m.GetInputImages());
+        var moduleImages = ModulesCardViewModel.Cards.OfType<IInputImageProvider>().SelectMany(m => m.GetInputImages());
 
         return samplerImages.Concat(moduleImages);
     }
 
     /// <inheritdoc />
-    protected override async Task GenerateImageImpl(
-        GenerateOverrides overrides,
-        CancellationToken cancellationToken
-    )
+    protected override async Task GenerateImageImpl(GenerateOverrides overrides, CancellationToken cancellationToken)
     {
         // Validate the prompts
         if (!await PromptCardViewModel.ValidatePrompts())
@@ -205,11 +201,7 @@ public class InferenceTextToImageViewModel
         {
             var seed = seedCard.Seed + i;
 
-            var buildPromptArgs = new BuildPromptEventArgs
-            {
-                Overrides = overrides,
-                SeedOverride = seed
-            };
+            var buildPromptArgs = new BuildPromptEventArgs { Overrides = overrides, SeedOverride = seed };
             BuildPrompt(buildPromptArgs);
 
             var generationArgs = new ImageGenerationEventArgs
@@ -270,16 +262,12 @@ public class InferenceTextToImageViewModel
 
                 if (state.TryGetPropertyValue("HiresSampler", out var hiresSamplerState))
                 {
-                    module
-                        .GetCard<SamplerCardViewModel>()
-                        .LoadStateFromJsonObject(hiresSamplerState!.AsObject());
+                    module.GetCard<SamplerCardViewModel>().LoadStateFromJsonObject(hiresSamplerState!.AsObject());
                 }
 
                 if (state.TryGetPropertyValue("HiresUpscaler", out var hiresUpscalerState))
                 {
-                    module
-                        .GetCard<UpscalerCardViewModel>()
-                        .LoadStateFromJsonObject(hiresUpscalerState!.AsObject());
+                    module.GetCard<UpscalerCardViewModel>().LoadStateFromJsonObject(hiresUpscalerState!.AsObject());
                 }
             });
 
@@ -289,17 +277,17 @@ public class InferenceTextToImageViewModel
 
                 if (state.TryGetPropertyValue("Upscaler", out var upscalerState))
                 {
-                    module
-                        .GetCard<UpscalerCardViewModel>()
-                        .LoadStateFromJsonObject(upscalerState!.AsObject());
+                    module.GetCard<UpscalerCardViewModel>().LoadStateFromJsonObject(upscalerState!.AsObject());
                 }
             });
 
             // Add FreeU to sampler
-            SamplerCardViewModel.ModulesCardViewModel.AddModule<FreeUModule>(module =>
-            {
-                module.IsEnabled = state.GetPropertyValueOrDefault<bool>("IsFreeUEnabled");
-            });
+            SamplerCardViewModel
+                .ModulesCardViewModel
+                .AddModule<FreeUModule>(module =>
+                {
+                    module.IsEnabled = state.GetPropertyValueOrDefault<bool>("IsFreeUEnabled");
+                });
         }
 
         base.LoadStateFromJsonObject(state);

@@ -272,6 +272,14 @@ public class ComfyUI(
             await controlnetOldLink.DeleteAsync(false).ConfigureAwait(false);
         }
 
+        // Migration for `IPAdapters` -> `ipadapter/base` and SD version folders
+        // If the original link exists, delete it first
+        if (installDirectory.JoinDir("models/ipadapter") is { IsSymbolicLink: true } ipAdapterOldLink)
+        {
+            Logger.Info("Migration: Removing old IPAdapter link {Path}", ipAdapterOldLink);
+            await ipAdapterOldLink.DeleteAsync(false).ConfigureAwait(false);
+        }
+
         // Resume base setup
         await base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink).ConfigureAwait(false);
     }

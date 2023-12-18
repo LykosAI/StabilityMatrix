@@ -5,8 +5,8 @@ namespace StabilityMatrix.Core.Helper;
 
 public static class SystemInfo
 {
-    public const long Gigabyte = 1024 * 1024 * 1024;
-    public const long Megabyte = 1024 * 1024;
+    public const long Gibibyte = 1024 * 1024 * 1024;
+    public const long Mebibyte = 1024 * 1024;
 
     [DllImport("UXTheme.dll", SetLastError = true, EntryPoint = "#138")]
     public static extern bool ShouldUseDarkMode();

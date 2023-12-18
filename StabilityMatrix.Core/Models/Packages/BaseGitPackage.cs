@@ -172,7 +172,7 @@ public abstract class BaseGitPackage : BasePackage
         IProgress<ProgressReport>? progress = null
     )
     {
-        const long fiveGigs = 5 * SystemInfo.Gigabyte;
+        const long fiveGigs = 5 * SystemInfo.Gibibyte;
         if (SystemInfo.GetDiskFreeSpaceBytes(installLocation) is < fiveGigs)
         {
             throw new ApplicationException(

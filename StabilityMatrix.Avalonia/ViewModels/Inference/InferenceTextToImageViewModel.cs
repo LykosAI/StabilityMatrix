@@ -130,6 +130,11 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
             _ => Convert.ToUInt64(SeedCardViewModel.Seed)
         };
 
+        if (!SamplerCardViewModel.IsDenoiseStrengthEnabled)
+        {
+            SamplerCardViewModel.DenoiseStrength = 1.0d;
+        }
+
         BatchSizeCardViewModel.ApplyStep(args);
 
         // Load models
@@ -233,6 +238,11 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         ModelCardViewModel.LoadStateFromParameters(parameters);
 
         SeedCardViewModel.Seed = Convert.ToInt64(parameters.Seed);
+
+        if (Math.Abs(SamplerCardViewModel.DenoiseStrength - 1.0d) > 0.01d)
+        {
+            SamplerCardViewModel.DenoiseStrength = 1.0d;
+        }
     }
 
     /// <inheritdoc />

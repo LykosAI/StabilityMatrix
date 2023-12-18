@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed UnicodeDecodeError when using extra_model_paths.yaml in ComfyUI on certain locales
 - Fixed SDXL CLIP Vision model directory name conflict
+- Fixed [#334](https://github.com/LykosAI/StabilityMatrix/issues/334) - Win32Exception if Settings are opened
 
 ## v2.7.2
 ### Changed
